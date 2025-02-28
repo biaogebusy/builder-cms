@@ -1,0 +1,79 @@
+services:
+  blazy.base:
+    abstract: true
+    class: Drupal\blazy\BlazyBase
+    # @todo replace dups with @blazy.libraries at 3.x as the first argument.
+    # @todo enable at 3.x:
+    # arguments: ['@blazy.libraries', '@entity.repository', '@entity_type.manager', '@renderer', '@language_manager']
+    arguments: ['%app.root%', '@entity.repository', '@entity_type.manager', '@module_handler', '@renderer', '@config.factory', '@cache.default', '@language_manager']
+  # @todo enable at 3.x. after refactoring as non-manager alternative.
+  # Was planned since 1.x, removed in 2.x, and never made it till 3.x.
+  # blazy:
+  # class: Drupal\blazy\Blazy
+  # parent: blazy.base
+
+  blazy.manager.base:
+    abstract: true
+    class: Drupal\blazy\BlazyManagerBase
+    parent: blazy.base
+
+  blazy.manager:
+    abstract: false
+    class: Drupal\blazy\BlazyManager
+    parent: blazy.manager.base
+
+  blazy.formatter:
+    class: Drupal\blazy\BlazyFormatter
+    parent: blazy.manager
+
+  blazy.media:
+    class: Drupal\blazy\Media\BlazyMedia
+    arguments: ['@blazy.manager', '@http_client', '@media.oembed.iframe_url_helper']
+
+  blazy.oembed:
+    class: Drupal\blazy\Media\BlazyOEmbed
+    arguments: ['@blazy.media', '@media.oembed.resource_fetcher', '@media.oembed.url_resolver']
+
+  blazy.entity:
+    class: Drupal\blazy\BlazyEntity
+    arguments: ['@blazy.oembed']
+
+  # @todo enable at 3.x when min D9.3:
+  # blazy.libraries:
+  #   class: Drupal\blazy\Asset\Libraries
+  # @todo recheck deprecated at D10: '@request_stack',
+  #   arguments: ['%app.root%', '@cache.default', '@config.factory', '@library.discovery', '@library.libraries_directory_file_finder', '@module_handler', '@current_route_match']
+  # blazy.skin:
+  #   class: Drupal\blazy\Skin\SkinManager
+  #   parent: default_plugin_manager
+  #   arguments: ['@blazy']
+
+  blazy.svg:
+    class: Drupal\blazy\Media\Svg\Svg
+    # @todo arguments: ['@file_system', '@file.repository', '@image.factory', '@logger.factory']
+    arguments: ['@file_system', '@image.factory', '@logger.factory']
+
+  blazy.admin.base:
+    abstract: true
+    class: Drupal\blazy\Form\BlazyAdminBase
+    arguments: ['@entity_display.repository', '@config.typed', '@date.formatter', '@blazy.manager']
+
+  blazy.admin.formatter:
+    class: Drupal\blazy\Form\BlazyAdminFormatter
+    parent: blazy.admin.base
+
+  blazy.admin:
+    class: Drupal\blazy\Form\BlazyAdmin
+    parent: blazy.admin.base
+
+  blazy.csp_subscriber:
+    class: Drupal\blazy\EventSubscriber\CspSubscriber
+    arguments:
+      - '@library.dependency_resolver'
+    tags:
+      - { name: event_subscriber }
+
+  # @todo deprecated at 2.16 for blazy.admin.formatter, and removed at 3.x.
+  blazy.admin.extended:
+    class: Drupal\blazy\Dejavu\BlazyAdminExtended
+    parent: blazy.admin.formatter

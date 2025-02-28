@@ -1,0 +1,18 @@
+entity_print_print_engine.testprintengine:
+  type: mapping
+  label: 'Test Pdf Engine setting'
+  mapping:
+    test_engine_setting:
+      type: string
+      label: 'Test setting'
+    test_engine_suffix:
+      type: string
+      label: 'Test suffix'
+
+entity_print_print_engine.test_word_print_engine:
+  type: mapping
+  label: 'Test WordDoc Engine setting'
+  mapping:
+    test_word_setting:
+      type: string
+      label: 'Test word setting'

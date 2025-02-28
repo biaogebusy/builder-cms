@@ -1,0 +1,39 @@
+entity_print.legacy_view:
+  path: 'entityprint/{export_type}/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\entity_print\Controller\EntityPrintController::viewRedirect'
+    _title: 'Entity Print'
+  requirements:
+    _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
+
+entity_print.view.legacy_debug:
+  path: 'entityprint/{export_type}/{entity_type}/{entity_id}/debug'
+  defaults:
+    _controller: '\Drupal\entity_print\Controller\EntityPrintController::viewRedirectDebug'
+    _title: 'Entity Print Debug'
+  requirements:
+    _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
+
+entity_print.view:
+  path: 'print/{export_type}/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\entity_print\Controller\EntityPrintController::viewPrint'
+    _title: 'Entity Print'
+  requirements:
+    _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
+
+entity_print.view.debug:
+  path: 'print/{export_type}/{entity_type}/{entity_id}/debug'
+  defaults:
+    _controller: '\Drupal\entity_print\Controller\EntityPrintController::viewPrintDebug'
+    _title: 'Entity Print Debug'
+  requirements:
+    _custom_access: '\Drupal\entity_print\Controller\EntityPrintController::checkAccess'
+
+entity_print.settings:
+  path: 'admin/config/content/entityprint'
+  defaults:
+    _form: '\Drupal\entity_print\Form\SettingsForm'
+    _title: 'Entity Print'
+  requirements:
+    _permission: 'administer entity print'

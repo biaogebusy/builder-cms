@@ -1,0 +1,34 @@
+/**
+* @file
+* Styles for formatted output of shs module.
+*/
+
+ul.shs {
+  display: inline-block;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+ul.shs li {
+  float: left;
+  padding: 0 5px 0 0;
+  white-space: nowrap;
+}
+ul.shs li:after {
+  content: '>';
+  margin: 0 0 0 5px;
+}
+ul.shs li:last-of-type {
+  padding-right: 0;
+}
+ul.shs li:last-of-type:after {
+  content: '';
+  margin: 0;
+}
+
+[dir="ltr"] ul.shs {
+  margin-left: 0;
+}
+[dir="rtl"] ul.shs {
+  margin-right: 0;
+}

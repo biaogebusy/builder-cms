@@ -1,0 +1,16 @@
+#
+# Contains default configuration for the Drupal Extension.
+#
+default:
+  extensions:
+    Drupal\DrupalExtension:
+      api_driver: drupal
+      blackbox: ~
+      drupal:
+        drupal_root: 'docroot'
+      drush:
+        alias: self
+      selectors:
+        error_message_selector: '.messages [role="alert"]'
+        warning_message_selector: .messages--warning
+        login_form_selector: '#user-login-form'

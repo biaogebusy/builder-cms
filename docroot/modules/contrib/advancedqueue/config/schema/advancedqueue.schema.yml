@@ -1,0 +1,62 @@
+advancedqueue.advancedqueue_queue.*:
+  type: config_entity
+  label: 'Queue'
+  mapping:
+    id:
+      type: string
+      label: 'Machine-readable name'
+    label:
+      type: label
+      label: 'Label'
+    backend:
+      type: string
+      label: 'Backend'
+    backend_configuration:
+      type: advancedqueue.backend.[%parent.plugin]
+    processor:
+      type: string
+      label: 'Processor'
+    processing_time:
+      type: integer
+      label: 'Processing time'
+    locked:
+      type: boolean
+      label: 'Locked'
+    threshold:
+      type: mapping
+      mapping:
+        type:
+          type: integer
+          label: 'Threshold type'
+        limit:
+          type: integer
+          label: 'Threshold limit'
+        state:
+          type: string
+          label: 'Threshold state'
+
+advancedqueue.backend.*:
+  type: advancedqueue_backend_configuration
+
+advancedqueue_backend_configuration:
+  type: mapping
+  mapping:
+    lease_time:
+      type: integer
+      label: 'Lease time'
+
+views.field.advancedqueue_json:
+  type: views_field
+  label: 'Json'
+  mapping:
+    key:
+      type: string
+      label: 'key'
+
+views.field.advancedqueue_job_state:
+  type: views_field
+  label: 'Job state'
+  mapping:
+    icon:
+      type: boolean
+      label: 'Icon'

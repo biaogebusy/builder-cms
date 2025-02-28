@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Address display module.
+ *
+ * @DCG
+ * This file is no longer required in Drupal 8.
+ * @see https://www.drupal.org/node/2217931
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function address_display_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.address_display':
+      $text = file_get_contents(dirname(__FILE__) . '/README.txt');
+      if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
+        return '<pre>' . $text . '</pre>';
+      }
+      else {
+        // Use the Markdown filter to render the README.
+        $filter_manager = \Drupal::service('plugin.manager.filter');
+        $settings = \Drupal::configFactory()->get('markdown.settings')->getRawData();
+        $config = ['settings' => $settings];
+        $filter = $filter_manager->createInstance('markdown', $config);
+        return $filter->process($text, 'en');
+      }
+  }
+  return NULL;
+}

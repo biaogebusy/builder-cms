@@ -1,0 +1,63 @@
+# Path to Ace library is defined using hook_library_info_alter().
+# See ace_editor.module
+primary:
+  version: VERSION
+  js:
+    js/jsoneditor.js: {}
+    js/editor.js: {}
+  css:
+    component:
+      css/jsoneditor.css: {}
+      css/style.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+formatter:
+  version: VERSION
+  js:
+    js/jsoneditor.js: {}
+    js/formatter.js: {}
+  css:
+    component:
+      css/jsoneditor.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+filter:
+  version: VERSION
+  js:
+    js/filter.js: {}
+
+  css:
+    component:
+      styles/editor.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+panels_ipe:
+  version: VERSION
+  js:
+    js/tooltip-min.js: { minified: true }
+    js/panels_ipe/panels_ipe.js: {}
+    js/panels_ipe/views/BlockPicker.js: {}
+  css:
+    component:
+      css/panels_ipe.css: {}
+  dependencies:
+    - panels_ipe/panels_ipe
+
+content_lock:
+  version: VERSION
+  js:
+    js/content_lock.js: {}
+  css:
+    component:
+      css/picl.css: {}
+  dependencies:
+    - panelizer/panels_ipe

@@ -1,0 +1,14 @@
+{
+  "name": "drupal/entity",
+  "description": "Provides expanded entity APIs, which will be moved to Drupal core one day.",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/entity",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/entity",
+    "source": "https://git.drupalcode.org/project/entity"
+  },
+  "require": {
+    "drupal/core": "^9.2|^10.0"
+  }
+}

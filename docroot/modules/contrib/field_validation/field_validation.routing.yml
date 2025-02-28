@@ -1,0 +1,55 @@
+entity.field_validation_rule_set.collection:
+  path: '/admin/structure/field_validation'
+  defaults:
+    _entity_list: 'field_validation_rule_set'
+    _title: 'Field validation rule set'
+  requirements:
+    _permission: 'administer field validation rule set'
+
+field_validation.field_validation_rule_set_add:
+  path: '/admin/structure/field_validation/add'
+  defaults:
+    _entity_form: field_validation_rule_set.add
+    _title: 'Add field validation rule set'
+  requirements:
+    _permission: 'administer field validation rule set'
+
+entity.field_validation_rule_set.edit_form:
+  path: '/admin/structure/field_validation/manage/{field_validation_rule_set}'
+  defaults:
+    _entity_form: field_validation_rule_set.edit
+    _title: 'Edit field validation rule set'
+  requirements:
+    _permission: 'administer field validation rule set'
+
+entity.field_validation_rule_set.delete_form:
+  path: '/admin/structure/field_validation/manage/{field_validation_rule_set}/delete'
+  defaults:
+    _entity_form: 'field_validation_rule_set.delete'
+    _title: 'Delete'
+  requirements:
+    _permission: 'administer field validation rule set'
+
+field_validation.field_validation_rule_add_form:
+  path: '/admin/structure/field_validation/manage/{field_validation_rule_set}/add/{field_validation_rule}'
+  defaults:
+    _form: '\Drupal\field_validation\Form\FieldValidationRuleAddForm'
+    _title: 'Add rule'
+  requirements:
+    _permission: 'administer field validation rule set'
+
+field_validation.field_validation_rule_edit_form:
+  path: '/admin/structure/field_validation/manage/{field_validation_rule_set}/rules/{field_validation_rule}'
+  defaults:
+    _form: '\Drupal\field_validation\Form\FieldValidationRuleEditForm'
+    _title: 'Edit rule'
+  requirements:
+    _permission: 'administer field validation rule set'
+
+field_validation.field_validation_rule_delete:
+  path: '/admin/structure/field_validation/manage/{field_validation_rule_set}/rules/{field_validation_rule}/delete'
+  defaults:
+    _form: '\Drupal\field_validation\Form\FieldValidationRuleDeleteForm'
+    _title: 'Delete rule'
+  requirements:
+    _permission: 'administer field validation rule set'

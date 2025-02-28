@@ -1,0 +1,28 @@
+diff --git a/user_default_page.module b/user_default_page.module
+index e796e3c..e604654 100644
+--- a/user_default_page.module
++++ b/user_default_page.module
+@@ -45,6 +45,11 @@ function user_default_page_help($route_name, RouteMatchInterface $route_match) {
+  * Implements hook_user_logout().
+  */
+ function user_default_page_user_logout($account) {
++  // Prevent redirection for other formats, like JSON
++  if (\Drupal::request()->getRequestFormat() !== 'html') {
++    return;
++  }
++
+   // Load all entities belongs to "user_default_page_config_entity".
+   $entities_load = \Drupal::entityTypeManager()->getStorage('user_default_page_config_entity')->loadMultiple();
+   // Get User Role(s).
+@@ -79,6 +84,11 @@ function user_default_page_user_logout($account) {
+  * Implements hook_user_login().
+  */
+ function user_default_page_user_login($account) {
++  // Prevent redirection for other formats, like JSON
++  if (\Drupal::request()->getRequestFormat() !== 'html') {
++    return;
++  }
++
+   // Load all entities belongs to "user_default_page_config_entity".
+   $entities_load = \Drupal::entityTypeManager()->getStorage('user_default_page_config_entity')->loadMultiple();
+   // Get User Role(s).

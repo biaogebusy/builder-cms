@@ -1,0 +1,10 @@
+name: 'Pendo'
+type: module
+description: 'Provides integration with Pendo software.'
+core_version_requirement: '^8.8 || ^9'
+package: 'Web Services'
+
+# Information added by Drupal.org packaging script on 2020-03-30
+version: '8.x-1.0-alpha4'
+project: 'pendo'
+datestamp: 1585570341

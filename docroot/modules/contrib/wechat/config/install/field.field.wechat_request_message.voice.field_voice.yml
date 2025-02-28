@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.wechat_request_message.field_voice
+    - wechat.request_message_type.voice
+  module:
+    - file
+id: wechat_request_message.voice.field_voice
+field_name: field_voice
+entity_type: wechat_request_message
+bundle: voice
+label: Voice
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  file_directory: 'wechat/request/voices/[date:custom:Y]-[date:custom:m]'
+  file_extensions: 'amr mp3'
+  max_filesize: ''
+  description_field: false
+  handler: 'default:file'
+  handler_settings: {  }
+field_type: file

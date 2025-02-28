@@ -1,0 +1,9 @@
+# Schema for the configuration files of the memcache_admin module.
+
+memcache_admin.settings:
+  type: config_object
+  label: 'Memcache Admin settings'
+  mapping:
+    show_memcache_statistics:
+      type: boolean
+      label: 'Show memcache statistics at the bottom of each page'

@@ -1,0 +1,5 @@
+require_login.settings:
+  title: "Login requirements"
+  base_route_name: require_login.settings
+  names:
+    - require_login.settings

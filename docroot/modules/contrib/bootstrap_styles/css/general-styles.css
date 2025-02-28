@@ -1,0 +1,94 @@
+@-webkit-keyframes hover-pop {
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes hover-pop {
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+#drupal-off-canvas .form-type-checkbox,
+#drupal-off-canvas .form-radios > div,
+#layout-builder-modal .form-type-checkbox,
+#layout-builder-modal .form-radios > div {
+  padding: 0;
+  margin: 0;
+  width: auto;
+}
+
+#drupal-off-canvas .form-control,
+#layout-builder-modal .form-control {
+  border: 0;
+}
+
+#drupal-off-canvas .custom-control-input,
+#layout-builder-modal .custom-control-input {
+  opacity: 1;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#drupal-off-canvas .bs_flex,
+#layout-builder-modal .bs_flex {
+  display: flex;
+}
+
+#drupal-off-canvas .bs-justify-content-between,
+#layout-builder-modal .bs-justify-content-between {
+  justify-content: space-between;
+}
+
+#drupal-off-canvas .bs_row,
+#layout-builder-modal .bs_row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
+}
+
+#drupal-off-canvas .bs_col,
+#layout-builder-modal .bs_col {
+  -ms-flex-preferred-size: 0;
+  flex-basis: 0;
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+#drupal-off-canvas .bs_col--50,
+#layout-builder-modal .bs_col--50 {
+  flex: 50%;
+  max-width: 50%;
+}
+
+#drupal-off-canvas .bs_col--100,
+#layout-builder-modal .bs_col--100 {
+  flex: 100%;
+  max-width: 100%;
+}
+
+#drupal-off-canvas .bs-group-title,
+#layout-builder-modal .bs-group-title {
+  margin-left: 15px;
+  display: flex;
+  align-items: center;
+}
+
+#drupal-off-canvas .sr-only,
+#layout-builder-modal .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

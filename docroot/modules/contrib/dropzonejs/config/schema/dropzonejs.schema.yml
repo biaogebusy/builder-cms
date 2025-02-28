@@ -1,0 +1,13 @@
+dropzonejs.settings:
+  type: config_object
+  label: 'DropzoneJS settings'
+  mapping:
+    tmp_upload_scheme:
+      type: string
+      label: 'Upload scheme'
+    filename_transliteration:
+      type: boolean
+      label: 'Transliterate names of uploaded files'
+    upload_timeout_ms:
+      type: integer
+      label: 'Upload timeout'

@@ -1,0 +1,7 @@
+# Recently read type menu items definition
+entity.recently_read_type.collection:
+  title: 'Recently read config'
+  route_name: entity.recently_read_type.collection
+  description: 'Tracks the history of recently read entities by each user.'
+  parent: system.admin_config_system
+  weight: 99

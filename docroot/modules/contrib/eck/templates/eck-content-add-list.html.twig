@@ -1,0 +1,46 @@
+{#
+/**
+ * @file
+ * Default theme implementation to list entity types available for adding content.
+ *
+ * Available variables:
+ * - types: A list of a specific entity type bundles , each with the following
+ *   properties:
+ *   - type: The entity bundle label.
+ *   - add_link: Link to create a piece of content of this type.
+ *   - description: Description of this type of content.
+ * - entity_type: The entity type
+ *   - id: The entity type id
+ *   - label: The entity type label
+ *
+ * @see template_preprocess_eck_content_add_list()
+ *
+ * @ingroup themeable
+ */
+#}
+{% if types is not empty %}
+    <ul class="admin-list">
+        {% for type in types %}
+            <li class="clearfix">
+                <a href="{{ type.add_link }}">
+            <span class="label">
+              {{ type.type }}
+            </span>
+
+                    <div class="description">
+                        {{ type.description }}
+                    </div>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>
+        {% set create_bundle = path('eck.entity.' ~ entity_type.id ~ '_type.add') %}
+        {% trans %}
+        You have not created any bundles for this type yet. Go to the <a
+                href="{{ create_bundle }}"> bundle creation page</a> to add a
+        new bundle.
+        {% endtrans %}
+    </p>
+{% endif %}

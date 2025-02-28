@@ -1,0 +1,10 @@
+page_load_progress:
+  version: VERSION
+  js:
+    js/page_load_progress.js: {}
+  css:
+    theme:
+      css/page_load_progress.theme.css : {}
+  dependencies:
+    - core/jquery
+    - core/drupal

@@ -1,0 +1,38 @@
+field.field.*.*.*.third_party.unique_content_field_validation:
+  type: mapping
+  label: Unique content field third party settings
+  mapping:
+    unique:
+      type: boolean
+      label: 'Set if field is unique ot not'
+    unique_text:
+      type: string
+      label: 'Unique text validation message'
+    unique_multivalue:
+      type: boolean
+      label: 'Set if field allows same values more once'
+    unique_multivalue_text:
+      type: string
+      label: 'Same value field text validation message'
+
+node.type.*.third_party.unique_content_field_validation:
+  type: mapping
+  label: 'Per-content type unique entity title settings'
+  mapping:
+    unique:
+      type: boolean
+      label: 'Set if title is unique ot not'
+    unique_text:
+      type: string
+      label: 'Unique text validation message'
+
+taxonomy.vocabulary.*.third_party.unique_content_field_validation:
+  type: mapping
+  label: 'Per-vocabulary type unique entity name setting'
+  mapping:
+    unique:
+      type: boolean
+      label: 'Set if name is unique ot not'
+    unique_text:
+      type: string
+      label: 'Unique text validation message'

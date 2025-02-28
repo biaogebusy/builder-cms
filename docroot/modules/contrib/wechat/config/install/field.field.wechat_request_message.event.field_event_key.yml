@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.wechat_request_message.field_event_key
+    - wechat.request_message_type.event
+id: wechat_request_message.event.field_event_key
+field_name: field_event_key
+entity_type: wechat_request_message
+bundle: event
+label: 'Event Key'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

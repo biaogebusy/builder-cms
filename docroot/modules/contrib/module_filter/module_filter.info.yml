@@ -1,0 +1,14 @@
+name: Module Filter
+type: module
+description: Filter the modules list.
+package: Administration
+core_version_requirement: ^9 || ^10
+configure: module_filter.settings
+dependencies:
+  - drupal:system
+  - jquery_ui_autocomplete:jquery_ui_autocomplete
+
+# Information added by Drupal.org packaging script on 2024-01-22
+version: '4.1.1'
+project: 'module_filter'
+datestamp: 1705957435

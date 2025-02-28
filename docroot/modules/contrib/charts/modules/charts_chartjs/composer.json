@@ -1,0 +1,34 @@
+{
+    "name": "drupal/charts_chartjs",
+    "description": "Charts module integration with Chart.js Charts.",
+    "type": "drupal-module",
+    "homepage": "http://drupal.org/project/charts",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/charts"
+    },
+    "license": "GPL-2.0+",
+    "repositories": {
+        "asset-packagist": {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    },
+    "require": {
+        "oomphinc/composer-installers-extender": "^2",
+        "npm-asset/chart.js": "^4.4",
+        "npm-asset/chartjs-adapter-date-fns": "^3.0"
+    },
+    "extra": {
+        "installer-types": [
+            "npm-asset"
+        ],
+        "installer-paths": {
+            "web/libraries/chartjs": [
+                "npm-asset/chart.js"
+            ],
+            "web/libraries/chartjs-adapter-date-fns": [
+                "npm-asset/chartjs-adapter-date-fns"
+            ]
+        }
+    }
+}

@@ -1,0 +1,79 @@
+<?php
+
+declare(strict_types = 1);
+
+/**
+ * @file
+ * Install, update and uninstall functions for SMS Framework.
+ */
+
+use Drupal\sms\Direction;
+
+/**
+ * Implements hook_requirements().
+ */
+function sms_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    $base_query = \Drupal::entityTypeManager()
+      ->getStorage('sms')
+      ->getQuery();
+
+    $query = clone $base_query;
+    $count = $query
+      ->condition('queued', 0)
+      ->condition('direction', Direction::INCOMING)
+      ->condition('processed', NULL, 'IS NULL')
+      ->count()
+      ->execute();
+
+    $requirements['sms_queue_incoming'] = [
+      'title' => t('SMS incoming queue'),
+      'severity' => REQUIREMENT_INFO,
+      'value' => \Drupal::translation()->formatPlural(
+        $count,
+        'There are @count messages in the incoming queue.',
+        'There are @count messages in the incoming queue.'
+      ),
+    ];
+
+    $query = clone $base_query;
+    $count = $query
+      ->condition('queued', 0)
+      ->condition('direction', Direction::OUTGOING)
+      ->condition('processed', NULL, 'IS NULL')
+      ->count()
+      ->execute();
+
+    $requirements['sms_queue_outgoing'] = [
+      'title' => t('SMS outgoing queue'),
+      'severity' => REQUIREMENT_INFO,
+      'value' => \Drupal::translation()->formatPlural(
+        $count,
+        'There are @count messages in the outgoing queue.',
+        'There are @count messages in the outgoing queue.'
+      ),
+    ];
+  }
+
+  return $requirements;
+}
+
+/**
+ * Install the "sms_result" and "sms_report" entity types.
+ */
+function sms_update_8101() {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  if ($update_manager->getEntityType('sms')) {
+    // Add storage definitions for the sms_result and sms_report entities.
+    if (!$update_manager->getEntityType('sms_result')) {
+      $update_manager->installEntityType($entity_type_manager->getDefinition('sms_result'));
+    }
+    if (!$update_manager->getEntityType('sms_report')) {
+      $update_manager->installEntityType($entity_type_manager->getDefinition('sms_report'));
+    }
+  }
+}

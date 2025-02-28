@@ -1,0 +1,66 @@
+include:
+  # This remote project centralize our CI "golden path" https://docs.gitlab.com/ee/ci/yaml/#includefile
+  remote: 'https://gitlab.com/drupalspoons/composer-plugin/-/raw/master/templates/.gitlab-ci.yml'
+
+variables:
+  PHP_TAG: "8.1"
+  # Disable default phpunit job in favor of the d9/10 variants below.
+  DCI_SKIP_PHPUNIT: 1
+  DCI_SKIP_PHPCS: 1
+  REDIS_HOST: redis
+
+composer:
+  parallel:
+    matrix:
+      - DRUPAL_CORE_CONSTRAINT: "^9"
+        PHP_TAG: "7.4"
+      - DRUPAL_CORE_CONSTRAINT: "^10"
+        PHP_TAG: "8.1"
+  script:
+    # Symlinks the project into Drupal codebase, builds composer.spoons.json, and `composer install`.
+    # Override with you own script if your needs are vastly unusual.
+    - echo -e "\e[0Ksection_start:`date +%s`:my_2_section[collapsed=true]\r\e[0KInstall Dependencies"
+    - bash <(curl -s https://gitlab.com/drupalspoons/composer-plugin/-/raw/master/bin/setup)
+    - composer require predis/predis
+    - echo -e "\e[0Ksection_end:`date +%s`:my_2_section\r\e[0K"
+
+.phpunit-local:
+  variables:
+    DCI_SKIP_PHPUNIT: 0
+  parallel:
+    matrix:
+      - REDIS_INTERFACE:
+          - PhpRedis
+          - Predis
+          - Relay
+  services:
+    - name: wodby/mariadb:$MARIADB_TAG
+      alias: mariadb
+    - name: redis:6
+  before_script:
+    - sudo sed -i 's/zend.assertions = -1/zend.assertions = 1/g' /usr/local/etc/php/php.ini
+    - >
+      if [ "$REDIS_INTERFACE" == "Relay" ]; then
+        sudo curl -sSLf -o /usr/local/bin/install-php-extensions https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
+        sudo chmod +x /usr/local/bin/install-php-extensions
+        sudo PHPIZE_DEPS="autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c" PHP_INI_DIR="/usr/local/etc/php" install-php-extensions relay
+      fi
+
+phpunit-d9:
+  variables:
+    PHP_TAG: "7.4"
+  dependencies:
+     # This syntax comes from https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734/diffs
+     - "composer: [^9, 7.4]"
+  extends:
+    - .phpunit-base
+    - .phpunit-local
+
+phpunit-d10:
+  variables:
+    PHP_TAG: "8.1"
+  dependencies:
+    - "composer: [^10, 8.1]"
+  extends:
+    - .phpunit-base
+    - .phpunit-local

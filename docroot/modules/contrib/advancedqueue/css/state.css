@@ -1,0 +1,29 @@
+.advancedqueue-status-queued,
+.advancedqueue-status-processing,
+.advancedqueue-status-success,
+.advancedqueue-status-failure {
+  display: inline-block;
+  height: 12px;
+  line-height: 12px;
+  padding-left: 16px;
+  width: 6em;
+  background-position: 0 50%;
+  background-repeat: no-repeat;
+}
+
+.advancedqueue-status-queued {
+  background-image: url('../images/queued.gif');
+}
+.advancedqueue-status-processing {
+  background-image: url('../images/processing.gif');
+}
+.advancedqueue-status-success {
+  background-image: url('../images/processed.png');
+  color: #336633;
+  font-weight: bold;
+}
+.advancedqueue-status-failure {
+  background-image: url('../images/failed.png');
+  color: #ff0000;
+  font-weight: bold;
+}

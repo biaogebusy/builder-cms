@@ -1,0 +1,75 @@
+@mixin flexbox() {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
+
+@mixin flex-wrap($wrap) {
+  -webkit-flex-wrap: $wrap;
+     -moz-flex-wrap: $wrap;
+      -ms-flex-wrap: $wrap;
+          flex-wrap: $wrap;
+}
+
+@mixin justify-content($justify) {
+  -webkit-justify-content: $justify;
+     -moz-justify-content: $justify;
+      -ms-justify-content: $justify;
+          justify-content: $justify;
+            -ms-flex-pack: $justify;
+}
+
+#private-message-page {
+  position:relative;
+  .private-message-thread-full {
+    .private-message-recipients {
+      @include flexbox();
+      @include flex-wrap(wrap);
+      @include justify-content(flex-start);
+      margin:0 -5px;
+      span,
+      article {
+        padding:0 5px;
+      }
+    }
+
+    .field--name-private-messages {
+      .private-message {
+        border: solid #ccc 1px;
+        margin-top:-1px;
+        padding:5px;
+        .field--name-created {
+          float:right;
+        }
+      }
+
+      #load-previous-messages-button-wrapper {
+        border:solid #ccc 1px;
+        &.load-previous-position-before {
+          border-bottom:none;
+        }
+        &.load-previous-position-after {
+          border-top:none;
+        }
+        a {
+          display:block;
+          text-align:center;
+          font-size:0.8em;
+          border-bottom:none;
+        }
+      }
+    }
+  }
+
+  #private-message-thread-dimmer {
+    position:absolute;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+    background-color:#000;
+    display:none;
+  }
+}

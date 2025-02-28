@@ -1,0 +1,13 @@
+{
+  "name": "drupal/views_data_export",
+  "description": "Plugin to export views data into various file formats.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "require": {
+    "drupal/csv_serialization": "~1.4 || ~2.0 || ~3 || ~4"
+  },
+  "require-dev": {
+    "drupal/search_api": "~1.12",
+    "drupal/xls_serialization": "~1.0"
+  }
+}

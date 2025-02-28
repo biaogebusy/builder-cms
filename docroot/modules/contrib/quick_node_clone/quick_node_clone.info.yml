@@ -1,0 +1,14 @@
+name: Quick Node Clone
+type: module
+description: 'Quickly clone a node with regular fields.'
+core_version_requirement: ^8.8 || ^9 || ^10
+configure: quick_node_clone.settingsform
+dependencies:
+  - drupal:node
+test_dependencies:
+  - paragraphs:paragraphs
+
+# Information added by Drupal.org packaging script on 2024-02-13
+version: '8.x-1.18'
+project: 'quick_node_clone'
+datestamp: 1707833858

@@ -1,0 +1,6 @@
+data_text_indent:
+  js:
+    js/textindent.js: {}
+  dependencies:
+    - core/drupalSettings
+    - core/jquery.once

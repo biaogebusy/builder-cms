@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * Installation actions for Blazy.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function blazy_requirements($phase) {
+  $requirements = [];
+
+  if ($phase === 'update') {
+
+    // If updating from Blazy 1.x to 2.x, Media module may not being installed
+    // and as it is now a dependency we need to let the administrator know it
+    // will be installed.
+    if (!blazy()->moduleExists('media')) {
+      $requirements['blazy_media'] = [
+        'title'       => t('Blazy requires Media core module'),
+        'description' => t('Blazy now requires core Media module, which is currently not installed. By continuing the update the module will be installed.'),
+        'severity'    => REQUIREMENT_WARNING,
+      ];
+    }
+  }
+  elseif ($phase === 'runtime') {
+    $enabled = blazy()->config('use_theme_blazy');
+    $enabled = !empty($enabled);
+    $requirements['blazy_theme'] = [
+      'title'       => t('Blazy'),
+      'description' => t('Blazy 3.x replaces sub-modules theme_ITEM() contents with theme_blazy(). Keep "Use theme_blazy()" enabled at <a href=":url">Blazy UI</a> to pass blazy:3.x.', [
+        ':url' => '/admin/config/media/blazy',
+      ]),
+      'severity'    => $enabled ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'value'       => $enabled ? t('Enabled: Use theme_blazy()') : t('Not enabled: Use theme_blazy()'),
+    ];
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function blazy_uninstall() {
+  blazy_filter_cleanup('blazy');
+}
+
+/**
+ * Added new services blazy.oembed and blazy.entity.
+ */
+function blazy_update_8201() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Added a new argument date.formatter to blazy.admin.base service.
+ */
+function blazy_update_8202() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Added a new argument @entity.repository to blazy.manager.base service.
+ */
+function blazy_update_8203() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Added new classes: BlazyUtil, BlazyBreakpoint to declutter Blazy.
+ */
+function blazy_update_8204() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Removed deprecated or no longer in use classes, settings, etc.
+ */
+function blazy_update_8205() {
+  $config = \Drupal::configFactory()->getEditable('blazy.settings');
+  foreach (['native', 'unbreakpoints'] as $key) {
+    $config->clear($key);
+  }
+  $config->save(TRUE);
+}
+
+/**
+ * Install core Media module if not already enabled.
+ */
+function blazy_update_8206() {
+  if (!\Drupal::moduleHandler()->moduleExists('media')) {
+    \Drupal::service('module_installer')->install(['media']);
+    return t('Blazy has installed core "Media" module.');
+  }
+}
+
+/**
+ * Added the language manager service as per #3214002.
+ */
+function blazy_update_8207() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Removed deprecated native settings as per #3213258.
+ */
+function blazy_update_8208() {
+  $config = \Drupal::configFactory()->getEditable('blazy.settings');
+  $config->clear('native');
+  $config->save(TRUE);
+}
+
+/**
+ * Matching a more relevant module version.
+ */
+function blazy_update_8217() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Matching a more relevant module version.
+ */
+function blazy_update_8223() {
+  // Do nothing to clear cache.
+}

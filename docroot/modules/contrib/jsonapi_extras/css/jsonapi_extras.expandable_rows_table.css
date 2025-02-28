@@ -1,0 +1,33 @@
+.advanced-opts {
+  display: none;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.advanced-opts td:nth-child(2) {
+  font-weight: bold;
+}
+
+.toggle-expanded span {
+  display: inline-block;
+  color: #000;
+}
+
+.toggle-expanded {
+  cursor: pointer;
+}
+
+.toggle-expanded span:hover {
+  text-decoration: none;
+}
+
+.toggle-expanded span::before {
+  margin-right: 0.3em;
+}
+
+.toggle-expanded.content-collapsed span::before {
+  content: "▸";
+}
+
+.toggle-expanded.content-expanded span::before {
+  content: "▾";
+}

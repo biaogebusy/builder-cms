@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - serialization
+    - user
+    - webform_rest
+id: webform_rest_elements
+plugin_id: webform_rest_elements
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - hal_json
+    - json
+    - xml
+  authentication:
+    - cookie

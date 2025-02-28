@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * gin.theme
+ */
+
+/**
+ * Load include files which contain additional theming logic.
+ */
+foreach (glob(\Drupal::service('extension.list.theme')->getPath('gin') . '/includes/*.theme') as $file) {
+  include $file;
+}
+
+/**
+ * Set Gin CSS on top of all other CSS files.
+ */
+function gin_css_alter(&$css, $assets) {
+  // Use anything greater than 100 to have it load after the theme
+  // as CSS_AGGREGATE_THEME is set to 100.
+  // Let's be on the safe side and assign a high number to it.
+  $base_css = \Drupal::service('extension.list.theme')->getPath('gin') . '/dist/css/base/gin.css';
+
+  if (isset($css[$base_css])) {
+    $css[$base_css]['group'] = 200;
+  }
+}

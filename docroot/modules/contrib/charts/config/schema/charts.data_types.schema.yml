@@ -1,0 +1,216 @@
+# Basic data types for charts.
+
+charts_dimensions:
+  type: mapping
+  mapping:
+    width:
+      type: string
+      label: 'Width'
+    width_units:
+      type: string
+      label: 'Width units'
+    height:
+      type: string
+      label: 'Height'
+    height_units:
+      type: string
+      label: 'Height units'
+
+charts_gauge:
+  type: mapping
+  mapping:
+    max:
+      type: string
+      label: 'Gauge maximum value'
+    min:
+      type: string
+      label: 'Gauge minimum value'
+    green_from:
+      type: string
+      label: 'Green minimum value'
+    green_to:
+      type: string
+      label: 'Green maximum value'
+    yellow_from:
+      type: string
+      label: 'Yellow minimum value'
+    yellow_to:
+      type: string
+      label: 'Yellow maximum value'
+    red_from:
+      type: string
+      label: 'Red minimum value'
+    red_to:
+      type: string
+      label: 'Red maximum value'
+
+charts_display:
+  type: mapping
+  mapping:
+    title:
+      type: label
+      label: 'Chart title'
+    title_position:
+      type: string
+      label: 'Title position'
+    subtitle:
+      type: string
+      label: 'Chart subtitle'
+    data_labels:
+      type: boolean
+      label: 'Enable data labels'
+    data_markers:
+      type: boolean
+      label: 'Enable data markers'
+    legend:
+      type: boolean
+      label: 'Legend'
+    legend_position:
+      type: string
+      label: 'Legend position'
+    background:
+      type: string
+      label: 'Background'
+    three_dimensional:
+      type: integer
+      label: 'Make chart three-dimensional (3D)'
+    colors:
+      type: sequence
+      label: 'Chart colors'
+      sequence:
+        type: string
+        label: 'Hexadecimal color'
+    polar:
+      type: integer
+      label: 'Transform cartesian charts into the polar coordinate system'
+    tooltips:
+      type: boolean
+      label: 'Tooltips'
+    tooltips_use_html:
+      type: boolean
+      label: 'Tooltips Use HTML'
+    dimensions:
+      type: charts_dimensions
+      label: 'Dimensions'
+    gauge:
+      type: charts_gauge
+      label: 'Gauge'
+    color_changer:
+      type: boolean
+      label: 'Enable color changer widget'
+
+charts_xaxis:
+  type: mapping
+  mapping:
+    title:
+      type: label
+      label: 'X axis title'
+    labels_rotation:
+      type: string
+      label: 'X axis labels rotation'
+
+charts_yaxis:
+  type: mapping
+  mapping:
+    title:
+      type: label
+      label: 'Y axis title'
+    min:
+      type: string
+      label: 'Y axis min value'
+    max:
+      type: string
+      label: 'Y axis max value'
+    prefix:
+      type: label
+      label: 'Y axis prefix'
+    suffix:
+      type: label
+      label: 'Y axis suffix'
+    decimal_count:
+      type: string
+      label: 'Y axis decimal count'
+    labels_rotation:
+      type: string
+      label: 'Y axis labels rotation'
+
+charts_views_field_data_provider:
+  type: mapping
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    color:
+      type: string
+      label: Color
+    weight:
+      type: integer
+      label: 'Weight'
+
+charts_views_field_entity_grouping_selected_method_colors:
+  type: mapping
+  mapping:
+    color:
+      type: string
+      label: Color
+
+charts_config:
+  type: mapping
+  mapping:
+    library:
+      type: string
+      label: 'Charting library'
+    type:
+      type: string
+      label: 'Chart type'
+    fields:
+      type: mapping
+      label: 'Charts fields'
+      mapping:
+        label:
+          type: string
+          label: 'Label field'
+        stacking:
+          type: boolean
+          label: Stacking
+        data_providers:
+          type: sequence
+          label: 'Data providers'
+          sequence:
+            type: charts_views_field_data_provider
+        entity_grouping:
+          type: mapping
+          label: 'Entity grouping settings'
+          mapping:
+            color_selection_method:
+              type: string
+              label: 'Color selection method'
+            selected_method:
+              type: mapping
+              label: 'Selected method'
+              mapping:
+                color_field_name:
+                  type: string
+                  label: 'Color field name'
+                colors:
+                  type: sequence
+                  label: 'Colors'
+                  sequence:
+                    type: charts_views_field_entity_grouping_selected_method_colors
+    display:
+      type: charts_display
+      label: 'Display'
+    xaxis:
+      type: charts_yaxis
+      label: 'X axis Display'
+    yaxis:
+      type: charts_yaxis
+      label: 'Y axis Display'
+    library_config:
+      type: charts.settings.library_plugin.[%parent.library]
+
+charts.settings.library_plugin.*:
+  type: charts_settings_library_plugin
+
+charts_settings_library_plugin:
+  type: mapping

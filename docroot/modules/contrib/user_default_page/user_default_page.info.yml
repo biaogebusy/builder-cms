@@ -1,0 +1,13 @@
+name: User Default Page
+type: module
+description: Customize the destination that a user is redirected to after logging in or logged out.
+core_version_requirement: ^9.2 || ^10
+package: User
+dependencies:
+  - drupal:user
+configure: user_default_page.action
+
+# Information added by Drupal.org packaging script on 2022-08-27
+version: '9.0.1'
+project: 'user_default_page'
+datestamp: 1661635924

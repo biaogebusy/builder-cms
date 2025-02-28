@@ -1,0 +1,20 @@
+active_hours:
+  status: false
+  ranges: []
+account_registration:
+  unrecognized_sender:
+    status: false
+    reply:
+      status: false
+      message: 'Hi, your [site:name] account is ready. Your username is [user:account-name] your password is [user:password].'
+  incoming_pattern:
+    status: false
+    incoming_messages:
+      - |-
+        E [email]
+        U [username]
+    send_activation_email: true
+    reply:
+      status: false
+      message: 'Hi [user:account-name], you will receive an activation email shortly - [site:name]'
+      message_failure: 'There was a problem creating your account: [error]'

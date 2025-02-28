@@ -1,0 +1,41 @@
+uuid: a7536fb3-839e-4766-87fc-0f1c0772dc34
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.unformatted_formatter
+    - field.field.node.page.field_decimal
+    - field.field.node.page.field_float
+    - field.field.node.page.field_integer
+    - node.type.page
+  module:
+    - range
+id: node.page.unformatted_formatter
+targetEntityType: node
+bundle: page
+mode: unformatted_formatter
+content:
+  field_decimal:
+    label: above
+    weight: 0
+    type: range_unformatted
+    settings:
+      range_separator: '-'
+    third_party_settings: {  }
+    region: content
+  field_float:
+    label: above
+    weight: 1
+    type: range_unformatted
+    settings:
+      range_separator: '-'
+    third_party_settings: {  }
+    region: content
+  field_integer:
+    label: above
+    weight: 2
+    type: range_unformatted
+    settings:
+      range_separator: '-'
+    third_party_settings: {  }
+    region: content
+hidden: {  }

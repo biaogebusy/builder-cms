@@ -1,0 +1,11 @@
+name: Field Name Prefix Remove
+type: module
+description: Removes field_ prefixes from automatically being created by the Field UI.
+package: Custom
+core: 8.x
+core_version_requirement: ^8 || ^9
+
+# Information added by Drupal.org packaging script on 2020-09-12
+version: '8.x-1.0'
+project: 'field_name_prefix_remove'
+datestamp: 1599944444

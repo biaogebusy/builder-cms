@@ -1,0 +1,13 @@
+/**
+ * @file
+ * Admin styling.
+ */
+
+.form-type-commerce-price .form-type-commerce-number,
+.form-type-commerce-price .form-type-select {
+  display: inline;
+}
+
+.form-type-commerce-price .form-type-select select {
+  padding-bottom: 0.4em;
+}

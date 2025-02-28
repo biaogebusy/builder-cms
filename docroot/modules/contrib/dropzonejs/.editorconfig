@@ -1,0 +1,5 @@
+# @see http://editorconfig.org/
+
+[composer.libraries.json]
+indent_size = 4
+indent_style = space

@@ -1,0 +1,7 @@
+menu_breadcrumb.settings:
+  path: '/admin/config/user-interface/menu-breadcrumb'
+  defaults:
+    _title: 'Menu Breadcrumb'
+    _form: '\Drupal\menu_breadcrumb\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

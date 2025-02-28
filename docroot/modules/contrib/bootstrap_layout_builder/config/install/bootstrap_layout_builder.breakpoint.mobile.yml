@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+id: mobile
+label: Mobile
+base_class: col
+weight: -8

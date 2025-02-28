@@ -1,0 +1,6 @@
+composer.lock
+vendor
+*.orig
+*.rej
+*.patch
+.idea

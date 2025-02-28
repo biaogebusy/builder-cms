@@ -1,0 +1,11 @@
+name: Fivestar widget provider
+type: module
+description: 'Support module for testing hook_fivestar_widgets().'
+package: Testing
+dependencies:
+  - fivestar:fivestar
+
+# Information added by Drupal.org packaging script on 2023-10-03
+version: '8.x-1.0-alpha5'
+project: 'fivestar'
+datestamp: 1696366147

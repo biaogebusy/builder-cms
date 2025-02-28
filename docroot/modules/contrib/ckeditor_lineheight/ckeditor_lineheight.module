@@ -1,0 +1,24 @@
+<?php
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ *
+ * @param $route_name
+ * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+ *
+ * @return string
+ */
+function ckeditor_lineheight_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the ckeditor_lineheight module.
+    case 'help.page.ckeditor_lineheight':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Adds the functionality to set the line-height property of an element similar to the font-size.') . '</p>';
+      return $output;
+
+    default:
+  }
+}

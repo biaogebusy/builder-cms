@@ -1,0 +1,8 @@
+{
+  "name": "drupal/media_entity_twitter",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "j7mbo/twitter-api-php": "~1.0"
+  }
+}

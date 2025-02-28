@@ -1,0 +1,40 @@
+
+@import "base";
+
+// Mixin that generate a color based classes like
+// "color" or "background-color". 
+//
+// @param $prop 
+//   Like color or background-color.
+// @param $abbrev
+//   The word after class prefix like text or bg.
+@mixin make-color($prop, $abbrev) {
+  // Generate the general classes first.
+  @each $color_key, $color_value in $bs_text_colors {
+    // The class style.
+    @include base-rule(".#{$bs_class_prefix}#{$abbrev}-#{$color_key}", "#{$prop}", "#{$color_value} !important");
+
+    // Fix the dispaly on off-canvas dialog.
+    #{$bs_off_canvas_selector} {
+      @include base-rule(".#{$bs_class_prefix}#{$abbrev}-#{$color_key}", "#{$prop}", "#{$color_value} !important");
+    }
+  }
+
+  // Then generate the classes for Breakpoints.
+  @each $breakpoint_key, $media in $bs_breakpoints {
+    @media #{$media} {
+      @each $color_key, $color_value in $bs_text_colors {
+        // The class style.
+        @include base-rule(".#{$bs_class_prefix}#{$abbrev}-#{$breakpoint_key}-#{$color_key}", "#{$prop}", "#{$color_value} !important");
+      }
+    }
+
+    // Fix the dispaly on off-canvas dialog.
+    @each $color_key, $color_value in $bs_text_colors {
+      #{$bs_off_canvas_selector} {
+        @include base-rule(".#{$bs_class_prefix}#{$abbrev}-#{$breakpoint_key}-#{$color_key}", "#{$prop}", "#{$color_value} !important");
+      }
+    }
+  }
+
+}

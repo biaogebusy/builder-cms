@@ -1,0 +1,131 @@
+commerce_order.configuration:
+  path: '/admin/commerce/config/orders'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Orders'
+  requirements:
+    _permission: 'access commerce administration pages'
+
+commerce_order.settings:
+  path: '/admin/commerce/config/orders/settings'
+  defaults:
+    _form: '\Drupal\commerce_order\Form\OrderSettingsForm'
+    _title: 'Order settings'
+  requirements:
+    _permission: 'administer commerce_order'
+
+entity.commerce_order.add_page:
+  path: '/admin/commerce/orders/add'
+  defaults:
+    _form: '\Drupal\commerce_order\Form\OrderAddForm'
+    _title: 'Create a new order'
+  requirements:
+    _entity_create_any_access: 'commerce_order'
+
+entity.commerce_order.reassign_form:
+  path: '/admin/commerce/orders/{commerce_order}/reassign'
+  defaults:
+    _form: '\Drupal\commerce_order\Form\OrderReassignForm'
+    _title: 'Reassign order'
+  options:
+    parameters:
+      commerce_order:
+        type: 'entity:commerce_order'
+  requirements:
+    _permission: 'administer commerce_order'
+
+entity.commerce_order.unlock_form:
+  path: '/admin/commerce/orders/{commerce_order}/unlock'
+  defaults:
+    _entity_form: 'commerce_order.unlock'
+  requirements:
+    _entity_access: 'commerce_order.unlock'
+
+entity.commerce_order.user_view:
+  path: '/user/{user}/orders/{commerce_order}'
+  defaults:
+    _entity_view: 'commerce_order.user'
+    _title: 'Order information'
+  requirements:
+    _custom_access: '\Drupal\commerce_order\Access\OrderUserViewAccessCheck::checkAccess'
+  options:
+    parameters:
+      entity:
+        user: 'entity:user'
+        commerce_order: 'entity:order'
+
+commerce_order.address_book.overview:
+  path: '/user/{user}/address-book'
+  defaults:
+    _controller: '\Drupal\commerce_order\Controller\AddressBookController::overviewPage'
+    _title: 'Address book'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+  requirements:
+    _address_book_access: 'TRUE'
+    _custom_access: '\Drupal\commerce_order\Controller\AddressBookController::checkOverviewAccess'
+
+commerce_order.address_book.add_form:
+  path: '/user/{user}/address-book/add/{profile_type}'
+  defaults:
+    _controller: '\Drupal\commerce_order\Controller\AddressBookController::addForm'
+    _title: 'Add address'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+      profile_type:
+        type: 'entity:profile_type'
+  requirements:
+    _address_book_access: 'TRUE'
+    _custom_access: '\Drupal\commerce_order\Controller\AddressBookController::checkCreateAccess'
+
+commerce_order.address_book.edit_form:
+  path: '/user/{user}/address-book/{profile}/edit'
+  defaults:
+    _entity_form: 'profile.address-book-edit'
+    _title_callback: '\Drupal\commerce_order\Controller\AddressBookController::editTitle'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+      profile:
+        type: 'entity:profile'
+  requirements:
+    _address_book_access: 'TRUE'
+    _entity_access: 'profile.update'
+    profile: '\d+'
+
+commerce_order.address_book.delete_form:
+  path: '/user/{user}/address-book/{profile}/delete'
+  defaults:
+    _entity_form: 'profile.address-book-delete'
+    _title_callback: '\Drupal\commerce_order\Controller\AddressBookController::deleteTitle'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+      profile:
+        type: 'entity:profile'
+  requirements:
+    _address_book_access: 'TRUE'
+    _entity_access: 'profile.delete'
+    profile: '\d+'
+
+commerce_order.address_book.set_default:
+  path: '/user/{user}/address-book/{profile}/set-default'
+  defaults:
+    _controller: '\Drupal\commerce_order\Controller\AddressBookController::setDefault'
+  options:
+    parameters:
+      user:
+        type: 'entity:user'
+      profile:
+        type: 'entity:profile'
+  requirements:
+    _address_book_access: 'TRUE'
+    _entity_access: 'profile.update'
+    profile: '\d+'
+    _csrf_token: 'TRUE'

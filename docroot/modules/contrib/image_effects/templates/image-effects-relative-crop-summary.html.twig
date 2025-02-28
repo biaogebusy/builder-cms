@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of a relative crop image effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this relative crop effect, including:
+ *   - width: The relative width of the resized image.
+ *   - height: The relative height of the resized image.
+ *   - anchor: The part of the image that will be retained after cropping. Has
+ *     the following keys:
+ *     - width: The anchor to use when cropping images in width. Either 'left',
+ *       'center', or 'right'.
+ *     - height: The anchor to use when cropping images in height. Either 'top'
+ *       'center' or 'bottom'.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% if data.width and data.height %}
+  {{ data.width }}:{{ data.height }}
+{% endif %}

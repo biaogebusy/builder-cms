@@ -1,0 +1,33 @@
+{
+    "name": "drupal/charts_google",
+    "description": "Charts module integration with Google Charts.",
+    "type": "drupal-module",
+    "homepage": "http://drupal.org/project/charts",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/charts"
+    },
+    "license": "GPL-2.0+",
+    "require": {
+        "google/charts": "45"
+    },
+    "repositories": {
+        "google_charts": {
+            "type": "package",
+            "package": {
+                "name": "google/charts",
+                "version": "45",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "google_charts"
+                },
+                "dist": {
+                    "url": "https://www.gstatic.com/charts/loader.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        }
+    }
+}

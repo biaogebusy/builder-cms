@@ -1,0 +1,13 @@
+entity.phone_number_settings.add:
+  title: 'Add phone number settings'
+  route_name: entity.phone_number_settings.add
+  weight: 1
+  appears_on:
+    - sms.phone_number_settings.list
+
+entity.sms_gateway.add:
+  title: 'Add gateway'
+  route_name: entity.sms_gateway.add
+  weight: 1
+  appears_on:
+    - sms.gateway.list

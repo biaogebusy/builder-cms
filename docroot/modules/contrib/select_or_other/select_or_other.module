@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Contains some hook implementations for the select or other module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_validation_constraint_alter().
+ */
+function select_or_other_validation_constraint_alter(&$definitions) {
+  // Work around core issue #2643308 by overriding the AllowedValuesConstraint.
+  $definition = &$definitions['AllowedValues'];
+  $definition['class'] = 'Drupal\select_or_other\Plugin\Validation\AllowedValuesConstraint';
+  $definition['provider'] = 'select_or_other';
+}
+
+/**
+ * Implements hook_help().
+ */
+function select_or_other_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.select_or_other':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t("Provides a new Forms API element which is a select/radios/checkboxes element that has an 'other' option.<br> When 'other' is selected a textfield appears for the user to provide a custom value.") . '</p>';
+      $output .= '<h3>' . t('Applications') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dd>' . t('As a Field widget for (auto create) Entity reference fields.') . '</dd>';
+      $output .= '<dd>' . t('As a Forms API element for developers. Therefor can be integrated into any form or module.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+
+    default:
+  }
+}

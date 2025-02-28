@@ -1,0 +1,4 @@
+"*.workflow.yml":
+  - label
+"*.workflow_groups.yml":
+  - label

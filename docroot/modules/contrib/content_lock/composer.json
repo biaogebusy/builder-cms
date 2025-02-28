@@ -1,0 +1,11 @@
+{
+  "name": "drupal/content_lock",
+  "description": "Prevents multiple users from trying to edit a content entity simultaneously to prevent edit conflicts.",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "drupal/core": "^9.0 || ^10.0"
+  },
+  "require-dev": {
+  }
+}

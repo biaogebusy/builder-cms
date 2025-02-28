@@ -1,0 +1,11 @@
+name: "Comment Delete"
+description: "Advanced comment deletion rules with threaded replies handler."
+type: module
+core_version_requirement: ^9 || ^10
+dependencies:
+  - drupal:comment
+
+# Information added by Drupal.org packaging script on 2023-09-28
+version: '2.0.9'
+project: 'comment_delete'
+datestamp: 1695924463

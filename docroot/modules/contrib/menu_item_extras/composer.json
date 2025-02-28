@@ -1,0 +1,42 @@
+{
+  "name": "drupal/menu_item_extras",
+  "type": "drupal-module",
+  "description": "Provide an additional custom fields which can be used on Menu link",
+  "keywords": ["Drupal", "Mega Menu"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/menu_item_extras",
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9 || ^10 || ^11"
+       }
+    }
+  },
+  "authors": [
+    {
+      "name": "Andriy Khomych",
+      "homepage": "https://www.drupal.org/u/andriy-khomych",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Bogdan Hepting",
+      "homepage": "https://www.drupal.org/u/bogdan-hepting",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Oleh Vehera",
+      "homepage": "https://www.drupal.org/u/voleger",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Mykhailo Gurei",
+      "homepage": "https://www.drupal.org/u/ozin",
+      "role": "Maintainer"
+    }
+  ],
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/menu_item_extras",
+    "source": "https://git.drupalcode.org/project/menu_item_extras"
+  }
+}

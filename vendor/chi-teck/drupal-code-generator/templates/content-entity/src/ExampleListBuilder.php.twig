@@ -1,0 +1,122 @@
+<?php
+
+namespace Drupal\{{ machine_name }};
+
+{% sort %}
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityListBuilder;
+  {% if created_base_field or changed_base_field %}
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+  {% endif %}
+{% endsort %}
+
+/**
+ * Provides a list controller for the {{ entity_type_label|lower }} entity type.
+ */
+class {{ class_prefix }}ListBuilder extends EntityListBuilder {
+
+{% if created_base_field or changed_base_field %}
+  /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
+   * Constructs a new {{ class_prefix }}ListBuilder object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type definition.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
+   *   The entity storage class.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
+   */
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, DateFormatterInterface $date_formatter) {
+    parent::__construct($entity_type, $storage);
+    $this->dateFormatter = $date_formatter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('date.formatter')
+    );
+  }
+
+{% endif %}
+  /**
+   * {@inheritdoc}
+   */
+  public function render() {
+    $build['table'] = parent::render();
+
+    $total = $this->getStorage()
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->count()
+      ->execute();
+
+    $build['summary']['#markup'] = $this->t('Total {{ entity_type_label|lower|pluralize }}: @total', ['@total' => $total]);
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildHeader() {
+    $header['id'] = $this->t('ID');
+{% if label_base_field %}
+    $header['label'] = $this->t('Label');
+{% endif %}
+{% if status_base_field %}
+    $header['status'] = $this->t('Status');
+{% endif %}
+{% if author_base_field %}
+    $header['uid'] = $this->t('Author');
+{% endif %}
+{% if created_base_field %}
+    $header['created'] = $this->t('Created');
+{% endif %}
+{% if changed_base_field %}
+    $header['changed'] = $this->t('Updated');
+{% endif %}
+    return $header + parent::buildHeader();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\{{ machine_name }}\{{ class_prefix }}Interface $entity */
+    $row['id'] = $entity->{{ label_base_field or not canonical ? 'id' : 'toLink' }}();
+{% if label_base_field %}
+    $row['label'] = $entity->{{ canonical ? 'toLink' : 'label' }}();
+{% endif %}
+{% if status_base_field %}
+    $row['status'] = $entity->get('status')->value ? $this->t('Enabled') : $this->t('Disabled');
+{% endif %}
+{% if author_base_field %}
+    $row['uid']['data'] = [
+      '#theme' => 'username',
+      '#account' => $entity->getOwner(),
+    ];
+{% endif %}
+{% if created_base_field %}
+    $row['created'] = $this->dateFormatter->format($entity->get('created')->value);
+{% endif %}
+{% if changed_base_field %}
+    $row['changed'] = $this->dateFormatter->format($entity->getChangedTime());
+{% endif %}
+    return $row + parent::buildRow($entity);
+  }
+
+}

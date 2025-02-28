@@ -1,0 +1,62 @@
+# Libraries are defined in alphabetical order.
+
+image_effects.admin.ui:
+  version: VERSION
+  css:
+    component:
+      css/image_effects.admin.ui.css: {}
+
+# @todo remove this once Drupal 9 is no longer supported.
+image_effects.farbtastic_color_selector:
+  version: VERSION
+  js:
+    js/image_effects.farbtastic_color_selector.js: {}
+  css:
+    component:
+      css/image_effects.farbtastic_color_selector.css: {}
+  dependencies:
+    - core/jquery.farbtastic
+
+image_effects.farbtastic_color_selector_v2:
+  version: VERSION
+  js:
+    js/image_effects.farbtastic_color_selector_v2.js: {}
+  css:
+    component:
+      css/image_effects.farbtastic_color_selector.css: {}
+  dependencies:
+    - core/once
+    - color/jquery.farbtastic
+
+image_effects.html_color_selector:
+  version: VERSION
+  js:
+    js/image_effects.html_color_selector.js: {}
+  css:
+    component:
+      css/image_effects.html_color_selector.css: {}
+
+image_effects.jquery_colorpicker_color_selector:
+  version: VERSION
+  js:
+    js/image_effects.jquery_colorpicker_color_selector.js: {}
+  css:
+    component:
+      css/image_effects.jquery_colorpicker_color_selector.css: {}
+  dependencies:
+    - core/once
+    - jquery_colorpicker/element
+
+image_effects.text_overlay_preview:
+  version: VERSION
+  css:
+    component:
+      css/image_effects.text_overlay_preview.css: {}
+
+image_effects.admin.convolution:
+  version: VERSION
+  js:
+    js/image_effects.admin.convolution.js: {}
+  css:
+    component:
+      css/image_effects.admin.convolution.css: {}

@@ -1,0 +1,5 @@
+vote_type.add:
+  route_name: votingapi.type_add
+  title: 'Add vote type'
+  appears_on:
+    - entity.vote_type.collection

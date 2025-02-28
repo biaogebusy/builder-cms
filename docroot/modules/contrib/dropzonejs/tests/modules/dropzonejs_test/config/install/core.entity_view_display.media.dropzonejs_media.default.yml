@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.dropzonejs_media.field_media_image
+    - image.style.large
+    - media.type.dropzonejs_media
+  module:
+    - image
+id: media.dropzonejs_media.default
+targetEntityType: media
+bundle: dropzonejs_media
+mode: default
+content:
+  field_media_image:
+    label: visually_hidden
+    weight: 0
+    settings:
+      image_style: large
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+hidden:
+  created: true
+  name: true
+  thumbnail: true
+  uid: true

@@ -1,0 +1,12 @@
+/** phpcs:ignoreFile */
+// Add foundation first so foundation utilities can be used everywhere
+@import 'foundation';
+
+@import 'base/app';
+@import 'base/config';
+@import 'base/settings';
+@import 'base/icons';
+
+@import 'components/layout';
+@import 'components/navigation';
+@import 'components/taxonomy-terms';

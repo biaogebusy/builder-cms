@@ -1,0 +1,7 @@
+slick_entityreference:
+  type: slick_base
+  label: 'Slick Entity Reference base display format settings'
+
+field.formatter.settings.slick_entityreference_vanilla:
+  type: slick_entityreference
+  label: 'Slick Entity Reference display format settings'

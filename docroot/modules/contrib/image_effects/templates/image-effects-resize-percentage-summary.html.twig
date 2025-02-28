@@ -1,0 +1,31 @@
+{#
+/**
+ * @file
+ * Default theme implementation for summary of resize percentage image effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this set canvas effect, including:
+ *   - width: the width in px or as % of source image.
+ *   - height: the height in px or as % of source image.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  - {{ 'Width'|t }}:
+{% if data.width %}
+  {{ data.width|e }}
+{% else %}
+  {{ '(scaled)'|t }}
+{% endif %}
+  - {{ 'Height'|t }}:
+{% if data.height %}
+  {{ data.height|e }}
+{% else %}
+  {{ '(scaled)'|t }}
+{% endif %}
+{% endapply %}

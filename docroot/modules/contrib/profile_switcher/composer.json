@@ -1,0 +1,21 @@
+{
+    "name": "drupal/profile_switcher",
+    "description": "Allows switching of installation profiles for a Drupal site.",
+    "type": "drupal-module",
+    "authors": [
+        {
+            "name": "Author name",
+            "email": "author@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0"
+    },
+    "extra": {
+        "drush": {
+            "services": {
+                "drush.services.yml": "^9"
+            }
+        }
+    }
+}

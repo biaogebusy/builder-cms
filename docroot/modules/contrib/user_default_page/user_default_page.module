@@ -1,0 +1,234 @@
+<?php
+
+/**
+ * @file
+ *   Contains user_default_page.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+/**
+ * Implements hook_help().
+ */
+function user_default_page_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the user_default_page module.
+    case 'help.page.user_default_page':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The module allows you to customize the destination that a user is redirected to after logging in or logged out. You can customize by roles or individual users. And customize configurable drupal messages for this actions. Do read README.txt file for more information.') . '</p>';
+
+      $output .= '<h3>' . t('Installation') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Enable the module via <a href=":drush_install_module">drush command</a> or the <a href=":extend_link">extend menu</a>.', [':extend_link' => '/admin/modules', ':drush_install_module' => 'https://www.drupal.org/docs/8/extending-drupal-8/installing-modules-from-the-command-line']) . '</dt>';
+      $output .= '</dl>';
+
+      $output .= '<h3>' . t('Usage') . '</h3>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Go to the <a href=":config_page">configuration page</a>.', [':config_page' => '/admin/config/people/user_default_page/']) . '</li>';
+      $output .= '<li>' . t('Add default pages by clicking on <strong>Add User default page</strong> button or the operation link on each created default page.') . '</li>';
+      $output .= '<ul>';
+      $output .= '<li>' . t('Define the page label (just to be easy to identify).') . '</li>';
+      $output .= '<li>' . t('Select the role, the user or both that will use this default page.') . '</li>';
+      $output .= '<li>' . t('If you are setting a login page, insert the redirect using internal URL (eg.: /node/5). Also, you can insert a message that will be displayed after the redirect.') . '</li>';
+      $output .= '<li>' . t('In case of a logout, the configuration is basically the same of the login.') . '</li>';
+      $output .= '<li>' . t('You can use just login redirect, just logout redirect or both.') . '</li>';
+      $output .= '</ul>';
+      $output .= '</li>';
+      $output .= '</ul>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_user_logout().
+ */
+function user_default_page_user_logout($account) {
+  // Avoid redirection for specific modules.
+  $route = \Drupal::routeMatch()->getRouteName();
+  if (in_array($route, [
+    'autologout.alt_logout',
+    'autologout.ajax_logout',
+  ])) {
+    return;
+  }
+
+  // Prevent redirection for other formats, like JSON
+  if (\Drupal::request()->getRequestFormat() !== 'html') {
+    return;
+  }
+
+  // Get User Role(s).
+  $roles = $account->getRoles();
+  $uid = $account->id();
+  $logout_redirect = '';
+  $logout_message = '';
+  $current_weight = -1000000;
+
+  // Load all "user_default_page_config_entity".
+  $entities_load = \Drupal::entityTypeManager()
+    ->getStorage('user_default_page_config_entity')
+    ->loadMultiple();
+
+  // Check for redirect logout path.
+  foreach ($entities_load as $entity) {
+    $weight = $entity->getWeight() ?? 0;
+    $users_array = $entity->getUsers();
+
+    if ($current_weight < $weight) {
+      $current_weight = $weight;
+      if (
+        (array_intersect($entity->getUserRoles(), $roles) && (!$entity->getUsers()))
+        || (in_array($uid, explode(',', $users_array)))
+      ) {
+        $logout_redirect = $entity->getLogoutRedirect();
+        $logout_message = $entity->getLogoutRedirectMessage();
+      }
+    }
+  }
+
+  // Set Logout redirect message.
+  if (!empty($logout_message)) {
+    if ($logout_redirect) {
+      $logout_redirect .= '?upd=' . $entity->id();
+    }
+  }
+
+  // Set redirect.
+  if ($logout_redirect) {
+    user_default_page_redirect($logout_redirect);
+  }
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function user_default_page_page_attachments(array &$page) {
+  $udpid = \Drupal::request()->query->get('upd');
+  $updStorage = \Drupal::entityTypeManager()
+    ->getStorage('user_default_page_config_entity');
+  if ($udpid && ($entity = $updStorage->load($udpid))) {
+    $logout_message = (\Drupal::currentUser()->isAnonymous()) ?
+      $entity->getLogoutRedirectMessage() :
+      $entity->getLoginRedirectMessage();
+    \Drupal::messenger()->addStatus(t($logout_message));
+  }
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function user_default_page_user_login($account) {
+  // Avoid redirection if logging in using one time login link.
+  $route = \Drupal::routeMatch()->getRouteName();
+  if ($route === 'user.reset.login') {
+    return;
+  }
+
+  // Prevent redirection for other formats, like JSON
+  if (\Drupal::request()->getRequestFormat() !== 'html') {
+    return;
+  }
+
+  // Load all entities belongs to "user_default_page_config_entity".
+  $entities_load = \Drupal::entityTypeManager()
+    ->getStorage('user_default_page_config_entity')
+    ->loadMultiple();
+
+  // Get User Role(s).
+  $roles = $account->getRoles();
+  $uid = $account->id();
+  $login_redirect = '';
+  $login_message = '';
+  $current_weight = NULL;
+
+  // Check for redirect login path.
+  foreach ($entities_load as $entity) {
+    if (array_intersect($entity->getUserRoles(), $roles)) {
+      if ($current_weight < $entity->getWeight()) {
+        $current_weight = $entity->getWeight();
+        $login_redirect = $entity->getLoginRedirect();
+      }
+      $login_message = $entity->getLoginRedirectMessage();
+    }
+    $users_array = $entity->getUsers();
+    if (strpos($users_array, $uid . ',') !== FALSE) {
+      $login_redirect = $entity->getLoginRedirect();
+      $login_message = $entity->getLoginRedirectMessage();
+    }
+  }
+
+  if ($login_redirect) {
+    $current_route = \Drupal::service('current_route_match')->getRouteName();
+    $ignored_routes = ['user.reset.login', 'user.reset'];
+    \Drupal::moduleHandler()->alter('user_default_page_login_ignore_whitelist', $ignored_routes);
+    if (!in_array($current_route, $ignored_routes)) {
+      // Set Login redirect message.
+      if ($login_message) {
+        \Drupal::messenger()->addStatus(t($login_message));
+      }
+      user_default_page_redirect($login_redirect);
+    }
+  }
+}
+
+/**
+ * Redirect path for login and logout.
+ */
+function user_default_page_redirect($path) {
+  if (!preg_match('/^http/', $path) && !preg_match('/^node/', $path)) {
+    $path = \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBasePath() . str_replace('//', '/', $path);
+  }
+
+  // Check if rename_admin_paths module enable.
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('rename_admin_paths')) {
+    $config = \Drupal::config('rename_admin_paths.settings');
+    if ($config->get('admin_path')) {
+      $admin_path_value = $config->get('admin_path_value');
+      if (!strpos($path, '/admin/') === FALSE) {
+        $path = preg_replace("#/admin/#", "/$admin_path_value/", $path);
+      }
+      elseif (!strpos($path, '/admin') === FALSE) {
+        $path = preg_replace("#\/admin$#", "/$admin_path_value", $path);
+      }
+    }
+    if ($config->get('user_path')) {
+      $user_path_value = $config->get('user_path_value');
+      if (!strpos($path, '/user/') === FALSE) {
+        $path = preg_replace("#/user/#", "/$user_path_value/", $path);
+      }
+      elseif (!strpos($path, '/user') === FALSE) {
+        $path = preg_replace("#\/user#", "/$user_path_value", $path);
+      }
+    }
+  }
+
+  $url_object = \Drupal::service('path.validator')->getUrlIfValid($path);
+  if (!$url_object) {
+    // If the path does not exist, check for an existing redirect (if enabled).
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('redirect')) {
+      $query = \Drupal::entityQuery('redirect');
+      $query->condition('redirect_source__path', ltrim($path, '/'));
+      $entity_ids = $query->execute();
+      if (!empty($entity_ids)) {
+        $redirect = \Drupal::entityTypeManager()->getStorage('redirect')->load(key($entity_ids));
+        $url_object = $redirect->getRedirectUrl();
+      }
+    }
+  }
+
+  if ($url_object) {
+    $url_object->setAbsolute();
+    $url = $url_object->toString();
+    \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $url);
+  }
+  else {
+    $message = t('The system attempted to redirect to %path, but the page is not valid', ['%path' => $path]);
+    // TODO: Conditionally display message based on user permissions.
+    \Drupal::messenger()->addWarning($message);
+    \Drupal::logger('user_default_page')->warning($message);
+  }
+}

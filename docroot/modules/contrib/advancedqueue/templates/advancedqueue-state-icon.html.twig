@@ -1,0 +1,10 @@
+{%
+set classes = [
+  'advancedqueue-status-' ~ state.state,
+]
+%}
+
+{{ attach_library('advancedqueue/state') }}
+<span{{ attributes.addClass(classes) }}>
+  {{ state.label }}
+</span>

@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Test hook implementation code for the VotingApi module.
+ */
+
+/**
+ * Implements hook_votingapi_results_alter().
+ */
+function votingapi_test_votingapi_results_alter(&$vote_results, $entity_type, $entity_id) {
+  // Add a new function and result.
+  $vote_results[] = [
+    'entity_id' => $entity_id,
+    'entity_type' => $entity_type,
+    'type' => 'vote',
+    'function' => 'ultimate_question',
+    'value' => 42,
+    'value_type' => 'points',
+    'timestamp' => \Drupal::time()->getRequestTime(),
+  ];
+}

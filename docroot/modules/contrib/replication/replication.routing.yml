@@ -1,0 +1,10 @@
+# Remote routing definition
+replication.settings_form:
+  path: '/admin/config/replication/settings'
+  defaults:
+    _controller: '\Drupal\replication\Controller\ReplicationConfigController::getForms'
+    _title: 'Replication settings'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE

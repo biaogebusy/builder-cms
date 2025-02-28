@@ -1,0 +1,21 @@
+# https://www.drupal.org/drupalorg/docs/drupal-ci/customizing-drupalci-testing
+build:
+  assessment:
+    validate_codebase:
+      phplint:
+      container_composer:
+      phpcs:
+        # phpcs will use core's specified version of Coder.
+        sniff-all-files: true
+        halt-on-fail: false
+    testing:
+      run_tests.standard:
+        types: 'PHPUnit-Unit,PHPUnit-Kernel,PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: true
+      run_tests.javascript:
+        concurrency: 15
+        types: 'PHPUnit-FunctionalJavascript'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false

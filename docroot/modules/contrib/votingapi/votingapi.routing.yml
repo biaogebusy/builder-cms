@@ -1,0 +1,46 @@
+votingapi.admin_settings:
+  path: '/admin/config/search/votingapi'
+  defaults:
+    _title: 'Voting API settings'
+    _form: '\Drupal\votingapi\Form\SettingsForm'
+  requirements:
+    _permission: 'administer voting api'
+
+entity.vote_type.collection:
+  path: '/admin/structure/vote-types'
+  defaults:
+    _entity_list: 'vote_type'
+    _title: 'Vote Types'
+  requirements:
+    _permission: 'administer vote types'
+
+votingapi.type_add:
+  path: '/admin/structure/vote-types/add'
+  defaults:
+    _entity_form: 'vote_type.add'
+    _title: 'Add vote type'
+  requirements:
+    _permission: 'administer vote types'
+
+entity.vote_type.edit_form:
+  path: '/admin/structure/vote-types/{vote_type}'
+  defaults:
+    _entity_form: 'vote_type.edit'
+  requirements:
+    _permission: 'administer vote types'
+
+entity.vote_type.delete_form:
+  path: '/admin/structure/vote-types/{vote_type}/delete'
+  defaults:
+    _entity_form: 'vote_type.delete'
+    _title: 'Delete'
+  requirements:
+    _entity_access: 'vote_type.delete'
+
+entity.vote.delete_form:
+  path: '/admin/vote/{vote}/delete'
+  defaults:
+    _entity_form: 'vote.delete'
+    _title: 'Delete'
+  requirements:
+    _entity_access: 'vote.delete'

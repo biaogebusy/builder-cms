@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - entity_module_test
+id: entity_test_enhanced_with_owner_publish_action
+label: 'Publish enhanced entities with owner'
+type: entity_test_enhanced_with_owner
+plugin: entity:publish_action:entity_test_enhanced_with_owner
+configuration: {  }

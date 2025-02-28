@@ -1,0 +1,46 @@
+create_workspace:
+  title: Create a new workspace
+
+view_own_workspace:
+  title: View own workspace
+  description: View a workspace owned by the user.
+
+view_any_workspace:
+  title: View any workspace
+  description: View any workspace, regardless of ownership.
+
+edit_own_workspace:
+  title: Edit own workspace
+  description: Make changes to workspaces owned by the user.
+
+edit_any_workspace:
+  title: Edit any workspace
+  description: Make changes to any workspace, regardless of ownership.
+
+delete_own_workspace:
+  title: Delete own workspace
+  description: Delete a workspace owned by the user and all content revisions within it.
+
+delete_any_workspace:
+  title: Delete any workspace
+  description: Delete a workspace and all content revisions within it, regardless of ownership.
+
+bypass_entity_access_own_workspace:
+  title: Bypass content entity access in own workspace
+  description: Allow all Edit/Update/Delete permissions for all content entities in a workspace owned by the user.
+  restrict access: TRUE
+
+view_revision_trees:
+  title: View revision trees
+  description: View the revision tree for any entities.
+
+update any workspace from upstream:
+  title: Update any workspace from upstream
+  description: Update any workspace with the latest changes from its upstream workspace.
+
+access replication settings fields:
+  title: Set or update replication settings fields
+  description: Allow to set or modify the value for the replication settings fields for a workspace.
+
+permission_callbacks:
+  - workspace.entity_access::workspacePermissions

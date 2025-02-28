@@ -1,0 +1,24 @@
+<?php
+
+use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\core_context\FieldContextHandler;
+use Drupal\core_context\SettingsContextHandler;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function core_context_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  foreach ($entity_types as $entity_type) {
+    if ($entity_type->hasHandlerClass('context')) {
+      continue;
+    }
+    elseif ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
+      $entity_type->setHandlerClass('context', FieldContextHandler::class);
+    }
+    elseif ($entity_type->entityClassImplements(ThirdPartySettingsInterface::class)) {
+      $entity_type->setHandlerClass('context', SettingsContextHandler::class);
+    }
+  }
+}

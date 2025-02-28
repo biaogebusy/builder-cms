@@ -1,0 +1,5 @@
+<?php
+
+function ckeditor_textindent_page_attachments(array &$page) {
+  $page['#attached']['library'][] = 'ckeditor_textindent/data_text_indent';
+}

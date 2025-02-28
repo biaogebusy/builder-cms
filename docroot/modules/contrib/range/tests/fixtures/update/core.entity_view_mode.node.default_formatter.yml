@@ -1,0 +1,9 @@
+uuid: 41e41e96-c997-44a4-9124-71da278fd8de
+status: true
+dependencies:
+  module:
+    - node
+id: node.default_formatter
+label: Default formatter
+targetEntityType: node
+cache: true

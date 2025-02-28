@@ -1,0 +1,4 @@
+id: test
+label: 'Test vote'
+value_type: 'points'
+description: 'A generic vote used for testing purposes.'

@@ -1,0 +1,35 @@
+xinshi_sms.settings:
+  path: '/admin/xinshi/config/sms'
+  defaults:
+    _form: '\Drupal\xinshi_sms\Form\SettingsForm'
+    _title: 'SMS Settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+xinshi_sms.otp_login_form:
+  path: '/user/signin'
+  defaults:
+    _form: '\Drupal\xinshi_sms\Form\OtpLoginForm'
+    _title: 'OTP Log in'
+  options:
+    no_cache: TRUE
+  requirements:
+    _role: 'anonymous'
+    _custom_access: '\Drupal\xinshi_sms\AccessCheck::checkSignin'
+
+xinshi_sms.bind_phone_form:
+  path: '/user/bind-phone'
+  defaults:
+    _form: '\Drupal\xinshi_sms\Form\BindPhoneForm'
+    _title: 'Bind Phone'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+xinshi_sms.find_password:
+  path: '/user/find-password'
+  defaults:
+    _form: '\Drupal\xinshi_sms\Form\FindPasswordForm'
+    _title: 'Find Password'
+  requirements:
+    _custom_access: '\Drupal\xinshi_sms\AccessCheck::FindPassword'
+

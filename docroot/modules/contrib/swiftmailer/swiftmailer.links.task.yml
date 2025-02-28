@@ -1,0 +1,14 @@
+swiftmailer.transport_settings:
+  route_name: swiftmailer.transport_settings
+  title: Transport
+  base_route: swiftmailer.transport_settings
+
+swiftmailer.message_settings:
+  route_name: swiftmailer.message_settings
+  title: Messages
+  base_route: swiftmailer.transport_settings
+
+swiftmailer.test:
+  route_name: swiftmailer.test
+  title: Test
+  base_route: swiftmailer.transport_settings

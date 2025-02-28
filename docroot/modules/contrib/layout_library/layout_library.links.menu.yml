@@ -1,0 +1,5 @@
+entity.layout.collection:
+  title: 'Layout library'
+  route_name: entity.layout.collection
+  parent: system.admin_structure
+  description: 'Manage pre-defined layouts for use by content editors.'

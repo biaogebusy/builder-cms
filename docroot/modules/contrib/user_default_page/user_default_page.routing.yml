@@ -1,0 +1,7 @@
+user_default_page.action:
+  path: 'admin/config/people/user_default_page'
+  defaults:
+    _title: 'Actions'
+    _entity_list: 'action'
+  requirements:
+    _permission: 'administer site configuration'

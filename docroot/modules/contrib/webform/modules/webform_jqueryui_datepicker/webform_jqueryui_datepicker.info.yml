@@ -1,0 +1,13 @@
+name: 'Webform jQueryUI Datepicker'
+type: module
+description: 'Provides jQueryUI datepicker support for date and datetime elements. jQueryUI is no longer maintained.'
+package: 'Webform [DEPRECATED]'
+core_version_requirement: ^9.4 || ^10
+dependencies:
+  - 'webform:webform'
+  - 'jquery_ui_datepicker:jquery_ui_datepicker'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

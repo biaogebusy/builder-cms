@@ -1,0 +1,3 @@
+administer xinshi api configuration:
+  title: 'Administer xinshi api configuration'
+  restrict access: true

@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the otp_login module.
+ */
+
+ /**
+  * Implements hook_schema().
+  *
+  * Defines the database tables used by this module.
+  *
+  * @see hook_schema()
+  *
+  * @ingroup otp_login
+  */

@@ -1,0 +1,11 @@
+name: 'Colorbox Library Test'
+description: 'Ensure colorbox can be tested properly with the downloaded library.'
+type: module
+hidden: true
+package: Testing
+core_version_requirement: ^8.8 || ^9
+
+# Information added by Drupal.org packaging script on 2022-04-19
+version: '8.x-1.10'
+project: 'colorbox'
+datestamp: 1650376981

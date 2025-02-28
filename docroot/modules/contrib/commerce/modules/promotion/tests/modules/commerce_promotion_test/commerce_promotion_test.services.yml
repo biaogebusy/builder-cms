@@ -1,0 +1,5 @@
+services:
+  commerce_promotion_test.filter_promotions_subscriber:
+    class: Drupal\commerce_promotion_test\EventSubscriber\FilterPromotionsSubscriber
+    tags:
+      - { name: event_subscriber }

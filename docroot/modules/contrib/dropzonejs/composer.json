@@ -1,0 +1,51 @@
+{
+    "name": "drupal/dropzonejs",
+    "description": "Drupal integration for DropzoneJS - An open source library that provides drag’n’drop file uploads with image previews.",
+    "type": "drupal-module",
+    "homepage": "https://www.drupal.org/project/dropzonejs",
+    "keywords": ["Drupal", "DropzoneJS"],
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/dropzonejs",
+        "#media": "http://drupal.slack.com",
+        "source": "https://www.drupal.org/project/dropzonejs"
+    },
+    "authors": [
+        {
+            "name": "Janez Urevc",
+            "homepage": "https://drupal.org/u/slashrsm",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Christian Fritsch",
+            "homepage": "https://drupal.org/u/chrfritsch",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Primoz Hmeljak",
+            "homepage": "https://drupal.org/u/Primsi",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Qiangjun Ran",
+            "homepage": "https://drupal.org/u/jungle",
+            "role": "Maintainer"
+        },
+        {
+            "name": "See other contributors",
+            "homepage": "https://www.drupal.org/node/1998478/committers",
+            "role": "contributor"
+        }
+    ],
+    "require": {
+        "drupal/core": "^9.3 || ^10"
+    },
+    "require-dev": {
+        "drupal/entity_browser": "^2.5"
+    },
+    "suggest": {
+        "enyo/dropzone": "Required to use drupal/dropzonejs. DropzoneJS is an open source library that provides drag’n’drop file uploads with image previews."
+    }
+}

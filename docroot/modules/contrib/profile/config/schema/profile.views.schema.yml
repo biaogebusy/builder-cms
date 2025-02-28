@@ -1,0 +1,7 @@
+views.argument_default.current_user_profile:
+  type: mapping
+  label: 'Current user profile'
+  mapping:
+    type:
+      type: string
+      label: 'Profile type'

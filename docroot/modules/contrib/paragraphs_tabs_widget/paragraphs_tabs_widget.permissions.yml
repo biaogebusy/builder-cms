@@ -1,0 +1,4 @@
+change paragraphs_tabs_widget summary_selector:
+  title: 'Change summary selector'
+  description: "The widget settings (in 'Manage form display') contains a 'Tab summary selector' setting, whose value will be evaluated by jQuery in the client's browser."
+  restrict access: true

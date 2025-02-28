@@ -1,0 +1,7 @@
+{
+  "_comment": "This file is not inherited, so we need to duplicate what is in core/.prettierrc.json",
+  "printWidth": 80,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all"
+}

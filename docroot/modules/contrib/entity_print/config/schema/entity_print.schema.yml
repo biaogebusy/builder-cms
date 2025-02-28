@@ -1,0 +1,155 @@
+entity_print.settings:
+  type: config_object
+  label: 'Entity Print settings.'
+  mapping:
+    default_css:
+      type: boolean
+      label: 'Enable the default CSS.'
+    force_download:
+      type: boolean
+      label: 'Force download of Print'
+    print_engines:
+      type: sequence
+      label: 'All in-use print engines.'
+      sequence:
+        type: string
+    base_url:
+      type: string
+      label: 'Base URL to drupal page'
+
+entity_print_engine_pdf:
+  type: mapping
+  label: 'Base settings for engines using the PDF base class'
+  mapping:
+    default_paper_size:
+      type: string
+      label: 'Default Paper Size'
+    default_paper_orientation:
+      type: string
+      label: 'Paper Orientation'
+    username:
+      type: string
+      label: 'HTTP Auth username'
+    password:
+      type: string
+      label: 'HTTP Auth password'
+
+entity_print.print_engine.*:
+  type: config_entity
+  label: 'Print Engine'
+  mapping:
+    id:
+      type: string
+      label: 'Print Engine Id'
+    settings:
+      type: entity_print_print_engine.[%parent.id]
+      label: 'Settings for the Print Engine.'
+
+entity_print_print_engine.dompdf:
+  type: entity_print_engine_pdf
+  label: 'Dompdf specific settings'
+  mapping:
+    enable_html5_parser:
+      type: boolean
+      label: 'Enable HTML5 parsing'
+    enable_remote:
+      type: boolean
+      label: 'Enable remote urls'
+    font_subsetting:
+      type: boolean
+      label: 'Enable font subsetting'
+    embedded_php:
+      type: boolean
+      label: 'Enable embedded PHP'
+    cafile:
+      type: string
+      label: 'Path to the cafile'
+    verify_peer:
+      type: boolean
+      label: 'Verify Peer'
+    verify_peer_name:
+      type: boolean
+      label: 'Verify Peer Name'
+
+entity_print_print_engine.phpwkhtmltopdf:
+  type: entity_print_engine_pdf
+  label: 'PHP Wkhtmltopdf'
+  mapping:
+    binary_location:
+      type: string
+      label: 'Path to the wkhtmltopdf binary'
+    zoom:
+      type: float
+      label: 'Zoom page level'
+    toc_generate:
+      type: boolean
+      label: 'Generate table of content'
+    toc_enable_back_links:
+      type: boolean
+      label: 'Link from section header to table of content'
+    toc_disable_dotted_lines:
+      type: boolean
+      label: 'Do not use dotted lines in the table of content'
+    toc_disable_links:
+      type: boolean
+      label: 'Do not link from table of content to sections'
+    viewport_size:
+      type: string
+      label: 'Set viewport size if you have custom scrollbars or css attribute overflow to emulate window size.'
+    remove_pdf_margins:
+      type: boolean
+      label: 'Remove the page margins on the PDF'
+
+entity_print_print_engine.tcpdfv1:
+  label: 'TCPDF (v1)'
+  type: mapping
+  mapping:
+    default_paper_size:
+      type: string
+      label: 'The page format. E.g. A3, A4 or many more options'
+    default_paper_orientation:
+      type: string
+      label: 'Paper Orientation'
+
+# Add schema for our extra field settings.
+core.entity_view_display.*.*.*.third_party.entity_print:
+  type: sequence
+  label: 'Schema for Entity Print third party settings'
+  sequence:
+    type: string
+    label: 'Entity print settings for each export type'
+
+action.configuration.entity_print_download_action:
+  type: action_configuration_default
+  label: 'Print Action'
+
+field.formatter.settings.entity_print_base64_image_formatter:
+  type: mapping
+  label: 'Image field display format settings'
+  mapping:
+    image_style:
+      type: string
+      label: 'Image style'
+
+block.settings.print_links:
+  type: block_settings
+  label: 'Print Links'
+  mapping:
+    pdf_enabled:
+      type: boolean
+      label: 'Flag to enable PDF link'
+    pdf_link_text:
+      type: label
+      label: 'PDF link text'
+    epub_enabled:
+      type: boolean
+      label: 'Flag to enable EPub link'
+    epub_link_text:
+      type: label
+      label: 'EPub link text'
+    word_docx_enabled:
+      type: boolean
+      label: 'Flag to enable Word Document link'
+    word_docx_link_text:
+      type: label
+      label: 'Word Document link text'

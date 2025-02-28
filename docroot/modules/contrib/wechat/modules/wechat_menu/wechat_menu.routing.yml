@@ -1,0 +1,47 @@
+entity.wechat_menu_item.collection:
+  path: '/admin/wechat/config/menu'
+  defaults:
+    _controller: '\Drupal\wechat_menu\Controller\WechatMenuController::wechatMenuManagePage'
+    _title: 'Wechat Menu'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_menu_item.add:
+  path: '/admin/wechat/config/menu/add'
+  defaults:
+    _entity_form: 'wechat_menu_item.add'
+    _title: 'Add'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_menu_item.canonical:
+  path: '/admin/wechat/config/menu/manage/{wechat_menu_item}'
+  defaults:
+    _entity_form: 'wechat_menu_item.edit'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_menu_item.edit_form:
+  path: '/admin/wechat/config/menu/manage/{wechat_menu_item}'
+  defaults:
+    _entity_form: 'wechat_menu_item.edit'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_menu_item.delete_form:
+  path: '/admin/wechat/config/menu/manage/{wechat_menu_item}/delete'
+  defaults:
+    _entity_form: 'wechat_menu_item.delete'
+    _title: 'Delete'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+
+wechat_menu.default_search:
+  path: '/admin/wechat/config/default_search'
+  defaults:
+    _form: 'Drupal\wechat_menu\Form\WechatMenuDefaultSearchForm'
+    _title: 'Wechat default search'
+  requirements:
+    _permission: 'access administration pages'

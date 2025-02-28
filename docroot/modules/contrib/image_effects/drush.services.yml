@@ -1,0 +1,6 @@
+services:
+  image_effects.commands:
+    class: \Drupal\image_effects\Commands\ImageEffectsCommands
+    arguments: ['@entity_type.manager', '@image_effects.converter']
+    tags:
+      - { name: drush.command }

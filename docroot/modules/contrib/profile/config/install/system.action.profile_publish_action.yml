@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - profile
+  module:
+    - profile
+id: profile_publish_action
+label: 'Publish selected profile'
+type: profile
+plugin: 'entity:publish_action:profile'
+configuration: {  }

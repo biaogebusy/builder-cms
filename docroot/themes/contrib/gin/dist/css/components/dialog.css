@@ -1,0 +1,290 @@
+.ui-dialog:not(.ui-dialog-off-canvas) {
+  max-width: 1280px;
+  border: 0 none !important;
+  border-radius: var(--gin-border-m);
+  background: var(--gin-bg-layer);
+}
+
+@media (forced-colors: active) {
+  .ui-dialog:not(.ui-dialog-off-canvas) {
+    border: 1px solid buttonBorder !important;
+  }
+}
+
+.ui-dialog:not(.ui-dialog-off-canvas) .ui-dialog-content:first-of-type {
+  border-top-left-radius: var(--gin-border-m);
+  border-top-right-radius: var(--gin-border-m);
+}
+
+.ui-dialog:not(.ui-dialog-off-canvas) .layout-region-node-actions {
+  position: absolute;
+  bottom: 0;
+  top: auto;
+}
+
+[dir="ltr"] .ui-dialog:not(.ui-dialog-off-canvas) .layout-region-node-actions {
+  left: var(--gin-spacing-m);
+  right: auto;
+}
+
+[dir="rtl"] .ui-dialog:not(.ui-dialog-off-canvas) .layout-region-node-actions {
+  right: var(--gin-spacing-m);
+  left: auto;
+}
+
+.ui-dialog:not(.ui-dialog-off-canvas) .layout-region-node-secondary {
+  width: 100%;
+}
+
+.ui-dialog:not(.ui-dialog-off-canvas) .views-exposed-form.views-exposed-form,
+.ui-dialog:not(.ui-dialog-off-canvas) .views-displays {
+  border: 1px solid var(--gin-border-color-layer);
+}
+
+@media (max-width: 47.99em) {
+  .ui-dialog:not(.ui-dialog-off-canvas) {
+    min-width: 92%;
+    max-width: 92%;
+  }
+}
+
+.ui-dialog {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--gin-font);
+  outline: none;
+}
+
+.ui-dialog, .ui-dialog:focus, .ui-dialog:focus:active, .ui-dialog:focus:hover {
+  box-shadow: var(--gin-shadow-l1);
+}
+
+.ui-dialog .ui-dialog-titlebar {
+  line-height: 1.2;
+  padding: var(--gin-spacing-m) var(--gin-spacing-l);
+  background: #1b1b1d;
+  border: 0 none;
+  border-radius: var(--gin-border-m) var(--gin-border-m) 0 0;
+  position: relative;
+}
+
+@media (forced-colors: active) {
+  .ui-dialog .ui-dialog-titlebar {
+    border-bottom: 1px solid buttonBorder;
+  }
+}
+
+.ui-dialog .ui-dialog-title {
+  font-size: var(--gin-font-size-l);
+  font-weight: var(--gin-font-weight-normal);
+  color: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+[dir="ltr"] .ui-dialog .ui-dialog-title {
+  padding-right: var(--gin-spacing-xl);
+}
+
+[dir="rtl"] .ui-dialog .ui-dialog-title {
+  padding-left: var(--gin-spacing-xl);
+}
+
+.ui-dialog .ui-dialog-content {
+  color: var(--gin-color-text);
+}
+
+.ui-dialog .ui-widget-content.ui-dialog-buttonpane {
+  padding: var(--gin-spacing-s) var(--gin-spacing-l);
+  border-top: 1px solid var(--gin-border-color-layer);
+  border-bottom-left-radius: var(--gin-border-m);
+  border-bottom-right-radius: var(--gin-border-m);
+  background: var(--gin-bg-app);
+}
+
+.ui-dialog .ui-widget-content.ui-dialog-buttonpane .button {
+  font-weight: var(--gin-font-weight-heavy);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+[dir="ltr"] .ui-dialog .ui-widget-content.ui-dialog-buttonpane .button:last-of-type {
+  margin-right: 0;
+}
+
+[dir="rtl"] .ui-dialog .ui-widget-content.ui-dialog-buttonpane .button:last-of-type {
+  margin-left: 0;
+}
+
+.ui-dialog .ui-widget-content.ui-dialog-buttonpane .button.button--danger,
+.ui-dialog [data-drupal-selector*=-remove-form] .button.button--danger {
+  border-color: var(--gin-color-danger) !important;
+}
+
+.ui-dialog .ui-dialog-buttonset {
+  margin-top: 0;
+}
+
+.ui-dialog .ui-dialog-titlebar-close {
+  position: absolute;
+  top: 50%;
+  width: 2rem;
+  height: 2rem;
+  opacity: .8;
+  margin: 0 var(--gin-spacing-m);
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+}
+
+[dir="ltr"] .ui-dialog .ui-dialog-titlebar-close {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .ui-dialog .ui-dialog-titlebar-close {
+  right: auto;
+  left: 0;
+}
+
+.ui-dialog .ui-dialog-titlebar-close .ui-icon-closethick {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  margin: 0;
+  transform: none;
+  background: #fff;
+  -webkit-mask-image: url("../../media/sprite.svg#close-view");
+          mask-image: url("../../media/sprite.svg#close-view");
+  -webkit-mask-size: var(--gin-icon-size-close) var(--gin-icon-size-close);
+          mask-size: var(--gin-icon-size-close) var(--gin-icon-size-close);
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center center;
+          mask-position: center center;
+}
+
+[dir="ltr"] .ui-dialog .ui-dialog-titlebar-close .ui-icon-closethick {
+  left: 0;
+}
+
+[dir="rtl"] .ui-dialog .ui-dialog-titlebar-close .ui-icon-closethick {
+  right: 0;
+}
+
+@media (forced-colors: active) {
+  .ui-dialog .ui-dialog-titlebar-close .ui-icon-closethick {
+    background: linktext;
+  }
+}
+
+.ui-dialog .ui-dialog-titlebar-close:hover {
+  opacity: 1;
+}
+
+.ui-dialog .ui-widget-content.ui-dialog-content {
+  padding-left: var(--gin-spacing-l);
+  padding-right: var(--gin-spacing-l);
+  background: var(--gin-bg-layer);
+}
+
+.ui-dialog .gin-layer-wrapper {
+  margin-bottom: var(--gin-spacing-l);
+}
+
+.erl-overlay,
+.layout-paragraphs-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  width: calc(100% - var(--gin-spacing-xl)) !important;
+}
+
+[dir="ltr"] .erl-overlay,
+[dir="ltr"] .layout-paragraphs-dialog {
+  left: 50% !important;
+  transform: translate(-50%, -50%);
+}
+
+[dir="rtl"] .erl-overlay,
+[dir="rtl"] .layout-paragraphs-dialog {
+  right: 50% !important;
+  transform: translate(50%, -50%);
+}
+
+@media (min-width: 64em) {
+  .erl-overlay,
+  .layout-paragraphs-dialog {
+    width: calc(100% - var(--gin-spacing-xxxl)) !important;
+  }
+}
+
+ul.paragraphs-add-dialog-list {
+  margin: var(--gin-spacing-l) 0;
+}
+
+.ui-widget-overlay {
+  opacity: .9;
+  background: var(--gin-bg-layer2);
+}
+
+.views-ui-dialog .views-offset-bottom {
+  border-top: 1px solid var(--gin-border-color);
+}
+
+@media (forced-colors: active) {
+  .views-ui-dialog .views-offset-bottom {
+    border-top: none;
+  }
+}
+
+.ui-widget-content a {
+  color: var(--gin-color-primary);
+}
+
+.ui-widget.ui-dialog.ui-dialog-off-canvas {
+  --gin-offcanvas-active: var(--gin-color-primary);
+  background: #444;
+  border: 0 none;
+  box-shadow: 0 0 48px rgba(0, 0, 0, .075);
+}
+
+.ui-widget.ui-dialog.ui-dialog-off-canvas .ui-dialog-titlebar {
+  background: #1b1b1d;
+  border-radius: 0;
+}
+
+.ui-widget.ui-dialog.ui-dialog-off-canvas .ui-resizable-w {
+  border: 0 none;
+  background-color: transparent;
+}
+
+.ui-widget.ui-dialog.ui-dialog-off-canvas .fieldset {
+  color: var(--gin-color-text);
+}
+
+.ui-widget.ui-dialog.ui-dialog-off-canvas #drupal-off-canvas .button--primary[type=submit] {
+  background: var(--gin-offcanvas-active);
+}
+
+.ui-dialog .ui-widget-content.ui-dialog-content {
+  overflow: auto;
+}
+
+.ui-dialog.webform-off-canvas .ui-widget-content.ui-dialog-content {
+  background: var(--gin-bg-layer);
+}
+
+table.treetable tr.branch {
+  background-color: transparent;
+}
+
+.ui-dialog .gin-layer-wrapper {
+  margin-bottom: var(--gin-spacing-l);
+  margin-top: var(--gin-spacing-l);
+}
+
+.views-ui-dialog.views-ui-dialog > .ui-dialog-content {
+  padding: 0;
+}
+

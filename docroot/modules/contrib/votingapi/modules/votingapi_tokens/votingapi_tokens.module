@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Contains votingapi_tokens.module.
+ *
+ * Add support for vote tokens on entities..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function votingapi_tokens_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.votingapi_tokens':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('This module enables tokens for all entity types that has <kbd>voting_api_field</kbd>.') . '</p>';
+      $output .= '<h3>' . t('Usage') . '</h3>';
+      $output .= '<p>' . t('Tokens are dynamic and you have to pass <emph>vote_type</emph> as the last parameter. Module defines four tokens:');
+      $output .= t('<ul><li>Vote count :: <code>[votingapi_ENTITY_TYPE_token:vote_count:VOTE_TYPE]</code></li>');
+      $output .= t('<li>Vote average :: <code>[votingapi_ENTITY_TYPE_token:vote_average:VOTE_TYPE]</code></li>');
+      $output .= t('<li>Best vote :: <code>[votingapi_ENTITY_TYPE_token:best_vote:VOTE_TYPE]</code></li>');
+      $output .= t('<li>Worst vote :: <code>[votingapi_ENTITY_TYPE_token:worst_vote:VOTE_TYPE]</code></li>');
+      $output .= '</ul></p>';
+      return $output;
+
+    default:
+  }
+}

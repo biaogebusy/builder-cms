@@ -1,0 +1,488 @@
+// -------
+// Imports
+// -------
+@import "../navigation/variables";
+@import "../navigation/admin-toolbar";
+@import "../navigation/toolbar-menu";
+@import "../navigation/toolbar-block";
+@import "../navigation/toolbar-link";
+@import "../navigation/tooltip";
+
+// Toolbar Variables
+:root {
+  --gin-toolbar-height: 39px;
+  --gin-toolbar-secondary-height: 48px;
+  --gin-scroll-offset: 72px;
+  --gin-toolbar-y-offset: var(--gin-toolbar-height);
+  --gin-toolbar-x-offset: 0px; // Needs px to work in calc() functions.
+  --gin-sticky-offset: 0px; // Needs px to work in calc() functions.
+  --gin-icon-size-toolbar: 20px;
+
+  @include mq(medium) {
+    --gin-toolbar-height: 0px; // Needs px to work in calc() functions.
+    --gin-toolbar-secondary-height: 52px;
+    --gin-toolbar-x-offset: var(--drupal-displace-offset-left, 64px);
+    --gin-scroll-offset: 130px;
+    --gin-sticky-offset: var(--gin-height-sticky);
+  }
+}
+
+html.admin-toolbar-expanded {
+  @include mq(medium) {
+    --gin-toolbar-x-offset: var(--drupal-displace-offset-left, 264px);
+  }
+}
+
+body.gin--navigation {
+  @include mq($to: medium) {
+    padding-top: var(--gin-toolbar-y-offset) !important;
+    padding-left: var(--gin-toolbar-x-offset, 39px) !important;
+  }
+}
+
+.gin--navigation .gin-secondary-toolbar:not(.gin-secondary-toolbar--frontend) {
+  margin-bottom: var(--gin-spacing-xxs);
+}
+
+.gin--navigation .gin-secondary-toolbar--frontend {
+  z-index: 102;
+  margin-inline-start: var(--gin-toolbar-x-offset);
+}
+
+// Set transtion to Gin's to avoid different speeds.
+.admin-toolbar ~ .dialog-off-canvas-main-canvas,
+.gin--navigation .gin-secondary-toolbar--frontend {
+  transition: margin-inline-start var(--gin-transition-fast), margin-left var(--gin-transition-fast);
+}
+
+// ----------
+// Navigation
+// ----------
+.gin--navigation {
+  font-family: var(--gin-font);
+  padding-top: 0 !important;
+
+  .admin-toolbar {
+    top: 0;
+    overflow-y: initial;
+    padding-inline: 0;
+    padding-block-start: 0;
+    border-right: 0;
+    box-shadow: 1px 0 0 var(--gin-border-color-layer);
+
+    // Hide on smaller screens for now as this is not ready yet.
+    @include mq($to: medium) {
+      display: none;
+    }
+  }
+
+  .admin-toolbar__content {
+    padding-block: var(--gin-spacing-xxs);
+    padding-inline: var(--gin-spacing-xs);
+    margin-block-end: 0;
+    overflow-y: auto;
+    // Scroll shadow
+    background: linear-gradient(var(--gin-bg-layer) 30%, var(--gin-bg-layer)),
+    linear-gradient(var(--gin-bg-layer), var(--gin-bg-layer) 80%) 0 100%,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, .15), rgba(0, 0, 0, 0)),
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, .15), rgba(0, 0, 0, 0)) 0 100%;
+    background-color: var(--gin-bg-layer);
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+    background-size: 100% 40px, 100% 40px, 100% 16px, 100% 16px;
+  }
+
+  .admin-toolbar__sticky-section {
+    position: static;
+    width: 100%;
+    margin-inline: 0;
+    padding-block-start: var(--gin-spacing-xs);
+    padding-block-end: 0;
+  }
+
+  .admin-toolbar,
+  .admin-toolbar__sticky-section {
+    background: var(--gin-bg-layer);
+  }
+
+  // Navigation header
+  .admin-toolbar__header {
+    margin-bottom: -4px;
+  }
+
+  // Content block
+  .toolbar-block__content.toolbar-block__content--content {
+    margin-block-start: var(--space-s);
+  }
+
+  // Navigation link
+  .toolbar-link {
+    color: var(--gin-color-text);
+    font-weight: normal;
+  }
+
+  // Toolbar menu
+  .toolbar-menu {
+    margin-inline: 0;
+  }
+
+  // Focus
+  .toolbar-menu__item--level-1 {
+    > .toolbar-link {
+      padding-block: calc(var(--gin-spacing-xs) + 1px);
+      margin-bottom: var(--gin-spacing-xxxs);
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);
+      }
+    }
+  }
+
+  .navigation-menu-wrapper.menu--logo {
+    margin-bottom: -5px;
+  }
+
+  .menu-item.current > .toolbar-link {
+    color: var(--gin-color-primary);
+  }
+
+  // -------
+  // Level 1
+  // -------
+
+  //Active menu item
+  .toolbar-menu__item--level-1.menu-item--expanded,
+  .toolbar-menu__item--level-1.current,
+  .toolbar-menu__item--level-1.active-path,
+  .toolbar-menu__item--level-2.active-path {
+    background-color: transparent;
+
+    > .toolbar-link {
+      color: var(--gin-color-primary);
+      background-color: var(--gin-color-primary-light);
+
+      // Icons
+      &::before,
+      &::after {
+        background: var(--gin-color-primary);
+      }
+
+      &:hover,
+      &:focus {
+        color: var(--gin-color-primary-hover);
+        background-color: var(--gin-color-primary-light-hover);
+      }
+    }
+  }
+
+  // Menu item hover
+  .toolbar-menu__item--level-1 > .toolbar-link:hover,
+  .toolbar-menu__item--level-1 > .toolbar-link:focus,
+  .toolbar-menu__item--level-2 > .toolbar-link:hover,
+  .toolbar-menu__item--level-2 > .toolbar-link:focus,
+  .toolbar-menu__item--level-2 .toolbar-link:hover,
+  .toolbar-menu__item--level-2 .toolbar-link:focus,
+  .toolbar-menu__item.toolbar-menu__item--expanded:not(.current) > .toolbar-link,
+  .toolbar-link--sidebar-toggle:hover,
+  .toolbar-link--sidebar-toggle:focus {
+    color: var(--gin-color-primary-hover);
+    background-color: var(--gin-color-primary-light-hover);
+
+    // Icons
+    &::before,
+    &::after {
+      background: var(--gin-color-primary);
+    }
+  }
+
+  // Hide Drupal 9 block_content links
+  .toolbar-menu__item--level-1 > .toolbar-link--manage-fields,
+  .toolbar-menu__item--level-1 > .toolbar-link--manage-form-display,
+  .toolbar-menu__item--level-1 > .toolbar-link--manage-display,
+  .toolbar-menu__item--level-1 > .toolbar-link--manage-permissions,
+  .toolbar-menu__item--level-1 > .toolbar-link--delete,
+  .toolbar-menu__item--level-1 > .toolbar-link[class*="toolbar-link--admin-toolbar-tools-extra-linksentity"],
+  .toolbar-menu__item--level-1 > .toolbar-link--announcements-feed-announcement
+  {
+    display: none;
+  }
+
+  // -----------
+  // Level 2 & 3
+  // -----------
+  .toolbar-menu__item--level-2,
+  .toolbar-menu__item--level-3  {
+    font-size: var(--gin-font-size-xs);
+  }
+
+  .toolbar-menu__item--level-2.current > .toolbar-link::after,
+  .toolbar-menu__item--level-3.current > .toolbar-link::after {
+    background-color: var(--gin-color-primary);
+  }
+
+  .toolbar-menu__item--level-2 > .toolbar-link::before,
+  .toolbar-menu__item--level-3 > .toolbar-link::before,
+  .toolbar-menu__item--level-2.menu-item--expanded > .toolbar-menu::before {
+    background-color: var(--gin-border-color-layer2);
+  }
+
+  .toolbar .toolbar-menu,
+  .toolbar .toolbar-icon.toolbar-handle {
+    background-color: transparent;
+  }
+
+  .toolbar .toolbar-menu .toolbar-menu a {
+    color: var(--gin-color-text);
+  }
+}
+
+// Submenu
+html:not(.admin-toolbar-expanded) .gin--navigation .cloned-flyout,
+html:not(.admin-toolbar-expanded) .gin--navigation .cloned-flyout .toolbar-menu__arrow-ref::before,
+html:not(.admin-toolbar-expanded) .gin--navigation .toolbar-menu__item--level-1 > .toolbar-menu-wrapper,
+html:not(.admin-toolbar-expanded) .gin--navigation .toolbar-menu__item--level-1.menu-item--expanded > .toolbar-menu-wrapper .toolbar-menu__arrow-ref::before {
+  background-color: var(--gin-bg-layer3);
+}
+
+.admin-toolbar-expanded .admin-toolbar .admin-toolbar__content .admin-toolbar__item,
+.admin-toolbar-expanded .admin-toolbar .admin-toolbar__sticky-section .admin-toolbar__item {
+  margin-inline: var(--gin-spacing-xxs);
+}
+
+.toolbar-menu__item--to-title {
+  padding-inline: 6px;
+
+  .toolbar-link:hover {
+    color: var(--gin-color-primary-hover);
+  }
+}
+
+.toolbar-menu__item--level-1 .toolbar-link,
+.dashboard-link .toolbar-link {
+  padding-inline: 10px;
+}
+
+// Fixes a quirk when the toolbar
+// module is still active
+.toolbar-anti-flicker.toolbar-loading.toolbar-fixed body.gin--navigation,
+.toolbar-anti-flicker.toolbar-loading.toolbar-fixed.toolbar-horizontal.toolbar-tray-open body.gin--navigation {
+  padding-top: 0;
+}
+
+// --------------
+// Text overflow
+// --------------
+.toolbar-menu .toolbar-link--has-icon {
+  &,
+  .toolbar-link__label {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  &::before,
+  &::after {
+    flex-shrink: 0;
+  }
+}
+
+// --------------
+// Sidebar toggle
+// --------------
+button.toolbar-link--sidebar-toggle {
+  background: var(--gin-bg-layer2);
+
+  &::before {
+    opacity: .75;
+    position: relative;
+    mask-size: var(--space-s) var(--space-s);
+    transition: transform var(--gin-transition);
+  }
+
+  &:hover::before,
+  &:active::before,
+  &:focus::before {
+    opacity: 1;
+  }
+
+  &[aria-expanded=false]::before {
+    left: 1px;
+    transform: rotate(-90deg);
+  }
+
+  &[aria-expanded=true]::before {
+    left: -1px;
+    transform: rotate(90deg);
+  }
+}
+
+// --------------
+// Icon overrides
+// --------------
+
+.toolbar-link--has-icon {
+  --icon: icon('fallback'); /* Default icon, aka --basic */
+
+  &::before {
+    width: var(--gin-icon-size-toolbar);
+    height: var(--gin-icon-size-toolbar);
+    background-color: var(--gin-icon-color);
+    mask-size: 100% 100%;
+  }
+
+  &:hover::before,
+  &:focus::before {
+    background-color: var(--gin-color-primary);
+  }
+}
+
+// Custom Gin Home logo
+.toolbar-link--gin-home {
+  color: var(--gin-bg-layer2);
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  max-width: 40px;
+  padding: 10px !important; // make the logo 32px
+  margin: 6px 4px 0 !important;
+
+  &, &:hover, &:focus {
+    background: var(--gin-color-primary) !important;
+  }
+
+  &::before {
+    --icon: #{icon('drupal')};
+    background: var(--gin-bg-layer2) !important;
+  }
+
+  span {
+    display: none;
+  }
+
+  // Navigation expanded
+  .admin-toolbar-expanded & {
+    margin-inline-start: 0;
+
+    &::before {
+      margin-inline-end: 0;
+    }
+  }
+}
+
+.toolbar-link--admin-toolbar-tools-help::before {
+  --icon: #{icon('tool')};
+}
+
+.toolbar-link--system-themes-page::before {
+  --icon: #{icon('appearance')};
+}
+
+.toolbar-link--blocks::before {
+  --icon: #{icon('blocks')};
+}
+
+.toolbar-link--bookmarks::before {
+  --icon: #{icon('bookmarks')};
+}
+
+.toolbar-link--system-admin-config::before {
+  --icon: #{icon('config')};
+}
+
+.toolbar-link--content::before {
+  --icon: #{icon('content')};
+}
+
+.toolbar-link--create::before {
+  --icon: #{icon('create')};
+}
+
+.toolbar-link--system-modules-list::before {
+  --icon: #{icon('extend-new')};
+}
+
+.toolbar-link--files::before {
+  --icon: #{icon('files')};
+}
+
+.toolbar-link--help::before {
+  --icon: #{icon('help')};
+}
+
+.toolbar-link--media::before {
+  --icon: #{icon('media')};
+}
+
+.toolbar-link--entity-user-collection::before {
+  --icon: #{icon('people-new')};
+}
+
+.toolbar-link--system-admin-reports::before {
+  --icon: #{icon('reports')};
+}
+
+.toolbar-link--system-admin-structure::before {
+  --icon: #{icon('structure')};
+}
+
+.toolbar-link--sidebar-toggle[aria-expanded=false]::before,
+.toolbar-link--sidebar-toggle[aria-expanded=true]::before {
+  --icon: #{icon('chevron-down')};
+}
+
+.toolbar-link--user::before {
+  --icon: #{icon('user')};
+}
+
+// -------------
+// Secondary nav
+// -------------
+.gin-secondary-toolbar {
+  // Fixes quirks when the toolbar
+  // module is still active
+  .toolbar-menu__trigger {
+    display: none;
+  }
+
+  .toolbar-tray .menu-item + .menu-item {
+    border-left: none;
+  }
+
+  .toolbar-secondary .toolbar-bar .toolbar-id--toolbar-icon-user {
+    margin-right: -1em;
+  }
+}
+
+// ---------
+// User menu
+// ---------
+
+// Hide user menu in favor
+// of secondary one
+.gin--navigation .toolbar-link--user {
+  display: none !important;
+}
+
+// -----------------------
+// Hide Toolbar on desktop
+// -----------------------
+#toolbar-administration {
+  .toolbar-menu__item--level-1 {
+    display: block;
+  }
+
+  .menu-item {
+    font-weight: var(--gin-font-weight-normal);
+  }
+
+  // Show toolbar on smaller screens for now as this is not ready yet.
+  @include mq(medium) {
+    display: none;
+  }
+}
+
+.toolbar-menu__title,
+.toolbar-menu__sub-title,
+.toolbar-menu__trigger {
+  display: none !important;
+}

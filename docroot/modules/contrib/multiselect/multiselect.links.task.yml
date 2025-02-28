@@ -1,0 +1,4 @@
+multiselect.admin_settings:
+  route_name: multiselect.admin_settings
+  title: Multiselect
+  base_route: multiselect.admin_settings

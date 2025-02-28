@@ -1,0 +1,355 @@
+<?php
+
+/**
+ * @file
+ * A simple n-star voting widget, usable in other forms.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Template\Attribute;
+
+/**
+ * Implements hook_help().
+ */
+function fivestar_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.fivestar':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Fivestar voting module is a very simple rating module that provides the possibility to rate items with stars or similar items. This gives you the possibilities to rate various items or even to create online forms for evaluations and assessments with different questions to be answered. For more information, see the <a href=":online">online documentation for the Fivestar module</a>.', [':online' => 'https://www.drupal.org/documentation/modules/fivestar']) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('General') . '</dt>';
+      $output .= '<dd>' . t("The Fivestar module can be used to easily rate various types of content on your website. These ratings can be used on the content itself or even from the comments of that piece of content.") . '</dd>';
+      $output .= '<dt>' . t('Basic Concepts and Features') . '</dt>';
+      $output .= '<dd>' . t('Fivestar is an excellent voting widget first made available for use on Drupal 5 websites. The D5 module included the ability to create a voting widget for nodes. With Drupal 6 came the ability to add comments. And with Drupal 7, the web developer was given the ability to create the voting widget with any entity.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_microdata_suggestions().
+ */
+function fivestar_microdata_suggestions() {
+  $mappings = [];
+
+  // Add the review mapping for Schema.org.
+  $mappings['fields']['fivestar']['schema.org'] = [
+    '#itemprop' => ['aggregateRating'],
+    '#is_item' => TRUE,
+    '#itemtype' => ['http://schema.org/AggregateRating'],
+    'average_rating' => [
+      '#itemprop' => ['ratingValue'],
+    ],
+    'rating_count' => [
+      '#itemprop' => ['ratingCount'],
+    ],
+  ];
+
+  return $mappings;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function fivestar_theme() {
+  return [
+    'fivestar_static' => [
+      'variables' => [
+        'rating' => NULL,
+        'stars' => 5,
+        'vote_type' => 'vote',
+        'widget' => ['name' => 'default', 'css' => ''],
+      ],
+    ],
+    'fivestar_static_element' => [
+      'variables' => [
+        'star_display' => NULL,
+        'title' => NULL,
+        'description' => NULL,
+      ],
+    ],
+    'fivestar_summary' => [
+      'variables' => [
+        'user_rating' => NULL,
+        'average_rating' => NULL,
+        'votes' => 0,
+        'stars' => 5,
+        'microdata' => [],
+      ],
+    ],
+    // This is dead code in Drupal 10.
+    'fivestar_preview' => [
+      'function' => 'theme_fivestar_preview',
+      'variables' => [
+        'style' => NULL,
+        'text' => NULL,
+        'stars' => NULL,
+        'unvote' => NULL,
+        'title' => NULL,
+      ],
+      'file' => 'includes/fivestar.theme.inc',
+    ],
+    'fivestar_formatter_rating' => [
+      'render element' => 'element',
+    ],
+    'fivestar_formatter_percentage' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_fivestar_access().
+ */
+function fivestar_fivestar_access($entity_type, $id, $vote_type, $uid) {
+  // Check to see if there is a field instance on this entity.
+  $fields = field_read_fields(['module' => 'fivestar']);
+  foreach ($fields as $field) {
+    if ($field['settings']['axis'] == $vote_type) {
+      $params = [
+        'entity_type' => $entity_type,
+        'field_name' => $field['field_name'],
+      ];
+      $instance = field_read_instances($params);
+      if (!empty($instance)) {
+        return TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_comment_form_alter().
+ *
+ * This hook removes the parent node, together with the fivestar field, from
+ * the comment preview page. If this is left in, when the user presses the
+ * "Save" button after the preview page has been displayed, the fivestar widget
+ * gets the input rather than the comment; the user's input is lost. Based on a
+ * suggestion by ChristianAdamski in issue 1289832-3.
+ */
+function fivestar_form_comment_form_alter(&$form, &$form_state, $form_id) {
+  $fivestar_field_keys = [];
+  if (isset($form['comment_output_below'])) {
+    foreach ($form['comment_output_below'] as $key => $value) {
+      if (is_array($value) && !empty($value['#field_type']) && $value['#field_type'] == 'fivestar') {
+        $fivestar_field_keys[] = $key;
+      }
+    }
+  }
+  if ($fivestar_field_keys) {
+    foreach ($fivestar_field_keys as $key) {
+      unset($form['comment_output_below'][$key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function fivestar_form_field_ui_field_edit_form_alter(&$form, $form_state) {
+  /** @var Drupal\field\FieldStorageConfigInterface $field */
+  $field = $form['#field'];
+  if ($field->getType() == 'fivestar') {
+    // Multiple values is not supported with Fivestar.
+    $form['field']['cardinality']['#access'] = FALSE;
+    $form['field']['cardinality']['#value'] = 1;
+    // Setting "default value" here is confusing and for all practical purposes
+    // meaningless with existing widgets provided by fivestar (and anything else
+    // available in contrib).
+    $form['instance']['default_value_widget']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_fivestar_widgets().
+ */
+function fivestar_fivestar_widgets() {
+  // Widgets defined by the core Fivestar module.
+  $widgets = [
+    'basic' => [
+      'library' => 'fivestar/basic',
+      'label' => t('Basic'),
+    ],
+    'craft' => [
+      'library' => 'fivestar/craft',
+      'label' => t('Craft'),
+    ],
+    'drupal' => [
+      'library' => 'fivestar/drupal',
+      'label' => t('Drupal'),
+    ],
+    'flames' => [
+      'library' => 'fivestar/flames',
+      'label' => t('Flames'),
+    ],
+    'hearts' => [
+      'library' => 'fivestar/hearts',
+      'label' => t('Hearts'),
+    ],
+    'lullabot' => [
+      'library' => 'fivestar/lullabot',
+      'label' => t('Lullabot'),
+    ],
+    'minimal' => [
+      'library' => 'fivestar/minimal',
+      'label' => t('Minimal'),
+    ],
+    'outline' => [
+      'library' => 'fivestar/outline',
+      'label' => t('Outline'),
+    ],
+    'oxygen' => [
+      'library' => 'fivestar/oxygen',
+      'label' => t('Oxygen'),
+    ],
+    'small' => [
+      'library' => 'fivestar/small',
+      'label' => t('Small'),
+    ],
+  ];
+
+  return $widgets;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar rating formatter.
+ */
+function template_preprocess_fivestar_formatter_rating(array &$variables) {
+  $element = $variables['element'];
+
+  // Get number of stars being used. Usually 5 ...
+  $stars = $element['#instance_settings']['stars'];
+  if (empty($stars)) {
+    $stars = 5;
+  }
+  // Set stars variable.
+  $variables['stars'] = $stars;
+
+  // Get average, which ranges from 0 to 100.
+  $average = $element['#item']['average'];
+  if (empty($average)) {
+    $average = 0;
+  }
+  // Set average variable.
+  $variables['average'] = round($average, 1);
+
+  // Rating is # out of available stars.
+  // For example, if the average vote is 2 out of 5 stars, the rating
+  // would be 2.
+  $rating = round(($average / 100) * $stars, 1);
+  $variables['rating'] = $rating;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar percentage formatter.
+ */
+function template_preprocess_fivestar_formatter_percentage(array &$variables) {
+  $element = $variables['element'];
+
+  // Get average, which ranges from 0 to 100.
+  $average = $element['#item']['average'];
+  if (empty($average)) {
+    $average = 0;
+  }
+
+  // Set average variable.
+  $variables['average'] = round($average, 1);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar static output.
+ */
+function template_preprocess_fivestar_static(array &$variables) {
+  // Get the total number of allowed stars. Defaults to 5.
+  $variables['stars'] = !empty($variables['stars']) ? $variables['stars'] : 5;
+
+  // Get number of selected stars.
+  $variables['numeric_rating'] = $variables['rating'] / (100 / $variables['stars']);
+
+  // Prepare stars data.
+  $stars_data = [];
+  for ($i = 1; $i <= $variables['stars']; $i++) {
+    $star_value = ceil((100 / $variables['stars']) * $i);
+    $prev_star_value = ceil((100 / $variables['stars']) * ($i - 1));
+
+    $stars_data[$i] = [
+      'star_value' => $star_value,
+      'percent' => NULL,
+    ];
+
+    if ($variables['rating'] < $star_value && $variables['rating'] > $prev_star_value) {
+      $stars_data[$i]['percent'] = (($variables['rating'] - $prev_star_value) / ($star_value - $prev_star_value)) * 100;
+    }
+  }
+
+  $variables['stars_data'] = $stars_data;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar static element.
+ *
+ * Displays a static fivestar value with a title and description.
+ */
+function template_preprocess_fivestar_static_element(array &$variables) {
+  $variables['content'] = [
+    '#type' => 'item',
+    '#title' => $variables['title'],
+    '#description' => $variables['description'],
+    '#description_display' => 'after',
+    '#children' => $variables['star_display'],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for the Fivestar summary output.
+ */
+function template_preprocess_fivestar_summary(array &$variables) {
+  $votes = $variables['votes'];
+  $stars_number = $variables['stars'];
+  $user_rating = $variables['user_rating'];
+  $average_rating = $variables['average_rating'];
+
+  $show_votes = $votes !== NULL;
+  $show_user_rating = $user_rating !== NULL;
+  $show_average_rating = $average_rating !== NULL;
+
+  $variables['average_rating_microdata'] = '';
+  $variables['rating_count_microdata'] = '';
+
+  if ($show_user_rating) {
+    $output_type = $show_votes ? 'user-count' : 'user';
+    if ($user_rating > 0) {
+      $variables['user_stars'] = round(($user_rating * $stars_number) / 100, 1);
+    }
+    else {
+      $variables['user_stars'] = t('None');
+    }
+  }
+
+  if ($show_average_rating) {
+    if ($show_user_rating) {
+      $output_type = 'combo';
+    }
+    else {
+      $output_type = $show_votes ? 'average-count' : 'average';
+    }
+
+    $variables['average_stars'] = round(($average_rating * $stars_number) / 100, 1);
+    if (!empty($variables['microdata']['average_rating']['#attributes'])) {
+      $variables['average_rating_microdata'] = new Attribute($variables['microdata']['average_rating']['#attributes']);
+    }
+  }
+
+  if ($show_votes) {
+    if (!$show_user_rating && !$show_average_rating) {
+      $output_type = 'count';
+    }
+    if ($votes > 0) {
+      if (!empty($variables['microdata']['rating_count']['#attributes'])) {
+        $variables['rating_count_microdata'] = new Attribute($variables['microdata']['rating_count']['#attributes']);
+      }
+    }
+  }
+  $variables['output_type'] = $output_type ?? '';
+}

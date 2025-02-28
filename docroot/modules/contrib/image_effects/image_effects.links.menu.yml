@@ -1,0 +1,5 @@
+image_effects.settings:
+  title: 'Image Effects'
+  description: 'Configure Image Effects settings.'
+  parent: system.admin_config_media
+  route_name: image_effects.settings

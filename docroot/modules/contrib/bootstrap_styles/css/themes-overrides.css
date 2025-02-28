@@ -1,0 +1,13 @@
+#bs_ui .custom-control-label::before, #bs_ui .custom-control-label::after {
+  display: none;
+}
+
+#bs_ui .custom-control {
+  padding-left: 0;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#bs_ui .custom-switch {
+  padding-left: 0;
+}

@@ -1,0 +1,42 @@
+services:
+  access_check.product_variation_collection:
+    class: Drupal\commerce_product\Access\ProductVariationCollectionAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+    - { name: access_check, applies_to: _product_variation_collection_access }
+
+  access_check.product_variation_create:
+    class: Drupal\commerce_product\Access\ProductVariationCreateAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+    - { name: access_check, applies_to: _product_variation_create_access }
+
+  commerce_product.attribute_field_manager:
+    class: Drupal\commerce_product\ProductAttributeFieldManager
+    arguments: ['@entity_field.manager', '@entity_type.bundle.info', '@entity_type.manager', '@cache.data']
+
+  commerce_product.lazy_builders:
+    class: Drupal\commerce_product\ProductLazyBuilders
+    arguments: ['@entity_type.manager', '@form_builder', '@entity.repository']
+
+  commerce_product.variation_field_renderer:
+    class: Drupal\commerce_product\ProductVariationFieldRenderer
+    arguments: ['@entity_type.manager']
+
+  commerce_product.product_route_context:
+    class: Drupal\commerce_product\ContextProvider\ProductRouteContext
+    arguments: ['@current_route_match', '@entity_type.manager']
+    tags:
+      - { name: 'context_provider' }
+
+  commerce_product.product_variation_route_context:
+    class: Drupal\commerce_product\ContextProvider\ProductVariationContext
+    arguments: ['@current_route_match', '@entity_type.manager']
+    calls:
+      - [ setSampleEntityGenerator, [ '@?layout_builder.sample_entity_generator' ] ]
+    tags:
+      - { name: 'context_provider' }
+
+  commerce_product.variation_attribute_mapper:
+    class: Drupal\commerce_product\ProductVariationAttributeMapper
+    arguments: ['@commerce_product.attribute_field_manager', '@entity_type.manager', '@entity.repository']

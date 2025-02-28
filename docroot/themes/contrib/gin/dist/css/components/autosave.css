@@ -1,0 +1,14 @@
+#autosave-notification {
+  font-size: var(--gin-font-size-s);
+  bottom: var(--gin-spacing-xs);
+  border-radius: var(--gin-border-xs);
+}
+
+[dir="ltr"] #autosave-notification {
+  right: var(--gin-spacing-xs);
+}
+
+[dir="rtl"] #autosave-notification {
+  left: var(--gin-spacing-xs);
+}
+

@@ -1,0 +1,584 @@
+# image_effects module schema
+
+# Schema for module settings.
+
+image_effects.settings:
+  type: config_object
+  label: 'Image Effects settings'
+  mapping:
+    color_selector:
+      type: mapping
+      label: 'Color selector plugin'
+      mapping:
+        plugin_id:
+          type: string
+          label: 'Selected plugin id'
+        plugin_settings:
+          type: sequence
+          label: 'Plugin settings'
+          sequence:
+            type: image_effects.plugin.color_selector.[%key]
+    image_selector:
+      type: mapping
+      label: 'Image selector plugin'
+      mapping:
+        plugin_id:
+          type: string
+          label: 'Selected plugin id'
+        plugin_settings:
+          type: sequence
+          label: 'Plugins settings'
+          sequence:
+            type: image_effects.plugin.image_selector.[%key]
+    font_selector:
+      type: mapping
+      label: 'Font selector plugin'
+      mapping:
+        plugin_id:
+          type: string
+          label: 'Selected plugin id'
+        plugin_settings:
+          type: sequence
+          label: 'Plugins settings'
+          sequence:
+            type: image_effects.plugin.font_selector.[%key]
+
+# Schema for image_effects plugins settings.
+
+image_effects.plugin.color_selector.*:
+  type: mapping
+  label: 'Color selector plugin settings'
+
+image_effects.plugin.color_selector.html_color:
+  type: mapping
+  label: 'HTML color element'
+
+image_effects.plugin.color_selector.farbtastic:
+  type: mapping
+  label: 'Farbtastic color picker'
+
+image_effects.plugin.image_selector.*:
+  type: mapping
+  label: 'Image selector plugin settings'
+
+image_effects.plugin.image_selector.basic:
+  type: mapping
+  label: 'Basic'
+
+image_effects.plugin.image_selector.dropdown:
+  type: mapping
+  label: 'Dropdown'
+  mapping:
+    path:
+      type: string
+      label: 'Path where image files can be found'
+
+image_effects.plugin.font_selector.*:
+  type: mapping
+  label: 'Font selector plugin settings'
+
+image_effects.plugin.font_selector.basic:
+  type: mapping
+  label: 'Basic'
+
+image_effects.plugin.font_selector.dropdown:
+  type: mapping
+  label: 'Dropdown'
+  mapping:
+    path:
+      type: string
+      label: 'Path where font files can be found'
+
+# Image effects settings
+
+image.effect.image_effects_auto_orient:
+  type: mapping
+  label: 'Automatically correct orientation'
+  mapping:
+    scan_exif:
+      type: boolean
+      label: 'Scan EXIF data when calculating styled image dimensions'
+
+image.effect.image_effects_background:
+  type: mapping
+  label: 'Background image effect'
+  mapping:
+    background_image:
+      type: string
+      label: 'Background image path'
+    background_image_width:
+      type: string
+      label: 'Background image width in px'
+    background_image_height:
+      type: string
+      label: 'Background image height in px'
+    placement:
+      type: string
+      label: 'Position of the source image on the background image'
+    x_offset:
+      type: integer
+      label: 'X offset of the source image vs placement'
+    y_offset:
+      type: integer
+      label: 'Y offset of the source image vs placement'
+    opacity:
+      type: integer
+      label: 'Opacity of the source image'
+
+image.effect.image_effects_brightness:
+  type: mapping
+  label: 'Adjust image brightness'
+  mapping:
+    level:
+      type: integer
+      label: 'Level'
+
+image.effect.image_effects_color_shift:
+  type: mapping
+  label: 'Shift image colors'
+  mapping:
+    RGB:
+      type: string
+      label: 'RGB color shift'
+
+image.effect.image_effects_contrast:
+  type: mapping
+  label: 'Adjust image contrast'
+  mapping:
+    level:
+      type: integer
+      label: 'Level'
+
+image.effect.image_effects_gaussian_blur:
+  type: mapping
+  label: 'Blur the image with a Gaussian operator'
+  mapping:
+    radius:
+      type: integer
+      label: 'Radius'
+    sigma:
+      type: float
+      label: 'Sigma'
+
+image.effect.image_effects_imagemagick_arguments:
+  type: mapping
+  label: 'Directly enter ImageMagick command line arguments'
+  mapping:
+    command_line:
+      type: text
+      label: 'Command line arguments'
+    dimensions_method:
+      type: string
+      label: 'Method for determining dimensions'
+    width:
+      type: string
+      label: 'Width in px or %'
+    height:
+      type: string
+      label: 'Height in px or %'
+
+# The image invert effect has no settings.
+image.effect.image_effects_invert:
+  type: sequence
+
+image.effect.image_effects_mask:
+  type: mapping
+  label: 'Apply a mask to the image'
+  mapping:
+    mask_image:
+      type: string
+      label: 'Mask image path'
+    mask_width:
+      type: string
+      label: 'Mask image horizontal resizing'
+    mask_height:
+      type: string
+      label: 'Mask image vertical resizing'
+    placement:
+      type: string
+      label: 'Position of the mask image on the image'
+    x_offset:
+      type: string
+      label: 'X offset of the mask image vs placement'
+    y_offset:
+      type: string
+      label: 'Y offset of the mask image vs placement'
+
+image.effect.image_effects_mirror:
+  type: mapping
+  label: 'Mirror the image horizontally and/or vertically'
+  mapping:
+    x_axis:
+      type: boolean
+      label: 'Flop the source image horizontally'
+    y_axis:
+      type: boolean
+      label: 'Flip the source image vertically'
+
+image.effect.image_effects_opacity:
+  type: mapping
+  label: 'Adjust image transparency level'
+  mapping:
+    opacity:
+      type: integer
+      label: 'Opacity % of the source image'
+
+image.effect.image_effects_pixelate:
+  type: mapping
+  label: 'Pixelate the image'
+  mapping:
+    size:
+      type: integer
+      label: 'Size of the pixels'
+
+image.effect.image_effects_relative_crop:
+  type: mapping
+  label: 'Relative crop'
+  mapping:
+    width:
+      type: integer
+      label: 'Ratio width'
+    height:
+      type: integer
+      label: 'Ratio height'
+    anchor:
+      type: mapping
+      label: 'Anchor'
+      mapping:
+        width:
+          type: string
+          label: 'Width anchor'
+          constraints:
+            AllowedValues: ['left', 'center', 'right']
+        height:
+          type: string
+          label: 'Height anchor'
+          constraints:
+            AllowedValues: ['top', 'center', 'bottom']
+
+image.effect.image_effects_resize_percentage:
+  type: mapping
+  label: 'Resize based on percentage'
+  mapping:
+    width:
+      type: string
+      label: 'Width in px or %'
+    height:
+      type: string
+      label: 'Height in px or %'
+
+image.effect.image_effects_rotate:
+  type: mapping
+  label: 'Image rotate'
+  mapping:
+    degrees:
+      type: integer
+      label: 'Rotation angle'
+    background_color:
+      label: 'Background color'
+      type: color_hex
+    fallback_transparency_color:
+      label: 'Fallback color for full transparency, when image or toolkit do not support it'
+      type: color_hex
+    method:
+      type: string
+      label: 'Determine how the rotation angle is calculated'
+      constraints:
+        AllowedValues: ['exact', 'pseudorandom', 'random']
+
+image.effect.image_effects_scale_and_smart_crop:
+  type: mapping
+  label: 'Similar to Scale and Crop, but preserves the portion of the image with the most entropy.'
+  mapping:
+    width:
+      type: string
+      label: 'Width in px or %'
+    height:
+      type: string
+      label: 'Height in px or %'
+    upscale:
+      type: boolean
+      label: 'Upscale'
+    simulate:
+      type: boolean
+      label: 'Simulate'
+    algorithm:
+      type: string
+      label: 'Calculation algorithm'
+
+image.effect.image_effects_set_canvas:
+  type: mapping
+  label: 'Set canvas image effect'
+  mapping:
+    canvas_size:
+      type: string
+      label: 'Canvas sizing, exact or relative'
+    canvas_color:
+      type: string
+      label: 'RGBA color of the canvas'
+    exact:
+      type: mapping
+      mapping:
+        width:
+          type: string
+          label: 'Exact width in px'
+        height:
+          type: string
+          label: 'Exact height in px'
+        placement:
+          type: string
+          label: 'Position of the source image on the canvas'
+        x_offset:
+          type: integer
+          label: 'x offset vs placement'
+        y_offset:
+          type: integer
+          label: 'y offset vs placement'
+    relative:
+      type: mapping
+      mapping:
+        left:
+          type: integer
+          label: 'Left margin in px'
+        right:
+          type: integer
+          label: 'Right margin in px'
+        top:
+          type: integer
+          label: 'Top margin in px'
+        bottom:
+          type: integer
+          label: 'Bottom margin in px'
+
+image.effect.image_effects_set_transparent_color:
+  type: mapping
+  label: 'Set transparent color'
+  mapping:
+    transparent_color:
+      type: string
+      label: 'RGB color'
+
+image.effect.image_effects_smart_crop:
+  type: mapping
+  label: 'Similar to Crop, but preserves the portion of the image with the most entropy.'
+  mapping:
+    width:
+      type: string
+      label: 'Width in px or %'
+    height:
+      type: string
+      label: 'Height in px or %'
+    square:
+      type: boolean
+      label: 'Make width/height the same if one dimension is not specified'
+    simulate:
+      type: boolean
+      label: 'Simulate'
+    algorithm:
+      type: string
+      label: 'Calculation algorithm'
+
+# The strip metadata effect has no settings.
+image.effect.image_effects_strip_metadata:
+  type: sequence
+
+image.effect.image_effects_text_overlay:
+  type: mapping
+  label: 'Text overlay effect'
+  mapping:
+    text_string:
+      type: text
+      label: 'Text associated with this effect, can include tokens'
+    font:
+      type: mapping
+      mapping:
+        name:
+          type: string
+          label: 'Font name'
+        uri:
+          type: string
+          label: 'Font file URI'
+        size:
+          type: integer
+          label: 'Font size'
+        angle:
+          type: integer
+          label: 'Font orientation'
+        color:
+          type: color_hex
+          label: 'Font color'
+        stroke_mode:
+          type: string
+          label: 'Type of stroke (outline/shadow)'
+        stroke_color:
+          type: color_hex
+          label: 'Color of the stroke'
+        outline_top:
+          type: integer
+          label: 'Outline px on the top'
+        outline_right:
+          type: integer
+          label: 'Outline px on the right'
+        outline_bottom:
+          type: integer
+          label: 'Outline px on the bottom'
+        outline_left:
+          type: integer
+          label: 'Outline px on the left'
+        shadow_x_offset:
+          type: integer
+          label: 'Shadow horizontal offset in px'
+        shadow_y_offset:
+          type: integer
+          label: 'Shadow vertical offset in px'
+        shadow_width:
+          type: integer
+          label: 'Shadow width in px'
+        shadow_height:
+          type: integer
+          label: 'Shadow height in px'
+    layout:
+      type: mapping
+      mapping:
+        padding_top:
+          type: integer
+          label: 'Padding top in px'
+        padding_right:
+          type: integer
+          label: 'Padding right in px'
+        padding_bottom:
+          type: integer
+          label: 'Padding bottom in px'
+        padding_left:
+          type: integer
+          label: 'Padding left in px'
+        x_pos:
+          type: string
+          label: 'Placement on canvas, horizontal'
+        y_pos:
+          type: string
+          label: 'Placement on canvas, vertical'
+        x_offset:
+          type: integer
+          label: 'Placement on canvas, horizontal, offset'
+        y_offset:
+          type: integer
+          label: 'Placement on canvas, vertical, offset'
+        background_color:
+          type: color_hex
+          label: 'Color of bounding box'
+        overflow_action:
+          type: string
+          label: 'Action when text wrapper overflows canvas'
+        extended_color:
+          type: color_hex
+          label: 'Color to be used when extending the underlying image'
+    text:
+      type: mapping
+      mapping:
+        strip_tags:
+          type: boolean
+          label: 'Strip HTML tags'
+        decode_entities:
+          type: boolean
+          label: 'Decode HTML entities'
+        maximum_chars:
+          type: integer
+          label: 'Maximum characters threshold'
+        excess_chars_text:
+          type: text
+          label: 'Text to append at the end of the trimmed text string when it exceeded maximum characters threshold'
+        maximum_width:
+          type: integer
+          label: 'Maximum width in px'
+        fixed_width:
+          type: boolean
+          label: 'Fixed width flag'
+        align:
+          type: string
+          label: 'Text alignment'
+        line_spacing:
+          type: integer
+          label: 'Line spacing in px'
+        case_format:
+          type: string
+          label: 'Text format conversion'
+
+image.effect.image_effects_watermark:
+  type: mapping
+  label: 'Watermark image effect'
+  mapping:
+    watermark_image:
+      type: string
+      label: 'Watermark image path'
+    watermark_width:
+      type: string
+      label: 'Watermark image horizontal resizing'
+    watermark_height:
+      type: string
+      label: 'Watermark image vertical resizing'
+    placement:
+      type: string
+      label: 'Position of the watermark image on the canvas'
+    x_offset:
+      type: string
+      label: 'X offset of the watermark image vs placement'
+    y_offset:
+      type: string
+      label: 'Y offset of the watermark image vs placement'
+    opacity:
+      type: integer
+      label: 'opacity'
+
+image.effect.image_effects_convolution:
+  type: mapping
+  label: 'Filter image using convolution'
+  mapping:
+    kernel:
+      type: sequence
+      label: 'Kernel'
+      sequence:
+        type: sequence
+        label: 'Row'
+        sequence:
+          type: integer
+          label: 'Column'
+    divisor:
+      type: integer
+      label: 'Divisor'
+    offset:
+      type: integer
+      label: 'Offset'
+    label:
+      type: string
+      label: 'Label'
+
+image.effect.image_effects_convolution_sharpen:
+  type: mapping
+  label: 'Sharpen image using convolution'
+  mapping:
+    level:
+      type: integer
+      label: 'Level'
+
+image.effect.image_effects_interlace:
+  type: mapping
+  label: 'Adjust interlace type'
+  mapping:
+    type:
+      type: string
+      label: 'Type'
+
+image.effect.image_effects_aspect_switcher:
+  type: mapping
+  label: 'Allows to choose image styles to apply based on orientation (portrait or landscape)'
+  mapping:
+    landscape_image_style:
+      type: string
+      label: 'Image style machine_name for landscape orientation'
+    portrait_image_style:
+      type: string
+      label: 'Image style machine_name for portrait orientation'
+    ratio_adjustment:
+      type: float
+      label: 'This allows you to bend the rules for how different the proportions need to be to trigger the switch'

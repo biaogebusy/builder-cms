@@ -1,0 +1,47 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.mie_demo_content.field_mie_image
+    - image.style.thumbnail
+    - taxonomy.vocabulary.mie_demo_content
+  module:
+    - image
+    - path
+    - text
+id: taxonomy_term.mie_demo_content.default
+targetEntityType: taxonomy_term
+bundle: mie_demo_content
+mode: default
+content:
+  description:
+    type: text_textarea
+    weight: 2
+    region: content
+    settings:
+      placeholder: ''
+      rows: 5
+    third_party_settings: {  }
+  field_mie_image:
+    weight: 1
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+    type: image_image
+    region: content
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }

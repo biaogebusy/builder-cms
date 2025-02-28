@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the menu breadcrumb module.
+ */
+
+/**
+ * Set new front_title config key from home_as_site_name.
+ */
+function menu_breadcrumb_update_8101() {
+  $config = \Drupal::configFactory()->getEditable('menu_breadcrumb.settings');
+
+  $home_as_site_name = $config->get('home_as_site_name');
+  // We suppose that if home_as_site_name is null it is because the settings
+  // form had been resaved or a custom update path had been done on the website.
+  if (!is_null($home_as_site_name)) {
+    // If the front_title key has already been set, do nothing.
+    if (is_null($config->get('front_title'))) {
+      if ($home_as_site_name == FALSE) {
+        $config->set('front_title', 1);
+      }
+      else {
+        $config->set('front_title', 0);
+      }
+    }
+
+    // Remove the previous key.
+    $config->clear('home_as_site_name');
+    $config->save(TRUE);
+  }
+}

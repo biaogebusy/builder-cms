@@ -1,0 +1,47 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.menu_link_content.mie-demo-base-menu.field_body
+    - field.field.menu_link_content.mie-demo-base-menu.field_image
+    - field.field.menu_link_content.mie-demo-base-menu.field_mie_demo_content_terms
+    - system.menu.mie-demo-base-menu
+  module:
+    - image
+    - text
+id: menu_link_content.mie-demo-base-menu.default
+targetEntityType: menu_link_content
+bundle: mie-demo-base-menu
+mode: default
+content:
+  children:
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_body:
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_image:
+    weight: 1
+    label: hidden
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+  field_mie_demo_content_terms:
+    weight: 2
+    label: hidden
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    type: entity_reference_entity_view
+    region: content
+hidden: {  }

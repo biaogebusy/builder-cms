@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.message.field_message_private_message
+    - message.template.private_message_notification
+id: message.private_message_notification.field_message_private_message
+field_name: field_message_private_message
+entity_type: message
+bundle: private_message_notification
+label: 'Private Message'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:private_message'
+  handler_settings:
+    target_bundles: null
+    sort:
+      field: _none
+    auto_create: false
+field_type: entity_reference

@@ -1,0 +1,5 @@
+lightning_roles.settings:
+  title: 'Roles'
+  description: 'Configure Lightning Roles settings.'
+  parent: lightning_core.settings
+  route_name: lightning_roles.settings

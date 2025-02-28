@@ -1,0 +1,25 @@
+id: d7_profile2_type
+label: Profile2 type
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: d7_profile2_type
+  constants:
+    description: 'Migrated from Profile2'
+    multiple: false
+    use_revisions: false
+process:
+  id: type
+  label: label
+  registration: registration
+  multiple: 'constants/multiple'
+  roles:
+    plugin: migration_lookup
+    migration: d7_user_role
+    source: roles
+  weight: weight
+  use_revisions: 'constants/use_revisions'
+  description: 'constants/description'
+destination:
+  plugin: entity:profile_type

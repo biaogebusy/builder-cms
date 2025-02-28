@@ -1,0 +1,36 @@
+id: d6_autologout_settings
+label: Automated Logout Configuration
+migration_tags:
+  - Drupal 6
+  - Configuration
+source:
+  plugin: variable
+  variables:
+    - autologout_timeout
+    - autologout_max_timeout
+    - autologout_padding
+    - autologout_role_logout
+    - autologout_redirect_url
+    - autologout_no_dialog
+    - autologout_message
+    - autologout_inactivity_message
+    - autologout_enforce_admin
+    - autologout_use_watchdog
+  source_module: autologout
+process:
+  timeout: autologout_timeout
+  max_timeout: autologout_max_timeout
+  padding: autologout_padding
+  role_logout: autologout_role_logout
+  redirect_url: '/{{autologout_redirect_url}}'
+  no_dialog: autologout_no_dialog
+  message: autologout_message
+  inactivity_message: autologout_inactivity_message
+  enforce_admin: autologout_enforce_admin
+  use_watchdog: autologout_use_watchdog
+destination:
+  plugin: config
+  config_name: autologout.settings
+migration_dependencies:
+  required:
+    - d6_user_role:*

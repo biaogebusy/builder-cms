@@ -1,0 +1,43 @@
+// Background repeat
+.bs_background--repeat {
+  .fieldset-wrapper > div {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid $box_input_hover_border;
+    overflow: hidden;
+    min-width: 70px;
+    max-width: 50%;
+
+    // Our actual form item.
+    > div {
+      @include blb_box_inputs($width: 50%, $height: 35px, $border-color: $box_input_hover_border);
+
+      // Repeat Y
+      input {
+        &[value='repeat-y'] + label svg {
+          transform: rotate(90deg);
+        }
+      }
+
+      // first item
+      &:nth-child(1) input + label {
+        border-top: 0;
+      }
+
+      &:nth-child(2) input + label {
+        border-left: 0;
+        border-top: 0;
+      }
+
+      &:nth-child(3) input + label {
+        border-top: 0;
+      }
+
+      // first item
+      &:nth-child(4) input + label {
+        border-left: 0;
+        border-top: 0;
+      }
+    }
+  }
+}

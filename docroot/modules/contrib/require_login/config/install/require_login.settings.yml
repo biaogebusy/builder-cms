@@ -1,0 +1,11 @@
+login_path: ''
+login_message: ''
+login_destination: ''
+requirements:
+  request_path:
+    id: request_path
+    negate: false
+    pages: ''
+extra:
+  include_403: false
+  include_404: false

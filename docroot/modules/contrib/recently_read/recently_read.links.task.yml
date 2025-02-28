@@ -1,0 +1,8 @@
+recently_read.list_tab:
+  route_name: entity.recently_read_type.collection
+  title: List
+  base_route: entity.recently_read_type.collection
+recently_read.settings_tab:
+  route_name: recently_read.settings_basic
+  title: Configuration
+  base_route: entity.recently_read_type.collection

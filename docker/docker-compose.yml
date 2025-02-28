@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  mariadb:
+    image: wodby/mariadb:$MARIADB_TAG
+    container_name: "${COMPOSE_PROJECT_NAME}_mariadb"
+    hostname: "${COMPOSE_PROJECT_NAME}_mariadb"
+    stop_grace_period: 30s
+    networks:
+     - app_net
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_ROOT_PASSWORD
+      MYSQL_DATABASE: $DB_NAME
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+      #MYSQL_INNODB_FLUSH_METHOD: fsync
+#    volumes:
+#      - ./mariadb-init:/docker-entrypoint-initdb.d # Place init .sql file(s) here.
+#      - ./data:/var/lib/mysql # Use bind mount
+
+  apache:
+    image: ipumpkin/drupalvm
+    container_name: "${COMPOSE_PROJECT_NAME}_apache"
+    hostname: "${COMPOSE_PROJECT_NAME}_apache"
+    environment:
+      APACHE_DOCUMENT_ROOT: "/var/www/html/docroot"
+    networks:
+     - app_net
+    volumes:
+      - ../:/var/www/html
+# For macOS users (https://wodby.com/stacks/drupal/docs/local/docker-for-mac/)
+#      - ./:/var/www/html:cached # User-guided caching
+#      - docker-sync:/var/www/html # Docker-sync
+    labels:
+      - 'traefik.backend=${COMPOSE_PROJECT_NAME}_apache'
+      - 'traefik.port=80'
+      - 'traefik.frontend.rule=Host:${PROJECT_BASE_URL}'
+
+networks:
+  app_net:
+    external: true

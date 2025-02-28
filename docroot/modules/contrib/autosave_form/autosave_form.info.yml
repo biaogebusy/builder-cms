@@ -1,0 +1,13 @@
+name: Autosave Form
+type: module
+description: 'Adds autosave feature on forms.'
+package: Content
+core_version_requirement: ^9 || ^10
+configure: autosave_form.admin_settings
+dependencies:
+  - drupal:system
+
+# Information added by Drupal.org packaging script on 2022-09-26
+version: '8.x-1.4'
+project: 'autosave_form'
+datestamp: 1664203246

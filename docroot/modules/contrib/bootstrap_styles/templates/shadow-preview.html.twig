@@ -1,0 +1,21 @@
+{#
+ /**
+  * @file
+  * Default theme implementation of spacing preview box.
+  *
+  * @ingroup themeable
+  */
+#}
+
+{{ attach_library('bootstrap_styles/plugins_groups.shadow.shadow_preview') }}
+
+<div data-bs-element="bs_preview-box" data-bs-mode="light" class="bs-shadow-preview">
+  <label class="bs-toggle-switch">
+    <input class="bs-toggle-switch--input" type="checkbox" data-theme-toggle>
+    <span class="bs-toggle-switch--slider"></span>
+  </label>
+
+  <div data-bs-element="bs_preview-element">
+    {{ 'Preview'|t }}
+  </div>
+</div>

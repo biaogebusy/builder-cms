@@ -1,0 +1,7 @@
+recently_read.settings_basic:
+  path: '/admin/config/system/recently-read/config'
+  defaults:
+    _form: '\Drupal\recently_read\Form\RecentlyReadConfigForm'
+    _title: 'Recently read configuration'
+  requirements:
+    _permission: 'access configuration pages'

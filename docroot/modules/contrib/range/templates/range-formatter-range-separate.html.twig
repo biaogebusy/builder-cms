@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Default theme implementation of a range with separate values.
+ *
+ * Available variables:
+ * - item: Range field item object.
+ * - field_prefix: The FIELD value prefix.
+ * - from_prefix: The FROM value prefix.
+ * - from: Range field item FROM value.
+ * - from_suffix: The FROM value suffix.
+ * - range_separator: Range separator.
+ * - to_prefix: The TO value prefix.
+ * - to: Range field item TO value.
+ * - to_suffix: The TO value suffix.
+ * - field_suffix: The FIELD value suffix.
+ *
+ * @see \Drupal\range\Plugin\Field\FieldFormatter\RangeFormatterBase::viewElementSeparate()
+ * @see template_preprocess()
+ *
+ * @ingroup themeable
+ */
+#}
+{{- field_prefix }}{{ from_prefix }}{{ from }}{{ from_suffix }}{{ range_separator }}{{ to_prefix }}{{ to }}{{ to_suffix }}{{ field_suffix -}}

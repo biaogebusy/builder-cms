@@ -1,0 +1,15 @@
+name: 'Webform rest test'
+type: module
+description: 'Support module for Webform REST testing.'
+package: Testing
+dependencies:
+  - 'drupal:hal'
+  - 'drupal:rest'
+  - 'drupal:serialization'
+  - 'webform:webform'
+  - 'webform_rest:webform_rest'
+
+# Information added by Drupal.org packaging script on 2020-09-20
+version: '8.x-2.0-beta4'
+project: 'webform_rest'
+datestamp: 1600634754

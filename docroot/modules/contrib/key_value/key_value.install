@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function key_value_schema() {
+  $schema['key_value_sorted'] = [
+    'description' => 'Key-value list storage table.',
+    'fields' => [
+      'collection' => [
+        'description' => 'A named collection of key and value pairs.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      // KEY is an SQL reserved word, so use 'name' as the key's field name.
+      'name' => [
+        'description' => 'The index or score key for the value.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'big',
+      ],
+      'value' => [
+        'description' => 'The value.',
+        'type' => 'blob',
+        'not null' => TRUE,
+        'size' => 'big',
+      ],
+    ],
+    'indexes' => [
+       'collection_name' => ['collection', 'name'],
+       'name' => ['name'],
+     ],
+  ];
+  return $schema;
+}

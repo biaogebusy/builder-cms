@@ -1,0 +1,21 @@
+entity.blb_layout.options_form:
+  path: '/admin/config/bootstrap-layout-builder/layouts/{blb_layout}/options'
+  defaults:
+    _entity_form: 'blb_layout.options'
+    _title: 'List layout options'
+  requirements:
+    _permission: 'configure bootstrap layout builder'
+bootstrap_layout_builder.styles:
+  path: '/admin/config/bootstrap-layout-builder/styles'
+  defaults:
+    _form: '\Drupal\bootstrap_layout_builder\Form\StylesForm'
+    _title: 'Bootstrap Layout Builder Styles'
+  requirements:
+    _permission: 'configure bootstrap layout builder'
+bootstrap_layout_builder.settings:
+  path: '/admin/config/bootstrap-layout-builder/settings'
+  defaults:
+    _form: '\Drupal\bootstrap_layout_builder\Form\SettingsForm'
+    _title: 'Bootstrap Layout Builder Settings'
+  requirements:
+    _permission: 'configure bootstrap layout builder'

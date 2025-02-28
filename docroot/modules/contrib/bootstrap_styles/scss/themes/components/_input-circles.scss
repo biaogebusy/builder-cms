@@ -1,0 +1,25 @@
+.bs_input-circles {
+  .fieldset-wrapper {
+    @include bs_circle_inputs;
+  }
+
+  // Adds our "shiny" selected effect with linear gradients.
+  &.with-selected-gradient input {
+    @include sr-only();
+
+    &:checked + label.option {
+      &:before {
+        @include smooth-all-transition;
+        width: calc(100% - 2px);
+        height: calc(100% - 2px);
+        top: 0;
+        left: 0;
+        margin: 1px;
+        content: '';
+        position: absolute;
+        border-radius: 40px;
+        background: linear-gradient(to top left, rgba($panel_bg_color, 0) 0, rgba($panel_bg_color, .1) 50%, rgba($panel_text_color, .1) 50%, rgba($panel_text_color, 0) 100%);
+      }
+    }
+  }
+}

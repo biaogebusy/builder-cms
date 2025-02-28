@@ -1,0 +1,24 @@
+# Schema for the configuration files of the replication module.
+replication.settings:
+  type: config_object
+  label: 'Replication settings'
+  mapping:
+    mapping_type:
+      type: string
+      label: 'Users mapping type'
+    uid:
+      type: integer
+      label: 'UID'
+    changes_limit:
+      type: integer
+      label: 'Changes limit'
+    bulk_docs_limit:
+      type: integer
+      label: 'Bulk docs limit'
+    # In number of hours.
+    replication_execution_limit:
+      type: integer
+      label: 'Replication execution limit'
+    verbose_logging:
+      type: boolean
+      label: 'Verbose logging'

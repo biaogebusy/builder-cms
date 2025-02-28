@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * Provides a way to place blocks on a custom page.
+ */
+
+use Drupal\page_manager\Entity\LayoutBuilderStorage;
+use Drupal\page_manager\Form\LayoutBuilderForm;
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function page_manager_entity_type_build(array &$entity_types) {
+  if (_page_manager_is_layout_builder_enabled()) {
+    /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+    $entity_types['page_variant']
+      ->setHandlerClass('storage', LayoutBuilderStorage::class)
+      ->setFormClass('layout_builder', LayoutBuilderForm::class);
+  }
+}
+
+/**
+ * Implements hook_display_variant_plugin_alter().
+ */
+function page_manager_display_variant_plugin_alter(array &$definitions) {
+  // Disable the layout builder plugin if layout builder is not enabled.
+  if (!_page_manager_is_layout_builder_enabled()) {
+    unset($definitions['layout_builder']);
+  }
+}
+
+/**
+ * Helper to check if layout builder is enabled.
+ *
+ * @return bool
+ *   TRUE is layout_builder is enabled, otherwise FALSE.
+ */
+function _page_manager_is_layout_builder_enabled() {
+  return Drupal::moduleHandler()->moduleExists('layout_builder');
+}

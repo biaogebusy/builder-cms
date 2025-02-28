@@ -1,0 +1,9 @@
+pendo.pendo_admin_form:
+  path: '/admin/config/services/pendo'
+  defaults:
+    _form: '\Drupal\pendo\Form\PendoAdminForm'
+    _title: 'PendoAdminForm'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE

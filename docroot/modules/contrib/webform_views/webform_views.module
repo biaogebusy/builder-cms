@@ -1,0 +1,255 @@
+<?php
+
+/**
+ * @file
+ * Webform integration with views.
+ */
+
+use Drupal\webform_views\WebformSubmissionViewsData;
+use Drupal\webform\Entity\Webform;
+use Drupal\views\Views;
+use Drupal\webform\Plugin\WebformElement\WebformManagedFileBase;
+use Drupal\webform_views\WebformElementViews\WebformManagedFileViews;
+use Drupal\webform\Plugin\WebformElement\WebformCompositeBase;
+use Drupal\webform_views\WebformElementViews\WebformCompositeViews;
+use Drupal\webform\Plugin\WebformElementEntityReferenceInterface;
+use Drupal\webform_views\WebformElementViews\WebformEntityReferenceViews;
+use Drupal\webform_views\WebformElementViews\WebformSelectOtherViews;
+use Drupal\webform\Plugin\WebformElement\WebformComputedBase;
+use Drupal\webform_views\WebformElementViews\WebformComputed;
+use Drupal\webform\Plugin\WebformElement\OptionsBase;
+use Drupal\webform_views\WebformElementViews\WebformSelectViews;
+use Drupal\webform_views\WebformElementViews\WebformCheckboxViews;
+use Drupal\webform_views\WebformElementViews\WebformCheckboxesViews;
+use Drupal\webform_views\WebformElementViews\WebformDateViews;
+use Drupal\webform_views\WebformElementViews\WebformNumericViews;
+use Drupal\webform_views\WebformElementViews\WebformHiddenViews;
+use Drupal\webform_views\WebformElementViews\WebformEntityReferenceSelectViews;
+use Drupal\webform_views\WebformElementViews\WebformTermCheckboxesViews;
+use Drupal\webform_views\WebformElementViews\WebformDefaultViews;
+use Drupal\webform_views\Plugin\Derivative\ViewsLocalTask;
+use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\webform_views\WebformElementViews\WebformDateTimeViews;
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function webform_views_module_implements_alter(&$implementations, $hook) {
+  // We need to run hook_local_tasks_alter() after views' implementation of the
+  // same hook.
+  switch ($hook) {
+    case 'local_tasks_alter':
+      $group = $implementations['webform_views'];
+      unset($implementations['webform_views']);
+      $implementations['webform_views'] = $group;
+      break;
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function webform_views_entity_type_alter(array &$entity_types) {
+  $entity_types['webform_submission']->setHandlerClass('views_data', WebformSubmissionViewsData::class);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function webform_views_webform_presave(Webform $entity) {
+  // Rebuild views data if there is any sensitive change in our webforms setup.
+  if ($entity->isNew() || $entity->getElementsRaw() != $entity->original->getElementsRaw()) {
+    Views::viewsData()->clear();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function webform_views_webform_delete(Webform $entity) {
+  Views::viewsData()->clear();
+}
+
+/**
+ * Implements hook_webform_element_info_alter().
+ */
+function webform_views_webform_element_info_alter(array &$elements) {
+  foreach ($elements as $k => $v) {
+    // If the webform element provides its own views handler, let's respect
+    // that.
+    if (isset($elements[$k]['webform_views_handler'])) {
+      continue;
+    }
+
+    $views_handler = FALSE;
+
+    // All file-based webform elements have special views handler by default.
+    if (is_subclass_of($v['class'], WebformManagedFileBase::class, TRUE)) {
+      $views_handler = WebformManagedFileViews::class;
+    }
+    elseif (is_subclass_of($v['class'], WebformCompositeBase::class)) {
+      $views_handler = WebformCompositeViews::class;
+    }
+    elseif (is_subclass_of($v['class'], WebformElementEntityReferenceInterface::class)) {
+      $views_handler = WebformEntityReferenceViews::class;
+    }
+    elseif (is_subclass_of($v['class'], \Drupal\webform\Plugin\WebformElement\WebformOtherInterface::class)) {
+      $views_handler = WebformSelectOtherViews::class;
+    }
+    elseif (is_subclass_of($v['class'], WebformComputedBase::class)) {
+      $views_handler = WebformComputed::class;
+    }
+    elseif (is_subclass_of($v['class'], OptionsBase::class)) {
+      $views_handler = WebformSelectViews::class;
+    }
+
+    switch ($k) {
+      case 'checkbox':
+        $views_handler = WebformCheckboxViews::class;
+        break;
+
+      case 'checkboxes':
+        $views_handler = WebformCheckboxesViews::class;
+        break;
+
+      case 'date':
+        $views_handler = WebformDateViews::class;
+        break;
+
+      case 'datetime':
+        $views_handler = WebformDateTimeViews::class;
+        break;
+
+      case 'number':
+        $views_handler = WebformNumericViews::class;
+        break;
+
+      case 'hidden':
+        $views_handler = WebformHiddenViews::class;
+        break;
+
+      case 'webform_entity_select':
+      case 'webform_term_select':
+        $views_handler = WebformEntityReferenceSelectViews::class;
+        break;
+
+      case 'webform_term_checkboxes':
+        $views_handler = WebformTermCheckboxesViews::class;
+        break;
+
+      default:
+        if (!$views_handler) {
+          $views_handler = WebformDefaultViews::class;
+        }
+        break;
+    }
+
+    if ($views_handler) {
+      $elements[$k]['webform_views_handler'] = $views_handler;
+    }
+  }
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function webform_views_local_tasks_alter(&$local_tasks) {
+  $container = \Drupal::getContainer();
+  $local_task = ViewsLocalTask::create($container, 'views_view');
+  $local_task->alterLocalTasks($local_tasks);
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function webform_views_menu_local_tasks_alter(&$data, $route_name) {
+  $webform = \Drupal::routeMatch()->getParameter('webform');
+  if ($webform && \Drupal::routeMatch()->getRouteName() == $route_name) {
+    // We have all the necessary data: we are manipulating current request and
+    // we know which webform is invoked. So we can safely hide the webform views
+    // tabs that relate to the webforms that are not the current one.
+    foreach ($data['tabs'] as $level => $tabs_per_level) {
+      foreach ($tabs_per_level as $k => $tab) {
+        if (substr($k, 0, strlen('webform_view:')) == 'webform_view:') {
+          $tab_webform = webform_views_webform_id_from_path($tab['#link']['url']->getInternalPath());
+          if ($tab_webform != $webform->id()) {
+            $data['tabs'][$level][$k]['#access'] = new AccessResultForbidden();
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Return a list of all views applicable for routing manipulation.
+ *
+ * @return array
+ *   A list of arrays containing the $view and $display_id and $path (path where
+ *   this view is available as a page)
+ *
+ * @code
+ * [
+ *   [$view, $display_id, $path],
+ *   [$view, $display_id, $path],
+ * ];
+ * @endcode
+ */
+function webform_views_applicable_views() {
+  $return = [];
+  foreach (Views::getApplicableViews('uses_menu_links') as $pair) {
+    list($view_id, $display_id) = $pair;
+    /** @var $executable \Drupal\views\ViewExecutable */
+    $executable = \Drupal::entityTypeManager()->getStorage('view')->load($view_id)->getExecutable();
+
+    $executable->setDisplay($display_id);
+    $menu = $executable->display_handler->getOption('menu');
+
+    $contains_webform_id_in_path = explode('/', $executable->getPath());
+    $contains_webform_id_in_path = (bool) \Drupal::entityQuery('webform')
+      ->condition(\Drupal::entityTypeManager()->getDefinition('webform')->getKey('id'), $contains_webform_id_in_path, 'IN')
+      ->count()
+      ->execute();
+
+    // TODO: in theory we should do a more intensive analysis than just
+    // comparing the base entity type of the view. For example, what if
+    // relationships are used and thus webform submission is introduced into the
+    // view while the base entity type may be different. Though hardly we will
+    // see such use cases in real world practice.
+    if ($executable->getBaseEntityType() && $executable->getBaseEntityType()->id() == 'webform_submission' && in_array($menu['type'], ['tab', 'default tab']) && $contains_webform_id_in_path) {
+      $return[] = [$view_id, $display_id, $executable->display_handler->getPath()];
+    }
+  }
+
+  return $return;
+}
+
+/**
+ * Retrieve webform ID from a views path.
+ *
+ * @param string $path
+ *   Path where webform ID to extract from
+ *
+ * @return string
+ *   Webform ID if one is encountered in the provided $path, NULL otherwise
+ */
+function webform_views_webform_id_from_path($path) {
+  $path = explode('/', $path);
+
+  // Strip the last path chunk, this way we should be one level above the
+  // current.
+  array_pop($path);
+
+  // Try each chunk of the path seeing if it is not actually a webform
+  // id.
+  foreach ($path as $k => $v) {
+    $webform = \Drupal::entityTypeManager()
+      ->getStorage('webform')
+      ->load(str_replace('-', '_', $v));
+    if ($webform) {
+      return $webform->id();
+    }
+  }
+
+  return NULL;
+}

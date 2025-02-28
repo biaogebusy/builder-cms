@@ -1,0 +1,62 @@
+xinshi_api.settings:
+  path: '/admin/xinshi/config/api'
+  defaults:
+    _form: '\Drupal\xinshi_api\Form\SettingsForm'
+    _title: 'XINSHI API'
+  requirements:
+    _permission: 'administer xinshi api configuration'
+
+xinshi_api.v3.landingPage.builder:
+  path: '/api/v3/landingPage/builder'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageBuilder'
+    _title: 'landingPage builder'
+  requirements:
+    _permission: 'create landing_page content'
+  methods: [ POST ]
+
+xinshi_api.v3.landingPage.canonical:
+  path: '/api/v3/landingPage/json/{node}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageCanonical'
+    _title: 'landingPage canonical'
+  requirements:
+    _permission: 'access content'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+  methods: [ GET ]
+
+xinshi_api.v3.landingPage.update:
+  path: '/api/v3/landingPage/update/{node}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageUpdate'
+    _title: 'landingPage update'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+  methods: [ PATCH ]
+
+xinshi_api.v3.landingPage.translations.add:
+  path: '/api/v3/landingPage/translations/add/{node}/{source}/{target}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageTranslations'
+    _title: 'landingPage update'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+      source:
+        type: 'language'
+      target:
+        type: 'language'
+  methods: [ POST ]

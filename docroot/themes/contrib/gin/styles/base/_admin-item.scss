@@ -1,0 +1,90 @@
+.admin-list {
+  padding: var(--gin-spacing-s) 0;
+}
+
+.admin-item {
+  position: relative;
+  padding: var(--gin-spacing-density-s) calc(var(--gin-spacing-xs) + var(--gin-spacing-xl)) var(--gin-spacing-density-s) var(--gin-spacing-l);
+  margin: var(--gin-spacing-l) var(--gin-spacing-s);
+
+  &--panel {
+    margin: 0 calc(var(--gin-spacing-l) * -1);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 0 none;
+
+    &::after {
+      content: "";
+      opacity: .75;
+      display: block;
+      position: absolute;
+      left: calc(var(--gin-spacing-s) * -1);
+      bottom: calc(var(--gin-spacing-s) * -1);
+      width: calc(100% + var(--gin-spacing-l));
+      height: 1px;
+      border-bottom: 1px solid var(--gin-border-color-table);
+    }
+  }
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__title {
+    font-size: var(--gin-font-size);
+    font-weight: var(--gin-font-weight-semibold);
+  }
+
+  &__description {
+    font-size: var(--gin-font-size-s);
+    color: var(--gin-color-text-light);
+  }
+
+  & &__link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    text-indent: -999em;
+
+    &::before {
+      right: var(--gin-spacing-m);
+      left: auto;
+      top: 50%;
+      transform: translateY(-50%) unquote("/*! rtl:append scaleX(-1) */");
+      background-image: none;
+      background-color: var(--gin-color-primary);
+      mask-image: icon('handle');
+      mask-size: 1em 1em;
+      mask-repeat: no-repeat;
+      mask-position: center center;
+
+      @media (forced-colors: active) {
+        background-color: linktext;
+      }
+    }
+
+    &:hover,
+    &:focus {
+      background: var(--gin-color-primary-light);
+      border-radius: var(--gin-border-m);
+
+      ~ .admin-item__title,
+      ~ .admin-item__description {
+        color: var(--gin-color-primary);
+      }
+    }
+
+    &:focus {
+      box-shadow: inset 0 0 0 1px var(--gin-color-focus-border), inset 0 0 0 4px var(--gin-color-focus);
+    }
+  }
+}

@@ -1,0 +1,59 @@
+services:
+  entity_theme_engine.entity_widget_service:
+    class: Drupal\entity_theme_engine\EntityWidgetService
+    arguments: ['@serializer']
+  entity_theme_engine.encoder.twig_variable:
+    class: Drupal\entity_theme_engine\Encoder\TwigVariablesEncoder
+    tags:
+      - { name: encoder, priority: 20, format: twig_variable }
+#Normalizers
+  entity_theme_engine.normalizer.content_entity:
+    class: Drupal\entity_theme_engine\Normalizer\ContentEntityNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 100 }
+  entity_theme_engine.normalizer.field_item:
+    class: Drupal\entity_theme_engine\Normalizer\FieldItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 100 }
+  entity_theme_engine.normalizer.list_item:
+    class: Drupal\entity_theme_engine\Normalizer\ListItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 110 }
+  entity_theme_engine.normalizer.entity_reference_item:
+    class: Drupal\entity_theme_engine\Normalizer\EntityReferenceItemNormalizer
+    arguments: ['@entity_type.manager', '@menu.active_trail', '@menu.link_tree']
+    tags:
+      - { name: normalizer, priority: 110 }
+  entity_theme_engine.normalizer.text_item:
+    class: Drupal\entity_theme_engine\Normalizer\TextItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 110 }
+  entity_theme_engine.normalizer.link_item:
+    class: Drupal\entity_theme_engine\Normalizer\LinkItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 110 }
+  entity_theme_engine.normalizer.file_item:
+    class: Drupal\entity_theme_engine\Normalizer\FileItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 120 }
+  entity_theme_engine.normalizer.image_item:
+    class: Drupal\entity_theme_engine\Normalizer\ImageItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 130 }
+  entity_theme_engine.normalizer.views_item:
+    class: Drupal\entity_theme_engine\Normalizer\ViewsItemNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 120 }
+#  entity_theme_engine.normalizer.date_item:
+#    class: Drupal\entity_theme_engine\Normalizer\DateItemNormalizer
+#    arguments: ['@entity_type.manager']
+#    tags:
+#      - { name: normalizer, priority: 110 }

@@ -1,0 +1,262 @@
+// Node layout
+.gin--edit-form {
+  // Has sidebar, save the space
+  @include mq(large) {
+    padding-right: var(--gin-sidebar-offset);
+
+    .dialog-off-canvas-main-canvas {
+      transition: padding-left var(--gin-transition-fast);
+    }
+
+    // If off-canvas dialog is shown
+    &.js-off-canvas-dialog-open {
+      padding-right: 0;
+
+      // Hide sidebar when off-canvas is shown
+      .layout-region.layout-region-node-secondary {
+        visibility: hidden;
+        opacity: 0;
+      }
+    }
+  }
+
+  // Hide delete Tab
+  [data-drupal-link-system-path*="/delete"] {
+    display: none;
+  }
+
+  // Hide edit secondary toolbar item
+  .gin-secondary-toolbar .toolbar-secondary .toolbar-bar .contextual-toolbar-tab {
+    display: none;
+  }
+
+  .layout-node-form {
+    overflow: inherit;
+    display: block;
+  }
+
+  .layout-region-node-main,
+  .layout-region-node-secondary
+  .layout-region-node-footer {
+    float: none;
+  }
+
+  .layout-region-node-main,
+  .layout-region-node-footer {
+    width: 100%;
+    padding-right: 0;
+
+    @include mq(large) {
+      flex-basis: 40%;
+      flex-shrink: 1;
+      flex-grow: 1;
+      min-width: 0;
+    }
+  }
+
+  .page-wrapper__node-edit-form {
+    .block-page-title-block {
+      @include mq(1730px) {
+        width: 100%;
+      }
+
+      .page-title {
+        @include mq(large) {
+          width: auto;
+          margin: 0;
+          overflow: hidden;
+        }
+      }
+    }
+
+    .block-local-tasks-block,
+    .block-system-main-block,
+    .messages-list,
+    .node-form,
+    .node-confirm-form,
+    .admin-list,
+    .help {
+      width: 100%;
+      max-width: $breakpointWide;
+      margin-left: auto;
+      margin-right: auto;
+      box-sizing: border-box;
+    }
+
+    .layout-region-node-secondary {
+      z-index: 103;
+      width: var(--gin-sidebar-width);
+      height: calc(100% - var(--gin-toolbar-y-offset));
+      position: fixed;
+      top: var(--gin-toolbar-y-offset);
+      right: 0;
+      margin: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background:var(--gin-bg-layer);
+      border-left: 1px solid var(--gin-border-color-layer);
+      transition: all var(--gin-transition-fast);
+
+      .gin--dark-mode & {
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .gin-sidebar {
+        .form-actions {
+          margin: 0;
+
+          .action-link {
+            margin-top: var(--gin-spacing-xs);
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      .field--name-revision-log,
+      .field--name-revision-log-message {
+        margin-top: var(--gin-spacing-l);
+      }
+
+      .accordion {
+        background: none;
+        border: 0 none;
+        box-shadow: none;
+      }
+
+      .entity-meta {
+        $sidebarSpacer: 1.5rem;
+
+        &__header {
+          color: var(--gin-color-text);
+          padding-left: $sidebarSpacer;
+          padding-right: $sidebarSpacer;
+          background-color: var(--gin-bg-layer);
+          border: 0 none;
+
+          @include mq($to: medium) {
+            padding-top: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
+            padding-right: var(--gin-spacing-l);
+          }
+        }
+
+        &__title {
+          color: var(--gin-color-title);
+          font-weight: var(--gin-font-weight-semibold);
+          margin-top: var(--gin-spacing-xxs);
+          margin-bottom: var(--gin-spacing-m);
+          text-shadow: none;
+        }
+
+        > .accordion__item {
+          margin: 0;
+          border: 0 none;
+          border-bottom: 1px solid var(--gin-border-color-layer);
+          border-radius: 0;
+
+          .gin--dark-mode & {
+            border-color: var(--gin-border-color);
+          }
+
+          > .claro-details__summary {
+            display: block;
+            padding-left: #{$sidebarSpacer + 1.5rem};
+
+            .details-title {
+              position: static;
+              padding-left: 0;
+            }
+
+            &::before {
+              top: var(--gin-spacing-xl);
+              left: $sidebarSpacer;
+            }
+
+            &:focus::after {
+              border-radius: 6px;
+            }
+          }
+
+          .claro-details__content {
+            margin-left: $sidebarSpacer;
+            margin-right: $sidebarSpacer;
+
+            .claro-details__wrapper {
+              margin: var(--gin-spacing-l);
+            }
+          }
+
+          .redirect-table__path {
+            width: 47%;
+          }
+
+          .form-type--entity-autocomplete .claro-autocomplete {
+            width: 100%;
+          }
+
+          .form-datetime-wrapper {
+            .form-items-inline {
+              display: flex;
+              flex-wrap: wrap;
+
+              @include mq(tiny) {
+                flex-wrap: nowrap;
+              }
+
+              @include mq(large, wide) {
+                flex-wrap: wrap;
+              }
+            }
+
+            .form-type--date {
+              display: block;
+              flex-basis: 100%;
+              flex-grow: 1;
+
+              @include mq(tiny) {
+                flex-basis: 50%;
+              }
+
+              @include mq(large, wide) {
+                flex-basis: 100%;
+              }
+
+              &:first-of-type {
+                @include mq(tiny) {
+                  margin-right: var(--gin-spacing-xs);
+                }
+
+                @include mq(large, wide) {
+                  margin-right: 0;
+                }
+              }
+
+              &:nth-of-type(2) {
+                flex-basis: 134px;
+              }
+
+              .form-element {
+                min-width: 0;
+                width: 100%;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .revision-current {
+    background-color: var(--gin-color-primary-light-active);
+  }
+
+  .field--name-title .form-element {
+    font-size: var(--gin-font-size-h3);
+    font-weight: var(--gin-font-weight-semibold);
+    line-height: normal;
+    letter-spacing: -0.025em;
+    width: 100%;
+    padding-top: var(--gin-spacing-s);
+    padding-bottom: var(--gin-spacing-s);
+  }
+}

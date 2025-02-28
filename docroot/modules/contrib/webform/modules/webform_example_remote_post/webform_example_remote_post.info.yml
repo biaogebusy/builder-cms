@@ -1,0 +1,13 @@
+name: 'Webform Remote Post Example'
+type: module
+description: 'Provides an example of a webform submission posted to a remote server.'
+package: 'Webform example'
+core_version_requirement: ^9.4 || ^10
+dependencies:
+  - 'token:token'
+  - 'webform:webform'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

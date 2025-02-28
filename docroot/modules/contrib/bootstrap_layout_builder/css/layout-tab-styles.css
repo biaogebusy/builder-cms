@@ -1,0 +1,48 @@
+#drupal-off-canvas .blb_breakpoint_cols label {
+  font-size: .875rem;
+  position: relative;
+  display: flex !important;
+  margin: 0 -5px;
+  cursor: pointer;
+}
+
+#drupal-off-canvas .blb_breakpoint_cols label:hover .bs_tooltip {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0px);
+}
+
+#drupal-off-canvas .blb_breakpoint_cols label:hover .blb_breakpoint_col {
+  background-color: #ffffff;
+  color: #444444;
+}
+
+#drupal-off-canvas .blb_breakpoint_cols input {
+  opacity: 0;
+  height: 0;
+  display: block;
+}
+
+#drupal-off-canvas .blb_breakpoint_cols input:checked + label .blb_breakpoint_col {
+  color: #ffffff;
+  background-color: #277abd;
+}
+
+#drupal-off-canvas .blb_breakpoint_col {
+  padding: 6px 10px;
+  margin: 5px;
+  text-align: center;
+  color: #444444;
+  background-color: rgba(255, 255, 255, 0.7);
+  transition: all .25s ease-out;
+  border-radius: 3px;
+}
+
+#drupal-off-canvas .blb_breakpoint_col.bp-selected {
+  color: #ffffff;
+  background-color: #277abd;
+}
+
+#drupal-off-canvas .blb_breakpoint_col.bp-selected:hover {
+  color: #444444;
+}

@@ -1,0 +1,22 @@
+page_load_progress.settings:
+  type: config_object
+  label: 'Page Load Progress settings'
+  mapping:
+    page_load_progress_time:
+      type: integer
+      label: 'Time to wait before locking the screen'
+    page_load_progress_elements:
+      type: text
+      label: 'HTML elements which will trigger the throbber'
+    page_load_progress_request_path:
+      type: string
+      label: 'Lists of paths to include or exclude'
+    page_load_progress_request_path_negate_condition:
+      type: boolean
+      label: 'Negate request path condition'
+    page_load_progress_internal_links:
+      type: boolean
+      label: 'Use the throbber for internal links'
+    page_load_progress_esc_key:
+      type: boolean
+      label: 'Allow ESC key to kill the throbber'

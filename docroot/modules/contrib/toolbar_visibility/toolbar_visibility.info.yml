@@ -1,0 +1,13 @@
+name: Toolbar Visibility
+type: module
+description: Remove toolbar on specific themes or domains.
+configure: toolbar_visibility.settings
+core_version_requirement: ^8 || ^9 || ^10
+package: Administration
+dependencies:
+  - drupal:toolbar
+
+# Information added by Drupal.org packaging script on 2022-08-09
+version: '8.x-2.1'
+project: 'toolbar_visibility'
+datestamp: 1660053569

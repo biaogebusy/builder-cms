@@ -1,0 +1,102 @@
+# Schema for the configuration files of the SMS module.
+
+sms.settings:
+  type: config_object
+  label: 'SMS Framework settings'
+  mapping:
+    fallback_gateway:
+      type: string
+      label: 'Entity ID of fallback SMS Gateway'
+    flood:
+      label: 'SMS Framework flood settings'
+      type: mapping
+      mapping:
+        verify_limit:
+          type: integer
+          label: 'Maximum failed phone number verifications per verify_window'
+        verify_window:
+          type: integer
+          label: 'Used to calculate window of failed phone number verifications.'
+    page:
+      label: 'Pages'
+      type: mapping
+      mapping:
+        verify:
+          type: path
+          label: 'Phone number verification page.'
+
+# Configuration for SMS Gateways.
+sms.gateway.*:
+  type: config_entity
+  label: 'SMS Gateway configuration'
+  mapping:
+    id:
+      type: string
+      label: 'Gateway machine name'
+    label:
+      type: label
+      label: 'Gateway label'
+    plugin:
+      type: string
+      label: 'Gateway plugin type'
+    settings:
+      type: sms_gateway.settings.[%parent.plugin]
+    skip_queue:
+      type: boolean
+      label: 'Whether messages sent to this gateway should be sent immediately.'
+    incoming_push_path:
+      type: path
+      label: 'The internal path where incoming messages are received.'
+    reports_push_path:
+      type: path
+      label: 'The internal path where pushed delivery reports can be received.'
+    retention_duration_incoming:
+      type: integer
+      label: 'How many seconds to hold messages after are recieved. Use -1 to never expire.'
+    retention_duration_outgoing:
+      type: integer
+      label: 'How many seconds to hold messages after they are sent. Use -1 to never expire.'
+
+sms.phone.*.*:
+  type: config_entity
+  label: 'Phone number configuration'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    entity_type:
+      type: string
+      label: 'Entity type'
+    bundle:
+      type: string
+      label: 'Bundle'
+    automated_optout:
+      type: boolean
+    verification_message:
+      type: string
+    verification_code_lifetime:
+      type: integer
+      label: 'Time in seconds, before verification codes expire.'
+    purge_verification_phone_number:
+      type: boolean
+      label: 'Remove phone number field value if verification code expires.'
+    fields:
+      type: mapping
+      mapping:
+        phone_number:
+          type: string
+          label: 'Name of field.'
+        automated_opt_out:
+          type: string
+          label: 'Name of field. Indicates if this bundle is allowed to control automated messages.'
+
+sms_gateway.settings.*:
+  type: sms_gateway_settings
+
+field.widget.settings.sms_telephone:
+  type: mapping
+  label: 'SMS Framework telephone widget settings'
+  mapping:
+    placeholder:
+      type: label
+      label: 'Placeholder'

@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @file
+ * Module file for views_infinite_scroll.
+ */
+
+use Drupal\Core\Url;
+use Drupal\Core\Template\Attribute;
+use Drupal\views_infinite_scroll\Plugin\views\pager\InfiniteScroll;
+
+/**
+ * Implements hook_preprocess_views_infinite_scroll_pager().
+ */
+function views_infinite_scroll_preprocess_views_infinite_scroll_pager(&$vars) {
+  // The important parts we needed lifted wholesale from
+  // template_preprocess_views_mini_pager().
+  /** @var \Drupal\Core\Pager\PagerManagerInterface $pager_manager */
+  $pager_manager = \Drupal::service('pager.manager');
+  $element = $vars['element'];
+  $parameters = $vars['parameters'];
+  $pager = $pager_manager->getPager($element);
+
+  if (isset($pager) && $pager->getCurrentPage() < ($pager->getTotalPages() - 1)) {
+    $options = [
+      'query' => $pager_manager->getUpdatedParameters($parameters, $element, $pager->getCurrentPage() + 1),
+    ];
+    $vars['items']['next']['href'] = Url::fromRoute('<none>', [], $options);
+  }
+  $vars['#cache']['contexts'][] = 'url.query_args';
+  $vars['attributes'] = new Attribute([
+    'class' => ['js-pager__items', 'pager'],
+    'data-drupal-views-infinite-scroll-pager' => $vars['options']['automatically_load_content'] ? 'automatic' : TRUE,
+  ]);
+
+}
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function views_infinite_scroll_preprocess_views_view(&$vars) {
+  $view = $vars['view'];
+  if ($view->getDisplay()->isPagerEnabled() && !empty($vars['rows'])) {
+    $pager = $view->getPager();
+    if ($pager && $pager instanceof InfiniteScroll) {
+      if (!isset($vars['rows']['#theme_wrappers'])) {
+        $vars['rows']['#theme_wrappers'] = [];
+      }
+      $vars['rows']['#theme_wrappers']['container']['#attributes']['data-drupal-views-infinite-scroll-content-wrapper'] = TRUE;
+      $vars['rows']['#theme_wrappers']['container']['#attributes']['class'][] = 'views-infinite-scroll-content-wrapper';
+      $vars['rows']['#theme_wrappers']['container']['#attributes']['class'][] = 'clearfix';
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_eva_display_entity_view()
+ */
+function views_infinite_scroll_preprocess_eva_display_entity_view(&$vars) {
+  // When the contributed EVA module is used to display the View, apply the
+  // preprocessing logic of this module.
+  views_infinite_scroll_preprocess_views_view($vars);
+}

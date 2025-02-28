@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * @file
+ * menu_breadcrumb.module
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function menu_breadcrumb_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+  switch ($route_name) {
+    // (this serves path = admin/help/menu_breadcrumb)
+    case 'help.page.menu_breadcrumb':
+      $output = <<<EOT
+<h5>
+Menu Breadcrumb: Generate breadcrumbs based on menu position/titles.
+</h5>
+<p>
+On the module Settings page, select options regarding the apperarance of breadcrumbs,
+and select menus on which to generate menu-based breadcrumbs.
+This basic behaviour is similar to the Drupal 7 version,
+which in Drupal 8 is extended as follows:
+</p>
+<ul>
+  <li>
+If the "Taxonomy Attachment" option is selected for a menu,
+and if the current page belongs to a taxonomy on that menu,
+it will inherit the taxonomy page's menu breadcrumbs (e.g., to provide
+breadcrumbs for blog entries that aren't on menus themselves).
+  </li>
+  <li>
+If the "Language Handling" option is selected for a menu,
+the menu will not be breadcrumbed unless its defined language matches
+the current content language (recommended when you use a separate menu per language).
+  </li>
+  <li>
+When the current page cannot be breadcrumbed according to the menu selections,
+it will not generate a breadcrumb at all, and another breadcrumb builder of lower
+priority will be free to generate the breadcrumb.
+  </li>
+</ul>
+<p>
+When a "taxonomy attachment" is found, the breadcrumbs will reflect the menus
+only and NOT the any hierarchy within the taxonomy: yet if those taxonomy terms
+are posted in a hierarchical menu then they will breadcrumb in the same way.
+(For menus based automatically on a taxonomy hierarchy,
+with breadcrumbs reflecting the same hierarchy,
+you could use the Taxonomy Menu module.)
+</p>
+<h5>
+Implementation Notes
+</h5>
+<p>
+If the current page exists on more than one menu,
+or has more than one possible taxonomy attachment,
+it uses the first box selected in the ordered list of menus.
+The order in which menus are scanned can be changed by
+dragging &amp; dropping the menus on that list.
+</p>
+<p>
+If the current page exists more than once <u>on the same menu</u>, the
+active_trail service returns more than one menu trail but the breadcrumb
+builder has no definitive way of choosing which corresponds to the
+chosen menu path (currently it will return the one with the lowest Menu
+Link ID: generally the oldest on the menu). If the duplication cannot be avoided by moving
+the duplicates to separate menus and setting menu priorities appropriately,
+you can try setting the active_trail of duplicated items by context
+(e.g. <a target="_blank" href="https://www.drupal.org/project/context_active_trail">Context Active Trail</a>)
+instead of adding them more than once your menu
+(see <a target="_blank" href="https://www.drupal.org/project/menu_breadcrumb/issues/3113126">Issue 3113126</a>).
+</p>
+<p>
+Taxonomy terms are searched in the order that their entity reference fields
+appear in the current page's field listing.
+One way to change an unwanted taxonomy term taking precendence over the one
+on which you want to "attach" would be to change the order of those fields.
+</p>
+<p>
+When the current page displays the breadcrumbs of its taxonomy parent,
+the breadcrumb for that taxonomy is <u>always</u> a link regardless of the
+"Show current page as link" option.  (This can be confusing until we remember
+that this breadcrumb <u>is not</u> for the current page, and must be a link
+because the current page is no anchored at all in the menu&hellip; unlike a
+breadcrumb that isn't taxonomy-attached.)
+</p>
+EOT;
+      break;
+
+    // (this serves path = admin/config/user-interface/menu_breadcrumb)
+    case 'menu_breadcrumb.settings':
+      $output = <<<EOT
+<p>
+Select the first option to enable the Menu Breadcrumb module,
+which will generate a breadcrumb trail according to the first match
+in the selected menu below: first looking for the current page on a menu
+(unless avoiding that menu due to language settings),
+and then seeing if the current page belongs to a taxonomy on that menu
+(whose breadcrumbs it will then inherit).
+</p>
+<p>
+If it cannot find a menu path or a taxonomy-based path for the current page,
+a breadcrumb will neither be generated nor cached and another breadcrumb builder
+(e.g., the default path-based breadcrumb builder)
+will be free to set the breadcrumb.
+</p>
+<p>
+For more details, see <a href="/admin/help/menu_breadcrumb">Menu Breadcrumb Help</a>.
+</p>
+EOT;
+      break;
+  }
+  return $output;
+}

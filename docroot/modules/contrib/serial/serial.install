@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Serial module.
+ */
+
+/**
+ * Implements hook_schema().
+ *
+ * Return the schema of all the assistant tables (one per field instance).
+ */
+function serial_schema() {
+  /** @var \Drupal\serial\SerialStorageInterface $serialStorage */
+  $serialStorage = \Drupal::getContainer()->get('serial.sql_storage');
+  $tableSchema = $serialStorage->getSchema();
+  $schema = [];
+  foreach ($serialStorage->getAllFields() as $entityTypeId => $entry) {
+    foreach ($entry as $fieldKey => $fieldInstance) {
+      foreach ($fieldInstance['bundles'] as $bundle) {
+        $schema[$serialStorage->createStorageName($entityTypeId, $bundle, $fieldKey)] = $tableSchema;
+      }
+    }
+  }
+  return $schema;
+}

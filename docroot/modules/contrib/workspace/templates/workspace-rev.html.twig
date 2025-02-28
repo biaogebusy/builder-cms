@@ -1,0 +1,29 @@
+{#
+/**
+ * @file
+ * Default theme implementation for Multiversion revisions.
+ *
+ * Available variables:
+ * - entity_type_id: The entity type ID.
+ * - entity_id: The entity ID.
+ * - revision_id: The entity revision ID.
+ * - uuid: The entity UUID.
+ * - rev: The revision token.
+ * - status: The status of the revision.
+ * - open_rev: Whether the revision is open or not.
+ * - conflict: Whether the revision is a conflict or not.
+ * - default: Whether the revision is the defaukt one or not.
+ *
+ * - title: The revision token linked to a view of the revision.
+ *
+ * @see template_preprocess_multiversion_rev()
+ *
+ * @ingroup themeable
+ */
+#}
+
+<div class="rev{{ default ? ' color-success' }}{{ conflict ? ' color-error' }}">
+    <h3 class="rev__title">{{ title }}</h3>
+    <hr>
+    {% trans %}Status: {{ status }}{% endtrans %}
+</div>

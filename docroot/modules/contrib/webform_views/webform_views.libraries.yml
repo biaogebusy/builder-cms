@@ -1,0 +1,5 @@
+filter.webform_term_checkboxes:
+  version: 5.x
+  css:
+    theme:
+      css/webform-filter-webform-term-checkboxes.css: {}

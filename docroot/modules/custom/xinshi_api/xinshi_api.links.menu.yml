@@ -1,0 +1,5 @@
+xinshi_api.settings:
+  title: 'Xinshi API'
+  description: 'Configure xinshi api settings.'
+  parent: system.admin_config_services
+  route_name: xinshi_api.settings

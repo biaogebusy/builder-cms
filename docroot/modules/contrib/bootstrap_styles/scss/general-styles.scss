@@ -1,0 +1,79 @@
+@import "variables";
+@import "mixins";
+@import "animations";
+
+// General styles.
+#drupal-off-canvas,
+#layout-builder-modal {
+  .form-type-checkbox,
+  .form-radios > div {
+    padding: 0;
+    margin: 0;
+    width: auto;
+  }
+
+  .form-control {
+    border: 0;
+  }
+  
+  // Bario theme.
+  .custom-control-input {
+    opacity: 1;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .bs_flex {
+    display: flex;
+  }
+
+  .bs-justify-content-between {
+    justify-content: space-between;
+  }
+
+  .bs_row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .bs_col {
+    -ms-flex-preferred-size: 0;
+    flex-basis: 0;
+    -webkit-box-flex: 1;
+    -ms-flex-positive: 1;
+    flex-grow: 1;
+    min-width: 0;
+    max-width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+
+    &--50 {
+      flex: 50%;
+      max-width: 50%;
+    }
+
+    &--100 {
+      flex: 100%;
+      max-width: 100%;
+    }
+  }
+
+  .bs-group-title {
+    margin-left: 15px;
+    display: flex;
+    align-items: center;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+  }
+}

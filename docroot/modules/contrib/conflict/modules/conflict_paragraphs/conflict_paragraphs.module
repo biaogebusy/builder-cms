@@ -1,0 +1,82 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\conflict\Entity\EntityConflictHandlerInterface;
+use Drupal\paragraphs\Plugin\Field\FieldWidget\ParagraphsWidget;
+
+/**
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
+ */
+function conflict_paragraphs_field_widget_paragraphs_form_alter(&$element, FormStateInterface $form_state, $context) {
+  /** @var \Drupal\entity_reference_revisions\EntityReferenceRevisionsFieldItemList $items */
+  $items = $context['items'];
+  $delta = $context['delta'];
+  /** @var \Drupal\paragraphs\Plugin\Field\FieldWidget\ParagraphsWidget $widget */
+  $widget = $context['widget'];
+  $widget_state = $widget::getWidgetState($element['#field_parents'], $items->getName(), $form_state);
+  /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
+  $form_display = $widget_state['paragraphs'][$delta]['display'];
+
+  $entity = $widget_state['paragraphs'][$delta]['entity'];
+
+  $entity->{EntityConflictHandlerInterface::CONFLICT_FORM_DISPLAY} = $form_display;
+
+  $subform =& $element['subform'];
+  conflict_prepare_entity_form($subform, $form_state, $entity, TRUE);
+
+
+  // auto merge
+  //
+  // if server version contains all our edited (edit open) entities, then take
+  // server order and apply merge resolution.
+  //
+  // If server contains new entities then merge them into ours and flag them as
+  // new in the form.
+  //
+  // if one of our edited entities was removed from the server version then add
+  // it as last element and flag it that it has been removed on the server
+  // version
+}
+
+/**
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
+ */
+function conflict_paragraphs_field_widget_entity_reference_paragraphs_form_alter(&$element, FormStateInterface $form_state, $context) {
+  conflict_paragraphs_field_widget_paragraphs_form_alter($element, $form_state, $context);
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Unset the conflict resolution of a paragraph field as whole set by the
+ * conflict resolution of the parent entity. We use conflict resolution on field
+ * item level instead.
+ */
+function conflict_paragraphs_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_state->get('conflict.build_conflict_resolution_form')) {
+    $manual_merge_conflicts = $form_state->get('manual-merge-conflicts');
+    if ($manual_merge_conflicts) {
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+      $entity = $form_state->getFormObject()->getEntity();
+      foreach ($manual_merge_conflicts as $field_name => $conflict_data) {
+        if (ParagraphsWidget::isApplicable($entity->getFieldDefinition($field_name)) && isset($form[$field_name]['conflict_resolution'])) {
+          unset($form[$field_name]['conflict_resolution']);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function conflict_paragraphs_module_implements_alter(&$implementations, $hook) {
+  // Move our hook_form_alter() implementation to the end of the list, so that
+  // it runs after conflict_form_alter() in order to be able to unset what has
+  // been unset by that function.
+  if ($hook === 'form_alter') {
+    $group = $implementations['conflict_paragraphs'];
+    unset($implementations['conflict_paragraphs']);
+    $implementations['conflict_paragraphs'] = $group;
+  }
+}

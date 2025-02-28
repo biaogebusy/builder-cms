@@ -1,0 +1,114 @@
+################
+# DrupalCI GitLabCI template
+#
+# Gitlab-ci.yml to replicate DrupalCI testing for Contrib
+#
+# With thanks to:
+#   * The GitLab Acceleration Initiative participants
+#   * DrupalSpoons
+################
+
+################
+# Guidelines
+#
+# This template is designed to give any Contrib maintainer everything they need to test, without requiring modification. It is also designed to keep up to date with Core Development automatically through the use of include files that can be centrally maintained.
+#
+# However, you can modify this template if you have additional needs for your project.
+################
+
+################
+# Includes
+#
+# Additional configuration can be provided through includes.
+# One advantage of include files is that if they are updated upstream, the changes affect all pipelines using that include.
+#
+# Includes can be overridden by re-declaring anything provided in an include, here in gitlab-ci.yml
+# https://docs.gitlab.com/ee/ci/yaml/includes.html#override-included-configuration-values
+################
+
+include:
+  ################
+  # DrupalCI includes:
+  # As long as you include this, any future includes added by the Drupal Association will be accessible to your pipelines automatically.
+  # View these include files at https://git.drupalcode.org/project/gitlab_templates/
+  ################
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      # EXPERIMENTAL: For Drupal 7, remove the above line and uncomment the below.
+      # - '/includes/include.drupalci.main-d7.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+#
+# Start custom overrides.
+#
+variables:
+  # Disable default phpunit job in favor of the d9/10 variants below.
+  SKIP_PHPUNIT: 1
+  # Skip eslint for now.
+  SKIP_ESLINT: 1
+  _PHPUNIT_EXTRA: --verbose
+  # Convenient, and we have no secrets.
+  _SHOW_ENVIRONMENT_VARIABLES: 1
+
+# Run two variations of composer job.
+composer:
+  parallel:
+    matrix:
+      - _TARGET_PHP: [ "7.3" ]
+        _TARGET_CORE: [ "9.5.11" ]
+      - _TARGET_PHP: [ "8.1" ]
+        _TARGET_CORE: [ "$CORE_STABLE" ]
+
+phpcs:
+  # Set allow_failure to false so that the test fails for coding standards faults.
+  allow_failure: true
+  dependencies:
+    - "composer: [8.1, $CORE_STABLE]"
+
+composer-lint:
+  dependencies:
+    - "composer: [8.1, $CORE_STABLE]"
+
+eslint:
+  dependencies:
+    - "composer: [8.1, $CORE_STABLE]"
+
+stylelint:
+  dependencies:
+    - "composer: [8.1, $CORE_STABLE]"
+
+.phpunit-local:
+  variables:
+    SKIP_PHPUNIT: 0
+
+phpunit-d9:
+  needs:
+    - job: composer
+      parallel:
+        matrix:
+          - _TARGET_PHP: "7.3"
+            _TARGET_CORE: "9.5.11"
+  variables:
+    _TARGET_PHP: "7.3"
+  extends:
+    - .phpunit-base
+    - .phpunit-local
+
+phpunit-d10:
+  needs:
+    - job: composer
+      parallel:
+        matrix:
+          - _TARGET_PHP: "8.1"
+            _TARGET_CORE: $CORE_STABLE
+  variables:
+    _TARGET_PHP: "8.1"
+  before_script:
+    - composer require drupal/ckeditor
+  extends:
+    - .phpunit-base
+    - .phpunit-local
+

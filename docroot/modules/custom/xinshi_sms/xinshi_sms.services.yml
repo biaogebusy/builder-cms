@@ -1,0 +1,13 @@
+services:
+  xinshi_sms.OTP:
+    class: Drupal\xinshi_sms\Otp
+    arguments: [ '@datetime.time', '@sms.provider', '@user.data', '@entity_type.manager', '@config.factory' ]
+
+  xinshi_sms.route_subscriber:
+    class: Drupal\xinshi_sms\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber, priority: 210 }
+
+  xinshi_sms.sms_message:
+    class: Drupal\xinshi_sms\Service\SmsMessageService
+    arguments: [ '@entity_type.manager', '@config.factory', '@logger.factory' ]

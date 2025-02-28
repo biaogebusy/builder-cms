@@ -1,0 +1,12 @@
+name: Commerce Log
+type: module
+description: 'Provides activity logs for Commerce entities.'
+package: Commerce
+core_version_requirement: ^9.3 || ^10
+dependencies:
+  - commerce:commerce
+
+# Information added by Drupal.org packaging script on 2023-06-01
+version: '8.x-2.36'
+project: 'commerce'
+datestamp: 1685624439

@@ -1,0 +1,20 @@
+charts.settings.library_plugin.chartjs:
+  type: charts_settings_library_plugin
+  mapping:
+    xaxis:
+      label: 'X-Axis settings'
+      type: mapping
+      mapping:
+        autoskip:
+          label: 'Enable autoskip'
+          type: boolean
+        horizontal_axis_title_align:
+          label: 'Horizontal axis title alignment'
+          type: string
+    yaxis:
+      label: 'Y-Axis settings'
+      type: mapping
+      mapping:
+        vertical_axis_title_align:
+          label: 'Vertical axis title alignment'
+          type: string

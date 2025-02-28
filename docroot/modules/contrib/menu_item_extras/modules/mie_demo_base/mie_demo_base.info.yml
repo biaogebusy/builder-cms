@@ -1,0 +1,17 @@
+name: Menu Item Extras Demo Base
+description: "Provide a base demo example of Mega Menu"
+type: module
+package: Menu
+hidden: false
+core_version_requirement: ^9.4 || ^10.0
+dependencies:
+  - drupal:menu_item_extras
+  - drupal:taxonomy
+  - drupal:image
+  - drupal:path
+  - drupal:ckeditor
+
+# Information added by Drupal.org packaging script on 2022-12-25
+version: '8.x-2.19'
+project: 'menu_item_extras'
+datestamp: 1671971155

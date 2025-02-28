@@ -1,0 +1,5 @@
+otp_login.admin_settings:
+  title: 'OTP Login Settings'
+  parent: user.admin_index
+  description: 'Control settings of OTP Login authentication module'
+  route_name: otp_login.admin_settings

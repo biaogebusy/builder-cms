@@ -1,0 +1,17 @@
+# Maintainers.
+Colan
+colan
+~ergonlogic
+Fieldto
+Gervais
+~josephleon
+Laventure
+~llamech
+~mparker
+Seonaid
+~spiderman
+~szhu
+
+# Misc.
+addmore
+autocollapse

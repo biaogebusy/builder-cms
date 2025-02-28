@@ -1,0 +1,24 @@
+charts_chartjs:
+  remote: 'https://github.com/chartjs/Chart.js'
+  version: VERSION
+  license:
+    name: 'Apache 2.0'
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+    gpl-compatible: false
+  # @todo
+  cdn:
+    /libraries/chart.js/: https://unpkg.com/chart.js@4.4.0/
+    /libraries/chartjs-adapter-date-fns/: https://unpkg.com/chartjs-adapter-date-fns@3.0.0/
+  js:
+    /libraries/chart.js/dist/chart.umd.js: { }
+    /libraries/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.js: { }
+  dependencies:
+    - core/drupal
+    - core/once
+chartjs:
+  version: 1.x
+  js:
+    js/charts_chartjs.js: { weight: -1 }
+  dependencies:
+    - charts/global
+    - charts_chartjs/charts_chartjs

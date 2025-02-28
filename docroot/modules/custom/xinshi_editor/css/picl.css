@@ -1,0 +1,24 @@
+.ipe-icon.ipe-icon-unlock,
+.ipe-icon.ipe-icon-start {
+  height: 16px;
+  width: 24px;
+}
+.ipe-icon.ipe-icon-unlock:before,
+.ipe-icon.ipe-icon-start:before {
+  content: "";
+  position: relative;
+  display: inline-block;
+  height: 24px;
+  width: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+.ipe-icon.ipe-icon-unlock:before {
+  background-image: url(../img/unlock.png);
+  top: -3px;
+}
+.ipe-icon.ipe-icon-start:before {
+  background-image: url(../img/lock.png);
+  top: -5px;
+}

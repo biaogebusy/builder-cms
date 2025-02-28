@@ -1,0 +1,198 @@
+# Base styles.
+layout_builder_form_style:
+  css:
+    theme:
+      css/general-styles.css: { }
+  js:
+    js/components/tabs.js: { }
+    js/components/inputs.js: { }
+  dependencies:
+    - core/drupal
+    - core/once
+    - bootstrap_styles/themes-overrides
+
+# Offcanvas Font
+offcanvas-font:
+  css:
+    theme:
+      //fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap: { type: external, minified: true }
+      css/fonts.css: { }
+
+# Themes overrides
+themes-overrides:
+  css:
+    theme:
+      css/themes-overrides.css: { }
+  js:
+    js/themes-overrides.js: { }
+
+# Base admin styles.
+layout_builder_admin_form_style:
+  css:
+    theme:
+      css/admin-general-styles.css: { }
+
+# Base components
+bs_yiq:
+  js:
+    js/components/yiq.js: { }
+
+# Themes.
+# Light
+theme.light:
+  version: 1.x
+  css:
+    theme:
+      css/themes/light.css: { }
+  dependencies:
+    - core/drupal.dialog.off_canvas
+
+# Dark
+theme.dark:
+  version: 1.x
+  css:
+    theme:
+      css/themes/dark.css: { }
+  dependencies:
+    - core/drupal.dialog.off_canvas
+
+# Plugins' groups.
+# spacing
+plugins_groups.spacing.spacing_preview:
+  js:
+    js/plugins_groups/spacing/spacing-preview.js: { }
+
+# border
+plugins_groups.border.border_preview:
+  js:
+    js/plugins_groups/border/border-preview.js: { }
+
+# shadow
+plugins_groups.shadow.shadow_preview:
+  js:
+    js/plugins_groups/shadow/shadow-preview.js: { }
+
+# Plugins.
+# background_color
+plugin.background_color.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/background-color-classes.css: { }
+  js:
+    js/plugins/background_color/layout-builder-form.js: { }
+  dependencies:
+    - bootstrap_styles/bs_yiq
+
+plugin.background_color.build:
+  css:
+    theme:
+      css/bs_example_classes/background-color-classes.css: { }
+
+# background_media
+plugin.background_media.build:
+  css:
+    theme:
+      css/build/plugins/background-media.css: { }
+  js:
+    js/plugins/background_media/build.js: { }
+
+# text_color
+plugin.text_color.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/text-color-classes.css: { }
+  js:
+    js/plugins/text_color/layout-builder-form.js: { }
+  dependencies:
+    - bootstrap_styles/bs_yiq
+
+plugin.text_color.build:
+  css:
+    theme:
+      css/bs_example_classes/text-color-classes.css: { }
+
+# text_alignment
+plugin.text_alignment.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/text-alignment-classes.css: { }
+
+plugin.text_alignment.build:
+  css:
+    theme:
+      css/bs_example_classes/text-alignment-classes.css: { }
+
+# padding
+plugin.padding.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/padding-classes.css: { }
+
+plugin.padding.build:
+  css:
+    theme:
+      css/bs_example_classes/padding-classes.css: { }
+
+# margin
+plugin.margin.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/margin-classes.css: { }
+
+plugin.margin.build:
+  css:
+    theme:
+      css/bs_example_classes/margin-classes.css: { }
+
+# border
+plugin.border.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/border-classes.css: { }
+  js:
+    js/plugins/border/layout-builder-form.js: { }
+
+plugin.border.build:
+  css:
+    theme:
+      css/bs_example_classes/border-classes.css: { }
+
+# box_shadow
+plugin.box_shadow.layout_builder_form:
+  css:
+    theme:
+      css/bs_example_classes/box-shadow-classes.css: { }
+
+plugin.box_shadow.build:
+  css:
+    theme:
+      css/bs_example_classes/box-shadow-classes.css: { }
+
+# scroll_effects
+plugin.scroll_effects.build:
+  dependencies:
+    - bootstrap_styles/aos.remote
+
+# AOS remote library.
+aos.remote:
+  remote: https://michalsnik.github.io/aos
+  version: 1.x
+  license:
+    name: MIT
+    url: https://github.com/michalsnik/aos/blob/master/LICENSE
+    gpl-compatible: true
+  js:
+    https://unpkg.com/aos@2.3.1/dist/aos.js: { type: external, weight: -3, minified: true }
+    js/plugins/scroll_effects/build.js: { }
+  css:
+    theme:
+      https://unpkg.com/aos@2.3.1/dist/aos.css: { }
+
+# AOS local library.
+aos.local:
+  js:
+    /libraries/aos/dist/aos.js: { weight: -3, minified: true }
+    js/plugins/scroll_effects/build.js: { }
+  css:
+    theme:
+      /libraries/aos/dist/aos.css: { minified: true }

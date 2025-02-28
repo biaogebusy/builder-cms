@@ -1,0 +1,58 @@
+/**
+ * @file
+ * Set base styles for the off-canvas dialog.
+ */
+
+/* Generic elements. */
+a,
+.link {
+  color: $panel_link_color;
+  font-family: inherit;
+}
+
+hr {
+  background: $panel_text_color;
+}
+
+/* Override jQuery UI */
+.ui-widget-content a {
+  color: $panel_link_color !important;
+}
+
+.messages {
+  margin-bottom: 2rem;
+  padding-left: 3rem;
+  background-size: 40px;
+  background-position: 5px 10px;
+  background-repeat: no-repeat;
+}
+
+.messages--status {
+  color: darken($state_success, 20%);
+  background-color: lighten($state_success, 30%);
+  background-image: $state_success_icon;
+
+  div, em {
+    color: darken($state_success, 20%);
+  }
+}
+
+.messages--warning {
+  color: darken($state_warning, 20%);
+  background-color: lighten($state_warning, 30%);
+  background-image: $state_warning_icon;
+
+  div, em {
+    color: darken($state_warning, 20%);
+  }
+}
+
+.messages--error {
+  color: darken($state_error, 20%);
+  background-color: lighten($state_error, 30%);
+  background-image: $state_error_icon;
+
+  div, em {
+    color: darken($state_error, 20%);
+  }
+}

@@ -1,0 +1,7 @@
+sms_blast.blast:
+  path: '/sms_blast'
+  defaults:
+    _title: 'SMS Blast'
+    _form: '\Drupal\sms_blast\SmsBlastForm'
+  requirements:
+    _permission: 'Send SMS Blast'

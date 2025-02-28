@@ -1,0 +1,123 @@
+<?php
+
+/**
+ * @file
+ * Select multiple items in an easier way than the normal node-reference widget.
+ */
+
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Template\Attribute;
+use Drupal\multiselect\Element\Multiselect;
+
+/**
+ * Implements hook_help().
+ */
+function multiselect_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.multiselect':
+      $output = '';
+      $output .= '<p>' . t('Provides a CCK and Form API widget for editing fields that allows users to select from a list of options in a left box and have them visually moved into the right box when options are chosen.') . '</p>';
+      $output .= '<h3>' . t('Methods of Implementing a Multiselect Widget') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt><h5>' . t('Method 1: Using CCK') . '</h5></dt>';
+      $output .= '<dd>' . t('When creating a new content field, select "Multiselect" as your widget type. You can use Multiselect on fields of type "list", "list_text", "list_number", "node_reference", "taxonomy_term_reference", and "user_reference".') . '</dd>';
+      $output .= '<dt><h5>' . t('Method 2: Coding Your Own Module') . '</h5></dt>';
+      $output .= '<dd>' . t('If you\'re developing a custom module and wish to use the Multiselect widget in place of a traditional "select" widget, you may use the Drupal 8 Form API.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_page_build().
+ */
+function multiselect_page_build(&$page) {
+  $config = \Drupal::config('multiselect.settings');
+  $page['#attached']['js'][] = [
+    'data' => [
+      'multiselect' => ['widths' => $config->get('multiselect.widths')],
+    ],
+    'type' => 'setting',
+  ];
+}
+
+/**
+ * Implements hook_theme().
+ */
+function multiselect_theme() {
+  return [
+    'multiselect' => [
+      'arguments' => ['element' => NULL],
+      'render element' => 'element',
+      'template' => 'multiselect',
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for multiselect element templates.
+ *
+ * Default template: multiselect.html.twig.
+ *
+ * @param array &$variables
+ *   An associative array containing:
+ *   - element: An associative array containing the properties of the element.
+ *     Properties used: #title, #value, #options, #description, #extra,
+ *     #multiple, #required, #name, #attributes, #size.
+ */
+function template_preprocess_multiselect(array &$variables) {
+  $element = $variables['element'];
+  Element::setAttributes($element, ['id', 'name', 'size', 'required']);
+
+  $available_options = Multiselect::getOptions('available', $element);
+  $available_size = min(count($available_options), 10);
+
+  $selected_options = Multiselect::getOptions('selected', $element);
+  $selected_size = min(count($selected_options), 10);
+  $total_size = $available_size + $selected_size;
+
+  $variables['multiselect'] = [
+    'available' => [
+      'id' => $element['#attributes']['id'] . '-available',
+      'label' => t('Available Options'),
+      'attributes' => [
+        'id' => $element['#attributes']['id'] . '-available',
+        'size' => $total_size,
+      ],
+      'options' => $available_options,
+    ],
+    'selected' => [
+      'id' => $element['#attributes']['id'],
+      'label' => t('Selected Options'),
+      'attributes' => $element['#attributes'],
+      'options' => $selected_options,
+    ],
+    'labels' => [
+      'add' => t('Add'),
+      'remove' => t('Remove'),
+    ],
+  ];
+
+  // Prepare selected attributes.
+  $variables['multiselect']['selected']['attributes']['size'] = $total_size;
+
+  // Prepare attributes for available select.
+  foreach (['multiple', 'class'] as $key) {
+    $element_key = "#{$key}";
+    if (isset($element[$element_key])) {
+      $variables['multiselect']['available']['attributes'][$key] = $element[$element_key];
+    }
+  }
+  // Prepare attributes.
+  $multiselect = &$variables['multiselect'];
+  foreach (['available', 'selected'] as $key) {
+    $multiselect[$key]['attributes']['class'][] = 'multiselect-' . $key;
+    $multiselect[$key]['attributes']['class'][] = 'form-multiselect';
+    if (isset($multiselect[$key]['attributes']) && !($multiselect[$key]['attributes'] instanceof Attribute)) {
+      if ($multiselect[$key]['attributes']) {
+        $multiselect[$key]['attributes'] = new Attribute($multiselect[$key]['attributes']);
+      }
+    }
+  }
+}

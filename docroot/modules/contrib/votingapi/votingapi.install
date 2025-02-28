@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Voting API module.
+ */
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function votingapi_update_last_removed() {
+  return 8302;
+}
+
+/**
+ * Alter votingapi_result table manually before definition update.
+ */
+function votingapi_update_8303(&$sandbox) {
+  // First we need to change the column of the table manually, because if there
+  // is content already, entity definition update manager will not allow to
+  // change the length of function field.
+  $field_storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('vote_result');
+  if (!empty($field_storage_definitions['function'])) {
+    /** @var \Drupal\Core\Field\BaseFieldDefinition $function_field_definition */
+    $function_field_definition = $field_storage_definitions['function'];
+    $schema = $function_field_definition->getSchema();
+    \Drupal::database()->schema()->changeField('votingapi_result', 'function', 'function', $schema['columns']['value']);
+    if (!empty($function_field_definition)) {
+      $new_schema = [
+        'votingapi_result' => [
+          'fields' => [
+            'function' => $schema['columns']['value'] + ['not null' => FALSE],
+          ],
+        ],
+      ];
+      \Drupal::keyValue('entity.storage_schema.sql')->set('vote_result.field_schema_data.function', $new_schema);
+    }
+    /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $repo */
+    $repo = \Drupal::service('entity.last_installed_schema.repository');
+    $repo->setLastInstalledFieldStorageDefinition($function_field_definition);
+  }
+}
+
+/**
+ * Update the definition of 'Function' field Vote Result entity.
+ */
+function votingapi_update_8304(&$sandbox) {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($vote_result_fields = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('vote_result')) {
+    /** @var \Drupal\Core\Field\BaseFieldDefinition $function_field_definition */
+    $function_field_definition = $vote_result_fields['function'];
+    $function_field_definition->getSchema();
+    $definition_update_manager->updateFieldStorageDefinition($function_field_definition);
+  }
+}

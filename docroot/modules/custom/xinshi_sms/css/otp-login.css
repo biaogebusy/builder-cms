@@ -1,0 +1,13 @@
+.inline-container .form-item {
+  display: inline-block;
+}
+
+.login-box .nav-tabs-custom .tab-content .inline-container .btn-verification-send {
+  position: relative;
+  bottom: -10px;
+}
+
+.login-box .nav-tabs-custom .tab-content .inline-container .send-message {
+  position: relative;
+  bottom: -10px;
+}

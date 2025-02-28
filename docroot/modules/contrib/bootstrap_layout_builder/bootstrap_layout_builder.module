@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Bootstrap Layout Builder module.
+ */
+
+use Drupal\Core\Render\Element;
+use Drupal\Core\Template\Attribute;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function bootstrap_layout_builder_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the bootstrap_layout_builder module.
+    case 'help.page.bootstrap_layout_builder':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Add Bootstrap Grid support to Layout Builder module.
+      currently, work for both Bootstrap 3 and Bootstrap 4.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function bootstrap_layout_builder_theme() {
+  return [
+    'blb_container_wrapper' => [
+      'variables' => [
+        'attributes' => [],
+        'children' => [],
+      ],
+    ],
+    'blb_container' => [
+      'variables' => [
+        'attributes' => [],
+        'children' => [],
+      ],
+    ],
+    'blb_section' => [
+      'template' => 'blb-section',
+      'render element' => 'content',
+      'base hook' => 'layout',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function bootstrap_layout_builder_preprocess_blb_section(&$variables) {
+  foreach (Element::children($variables['content']) as $name) {
+    if (!isset($variables['content'][$name]['#attributes'])) {
+      $variables['content'][$name]['#attributes'] = [];
+    }
+
+    /**
+     * A work around over TWIG ~3.0 for modules that pass array as css class value
+     * this results in array of arrays that must be flatten before displaying
+     * in twig.
+     */
+    foreach ($variables['content'][$name]['#attributes'] as $k => $v) {
+      if (is_array($v)) {
+        $result = [];
+        array_walk_recursive($v,function($elem) use (&$result){ if($elem) { $result[] = $elem; }});
+        $variables['content'][$name]['#attributes'][$k] = $result;
+      }
+    }
+
+    $variables['region_attributes'][$name] = new Attribute($variables['content'][$name]['#attributes']);
+  }
+}

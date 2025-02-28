@@ -1,0 +1,64 @@
+# Schema for the views plugins of the Serialization (Excel) module.
+
+views.display.excel_export:
+  type: views.display.rest_export
+  label: 'Excel export display options'
+  mapping:
+    filename:
+      type: string
+      label: 'Filename'
+    header_bold:
+      type: boolean
+      label: 'Header Bold'
+    header_italic:
+      type: boolean
+      label: 'Header Italic'
+    header_background_color:
+      type: string
+      label: 'Header Background Color'
+    header_text_color:
+      type: string
+      label: 'Header Text Color'
+
+views.style.excel_export:
+  type: views.style.serializer
+  label: 'Excel export output format'
+  mapping:
+    xls_settings:
+      type: mapping
+      label: 'XLS(X) settings'
+      mapping:
+        xls_format:
+          type: string
+          label: 'Format'
+        metadata:
+          type: mapping
+          label: 'Document metadata'
+          mapping:
+            creator:
+              type: string
+              label: 'Author/creator name'
+            last_modified_by:
+              type: string
+              label: 'Last modified by'
+            title:
+              type: string
+              label: 'Title'
+            description:
+              type: string
+              label: 'Description'
+            subject:
+              type: string
+              label: 'Subject'
+            keywords:
+              type: string
+              label: 'Keywords'
+            category:
+              type: string
+              label: 'Category'
+            manager:
+              type: string
+              label: 'Manager'
+            company:
+              type: string
+              label: 'Company'

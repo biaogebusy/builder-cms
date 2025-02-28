@@ -1,0 +1,8 @@
+workflow:
+  label: Workflow
+  plugin_manager_service_id: plugin.manager.workflow
+  plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
+workflow_group:
+  label: Workflow group
+  plugin_manager_service_id: plugin.manager.workflow_group
+  plugin_definition_decorator_class: \Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator

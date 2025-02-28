@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Integrates CKEditor's Upload Image plugin to Drupal.
+ */
+
+/**
+ * Implements hook_ckeditor_plugin_info_alter().
+ */
+function ckeditor_uploadimage_ckeditor_plugin_info_alter(array &$plugins) {
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('media')) {
+    $mediaImageFields = \Drupal::service('entity_field.manager')->getFieldDefinitions('media', 'image');
+    if (isset($mediaImageFields['field_media_image'])) {
+      $plugins['drupalimage']['class'] = 'Drupal\ckeditor_uploadimage\Form\CKEditorUploadImageDrupalImage';
+    }
+  }
+}

@@ -1,0 +1,12 @@
+services:
+  # A normalizer that simply unwraps the data object.
+  serializer.normalizer.serialized:
+    class: Drupal\rest_views\Normalizer\DataNormalizer
+    tags:
+      - { name: normalizer }
+  # A normalizer that renders a data array.
+  serializer.normalizer.render:
+    class: Drupal\rest_views\Normalizer\RenderNormalizer
+    arguments: ['@renderer']
+    tags:
+      - { name: normalizer }

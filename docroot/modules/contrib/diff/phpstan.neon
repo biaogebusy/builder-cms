@@ -1,0 +1,20 @@
+includes:
+  - phpstan-baseline.neon
+parameters:
+  level: 6
+  paths:
+    - .
+  reportUnmatchedIgnoredErrors: true
+  checkMissingIterableValueType: false
+  strictRules:
+     strictCalls: false
+  fileExtensions:
+    - php
+    - module
+    - theme
+    - profile
+    - install
+    - inc
+  excludePaths:
+    # We cant improve this directory as its contains Drupal-generic code.
+    - vendor

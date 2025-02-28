@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.wechat_response_message.image.field_image
+    - image.style.thumbnail
+    - wechat.response_message_type.image
+  module:
+    - image
+id: wechat_response_message.image.default
+targetEntityType: wechat_response_message
+bundle: image
+mode: default
+content:
+  field_image:
+    weight: 1
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+    type: image_image
+hidden: {  }

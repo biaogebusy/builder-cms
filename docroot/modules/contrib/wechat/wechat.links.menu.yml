@@ -1,0 +1,36 @@
+wechat.admin.wechat:
+  title: Wechat
+  description: 'Administer Wechat.'
+  route_name: wechat.admin_wechat
+  parent: system.admin
+  weight: -12
+wechat.admin.wechat.config:
+  title: Configuration
+  description: 'Adjust configuration settings for Wechat.'
+  route_name: wechat.configuration
+  parent: wechat.admin.wechat
+  weight: 6
+wechat.admin.wechat.config.default:
+  title: Config Wechat
+  description: 'Wechat configuration.'
+  route_name: wechat.config_default
+  parent: wechat.admin.wechat.config
+  weight: 1
+wechat.admin.wechat.config.default_message:
+  title: Config default message
+  description: 'Config default message.'
+  route_name: wechat.config.default_message
+  parent: wechat.admin.wechat.config
+  weight: 2
+wechat.admin.wechat.config.request_message:
+  title: Request message types
+  description: 'Request message types.'
+  route_name: entity.wechat_request_message_type.collection
+  parent: wechat.admin.wechat.config
+  weight: 3
+wechat.admin.wechat.config.response_message:
+  title: Response message types
+  description: 'Response message types.'
+  route_name: entity.wechat_response_message_type.collection
+  parent: wechat.admin.wechat.config
+  weight: 3   

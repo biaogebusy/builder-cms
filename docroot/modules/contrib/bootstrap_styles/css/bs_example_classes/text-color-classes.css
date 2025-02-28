@@ -1,0 +1,83 @@
+.bs-text-white {
+  color: #ffffff !important;
+}
+
+.ui-dialog-off-canvas .bs-text-white {
+  color: #ffffff !important;
+}
+
+.bs-text-black {
+  color: #000000 !important;
+}
+
+.ui-dialog-off-canvas .bs-text-black {
+  color: #000000 !important;
+}
+
+@media screen and (max-width: 576px) {
+  .bs-text-sm-white {
+    color: #ffffff !important;
+  }
+  .bs-text-sm-black {
+    color: #000000 !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-text-sm-white {
+  color: #ffffff !important;
+}
+
+.ui-dialog-off-canvas .bs-text-sm-black {
+  color: #000000 !important;
+}
+
+@media (min-width: 576px) and (max-width: 992px) {
+  .bs-text-md-white {
+    color: #ffffff !important;
+  }
+  .bs-text-md-black {
+    color: #000000 !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-text-md-white {
+  color: #ffffff !important;
+}
+
+.ui-dialog-off-canvas .bs-text-md-black {
+  color: #000000 !important;
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+  .bs-text-lg-white {
+    color: #ffffff !important;
+  }
+  .bs-text-lg-black {
+    color: #000000 !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-text-lg-white {
+  color: #ffffff !important;
+}
+
+.ui-dialog-off-canvas .bs-text-lg-black {
+  color: #000000 !important;
+}
+
+@media (min-width: 1200px) {
+  .bs-text-xl-white {
+    color: #ffffff !important;
+  }
+  .bs-text-xl-black {
+    color: #000000 !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-text-xl-white {
+  color: #ffffff !important;
+}
+
+.ui-dialog-off-canvas .bs-text-xl-black {
+  color: #000000 !important;
+}

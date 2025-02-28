@@ -1,0 +1,12 @@
+services:
+  plugin.manager.queue_ui:
+    class: Drupal\queue_ui\QueueUIManager
+    parent: default_plugin_manager
+    arguments: ['@queue']
+  queue_ui.batch:
+    class: Drupal\queue_ui\QueueUIBatch
+    arguments:
+      - '@plugin.manager.queue_worker'
+      - '@module_handler'
+      - '@messenger'
+      - '@queue'

@@ -1,0 +1,37 @@
+{
+  "name": "drupal/allowed_formats",
+  "description": "Limit which text formats are available for each field instance.",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/allowed_formats",
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Northern Commerce (formerly Digital Echidna)",
+      "homepage": "https://www.drupal.org/northern-commerce-formerly-digital-echidna",
+      "role": "Supporting organization"
+    },
+    {
+      "name": "Jordan Thompson (nord102)",
+      "homepage": "https://www.drupal.org/u/nord102",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Wunder",
+      "homepage": "https://www.drupal.org/wunder",
+      "role": "Supporting organization"
+    },
+    {
+      "name": "Florian Loretan (floretan)",
+      "homepage": "https://www.drupal.org/u/floretan",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/allowed_formats",
+    "source": "http://cgit.drupalcode.org/allowed_formats"
+  },
+  "require": {
+    "drupal/core": "^8.8 || ^9"
+  }
+}

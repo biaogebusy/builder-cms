@@ -1,0 +1,85 @@
+<?php
+
+/**
+ * @file
+ */
+
+use Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface;
+use Drupal\eck\Entity\EckEntityBundle;
+
+/**
+ * Enable all base fields for existing ECK entity types.
+ */
+function eck_update_8001() {
+  $entity_types = \Drupal::entityTypeManager()
+    ->getStorage('eck_entity_type')
+    ->loadMultiple();
+  $names = [];
+  foreach ($entity_types as $entity_type) {
+    $names[] = "eck.eck_entity_type.{$entity_type->id()}";
+  }
+
+  foreach ($names as $name) {
+    $config = \Drupal::configFactory()->getEditable($name);
+    $data = $config->getRawData();
+    foreach (['uid', 'title', 'created', 'changed'] as $field) {
+      $data[$field] = TRUE;
+    }
+    $config->setData($data);
+    $config->save();
+  }
+
+  drupal_flush_all_caches();
+  EntityDefinitionUpdateManagerInterface::getChangeList();
+}
+
+/**
+ * Re-save all bundles for all entities to set the correct dependencies.
+ */
+function eck_update_8002() {
+  $bundles = EckEntityBundle::loadMultiple();
+  foreach ($bundles as $bundle) {
+    $bundle->save();
+  }
+}
+
+/**
+ * Update entity definitions to fix any mismatched entities.
+ *
+ * @see https://www.drupal.org/node/2646412
+ */
+function eck_update_8003() {
+  EntityDefinitionUpdateManagerInterface::getChangeList();
+}
+
+/**
+ * Upgrades ECK tables.
+ *
+ * (ID columns should be of unsigned int type) and installs new definitions from
+ * code.
+ */
+function eck_update_8004() {
+  $schema = Drupal::database()->schema();
+  /** @var \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface $entityDefinitionUpdateManager */
+  $entityDefinitionUpdateManager = Drupal::service('entity.definition_update_manager');
+  $entityTypeManager = Drupal::entityTypeManager();
+  $eckEntityTypes = $entityTypeManager
+    ->getStorage('eck_entity_type')
+    ->loadMultiple();
+  $idColumnSpec = [
+    'primary key' => TRUE,
+    'type' => 'serial',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+  ];
+
+  /** @var \Drupal\eck\Entity\EckEntityType $entity_type */
+  foreach ($eckEntityTypes as $machineName => $entity_type) {
+    $entityTypeDefinition = $entityTypeManager->getDefinition($machineName);
+
+    $schema->changeField($entityTypeDefinition->getBaseTable(), 'id', 'id', $idColumnSpec);
+    $schema->changeField($entityTypeDefinition->getDataTable(), 'id', 'id', $idColumnSpec);
+
+    $entityDefinitionUpdateManager->installEntityType($entityTypeDefinition);
+  }
+}

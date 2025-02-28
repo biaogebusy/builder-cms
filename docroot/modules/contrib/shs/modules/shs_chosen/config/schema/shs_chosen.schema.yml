@@ -1,0 +1,40 @@
+# Schema for configuration files of the SHS module.
+
+field.widget.settings.options_shs_chosen:
+  type: mapping
+  label: 'Simple hierarchical select chosen form display settings'
+  mapping:
+    display_node_count:
+      type: boolean
+      label: 'Display node count'
+    create_new_items:
+      type: boolean
+      label: 'Allow creating new items'
+    create_new_levels:
+      type: boolean
+      label: 'Allow creating new levels'
+    force_deepest:
+      type: boolean
+      label: 'Force selection of deepest level'
+    chosen_override:
+      type: boolean
+      label: 'Custom chosen settings'
+    chosen_settings:
+      type: mapping
+      label: 'Chosen overrides'
+      mapping:
+        disable_search:
+          type: boolean
+          label: 'Disable search box'
+        search_contains:
+          type: boolean
+          label: 'Search also in the middle of words'
+        placeholder_text_multiple:
+          type: string
+          label: 'Placeholder text of multiple selects'
+        placeholder_text_single:
+          type: string
+          label: 'Placeholder text of single selects'
+        no_results_text:
+          type: string
+          label: 'No results text'

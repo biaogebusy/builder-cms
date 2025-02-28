@@ -1,0 +1,61 @@
+menu_breadcrumb.settings:
+  type: config_object
+  label: 'Menu Breadcrumb Settings'
+  mapping:
+    determine_menu:
+      type: boolean
+      label: 'Use menu the page belongs to, or the page for the taxonomy of which it is a member, for the breadcrumb.'
+    disable_admin_page:
+      type: boolean
+      label: 'Do not build menu-based breadcrumbs for admin pages.'
+    append_current_page:
+      type: boolean
+      label: 'Include the current page in the breadcrumb trail if it is in the menu.'
+    current_page_as_link:
+      type: boolean
+      label: 'If the current page in the breadcrumb trail should be a link.'
+    stop_on_first_match:
+      type: boolean
+      label: 'End the breadcrumb trail when the first matching found in the menu.'
+    append_member_page:
+      type: boolean
+      label: 'This option affects breadcrumb display when the current page is a member of a taxonomy whose term is on a menu with "Taxonomy Attachment" selected.'
+    member_page_as_link:
+      type: boolean
+      label: 'Set TRUE to show the attached final breadcrumb as a link.'
+    remove_home:
+      type: boolean
+      label: 'Remove the home link.'
+    add_home:
+      type: boolean
+      label: 'Ensure that the very first link is the designated <front> page link.'
+    front_title:
+      type: integer
+      label: 'Choose how to show home title in breadcrumb'
+    exclude_empty_url:
+      type: boolean
+      label: 'Exclude menu items with empty URLs.'
+    exclude_disabled_menu_items:
+      type: boolean
+      label: 'Exclude disabled menu items.'
+    derived_active_trail:
+      type: boolean
+      label: 'Derive MenuActiveTrail from RouteMatch.'
+    menu_breadcrumb_menus:
+      type: sequence
+      label: 'Menu Breadcrumb Menu Configurations'
+      sequence:
+        type: mapping
+        mapping:
+          enabled:
+            type: integer
+            label: 'Enabled'
+          weight:
+            type: integer
+            label: 'Weight'
+          taxattach:
+            type: integer
+            label: 'Taxonomy Attachment'
+          langhandle:
+            type: integer
+            label: 'Language Handling'

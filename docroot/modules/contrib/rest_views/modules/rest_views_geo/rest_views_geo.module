@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Provides a new Views Field plugin for all geolocation_field fields.
+ */
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function rest_views_geo_views_data_alter(array &$data) {
+  foreach ($data as $table_alias => $fields) {
+    /** @var array[] $fields */
+    foreach ($fields as $field_alias => $field) {
+      // Find all handlers that use the geolocation_field plugin.
+      if (isset($field['field']['id']) && $field['field']['id'] === 'geolocation_field') {
+        // Add a second handler that uses the Rest Field plugin.
+        $field['title'] = t('@field (serializable)', ['@field' => $field['title']]);
+        $field['field']['id'] = 'field_export';
+
+        // Only expose the field handler as the others are redundant.
+        unset($field['argument'], $field['filter'], $field['sort']);
+        $data[$table_alias]["{$field_alias}_export"] = $field;
+      }
+    }
+  }
+}

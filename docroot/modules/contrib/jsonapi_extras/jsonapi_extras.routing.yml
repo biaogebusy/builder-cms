@@ -1,0 +1,7 @@
+jsonapi_extras.settings:
+  path: '/admin/config/services/jsonapi/extras'
+  defaults:
+    _form: '\Drupal\jsonapi_extras\Form\JsonapiExtrasSettingsForm'
+    _title: 'JSON:API Extras'
+  requirements:
+    _permission: 'administer site configuration'

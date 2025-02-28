@@ -1,0 +1,18 @@
+# Schema for configuration files of the SHS module.
+
+field.widget.settings.options_shs:
+  type: mapping
+  label: 'Simple hierarchical select form display settings'
+  mapping:
+    display_node_count:
+      type: boolean
+      label: 'Display node count'
+    create_new_items:
+      type: boolean
+      label: 'Allow creating new items'
+    create_new_levels:
+      type: boolean
+      label: 'Allow creating new levels'
+    force_deepest:
+      type: boolean
+      label: 'Force selection of deepest level'

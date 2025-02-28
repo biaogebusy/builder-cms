@@ -1,0 +1,219 @@
+#bs_spacing_preview_calc {
+  display: none;
+  visibility: hidden;
+}
+
+// Spacing previewer
+.spacing-preview {
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  display: flex;
+
+  // Shared preview box styles.
+  .preview-box {
+    @include smooth-all-transition;
+    position: relative;
+    width: 100%;
+    padding: 1.5rem;
+    font-size: 10px;
+    display: flex;
+
+    .title,
+    .left,
+    .top,
+    .right,
+    .bottom {
+      @include smooth-all-transition;
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 1.5rem;
+      z-index: 1;
+      color: $panel_bg_color;
+    }
+
+    .title {
+      top: -1.5rem;
+      left: -.125rem;
+    }
+
+    .left,
+    .right,
+    .top,
+    .bottom {
+      width: 1.5rem;
+    }
+
+    .left {
+      left: -1.5rem;
+      margin-top: -.75rem;
+      top: 50%;
+    }
+
+    .right {
+      right: -1.5rem;
+      margin-top: -.75rem;
+      top: 50%;
+    }
+
+    .top {
+      top: -1.5rem;
+      margin-left: -.75rem;
+      left: 50%;
+    }
+
+    .bottom {
+      bottom: -1.5rem;
+      margin-left: -.75rem;
+      left: 50%;
+    }
+
+    // When our range slider gets adjusted
+    &.bs-adjusting > {
+      .title,
+      .left,
+      .top,
+      .right,
+      .bottom {
+        font-weight: bold;
+      }
+    }
+  }
+
+  .margin-box {
+    height: 150px;
+    box-shadow: 0 0 0 1.5rem $state_warning;
+  }
+
+  .padding-box {
+    height: 100%;
+    box-shadow: 0 0 0 1.5rem $state_success;
+  }
+}
+
+// Padding/Margin Highlighting
+.bs_input-boxes--box-model .fieldset-wrapper > div > div {
+  input {
+
+    // all
+    &[value="padding"],
+    &[value="margin"] {
+      + label:after,
+      &:hover + label:after {
+        border-color: $white;
+      }
+    }
+
+    // padding/margin all
+    &[value="padding"]:checked + label:after {
+      border-color: $state_success;
+    }
+
+    &[value="margin"]:checked + label:after {
+      border-color: $state_warning;
+    }
+
+    // left
+    &[value="padding_left"] {
+      + label:after,
+      &:hover + label:after {
+        border-left-color: $white;
+      }
+
+      &:checked + label:after {
+        border-left-color: $state_success;
+      }
+    }
+
+    &[value="margin_left"] {
+      + label:after,
+      &:hover + label:after {
+        border-left-color: $white;
+      }
+
+      &:checked + label:after {
+        border-left-color: $state_warning;
+      }
+    }
+
+    // top
+    &[value="padding_top"] {
+      + label:after,
+      &:hover + label:after {
+        border-top-color: $white;
+      }
+
+      &:checked + label:after {
+        border-top-color: $state_success;
+      }
+    }
+
+    &[value="margin_top"] {
+      + label:after,
+      &:hover + label:after {
+        border-top-color: $white;
+      }
+
+      &:checked + label:after {
+        border-top-color: $state_warning;
+      }
+    }
+
+    // right
+    &[value="padding_right"] {
+      + label:after,
+      &:hover + label:after {
+        border-right-color: $white;
+      }
+
+      &:checked + label:after {
+        border-right-color: $state_success;
+      }
+    }
+
+    &[value="margin_right"] {
+      + label:after,
+      &:hover + label:after {
+        border-right-color: $white;
+      }
+
+      &:checked + label:after {
+        border-right-color: $state_warning;
+      }
+    }
+
+    // bottom
+    &[value="padding_bottom"] {
+      + label:after ,
+      &:hover + label:after {
+        border-bottom-color: $white;
+      }
+
+      &:checked + label:after {
+        border-bottom-color: $state_success;
+      }
+    }
+
+    &[value="margin_bottom"] {
+      + label:after,
+      &:hover + label:after {
+        border-bottom-color: $white;
+      }
+
+      &:checked + label:after {
+        border-bottom-color: $state_warning;
+      }
+    }
+  }
+}
+
+// Padding range sliders
+input[type=range][class^="bs-field-padding"] {
+  @include bs_range_sliders($state_success);
+}
+
+// Margin range sliders
+input[type=range][class^="bs-field-margin"] {
+  @include bs_range_sliders($state_warning);
+}

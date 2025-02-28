@@ -1,0 +1,18 @@
+form:
+  version: VERSION
+  css:
+    theme:
+      css/product.form.css: {}
+
+rendered-attributes:
+  version: VERSION
+  css:
+    theme:
+      css/commerce_product.rendered-attributes.css: {}
+
+update_product_url:
+  version: VERSION
+  js:
+    js/commerce_product.update_product_url.js: {}
+  dependencies:
+    - core/drupal.ajax

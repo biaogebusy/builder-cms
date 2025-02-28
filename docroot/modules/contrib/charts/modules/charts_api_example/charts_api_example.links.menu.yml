@@ -1,0 +1,5 @@
+charts_api_example.display:
+  title: 'Charts API Example'
+  description: 'Displays charts rendered using the Charts API.'
+  parent: system.admin_config_content
+  route_name: charts_api_example.display

@@ -1,0 +1,17 @@
+// Themes overrides for Barrio theme.
+#bs_ui {
+  .custom-control-label {
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+  .custom-control {
+    padding-left: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .custom-switch {
+    padding-left: 0;
+  }
+}

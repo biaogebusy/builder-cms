@@ -1,0 +1,47 @@
+views.style.chart:
+  type: views_style
+  label: 'Chart'
+  mapping:
+    chart_settings:
+      type: charts_config
+      label: 'Settings'
+
+views.display.chart_extension:
+  type: views_display
+  label: 'Attachment display options'
+
+views.field.field_exposed_chart_type:
+  type: views_field
+  label: 'Exposed Chart Type'
+  mapping:
+    chart_types:
+      type: sequence
+      label: 'Chart Type Options'
+    exposed_select_type:
+      type: string
+      label: 'Exposed Selection Type'
+
+views.field.field_charts_fields_bubble:
+  type: views_field
+  label: 'Bubble Field'
+  mapping:
+    x_axis:
+      type: string
+      label: 'X Axis Field'
+    y_axis:
+      type: string
+      label: 'Y Axis Field'
+    z_axis:
+      type: string
+      label: 'Z Axis Field'
+
+views.field.field_charts_fields_scatter:
+  type: views_field
+  label: 'Scatter Field'
+  mapping:
+    x_axis:
+      type: string
+      label: 'X Axis Field'
+    y_axis:
+      type: string
+      label: 'Y Axis Field'

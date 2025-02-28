@@ -1,0 +1,6 @@
+pendo.pendo_admin_form:
+  title: 'Pendo'
+  route_name: pendo.pendo_admin_form
+  description: 'Edit Pendo configuration.'
+  parent: system.admin_config_services
+  weight: 99

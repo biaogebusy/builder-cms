@@ -1,0 +1,6 @@
+name: FooTable
+description: 'Provides Views integration for the jQuery FooTable plugin.'
+type: module
+core_version_requirement: ^9 || ^10
+package: Views
+configure: footable.settings

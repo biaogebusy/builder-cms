@@ -1,0 +1,5 @@
+charts.settings:
+  title: 'Charts settings'
+  base_route_name: charts.settings
+  names:
+    - charts.settings

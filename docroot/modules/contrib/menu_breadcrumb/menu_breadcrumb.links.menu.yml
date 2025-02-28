@@ -1,0 +1,5 @@
+menu_breadcrumb.settings:
+  title: Menu Breadcrumb
+  description: 'Configure Menu Breadcrumb settings'
+  route_name: menu_breadcrumb.settings
+  parent: system.admin_config_ui

@@ -1,0 +1,47 @@
+{
+  "name": "drupal/ace_editor",
+  "type": "drupal-module",
+  "description": "Ace is an embeddable code editor providing syntax highlighting and much more. See https://ace.c9.io/.",
+  "keywords": [
+    "Drupal",
+    "ACE",
+    "Editor"
+  ],
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/ace_editor",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/ace_editor",
+    "source": "http://cgit.drupalcode.org/ace_editor"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    },
+    "assets": {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  },
+  "require": {
+    "composer/installers": "~1.0 || ~2.0",
+    "oomphinc/composer-installers-extender": "~1.0 || ~2.0",
+    "npm-asset/ace-builds": "~1.0"
+  },
+  "extra": {
+    "installer-types": [
+      "bower-asset",
+      "npm-asset"
+    ],
+    "installer-paths": {
+      "libraries/ace": ["npm-asset/ace-builds"]
+    },
+    "drupal-libraries": {
+      "libraries": [
+        {"name": "ace", "package": "npm-asset/ace-builds"}
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a bootstrap columns layout.
+ *
+ * Available variables:
+ * - content: The content for this layout.
+ * - attributes: HTML attributes for the layout <div>.
+ *
+ * @ingroup themeable
+ */
+#}
+{% if content %}
+  {% set classes = [
+    'layout',
+    'row',
+    content['#settings']['remove_gutters'] is same as('1') ? 'no-gutters' : '',
+    'layout-builder__layout'
+  ] %}
+
+  <div {{ attributes.addClass(classes) }}>
+    {{ title_prefix }}
+    {% for i in 1..12 %}
+      {% set region = "blb_region_col_" ~ i %}
+      {% if content[region] %}
+        <div {{ region_attributes[region] }}>
+          {{ content[region] }}
+        </div>
+      {% endif %}
+    {% endfor %}
+    {{ title_suffix }}
+  </div>
+
+{% endif %}

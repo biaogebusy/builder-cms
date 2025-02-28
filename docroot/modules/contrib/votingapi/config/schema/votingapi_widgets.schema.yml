@@ -1,0 +1,38 @@
+field.storage_settings.voting_api_field:
+  type: mapping
+  label: 'Voting API widget field settings.'
+  mapping:
+    vote_plugin:
+      type: string
+      label: 'Vote plugin'
+    vote_type:
+      type: string
+      label: 'Vote type'
+    status:
+      type: string
+      label: 'Status'
+
+field.field_settings.voting_api_field:
+  type: mapping
+  label: 'Voting API widget field settings.'
+  mapping:
+    anonymous_window:
+      type: string
+      label: 'Anonymous vote rollover'
+    result_function:
+      type: string
+      label: 'Result function'
+    user_window:
+      type: string
+      label: 'Registered user vote rollover'
+    widget_format:
+      type: string
+      label: 'Widget format'
+
+field.value.voting_api_field:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    status:
+      type: string
+      label: 'Status'

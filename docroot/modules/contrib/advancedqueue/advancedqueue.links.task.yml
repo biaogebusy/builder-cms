@@ -1,0 +1,4 @@
+entity.advancedqueue_queue.edit_form:
+  route_name: entity.advancedqueue_queue.edit_form
+  base_route: entity.advancedqueue_queue.edit_form
+  title: Edit

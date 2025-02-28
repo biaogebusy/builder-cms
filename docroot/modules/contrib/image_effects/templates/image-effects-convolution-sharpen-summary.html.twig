@@ -1,0 +1,21 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an image convolution sharpen effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this convolution sharpen effect, including:
+ *   - level: The convolution sharpen adjustment level.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  {% trans %}
+    level : {{ data.level }}
+  {% endtrans %}
+{% endapply %}

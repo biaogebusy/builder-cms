@@ -1,0 +1,5 @@
+xinshi_editor.panelizer_settings:
+  title: 'Panelizer Settings'
+  route_name: xinshi_editor.panelizer_settings
+  parent: xinshi_manage.admin.config
+  weight: 99

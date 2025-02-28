@@ -1,0 +1,55 @@
+# Schema for the views plugins of the SHS module.
+
+views.filter.shs_chosen_taxonomy_index_tid:
+  type: views.filter.taxonomy_index_tid
+  label: 'SHS Chosen Taxonomy term ID'
+  mapping:
+    expose:
+      type: mapping
+      label: 'Expose'
+      mapping:
+        chosen_override:
+          type: boolean
+          label: 'Override global settings for Chosen'
+        disable_search:
+          type: boolean
+          label: 'Disable search box'
+        search_contains:
+          type: boolean
+          label: 'Also search in the middle of words'
+        placeholder_text_multiple:
+          type: string
+          label: 'Placeholder text of multiple selects'
+        placeholder_text_single:
+          type: string
+          label: 'Placeholder text of single selects'
+        no_results_text:
+          type: string
+          label: 'No results text'
+
+views.filter.shs_chosen_taxonomy_index_tid_depth:
+  type: views.filter.taxonomy_index_tid_depth
+  label: 'SHS Chosen Taxonomy term ID with depth'
+  mapping:
+    expose:
+      type: mapping
+      label: 'Expose'
+      mapping:
+        chosen_override:
+          type: boolean
+          label: 'Override global settings for Chosen'
+        disable_search:
+          type: boolean
+          label: 'Disable search box'
+        search_contains:
+          type: boolean
+          label: 'Also search in the middle of words'
+        placeholder_text_multiple:
+          type: string
+          label: 'Placeholder text of multiple selects'
+        placeholder_text_single:
+          type: string
+          label: 'Placeholder text of single selects'
+        no_results_text:
+          type: string
+          label: 'No results text'

@@ -1,0 +1,100 @@
+<?php
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+/**
+ * Implements hook_entity_create_access().
+ */
+function xinshi_api_entity_create_access(AccountInterface $account, array $context, $entity_bundle) {
+  if (isset($context['entity_type_id']) && $context['entity_type_id'] == 'flagging') {
+    return AccessResult::allowedIfHasPermission($account, 'flag ' . $entity_bundle);
+  }
+}
+
+/**
+ * Implements hook_entity_create_access().
+ */
+function xinshi_api_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  switch ($entity->getEntityTypeId()) {
+    case 'flagging':
+      switch ($operation) {
+        case 'delete':
+        case 'edit':
+          if ($entity->getOwnerId() == $account->id()) {
+            return AccessResult::allowedIfHasPermission($account, 'unflag ' . $entity->bundle());
+          } else {
+            return AccessResult::forbidden();
+          }
+          break;
+        case 'view':
+          return AccessResult::allowedIf($entity->getOwnerId() == $account->id());
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_entity_field_access().
+ */
+function xinshi_api_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  // Account with role sub-admin can view the status, init and mail fields for
+  // user with no roles.
+  if ($account->isAuthenticated() && $field_definition->getTargetEntityTypeId() == 'user' && $operation === 'view' && in_array($field_definition->getName(), ['roles'])) {
+    return AccessResult::allowed();
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_jsonapi_ENTITY_TYPE_filter_access() for 'flagging'.
+ */
+function xinshi_api_jsonapi_flagging_filter_access($entity_type, AccountInterface $account) {
+  return ([
+    JSONAPI_FILTER_AMONG_ALL => AccessResult::allowedIf($account->isAuthenticated()),
+  ]);
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function xinshi_api_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  switch ($entity->getEntityTypeId()) {
+    case 'user':
+      if (in_array($display->getMode(), ['json', 'profile'])) {
+        unset($build['#prefix']);
+        unset($build['#suffix']);
+        foreach ($build['content']['#context']['_layout_builder'] ?? [] as $key => $contents) {
+          if (!is_numeric($key)) {
+            continue;
+          }
+          foreach ($contents['content'] ?? [] as $content) {
+            if ($content['#base_plugin_id'] != 'views_block') {
+              continue;
+            }
+            /** @var \Drupal\views\ViewExecutable $view */
+            $view = $content['content']['#view'];
+            $view->render();
+            $build['content']['#context'][str_replace('-', '_', $content['#derivative_plugin_id'])] = $view->result;
+            $build['content']['#cache']['tags'] = array_merge($build['content']['#cache']['tags'], $view->getCacheTags());
+          }
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function xinshi_api_module_implements_alter(&$implementations, $hook) {
+  if (in_array($hook, ['entity_view_alter'])) {
+    $group = $implementations['xinshi_api'];
+    unset($implementations['xinshi_api']);
+    $implementations['xinshi_api'] = $group;
+  }
+}

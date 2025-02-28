@@ -1,0 +1,48 @@
+# Schema for the configuration files of the ECK module.
+
+# This schema tells the config system how to read the config YML files.
+
+eck.settings:
+  type: config_object
+  label: 'ECK settings'
+  mapping:
+    use_admin_theme:
+      type: boolean
+      label: 'Use administration theme when editing or creating ECK entities'
+
+eck.eck_entity_type.*:
+  type: config_entity
+  label: 'ECK Entity Type'
+  mapping:
+    id:
+      type: string
+      label: 'Id'
+    label:
+      type: label
+      label: 'Name'
+    uid:
+      type: boolean
+      label: 'Author'
+    created:
+      type: boolean
+      label: 'Created'
+    changed:
+      type: boolean
+      label: 'Changed'
+    title:
+      type: boolean
+      label: 'Title'
+
+eck.eck_type.*:
+  type: config_entity
+  label: 'ECK Entity bundle'
+  mapping:
+    name:
+      type: label
+      label: 'Name'
+    type:
+      type: string
+      label: 'Bundle machine name'
+    description:
+      type: text
+      label: 'Explanation or submission guidelines'

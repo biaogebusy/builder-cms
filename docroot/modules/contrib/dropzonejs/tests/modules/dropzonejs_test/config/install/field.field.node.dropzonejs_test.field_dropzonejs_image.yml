@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_dropzonejs_image
+    - media.type.dropzonejs_media
+    - node.type.dropzonejs_test
+id: node.dropzonejs_test.field_dropzonejs_image
+field_name: field_dropzonejs_image
+entity_type: node
+bundle: dropzonejs_test
+label: Image
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      dropzonejs_media: dropzonejs_media
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

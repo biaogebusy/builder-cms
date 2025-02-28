@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.wechat_response_message.text.field_content
+    - wechat.response_message_type.text
+id: wechat_response_message.text.default
+targetEntityType: wechat_response_message
+bundle: text
+mode: default
+content:
+  field_content:
+    weight: 0
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textarea
+hidden: {  }

@@ -1,0 +1,61 @@
+field.field.*.*.*.third_party.comment_delete:
+  type: mapping
+  label: 'Comment Delete'
+  mapping:
+    operation:
+      type: mapping
+      label: 'Allowed operations'
+      mapping:
+        hard:
+          type: string
+          label: 'Operation: Delete comment and its replies (hard delete)'
+        hard_partial:
+          type: string
+          label: 'Operation: Delete comment and move its replies up one level (partial hard delete)'
+        soft:
+          type: string
+          label: 'Operation: Delete comment and keep its replies at the current level (soft delete)'
+    visibility:
+      type: string
+      label: 'Operation visibility'
+    label:
+      type: mapping
+      label: 'Option labels'
+      mapping:
+        hard:
+          type: text
+          label: 'Label: Delete comment and its replies (hard delete)'
+        hard_partial:
+          type: text
+          label: 'Label: Delete comment and move its replies up one level (partial hard delete)'
+        soft:
+          type: text
+          label: 'Label: Delete comment and keep its replies at the current level (soft delete)'
+    message:
+      type: mapping
+      label: 'Confirmation messages'
+      mapping:
+        hard:
+          type: text
+          label: 'Message: Delete comment and its replies (hard delete)'
+        hard_partial:
+          type: text
+          label: 'Message: Delete comment and move its replies up one level (partial hard delete)'
+        soft:
+          type: text
+          label: 'Message: Delete comment and keep its replies at the current level (soft delete)'
+    mode:
+      type: string
+      label: 'Soft delete mode'
+    anonymize:
+      type: boolean
+      label: 'Set author to Anonymous on soft delete'
+    default:
+      type: string
+      label: 'Default selected operation'
+    time_limit:
+      type: boolean
+      label: 'Delete time limit'
+    timer:
+      type: integer
+      label: 'Delete timer'

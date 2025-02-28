@@ -1,0 +1,23 @@
+# The permissions.yml file defines the permissions for the module.
+
+# Defines the administer permission for the entity types.
+
+bypass eck entity access:
+  title: 'Bypass ECK entity access control'
+  description: 'View, edit and delete all ECK entities regardless of permission restrictions.'
+  restrict access: true
+administer eck entity types:
+  title: 'Administer ECK entity types.'
+  description: 'Create, edit, delete and perform other tasks across all ECK entity types.'
+  restrict access: true
+administer eck entity bundles:
+  title: 'Administer ECK entity bundles'
+  description: 'Create, edit, delete and perform other tasks across all ECK entity bundles.'
+  restrict access: true
+administer eck entities:
+  title: 'Administer ECK entities'
+  description: 'Create, edit, delete and perform other tasks across all ECK entities.'
+  restrict access: true
+
+permission_callbacks:
+  - '\Drupal\eck\PermissionsGenerator::entityPermissions'

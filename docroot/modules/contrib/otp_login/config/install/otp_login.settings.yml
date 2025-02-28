@@ -1,0 +1,5 @@
+otp_expire_value: 30
+otp_platform: 'sms'
+tiniyo_otp_channel: 'all'
+tiniyo_otp_length: '6'
+encryption_secret_key: ''

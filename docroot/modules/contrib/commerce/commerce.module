@@ -1,0 +1,221 @@
+<?php
+
+/**
+ * @file
+ * Defines common functionality for all Commerce modules.
+ */
+
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+
+/**
+ * Implements hook_mail().
+ *
+ * Prepares emails sent by the MailHandler service.
+ */
+function commerce_mail($key, &$message, $params) {
+  /** @var \Drupal\Core\Render\RendererInterface $renderer */
+  $renderer = \Drupal::service('renderer');
+
+  if (isset($params['headers'])) {
+    $message['headers'] = array_merge($message['headers'], $params['headers']);
+  }
+  if (!empty($params['from'])) {
+    $message['from'] = $params['from'];
+  }
+  $message['subject'] = $params['subject'];
+  $message['body'][] = $renderer->renderPlain($params['body']);
+}
+
+/**
+ * Implements hook_toolbar_alter().
+ */
+function commerce_toolbar_alter(&$items) {
+  $items['administration']['#attached']['library'][] = 'commerce/toolbar';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function commerce_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_state->get('has_commerce_inline_forms')) {
+    commerce_alter_inline_forms($form, $form_state, $form);
+  }
+}
+
+/**
+ * Invokes inline form alter hooks for the given element's inline forms.
+ *
+ * @param array $element
+ *   The form element.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The current state of the form.
+ * @param array $complete_form
+ *   The complete form structure.
+ */
+function commerce_alter_inline_forms(array &$element, FormStateInterface $form_state, array &$complete_form) {
+  foreach (Element::children($element) as $key) {
+    if (isset($element[$key]['#inline_form'])) {
+      $inline_form = &$element[$key];
+      /** @var \Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormInterface $plugin */
+      $plugin = $inline_form['#inline_form'];
+      // Invoke hook_commerce_inline_form_alter() and
+      // hook_commerce_inline_form_PLUGIN_ID_alter() implementations.
+      $hooks = [
+        'commerce_inline_form',
+        'commerce_inline_form_' . $plugin->getPluginId(),
+      ];
+      \Drupal::moduleHandler()->alter($hooks, $inline_form, $form_state, $complete_form);
+    }
+
+    commerce_alter_inline_forms($element[$key], $form_state, $complete_form);
+  }
+}
+
+/**
+ * Implements hook_field_widget_info_alter().
+ *
+ * Exposes the commerce_plugin_item widgets for each of the field type's
+ * derivatives, since core does not do it automatically.
+ */
+function commerce_field_widget_info_alter(array &$info) {
+  foreach (['commerce_plugin_select', 'commerce_plugin_radios'] as $widget) {
+    if (isset($info[$widget])) {
+      $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+      foreach ($field_type_manager->getDefinitions() as $key => $definition) {
+        if ($definition['id'] == 'commerce_plugin_item') {
+          $info[$widget]['field_types'][] = $key;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ *
+ * Exposes the commerce_plugin_item_default formatter for each of the field
+ * type's derivatives, since core does not do it automatically.
+ */
+function commerce_field_formatter_info_alter(array &$info) {
+  if (isset($info['commerce_plugin_item_default'])) {
+    $field_type_manager = \Drupal::service('plugin.manager.field.field_type');
+    foreach ($field_type_manager->getDefinitions() as $key => $definition) {
+      if ($definition['id'] == 'commerce_plugin_item') {
+        $info['commerce_plugin_item_default']['field_types'][] = $key;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_single_element_form_alter().
+ *
+ * Base fields have a description that's used for two very different purposes:
+ * - To describe the field in the Views UI and other parts of the system.
+ * - As user-facing help text shown on field widgets.
+ * The text is rarely suitable for both, and in most cases feels redundant
+ * as user-facing help text. Hence we remove it from that context, but only if
+ * the definition didn't specify otherwise via our display_description setting.
+ */
+function commerce_field_widget_single_element_form_alter(array &$element, FormStateInterface $form_state, array $context) {
+  $field_definition = $context['items']->getFieldDefinition();
+  if (!($field_definition instanceof BaseFieldDefinition)) {
+    // Not a base field.
+    return;
+  }
+  if (strpos($field_definition->getTargetEntityTypeId(), 'commerce_') !== 0) {
+    // Not a Commerce entity type.
+    return;
+  }
+  if ($field_definition->getSetting('display_description')) {
+    // The definition requested that the description stays untouched.
+    return;
+  }
+
+  $element['#description'] = '';
+  // Many widgets are nested one level deeper.
+  $children = Element::getVisibleChildren($element);
+  if (count($children) == 1) {
+    $child = reset($children);
+    $element[$child]['#description'] = '';
+  }
+}
+
+/**
+ * Gets the entity display for the given entity type and bundle.
+ *
+ * The entity display will be created if missing.
+ *
+ * @param string $entity_type
+ *   The entity type.
+ * @param string $bundle
+ *   The bundle.
+ * @param string $display_context
+ *   The display context ('view' or 'form').
+ *
+ * @throws \InvalidArgumentException
+ *   Thrown when an invalid display context is provided.
+ *
+ * @return \Drupal\Core\Entity\Display\EntityDisplayInterface
+ *   The entity display.
+ */
+function commerce_get_entity_display($entity_type, $bundle, $display_context) {
+  if (!in_array($display_context, ['view', 'form'])) {
+    throw new \InvalidArgumentException(sprintf('Invalid display_context %s passed to _commerce_product_get_display().', $display_context));
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('entity_' . $display_context . '_display');
+  $display = $storage->load($entity_type . '.' . $bundle . '.default');
+  if (!$display) {
+    $display = $storage->create([
+      'targetEntityType' => $entity_type,
+      'bundle' => $bundle,
+      'mode' => 'default',
+      'status' => TRUE,
+    ]);
+  }
+
+  return $display;
+}
+
+/**
+ * Helper for providing entity theme suggestions.
+ *
+ * @param string $entity_type_id
+ *   The entity type ID.
+ * @param array $variables
+ *   An array of variables passed to the theme hook.
+ *
+ * @return array
+ *   An array of theme suggestions.
+ */
+function _commerce_entity_theme_suggestions($entity_type_id, array $variables) {
+  $original = $variables['theme_hook_original'];
+  $entity = $variables['elements']['#' . $entity_type_id];
+  $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+  $suggestions = [];
+  $suggestions[] = $original . '__' . $sanitized_view_mode;
+  $suggestions[] = $original . '__' . $entity->bundle();
+  $suggestions[] = $original . '__' . $entity->bundle() . '__' . $sanitized_view_mode;
+  $suggestions[] = $original . '__' . $entity->id();
+  $suggestions[] = $original . '__' . $entity->id() . '__' . $sanitized_view_mode;
+
+  return $suggestions;
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function commerce_page_attachments_alter(array &$attachments) {
+  if (isset($attachments['#attached']['html_head'])) {
+    foreach ($attachments['#attached']['html_head'] as $index => &$parts) {
+      if (!isset($parts[1]) || $parts[1] !== 'system_meta_generator') {
+        continue;
+      }
+      $parts[0]['#attributes']['content'] .= '; Commerce 2';
+    }
+  }
+}

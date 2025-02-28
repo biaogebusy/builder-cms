@@ -1,0 +1,12 @@
+name: 'Field Group Migrate'
+type: module
+description: 'Provides the ability to migrate field groups from D6/D7 to D8.'
+package: Migration
+core_version_requirement: ^9.2 || ^10
+dependencies:
+  - field_group:field_group
+
+# Information added by Drupal.org packaging script on 2022-10-31
+version: '8.x-3.4'
+project: 'field_group'
+datestamp: 1667241980

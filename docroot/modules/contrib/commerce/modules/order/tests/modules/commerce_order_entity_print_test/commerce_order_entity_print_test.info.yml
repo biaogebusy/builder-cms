@@ -1,0 +1,12 @@
+name: commerce_order_entity_print_test
+type: module
+package: Testing
+dependencies:
+  - commerce:commerce_order
+  - commerce:commerce_product
+  - entity_print:entity_print
+
+# Information added by Drupal.org packaging script on 2023-06-01
+version: '8.x-2.36'
+project: 'commerce'
+datestamp: 1685624439

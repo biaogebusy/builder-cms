@@ -1,0 +1,31 @@
+entity_print_views.view:
+  path: 'print/view/{export_type}/{view_name}/{display_id}'
+  defaults:
+    _controller: '\Drupal\entity_print_views\Controller\ViewPrintController::viewPrint'
+    _title: 'Entity Print Views'
+  requirements:
+    _custom_access: '\Drupal\entity_print_views\Controller\ViewPrintController::checkAccess'
+
+entity_print_views.view.debug:
+  path: 'print/view/{export_type}/{view_name}/{display_id}/debug'
+  defaults:
+    _controller: '\Drupal\entity_print_views\Controller\ViewPrintController::viewPrintDebug'
+    _title: 'Entity Print Views'
+  requirements:
+    _custom_access: '\Drupal\entity_print_views\Controller\ViewPrintController::checkAccess'
+
+entity_print_views.legacy_view:
+  path: 'entityprint/view/{export_type}/{view_name}/{display_id}'
+  defaults:
+    _controller: '\Drupal\entity_print_views\Controller\ViewPrintController::viewRedirect'
+    _title: 'Entity Print Views'
+  requirements:
+    _custom_access: '\Drupal\entity_print_views\Controller\ViewPrintController::checkAccess'
+
+entity_print_views.legacy_debug:
+  path: 'entityprint/view/{export_type}/{view_name}/{display_id}/debug'
+  defaults:
+    _controller: '\Drupal\entity_print_views\Controller\ViewPrintController::viewRedirectDebug'
+    _title: 'Entity Print Views'
+  requirements:
+    _custom_access: '\Drupal\entity_print_views\Controller\ViewPrintController::checkAccess'

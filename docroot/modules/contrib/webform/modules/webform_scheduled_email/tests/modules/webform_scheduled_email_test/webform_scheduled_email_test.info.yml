@@ -1,0 +1,13 @@
+name: 'Webform Scheduled Email test'
+type: module
+description: 'Support module for webform schedule email testing.'
+package: 'Webform Testing'
+core_version_requirement: ^9.4 || ^10
+dependencies:
+  - 'webform:webform'
+  - 'webform:webform_scheduled_email'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

@@ -1,0 +1,3 @@
+administer advancedqueue:
+  title: 'Administer queues'
+  restrict access: true

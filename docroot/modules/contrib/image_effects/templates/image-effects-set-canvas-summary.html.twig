@@ -1,0 +1,46 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of set canvas image effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this set canvas effect, including:
+ *   - canvas_color: The canvas color in RGBA format.
+ *   - canvas_size: 'exact' or 'relative'.
+ *   - exact: The configuration for exact size, including:
+ *     - width: the width in px or as % of source image.
+ *     - height: the height in px or as % of source image.
+ *     - placement: The position of the source on the underlying canvas.
+ *     - x_offset: The x_offset of the source image vs placement.
+ *     - y_offset: The y_offset of the source image vs placement.
+ *   - relative: The configuration for relative size, including:
+ *     - left: the size in px of the margin on the left side.
+ *     - right: the size in px of the margin on the right side.
+ *     - top: the size in px of the margin on the top side.
+ *     - bottom: the size in px of the margin on the bottom side.
+ *   - color_info: A render element for canvas color information including a
+ *     color preview.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+{% if data.canvas_size == 'exact' %}
+  - {{ 'Exact size'|t }}:
+  {% if data.exact.width %}{{ data.exact.width|e }}{% else %}{{ '100%'|t }}{% endif %}x{% if data.exact.height %}{{ data.exact.height|e }}{% else %}{{ '100%'|t }}{% endif %}
+  {{ 'Placement'|t }}: {{ data.exact.placement|e }}
+  {% if data.exact.x_offset %} {{ 'X offset'|t }}: {{ data.exact.x_offset|e }}px{% endif %}
+  {% if data.exact.y_offset %} {{ 'Y offset'|t }}: {{ data.exact.y_offset|e }}px{% endif %}
+{% elseif data.canvas_size == 'relative' %}
+  - {{ 'Relative size'|t }}:
+  {% if data.relative.left %} {{ 'left'|t }}: {{ data.relative.left|e }}px{% endif %}
+  {% if data.relative.right %} {{ 'right'|t }}: {{ data.relative.right|e }}px{% endif %}
+  {% if data.relative.top %} {{ 'top'|t }}: {{ data.relative.top|e }}px{% endif %}
+  {% if data.relative.bottom %} {{ 'bottom'|t }}: {{ data.relative.bottom|e }}px{% endif %}
+{% endif %}
+ - {{ 'Color'|t }}: {{ data.color_info }}
+{% endapply %}

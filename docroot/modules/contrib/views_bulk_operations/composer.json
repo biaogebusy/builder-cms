@@ -1,0 +1,35 @@
+{
+  "name": "drupal/views_bulk_operations",
+  "description": "Adds an ability to perform bulk operations on selected entities from view results. Provides an API to create such operations.",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/views_bulk_operations",
+  "authors": [
+    {
+      "name": "Marcin Grabias",
+      "homepage": "https://www.drupal.org/u/graber"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/views_bulk_operations?version=8.x",
+    "docs": "https://www.drupal.org/docs/8/modules/views-bulk-operations-vbo",
+    "source": "https://git.drupalcode.org/project/views_bulk_operations/-/tree/8.x-3.x"
+  },
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "require": {
+    "drupal/core": "^8.8 || ^9"
+  },
+  "require-dev": {
+    "drush/drush": "^10"
+  },
+  "suggest": {
+    "drush/drush": "^9 || ^10"
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9 || ^10"
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Contains install, update and uninstall functions for Require Login module.
+ */
+
+/**
+ * Migrate 2.x to 3.x config schema.
+ */
+function require_login_update_9301(&$sandbox): void {
+  $currentConfig = \Drupal::config('require_login.config');
+  $config = \Drupal::configFactory()->getEditable('require_login.settings');
+
+  $config->set('login_path', $currentConfig->get('auth_path'));
+  $config->set('login_message', $currentConfig->get('deny_message'));
+  $config->set('login_destination', $currentConfig->get('destination_path'));
+
+  // Migrate exclusions to the condition plugin schema.
+  $requirements = [];
+  if ($paths = array_filter(preg_split('/\r\n|\r|\n/', $currentConfig->get('excluded_paths')))) {
+    $requirements['request_path'] = [
+      'id' => 'request_path',
+      'negate' => TRUE,
+      'pages' => implode(PHP_EOL, $paths),
+    ];
+  }
+  $excludedNodeTypes = $currentConfig->get('excluded_node_types');
+  if ($bundles = array_filter($excludedNodeTypes ?: [])) {
+    $requirements['entity_bundle:node'] = [
+      'id' => 'entity_bundle:node',
+      'negate' => TRUE,
+      'context_mapping' => ['node' => '@node.node_route_context:node'],
+      'bundles' => $bundles,
+    ];
+  }
+  $config->set('requirements', $requirements);
+
+  $config->set('extra', [
+    'include_403' => $currentConfig->get('excluded_403') === FALSE,
+    'include_404' => $currentConfig->get('excluded_404') === FALSE,
+  ]);
+  $config->save(TRUE);
+
+  // Migrate the config translations.
+  if (\Drupal::moduleHandler()->moduleExists('language')) {
+    $defaultConfigLanguage = \Drupal::languageManager()->getConfigOverrideLanguage();
+    $defaultLanguage = \Drupal::languageManager()->getDefaultLanguage();
+    /** @var \Drupal\language\Config\LanguageConfigFactoryOverrideInterface $configFactoryOverride */
+    $configFactoryOverride = \Drupal::service('language.config_factory_override');
+    foreach (\Drupal::languageManager()->getLanguages() as $language) {
+      if ($language->getId() === $defaultLanguage->getId()) {
+        continue;
+      }
+      \Drupal::languageManager()->setConfigOverrideLanguage($language);
+      $currentConfig = \Drupal::config('require_login.config');
+      $config = $configFactoryOverride->getOverride($language->getId(), 'require_login.settings');
+      $config->set('login_path', $currentConfig->get('auth_path'));
+      $config->set('login_message', $currentConfig->get('deny_message'));
+      $config->set('login_destination', $currentConfig->get('destination_path'));
+      $config->save(TRUE);
+    }
+    \Drupal::languageManager()->setConfigOverrideLanguage($defaultConfigLanguage);
+  }
+}

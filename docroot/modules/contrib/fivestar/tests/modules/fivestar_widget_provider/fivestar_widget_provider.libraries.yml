@@ -1,0 +1,11 @@
+awesome:
+  widget_label: 'Awesome widget'
+  css:
+    component:
+      widget/awesome/awesome.css: {}
+
+cool:
+  widget_label: 'Cool widget'
+  css:
+    component:
+      widget/cool/cool.css: {}

@@ -1,0 +1,38 @@
+/**
+ * @file
+ * Admin styling for Commerce Tax.
+ */
+.commerce-tax-info {
+  margin: 30px 0;
+}
+.commerce-tax__item:nth-child(2) {
+  flex: 3 !important;
+}
+.commerce-tax__item-image {
+  width: 100px;
+  height: 100px;
+  display: inline-block;
+  vertical-align: top;
+}
+.commerce-tax__item-image:before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  content: "";
+  background-repeat: no-repeat;
+  background-position: 50% center;
+  background-size: 100px;
+}
+.commerce-tax__item-image--avalara-logo:before {
+  background-image: url(../images/avalara-logo.svg);
+}
+.commerce-tax__item-image--risk-assessment-map:before {
+  background-image: url(../images/risk-assessment-map.jpg);
+}
+.commerce-tax__item-details {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  padding-left: 10px;
+  width: calc(100% - 110px);
+}

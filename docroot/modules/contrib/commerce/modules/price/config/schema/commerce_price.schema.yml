@@ -1,0 +1,76 @@
+commerce_price.commerce_currency.*:
+  type: config_entity
+  label: 'Currency'
+  mapping:
+    currencyCode:
+      type: string
+      label: 'Currency code'
+    name:
+      type: label
+      label: 'Name'
+    numericCode:
+      type: string
+      label: 'Numeric code'
+    symbol:
+      type: label
+      label: 'Symbol'
+    fractionDigits:
+      type: integer
+      label: 'Fraction digits'
+
+field.value.commerce_price:
+  type: mapping
+  label: 'Price'
+  mapping:
+    number:
+      type: string
+      label: 'Number'
+    currency_code:
+      type: string
+      label: 'Currency code'
+
+field.field_settings.commerce_price:
+  type: mapping
+  label: 'Price field settings'
+  mapping:
+    available_currencies:
+      type: sequence
+      label: 'Available currencies'
+      orderby: value
+      sequence:
+        type: string
+    allow_negative:
+      type: boolean
+      label: 'Allow negative prices'
+
+field.formatter.settings.commerce_price_default:
+  type: mapping
+  label: 'Default price formatter settings'
+  mapping:
+    strip_trailing_zeroes:
+      type: boolean
+      label: 'Strip trailing zeroes after the decimal point'
+    currency_display:
+      type: string
+      label: 'Currency display'
+
+field.formatter.settings.commerce_price_calculated:
+  type: mapping
+  label: 'Calculated price formatter settings'
+  mapping:
+    strip_trailing_zeroes:
+      type: boolean
+      label: 'Strip trailing zeroes after the decimal point'
+    currency_display:
+      type: string
+      label: 'Currency display'
+    # Needed by the commerce_order version of the formatter.
+    adjustment_types:
+      type: sequence
+      label: 'Adjustment types'
+      sequence:
+        type: string
+        label: 'Adjustment type'
+
+views.filter.commerce_currency:
+  type: views.filter.in_operator

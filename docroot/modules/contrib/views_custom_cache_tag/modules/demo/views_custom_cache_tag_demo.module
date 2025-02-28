@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Contains views_custom_cache_tag.module.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_node_presave().
+ */
+function views_custom_cache_tag_demo_node_presave(NodeInterface $node) {
+  $cache_tag = 'node:type:' . $node->getType();
+  Cache::invalidateTags(array($cache_tag));
+}

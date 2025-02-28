@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Defines a numeric range field type.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function range_theme() {
+  return [
+    'range_formatter_range_combined' => [
+      'variables' => [
+        'item' => NULL,
+        'field_prefix' => NULL,
+        'value_prefix' => NULL,
+        'value' => NULL,
+        'value_suffix' => NULL,
+        'field_suffix' => NULL,
+      ],
+    ],
+    'range_formatter_range_separate' => [
+      'variables' => [
+        'item' => NULL,
+        'field_prefix' => NULL,
+        'from_prefix' => NULL,
+        'from' => NULL,
+        'from_suffix' => NULL,
+        'range_separator' => NULL,
+        'to_prefix' => NULL,
+        'to' => NULL,
+        'to_suffix' => NULL,
+        'field_suffix' => NULL,
+      ],
+    ],
+  ];
+}

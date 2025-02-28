@@ -1,0 +1,12 @@
+name: Charts test
+type: module
+description: 'Provides functionality for testing the charts module.'
+package: Testing
+core_version_requirement: ^8.8 || ^9 || ^10
+dependencies:
+  - charts:charts
+
+# Information added by Drupal.org packaging script on 2024-07-22
+version: '5.0.16'
+project: 'charts'
+datestamp: 1721677971

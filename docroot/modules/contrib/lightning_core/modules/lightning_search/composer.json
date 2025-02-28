@@ -1,0 +1,5 @@
+{
+    "name": "drupal/lightning_search",
+    "type": "drupal-module",
+    "description": "A basic but powerful set of default configuration for searching your site."
+}

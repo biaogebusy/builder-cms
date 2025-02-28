@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Field Validation module.
+ */
+
+/**
+ * Renames validation rules config prefix from "fv" to "rule_set".
+ */
+function field_validation_update_8001() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('field_validation.fv.') as $old_name) {
+    $new_name = 'field_validation.rule_set.' . substr($old_name, 20);
+    $config_factory->rename($old_name, $new_name);
+  }
+}

@@ -1,0 +1,71 @@
+// This file provide classes examples for Background color Plugin.
+// We only use these classes in configuration page when install the module.
+// Note: this is just example, you can use any class from your theme.
+// Classes: bs-bg-{color}
+
+// Colors.
+$colors: (
+  success: green,
+  warning: yellow,
+  danger: red,
+  light: lightgray,
+);
+
+@mixin background-color($selector, $color) {
+  #{$selector} {
+    background-color: $color !important;
+  }
+}
+
+@each $color, $value in $colors {
+  @include background-color(".bs-bg-#{$color}", $value);
+}
+
+// Breakpoints
+//sm
+@each $color, $value in $colors {
+  // Fix the background color in the layout builder dialog.
+  .ui-dialog-off-canvas {
+    @include background-color(".bs-bg-sm-#{$color}", $value);
+  }
+  // Generate bs-bg-sm-#{$color} class.
+  @media screen and (max-width: 576px) {
+    @include background-color(".bs-bg-sm-#{$color}", $value);
+  }
+}
+
+//md
+@each $color, $value in $colors {
+  // Fix the background color in the layout builder dialog.
+  .ui-dialog-off-canvas {
+    @include background-color(".bs-bg-md-#{$color}", $value);
+  }
+  // Generate bs-bg-md-#{$color} class.
+  @media (min-width: 576px) and (max-width: 992px) {
+    @include background-color(".bs-bg-md-#{$color}", $value);
+  }
+}
+
+//lg
+@each $color, $value in $colors {
+  // Fix the background color in the layout builder dialog.
+  .ui-dialog-off-canvas {
+    @include background-color(".bs-bg-lg-#{$color}", $value);
+  }
+  // Generate bs-bg-lg-#{$color} class.
+  @media (min-width: 992px) and (max-width: 1200px) {
+    @include background-color(".bs-bg-lg-#{$color}", $value);
+  }
+}
+
+//xl
+@each $color, $value in $colors {
+  // Fix the background color in the layout builder dialog.
+  .ui-dialog-off-canvas {
+    @include background-color(".bs-bg-xl-#{$color}", $value);
+  }
+  // Generate bs-bg-xl-#{$color} class.
+  @media (min-width: 1200px) {
+    @include background-color(".bs-bg-xl-#{$color}", $value);
+  }
+}

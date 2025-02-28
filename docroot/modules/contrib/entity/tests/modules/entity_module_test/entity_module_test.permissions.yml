@@ -1,0 +1,6 @@
+'view all entity_test_enhanced revisions':
+  title: 'View all entity_test_enhanced revisions'
+  'restrict access': TRUE
+'revert all entity_test_enhanced revisions':
+  title: 'Revert all entity_test_enhanced revisions'
+  'restrict access': TRUE

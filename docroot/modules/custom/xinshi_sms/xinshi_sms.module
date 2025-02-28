@@ -1,0 +1,16 @@
+<?php
+/**
+ * @file
+ * This file is used to write hooks that used in the module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * @param $form
+ * @param FormStateInterface $form_state
+ */
+function xinshi_sms_form_user_form_alter(&$form, FormStateInterface $form_state) {
+  $display_element['#attached']['library'][] = 'xinshi_sms/opt_login';
+}

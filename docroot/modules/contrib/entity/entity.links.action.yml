@@ -1,0 +1,2 @@
+entity.entity_actions:
+  deriver: Drupal\entity\Plugin\Derivative\EntityActionsDeriver

@@ -1,0 +1,156 @@
+.gin-breadcrumb {
+  color: var(--gin-color-text);
+  padding: 0;
+}
+
+.gin-breadcrumb-wrapper {
+  min-width: 1px;
+}
+
+.gin-breadcrumb__list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-top: 0;
+}
+
+[dir="ltr"] .gin-breadcrumb__list {
+  padding-left: var(--gin-spacing-xxs);
+  margin-left: calc(var(--gin-spacing-xxs) * -1);
+}
+
+[dir="rtl"] .gin-breadcrumb__list {
+  padding-right: var(--gin-spacing-xxs);
+  margin-right: calc(var(--gin-spacing-xxs) * -1);
+}
+
+.gin-breadcrumb__item, .gin-breadcrumb__link, .gin-breadcrumb__text {
+  display: inline;
+  font-weight: var(--gin-font-weight-normal);
+  color: var(--gin-color-text-light);
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.gin-breadcrumb__item {
+  font-size: 0;
+}
+
+.gin-breadcrumb__item + .gin-breadcrumb__item::before {
+  content: "/";
+  opacity: .3;
+  font-size: var(--gin-font-size-xs);
+  vertical-align: middle;
+  display: inline-block;
+  padding: 0 .5em;
+  background: none;
+}
+
+@media (forced-colors: active) {
+  .gin-breadcrumb__item + .gin-breadcrumb__item::before {
+    opacity: 1;
+  }
+}
+
+.gin-breadcrumb__item:first-of-type .gin-breadcrumb__link {
+  position: relative;
+}
+
+[dir="ltr"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link {
+  padding-left: 1.75em;
+}
+
+[dir="rtl"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link {
+  padding-right: 1.75em;
+}
+
+.gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: calc(50% - 1px);
+  width: var(--gin-icon-size-toolbar-secondary);
+  height: var(--gin-icon-size-toolbar-secondary);
+  transform: translateY(-50%);
+  background-color: var(--gin-icon-color);
+  -webkit-mask-image: url("../../media/sprite.svg#backtosite-view");
+          mask-image: url("../../media/sprite.svg#backtosite-view");
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-position: center center;
+          mask-position: center center;
+}
+
+[dir="ltr"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
+  left: 0;
+}
+
+[dir="rtl"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
+  right: 0;
+}
+
+@media (forced-colors: active) {
+  .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
+    background: linktext;
+  }
+}
+
+.gin-breadcrumb__item:first-of-type .gin-breadcrumb__link:hover::before {
+  background-color: var(--gin-color-primary);
+}
+
+@media (forced-colors: active) {
+  .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link:hover::before {
+    background: linktext;
+  }
+}
+
+.gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
+  content: "";
+  opacity: .3;
+  width: 1px;
+  height: 20px;
+}
+
+[dir="ltr"] .gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
+  border-right: 1px solid var(--gin-color-text);
+  padding-left: .75em;
+  padding-right: 0;
+  margin-right: .75em;
+}
+
+[dir="rtl"] .gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
+  border-left: 1px solid var(--gin-color-text);
+  padding-right: .75em;
+  padding-left: 0;
+  margin-left: .75em;
+}
+
+@media (forced-colors: active) {
+  .gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
+    opacity: 1;
+  }
+}
+
+.gin-breadcrumb__link, .gin-breadcrumb__text {
+  font-size: var(--gin-font-size-xs);
+  line-height: 2;
+  border-radius: var(--gin-border-xxs);
+}
+
+.gin-breadcrumb__link, .gin-breadcrumb__link:link, .gin-breadcrumb__link:visited, .gin-breadcrumb__link em, .gin-breadcrumb__link em:link, .gin-breadcrumb__link em:visited, .gin-breadcrumb__text, .gin-breadcrumb__text:link, .gin-breadcrumb__text:visited, .gin-breadcrumb__text em, .gin-breadcrumb__text em:link, .gin-breadcrumb__text em:visited {
+  font-weight: var(--gin-font-weight-normal);
+  color: var(--gin-color-text-light);
+}
+
+.gin-breadcrumb__link em, .gin-breadcrumb__text em {
+  font-style: italic;
+}
+
+.gin-breadcrumb__link:hover, .gin-breadcrumb__link:hover em {
+  color: var(--gin-color-primary-hover);
+}
+

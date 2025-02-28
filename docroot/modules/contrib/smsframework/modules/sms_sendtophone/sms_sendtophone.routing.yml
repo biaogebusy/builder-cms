@@ -1,0 +1,17 @@
+sms_sendtophone.page:
+  path: '/sms/sendtophone/{type}/{extra}'
+  defaults:
+    type: null
+    extra: null
+    _title: 'Send to phone'
+    _form: \Drupal\sms_sendtophone\Form\SendToPhoneForm
+  requirements:
+    _permission: 'access content'
+
+sms_sendtophone.admin_overview:
+  path: /admin/config/smsframework/sendtophone
+  defaults:
+    _title: 'Send to phone'
+    _form: \Drupal\sms_sendtophone\Form\AdminOverviewForm
+  requirements:
+    _permission: 'administer smsframework'

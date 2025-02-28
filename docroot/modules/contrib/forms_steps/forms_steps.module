@@ -1,0 +1,179 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the forms_steps module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\forms_steps\Form\FormsStepsAlter;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\forms_steps\Entity\Workflow;
+
+/**
+ * Implements hook_help().
+ */
+function forms_steps_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'forms_steps.collection':
+      // @todo Documentation and helps todo.
+      $output = t('Forms Steps listed below are enabled.... See <a href=":url">the online documentation</a> for an introduction on how to use Forms Steps.', [
+        ':url' => Url::fromRoute('forms_steps.collection')->toString(),
+      ]);
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * If this is a form managed by forms_steps we set the submit next route to the
+ * form.
+ */
+function forms_steps_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $formStateStorage = $form_state->getStorage();
+  $currentRoute = \Drupal::routeMatch()->getRouteName();
+  if (
+    is_string($currentRoute)
+    && preg_match('/^forms_steps\./', $currentRoute)
+    && isset($formStateStorage['form_steps'])
+  ) {
+    $form['actions']['submit']['#submit'][] = 'Drupal\forms_steps\Form\FormsStepsAlter::setNextRoute';
+
+    // Handle the forms steps.
+    FormsStepsAlter::handle($form, $form_state);
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function forms_steps_entity_insert(EntityInterface $entity) {
+  \Drupal::service('forms_steps.workflow.manager')->entityInsert($entity);
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function forms_steps_entity_presave(EntityInterface $entity) {
+  \Drupal::service('forms_steps.workflow.manager')->entityPreSave($entity);
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function forms_steps_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'node') {
+    // If we have moved to new workflow management. We no longer need this
+    // field.
+    if (\Drupal::service('update.update_hook_registry')->getInstalledVersion('forms_steps') === '8100') {
+      $fields['field_forms_steps_id'] = BaseFieldDefinition::create(
+        'string'
+      )
+        ->setLabel(t('Forms Steps ID'))
+        ->setDisplayConfigurable('form', FALSE)
+        ->setDisplayConfigurable('view', FALSE);
+
+      return $fields;
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_type_build().
+ *
+ * Manage all form modes and define FormClasses for each specific types.
+ */
+function forms_steps_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\forms_steps\Service\FormsStepsManager $formsStepsManager */
+  $formsStepsManager = \Drupal::service('forms_steps.manager');
+
+  $available_entity_types = $formsStepsManager->getAllFormModesDefinitions();
+
+  // We parse each entity type.
+  foreach ($available_entity_types as $entity_type_id => $form_modes) {
+    // We parse and set each form_mode.
+    foreach ($form_modes as $form_mode) {
+      // Retrieving the form class.
+      $form_class = $entity_types[$entity_type_id]->getFormClass($form_mode);
+
+      // If no form class has been found, we try to fallback on
+      // a default operation form class.
+      if (!$form_class) {
+        $operations = ['register', 'default', 'add'];
+
+        foreach ($operations as $operation) {
+          $form_class = $entity_types[$entity_type_id]->getFormClass($operation);
+
+          if ($form_class) {
+            break;
+          }
+        }
+      }
+
+      // If we still have no form class, the user has to define
+      // its own form class.
+      if (!$form_class) {
+        \Drupal::messenger()->addError(
+          t(
+            "Forms steps could not determine a default form class for ':form_mode' form mode on :entity_type_id entity type, please define your own form class. See README.md for proper instructions.",
+            [':form_mode' => $form_mode, ':entity_type_id' => $entity_type_id]
+          )
+        );
+      }
+      else {
+        $entity_types[$entity_type_id]->setFormClass($form_mode, $form_class);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ *
+ * Overrides the core html theme to use a custom template for form steps.
+ */
+function forms_steps_theme() {
+  return [
+    'item_list__forms_steps' => [
+      'variables' => [
+        'items' => [],
+        'title' => '',
+        'list_type' => '',
+        'wrapper_attributes' => [],
+        'attributes' => [],
+        'empty' => '',
+        'context' => [],
+      ],
+      'preprocess functions' => ['template_preprocess_item_list'],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_predelete().
+ *
+ * Delete workflow entities when original entity is deleted.
+ */
+function forms_steps_entity_predelete($entity) {
+  if ($entity->getEntityTypeId() !== 'forms_steps_workflow') {
+    // Get entity id.
+    $entity_id = $entity->id();
+
+    // EntityQuery on Workflow entities.
+    $query = \Drupal::entityQuery(Workflow::ENTITY_TYPE);
+    $query->condition('entity_id', $entity_id);
+    $workflow_entity_ids = $query->accessCheck()->execute();
+    if ($workflow_entity_ids) {
+      // Loop through results so we can load the result as an entity to delete.
+      foreach ($workflow_entity_ids as $workflow_entity_id) {
+        $workflow_entity = Workflow::load($workflow_entity_id);
+        $workflow_entity->delete();
+      }
+    }
+  }
+}

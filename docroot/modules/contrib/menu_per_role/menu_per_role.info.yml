@@ -1,0 +1,13 @@
+name: 'Menu Per Role'
+type: module
+description: 'Allows restricting access to menu items per role.'
+core_version_requirement: ^9.4 || ^10
+package: 'Access control'
+configure: menu_per_role.settings
+dependencies:
+  - drupal:menu_link_content
+
+# Information added by Drupal.org packaging script on 2024-02-01
+version: '8.x-1.6'
+project: 'menu_per_role'
+datestamp: 1706782184

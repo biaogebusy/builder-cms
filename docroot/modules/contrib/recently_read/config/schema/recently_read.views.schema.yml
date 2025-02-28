@@ -1,0 +1,13 @@
+# Schema for the views plugins of the flag module.
+
+views.filter.recently_read_user_filter:
+  type: views.filter.boolean
+  label: 'Recently read current user filter'
+
+views.relationship.recently_read_relationship:
+  type: views_relationship
+  label: 'Display options for recently read relationship'
+  mapping:
+    user_scope:
+      type: string
+      label: 'The user scope'

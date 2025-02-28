@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Provides a service to manage file metadata.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_cache_flush().
+ */
+function file_mdm_cache_flush() {
+  return ['file_mdm'];
+}
+
+/**
+ * Implements hook_file_delete().
+ */
+function file_mdm_file_delete(EntityInterface $entity) {
+  // Deletes any cached file metadata information upon deletion of a file
+  // entity.
+  $fmdm = \Drupal::service('file_metadata_manager');
+  $fmdm->deleteCachedMetadata($entity->getFileUri());
+  $fmdm->release($entity->getFileUri());
+}

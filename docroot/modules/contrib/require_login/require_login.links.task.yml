@@ -1,0 +1,4 @@
+require_login.settings:
+  route_name: require_login.settings
+  title: "Settings"
+  base_route: require_login.settings

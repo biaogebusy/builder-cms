@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+name: mie_demo_teaser
+label: 'MIE Demo Teaser'
+effects:
+  72717da7-049f-4acb-ab5e-e26a295c3d84:
+    uuid: 72717da7-049f-4acb-ab5e-e26a295c3d84
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 300
+      height: 200

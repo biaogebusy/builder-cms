@@ -1,0 +1,17 @@
+address_book:
+  version: VERSION
+  css:
+    layout:
+      css/commerce_order.address_book.css: {}
+
+form:
+  version: VERSION
+  css:
+    layout:
+      css/commerce_order.module.css: {}
+
+total_summary:
+  version: VERSION
+  css:
+    layout:
+      css/commerce_order.total_summary.css: {}

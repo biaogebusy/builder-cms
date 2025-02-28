@@ -1,0 +1,5 @@
+{
+    "name": "drupal/lightning_page",
+    "type": "drupal-module",
+    "description": "Provides a \"Basic Page\" content type that is, indeed, very basic."
+}

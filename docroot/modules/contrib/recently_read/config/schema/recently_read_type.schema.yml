@@ -1,0 +1,17 @@
+recently_read.recently_read_type.*:
+  type: config_entity
+  label: 'Recently read type config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+    types:
+      type: sequence
+      label: 'Types'
+      sequence:
+        - type: string

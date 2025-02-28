@@ -1,0 +1,21 @@
+media_entity_instagram.settings:
+  type: config_object
+  label: 'Media entity Instagram settings'
+  mapping:
+    facebook_app_id:
+      type: string
+      label: 'Facebook App ID'
+    facebook_app_secret:
+      type: string
+      label: 'Facebook App secret'
+
+field.formatter.settings.instagram_embed:
+  type: mapping
+  label: 'Instagram display format settings'
+  mapping:
+    max_width:
+      type: integer
+      label: 'Maximum width'
+    hidecaption:
+      type: boolean
+      label: 'Caption hidden'

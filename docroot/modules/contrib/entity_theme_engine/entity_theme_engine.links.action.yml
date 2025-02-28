@@ -1,0 +1,5 @@
+entity.entity_widget.add_form:
+  route_name: 'entity.entity_widget.add_form'
+  title: 'Add Widget'
+  appears_on:
+    - entity.entity_widget.collection

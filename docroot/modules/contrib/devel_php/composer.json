@@ -1,0 +1,9 @@
+{
+    "name": "drupal/devel_php",
+    "description": "Re-add Execute PHP feature to Devel.",
+    "license": "GPL-2.0-or-later",
+    "type": "drupal-module",
+    "require": {
+        "drupal/devel": ">=2.1"
+    }
+}

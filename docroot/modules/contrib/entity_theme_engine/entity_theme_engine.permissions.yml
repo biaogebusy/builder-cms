@@ -1,0 +1,8 @@
+# The permissions.yml file defines the permissions for the module.
+
+# Defines the administer permission for the entity types.
+
+administer entity widget entities:
+  title: 'Administer Entity Widget Entities.'
+  description: 'Create, edit, delete across all entity widgets.'
+  restrict access: true

@@ -1,0 +1,119 @@
+wechat.admin_wechat:
+  path: '/admin/wechat'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Wechat'
+  requirements:
+    _permission: 'access administration pages'
+
+wechat.configuration:
+  path: '/admin/wechat/config'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Configuration'
+  requirements:
+    _permission: 'access administration pages'
+
+wechat.config_default:
+  path: '/admin/wechat/config/default'
+  defaults:
+    _form: 'Drupal\wechat\Form\WechatConfigForm'
+    _title: 'Config Wechat'
+  requirements:
+    _permission: 'access administration pages'
+
+wechat.config.default_message:
+  path: '/admin/wechat/config/default_message'
+  defaults:
+    _form: 'Drupal\wechat\Form\WechatDefaultMessageConfigForm'
+    _title: 'Config default message'
+  requirements:
+    _permission: 'access administration pages'
+
+wechat.callback:
+  path: '/wechat'
+  defaults:
+    _controller: '\Drupal\wechat\Controller\WechatController::wechatCallbackPage'
+    _title: 'Wechat'
+  requirements:
+    _permission: 'access content'
+
+entity.wechat_request_message_type.collection:
+  path: '/admin/wechat/config/request-message-types'
+  defaults:
+    _entity_list: 'wechat_request_message_type'
+    _title: 'Request message types'
+  requirements:
+    _permission: 'access administration pages'
+
+wechat.request_message_type_add:
+  path: '/admin/wechat/config/request-message-types/add'
+  defaults:
+    _entity_form: 'wechat_request_message_type.add'
+    _title: 'Add'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_request_message_type.edit_form:
+  path: '/admin/wechat/config/request-message-types/manage/{wechat_request_message_type}'
+  defaults:
+    _entity_form: 'wechat_request_message_type.edit'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_request_message_type.delete_form:
+  path: '/admin/wechat/config/request-message-types/manage/{wechat_request_message_type}/delete'
+  defaults:
+    _entity_form: 'wechat_request_message_type.delete'
+    _title: 'Delete'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+
+entity.wechat_response_message_type.collection:
+  path: '/admin/wechat/config/response-message-types'
+  defaults:
+    _entity_list: 'wechat_response_message_type'
+    _title: 'Response message types'
+  requirements:
+    _permission: 'access administration pages'
+
+wechat.response_message_type_add:
+  path: '/admin/wechat/config/response-message-types/add'
+  defaults:
+    _entity_form: 'wechat_response_message_type.add'
+    _title: 'Add'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_response_message_type.edit_form:
+  path: '/admin/wechat/config/response-message-types/manage/{wechat_response_message_type}'
+  defaults:
+    _entity_form: 'wechat_response_message_type.edit'
+  requirements:
+    _permission: 'access administration pages'
+
+entity.wechat_response_message_type.delete_form:
+  path: '/admin/wechat/config/response-message-types/manage/{wechat_response_message_type}/delete'
+  defaults:
+    _entity_form: 'wechat_response_message_type.delete'
+    _title: 'Delete'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+entity.wechat_response_message.collection:
+  path: '/admin/wechat/messages/response'
+  defaults:
+    _entity_list: 'wechat_response_message'
+    _title: 'Response message'
+  requirements:
+    _permission: 'access administration pages'
+entity.wechat_user.collection:	
+  path: '/admin/wechat/wechat-users'
+  defaults:
+    _entity_list: 'wechat_user'
+    _title: 'Wechat users'
+  requirements:
+    _permission: 'access administration pages'

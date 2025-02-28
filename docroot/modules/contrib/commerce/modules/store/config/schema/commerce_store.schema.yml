@@ -1,0 +1,28 @@
+commerce_store.commerce_store_type.*:
+  type: commerce_config_entity_bundle
+  label: 'Store type'
+  mapping:
+    description:
+      type: text
+      label: 'Description'
+
+field.formatter.settings.commerce_store_datetime:
+  type: mapping
+  label: 'Store date/time formatter settings'
+  mapping:
+    date_format:
+      type: string
+      label: 'Date format'
+
+views.field.commerce_store:
+  type: views.field.field
+  mapping:
+    hide_single_store:
+      type: boolean
+      label: 'Hide if there''s only one store.'
+
+views.filter_value.commerce_store_datetime:
+  type: views.filter_value.date
+
+views.filter.commerce_store_datetime:
+  type: views.filter.date

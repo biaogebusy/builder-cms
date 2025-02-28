@@ -1,0 +1,5 @@
+services:
+  xinshi_editor.route_subscriber:
+    class: Drupal\xinshi_editor\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

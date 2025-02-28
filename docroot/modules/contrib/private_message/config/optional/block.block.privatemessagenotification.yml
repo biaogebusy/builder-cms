@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - private_message
+  theme:
+    - bartik
+id: privatemessagenotification
+theme: bartik
+region: header
+weight: -3
+provider: null
+plugin: private_message_notification_block
+settings:
+  id: private_message_notification_block
+  label: 'Private Message Notification'
+  provider: private_message
+  label_display: '0'
+  ajax_refresh_rate: 15
+visibility: {  }

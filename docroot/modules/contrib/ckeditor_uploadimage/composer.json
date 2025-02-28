@@ -1,0 +1,20 @@
+{
+  "name": "drupal/ckeditor_uploadimage",
+  "description": "Integrates CKEditor's Upload Image plugin to Drupal. This enables Drupal's default WYSIWYG text editor capable of uploading images that were dropped or pasted from clipboard into the editor as inline image.",
+  "type": "drupal-module",
+  "repositories": [
+    {
+      "type": "composer",
+      "url":  "https://packages.drupal.org/8"
+    }
+  ],
+  "authors": [
+    {
+      "name": "Roland Michael dela Peña (arpeggio)",
+      "homepage": "https://www.webfoobar.com",
+      "role": "Maintainer"
+    }
+  ],
+  "license": "GPL-2.0+",
+  "homepage": "https://drupal.org/project/ckeditor_uploadimage"
+}

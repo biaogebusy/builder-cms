@@ -1,0 +1,5 @@
+services:
+  panelizer_test.route_subscriber:
+    class: 'Drupal\panelizer_test\Routing\RouteSubscriber'
+    tags:
+      - { name: event_subscriber }

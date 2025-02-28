@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Test module for Commerce Product.
+ */
+
+use Drupal\commerce_product\Entity\ProductVariationInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_entity_access().
+ */
+function commerce_product_test_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  if ($entity instanceof ProductVariationInterface) {
+    if ($operation == 'view') {
+      return AccessResult::forbiddenIf(strpos($entity->getSku(), 'DENY') !== FALSE);
+    }
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function commerce_product_test_module_implements_alter(&$implementations, $hook) {
+  // Remove the EventOnlyQueryAccessHandler added to all entities in entity:1.1
+  // for testing. The generic query_access handler provided by the Entity module
+  // bypasses the need to define hook_jsonapi_ENTITY_TYPE_filter_access. We
+  // remove it in the test to verify commerce_product_jsonapi_commerce_product_variation_filter_access
+  // is working as expected.
+  if ($hook === 'entity_type_alter') {
+    unset($implementations['entity']);
+  }
+}

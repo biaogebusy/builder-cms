@@ -1,0 +1,20 @@
+all:
+  version: VERSION
+  css:
+    theme:
+      css/entityprint-all.css: {}
+node:
+  version: VERSION
+  css:
+    theme:
+      css/entityprint-node.css: {}
+page:
+  version: VERSION
+  css:
+    theme:
+      css/entityprint-page.css: {}
+module:
+  version: VERSION
+  css:
+    theme:
+      css/entityprint-module.css: {}

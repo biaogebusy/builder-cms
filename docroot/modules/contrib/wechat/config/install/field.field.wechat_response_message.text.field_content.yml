@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.wechat_response_message.field_content
+    - wechat.response_message_type.text
+id: wechat_response_message.text.field_content
+field_name: field_content
+entity_type: wechat_response_message
+bundle: text
+label: Content
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

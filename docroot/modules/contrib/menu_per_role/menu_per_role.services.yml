@@ -1,0 +1,16 @@
+services:
+  cache_context.route.is_admin:
+    class: Drupal\menu_per_role\Cache\Context\RouteIsAdminCacheContext
+    arguments:
+      - '@router.admin_context'
+    tags:
+      - { name: cache.context }
+
+  menu_per_role.menu_tree_manipulators:
+    class: Drupal\menu_per_role\MenuPerRoleLinkTreeManipulator
+    public: false
+    decorates: menu.default_tree_manipulators
+    parent: menu.default_tree_manipulators
+    calls:
+      - [setAdminContext, ['@router.admin_context']]
+      - [setConfigFactory, ['@config.factory']]

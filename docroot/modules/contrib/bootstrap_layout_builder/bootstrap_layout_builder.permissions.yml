@@ -1,0 +1,4 @@
+configure bootstrap layout builder:
+  title: 'Configure Bootstrap Layout Builder'
+  description: 'Allows access to configuration for Bootstrap Layout Builder.'
+  restrict access: true

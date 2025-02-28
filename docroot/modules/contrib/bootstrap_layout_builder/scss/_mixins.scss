@@ -1,0 +1,74 @@
+// Mixins
+@mixin sr-only() {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+@mixin smooth-all-transition() {
+  transition: all .3s ease-in-out;
+}
+
+// Rounded input style
+@mixin blb_box_inputs($width: 100%) {
+  position: relative;
+  flex: $width;
+  width: $width;
+  margin: 0;
+  padding: 0;
+
+  input {
+    @include sr-only;
+
+    + label {
+      @include smooth-all-transition;
+      border: 2px solid $panel_text_color;
+      padding: 10px;
+      height: 50px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+
+      &:hover {
+        background-color: rgba($panel_text_color, .1);
+      }
+    }
+
+    // Active state.
+    &:checked + label {
+      color: $panel_bg_color;
+      background-color: $panel_text_color;
+    }
+  }
+
+  // Custom fix for Bootstrap 3 Drupal theme.
+  label {
+    border: 2px solid $panel_text_color;
+    height: 50px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+
+    + input {
+      opacity: 0;
+      position: absolute;
+    }
+
+    // Active state.
+    &.active {
+      color: $panel_bg_color;
+      background-color: $panel_text_color;
+    }
+  }
+}

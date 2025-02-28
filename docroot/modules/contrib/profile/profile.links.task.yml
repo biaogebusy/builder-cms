@@ -1,0 +1,8 @@
+entity.profile.collection:
+  route_name: entity.profile.collection
+  base_route: entity.user.collection
+  title: 'Profiles'
+  weight: 10
+
+profile.user_page:
+  deriver: Drupal\profile\Plugin\Derivative\UserLocalTask

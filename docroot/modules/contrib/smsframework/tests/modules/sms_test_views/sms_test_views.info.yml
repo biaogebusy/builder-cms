@@ -1,0 +1,9 @@
+name: SMS Test Views
+type: module
+description: Module for testing SMS views.
+package: Testing
+
+# Information added by Drupal.org packaging script on 2022-12-05
+version: '2.1.0'
+project: 'smsframework'
+datestamp: 1670240398

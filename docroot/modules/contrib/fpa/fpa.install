@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for the FPA module.
+ */
+
+use Drupal\fpa\FpaFormBuilder;
+
+/**
+ * Implements hook_requirements().
+ */
+function fpa_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    if (!FpaFormBuilder::checkMemoryLimit()) {
+      $php_ini_path = '';
+      $desc = 'It is likely that you will <b>exceed your memory limit</b> when viewing the permissions page for all roles and permissions. If you are unable to load the permissions page, this is most likely the cause.';
+      $filter_perms_link = 'https://drupal.org/project/filter_perms';
+      $filter_perm_exists = \Drupal::service('module_handler')->moduleExists('filter_perms');
+      if (!$filter_perm_exists) {
+        $desc .= '<br>The <a href=":link" target="_blank">Filter Permissions</a> module can work with Fast Permissions Administration by reducing the amount of the permissions form that is rendered and thereby reducing the memory required on the permissions page.';
+        if ($php_ini_path = get_cfg_var('cfg_file_path')) {
+          $desc .= '<br>Increase the memory limit by editing the <code>memory_limit</code> parameter in the file %configuration-file and then restart your web server (or contact your system administrator or hosting provider for assistance).';
+        }
+      }
+      else {
+        $requirements['fpa_memory']['severity'] = REQUIREMENT_OK;
+        $desc .= '<br>The <a href=":link" target="_blank">Filter Permissions</a> module installed should prevent a memory issue as long as viewed permissions and roles are limited.';
+      }
+
+      $permissions_memory_required = FpaFormBuilder::getRequiredMemory();
+      $requirements['fpa_memory'] = [
+        'severity' => REQUIREMENT_WARNING,
+        'title' => t('Insufficient memory for permissions page'),
+        'value' => t('~@permissions_memory_requiredM of memory required', ['@permissions_memory_required' => round($permissions_memory_required / 1024 / 1024)]),
+        'description' => t($desc, [
+          ':link' => $filter_perms_link,
+          '%configuration-file' => $php_ini_path,
+        ]),
+      ];
+
+    }
+  }
+
+  return $requirements;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "drupal/ckeditor_lineheight",
+  "description": "Adds the functionality to set the line-height property of an element similar to the font-size to CKEditor.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "homepage": "https://drupal.org/project/ckeditor_lineheight",
+  "authors": [
+    {
+      "name": "Iorga Mihai (mihai7221)",
+      "homepage": "https://www.drupal.org/u/mihai7221",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/ckeditor_lineheight?version=8.x-1.x",
+    "source": "https://git.drupalcode.org/project/ckeditor_lineheight"
+  }
+}

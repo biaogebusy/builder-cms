@@ -1,0 +1,6 @@
+multiselect_test.page:
+  path: '/multiselect_test/page'
+  defaults:
+    _form: 'Drupal\multiselect_test\Form\MultiselectTestForm'
+  requirements:
+    _access: 'TRUE'

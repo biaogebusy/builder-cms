@@ -1,0 +1,6 @@
+replication.settings_form:
+  title: 'Replication settings'
+  route_name: replication.settings_form
+  description: 'General settings for Replication'
+  parent: system.admin_config_services
+  weight: 100

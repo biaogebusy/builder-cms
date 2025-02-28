@@ -1,0 +1,6 @@
+services:
+  profile_switcher.commands:
+    class: \Drupal\profile_switcher\Commands\ProfileSwitcherCommands
+    arguments: ['@config.factory', '@profile_switcher.profile_switcher']
+    tags:
+      - { name: drush.command }

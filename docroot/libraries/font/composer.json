@@ -1,0 +1,16 @@
+{
+  "name": "drupal-ckeditor-libraries-group/font",
+  "description": "CKEditor 4 font plugin",
+  "type": "drupal-library",
+  "keywords": ["ckeditor", "plugin", "font"],
+  "homepage": "https://ckeditor.com/cke4/addon/font",
+  "license": [
+    "GPL-2.0-or-later",
+    "LGPL-2.1-or-later",
+    "MPL-1.1"
+  ],
+  "support": {
+    "issues": "https://github.com/ckeditor/ckeditor4/issues",
+    "source": "https://github.com/ckeditor/ckeditor4/tree/master/plugins/font"
+  }
+}

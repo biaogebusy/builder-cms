@@ -1,0 +1,15 @@
+{
+  "name": "drupal/slick_entityreference",
+  "type": "drupal-module",
+  "description": "Slick entity reference fields for the Slick carousel.",
+  "homepage": "https://drupal.org/project/slick_entityreference",
+  "license": "GPL-2.0+",
+  "support": {
+    "issues": "https://drupal.org/project/issues/slick_entityreference",
+    "source": "https://cgit.drupalcode.org/slick_entityreference"
+  },
+  "require": {
+    "drupal/slick": "~2.0",
+    "drupal/core": "^8 || ^9 || ^10"
+  }
+}

@@ -1,0 +1,6 @@
+services:
+  # Conflict resolution subscribers:
+  conflict_resolution.merge_remote_paragraph_structure:
+    class: \Drupal\conflict_paragraphs\ConflictResolution\MergeRemoteStructure
+    tags:
+      - { name: event_subscriber }

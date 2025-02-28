@@ -1,0 +1,59 @@
+// Toggle Switches
+.bs-toggle-switch {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: inline-block;
+  width: 2rem;
+  height: 1.125rem;
+
+  &--input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    // Checked style
+    &:checked + .bs-toggle-switch--slider {
+      background: $black;
+
+      &:before {
+        background-color: $white;
+        transform: translate(1rem, -50%);
+      }
+    }
+  }
+
+  &--slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: $black;
+    border-radius: 1rem;
+    transition: background 0.2s;
+    cursor: pointer;
+
+    &:before {
+      content: "";
+      position: absolute;
+      left: 0.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      height: .75rem;
+      width: .75rem;
+      border-radius: 1.5rem;
+      background: $white;
+      transition: transform 0.2s, width 0.2s, background 0.2s;
+    }
+  }
+}
+
+// Dark Mode
+[data-bs-mode="dark"] .bs-toggle-switch--input:checked + .bs-toggle-switch--slider {
+  background: $white;
+
+  &:before {
+    background-color: $black;
+  }
+}

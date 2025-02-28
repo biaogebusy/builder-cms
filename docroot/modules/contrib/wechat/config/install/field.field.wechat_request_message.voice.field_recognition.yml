@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.wechat_request_message.field_recognition
+    - wechat.request_message_type.voice
+id: wechat_request_message.voice.field_recognition
+field_name: field_recognition
+entity_type: wechat_request_message
+bundle: voice
+label: Recognition
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

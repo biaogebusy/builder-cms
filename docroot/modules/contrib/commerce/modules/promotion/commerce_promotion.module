@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * @file
+ * Provides a UI for managing promotions.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\user\UserInterface;
+use Drupal\views\Plugin\views\field\EntityField;
+
+/**
+ * Implements hook_commerce_condition_info_alter().
+ */
+function commerce_promotion_commerce_condition_info_alter(&$definitions) {
+  foreach ($definitions as &$definition) {
+    // Force all order item conditions to have the same category.
+    // This prevents them from accidentally showing in vertical tabs
+    // in the promotion offer UI.
+    if ($definition['entity_type'] == 'commerce_order_item') {
+      $definition['category'] = t('Products');
+    }
+  }
+}
+
+/**
+ * Implements hook_user_presave().
+ */
+function commerce_promotion_user_presave(UserInterface $account) {
+  if ($account->isNew()) {
+    return;
+  }
+
+  $old_mail = $account->original->getEmail();
+  $new_mail = $account->getEmail();
+  if ($old_mail && $new_mail && $old_mail != $new_mail) {
+    \Drupal::service('commerce_promotion.usage')->reassign($old_mail, $new_mail);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_promotion_theme() {
+  return [
+    'commerce_promotion' => [
+      'render element' => 'elements',
+    ],
+    'commerce_promotion_form' => [
+      'render element' => 'form',
+    ],
+    'commerce_coupon_redemption_form' => [
+      'render element' => 'form',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_commerce_promotion().
+ */
+function commerce_promotion_theme_suggestions_commerce_promotion(array $variables) {
+  return _commerce_entity_theme_suggestions('commerce_promotion', $variables);
+}
+
+/**
+ * Prepares variables for promotion templates.
+ *
+ * Default template: commerce-promotion.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_commerce_promotion(array &$variables) {
+  /** @var Drupal\commerce_promotion\Entity\PromotionInterface $promotion */
+  $promotion = $variables['elements']['#commerce_promotion'];
+
+  $variables['promotion_entity'] = $promotion;
+  $variables['promotion_url'] = $promotion->isNew() ? '' : $promotion->toUrl();
+  $variables['promotion'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['promotion'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Removes core's built-in formatters from views field options for
+ * promotion start_date and end_date fields, since they perform timezone
+ * conversion. The "Default (Store timezone)" formatter should be used instead.
+ */
+function commerce_promotion_form_views_ui_config_item_form_alter(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\views\Plugin\views\field\EntityField $handler */
+  $handler = $form_state->get('handler');
+  if ($handler instanceof EntityField && !empty($handler->definition['entity_type'])) {
+    $entity_type_id = $handler->definition['entity_type'];
+    $field_name = $handler->definition['field_name'];
+    /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $field_manager */
+    $field_manager = \Drupal::service('entity_field.manager');
+    $field_definitions = $field_manager->getFieldStorageDefinitions($entity_type_id);
+    $field_definition = $field_definitions[$field_name];
+    if ($entity_type_id == 'commerce_promotion' && $field_definition->getType() == 'datetime') {
+      unset($form['options']['type']['#options']['datetime_custom']);
+      unset($form['options']['type']['#options']['datetime_default']);
+      unset($form['options']['type']['#options']['datetime_plain']);
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_single_element_form_alter().
+ */
+function commerce_promotion_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
+  /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
+  $field_definition = $context['items']->getFieldDefinition();
+  $field_name = $field_definition->getName();
+  $entity_type = $field_definition->getTargetEntityTypeId();
+  $widget_name = $context['widget']->getPluginId();
+  if ($field_name == 'condition_operator' && $entity_type == 'commerce_promotion' && $widget_name == 'options_buttons') {
+    // Hide the label.
+    $element['#title_display'] = 'invisible';
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function commerce_promotion_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'commerce_order') {
+    $fields['coupons'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Coupons'))
+      ->setDescription(t('Coupons which have been applied to order.'))
+      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+      ->setRequired(FALSE)
+      ->setSetting('target_type', 'commerce_promotion_coupon')
+      ->setSetting('handler', 'default')
+      ->setTranslatable(FALSE)
+      ->addConstraint('CouponValid')
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ]);
+
+    return $fields;
+  }
+}

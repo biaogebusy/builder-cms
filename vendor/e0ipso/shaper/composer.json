@@ -1,0 +1,27 @@
+{
+  "name": "e0ipso/shaper",
+  "description": "Lightweight library to handle in and out transformations in PHP.",
+  "type": "library",
+  "license": "GPL-2.0",
+  "authors": [
+    {
+      "name": "Mateu Aguiló Bosch",
+      "email": "mateu.aguilo.bosch@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "Shaper\\": "src",
+      "Shaper\\Tests\\": "tests/src"
+    }
+  },
+  "require": {
+    "justinrainbow/json-schema": "^5.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "phpunit/phpcov": "^8.2",
+    "php-coveralls/php-coveralls": "^2.4"
+  }
+}

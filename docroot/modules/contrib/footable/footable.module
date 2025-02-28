@@ -1,0 +1,207 @@
+<?php
+
+/**
+ * @file
+ * Provides Views integration for the jQuery FooTable plugin.
+ */
+
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\footable\Entity\FooTableBreakpoint;
+
+/**
+ * Implements hook_theme().
+ */
+function footable_theme($existing, $type, $theme, $path) {
+  return [
+    'footable' => [
+      'base hook' => 'table',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_views_ui_style_plugin_table().
+ *
+ * Removes the responsive values from the Views UI plugin table.
+ */
+function footable_preprocess_views_ui_style_plugin_table(&$variables) {
+  if (isset($variables['form']['footable'], $variables['table']['#rows'])) {
+    array_pop($variables['table']['#header']);
+
+    $lastRow = end($variables['table']['#rows']);
+    foreach ($variables['table']['#rows'] as &$row) {
+      if ($row !== $lastRow) {
+        array_pop($row);
+        continue;
+      }
+
+      unset($row['colspan']);
+    }
+  }
+}
+
+/**
+ * Display a view as a FooTable style.
+ *
+ * @see template_preprocess_views_view_table()
+ */
+function template_preprocess_views_view_footable(&$variables) {
+  template_preprocess_views_view_table($variables);
+
+  $view = $variables['view'];
+
+  $result = $variables['result'] = $variables['rows'];
+
+  $options = $view->style_plugin->options;
+  $handler = $view->style_plugin;
+
+  $fields = &$view->field;
+  $columns = $handler->sanitizeColumns($options['columns'], $fields);
+
+  foreach ($columns as $field => $column) {
+    /** @var Drupal\views\Plugin\views\field\FieldPluginBase $field_handler */
+    $field_handler = $fields[$field];
+
+    // Skip building the attributes and content if the field is to be excluded
+    // from the display.
+    if (!empty($field_handler->options['exclude'])) {
+      continue;
+    }
+
+    $info = FieldStorageConfig::loadByName($field_handler->getEntityType(), $field_handler->field);
+
+    // Get column type.
+    if ($info && $info->getType() === 'datetime') {
+      $variables['header'][$field]['attributes']['data-type'] = 'date';
+    }
+    elseif (!empty($field_handler->last_render) && is_numeric($field_handler->last_render)) {
+      $variables['header'][$field]['attributes']['data-type'] = 'numeric';
+    }
+    elseif (!empty($field_handler->last_render) && mb_strlen((string) $field_handler->last_render) != mb_strlen(strip_tags((string) $field_handler->last_render))) {
+      $variables['header'][$field]['attributes']['data-type'] = 'html';
+    }
+    else {
+      $variables['header'][$field]['attributes']['data-type'] = 'text';
+    }
+
+    // Add breakpoints.
+    if (!empty($options['footable']['breakpoint'][$field])) {
+      if (!empty($options['footable']['breakpoint'][$field]['all'])) {
+        $options['footable']['breakpoint'][$field] = ['all' => 'all'];
+      }
+      $variables['header'][$field]['attributes']['data-breakpoints'] = implode(' ', array_keys(array_filter($options['footable']['breakpoint'][$column])));
+    }
+
+    // Sorting.
+    if (!empty($options['footable']['component']['sorting']['enabled'])) {
+      $variables['header'][$field]['content'] = Html::escape(!empty($field_handler) ? $field_handler->label() : '');
+      unset($variables['header'][$field]['url'], $variables['header'][$field]['sort_indicator']);
+
+      if (empty($options['info'][$field]['sortable']) || !$field_handler->clickSortable()) {
+        $variables['header'][$field]['attributes']['data-sortable'] = 'false';
+      }
+      else {
+        if (!empty($options['default']) && $options['default'] == $field) {
+          $variables['header'][$field]['attributes']['data-sorted'] = 'true';
+
+          if (!empty($options['info'][$field]['default_sort_order'])) {
+            $variables['header'][$field]['attributes']['data-direction'] = strtoupper($options['info'][$field]['default_sort_order']);
+          }
+        }
+      }
+    }
+
+    // Add data values.
+    if (!empty($options['footable']['component']['filtering']['enabled']) || !empty($options['footable']['component']['sorting']['enabled'])) {
+      $types = ['html', 'date'];
+      foreach ($result as $num => $row) {
+        if (in_array($variables['header'][$field]['attributes']['data-type'], $types)) {
+          if (!empty($variables['rows'][$num]['columns'][$column]['content'][0]['field_output']['#markup'])) {
+            $value = strip_tags($variables['rows'][$num]['columns'][$column]['content'][0]['field_output']['#markup']->__toString());
+            if (!empty($options['footable']['component']['filtering']['enabled'])) {
+              $variables['rows'][$num]['columns'][$column]['attributes']['data-filter-value'] = $value;
+            }
+            if (!empty($options['footable']['component']['sorting']['enabled'])) {
+              $variables['rows'][$num]['columns'][$column]['attributes']['data-sort-value'] = $value;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Add FooTable classes and data attributes.
+  $config = \Drupal::config('footable.settings');
+  $variables['attributes']['class'][] = 'footable';
+
+  // Expand all rows.
+  $variables['attributes']['data-expand-all'] = $options['footable']['expand_all'] ? 'true' : 'false';
+
+  // Expand first row.
+  $variables['attributes']['data-expand-first'] = $options['footable']['expand_first'] ? 'true' : 'false';
+
+  // Show header.
+  $variables['attributes']['data-show-header'] = $options['footable']['show_header'] ? 'true' : 'false';
+
+  // Expandable column.
+  $variables['attributes']['data-toggle-column'] = $options['footable']['toggle_column'];
+
+  // Add Bootstrap configuration.
+  if ($config->get('plugin_type') === 'bootstrap') {
+    if (!empty($options['footable']['bootstrap']['striped'])) {
+      $variables['attributes']['class'][] = 'table-striped';
+    }
+
+    if (!empty($options['footable']['bootstrap']['bordered'])) {
+      $variables['attributes']['class'][] = 'table-bordered';
+    }
+
+    if (!empty($options['footable']['bootstrap']['hover'])) {
+      $variables['attributes']['class'][] = 'table-hover';
+    }
+
+    if (!empty($options['footable']['bootstrap']['condensed'])) {
+      $variables['attributes']['class'][] = 'table-condensed';
+    }
+  }
+
+  // Add components.
+  // Filtering.
+  if (!empty($options['footable']['component']['filtering']['enabled'])) {
+    $variables['attributes']['data-filtering'] = 'true';
+    $variables['attributes']['data-filter-delay'] = $options['footable']['component']['filtering']['delay'];
+    $variables['attributes']['data-filter-min'] = $options['footable']['component']['filtering']['min'];
+    $variables['attributes']['data-filter-placeholder'] = t($options['footable']['component']['filtering']['placeholder']);
+    $variables['attributes']['data-filter-position'] = $options['footable']['component']['filtering']['position'];
+    $variables['attributes']['data-filter-space'] = $options['footable']['component']['filtering']['space'];
+  }
+
+  // Paging.
+  if (!empty($options['footable']['component']['paging']['enabled'])) {
+    $variables['attributes']['data-paging'] = 'true';
+    $variables['attributes']['data-paging-count-format'] = $options['footable']['component']['paging']['countformat'];
+    $variables['attributes']['data-paging-current'] = $options['footable']['component']['paging']['current'];
+    $variables['attributes']['data-paging-limit'] = $options['footable']['component']['paging']['limit'];
+    $variables['attributes']['data-paging-position'] = $options['footable']['component']['paging']['position'];
+    $variables['attributes']['data-paging-size'] = $options['footable']['component']['paging']['size'];
+  }
+
+  // Sorting.
+  if (!empty($options['footable']['component']['sorting']['enabled'])) {
+    $variables['attributes']['data-sorting'] = 'true';
+  }
+
+  // Add FooTable breakpoints.
+  $breakpoints = [];
+  foreach (FooTableBreakpoint::loadMultiple() as $breakpoint) {
+    $breakpoints[$breakpoint->id()] = $breakpoint->getBreakpoint();
+  }
+  $variables['attributes']['data-breakpoints'] = Json::encode($breakpoints);
+
+  // Add FooTable plugin files and calling script.
+  $library = $config->get('plugin_type') . '_' . $config->get('plugin_compression');
+  $variables['view']->element['#attached']['library'][] = 'footable/footable';
+  $variables['view']->element['#attached']['library'][] = 'footable/footable_' . $library;
+}

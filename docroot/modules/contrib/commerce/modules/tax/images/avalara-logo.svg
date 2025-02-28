@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180px" height="180px" viewBox="0 0 180 180" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Group 11</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="80" cy="80" r="80"></circle>
+        <filter x="-11.2%" y="-7.5%" width="122.5%" height="122.5%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="6" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0.866666667   0 0 0 0 0.866666667   0 0 0 0 0.866666667  0 0 0 1 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <polygon id="path-3" points="0.593530974 0.284133333 22.1370081 0.284133333 22.1370081 32 0.593530974 32"></polygon>
+        <polygon id="path-5" points="0 0.476861538 58.1111896 0.476861538 58.1111896 82 0 82"></polygon>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="logos-copy-6" transform="translate(-301.000000, -244.000000)">
+            <g id="Group-11" transform="translate(311.000000, 248.000000)">
+                <g id="Oval">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                    <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+                </g>
+                <g id="a-check" transform="translate(41.000000, 39.000000)">
+                    <path d="M34.8402681,63.2464562 C34.8402681,63.2464562 30.3443727,58.2406518 27.7171638,55.522268 L24,63.512892 C29.3419915,70.7668266 32.8759243,77.0078134 34.8133225,80 C38.604587,74.1555977 47.8469733,56.7832346 67,40.5392343 L64.8888018,36 C52.4546935,44.3700188 41.8677151,55.0716599 34.8402681,63.2354056" id="Fill-1" fill="#0D9AD2" fill-rule="nonzero"></path>
+                    <g id="Group-5" transform="translate(55.000000, 50.000000)">
+                        <g id="Fill-3-Clipped">
+                            <g>
+                                <mask id="mask-4" fill="white">
+                                    <use xlink:href="#path-3"></use>
+                                </mask>
+                                <g id="path-1"></g>
+                                <path d="M8.28754207,32.0001333 L22.1370081,32.0001333 L9.91956776,0.284133333 C6.60755181,4.10546667 3.49354347,8.1228 0.593530974,12.3188 L8.28754207,32.0001333 Z" id="Fill-3" fill="#FF6600" fill-rule="nonzero" mask="url(#mask-4)"></path>
+                            </g>
+                        </g>
+                    </g>
+                    <g id="Group-8">
+                        <g id="Fill-6-Clipped">
+                            <g>
+                                <mask id="mask-6" fill="white">
+                                    <use xlink:href="#path-5"></use>
+                                </mask>
+                                <g id="path-3"></g>
+                                <path d="M45.4212729,0.476861538 L33.1898354,0.476861538 L-0.000122916667,82 L13.8390646,82 L37.8373146,23.9036308 L38.9742936,20.7523077 L39.6171479,20.7523077 L40.7553561,23.9036308 L47.8722311,41.1261538 C51.1246061,37.7982155 54.5416896,34.6456308 58.1111896,31.6797539 L45.4212729,0.476861538 Z" id="Fill-6" fill="#FF6600" fill-rule="nonzero" mask="url(#mask-6)"></path>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

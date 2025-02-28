@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Queue ui module file.
+ */
+
+/**
+ * Hook_queue_info_alter()
+ */
+function queue_ui_queue_info_alter(&$queues) {
+  foreach ($queues as $queueName => $definition) {
+    // Check if a time limit override exists for this queue.
+    if ($time_limit = \Drupal::state()->get('queue_ui_cron_' . $queueName)) {
+      // Override the original definition.
+      $queues[$queueName]['cron']['time'] = $time_limit;
+    }
+  }
+}

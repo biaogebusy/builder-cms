@@ -1,0 +1,5 @@
+entity.field_validation_rule_set.collection:
+  title: 'Field validation'
+  description: 'Manage field validation.'
+  parent: system.admin_structure
+  route_name: entity.field_validation_rule_set.collection

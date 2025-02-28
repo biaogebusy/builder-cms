@@ -1,0 +1,14 @@
+{
+  "name": "drupal/jsonapi_include",
+  "type": "drupal-module",
+  "description": "Add include data to json output",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/jsonapi_include",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/jsonapi_include",
+    "source": "http://cgit.drupalcode.org/jsonapi_include"
+  },
+  "require": { }
+}

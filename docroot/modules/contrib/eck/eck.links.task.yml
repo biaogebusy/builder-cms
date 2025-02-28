@@ -1,0 +1,3 @@
+eck.entity_content:
+  class: \Drupal\Core\Menu\LocalTaskDefault
+  deriver: \Drupal\eck\Plugin\Derivative\EckEntityContentLocalTask

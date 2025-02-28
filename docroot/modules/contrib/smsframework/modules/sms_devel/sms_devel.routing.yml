@@ -1,0 +1,7 @@
+sms_devel.message:
+  path: '/admin/config/development/sms'
+  defaults:
+    _title: 'Test SMS'
+    _form: '\Drupal\sms_devel\Form\SmsDevelMessageForm'
+  requirements:
+    _permission: 'sms_devel form'

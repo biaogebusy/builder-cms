@@ -1,0 +1,7 @@
+xinshi_editor.panelizer_settings:
+  path: '/admin/xinshi/config/panelizer-settings'
+  defaults:
+    _form: '\Drupal\xinshi_editor\Form\PanelizerSettingsForm'
+    _title: 'Panelizer settings'
+  requirements:
+    _permission: 'access panels in-place editing'

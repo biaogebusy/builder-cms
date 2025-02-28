@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the commerce_log module.
+ */
+
+use Drupal\commerce_log\LogStorageSchema;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Site\Settings;
+
+/**
+ * Add a "source_entity" index and reduce the "source_entity_type" maxlength.
+ */
+function commerce_log_update_8201() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+  $entity_field_manager->clearCachedFieldDefinitions();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $database = \Drupal::database();
+  // Resize the source_entity_type field.
+  $database->schema()->changeField('commerce_log', 'source_entity_type', 'source_entity_type', [
+    'type' => 'varchar',
+    'length' => EntityTypeInterface::ID_MAX_LENGTH,
+  ]);
+
+  // Update storage schema.
+  $storage_key = 'commerce_log.field_schema_data.source_entity_type';
+  $storage_schema = \Drupal::keyValue('entity.storage_schema.sql');
+  $field_schema = $storage_schema->get($storage_key);
+  $field_schema['commerce_log']['fields']['source_entity_type']['length'] = EntityTypeInterface::ID_MAX_LENGTH;
+  $storage_schema->set($storage_key, $field_schema);
+
+  $key = 'commerce_log.field_storage_definitions';
+  $entity_definitions_installed = \Drupal::keyValue('entity.definitions.installed');
+  $definitions = $entity_definitions_installed->get($key);
+  /** @var \Drupal\Core\Field\FieldDefinitionInterface[] $base_field_definitions */
+  $base_field_definitions = $entity_field_manager->getBaseFieldDefinitions('commerce_log');
+  $definitions['source_entity_type'] = $base_field_definitions['source_entity_type']->getFieldStorageDefinition();
+  $entity_definitions_installed->set($key, $definitions);
+
+  // Get the current log entity type definition, ensure the storage schema
+  // class is set.
+  $entity_type = $entity_type_manager->getDefinition('commerce_log')
+    ->setHandlerClass('storage_schema', LogStorageSchema::class);
+  // Regenerate entity type indexes.
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Add an index to commerce_log.created.
+ */
+function commerce_log_update_8202() {
+  // Updating table indexes can be costly for site with millions of logs, allow
+  // skipping this update via a setting.
+  if (!Settings::get('commerce_log_skip_update_8202', FALSE)) {
+    $definition_update_manager = \Drupal::service('entity.definition_update_manager');
+    // Regenerate entity type indexes.
+    $entity_type = \Drupal::entityTypeManager()->getDefinition('commerce_log');
+    $definition_update_manager->updateEntityType($entity_type);
+  }
+}

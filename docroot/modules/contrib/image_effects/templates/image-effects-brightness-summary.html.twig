@@ -1,0 +1,29 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an image brightness effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this brightness effect, including:
+ *   - level: The brightness adjustment level in percent.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  {% if data.level > 0 %}
+    {% trans %}
+      +{{ data.level }}%
+    {% endtrans %}
+  {% elseif data.level < 0 %}
+    {% trans %}
+      {{ data.level }}%
+    {% endtrans %}
+  {% else %}
+    <em>{{ 'Unchanged'|t }}</em>
+  {% endif %}
+{% endapply %}

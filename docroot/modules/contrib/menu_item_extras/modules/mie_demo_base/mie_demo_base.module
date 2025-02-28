@@ -1,0 +1,85 @@
+<?php
+
+/**
+ * @file
+ * Manage fields for the menu items.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function mie_demo_base_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Help for the paragraphs demo module.
+    case 'help.page.mie_demo_base':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Menu Item Extras Demo Base module provides <em>Menu Item Extras Demo Menu</em> for the <a href=":menu_item_extras">Menu Items Extras module</a>.', [':menu_item_extras' => Url::fromRoute('help.page', ['name' => 'menu_item_extras'])->toString()]) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dt>' . t('Changing demo menu') . '</dt>';
+      $output .= '<dd>' . t('Administrators can edit the provided <em>Menu Item Extras Demo Menu</em> on the');
+      $output .= t('&nbsp;<a href=":mie_demo_base">Menu Item Extras Demo Menu page</a>', [':mie_demo_base' => Url::fromRoute('entity.menu.edit_form', ['menu' => 'mie-demo-base-menu'])->toString()]);
+      $output .= t('&nbsp;if the <a href=":field_ui">Field UI</a> module is enabled. For more information on fields and entities, see the <a href=":field">Field module help page</a>.', [':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#']) . '</dd>';
+      $output .= '<dt>' . t('Deleting demo menu') . '</dt>';
+      $output .= '<dd>' . t('The provided <em>Menu Item Extras Demo Menu</em> stay available even when the Menu Item Extras Demo Base module is uninstalled. They can be deleted individually on the <a href=":mie_demo_base">Menu Item Extras Demo Menu page</a>.', [':mie_demo_base' => Url::fromRoute('entity.menu.edit_form', ['menu' => 'mie-demo-base-menu'])->toString()]) . '</dd>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_preprocess_node() for paragraph node templates.
+ *
+ * Attach css we need for paragraph demo content.
+ */
+function mie_demo_base_preprocess_menu(&$variables) {
+  if ($variables['menu_name'] === 'mie-demo-base-menu') {
+    $variables['#attached']['library'][] = 'mie_demo_base/demo';
+  }
+}
+
+/**
+ * Implements hook_preprocess().
+ */
+function mie_demo_base_preprocess(&$variables, $hook, &$info) {
+  $module_path = \Drupal::service('extension.list.module')->getPath('mie_demo_base');
+
+  if ($hook == 'menu') {
+    if (substr($info['theme path'], 0, 7) != 'themes/') {
+      $info['theme path'] = $module_path;
+      $info['path'] = $module_path . '/templates';
+    }
+  }
+  if ($hook == 'menu_link_content') {
+    /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $menu_link_content */
+    $menu_link_content = $variables['elements']['#menu_link_content'];
+    $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+    if (substr($info['theme path'], 0, 7) !== 'themes/' && $menu_link_content->getMenuName() === 'mie-demo-base-menu') {
+      $info['theme path'] = $module_path;
+      $info['path'] = $module_path . '/templates';
+      $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--' . $sanitized_view_mode;
+
+      if (isset($variables['elements']['#menu_level']) && $variables['elements']['#menu_level'] === 0) {
+        $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--' . 'menu-level-' . $variables['elements']['#menu_level'] . '--' . $sanitized_view_mode;
+      }
+
+      if ($sanitized_view_mode === 'banner' && isset($variables['elements']['#menu_level']) && $variables['elements']['#menu_level'] === 1) {
+        $info['template'] = 'menu-link-content--' . $menu_link_content->getMenuName() . '--' . 'menu-level-' . $variables['elements']['#menu_level'] . '--' . $sanitized_view_mode;
+      }
+    }
+  }
+
+  if ($hook === 'taxonomy_term') {
+    /** @var \Drupal\taxonomy\Entity\Term $entity */
+    $entity = $variables['elements']['#taxonomy_term'];
+
+    if ($entity->bundle() === 'mie_demo_content') {
+      $info['theme path'] = $module_path;
+      $info['path'] = $module_path . '/templates';
+      $info['template'] = 'taxonomy-term--mie-demo-content';
+    }
+  }
+}

@@ -1,0 +1,156 @@
+<?php
+
+/**
+ * @file
+ * Entity Print installation file.
+ */
+
+use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_install().
+ */
+function entity_print_install() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $storage = $entity_type_manager->getStorage('entity_view_mode');
+
+  // Add a PDF view mode if the node entity type exists and the PDF view mode
+  // does not already exist.
+  if ($entity_type_manager->getDefinition('node', FALSE) && !$storage->load('node.pdf')) {
+    $storage->create([
+      'targetEntityType' => 'node',
+      'id' => 'node.pdf',
+      'status' => TRUE,
+      'label' => t('PDF'),
+    ])->save();
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function entity_print_requirements($phase) {
+  $requirements = [];
+  if ($phase !== 'runtime') {
+    return $requirements;
+  }
+
+  $definitions = \Drupal::service('plugin.manager.entity_print.print_engine')->getDefinitions();
+  $has_one_engine = FALSE;
+  foreach ($definitions as $definition) {
+    /** @var \Drupal\entity_print\Plugin\PrintEngineInterface $class */
+    $class = $definition['class'];
+    if ($class::dependenciesAvailable()) {
+      $has_one_engine = TRUE;
+    }
+  }
+
+  if (!$has_one_engine) {
+    $requirements['entity_print_pdf_engine_available'] = [
+      'title' => t('PDF Engine available'),
+      'description' => t('At least one valid PDF engine must be available to use Entity Print. See the <a href=":docs">documentation</a>', [
+        ':docs' => 'https://www.drupal.org/node/2706755',
+      ]),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+  return $requirements;
+}
+
+/**
+ * Clear the cache for a renamed service key.
+ */
+function entity_print_update_8104() {
+
+}
+
+/**
+ * Rename the plugin id.
+ */
+function entity_print_update_8103() {
+  if ($config = \Drupal::configFactory()->getEditable('system.action.entity_print_pdf_download_action')) {
+    $config
+      ->set('plugin', 'entity_print_download_action')
+      ->save(TRUE);
+  }
+}
+
+/**
+ * Upgrade from the 1.x to the 2.x branch.
+ */
+function entity_print_update_8102() {
+  // Install the new entity definitions.
+  \Drupal::entityDefinitionUpdateManager()->installEntityType(new ConfigEntityType([
+    'id' => 'print_engine',
+    'label' => new TranslatableMarkup('Print Engine'),
+    'config_prefix' => 'print_engine',
+    'admin_permission' => 'administer entity print',
+    'entity_keys' => ['id' => 'id'],
+    'config_export' => [
+      'id',
+      'settings',
+    ],
+  ]));
+
+  $config = \Drupal::configFactory()->getEditable('entity_print.settings');
+  $engine = $config->get('pdf_engine');
+  $config
+    ->set('print_engines.pdf_engine', $engine)
+    ->clear('pdf_engine')
+    ->save(TRUE);
+
+  // Copy settings across for the selected PDF engine and delete the old object.
+  if ($old_config = \Drupal::configFactory()->getEditable('entity_print.pdf_engine.' . $engine)) {
+    $new_config = \Drupal::configFactory()->getEditable('entity_print.print_engine.' . $engine);
+    $new_config
+      ->setData($old_config->getRawData())
+      ->save(TRUE);
+    $old_config->delete();
+  }
+
+  // Update the VBO action.
+  $old_config = \Drupal::configFactory()->getEditable('system.action.entity_print_download_action');
+  $new_config = \Drupal::configFactory()->getEditable('system.action.entity_print_pdf_download_action');
+  $new_config
+    ->setData($old_config->getRawData())
+    ->set('id', 'entity_print_pdf_download_action')
+    ->set('plugin', 'entity_print_pdf_download_action')
+    ->save(TRUE);
+  $old_config->delete();
+}
+
+/**
+ * Upgrade the permissions inline with the more granular permissions.
+ */
+function entity_print_update_8101() {
+  $roles = user_roles();
+  foreach ($roles as $role) {
+    if ($role->hasPermission('entity print access')) {
+      $role->grantPermission('bypass entity print access');
+      $role->revokePermission('entity print access');
+      $role->save();
+    }
+  }
+}
+
+/**
+ * Standardize configuration keys for page size and orientation.
+ */
+function entity_print_update_8201() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('entity_print.print_engine.') as $print_engine_config_name) {
+    $print_engine_config = $config_factory->getEditable($print_engine_config_name);
+    $orientation = $print_engine_config->get('settings.orientation');
+    if (NULL !== $orientation) {
+      $print_engine_config->set('settings.default_paper_orientation', $orientation);
+      $print_engine_config->clear('settings.orientation');
+    }
+    $page_format = $print_engine_config->get('settings.page_format');
+    if (NULL !== $page_format) {
+      $print_engine_config->set('settings.default_paper_size', $page_format);
+      $print_engine_config->clear('settings.page_format');
+    }
+    $print_engine_config->save(TRUE);
+  }
+}

@@ -1,0 +1,40 @@
+id: d7_autologout_settings
+label: Automated Logout Configuration
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: variable
+  variables:
+    - autologout_timeout
+    - autologout_max_timeout
+    - autologout_padding
+    - autologout_role_logout
+    - autologout_redirect_url
+    - autologout_no_dialog
+    - autologout_message
+    - autologout_inactivity_message
+    - autologout_enforce_admin
+    - autologout_use_alt_logout_method
+    - autologout_use_watchdog
+    - autologout_whitelisted_ip_addresses
+  source_module: autologout
+process:
+  timeout: autologout_timeout
+  max_timeout: autologout_max_timeout
+  padding: autologout_padding
+  role_logout: autologout_role_logout
+  redirect_url: '/{{autologout_redirect_url}}'
+  no_dialog: autologout_no_dialog
+  message: autologout_message
+  inactivity_message: autologout_inactivity_message
+  enforce_admin: autologout_enforce_admin
+  use_alt_logout_method: autologout_use_alt_logout_method
+  use_watchdog: autologout_use_watchdog
+  whitelisted_ip_addresses: autologout_whitelisted_ip_addresses
+destination:
+  plugin: config
+  config_name: autologout.settings
+migration_dependencies:
+  required:
+    - d7_user_role:*

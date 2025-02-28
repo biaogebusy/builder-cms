@@ -1,0 +1,29 @@
+{#
+/**
+ * @file
+ * Default theme implementation to present a menu link entity entity.
+ *
+ * Available variables:
+ * - menu_link_content: Menu link entity.
+ *
+ * @see template_preprocess_menu_link_content()
+ *
+ * @ingroup themeable
+ */
+#}
+
+{% set entityObject = elements['#menu_link_content'] %}
+{% set rendered_content = content|without('field_image') %}
+
+{% if content.field_image|render %}
+  {% set field_image_path = file_url(content.field_image[0]['#item'].entity.fileuri) %}
+{% endif %}
+
+{% if content %}
+<div class="menu-item-dropdown-content" style="background-image:url({{ field_image_path }});">
+  <div class="menu-item-dropdown-content-inner">
+    <h2>{{ entityObject.getTitle() }}</h2>
+    {{ rendered_content }}
+  </div>
+</div>
+{% endif %}

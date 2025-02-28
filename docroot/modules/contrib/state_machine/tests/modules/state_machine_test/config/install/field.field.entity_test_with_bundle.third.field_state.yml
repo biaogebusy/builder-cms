@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - entity_test.entity_test_bundle.third
+    - field.storage.entity_test_with_bundle.field_state
+  module:
+    - state_machine
+id: entity_test_with_bundle.third.field_state
+field_name: field_state
+entity_type: entity_test_with_bundle
+bundle: third
+label: State
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  workflow: two_transitions
+field_type: state

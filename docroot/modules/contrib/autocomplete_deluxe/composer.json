@@ -1,0 +1,33 @@
+{
+  "name": "drupal/autocomplete_deluxe",
+  "description": "Enhanced autocomplete using Jquery UI autocomplete.",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/autocomplete_deluxe",
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Vardot",
+      "homepage": "https://www.drupal.org/vardot",
+      "role": "Maintenance for D8 and D9 versions"
+    },
+    {
+      "name": "Mediacurrent",
+      "homepage": "https://www.drupal.org/mediacurrent",
+      "role": "Supporting organization"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/autocomplete_deluxe",
+    "source": "http://cgit.drupalcode.org/autocomplete_deluxe"
+  },
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
+  },
+  "require": {
+    "drupal/core": "^8 || ^9 || ^10"
+  }
+}

@@ -1,0 +1,39 @@
+entity.footable_breakpoint.collection:
+  path: '/admin/config/user-interface/footable'
+  defaults:
+    _entity_list: 'footable_breakpoint'
+    _title: 'FooTable'
+  requirements:
+    _permission: 'administer footable'
+
+entity.footable_breakpoint.add_form:
+  path: '/admin/config/user-interface/footable/breakpoint/add'
+  defaults:
+    _entity_form: 'footable_breakpoint.add'
+    _title: 'Add FooTable breakpoint'
+  requirements:
+    _permission: 'administer footable'
+
+entity.footable_breakpoint.edit_form:
+  path: '/admin/config/user-interface/footable/breakpoint/{footable_breakpoint}/edit'
+  defaults:
+    _entity_form: 'footable_breakpoint.edit'
+    _title: 'Edit FooTable breakpoint'
+  requirements:
+    _permission: 'administer footable'
+
+entity.footable_breakpoint.delete_form:
+  path: '/admin/config/user-interface/footable/breakpoint/{footable_breakpoint}/delete'
+  defaults:
+    _entity_form: 'footable_breakpoint.delete'
+    _title: 'Delete FooTable breakpoint'
+  requirements:
+    _permission: 'administer footable'
+
+footable.settings:
+  path: '/admin/config/user-interface/footable/settings'
+  defaults:
+    _form: '\Drupal\footable\Form\FooTableConfigForm'
+    _title: 'Settings'
+  requirements:
+    _permission: 'administer footable'

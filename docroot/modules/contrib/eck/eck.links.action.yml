@@ -1,0 +1,8 @@
+# Add some local task links to facilitate navigation.
+
+eck.entity_type.add.action:
+  route_name: eck.entity_type.add
+  title: 'Add entity type'
+  weight: 10
+  appears_on:
+    - eck.entity_type.list

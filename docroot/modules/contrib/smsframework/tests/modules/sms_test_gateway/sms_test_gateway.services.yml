@@ -1,0 +1,5 @@
+services:
+  sms_test_gateway.event_subscriber:
+    class: Drupal\sms_test_gateway\EventSubscriber\SmsTestGatewayEventSubscriber
+    tags:
+      - { name: event_subscriber }

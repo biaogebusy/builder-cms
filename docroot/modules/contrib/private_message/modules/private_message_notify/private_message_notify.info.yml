@@ -1,0 +1,13 @@
+name: Private Message Notify
+type: module
+description: Implements new message notifications.
+package: Private Message
+core_version_requirement: ^9.3 || ^10
+dependencies:
+  - message_notify:message_notify
+  - private_message:private_message
+
+# Information added by Drupal.org packaging script on 2023-10-09
+version: '3.0.0'
+project: 'private_message'
+datestamp: 1696872293

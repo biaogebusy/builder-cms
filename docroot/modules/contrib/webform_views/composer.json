@@ -1,0 +1,18 @@
+{
+  "name": "drupal/webform_views",
+  "type": "drupal-module",
+  "description": "Webform integration with views.",
+  "keywords": [
+    "Drupal"
+  ],
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/webform_views",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/webform_views",
+    "source": "https://git.drupalcode.org/project/webform_views"
+  },
+  "require": {
+    "drupal/webform": "^6.0"
+  }
+}

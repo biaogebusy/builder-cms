@@ -1,0 +1,13 @@
+langcode: en
+status: true
+label: Default
+id: default
+workflow: order_default
+numberPattern: order_default
+refresh_mode: customer
+refresh_frequency: 300
+sendReceipt: true
+receiptBcc: ''
+receiptSubject: ''
+traits: {  }
+locked: false

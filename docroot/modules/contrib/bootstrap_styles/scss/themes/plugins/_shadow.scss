@@ -1,0 +1,24 @@
+// Our styled radios.
+.bs-field-box-shadow {
+  .fieldset-wrapper > div {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+
+    > div {
+      @include bs_boxed_inputs($width: 25%, $max-width: 25%, $height: 50px, $bg: $box_input_bg, $active_color: inherit, $active_bg: $box_input_bg_checked);
+      @include bs_boxed_inputs_cards($height: 60px);
+
+      .input-icon {
+        display: none;
+      }
+    }
+  }
+}
+
+// Shadow Previewer Box
+.bs-shadow-preview {
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}

@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Test module for State Machine.
+ */
+
+use Drupal\views\EntityViewsData;
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function state_machine_test_entity_type_build(array &$entity_types) {
+  $entity_types['entity_test_with_bundle']->setHandlerClass('views_data', EntityViewsData::class);
+}
+
+/**
+ * Workflow callback for the "Second" bundle of entity_test_with_bundle.
+ */
+function state_machine_test_workflow_callback() {
+  return 'validation';
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function state_machine_test_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  if (isset($entity_types['entity_test_with_bundle'])) {
+    $entity_types['entity_test_with_bundle']->setLinkTemplate('state-transition-form', '/entity_test_with_bundle/{entity_test_with_bundle}/{field_name}/{transition_id}');
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function state_machine_test_module_implements_alter(&$implementations, $hook) {
+  // Ensure state_machine_entity_type_alter() runs after
+  // state_machine_test_entity_type_alter() which specifies the link template
+  // which is checked in state_machine_entity_type_alter().
+  if ($hook === 'entity_type_alter') {
+    $group = $implementations['state_machine'];
+    unset($implementations['state_machine']);
+    $implementations['state_machine'] = $group;
+  }
+}

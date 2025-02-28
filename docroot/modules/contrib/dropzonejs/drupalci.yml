@@ -1,0 +1,66 @@
+# This is the DrupalCI testbot build file for Drupal core.
+# https://www.drupal.org/drupalorg/docs/drupal-ci/customizing-drupalci-testing
+build:
+  assessment:
+    validate_codebase:
+      phplint:
+      csslint:
+        halt-on-fail: false
+      eslint:
+        # A test must pass eslinting standards check in order to continue processing.
+        halt-on-fail: false
+      phpcs:
+        # phpcs will use core's specified version of Coder.
+        sniff-all-files: false
+        halt-on-fail: false
+    testing:
+      container_command:
+        commands:
+         - "cd ${SOURCE_DIR}"
+         - "sudo -u www-data mkdir libraries"
+         - "sudo -u www-data curl https://codeload.github.com/enyo/dropzone/tar.gz/v5.5.0 --output dropzone.tar.gz --silent"
+         - "sudo -u www-data tar xzf dropzone.tar.gz"
+         - "sudo -u www-data mv dropzone-5.5.0 libraries/dropzone"
+        halt-on-fail: true
+      # run_tests task is executed several times in order of performance speeds.
+      # halt-on-fail can be set on the run_tests tasks in order to fail fast.
+      # suppress-deprecations is false in order to be alerted to usages of
+      # deprecated code.
+      run_tests.phpunit:
+        types: 'PHPUnit-Unit'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.simpletest:
+        types: 'Simpletest'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.build:
+        types: 'PHPUnit-Build'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.javascript:
+        concurrency: 15
+        types: 'PHPUnit-FunctionalJavascript'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      # Run nightwatch testing.
+      # @see https://www.drupal.org/project/drupal/issues/2869825
+      nightwatchjs:
+#      container_command.drupal_project_templates:
+#        commands:
+#          - "sudo -u www-data ${SOURCE_DIR}/core/tests/scripts/test_composer_project_templates.sh"
+#        halt-on-fail: true

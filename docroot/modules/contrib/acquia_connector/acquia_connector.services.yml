@@ -1,0 +1,17 @@
+services:
+  acquia_connector.init_subscriber:
+    class: Drupal\acquia_connector\EventSubscriber\InitSubscriber
+    arguments: ['@config.factory', '@state', '@cache.default', '@acquia_connector.spi']
+    tags:
+      - {name: event_subscriber}
+  acquia_connector.kernel_view.codestudio_message:
+    class: Drupal\acquia_connector\EventSubscriber\KernelView\CodeStudioMessage
+    arguments: ['@messenger']
+    tags:
+      - {name: event_subscriber}
+  acquia_connector.client:
+    class: Drupal\acquia_connector\Client
+    arguments: ['@config.factory', '@state', '@datetime.time']
+  acquia_connector.spi:
+    class: Drupal\acquia_connector\Controller\SpiController
+    arguments: ['@acquia_connector.client', '@config.factory', '@path_alias.manager']

@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default theme implementation of a range with a combined value.
+ *
+ * Available variables:
+ * - item: Range field item object.
+ * - field_prefix: The FIELD value prefix.
+ * - value_prefix: The combined value prefix.
+ * - value: Range field item combined value.
+ * - value_suffix: The combined value suffix.
+ * - field_suffix: The FIELD value suffix.
+ *
+ * @see \Drupal\range\Plugin\Field\FieldFormatter\RangeFormatterBase::viewElementCombined()
+ * @see template_preprocess()
+ *
+ * @ingroup themeable
+ */
+#}
+{{- field_prefix }}{{ value_prefix }}{{ value }}{{ value_suffix }}{{ field_suffix -}}

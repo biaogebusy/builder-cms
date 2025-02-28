@@ -1,0 +1,12 @@
+services:
+  sms_user.active_hours:
+    class: Drupal\sms_user\ActiveHours
+    arguments: ['@config.factory']
+  sms_user.account_registration:
+    class: Drupal\sms_user\AccountRegistration
+    arguments: ['@config.factory', '@token', '@sms.provider', '@sms.phone_number.verification']
+  sms_user.sms_events:
+    class: Drupal\sms_user\EventSubscriber\SmsEventSubscriber
+    arguments: ['@sms_user.account_registration']
+    tags:
+      - { name: event_subscriber }

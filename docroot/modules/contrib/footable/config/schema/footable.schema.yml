@@ -1,0 +1,14 @@
+# Schema for configuration files of the FooTable module.
+
+footable.footable_breakpoint.*:
+  type: config_entity
+  label: 'FooTable breakpoint'
+  mapping:
+    name:
+      type: string
+    label:
+      type: label
+      label: 'Label'
+    breakpoint:
+      type: integer
+      label: 'Breakpoint'

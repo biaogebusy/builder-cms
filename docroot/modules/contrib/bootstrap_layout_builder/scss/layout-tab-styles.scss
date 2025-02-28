@@ -1,0 +1,89 @@
+@import "variables";
+@import "mixins";
+
+#drupal-off-canvas {
+
+  // Container Type
+  //.blb_container_type {
+    //.fieldset-wrapper > div {
+      //display: flex;
+      //margin-bottom: 10px;
+
+      // Our actual form item.
+      //> div {
+        //@include blb_box_inputs;
+
+        //&:first-child input + label {
+        //  border-right: 0;
+        //}
+        //
+        //&:last-child input + label {
+        //  border-left: 0;
+        //}
+        //
+        //// Pill style toggle.
+        //&:first-child input + label {
+        //  border-radius: 8px 0 0 8px;
+        //}
+        //
+        //&:last-child input + label {
+        //  border-radius: 0 8px 8px 0;
+        //}
+      //}
+    //}
+  //}
+
+  // Graphical Layout Columns
+  .blb_breakpoint_cols {
+    label {
+      font-size: .875rem;
+      position: relative;
+      display: flex!important;
+      margin: 0 -5px;
+      cursor: pointer;
+
+      &:hover {
+        .bs_tooltip {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0px);
+        }
+
+        .blb_breakpoint_col {
+          background-color: $white;
+          color: $gray-444;
+        }
+      }
+    }
+
+    input {
+      opacity: 0;
+      height: 0;
+      display: block;
+
+      &:checked + label .blb_breakpoint_col {
+        color: $white;
+        background-color: $blue-277;
+      }
+    }
+  }
+
+  .blb_breakpoint_col {
+    padding: 6px 10px;
+    margin: 5px;
+    text-align: center;
+    color: $gray-444;
+    background-color: rgba($white, .7);
+    transition: all .25s ease-out;
+    border-radius: 3px;
+
+    &.bp-selected {
+      color: $white;
+      background-color: $blue-277;
+
+      &:hover {
+        color: $gray-444;
+      }
+    }
+  }
+}

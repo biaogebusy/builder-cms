@@ -1,0 +1,13 @@
+name: Json Editor
+type: module
+description: 'Json Editor display formatter'
+
+core: 8.x
+core_version_requirement: ^8 || ^9
+package: 'WEBSOLUTIONS Modules'
+
+configure: json_editor.admin
+# Information added by Drupal.org packaging script on 2019-03-22
+version: '8.x-1.0-beta1'
+project: 'json_editor'
+datestamp: 1553248695

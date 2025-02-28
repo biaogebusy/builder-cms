@@ -1,0 +1,39 @@
+build:
+  assessment:
+    validate_codebase:
+      phplint:
+      csslint:
+        halt-on-fail: false
+      eslint:
+        # A test must pass eslinting standards check in order to continue processing.
+        halt-on-fail: false
+      phpcs:
+        # phpcs will use core's specified version of Coder.
+        sniff-all-files: false
+        halt-on-fail: false
+      phpstan:
+        halt-on-fail: false
+    testing:
+      # container commands below install the ImageMagick executable.
+      container_command :
+        commands:
+          - "sudo apt-get update"
+          - "sudo apt-get install -y imagemagick graphicsmagick"
+          - "convert -version"
+          - "gm -version"
+          - "locale -a"
+      run_tests.phpunit:
+        types: 'PHPUnit-Unit'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false

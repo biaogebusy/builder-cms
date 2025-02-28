@@ -1,0 +1,4 @@
+services:
+  otp_login.OTP:
+    class: Drupal\otp_login\Otp
+    arguments: ['@datetime.time', '@sms.provider', '@user.data', '@entity_type.manager', '@config.factory']

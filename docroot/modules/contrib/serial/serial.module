@@ -1,0 +1,97 @@
+<?php
+
+/**
+ * @file
+ * The Serial module main file.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\node\Entity\Node;
+use Drupal\serial\SerialStorageInterface;
+
+/**
+ * Implements hook_help().
+ */
+function serial_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.serial':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Defines serial field type.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_create().
+ *
+ * @inheritdoc
+ */
+function serial_field_config_create(FieldConfig $field) {
+  if ($field->getType() == 'serial' && !$field->isDeleted()) {
+    // Create the assistant storage.
+    /** @var \Drupal\serial\SerialStorageInterface $serialStorage */
+    $serialStorage = \Drupal::getContainer()->get('serial.sql_storage');
+    $storageName = $serialStorage->createStorageName(
+      $field->getTargetEntityTypeId(),
+      $field->getTargetBundle(),
+      $field->getFieldStorageDefinition()->getName()
+    );
+    $serialStorage->createStorageFromName($storageName);
+    $field->save();
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ *
+ * @inheritdoc
+ */
+function serial_field_config_delete(FieldConfig $field) {
+  if ($field->getType() == 'serial') {
+    $serialStorage = \Drupal::getContainer()->get('serial.sql_storage');
+    $storageName = $serialStorage->createStorageName(
+      $field->getTargetEntityTypeId(),
+      $field->getTargetBundle(),
+      $field->getFieldStorageDefinition()->getName()
+    );
+    $serialStorage->dropStorageFromName($storageName);
+  }
+}
+
+/**
+ * Implements hook_clone_node_alter().
+ *
+ * @todo to review once node_clone have a stable release
+ */
+function serial_clone_node_alter(Node &$node, $context) {
+  // Reset values of all serial fields when cloning a node.
+  foreach (\Drupal::getContainer()->get('entity_field.manager')->getFieldDefinitions('node', $node->bundle()) as $field_name => $field_definition) {
+    if (!empty($field_definition->getTargetBundle())
+      && $field_definition->getType() == SerialStorageInterface::SERIAL_FIELD_TYPE) {
+      $node->{$field_name} = [];
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function serial_theme() {
+  // Register the theme for the serial default.
+  return ['serial_default' => ['variables' => ['serial_id' => NULL]]];
+}
+
+/**
+ * Theme function for the serial default.
+ *
+ * @param array $variables
+ *   Theme variables.
+ *
+ * @return array
+ *   Theme variables.
+ */
+function theme_serial_default(array $variables) {
+  return $variables['serial_id'];
+}

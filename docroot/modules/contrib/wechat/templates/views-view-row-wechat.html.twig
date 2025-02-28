@@ -1,0 +1,22 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display an item in a views wechat response.
+ *
+ * Available variables:
+ * - title: wechat response item title.
+ * - description: wechat response item description text.
+ * - pic_url: wechat response item picture url.
+ * - url: wechat response item url.
+ *
+ * @see template_preprocess_views_view_row_wechat()
+ *
+ * @ingroup themeable
+ */
+#}
+<item>
+  <Title><![CDATA[{{ title }}]]></Title>
+  <Description><![CDATA[{{ description }}]]></Description>
+  <PicUrl><![CDATA[{{ pic_url }}]]></PicUrl>
+  <Url><![CDATA[{{ url }}]]></Url>
+</item>

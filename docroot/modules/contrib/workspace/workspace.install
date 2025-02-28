@@ -1,0 +1,253 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the workspace module.
+ */
+
+use Drupal\Component\Utility\Crypt;
+use Drupal\multiversion\Entity\Workspace;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\workspace\Entity\Replication;
+
+/**
+ * Implementation of hook_install().
+ */
+function workspace_install() {
+  // Set workspace earlier to alter entities before anyone else does.
+  module_set_weight('workspace', 10);
+
+  // Add pointers for all existing workspaces.
+  foreach (Workspace::loadMultiple() as $workspace) {
+    \Drupal::service('workspace.entity_operations')->workspaceInsert($workspace);
+  }
+
+  $default_workspace_id = \Drupal::getContainer()->getParameter('workspace.default');
+  /** @var \Drupal\multiversion\Entity\WorkspaceInterface $stage */
+  $stage = Workspace::create(['machine_name' => 'stage', 'label' => 'Stage', 'type' => 'basic']);
+  $stage->set('upstream', $default_workspace_id);
+  $stage->save();
+
+  // Allow workspace entity route alterations.
+  \Drupal::service('entity_type.manager')->clearCachedDefinitions();
+  \Drupal::service('router.builder')->rebuild();
+}
+
+/**
+ * Allow "administer deployment" roles access to the Toolbar Update button.
+ */
+function workspace_update_8101() {
+  if (\Drupal::moduleHandler()->moduleExists('deploy')) {
+    $roles = \Drupal::entityTypeManager()
+      ->getStorage('user_role')
+      ->loadMultiple();
+    foreach ($roles as $role) {
+      if ($role->hasPermission('administer deployments')) {
+        $role->grantPermission('update any workspace from upstream');
+        $role->save();
+      }
+    }
+  }
+}
+
+/**
+ * Make sure all workspaces have a pointer.
+ */
+function workspace_update_8102() {
+  $workspaces = \Drupal::entityTypeManager()->getStorage('workspace')->loadMultiple();
+  $storage = \Drupal::entityTypeManager()->getStorage('workspace_pointer');
+  foreach ($workspaces as $workspace) {
+    $workspace_pointers = $storage->loadByProperties(['workspace_pointer' => $workspace->id()]);
+    if (empty($workspace_pointers)) {
+      /** @var \Drupal\workspace\WorkspacePointerInterface $pointer */
+      $pointer = $storage->create();
+      $pointer->setWorkspace($workspace);
+      $pointer->save();
+    }
+  }
+}
+
+/**
+ * Add the replication_status.
+ */
+function workspace_update_8103() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  // Add the replication status field to the replication entity type.
+  $replication_status = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Replication status'))
+    ->setDescription(new TranslatableMarkup('The status of the replication.'))
+    ->setRequired(TRUE)
+    ->setDefaultValue(Replication::FAILED)
+    ->setInitialValue(Replication::FAILED);
+  $definition_update_manager->installFieldStorageDefinition('replication_status', 'replication', 'workspace', $replication_status);
+
+  // Set the replication_status.
+  $entity_type = $definition_update_manager->getEntityType('replication');
+  \Drupal::database()->update($entity_type->getBaseTable())
+    ->fields(['replication_status' => Replication::REPLICATED])
+    ->isNotNull('replicated')
+    ->execute();
+}
+
+/**
+ * Populate the replication blocker key state variable.
+ */
+function workspace_update_8104() {
+  $state = \Drupal::state();
+  $replication_blocker_key = $state->get('workspace.replication_blocker_key');
+  if (!$replication_blocker_key) {
+    $replication_blocker_key = Crypt::randomBytesBase64(55);
+    $state->set('workspace.replication_blocker_key', $replication_blocker_key);
+  }
+}
+
+/**
+ * Update workspace pointer name field.
+ */
+function workspace_update_8105() {
+  // This update hook wasn't working, so it's been removed in favour of 8106.
+}
+
+/**
+ * Updates definitions of entity's type columns.
+ *
+ * @param string $entity_type_id
+ *   The type of entity.
+ * @param string[] $columns
+ *   The list of column names.
+ * @param string[] $tables
+ *   The list of tables to update the columns in.
+ *
+ * @throws \Exception
+ */
+function workspace_update_field_storage_definitions($entity_type_id, array $columns, array $tables) {
+  $database = \Drupal::database();
+  /* @var \Drupal\Core\Field\BaseFieldDefinition[] $base_field_definitions */
+  $base_field_definitions = \Drupal::service('entity_field.manager')->getBaseFieldDefinitions($entity_type_id);
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $existing_data = [];
+
+  foreach ($tables as $table) {
+    // Store existing data in memory.
+    $data = $database
+      ->select($table)
+      ->fields($table)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_ASSOC);
+
+    // Truncate the table to unfreeze modification of its schema only in
+    // case it's not empty.
+    if (!empty($data)) {
+      $database
+        ->truncate($table)
+        ->execute();
+
+      $existing_data[$table] = $data;
+    }
+  }
+
+  foreach ($columns as $column) {
+    $definition_update_manager->updateFieldStorageDefinition($base_field_definitions[$column]);
+  }
+
+  // Put the data back into the table.
+  foreach ($existing_data as $table => $entries) {
+    foreach ($entries as $entry) {
+      $database
+        ->insert($table)
+        ->fields($entry)
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Update workspace pointer name field again.
+ */
+function workspace_update_8106() {
+  workspace_update_field_storage_definitions('workspace_pointer', ['name'], ['workspace_pointer', 'workspace_pointer_revision']);
+}
+
+/**
+ * Make sure replication_status is a integer field type.
+ */
+function workspace_update_8107() {
+  workspace_update_field_storage_definitions('replication', ['replication_status', 'name'], ['replication']);
+}
+
+/**
+ * Add the fail_info field.
+ */
+function workspace_update_8108() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  // Add the replication status field to the replication entity type.
+  $replication_fail_info = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Replication fail info'))
+    ->setDescription(t('When a replication fails, it contains the info about the cause of the fail.'))
+    ->setRequired(FALSE)
+    ->setDefaultValue('')
+    ->setInitialValue('');
+  $definition_update_manager->installFieldStorageDefinition('fail_info', 'replication', 'workspace', $replication_fail_info);
+}
+
+/**
+ * Add the archive_source field.
+ */
+function workspace_update_8109() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  // Add the replication status field to the replication entity type.
+  $archive_source = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Archive source workspace flag'))
+    ->setDescription(t('The flag that marks if the source workspace should be archived if replication ends with success.'))
+    ->setRequired(FALSE)
+    ->setDefaultValue(FALSE)
+    ->setInitialValue(FALSE);
+  $definition_update_manager->installFieldStorageDefinition('archive_source', 'replication', 'workspace', $archive_source);
+}
+
+/**
+ * Add the doc_ids field.
+ */
+function workspace_update_8110() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  // Add the replication status field to the replication entity type.
+  $field = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Selected entity UUIDs for deployment'))
+    ->setDescription(t('If this field contains at leas one entity UUID, then it will deploy only changes for that entity.'))
+    ->setRequired(FALSE)
+    ->setDefaultValue('')
+    ->setInitialValue('')
+    ->setSetting('case_sensitive', TRUE);
+  $definition_update_manager->installFieldStorageDefinition('doc_ids', 'replication', 'workspace', $field);
+}
+
+/**
+ * Add the workspace_available field.
+ */
+function workspace_update_8111() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  // Add the workspace_available field to the workspace_pointer entity type.
+  $field = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Workspace available'))
+    ->setDescription(t('Keeps the availability of the referenced ' .
+      'workspace, this flag might not be accurate, the availability should ' .
+      'be checked regularly.'))
+    ->setRevisionable(TRUE)
+    ->setDefaultValue(TRUE);
+  $definition_update_manager->installFieldStorageDefinition('workspace_available', 'workspace_pointer', 'workspace', $field);
+  // Set all workspaces as available.
+  /** @var \Drupal\workspace\WorkspacePointerInterface[] $pointers */
+  $pointers = \Drupal::entityTypeManager()->getStorage('workspace_pointer')->loadMultiple();
+  foreach ($pointers as $pointer) {
+    $pointer->setWorkspaceAvailable()->save();
+  }
+}
+
+/**
+ * Delete the replication blocker key state variable.
+ */
+function workspace_update_8112() {
+  $state = \Drupal::state();
+  $state->delete('workspace.replication_blocker_key');
+}

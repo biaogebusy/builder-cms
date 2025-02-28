@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Installation and uninstallation functions.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function charts_google_requirements($phase) {
+  $requirements = [];
+
+  switch ($phase) {
+    case 'runtime':
+      $library_path = charts_google_find_library();
+
+      if (!$library_path) {
+        $requirements['charts_google_js'] = [
+          'title' => t('Google Charts Library'),
+          'value' => t('Not Installed'),
+          'severity' => REQUIREMENT_WARNING,
+          'description' => t('You are missing the Google Charts library in your Drupal installation directory. Please see the README file inside charts_google for instructions to install the library.'),
+        ];
+      }
+      else {
+        $requirements['charts_google_js'] = [
+          'title' => t('Google Charts Library'),
+          'severity' => REQUIREMENT_OK,
+          'value' => t('Installed'),
+        ];
+      }
+      break;
+  }
+
+  return $requirements;
+}
+
+/**
+ * Get the location of the Google Charts library.
+ *
+ * @return string
+ *   The location of the library, or FALSE if the library isn't installed.
+ */
+function charts_google_find_library() {
+  // The following logic is taken from libraries_get_libraries()
+  $searchdir = [];
+
+  // Similar to 'modules' and 'themes' directories inside an installation
+  // profile, installation profiles may want to place libraries into a
+  // 'libraries' directory.
+  $searchdir[] = 'profiles/' . \Drupal::installProfile() . '/libraries';
+
+  // Always search libraries.
+  $searchdir[] = 'libraries';
+
+  // Also search sites/<domain>/*.
+  $container = \Drupal::getContainer();
+  $site_path = $container->getParameter('site.path');
+  $site_path = explode('/', $site_path);
+  $site_name = $site_path[1];
+  $searchdir[] = $site_name . '/libraries';
+
+  foreach ($searchdir as $dir) {
+    if (file_exists($dir . '/google_charts/loader.js')) {
+      return $dir . '/google_charts';
+    }
+  }
+
+  return FALSE;
+}

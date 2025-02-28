@@ -1,0 +1,67 @@
+services:
+  jsonapi_extras.resource_type.repository:
+    public: false
+    class: Drupal\jsonapi_extras\ResourceType\ConfigurableResourceTypeRepository
+    decorates: jsonapi.resource_type.repository
+    parent: jsonapi.resource_type.repository
+    calls:
+      - [setEntityRepository, ['@entity.repository']]
+      - [setEnhancerManager, ['@plugin.manager.resource_field_enhancer']]
+      - [setConfigFactory, ['@config.factory']]
+
+  serializer.normalizer.field_item.jsonapi_extras:
+    class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\FieldItemNormalizerImpostor
+    decorates: serializer.normalizer.field_item.jsonapi
+    arguments:
+      - '@serializer.normalizer.field_item.jsonapi_extras.inner'
+      - '@entity_type.manager'
+      - '@plugin.manager.resource_field_enhancer'
+
+  serializer.normalizer.resource_identifier.jsonapi_extras:
+    class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\ResourceIdentifierNormalizerImpostor
+    decorates: serializer.normalizer.resource_identifier.jsonapi
+    arguments:
+      - '@serializer.normalizer.resource_identifier.jsonapi_extras.inner'
+      - '@jsonapi.resource_type.repository'
+
+  serializer.normalizer.resource_object.jsonapi_extras:
+    class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\ResourceObjectNormalizerImpostor
+    decorates: serializer.normalizer.resource_object.jsonapi
+    arguments: ['@serializer.normalizer.resource_object.jsonapi_extras.inner']
+
+  serializer.normalizer.content_entity.jsonapi_extras:
+    class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\ContentEntityDenormalizerImpostor
+    decorates: serializer.normalizer.content_entity.jsonapi
+    arguments: ['@serializer.normalizer.content_entity.jsonapi_extras.inner']
+
+  serializer.normalizer.config_entity.jsonapi_extras:
+    class: Drupal\jsonapi\Normalizer\ImpostorFrom\jsonapi_extras\ConfigEntityDenormalizerImpostor
+    decorates: serializer.normalizer.config_entity.jsonapi
+    arguments: ['@serializer.normalizer.config_entity.jsonapi_extras.inner']
+
+  plugin.manager.resource_field_enhancer:
+    class: Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerManager
+    parent: default_plugin_manager
+
+  # Event subscribers.
+  jsonapi_extras.config_subscriber:
+    class: Drupal\jsonapi_extras\EventSubscriber\ConfigSubscriber
+    arguments: ['@kernel', '@router.builder']
+    tags:
+      - { name: event_subscriber }
+
+  jsonapi_extras.entity.to_jsonapi:
+    class: Drupal\jsonapi_extras\EntityToJsonApi
+    arguments:
+      - '@http_kernel.basic'
+      - '@jsonapi.resource_type.repository'
+      - '@session'
+      - '@request_stack'
+
+  jsonapi_extras.jsonapi_build_subscriber:
+    class: Drupal\jsonapi_extras\EventSubscriber\JsonApiBuildSubscriber
+    arguments:
+      - '@jsonapi_extras.resource_type.repository'
+      - '@config.factory'
+    tags:
+      - { name: event_subscriber }

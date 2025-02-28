@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.node_type_a
+  module:
+    - text
+id: node.node_type_a.body
+field_name: body
+entity_type: node
+bundle: node_type_a
+label: Body
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: true
+field_type: text_with_summary

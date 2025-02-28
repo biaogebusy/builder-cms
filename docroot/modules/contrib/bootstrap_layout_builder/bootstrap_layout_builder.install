@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * @file
+ * Installation and updating routines.
+ */
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Creates the new Bootstrap Layout Builder settings.
+ */
+function bootstrap_layout_builder_update_8001() {
+  $path = \Drupal::service('extension.list.module')->getPath('bootstrap_layout_builder') . '/config/install';
+  $source = new FileStorage($path);
+  $config_name = 'bootstrap_layout_builder.settings';
+
+  /** @var \Drupal\Core\Config\StorageInterface $active_storage */
+  $active_storage = \Drupal::service('config.storage');
+  $active_storage->write($config_name, $source->read($config_name));
+}
+
+/**
+ * Import new configs for breakpoints, layouts and its options.
+ */
+function bootstrap_layout_builder_update_8002() {
+  // Enable the new dependency modules.
+  \Drupal::service('module_installer')->install(['media_library_form_element', 'media_library_theme_reset']);
+  // Re-import the default configs.
+  \Drupal::service('config.installer')->installDefaultConfig('module', 'bootstrap_layout_builder');
+}
+
+/**
+ * Update entity definitions, necessary if notices appear on site status page.
+ */
+function bootstrap_layout_builder_update_8003() {
+  $blb_breakpoint_entity_type = \Drupal::entityTypeManager()->getDefinition('blb_breakpoint');
+  $blb_layout_entity_type = \Drupal::entityTypeManager()->getDefinition('blb_layout');
+  $blb_layout_option_entity_type = \Drupal::entityTypeManager()->getDefinition('blb_layout_option');
+
+  $entityUpdateManager = \Drupal::entityDefinitionUpdateManager();
+  $entityUpdateManager->installEntityType($blb_breakpoint_entity_type);
+  $entityUpdateManager->installEntityType($blb_layout_entity_type);
+  $entityUpdateManager->installEntityType($blb_layout_option_entity_type);
+}
+
+/**
+ * Make sure that dependent Bootstrap Styles module is installed.
+ */
+function bootstrap_layout_builder_update_8004() {
+  \Drupal::service('module_installer')->install(['bootstrap_styles']);
+}
+
+/**
+ * Add 'default_breakpoints' field to 'blb_layout_option' entities.
+ */
+function bootstrap_layout_builder_update_8005() {
+  $field_storage_definition = BaseFieldDefinition::create('default_breakpoints')
+    ->setLabel(t('Default Breakpoints'))
+    ->setDescription(t('Breakpoints you want to make this layout option the default.'))
+    ->setRevisionable(FALSE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('default_breakpoints', 'blb_layout_option', 'bootstrap_layout_builder', $field_storage_definition);
+}

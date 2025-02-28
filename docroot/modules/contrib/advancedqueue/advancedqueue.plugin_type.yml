@@ -1,0 +1,12 @@
+advancedqueue.backend:
+  label: AdvancedQueue backend
+  provider: advancedqueue
+  plugin_manager_service_id: plugin.manager.advancedqueue_backend
+  plugin_configuration_schema_id: advancedqueue.backend.[id]
+  plugin_definition_decorator_class: Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator
+
+advancedqueue.job_type:
+  label: AdvancedQueue job type
+  provider: advancedqueue
+  plugin_manager_service_id: plugin.manager.advancedqueue_job_type
+  plugin_definition_decorator_class: Drupal\plugin\PluginDefinition\ArrayPluginDefinitionDecorator

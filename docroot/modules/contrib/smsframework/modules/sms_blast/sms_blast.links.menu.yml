@@ -1,0 +1,4 @@
+sms_blast.blast:
+  title: 'SMS Blast'
+  description: 'Send SMS to all registered users on this site.'
+  route_name: sms_blast.blast

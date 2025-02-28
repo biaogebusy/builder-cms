@@ -1,0 +1,5 @@
+entity.footable_breakpoint.add_form:
+  route_name: entity.footable_breakpoint.add_form
+  title: 'Add FooTable breakpoint'
+  appears_on:
+    - entity.footable_breakpoint.collection

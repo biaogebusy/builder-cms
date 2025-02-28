@@ -1,0 +1,7 @@
+charts_api_example.display:
+  path: /charts/example/display
+  defaults:
+    _controller: '\Drupal\charts_api_example\Controller\ChartsApiExample::display'
+    _title: 'How to Use the Charts API'
+  requirements:
+    _permission: 'access content'

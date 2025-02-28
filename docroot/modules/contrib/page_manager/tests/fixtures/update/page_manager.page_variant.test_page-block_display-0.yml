@@ -1,0 +1,46 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - page_manager.page.test_page
+  module:
+    - ctools
+    - user
+id: test_page-block_display-0
+label: 'Block page'
+variant: block_display
+variant_settings:
+  blocks:
+    29550d0e-39f1-4fb9-bad6-c390dda5bd00:
+      id: 'entity_view:user'
+      label: 'Entity view (User)'
+      provider: ctools
+      label_display: visible
+      view_mode: default
+      region: top
+      weight: 0
+      uuid: 29550d0e-39f1-4fb9-bad6-c390dda5bd00
+      context_mapping:
+        entity: current_user
+  id: block_display
+  uuid: 19f8aeb3-5ba1-4abc-859f-0bcec05ada58
+  label: null
+  weight: 0
+  page_title: ''
+page: test_page
+weight: 0
+selection_criteria:
+  -
+    id: user_role
+    roles:
+      authenticated: authenticated
+    negate: false
+    context_mapping:
+      user: current_user
+  -
+    id: request_path
+    pages: /test-url
+    negate: false
+    context_mapping: {  }
+selection_logic: and
+static_context: {  }

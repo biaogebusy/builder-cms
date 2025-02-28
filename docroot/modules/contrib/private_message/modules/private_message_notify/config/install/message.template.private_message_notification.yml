@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies: {  }
+template: private_message_notification
+label: 'Private Message Notification'
+description: 'The notification from a private message'
+text:
+  -
+    value: "Private message at [site:name]\r\n"
+    format: basic_html
+  -
+    value: "[user:display-name],\r\n\r\nYou have received a private message at [site:name] from [private_message:author-name]\r\n\r\nThe message is as follows:\r\n\r\n[private_message:message]\r\n\r\nYou can view the entire thread and reply to this message at:\r\n\r\n[private_message_thread:url]\r\n\r\n\r\nThank you,\r\n\r\n-- [site:name]\r\n"
+    format: basic_html
+settings:
+  'token options':
+    clear: false
+    'token replace': true
+  purge_override: false
+  purge_methods: {  }

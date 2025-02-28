@@ -1,0 +1,12 @@
+{
+  "name": "drupal/key_value",
+  "description": "Extends the core key-value API with a backend for lists and sorted sets that you can do range queries on.",
+  "type": "drupal-module",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.drupal.org/project/key_value",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/key_value",
+    "source": "https://git.drupal.org/project/key_value.git"
+  }
+}

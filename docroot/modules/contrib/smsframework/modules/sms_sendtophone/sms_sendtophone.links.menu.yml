@@ -1,0 +1,5 @@
+sms_sendtophone.admin_overview:
+  route_name: sms_sendtophone.admin_overview
+  title: 'Send to phone'
+  description: 'Configure send to phone functinality.'
+  parent: sms.admin

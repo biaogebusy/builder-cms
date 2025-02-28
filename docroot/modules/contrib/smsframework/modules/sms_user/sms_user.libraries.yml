@@ -1,0 +1,5 @@
+admin:
+  version: 0
+  css:
+    theme:
+      css/sms_user.admin.css: {}

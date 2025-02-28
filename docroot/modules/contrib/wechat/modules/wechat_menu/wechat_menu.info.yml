@@ -1,0 +1,12 @@
+name: Wechat Menu
+description: 'Wechat Menu.'
+# core: 8.x
+package: Wechat
+type: module
+dependencies:
+  - drupal:wechat
+# Information added by Drupal.org packaging script on 2016-12-01
+version: '8.x-1.0-beta3'
+core_version_requirement: ^8 || ^9
+project: 'wechat'
+datestamp: 1480586289

@@ -1,0 +1,12 @@
+name: 'Webform Attachment'
+type: module
+description: 'Provides an element that generates or loads a file that can be attached to a submission or email.'
+package: Webform
+core_version_requirement: ^9.4 || ^10
+dependencies:
+  - 'webform:webform'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

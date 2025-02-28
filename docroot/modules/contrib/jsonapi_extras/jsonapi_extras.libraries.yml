@@ -1,0 +1,23 @@
+admin:
+  version: VERSION
+  css:
+    theme:
+      css/jsonapi_extras.admin.css: {}
+  js:
+    js/jsonapi_extras.admin.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+
+expandable_rows_table:
+  version: VERSION
+  css:
+    theme:
+      css/jsonapi_extras.expandable_rows_table.css: {}
+  js:
+    js/jsonapi_extras.expandable_rows_table.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

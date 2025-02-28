@@ -1,0 +1,13 @@
+recently_read.configuration:
+  type: config_object
+  label: 'Recently read config.'
+  mapping:
+    delete_config:
+      type: string
+      label: 'Delete config'
+    delete_time:
+      type: string
+      label: 'Delete time'
+    count:
+      type: string
+      label: 'Max records'

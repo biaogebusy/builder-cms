@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+id: mie-demo-base-menu
+label: 'Menu Item Extras Demo Menu'
+description: 'Demo menu for Menu Item Extras module'
+locked: false

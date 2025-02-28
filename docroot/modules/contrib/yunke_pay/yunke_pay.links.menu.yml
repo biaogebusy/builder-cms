@@ -1,0 +1,6 @@
+yunke_pay.settings.pay:
+  title: 'Payment settings'
+  description: 'Yunke payment settings'
+  route_name: yunke_pay.settings
+  weight: 10
+  parent: system.admin_config_system

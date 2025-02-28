@@ -1,0 +1,257 @@
+<?php
+
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\multiversion\Entity\WorkspaceInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\workspace\Entity\Replication;
+use Drupal\workspace\Entity\WorkspacePointer;
+
+/**
+ * Implements hook_requirements().
+ */
+function workspace_requirements($phase) {
+  if ($phase === 'runtime') {
+    $requirements = [];
+    $state = \Drupal::state();
+    $replication_settings_url = Url::fromRoute('replication.settings_form')->toString();
+    $last_replication_failed = $state->get('workspace.last_replication_failed', NULL);
+    if ($last_replication_failed === TRUE) {
+      $requirements['last_replication_status'] = [
+        'title' => t('Last replication status'),
+        'value' => t('Failed'),
+        'description' => t('Last replication failed, creating and running deployments is not allowed now. After you fix the problem that caused the last replication fail, access <strong><a href=":url">this</a></strong> link to reset the replication blocker.', [':url' => $replication_settings_url]),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    elseif ($last_replication_failed === FALSE) {
+      $requirements['last_replication_status'] = [
+        'title' => t('Last replication status'),
+        'value' => t('Successful'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+    return $requirements;
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function workspace_entity_type_alter(array &$entity_types) {
+  \Drupal::service('workspace.entity_type_info')->entityTypeAlter($entity_types);
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function workspace_entity_type_build(array &$entity_types) {
+  \Drupal::service('workspace.entity_type_info')->entityTypeBuild($entity_types);
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function workspace_entity_base_field_info(\Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+  return \Drupal::service('workspace.entity_type_info')->entityBaseFieldInfo($entity_type);
+}
+
+/**
+ * Default value callback for 'upstream' base field definition.
+ *
+ * @return array
+ */
+function workspace_active_id() {
+  /** @var \Drupal\multiversion\Entity\Workspace $active_workspace */
+  $active_workspace = \Drupal::service('workspace.manager')->getActiveWorkspace();
+  if ($active_workspace instanceof WorkspaceInterface) {
+    return [$active_workspace->id()];
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert()
+ *
+ * @param \Drupal\multiversion\Entity\WorkspaceInterface $workspace
+ */
+function workspace_workspace_insert(WorkspaceInterface $workspace) {
+  \Drupal::service('workspace.entity_operations')->workspaceInsert($workspace);
+}
+
+function workspace_pointer_allowed_values(FieldStorageDefinitionInterface $definition, FieldableEntityInterface $entity = NULL, &$cacheable) {
+  return \Drupal\workspace\Entity\Replication::getPointerAllowedValues($definition, $entity, $cacheable);
+}
+
+/**
+ * Implements hook_toolbar().
+ */
+function workspace_toolbar() {
+  return \Drupal::service('workspace.toolbar')->toolbar();
+}
+
+/**
+ * Implements hook_entity_access().
+ */
+function workspace_entity_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  return \Drupal::service('workspace.entity_access')->entityAccess($entity, $operation, $account);
+}
+
+/**
+ * Implements hook_entity_create_access().
+ */
+function workspace_entity_create_access(AccountInterface $account, array $context, $entity_bundle) {
+  return \Drupal::service('workspace.entity_access')->entityCreateAccess($account, $context, $entity_bundle);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ */
+function workspace_workspace_access(EntityInterface $entity, $operation, AccountInterface $account) {
+  return \Drupal::service('workspace.entity_access')->workspaceAccess($entity, $operation, $account);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_create_access().
+ */
+function workspace_workspace_create_access(AccountInterface $account, array $context, $entity_bundle) {
+  return \Drupal::service('workspace.entity_access')->workspaceCreateAccess($account, $context, $entity_bundle);
+}
+
+
+/**
+ * Implements hook_theme().
+ *
+ * @param $existing
+ * @param $type
+ * @param $theme
+ * @param $path
+ * @return array
+ */
+function workspace_theme($existing, $type, $theme, $path) {
+  return [
+    'workspace_add_list' => [
+      'variables' => ['content' => NULL],
+    ],
+    'workspace_rev' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_HOOK
+ */
+function workspace_preprocess_workspace_add_list(&$variables) {
+  if (!empty($variables['content'])) {
+    foreach ($variables['content'] as $type) {
+      $variables['types'][$type->id()]['label'] = $type->label();
+      $options = ['query' => \Drupal::request()->query->all()];
+      $variables['types'][$type->id()]['url'] = Url::fromRoute('entity.workspace.add_form', ['workspace_type' => $type->id()], $options);
+    }
+  }
+}
+
+/**
+ * Prepares variables for revision templates.
+ */
+function workspace_preprocess_workspace_rev(&$variables) {
+  $uuid = $variables['elements']['#uuid'];
+  $rev = $variables['elements']['#rev'];
+  $rev_info = array_merge(
+    \Drupal::service('multiversion.entity_index.rev')->get("$uuid:$rev"),
+    $variables['elements']['#rev_info']
+  );
+
+  $variables = array_merge($variables, $rev_info);
+
+  list($i) = explode('-', $rev);
+  // Apart from the index length, we want 7 characters plus dash and ellipsis.
+  $length = strlen($i) + 9;
+  $title = Unicode::truncate($rev, $length, FALSE, TRUE);
+
+  if (!empty($rev_info['revision_id'])) {
+    $entity_revision = \Drupal::entityTypeManager()->getStorage($rev_info['entity_type_id'])->loadRevision($rev_info['revision_id']);
+    $variables['title'] = Link::fromTextAndUrl($title, $entity_revision->toUrl('revision'));
+  }
+  else {
+    $variables['title'] = $title;
+  }
+}
+
+/**
+ * Implements hook_help().
+ */
+function workspace_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.workspace':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The <a href="@link">Workspace module</a> Provides the ability to have multiple workspaces on a single site to facilitate things like full-site preview and content staging.', ['@link' => 'https://www.drupal.org/project/workspace']) . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function workspace_menu_local_tasks_alter(&$data, $route_name) {
+  if ($route_name == 'entity.replication.collection') {
+    foreach ($data['tabs'][0] as $href => $tab_data) {
+      if (strpos($href, 'field_ui.fields:') === 0) {
+        unset($data['tabs'][0][$href]);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_queue_info_alter().
+ */
+function workspace_queue_info_alter(&$queues) {
+  $replication_blocked = \Drupal::state()->get('workspace.last_replication_failed', FALSE);
+  if (isset($queues['workspace_replication']) && $replication_blocked) {
+    // Let's spend 60 seconds instead of 600 seconds when the replication is
+    // blocked.
+    $queues['workspace_replication']['cron']['time'] = 60;
+  }
+}
+
+/**
+ * Implements hook_multiversion_workspace_predelete().
+ *
+ * @param \Drupal\multiversion\Entity\WorkspaceInterface $workspace
+ *
+ * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+ * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+ * @throws \Drupal\Core\Entity\EntityStorageException
+ */
+function workspace_multiversion_workspace_predelete(WorkspaceInterface $workspace) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $workspace_pointer = WorkspacePointer::loadFromWorkspace($workspace);
+  if (!empty($workspace_pointer)) {
+    // Also mark as failed all deployments that have as source or target
+    // the deleted workspace.
+    $deployments = $entity_type_manager
+      ->getStorage('replication')
+      ->loadByProperties(['source' => $workspace_pointer->id()]);
+    $deployments += $entity_type_manager
+      ->getStorage('replication')
+      ->loadByProperties(['target' => $workspace_pointer->id()]);
+    /** @var Replication $deployment */
+    foreach ($deployments as $deployment) {
+      $replication_status = $deployment->getReplicationStatus();
+      if (!in_array($replication_status, [Replication::QUEUED, Replication::REPLICATING])) {
+        continue;
+      }
+      $deployment
+        ->setReplicationStatusFailed()
+        ->setReplicationFailInfo(t('This deployment has been automatically marked as failed because source or target workspace has been deleted.'))
+        ->save();
+    }
+    $workspace_pointer->delete();
+  }
+}

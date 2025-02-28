@@ -1,0 +1,16 @@
+{
+    "require": {
+        "doctrine/collections": {
+            "version": "1.8.0",
+            "url": "https://github.com/doctrine/collections/archive/1.8.0.zip"
+        },
+        "doctrine/deprecations": {
+            "version": "v1.0.0",
+            "url": "https://github.com/doctrine/deprecations/archive/v1.0.0.zip"
+        },
+        "commerceguys/addressing": {
+            "version": "v1.4.2",
+            "url": "https://github.com/commerceguys/addressing/archive/v1.4.2.zip"
+        }
+    }
+}

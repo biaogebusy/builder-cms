@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default theme implementation for image_effects color details.
+ *
+ * @ingroup themeable
+ */
+#}
+{% if color %}
+  {% if border %}
+	<span class='image-effects-color-box' style='background-color: {{ color }}; color: {{ color }}; border-color: {{ border_color }};'>M</span> {{ color }}
+  {% else %}
+	<span class='image-effects-color-box' style='background-color: {{ color }}; color: {{ color }}; '>M</span> {{ color }}
+  {% endif %}
+  {% if color_opacity < 100 %}
+    {{ 'opacity'|t  }}: {{ color_opacity }}%
+  {% endif %}
+{% else %}
+  {{ 'Transparent'|t  }}
+{% endif %}

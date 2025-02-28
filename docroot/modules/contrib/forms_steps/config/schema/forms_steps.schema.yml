@@ -1,0 +1,109 @@
+# Schema for the configuration files of the FormsSteps module.
+
+forms_steps.forms_steps.*:
+  type: config_entity
+  label: 'FormsSteps'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: text
+      label: 'Administrative description'
+    progress_steps_links_saved_only:
+      type: boolean
+      label: 'Show links only if concerning step has been saved to the database'
+    progress_steps_links_saved_only_next:
+      type: boolean
+      label: 'Show link of the step following the last step that has been saved to the database'
+    redirection_policy:
+      type: string
+      label: 'Redirection policy'
+    redirection_target:
+      type: string
+      label: 'Redirection target'
+    steps:
+      type: sequence
+      label: 'Steps'
+      sequence:
+        type: mapping
+        label: 'Step'
+        mapping:
+          label:
+            type: label
+            label: 'Label'
+          weight:
+            type: integer
+            label: 'Weight'
+          entity_type:
+            type: string
+            label: 'Entity Type'
+          entity_bundle:
+            type: string
+            label: 'Node Type'
+          form_mode:
+            type: string
+            label: 'Form mode'
+          url:
+            type: string
+            label: 'Url'
+          submitLabel:
+            type: string
+            label: 'Submit Label'
+          cancelLabel:
+            type: string
+            label: 'Cancel Label'
+          cancelRoute:
+            type: string
+            label: 'Cancel Route'
+          cancelStep:
+            type: string
+            label: 'Cancel Step'
+          cancelStepMode:
+            type: string
+            label: 'Cancel Step Mode'
+          previousLabel:
+            type: string
+            label: 'Previous Label'
+          hideDelete:
+            type: integer
+            label: 'Hide delete'
+          deleteLabel:
+            type: string
+            label: 'Delete Label'
+          displayPrevious:
+            type: integer
+            label: 'Display Previous'
+    progress_steps:
+      type: sequence
+      label: 'progress steps'
+      sequence:
+        type: mapping
+        label: 'progress step'
+        mapping:
+          label:
+            type: label
+            label: 'Label'
+          weight:
+            type: integer
+            label: 'Weight'
+          routes:
+            type: sequence
+            label: 'Routes'
+            sequence:
+              type: mapping
+              route:
+                type: string
+          link:
+            type: string
+            label: 'Link'
+          link_visibility:
+            type: sequence
+            label: 'Link visibility'
+            sequence:
+              type: mapping
+              step:
+                type: string

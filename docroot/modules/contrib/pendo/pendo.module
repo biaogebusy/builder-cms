@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Contains pendo.module.
+ */
+
+use Drupal\user\Entity\User;
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function pendo_preprocess_html(&$variables) {
+  $variables['#attached']['library'][] = 'pendo/pendo-js';
+
+  // Use only Strings, Numbers, or Bools for value types.
+  $variables['#attached']['drupalSettings']['pendo']['api_key'] = \Drupal::config('pendo.settings')->get('api_key');
+  $variables['#attached']['drupalSettings']['pendo']['data']['account']['id'] = \Drupal::config('system.site')->get('uuid');
+  $variables['#attached']['drupalSettings']['pendo']['data']['visitor']['id'] = User::load(\Drupal::currentUser()->id())->uuid();
+  $variables['#attached']['drupalSettings']['pendo']['data']['visitor']['email'] = \Drupal::currentUser()->getEmail();
+}

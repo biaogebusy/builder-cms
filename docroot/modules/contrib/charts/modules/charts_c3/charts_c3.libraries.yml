@@ -1,0 +1,36 @@
+charts_c3:
+  version: 1.x
+  js:
+    js/charts_c3.js: { weight: -1 }
+  dependencies:
+    - charts/global
+    - core/drupal
+    - core/once
+d3:
+  remote: 'https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js'
+  version: 5.16.0
+  license:
+    name: BSD
+    url: 'https://en.wikipedia.org/wiki/BSD_licenses'
+    gpl-compatible: false
+  cdn:
+    /libraries/d3/: https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/
+  js:
+    /libraries/d3/d3.min.js: {  }
+c3:
+  remote: 'https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.min.js'
+  version: 0.7.20
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+    gpl-compatible: true
+  cdn:
+    /libraries/c3/: https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/
+  css:
+    theme:
+      /libraries/c3/c3.min.css: {  }
+  js:
+    /libraries/c3/c3.min.js: {  }
+  dependencies:
+    - charts_c3/charts_c3
+    - charts_c3/d3

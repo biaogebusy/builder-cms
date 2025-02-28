@@ -1,0 +1,34 @@
+<?php
+
+namespace Drupal\{{ machine_name }}\Plugin\Validation\Constraint;
+
+use Symfony\Component\Validator\Constraint;
+
+/**
+ * Provides {{ plugin_label|article }} constraint.
+ *
+ * @Constraint(
+ *   id = "{{ plugin_id }}",
+ *   label = @Translation("{{ plugin_label }}", context = "Validation"),
+ * )
+{% if input_type == 'entity' %}
+ *
+ * @DCG
+ * To apply this constraint, see https://www.drupal.org/docs/drupal-apis/entity-api/entity-validation-api/providing-a-custom-validation-constraint.
+{% elseif input_type == 'item_list' %}
+ *
+ * @DCG
+ * To apply this constraint on third party entity types implement either
+ * hook_entity_base_field_info_alter() or hook_entity_bundle_field_info_alter().
+{% elseif input_type == 'item' %}
+ *
+ * @DCG
+ * To apply this constraint on third party field types. Implement
+ * hook_field_info_alter().
+{% endif %}
+ */
+class {{ class }} extends Constraint {
+
+  public $errorMessage = 'The error message.';
+
+}

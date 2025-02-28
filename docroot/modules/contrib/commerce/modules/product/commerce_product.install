@@ -1,0 +1,294 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Product module.
+ */
+
+use Drupal\commerce\CommerceContentEntityStorageSchema;
+use Drupal\commerce_product\Entity\Product;
+use Drupal\commerce_product\Entity\ProductVariation;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_install().
+ */
+function commerce_product_install() {
+  // Allow all roles to view published products.
+  user_role_grant_permissions(AccountInterface::ANONYMOUS_ROLE, ['view commerce_product']);
+  user_role_grant_permissions(AccountInterface::AUTHENTICATED_ROLE, ['view commerce_product']);
+}
+
+/**
+ * Change the path field to computed.
+ */
+function commerce_product_update_8201() {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($entity_definition_update_manager->getEntityType('commerce_product')) {
+    // Computed field definitions are not tracked by the entity definition
+    // update manager, so remove them.
+    $storage_definition = $entity_definition_update_manager->getFieldStorageDefinition('path', 'commerce_product');
+    if ($storage_definition) {
+      $entity_definition_update_manager->uninstallFieldStorageDefinition($storage_definition);
+    }
+  }
+}
+
+/**
+ * Set the 'published' entity key.
+ */
+function commerce_product_update_8202() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $definition_update_manager->getEntityType('commerce_product');
+  $keys = $entity_type->getKeys();
+  $keys['published'] = 'status';
+  unset($keys['status']);
+  $entity_type->set('entity_keys', $keys);
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Update the product 'status' field.
+ */
+function commerce_product_update_8203() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setName('status')
+    ->setTargetEntityTypeId('commerce_product')
+    ->setLabel(t('Published'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue(TRUE)
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => TRUE,
+      ],
+      'weight' => 90,
+    ])
+    ->setDisplayConfigurable('form', TRUE);
+
+  $definition_update_manager->updateFieldStorageDefinition($storage_definition);
+}
+
+/**
+ * Create the 'list_price' field.
+ */
+function commerce_product_update_8204() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('commerce_price')
+    ->setLabel(t('List price'))
+    ->setDescription(t('The list price.'))
+    ->setDisplayOptions('view', [
+      'label' => 'above',
+      'type' => 'commerce_price_default',
+      'weight' => -1,
+    ])
+    ->setDisplayOptions('form', [
+      'type' => 'commerce_list_price',
+      'weight' => -1,
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  $definition_update_manager->installFieldStorageDefinition('list_price', 'commerce_product_variation', 'commerce_product', $storage_definition);
+}
+
+/**
+ * Update entity keys for products and variations.
+ */
+function commerce_product_update_8205() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  foreach (['commerce_product', 'commerce_product_variation'] as $entity_type_id) {
+    $uid_storage_definition = $definition_update_manager->getFieldStorageDefinition('uid', $entity_type_id);
+    $entity_type = $definition_update_manager->getEntityType($entity_type_id);
+    $keys = $entity_type->getKeys();
+    $keys['owner'] = 'uid';
+    $keys['uid'] = 'uid';
+    $entity_type->set('entity_keys', $keys);
+    $definition_update_manager->updateEntityType($entity_type);
+    $definition_update_manager->updateFieldStorageDefinition($uid_storage_definition);
+  }
+}
+
+/**
+ * Set the 'published' entity key for variations.
+ */
+function commerce_product_update_8206() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $definition_update_manager->getEntityType('commerce_product_variation');
+  $keys = $entity_type->getKeys();
+  $keys['published'] = 'status';
+  unset($keys['status']);
+  $entity_type->set('entity_keys', $keys);
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Update the variation 'status' field.
+ */
+function commerce_product_update_8207() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setName('status')
+    ->setTargetEntityTypeId('commerce_product_variation')
+    ->setLabel(t('Published'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue(TRUE)
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => TRUE,
+      ],
+      'weight' => 90,
+    ])
+    ->setDisplayConfigurable('form', TRUE);
+
+  $definition_update_manager->updateFieldStorageDefinition($storage_definition);
+}
+
+/**
+ * Convert 'stores' and 'variations' configurable fields into base fields.
+ */
+function commerce_product_update_8208() {
+  $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo('commerce_product');
+  $product_types = array_keys($bundle_info);
+  $config_factory = \Drupal::configFactory();
+  $config_manager = \Drupal::service('config.manager');
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+
+  $entity_type_manager->clearCachedDefinitions();
+  $entity_field_manager->clearCachedFieldDefinitions();
+
+  $key = 'commerce_product.field_storage_definitions';
+  $entity_definitions_installed = \Drupal::keyValue('entity.definitions.installed');
+  $definitions = $entity_definitions_installed->get($key);
+  /** @var \Drupal\Core\Field\FieldDefinitionInterface[] $base_field_definitions */
+  $base_field_definitions = $entity_field_manager->getBaseFieldDefinitions('commerce_product');
+  $definitions['stores'] = $base_field_definitions['stores']->getFieldStorageDefinition();
+  $definitions['variations'] = $base_field_definitions['variations']->getFieldStorageDefinition();
+  $entity_definitions_installed->set($key, $definitions);
+
+  $configuration_to_delete = [];
+  foreach ($product_types as $bundle) {
+    $configuration_to_delete[] = 'field.field.commerce_product.' . $bundle . '.stores';
+    $configuration_to_delete[] = 'field.field.commerce_product.' . $bundle . '.variations';
+  }
+  $configuration_to_delete[] = 'field.storage.commerce_product.stores';
+  $configuration_to_delete[] = 'field.storage.commerce_product.variations';
+
+  $dependents = $config_manager->findConfigEntityDependents('config', $configuration_to_delete);
+  /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $config_entity */
+  foreach ($dependents as $config_name => $config_entity) {
+    $config_entity = $config_factory->getEditable($config_name);
+    $dependencies = $config_entity->get('dependencies.config');
+    $dependencies = array_diff($dependencies, $configuration_to_delete);
+    $config_entity->set('dependencies.config', $dependencies);
+    $config_entity->save();
+  }
+
+  foreach ($configuration_to_delete as $config) {
+    $config_factory->getEditable($config)->delete();
+  }
+}
+
+/**
+ * Update all existing views using a reference to stores or variations.
+ */
+function commerce_product_update_8209() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('views.view.') as $view_config_name) {
+    $view = $config_factory->getEditable($view_config_name);
+    if (!in_array($view->get('base_field'), ['product_id', 'variation_id'])) {
+      // Not a commerce_product / commerce_product_variation SQL view.
+      continue;
+    }
+
+    $displays = $view->get('display');
+    foreach ($displays as $display_name => $display) {
+      if (!empty($display['display_options']['relationships'])) {
+        foreach ($display['display_options']['relationships'] as $relationship_name => $relationship) {
+          if ($relationship_name == 'stores' || $relationship_name == 'variations') {
+            // Update the relation field and add entity information.
+            $base = "display.$display_name.display_options.relationships.$relationship_name";
+            $view->set($base . '.field', $relationship_name . '_target_id');
+            $view->set($base . '.entity_type', 'commerce_product');
+            $view->set($base . '.entity_field', $relationship_name);
+          }
+        }
+      }
+
+      if (!empty($display['display_options']['fields'])) {
+        foreach ($display['display_options']['fields'] as $field_name => $field) {
+          if ($field_name == 'stores' || $field_name == 'variations') {
+            // Update the relation field and add entity information.
+            $base = "display.$display_name.display_options.fields.$field_name";
+            $view->set($base . '.field', $field_name . '_target_id');
+          }
+        }
+      }
+    }
+    $view->save(TRUE);
+  }
+}
+
+/**
+ * Update the 'uid' field for products and variations.
+ */
+function commerce_product_update_8210() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $base_field_override_storage = \Drupal::entityTypeManager()->getStorage('base_field_override');
+
+  foreach (['commerce_product', 'commerce_product_variation'] as $entity_type_id) {
+    $storage_definition = $definition_update_manager->getFieldStorageDefinition('uid', $entity_type_id);
+    $default_value_callback = $entity_type_id === 'commerce_product' ? Product::class . '::getDefaultEntityOwner' : ProductVariation::class . '::getDefaultEntityOwner';
+
+    $base_field_overrides = $base_field_override_storage->loadByProperties([
+      'entity_type' => $entity_type_id,
+      'field_name' => 'uid',
+    ]);
+    /** @var \Drupal\Core\Field\FieldDefinitionInterface $base_field_override */
+    foreach ($base_field_overrides as $base_field_override) {
+      if ($base_field_override->getDefaultValueCallback() !== $storage_definition->getDefaultValueCallback()) {
+        continue;
+      }
+      // Update the "default_value_callback" for base field overrides, as long
+      // as they're using the default one.
+      $base_field_override->setDefaultValueCallback($default_value_callback);
+      $base_field_override->save();
+    }
+
+    $storage_definition->setDefaultValueCallback($default_value_callback);
+    $definition_update_manager->updateFieldStorageDefinition($storage_definition);
+  }
+}
+
+/**
+ * Ensure new field indexes on the product variation entity.
+ */
+function commerce_product_update_8211() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Get the current product variation entity type definition, ensure the
+  // storage schema class is set.
+  $entity_type = $entity_type_manager->getDefinition('commerce_product_variation')
+    ->setHandlerClass('storage_schema', CommerceContentEntityStorageSchema::class);
+
+  // Regenerate entity type indexes.
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Update the sku field definition.
+ */
+function commerce_product_update_8212() {
+  $definition_update_manager = \Drupal::service('entity.definition_update_manager');
+  $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('sku', 'commerce_product_variation'));
+}

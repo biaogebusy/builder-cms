@@ -1,0 +1,14 @@
+{
+    "name": "drupal/module_filter",
+    "description": "Filter the modules list.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "http://drupal.org/project/module_filter",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/module_filter",
+        "source": "https://git.drupalcode.org/project/module_filter"
+    },
+    "require": {
+        "drupal/jquery_ui_autocomplete": "^2.0"
+    }
+}

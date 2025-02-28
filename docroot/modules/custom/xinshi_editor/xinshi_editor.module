@@ -1,0 +1,145 @@
+<?php
+
+use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+
+
+/**
+ * Implements hook_library_info_alter().
+ *
+ * Replaces style sheets declared in libraries with color-altered style sheets.
+ */
+function xinshi_editor_library_info_alter(&$libraries, $extension) {
+  if ($extension == 'ace_editor') {
+    $libraries['formatter']['js']['/libraries/ace-builds/src/ace.js']['preprocess'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function xinshi_editor_theme($existing, $type, $theme, $path) {
+  return [
+    'json_formatter' => [
+      'template' => 'field--json-formatter',
+      'variables' => ['value' => NULL,],
+    ],
+  ];
+}
+
+
+/**
+ * Implements hook_block_alter().
+ */
+function xinshi_editor_block_alter(&$definitions) {
+  foreach ($definitions as $key => $definition) {
+    if (substr($key, 0, 14) == 'block_content:') {
+      $definitions[$key]['class'] = 'Drupal\xinshi_editor\Plugin\Block\BlockContentBlock';
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function xinshi_editor_entity_type_alter(array &$entity_types) {
+  if (isset($entity_types['block_content'])) {
+    $entity_types['block_content']->setFormClass('panels_ipe', 'Drupal\xinshi_editor\Form\PanelsIPEBlockContentForm');
+  }
+}
+
+
+/**
+ * Implements hook_panels_build_alter().
+ */
+function xinshi_editor_panels_build_alter(&$build, PanelsDisplayVariant $panels_display) {
+  $builder = $panels_display->getBuilder();
+  $storage_type = $panels_display->getStorageType();
+
+  $is_panelizer = ($builder->getPluginId() == 'ipe' &&
+    in_array($storage_type, ['panelizer_default', 'panelizer_field']) &&
+    isset($build['#attached']) &&
+    isset($build['#attached']['library']) &&
+    in_array('panels_ipe/panels_ipe', $build['#attached']['library']));
+
+  if ($is_panelizer) {
+    $build['#attached']['library'][] = 'xinshi_editor/panels_ipe';
+
+    if (\Drupal::moduleHandler()->moduleExists('entity_theme_engine')) {
+      $widgetService = \Drupal::service('entity_theme_engine.entity_widget_service');
+      $widgets = $widgetService->getAllWidgets();
+      $widget_categories = [];
+      foreach ($widgets as $widget) {
+        if ($category = $widget->getCategory()) {
+          $widget_categories[$category] = $category;
+        }
+      }
+      ksort($widget_categories);
+      $groups = [];
+      foreach ($widget_categories as $category) {
+        $groups[] = [
+          'id' => $category,
+          'name' => $category,
+        ];
+      }
+    } else {
+      $storage = \Drupal::service('entity_type.manager')->getStorage('taxonomy_term');
+      $vid = 'widget_group';
+      $tids = $storage->getQuery()
+        ->condition('vid', $vid)
+        ->execute();
+      $entities = $storage->loadMultiple($tids);
+      $groups = [];
+      foreach ($entities as $term) {
+        $groups[] = [
+          'id' => $term->id(),
+          'name' => $term->name->value,
+        ];
+      }
+    }
+    $build['#attached']['drupalSettings']['xinshi_editor_panelizer']['groups'] = $groups;
+  }
+
+  if (\Drupal::service('module_handler')->moduleExists('content_lock')) {
+    $builder = $panels_display->getBuilder();
+    $storage_type = $panels_display->getStorageType();
+    $lock_service = \Drupal::service('content_lock');
+
+    $is_picl = $builder->getPluginId() == 'ipe' &&
+      in_array($storage_type, ['panelizer_default', 'panelizer_field']) &&
+      isset($build['#attached']) &&
+      isset($build['#attached']['library']) &&
+      in_array('panels_ipe/panels_ipe', $build['#attached']['library']) &&
+      isset($panels_display->getContexts()['@panelizer.entity_context:entity']) &&
+      $lock_service->isLockable($panels_display->getContexts()['@panelizer.entity_context:entity']->getContextData()->getValue());
+
+    if ($is_picl) {
+      $build['#attached']['library'][] = 'xinshi_editor/content_lock';
+    }
+  }
+}
+
+///**
+// * Implements hook_form_alter().
+// * @param $form
+// * @param FormStateInterface $form_state
+// * @param $form_id
+// */
+//function xinshi_editor_form_alter(&$form, Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+//  $access = FALSE;
+//  if (isset($form['panelizer'])) {
+//    $widget = $form['panelizer']['widget'] ?? [];
+//    $options = [];
+//    foreach ($widget as $k => $w) {
+//      if (is_numeric($k) && isset($w['default']['#options'])) {
+//        $options[] = $w;
+//        if (count($w['default']['#options']) >= 2) {
+//          $access = TRUE;
+//        }
+//      }
+//    }
+//    $count = count($options);
+//    if ($count < 2 && !$access) {
+//      $form['panelizer']['#access'] = FALSE;
+//    }
+//  }
+//}

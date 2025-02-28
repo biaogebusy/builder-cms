@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+id: default
+label: Default
+description: ''
+variationType: default
+variationTypes:
+  - default
+multipleVariations: true
+injectVariationFields: true
+traits: {  }
+locked: false

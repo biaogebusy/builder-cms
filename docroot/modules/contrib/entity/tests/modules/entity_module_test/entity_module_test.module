@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * Implements hook_entity_bundle_info().
+ */
+function entity_module_test_entity_bundle_info() {
+  $bundles['entity_test_enhanced']['default']['label'] = t('Default');
+  $bundles['entity_test_enhanced']['first']['label'] = t('First');
+  $bundles['entity_test_enhanced']['second']['label'] = t('Second');
+  $bundles['entity_test_enhanced_with_owner']['default']['label'] = t('Default');
+  $bundles['entity_test_enhanced_with_owner']['first']['label'] = t('First');
+  $bundles['entity_test_enhanced_with_owner']['second']['label'] = t('Second');
+
+  return $bundles;
+}

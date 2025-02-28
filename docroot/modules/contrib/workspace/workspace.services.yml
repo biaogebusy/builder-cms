@@ -1,0 +1,51 @@
+services:
+  workspace.replicator_manager:
+    class: Drupal\workspace\ReplicatorManager
+    arguments: ['@workspace.conflict_tracker', '@event_dispatcher', '@queue']
+    tags:
+      - { name: service_collector, tag: workspace_replicator, call: addReplicator}
+  workspace.internal_replicator:
+    class: Drupal\workspace\InternalReplicator
+    arguments: ['@workspace.manager', '@entity_type.manager', '@replication.changes_factory', '@replication.revisiondiff_factory', '@multiversion.entity_index.rev', '@serializer', '@logger.factory']
+    tags:
+      - {name: workspace_replicator, priority: 10}
+  workspace.entity_type_info:
+    class: Drupal\workspace\EntityTypeInfo
+    arguments: ['@multiversion.manager']
+  workspace.entity_operations:
+    class: Drupal\workspace\EntityOperations
+    arguments: ['@multiversion.manager', '@entity_type.manager', '@queue']
+  workspace.toolbar:
+    class: Drupal\workspace\Toolbar
+    arguments: ['@entity_type.manager', '@workspace.manager', '@form_builder', '@current_user']
+  workspace.route_subscriber:
+    class: Drupal\workspace\Routing\RouteSubscriber
+    arguments: ['@multiversion.manager']
+    tags:
+      - { name: event_subscriber }
+  workspace.paramconverter.entity_revision:
+    class: Drupal\workspace\ParamConverter\EntityRevisionConverter
+    arguments: ['@entity_type.manager', '@entity.repository']
+    tags:
+      - { name: paramconverter, priority: 30 }
+  workspace.workbench_moderation_subscriber:
+    class: Drupal\workspace\EventSubscriber\WorkbenchModerationSubscriber
+    arguments: ['@entity_type.manager', '@workspace.replicator_manager']
+    tags:
+      - { name: event_subscriber }
+  workspace.replication_finished:
+    class: Drupal\workspace\EventSubscriber\ReplicationFinished
+    arguments: ['@entity_type.manager', '@workspace.manager', '@?plugin.manager.alias_type', '@?pathauto.generator']
+    tags:
+      - { name: event_subscriber }
+  workspace.replication_config_route_subscriber:
+    class: Drupal\workspace\EventSubscriber\ReplicationConfigRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  workspace.entity_access:
+    class: Drupal\workspace\EntityAccess
+    arguments: ['@entity_type.manager', '@workspace.manager', '%workspace.default%']
+  access_check.workspace_view:
+    class: Drupal\workspace\Access\WorkspaceViewCheck
+    tags:
+      - { name: access_check, applies_to: _workspace_view }

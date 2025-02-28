@@ -1,0 +1,9 @@
+administer menu_per_role:
+  title: 'Administer Menu Per Role'
+  description: 'Permission for who can access the Menu Per Role forms.'
+bypass menu_per_role access front:
+  title: 'Bypass Menu Per Role access on the front context'
+  description: 'Allows users to access all menu links regardless of their role and configured menu links roles when on the front.'
+bypass menu_per_role access admin:
+  title: 'Bypass Menu Per Role access in the admin context'
+  description: 'Allows users to access all menu links regardless of their role and configured menu links roles when in the admin interface.'

@@ -1,0 +1,26 @@
+{
+  "name": "drupal/sms_sendtophone",
+  "description": "Provides various tools for sending bits of information via SMS.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "http://drupal.org/project/smsframework",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/smsframework",
+    "source": "http://cgit.drupalcode.org/smsframework"
+  },
+  "authors": [
+    {
+      "name": "Aniebiet Udoh",
+      "homepage": "https://www.drupal.org/u/almaudoh",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Daniel Phin",
+      "homepage": "http://danielph.in",
+      "role": "Maintainer"
+    }
+  ],
+  "require": {
+    "drupal/smsframework": "^1.0"
+  }
+}

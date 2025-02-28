@@ -1,0 +1,31 @@
+uuid: a453a6d7-c72b-45e4-873d-4e1f486eea2a
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_float
+    - node.type.page
+  module:
+    - range
+id: node.page.field_float
+field_name: field_float
+entity_type: node
+bundle: page
+label: Float
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    from: 2.5
+    to: 4.5
+default_value_callback: ''
+settings:
+  min: -10.5
+  max: 10.5
+  from:
+    prefix: ''
+    suffix: ''
+  to:
+    prefix: ''
+    suffix: ''
+field_type: range_float

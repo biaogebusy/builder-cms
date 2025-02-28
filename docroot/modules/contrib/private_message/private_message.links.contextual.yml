@@ -1,0 +1,4 @@
+private_message.delete:
+  route_name: entity.private_message.delete
+  title: 'Delete'
+  group: private_message

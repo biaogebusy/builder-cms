@@ -1,0 +1,40 @@
+# Path to Ace library is defined using hook_library_info_alter().
+# See ace_editor.module
+primary:
+  version: VERSION
+  js:
+    js/editor.js: {}
+
+  css:
+    component:
+      styles/editor.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+formatter:
+  version: VERSION
+  js:
+    js/formatter.js: {}
+
+  css:
+    component:
+      styles/editor.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+filter:
+  version: VERSION
+  js:
+    js/filter.js: {}
+
+  css:
+    component:
+      styles/editor.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings

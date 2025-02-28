@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * @file
+ * Contains toolbar_visibility.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function toolbar_visibility_help($route_name, RouteMatchInterface $route_match) {
+  if ($route_name == 'help.page.toolbar_visibility') {
+    $text = file_get_contents(__DIR__ . '/README.md');
+    if (!Drupal::moduleHandler()->moduleExists('markdown')) {
+      return '<pre>' . $text . '</pre>';
+    }
+    else {
+      /** @var \Drupal\markdown\PluginManager\ParserManagerInterface $parser_manager */
+      $parser_manager = \Drupal::service('plugin.manager.markdown.parser');
+      $parser = $parser_manager->getDefaultParser([
+        'render_strategy' => ['type' => 'none'],
+      ]);
+      return $parser->parse($text);
+    }
+  }
+  return NULL;
+}
+
+/**
+ * Implements hook_page_top().
+ */
+function toolbar_visibility_page_top(array &$page_top) {
+  $current_theme_name = \Drupal::theme()->getActiveTheme()->getName();
+  $config = \Drupal::config('toolbar_visibility.settings');
+  if ($themes = $config->get('themes')) {
+    foreach ($themes as $theme_name => $theme_status) {
+      if ($theme_name == $current_theme_name && $theme_status) {
+        if (isset($page_top['toolbar'])) {
+          unset($page_top['toolbar']);
+        }
+      }
+    }
+  }
+  if ($domains = $config->get('domains')) {
+    /** @var \Drupal\Core\Extension\ModuleHandler $moduleHandler */
+    $moduleHandler = \Drupal::service('module_handler');
+    if ($moduleHandler->moduleExists('domain')) {
+      /** @var \Drupal\domain\DomainNegotiator $domainNegotiator */
+      $domainNegotiator = \Drupal::service('domain.negotiator');
+      $activeDomainId = $domainNegotiator->getActiveId();
+      if (in_array($activeDomainId, $domains)) {
+        if (isset($page_top['toolbar'])) {
+          unset($page_top['toolbar']);
+        }
+      }
+    }
+  }
+}

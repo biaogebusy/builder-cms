@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Charts API Example module file.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function charts_api_example_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+  switch ($route_name) {
+    // Main module help for the charts_api_example module.
+    case 'help.page.charts_api_example':
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('A simple example on how to interact with the Charts API') . '</p>';
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Implements hook_chart_definition_CHART_ID_alter().
+ */
+function charts_api_example_chart_definition_exampleidphp_alter(&$chart) {
+  // Please note: this will only show when the charts_highcharts module is
+  // enabled and Highcharts is set as your default library.
+  $chart['chart']['backgroundColor'] = 'blue';
+}
+
+/**
+ * Implements hook_chart_alter().
+ */
+function charts_api_example_chart_alter(array &$element, $chart_id) {
+  // Please note: this will only show when the charts_highcharts module is
+  // enabled and Highcharts is set as your default library.
+  if ($chart_id === 'exampleidjschart') {
+    $element['#attached']['library'][] = 'charts_api_example/charts_api_example';
+  }
+}

@@ -1,0 +1,14 @@
+name: "SMS User"
+description: "Provides integration between the SMS Framework and Drupal users."
+package: SMS Framework
+core_version_requirement: '>=9.2'
+type: module
+configure: sms_user.options
+dependencies:
+  - smsframework:sms
+  - drupal:user
+
+# Information added by Drupal.org packaging script on 2022-12-05
+version: '2.1.0'
+project: 'smsframework'
+datestamp: 1670240398

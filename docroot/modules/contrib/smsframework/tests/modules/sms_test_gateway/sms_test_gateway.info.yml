@@ -1,0 +1,9 @@
+name: Test Gateway
+type: module
+description: Support module for sms gateway testing.
+package: Testing
+
+# Information added by Drupal.org packaging script on 2022-12-05
+version: '2.1.0'
+project: 'smsframework'
+datestamp: 1670240398

@@ -1,0 +1,205 @@
+<?php
+
+/**
+ * @file
+ * The module that makes concurrent editing possible.
+ */
+
+use Drupal\Core\Entity\RevisionableInterface;
+use Drupal\Core\Entity\TranslatableInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityFormInterface;
+use Drupal\conflict\Entity\ContentEntityConflictHandler;
+use Drupal\conflict\Entity\EntityConflictHandlerInterface;
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function conflict_module_implements_alter(&$implementations, $hook) {
+  // Move the hooks conflict_form_alter(), conflict_entity_load() and
+  // conflict_entity_type_alter() to the end of the list.
+  if (in_array($hook, ['form_alter', 'entity_load', 'entity_type_alter'])) {
+    $group = $implementations['conflict'];
+    unset($implementations['conflict']);
+    $implementations['conflict'] = $group;
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ *
+ * @see \Drupal\Core\Entity\Annotation\EntityType
+ */
+function conflict_entity_type_alter(array &$entity_types) {
+  // Provide defaults for translation info.
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  foreach ($entity_types as $entity_type) {
+    if ($entity_type instanceof ContentEntityTypeInterface) {
+      if (!$entity_type->hasHandlerClass('conflict.resolution_handler')) {
+        $entity_type->setHandlerClass('conflict.resolution_handler', ContentEntityConflictHandler::class);
+      }
+      if (is_null($entity_type->get('conflict_ui_merge_supported'))) {
+        $entity_type->set('conflict_ui_merge_supported', TRUE);
+      }
+    }
+    else {
+      // @todo add support for config entities.
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_load().
+ *
+ * Attaches a clone of the loaded entity to the currently loaded entity, which
+ * will be used if any conflicts are detected on an entity form submission in
+ * order to determine the changes made by the user in case the entity has been
+ * saved meanwhile.
+ */
+function conflict_entity_load(array $entities, $entity_type_id) {
+  // @todo decide whether this is the right place for storing a clone of the
+  // loaded entity. Another possible place would be the form state for the main
+  // entity and the field state for inline entities. The problem with the
+  // current solution is that even entities loaded e.g. for a non inline entity
+  // form widget will be cloned.
+  $route =  \Drupal::routeMatch()->getRouteObject();
+  // The route object will not be present if the entity is being loaded before
+  // the routing has completed. This happens e.g. in
+  // Drupal\Core\ParamConverter\EntityConverter::convert(), therefore we have
+  // to check if the route object is not present that we are still in the
+  // browser. This is not a perfect solution as there will be cases where we
+  // will clone unnecessary the entity, but currently the most simple solution.
+  if ((is_null($route) && (php_sapi_name() != 'cli')) || $route && ($route_defaults = $route->getDefaults()) && isset($route_defaults['_entity_form'])) {
+    foreach ($entities as $entity) {
+      // Set the entity in the correct language for display.
+      if ($entity instanceof TranslatableInterface && $entity->isTranslatable()) {
+        $entity = \Drupal::service('entity.repository')->getTranslationFromContext($entity, NULL, ['operation' => 'entity_upcast']);
+      }
+      if ($entity instanceof ContentEntityInterface) {
+        $clone = clone $entity;
+        $entity->{EntityConflictHandlerInterface::CONFLICT_ENTITY_ORIGINAL} = $clone;
+
+        $serialized = serialize($clone);
+        $hash = $entity_type_id . '_' . $entity->id() . sha1($serialized);
+        $entity->{EntityConflictHandlerInterface::CONFLICT_ENTITY_ORIGINAL_HASH} = $hash;
+
+        \Drupal::keyValueExpirable('conflict_original_entity')
+          ->setWithExpireIfNotExists($hash, $serialized, 86400);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_prepare_form().
+ *
+ * Loads the original entity into the form for not yet cached entity forms. This
+ * is required as forms are not cached on GET, but only on POST requests.
+ * Therefore until there was some AJAX interactions with the form it will remain
+ * uncached. However if the form was submitted with changes without being cached
+ * before and in the meanwhile the entity has been saved in another session then
+ * the currently rebuilt form for submitting it will be using the newer version
+ * of the entity instead of the one used for generating it. For proper conflict
+ * handling we however need that the form is built with the originally used
+ * entity.
+ *
+ * Note: when the referenced drupal.org issue is solved we would not need to
+ * store the entity in the key value store anymore and exchange it in the form.
+ *
+ * @see https://www.drupal.org/project/drupal/issues/2824293
+ */
+function conflict_entity_prepare_form(EntityInterface $entity, $operation, FormStateInterface $form_state) {
+  if (!$entity->isNew() && !$form_state->isCached()) {
+    $conflict_entity_original_hash = $form_state->getUserInput()['conflict_entity_original_hash'] ?? NULL;
+    if ($conflict_entity_original_hash) {
+      $original_entity = \Drupal::keyValueExpirable('conflict_original_entity')->get($conflict_entity_original_hash);
+      if ($original_entity) {
+        $original_entity = unserialize($original_entity);
+        /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+        $form_object = $form_state->getFormObject();
+        $form_object->setEntity($original_entity);
+        $form_state->set('conflict-exchanged-entity', TRUE);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function conflict_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form_object = $form_state->getFormObject();
+  if (!($form_object instanceof EntityFormInterface)) {
+    return;
+  }
+  conflict_prepare_entity_form($form, $form_state, $form_object->getEntity());
+}
+
+/**
+ * Helper method for preparing entity forms for conflict resolution.
+ *
+ * The entity is present as a parameter to support inline entity forms.
+ */
+function conflict_prepare_entity_form(&$form, FormStateInterface $form_state, EntityInterface $entity, $inline_entity_form = FALSE) {
+  $conflict_supported = $form_state->get('conflict.supported');
+  if ($conflict_supported === FALSE) {
+    return;
+  }
+  elseif (is_null($conflict_supported)) {
+    $route =  \Drupal::routeMatch()->getRouteObject();
+    if (!($route && ($route_defaults = $route->getDefaults()) && isset($route_defaults['_entity_form']))) {
+      $form_state->set('conflict.supported', FALSE);
+      return;
+    }
+    // If the main form entity has been exchanged then it and the referenced
+    // entities might not be loaded in their default revision anymore, but in
+    // the previous one (original one). As we do not have deep serialization in
+    // core the referenced entities will be reloaded even if the main entity is
+    // exchanged.
+    elseif ($entity instanceof RevisionableInterface && (!$entity->isDefaultRevision() && !(bool) $form_state->get('conflict-exchanged-entity'))) {
+      $form_state->set('conflict.supported', FALSE);
+      return;
+    }
+    // Flags the form that on it a conflict resolution is supported.
+    $form_state->set('conflict.supported', TRUE);
+  }
+
+  $entity_type_id = $entity->getEntityTypeId();
+  $bundle = $entity->bundle();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  if ($entity_type_manager->hasHandler($entity_type_id, 'conflict.resolution_handler')) {
+    if (!$inline_entity_form) {
+      /** @var \Drupal\Core\Entity\ContentEntityFormInterface $form_object */
+      $form_object = $form_state->getFormObject();
+      $entity->{EntityConflictHandlerInterface::CONFLICT_FORM_DISPLAY} = $form_object->getFormDisplay($form_state);
+    }
+
+    /** @var \Drupal\conflict\Entity\EntityConflictHandlerInterface $entity_conflict_resolution_handler */
+    $entity_conflict_resolution_handler = $entity_type_manager->getHandler($entity_type_id, 'conflict.resolution_handler');
+    $entity_conflict_resolution_handler->entityFormAlter($form, $form_state, $entity, $inline_entity_form);
+
+    // Retrieve the resolution strategy from the settings and if none selected
+    // default to inline.
+    $settings = \Drupal::configFactory()->get('conflict.settings');
+    $strategy = $settings->get("resolution_type.{$entity_type_id}.{$bundle}") ??
+      $settings->get("resolution_type.{$entity_type_id}.default") ??
+      $settings->get("resolution_type.default.default") ??
+      'inline';
+
+    if ($strategy === 'dialog') {
+      // Add the dialog conflict resolution overview only to the main entity
+      // form and not to the nested entity forms.
+      if (!$inline_entity_form && ($form_state->get('conflict.build_conflict_resolution_form') || $form_state->get('conflict.processing'))) {
+        \Drupal::service('conflict.resolution_form.builder')->processForm($form, $form_state);
+      }
+    }
+    else {
+      if ($form_state->get('conflict.build_conflict_resolution_form')) {
+        \Drupal::service('conflict.resolution_inline_form.builder')->processForm($form, $form_state, $entity);
+      }
+    }
+  }
+}

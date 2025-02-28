@@ -1,0 +1,4 @@
+demo:
+  css:
+    theme:
+      css/mie_demo_base.css: { }

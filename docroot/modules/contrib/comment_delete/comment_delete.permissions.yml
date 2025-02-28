@@ -1,0 +1,13 @@
+administer comment delete:
+  title: "Administer comment delete settings"
+  restrict access: true
+delete own comment:
+  title: "Delete own comments"
+delete own comment anytime:
+  title: "Delete own comments anytime"
+delete any comment:
+  title: "Delete any comment"
+delete any comment anytime:
+  title: "Delete any comment anytime"
+permission_callbacks:
+  - Drupal\comment_delete\CommentDeleteAccess::permissions

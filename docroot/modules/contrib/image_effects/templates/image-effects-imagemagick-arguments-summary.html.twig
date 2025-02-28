@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an Imagemagick arguments effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this interlace effect, including:
+ *   - command_line: The ImageMagick arguments.
+ *   - dimensions_method: The method to calculate dimensions.
+ *   - width: The image width.
+ *   - height: The image height.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  <em>{{ data.command_line }}</em>
+  - {{ 'Dimensions'|t }}: {{ data.dimensions_method|e }}
+  {% if data.dimensions_method == 'value' %}
+    - {{ 'Width'|t }}: {{ data.width|e }}, {{ 'Height'|t }}: {{ data.height|e }}
+  {% endif %}
+{% endapply %}

@@ -1,0 +1,25 @@
+.taxonomy-term {
+  &.vocabulary-mie-demo-content {
+    box-shadow: 0 5px 5px rgba($black, .3);
+
+    .taxonomy-link-wrapper {
+      margin: 0;
+      float: none;
+      display: block;
+      padding-left: 1px;
+      padding-right: 1px;
+      padding-bottom: 1px;
+    }
+
+    img {
+      display: block;
+      margin: 0;
+      width: 100%;
+      height: auto;
+    }
+    h2 {
+      margin-top: 0;
+      padding: 0 8px;
+    }
+  }
+}

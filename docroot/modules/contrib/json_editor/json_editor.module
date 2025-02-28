@@ -1,0 +1,12 @@
+<?php
+
+/**
+ * Implements hook_theme().
+ */
+function json_editor_theme($existing, $type, $theme, $path){
+  return [
+    'json_editor' => [
+      'template' => 'json-editor-page'
+    ]
+  ];
+}

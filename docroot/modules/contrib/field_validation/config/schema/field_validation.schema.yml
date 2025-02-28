@@ -1,0 +1,264 @@
+field_validation.rule_set.*:
+  type: config_entity
+  label: 'Field validation rule set'
+  mapping:
+    name:
+      type: string
+      label: 'Name'
+    label:
+      type: string
+      label: 'Label'
+    entity_type:
+      type: string
+      label: 'Entity type'
+    bundle:
+      type: string
+      label: 'Entity bundle'
+    field_validation_rules:
+      type: sequence
+      sequence:
+        type: mapping
+        mapping:
+          id:
+            type: string
+            label: 'ID'
+          title:
+            type: label
+            label: 'Rule name'
+          data:
+            type: field_validation.rule.[%parent.id]
+            label: 'Data'
+          weight:
+            type: integer
+            label: 'Weight'
+          uuid:
+            type: string
+            label: 'UUID'
+          field_name:
+            type: string
+            label: 'Field name'
+          column:
+            type: string
+            label: 'Field column'
+          error_message:
+            type: string
+            label: 'Error message'
+          roles:
+            type: sequence
+            sequence:
+              type: string
+          condition:
+            type: mapping
+            mapping:
+              field:
+                type: string
+                label: 'Field name'
+              operator:
+                type: string
+                label: 'Operator'
+              value:
+                type: string
+                label: 'Value'
+
+field_validation.rule.*:
+  type: mapping
+  label: 'Field validation rule'
+
+field_validation.rule.blocklist_field_validation_rule:
+  type: mapping
+  label: 'Words blocklist validation rule'
+  mapping:
+    setting:
+      type: string
+      label: 'Blocklisted words'
+
+field_validation.rule.date_range_field_validation_rule:
+  type: mapping
+  label: 'Date range validation rule'
+  mapping:
+    min:
+      type: string
+      label: 'Minimum date'
+    max:
+      type: string
+      label: 'Maximum date'
+    cycle:
+      type: string
+      label: 'Cycle of date'
+
+field_validation.rule.email_field_validation_rule:
+  type: mapping
+  label: 'Email validation rule'
+
+field_validation.rule.integer_field_validation_rule:
+  type: mapping
+  label: 'Integer field validation rule'
+  mapping:
+    min:
+      type: string
+      label: 'Minimum value'
+    max:
+      type: string
+      label: 'Maximum value'
+
+field_validation.rule.ip_field_validation_rule:
+  type: mapping
+  label: 'IP address validation rule'
+  mapping:
+    version:
+      type: string
+      label: 'IP Version'
+
+field_validation.rule.length_field_validation_rule:
+  type: mapping
+  label: 'Length field validation rule'
+  mapping:
+    min:
+      type: string
+      label: 'Minimum value'
+    max:
+      type: string
+      label: 'Maximum value'
+    strip_tags:
+      type: boolean
+      label: 'Strip tags'
+    trim:
+      type: boolean
+      label: 'Trim'
+
+field_validation.rule.must_be_empty_field_validation_rule:
+  type: mapping
+  label: 'Must be empty field validation rule'
+
+field_validation.rule.numeric_field_validation_rule:
+  type: mapping
+  label: 'Numeric field validation rule'
+  mapping:
+    min:
+      type: string
+      label: 'Minimum value'
+    max:
+      type: string
+      label: 'Maximum value'
+    step:
+      type: string
+      label: 'Step'
+
+field_validation.rule.phone_field_validation_rule:
+  type: mapping
+  label: 'Phone field validation rule'
+  mapping:
+    country:
+      type: string
+      label: 'Country'
+
+field_validation.rule.plain_text_field_validation_rule:
+  type: mapping
+  label: 'Plain text field validation rule'
+
+field_validation.rule.regex_field_validation_rule:
+  type: mapping
+  label: 'Regular expression field validation rule'
+  mapping:
+    setting:
+      type: string
+      label: 'Pattern'
+
+field_validation.rule.unique_field_validation_rule:
+  type: mapping
+  label: 'Unique field validation rule'
+  mapping:
+    scope:
+      type: string
+      label: 'Scope of unique'
+    published:
+      type: boolean
+      label: 'Published entities'
+    per_user:
+      type: boolean
+      label: 'Per user'
+
+field_validation.rule.words_field_validation_rule:
+  type: mapping
+  label: 'Number of words field validation rule'
+  mapping:
+    min:
+      type: string
+      label: 'Minimum number of words'
+    max:
+      type: string
+      label: 'Maximum number of words'
+
+field_validation.rule.item_count_field_validation_rule:
+  type: mapping
+  label: 'Min/max item count field validation rule'
+  mapping:
+    min:
+      type: integer
+      label: 'Minimum field values'
+    max:
+      type: integer
+      label: 'Maximum field values'
+
+field_validation.rule.url_field_validation_rule:
+  type: mapping
+  label: 'Url field validation rule'
+  mapping:
+    external:
+      type: boolean
+      label: 'External'
+    internal:
+      type: boolean
+      label: 'Internal'
+
+field_validation.rule.specific_value_field_validation_rule:
+  type: mapping
+  label: 'Specific value(s) field validation rule'
+  mapping:
+    setting:
+      type: string
+      label: '(Key) values'
+
+field_validation.rule.pattern_field_validation_rule:
+  type: mapping
+  label: 'Pattern field validation rule'
+  mapping:
+    pattern:
+      type: string
+      label: 'Pattern'
+
+field_validation.rule.match_field_field_validation_rule:
+  type: mapping
+  label: 'Match against a field validation rule'
+  mapping:
+    entity_type:
+      type: string
+      label: 'Entity type'
+    bundle:
+      type: string
+      label: 'Bundle'
+    field_name:
+      type: string
+      label: 'Field name'
+    column:
+      type: string
+      label: 'Column'
+    reverse:
+      type: boolean
+      label: 'Reverse'
+
+field_validation.rule.one_of_several_validation_rule:
+  type: mapping
+  label: 'Require at least one of several fields validation rule'
+  mapping:
+    data:
+      type: string
+      label: 'Group name'
+
+field_validation.rule.equal_values_field_validation_rule:
+  type: mapping
+  label: 'Equal values on multiple fields validation rule'
+  mapping:
+    data:
+      type: string
+      label: 'Group name'

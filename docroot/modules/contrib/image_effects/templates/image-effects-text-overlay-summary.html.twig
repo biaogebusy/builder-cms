@@ -1,0 +1,63 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of a Text Overlay effect.
+ *
+ * Available variables:
+ * - data: The effect configuration, including:
+ *   - text_string: The text associated with this effect, can include tokens
+ *   - font: The font data, including:
+ *     - name: Font name
+ *     - uri: Font file URI
+ *     - size: Font size
+ *     - angle: Font orientation
+ *     - color: Font color
+ *     - stroke_mode: Type of stroke (outline/shadow)
+ *     - stroke_color: Color of the stroke
+ *     - outline_top: Outline px on the top
+ *     - outline_right: Outline px on the right
+ *     - outline_bottom: Outline px on the bottom
+ *     - outline_left: Outline px on the left
+ *     - shadow_x_offset: Shadow horizontal offset in px
+ *     - shadow_y_offset: Shadow vertical offset in px
+ *     - shadow_width: Shadow width in px
+ *     - shadow_height: Shadow height in px
+ *   - layout: The text layout information, including:
+ *     - padding_top: Padding top in px
+ *     - padding_right: Padding right in px
+ *     - padding_bottom: Padding bottom in px
+ *     - padding_left: Padding left in px
+ *     - x_pos: Placement on canvas, horizontal
+ *     - y_pos: Placement on canvas, vertical
+ *     - x_offset: Placement on canvas, horizontal, offset
+ *     - y_offset: Placement on canvas, vertical, offset
+ *     - background_color: Color of bounding box
+ *     - overflow_action: Action when text wrapper overflows canvas
+ *     - extended_color: Color to be used when extending the underlying image
+ *   - text: The text information, including:
+ *     - maximum_width: Maximum width in px
+ *     - fixed_width: Fixed width flag
+ *     - align: Text alignment
+ *     - line_spacing: Line spacing in px
+ *     - case_format: Text format conversion
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  - {{ 'Font'|t }}: {{ data.font.name }} - {{ 'Size'|t  }}: {{ data.font.size }}
+  {% if data.font.angle %}
+    - {{ 'Rotate'|t }}: {{ data.font.angle }}°
+  {% endif %}
+  - {{ 'Color'|t }}: {{ data.font_color_detail }}
+  {% if data.stroke_mode %}
+    - {{ data.stroke_mode }}: {{ data.stroke_color_detail }}
+  {% endif %}
+  {% if data.background_color_detail %}
+    - {{ 'Background color'|t }}: {{ data.background_color_detail }}
+  {% endif %}
+{% endapply %}

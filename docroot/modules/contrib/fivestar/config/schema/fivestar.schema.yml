@@ -1,0 +1,75 @@
+field.value.fivestar:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    rating:
+      type: integer
+      label: 'Star rating'
+    target:
+      type: integer
+      label: 'Target ID'
+
+field.field_settings.fivestar:
+  type: mapping
+  label: 'Fivestar field settings'
+  mapping:
+    stars:
+      type: integer
+      label: 'Number of stars'
+    allow_clear:
+      type: boolean
+      label: 'Allow users to cancel their ratings'
+    allow_revote:
+      type: boolean
+      label: 'Allow users to re-vote on already voted content'
+    allow_ownvote:
+      type: boolean
+      label: 'Allow users to vote on their own content'
+    rated_while:
+      type: string
+      label: 'Select when rating is allowed: "viewing" or "editing"'
+    enable_voting_target:
+      type: boolean
+      label: 'Set voting target'
+    target_bridge_field:
+      type: string
+      label: 'Machine name of entity reference field that binds the current entity with the entity that contain target fivestar field'
+    target_fivestar_field:
+      type: string
+      label: 'Machine name of the fivestar field which should affect after vote.'
+
+field.storage_settings.fivestar:
+  type: mapping
+  label: 'Fivestar field storage settings'
+  mapping:
+    vote_type:
+      type: string
+      label: 'Fivestar vote type'
+
+field.formatter.settings.fivestar_stars:
+  type: mapping
+  label: 'Fivestar field formatter settings'
+  mapping:
+    text_format:
+      type: string
+      label: 'Text format'
+    display_format:
+      type: string
+      label: 'Display format'
+    fivestar_widget:
+      type: string
+      label: 'Widget ID'
+
+field.widget.settings.fivestar_stars:
+  type: mapping
+  label: 'Fivestar field widget settings'
+  mapping:
+    text_format:
+      type: string
+      label: 'Text format'
+    display_format:
+      type: string
+      label: 'Display format'
+    fivestar_widget:
+      type: string
+      label: 'Widget ID'

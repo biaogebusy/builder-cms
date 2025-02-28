@@ -1,0 +1,12 @@
+name: 'Unique content field validation'
+description: 'Validate the uniqueness of the entities fields or title.'
+type: module
+core_version_requirement: ^9.1 || ^10
+dependencies:
+  - drupal:node
+  - drupal:taxonomy
+
+# Information added by Drupal.org packaging script on 2023-06-30
+version: '1.1.1'
+project: 'unique_content_field_validation'
+datestamp: 1688169111

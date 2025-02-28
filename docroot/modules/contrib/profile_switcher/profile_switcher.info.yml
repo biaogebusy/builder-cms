@@ -1,0 +1,10 @@
+name: 'Profile switcher'
+description: "Changes the site's installation profile via Drush"
+type: module
+core_version_requirement: ^8 || ^9 || ^10
+dependencies:
+
+# Information added by Drupal.org packaging script on 2022-07-15
+version: '8.x-1.0-alpha6'
+project: 'profile_switcher'
+datestamp: 1657897254

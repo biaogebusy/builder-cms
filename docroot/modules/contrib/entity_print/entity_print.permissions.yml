@@ -1,0 +1,10 @@
+bypass entity print access:
+  title: 'Bypass entity print access'
+  description: 'Allow a user to bypass the entity print access permissions.'
+administer entity print:
+  title: 'Administer Entity Print'
+  description: 'Allow users to administer the Entity Print settings.'
+  restrict access: true
+
+permission_callbacks:
+  - \Drupal\entity_print\EntityPrintPermissions::getPermissions

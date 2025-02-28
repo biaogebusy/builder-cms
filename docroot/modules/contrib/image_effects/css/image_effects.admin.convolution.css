@@ -1,0 +1,5 @@
+/* Convolution image effects UI */
+
+.form-item-data-kernel .kernel-entry {
+  display: inline;
+}

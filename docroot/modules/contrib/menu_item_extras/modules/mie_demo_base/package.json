@@ -1,0 +1,40 @@
+{
+  "name": "mie_demo_base",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Ecd ../rror: no test specified\" && exit 1",
+    "postinstall": "find node_modules/ -name '*.info' -type f -delete"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ozin7/menu_item_extras.git"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.7.0",
+    "foundation-sites": "^6.4.3",
+    "gulp": "^3.9.0",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-icomoon-builder": "^1.0.0",
+    "gulp-jshint": "^2.1.0",
+    "gulp-livereload": "^3.8.1",
+    "gulp-notify": "^3.2.0",
+    "gulp-plumber": "^1.2.0",
+    "gulp-sass": "^3.2.1",
+    "gulp-sass-lint": "^1.4.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-util": "^3.0.8",
+    "gulp-watch": "^4.3.11",
+    "jshint": "^2.9.5",
+    "jshint-stylish": "^2.2.1",
+    "node-glob": "^1.2.0",
+    "path": "^0.12.7",
+    "svg-injector": "^1.1.3",
+    "vinyl-buffer": "^1.0.1",
+    "webpack": "^3.12.0",
+    "webpack-stream": "^4.0.3"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,24 @@
+services:
+  access_check.state_transition:
+    class: Drupal\state_machine\Access\StateTransitionAccessCheck
+    arguments: [ '@entity_type.manager' ]
+    tags:
+      - { name: access_check, applies_to: _state_transition_access }
+
+  state_machine.guard_factory:
+    class: Drupal\state_machine\Guard\GuardFactory
+    arguments: ['@service_container']
+
+  state_machine.route_subscriber:
+    class: Drupal\state_machine\Routing\RouteSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  plugin.manager.workflow:
+    class: Drupal\state_machine\WorkflowManager
+    arguments: ['@module_handler', '@cache.discovery', '@plugin.manager.workflow_group']
+
+  plugin.manager.workflow_group:
+    class: Drupal\state_machine\WorkflowGroupManager
+    arguments: ['@module_handler', '@cache.discovery']

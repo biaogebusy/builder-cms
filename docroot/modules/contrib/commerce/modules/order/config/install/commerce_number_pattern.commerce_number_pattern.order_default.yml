@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - commerce_order
+id: order_default
+label: Default
+targetEntityType: commerce_order
+plugin: infinite
+configuration:
+  pattern: '[pattern:number]'
+  initial_number: 1
+  padding: 0
+  per_store_sequence: true

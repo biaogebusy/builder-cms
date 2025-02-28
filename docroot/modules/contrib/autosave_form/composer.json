@@ -1,0 +1,6 @@
+{
+    "name": "drupal/autosave_form",
+    "type": "drupal-module",
+    "description": "Adds autosave feature on forms.",
+    "license": "GPL-2.0-or-later"
+}

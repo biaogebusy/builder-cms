@@ -1,0 +1,7 @@
+sms_user.options:
+  path: '/admin/config/smsframework/user'
+  defaults:
+    _form: '\Drupal\sms_user\Form\AdminSettingsForm'
+    _title: 'User SMS settings'
+  requirements:
+    _permission: 'administer smsframework'

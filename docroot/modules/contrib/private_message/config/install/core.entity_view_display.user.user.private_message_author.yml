@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.user.private_message_author
+  module:
+    - user
+    - private_message
+id: user.user.private_message_author
+targetEntityType: user
+bundle: user
+mode: private_message_author
+content:
+  linked_username:
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  member_for: true

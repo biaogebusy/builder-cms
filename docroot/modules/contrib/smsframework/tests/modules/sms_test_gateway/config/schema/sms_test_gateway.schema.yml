@@ -1,0 +1,32 @@
+sms_test_gateway_base:
+  type: sms_gateway_settings
+  mapping:
+    gateway_id:
+      type: string
+      label: 'ID of the gateway config entity.'
+
+sms_gateway.settings.incoming:
+  type: sms_test_gateway_base
+
+sms_gateway.settings.memory:
+  type: sms_test_gateway_base
+  label: 'Memory'
+  mapping:
+    widget:
+      type: string
+      label: 'Widget'
+
+sms_gateway.settings.memory_chunked:
+  type: sms_test_gateway_base
+
+sms_gateway.settings.memory_noincoming:
+  type: sms_test_gateway_base
+
+sms_gateway.settings.memory_outgoing_result:
+  type: sms_gateway.settings.memory
+
+sms_gateway.settings.memory_schedule_aware:
+  type: sms_test_gateway_base
+
+sms_gateway.settings.capabilities_default:
+  type: sms_test_gateway_base

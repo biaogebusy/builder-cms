@@ -1,0 +1,6 @@
+services:
+  votingapi.commands:
+    class: \Drupal\votingapi\Commands\VotingApiCommands
+    arguments: ['@database']
+    tags:
+      - { name: drush.command }

@@ -1,0 +1,14 @@
+drupal.content_lock.settings:
+  js:
+    js/content_lock_settings.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+drupal.content_lock.lock_form:
+  js:
+    js/content_lock_form.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once

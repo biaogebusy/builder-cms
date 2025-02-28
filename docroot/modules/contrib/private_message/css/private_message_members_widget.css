@@ -1,0 +1,27 @@
+#thread-members-display-container {
+  position: relative; }
+  #thread-members-display-container + * {
+    clear: both; }
+  #thread-members-display-container #pm-members-autocomplete-results-wrapper {
+    position: absolute; }
+  #thread-members-display-container .private-message-member-display-item {
+    background-color: #E4E4E4;
+    margin: 2px 4px 1em;
+    float: left; }
+    #thread-members-display-container .private-message-member-display-item .pm-username {
+      float: left;
+      padding: 4px 7px 4px 3px; }
+    #thread-members-display-container .private-message-member-display-item .pm-username-remove-link {
+      border-left: dotted black 1px;
+      padding: 4px 4px 5px;
+      display: block;
+      float: left;
+      cursor: pointer; }
+  #thread-members-display-container #thread-members-input {
+    margin-bottom: 0; }
+  #thread-members-display-container .pm-autocomplete-search-result {
+    display: block;
+    height: 100%; }
+  #thread-members-display-container .invalid-username {
+    color: #FF0000;
+    font-weight: bold; }

@@ -1,0 +1,46 @@
+// Shared previewer box styles
+// @todo: combine all plugins into 1 previewer.
+[data-bs-element="bs_preview-box"] {
+  @include smooth-all-transition;
+  width: 100%;
+  height: 200px;
+  margin: 0.5rem 0 1.5rem;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  background: $border_preview_box_bg;
+  color: rgba($panel_text_color, .3);
+
+  // Light Mode
+  &[data-bs-mode="light"] {
+    background: $gray-e2e;
+
+    [data-bs-element="bs_preview-element"] {
+      background-color: $white;
+      color: $black;
+    }
+  }
+
+  // Dark Mode
+  &[data-bs-mode="dark"] {
+    background-color: $black;
+
+    [data-bs-element="bs_preview-element"] {
+      background-color: $gray-212;
+      color: $white;
+    }
+  }
+}
+
+// The actual element that gets our JS styles applied to it.
+[data-bs-element="bs_preview-element"] {
+  @include smooth-all-transition;
+  background-color: $white;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}

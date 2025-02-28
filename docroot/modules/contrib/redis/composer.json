@@ -1,0 +1,16 @@
+{
+  "name": "drupal/redis",
+  "type": "drupal-module",
+  "description": "Integration of Drupal with the Redis key-value store.",
+  "suggest": {
+    "ext-redis": "Required to use the PhpRedis as redis driver (^4.0|^5.0).",
+    "ext-relay": "Required to use the Relay as Redis driver (^0.5|^1.0).",
+    "predis/predis": "Required to use the Predis as redis driver (^1.1|^2.0)."
+  },
+  "license": "GPL-2.0-or-later",
+  "autoload": {
+    "psr-4": {
+      "Drupal\\redis\\": "src"
+    }
+  }
+}

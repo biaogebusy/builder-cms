@@ -1,0 +1,115 @@
+<?php
+
+/**
+ * @file
+ * Bootstrap styles module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function bootstrap_styles_theme($existing, $type, $theme, $path) {
+  return [
+    'form_element__bs' => [
+      'template' => 'form-element--bs',
+      'base hook' => 'form-element',
+      'path' => $path . '/templates/form',
+    ],
+    'fieldset__bs' => [
+      'template' => 'fieldset--bs',
+      'base hook' => 'fieldset',
+      'path' => $path . '/templates/form',
+    ],
+    'input__bs' => [
+      'template' => 'input--bs',
+      'base hook' => 'input',
+      'path' => $path . '/templates/form',
+    ],
+    'radios__bs' => [
+      'template' => 'radios--bs',
+      'base hook' => 'radios',
+      'path' => $path . '/templates/form',
+    ],
+    'bs_video_background' => [
+      'variables' => [
+        'video_background_url' => '',
+        'attributes' => [],
+        'children' => [],
+      ],
+    ],
+    'spacing_preview' => [
+      'render element' => 'element',
+    ],
+    'border_preview' => [
+      'render element' => 'element',
+    ],
+    'shadow_preview' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function bootstrap_styles_page_attachments_alter(array &$page) {
+  $settings = \Drupal::config('bootstrap_styles.settings');
+  $entity_types = array_keys(\Drupal::entityTypeManager()->getDefinitions());
+  $layout_routes = [];
+
+  foreach ($entity_types as $entity_type_id) {
+    $layout_routes[] = 'layout_builder.defaults.' . $entity_type_id . '.view';
+    $layout_routes[] = 'layout_builder.overrides.' . $entity_type_id . '.view';
+    // layout_library module.
+    $layout_routes[] = 'layout_builder.layout_library.' . $entity_type_id . '.view';
+  }
+
+  $route_match = \Drupal::routeMatch();
+  // Attach the libraries only in layout route.
+  if (in_array($route_match->getRouteName(), $layout_routes)) {
+    // Attach the layout builder form styles.
+    $page['#attached']['library'][] = 'bootstrap_styles/layout_builder_form_style';
+    // Attach the font.
+    $page['#attached']['library'][] = 'bootstrap_styles/offcanvas-font';
+
+    if ($settings->get('layout_builder_theme') && $settings->get('layout_builder_theme') == 'light') {
+      $page['#attached']['library'][] = 'bootstrap_styles/theme.light';
+    }
+    else {
+      // Attach the default dark theme.
+      $page['#attached']['library'][] = 'bootstrap_styles/theme.dark';
+    }
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_alter().
+ */
+function bootstrap_styles_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
+  $parents = $variables['element']['#array_parents'] ?? FALSE;
+  $bs_parents = ['ui', 'tab_content', 'appearance', 'layout_settings'];
+
+  // UI/Tab content are expected, and one of appearance or layout settings.
+  if ($parents && count(array_intersect($bs_parents, $parents)) >= 3) {
+    $suggestions[] = $hook . '__bs';
+  }
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function bootstrap_styles_library_info_alter(&$libraries, $extension) {
+
+  if ($extension == 'bootstrap_styles'
+    && isset($libraries['plugin.scroll_effects.build'])
+    && file_exists(DRUPAL_ROOT . '/libraries/aos/dist/aos.js')) {
+
+    if (isset($libraries['plugin.scroll_effects.build']['dependencies'])
+      && ($dependency_key = array_search('bootstrap_styles/aos.remote', $libraries['plugin.scroll_effects.build']['dependencies'])) !== FALSE) {
+
+      unset($libraries['plugin.scroll_effects.build']['dependencies'][$dependency_key]);
+      $libraries['plugin.scroll_effects.build']['dependencies'][] = 'bootstrap_styles/aos.local';
+
+    }
+  }
+}

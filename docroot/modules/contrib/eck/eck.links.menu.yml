@@ -1,0 +1,7 @@
+# Define the menu links for this module
+
+eck.entity_type.admin.structure.settings:
+  title: ECK Entity Types
+  description: 'Configure ECK entity types'
+  route_name:  eck.entity_type.list
+  parent: system.admin_structure

@@ -1,0 +1,101 @@
+default:
+  id: default
+  label: Default
+  group: entity_test_with_bundle
+  states:
+    new:
+      label: New
+    fulfillment:
+      label: Fulfillment
+    completed:
+      label: Completed
+    canceled:
+      label: Canceled
+  transitions:
+    create:
+      label: Create
+      from: [new]
+      to: fulfillment
+    fulfill:
+      label: Fulfill
+      from: [fulfillment]
+      to: completed
+    cancel:
+      label: Cancel
+      from: [new, fulfillment]
+      to: canceled
+
+validation:
+  id: validation
+  label: Validation
+  group: entity_test_with_bundle
+  states:
+    new:
+      label: New
+    validation:
+      label: Validation
+    fulfillment:
+      label: Fulfillment
+    completed:
+      label: Completed
+    canceled:
+      label: Canceled
+  transitions:
+    create:
+      label: Create
+      from: [new]
+      to: validation
+    validate:
+      label: Validate
+      from: [validation]
+      to: fulfillment
+    fulfill:
+      label: Fulfill
+      from: [fulfillment]
+      to: completed
+    cancel:
+      label: Cancel
+      from: [new, validation, fulfillment]
+      to: canceled
+
+two_transitions:
+  id: two_transitions
+  label: Two transitions
+  group: entity_test_with_bundle
+  states:
+    new:
+      label: New
+    completed:
+      label: Completed
+  transitions:
+    complete1:
+      label: Complete1
+      from: [new]
+      to:   completed
+    complete2:
+      label: Complete2
+      from: [new]
+      to:   completed
+
+same_transition:
+  id: same_transition
+  label: Contains transition to same state.
+  group: entity_test_with_bundle
+  states:
+    new:
+      label: New
+    completed:
+      label: Completed
+  transitions:
+    complete1:
+      label: Complete1
+      from: [new]
+      to:   completed
+    complete2:
+      label: Complete2
+      from: [new]
+      to:   completed
+    same:
+      label: Stay same
+      from: [new]
+      to: new

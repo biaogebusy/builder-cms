@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Contains otp_login.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\user\Entity\User;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_help().
+ */
+function otp_login_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the otp_login module.
+    case 'help.page.otp_login':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('OTP Login') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Helper function to include the OTP Login checkbox on user forms.
+ *
+ * @param array $form
+ *   The user account form.
+ *
+ * @see otp_login_form_user_form_alter()
+ * @see otp_login_form_user_register_form_alter()
+ * @see otp_login_user_form_submit()
+ */
+function otp_login_user_form_includes(array &$form) {
+  $form['otp_login_user_enable'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Enable this user to leverage OTP login'),
+    '#access' => \Drupal::currentUser()->hasPermission('change otp authentication setting'),
+    '#description' => t("WARNING: if unchecked, this will become a local Drupal user, which might be denied access based on the OTP Login settings for authenticating local Drupal accounts.<br />Don't use this setting for access control, which should be configured in your IdP instead.<br />NOTE: if the configuration option 'Automatically enable OTP authentication for existing users upon successful login' is activated, this Drupal account can become linked with OTP Login (again) when the user succesfully authenticates using OTP."),
+  ];
+  $form['actions']['submit']['#submit'][] = 'otp_login_user_form_submit';
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Alters the user register form to include a checkbox signifying the user
+ * should be OTP enabled. Removes password fields if the OTP
+ * is the sole place for password management.
+ */
+function otp_login_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id === 'user_form') {
+    // Load the current user.
+    $user = User::load(\Drupal::currentUser()->id());
+    $uid = $user->get('uid')->value;
+    $userData = \Drupal::service('user.data');
+    $is_otp_logged_in = $userData->get('otp_login', $uid, 'otp_logged_in');
+    if ($is_otp_logged_in === 'yes') {
+      $form['account']['mail']['#access'] = FALSE;
+      $form['account']['pass']['#access'] = FALSE;
+      $form['account']['current_pass_required_values']['#access'] = FALSE;
+      $form['account']['current_pass']['#access'] = FALSE;
+      $form['#validate'] = [];
+      $form['#validate'][] = 'otp_login_custom_user_validation';
+    }
+  }
+}
+
+/**
+ * {@inheritdoc}
+ */
+function otp_login_custom_user_validation(&$form, $form_state) {
+  $form_state->setTemporaryValue('entity_validated', TRUE);
+}
+
+/**
+ * {@inheritdoc}
+ */
+function otp_login_user_logout(AccountInterface $account) {
+  $uid = $account->id();
+  $otp_service = \Drupal::service('otp_login.OTP');
+  $userData = \Drupal::service('user.data');
+  $data = $userData->get('otp_login', $uid, 'otp_user_data');
+  $tiniyo_data = $userData->get('otp_login', $uid, 'otp_user_data');
+  $otp_platform = \Drupal::config('otp_login.settings')->get('otp_platform');
+  if ($otp_platform == 'sms' && $data) {
+    $mobile_number = $data['mobile_number'];
+    $cookie_session_id = $_COOKIE['Drupal_visitor_' . $mobile_number];
+    user_cookie_delete($mobile_number);
+    $otp_service->userOtpLogout($cookie_session_id, $mobile_number);
+  }
+  elseif ($otp_platform == 'tiniyo' && $tiniyo_data) {
+    $mobile_number = $tiniyo_data['mobile_number'];
+    $cookie_session_id = $_COOKIE['Drupal_visitor_' . $mobile_number];
+    user_cookie_delete($mobile_number);
+    $otp_service->userTiniyoOtpLogout($cookie_session_id, $mobile_number);
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function otp_login_cron() {
+  // Remove OTPs that are older than given amount of time.
+  $current_time = \Drupal::time()->getCurrentTime();
+  $config = \Drupal::config('otp_login.settings');
+  $otp_expire_value = $config->get('otp_expire_value');
+  $userData = \Drupal::service('user.data');
+  $data = $userData->get('otp_login');
+  $user_ids = array_keys($data);
+  foreach ($user_ids as $user_value) {
+    $mobile_number = $data[$user_value]['otp_user_data']['mobile_number'];
+    $lastotptime = $data[$user_value]['otp_user_data']['last_otp_time'];
+    $sessions = $data[$user_value]['otp_user_data']['sessions'];
+    $user_otp_time = array_column($data[$user_value]['otp_user_data']['otps'], 'otp_time');
+    foreach ($user_otp_time as $key => $value) {
+      $time_diff = ($current_time - $value) / 60;
+      if ($time_diff > $otp_expire_value) {
+        unset($data[$user_value]['otp_user_data']['otps'][$key]);
+        $otps = array_values($data[$user_value]['otp_user_data']['otps']);
+        $otp_user_data = [
+          "mobile_number" => $mobile_number,
+          "otps" => $otps,
+          "last_otp_time" => $lastotptime,
+          "sessions" => $sessions,
+        ];
+        $userData->set('otp_login', $user_value, 'otp_user_data', $otp_user_data);
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+    "name": "drupal/pendo",
+    "type": "drupal-module",
+    "description": "Provides integration with Pendo software.",
+    "keywords": [
+    ],
+    "homepage": "https://www.drupal.org/project/pendo",
+    "minimum-stability": "dev",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/pendo",
+        "source": "http://cgit.drupalcode.org/pendo"
+    }
+}

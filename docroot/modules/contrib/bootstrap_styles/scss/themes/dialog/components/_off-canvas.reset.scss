@@ -1,0 +1,82 @@
+/**
+ * @file
+ * Reset most HTML elements styles for the off-canvas dialog.
+ *
+ * This is a generic reset. Drupal-specific classes are reset in components.
+ */
+
+textarea,
+select,
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="month"],
+input[type="number"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+input[type="text"],
+input[type="time"],
+input[type="url"],
+input[type="week"] {
+  color: $panel_text_color;
+  padding: .65rem 1rem;
+  height: auto;
+  vertical-align: middle;
+  border-radius: $border_radius;
+  border: 2px solid $tabs_bottom_border_color;
+  background-color: transparent;
+
+  &::placeholder {
+    color: rgba($panel_text_color, .5);
+  }
+}
+
+textarea[disabled],
+select[disabled],
+input[type="date"][disabled],
+input[type="datetime"][disabled],
+input[type="datetime-local"][disabled],
+input[type="email"][disabled],
+input[type="month"][disabled],
+input[type="number"][disabled],
+input[type="password"][disabled],
+input[type="search"][disabled],
+input[type="tel"][disabled],
+input[type="text"][disabled],
+input[type="time"][disabled],
+input[type="url"][disabled],
+input[type="week"][disabled] {
+  background-color: rgba($panel_text_color, .1);
+}
+
+input:placeholder,
+textarea:placeholder {
+  color: rgba($panel_text_color, .8);
+}
+
+optgroup {
+  color: black;
+}
+
+* button {
+  color: black;
+  border: none;
+}
+
+* textarea,
+* select,
+*:not(div) textarea,
+*:not(div) select {
+  color: black;
+  border: 1px solid grey;
+  background: white;
+}
+
+/* To standardize off-canvas selection color. */
+::-moz-selection,
+::selection {
+  color: inherit;
+  background-color: rgba(175, 175, 175, 0.5);
+}

@@ -1,0 +1,188 @@
+ul.ui-autocomplete {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: 240px;
+  padding: 3px;
+}
+
+a.autocomplete-deluxe-single:hover {
+  text-decoration: none;
+}
+
+.ui-autocomplete .ui-menu-item a {
+  display: block;
+  color: black;
+}
+.ui-autocomplete .ui-menu-item a:hover {
+  text-decoration: none;
+  color: white;
+  background: #0072b9;
+}
+.ui-autocomplete .ui-state-hover {
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background-color: #3875d7;
+  background-image: linear-gradient(to bottom, #3875d7 20%, #2a62bc 90%);
+}
+
+.autocomplete-deluxe-container {
+  position: relative;
+  display: inline-block;
+  padding: 0;
+  border: 1px solid #ccc;
+  background: no-repeat -38px -22px, linear-gradient(to bottom, #eee 1%, #fff 15%);
+}
+.autocomplete-deluxe-container input.autocomplete-deluxe-form {
+  padding: 4px 5px 4px 5px;
+  border: none;
+  background: #fff no-repeat -38px -22px;
+}
+
+div.autocomplete-deluxe-container input.autocomplete-deluxe-form-single {
+  width: 90%;
+  border: none;
+  background: no-repeat -38px -22px, linear-gradient(to bottom, #eee 1%, #fff 15%);
+}
+
+.autocomplete-deluxe-search {
+  position: relative;
+  z-index: 1010;
+  margin: 0 0 4px 0;
+  padding: 3px 4px;
+  white-space: nowrap;
+}
+
+span.autocomplete-deluxe-value-delete {
+  display: inline-block;
+  width: 18px;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background: url("x.gif") no-repeat center;
+}
+
+.autocomplete-deluxe-single-open {
+  border: 1px solid #aaa;
+  -moz-border-radius-bottomright: 0;
+  border-bottom-right-radius: 0;
+  -moz-border-radius-bottomleft: 0;
+  border-bottom-left-radius: 0;
+  background-color: #eee;
+  background-image: linear-gradient(to bottom, #eee 20%, #fff 80%);
+  box-shadow: 0 1px 0 #fff inset;
+}
+
+div.autocomplete-deluxe-multiple {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto !important;
+  margin: 0;
+  padding: 5px;
+  cursor: text;
+  border: 1px solid #aaa;
+  background: #fff no-repeat -38px -22px;
+  background: no-repeat -38px -22px, linear-gradient(to bottom, #eee 1%, #fff 15%);
+  background-color: #fff;
+  font-size: 13px;
+  line-height: 0.81em;
+}
+
+input.autocomplete-deluxe-form.autocomplete-deluxe-multiple {
+  float: left;
+  width: 25px;
+  margin-left: 5px;
+  border: 3px none;
+}
+
+div.autocomplete-deluxe-throbber {
+  float: right;
+  width: 16px;
+  height: 50%;
+}
+
+.autocomplete-deluxe-closed {
+  background: url("../images/throbber.gif") no-repeat 100% 6px;
+}
+
+.autocomplete-deluxe-open {
+  background: url("../images/throbber.gif") no-repeat 100% -14px;
+}
+
+.autocomplete-deluxe-item {
+  position: relative;
+  float: left;
+  margin: 3px 0 3px 5px;
+  padding: 3px 20px 3px 5px;
+  cursor: move;
+  color: #333;
+  border: 1px solid #aaa;
+  border-radius: 3px 3px 3px 3px;
+  background-color: #e4e4e4;
+  background-image: -moz-linear-gradient(center top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eee 100%);
+  background-clip: padding-box;
+  box-shadow: 0 0 2px #fff inset, 0 1px 0 rgba(0, 0, 0, 0.05);
+  line-height: 13px;
+}
+
+.autocomplete-deluxe-item-delete {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: block;
+  width: 12px;
+  height: 13px;
+  background: url("../images/x.gif");
+  font-size: 1px;
+}
+
+.autocomplete-deluxe-item-focus {
+  background: none repeat scroll 0 0 #d4d4d4;
+}
+
+.autocomplete-deluxe-highlight-char {
+  color: inherit;
+  font-weight: bold;
+}
+
+/* RTL styling */
+[dir=rtl] span.autocomplete-deluxe-value-delete {
+  float: left;
+}
+
+[dir=rtl] div.autocomplete-deluxe-multiple {
+  padding: 4px 5px;
+}
+
+[dir=rtl] input.autocomplete-deluxe-form.autocomplete-deluxe-multiple {
+  float: right;
+  margin-right: 5px;
+  margin-left: 0;
+}
+
+[dir=rtl] div.autocomplete-deluxe-throbber {
+  float: left;
+}
+
+[dir=rtl] .autocomplete-deluxe-closed {
+  background-position: 0 6px;
+}
+
+[dir=rtl] .autocomplete-deluxe-open {
+  background-position: 0 -14px;
+}
+
+[dir=rtl] .autocomplete-deluxe-item {
+  float: right;
+  margin: 3px 5px 3px 0;
+  padding: 3px 5px 3px 20px;
+}
+
+[dir=rtl] .autocomplete-deluxe-item-delete {
+  position: absolute;
+  right: auto;
+  left: 3px;
+}

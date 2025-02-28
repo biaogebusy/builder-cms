@@ -1,0 +1,25 @@
+{
+  "name": "drupal/login_emailusername",
+  "description": "Login with the email as username.",
+  "type": "drupal-module",
+  "homepage": "https://drupal.org/project/login_emailusername",
+  "authors": [
+    {
+      "name": "See contributors",
+      "homepage": "https://www.drupal.org/node/2820429/committers",
+      "role": "contributor"
+    }
+  ],
+  "support": {
+    "issues": "https://drupal.org/project/issues/login_emailusername",
+    "source": "https://git.drupalcode.org/project/login_emailusername"
+  },
+  "license": "GPL-2.0+",
+  "minimum-stability": "dev",
+  "require": {},
+  "extra": {
+    "branch-alias": {
+      "dev-8.x-1.x": "8.1.x-dev"
+    }
+  }
+}

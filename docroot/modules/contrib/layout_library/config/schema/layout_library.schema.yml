@@ -1,0 +1,29 @@
+core.entity_view_display.*.*.*.third_party.layout_library:
+  type: mapping
+  label: 'Per-view-mode Layout Library settings'
+  mapping:
+    enable:
+      type: boolean
+      label: 'Whether the Layout Library is enabled for this display'
+
+layout_library.layout.*:
+  type: config_entity
+  label: 'Layout'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    targetEntityType:
+      type: string
+      label: 'Entity type'
+    targetBundle:
+      type: string
+      label: 'Bundle'
+    layout:
+      label: 'Layout'
+      type: sequence
+      sequence:
+        type: layout_builder.section

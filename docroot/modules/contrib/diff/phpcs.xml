@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="My Coding Standard">
+  <file>./src</file>
+  <file>./tests</file>
+  <file>diff.module</file>
+  <file>diff.views.inc</file>
+  <rule ref="PreviousNextDrupal" />
+
+  <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint">
+    <severity>0</severity>
+  </rule>
+
+  <arg name="report" value="full"/>
+</ruleset>

@@ -1,0 +1,9 @@
+# Schema for the views plugins of the SHS module.
+
+views.filter.shs_taxonomy_index_tid:
+  type: views.filter.taxonomy_index_tid
+  label: 'SHS Taxonomy term ID'
+
+views.filter.shs_taxonomy_index_tid_depth:
+  type: views.filter.taxonomy_index_tid_depth
+  label: 'SHS Taxonomy term ID with depth'

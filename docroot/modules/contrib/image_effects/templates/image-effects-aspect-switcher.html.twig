@@ -1,0 +1,27 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an aspect switcher effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this aspect switcher effect,
+ *   including:
+ *   - landscape: Image style for landscape orientation.
+ *   - landscape_image_style: Image style (machine name) for landscape
+ *     orientation.
+ *   - portrait: Image style for portrait orientation.
+ *   - portrait_image_style: Image style (machine name) for portrait
+ *     orientation.
+ *   - ratio_adjustment: Rules for how different the proportions need to be to
+ *     trigger the switch.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  - {{ 'Portrait'|t }}: <b>{{ data.portrait }}</b>, {{ 'Landscape'|t }}: <b>{{ data.landscape }}</b>, {{ 'Ratio'|t }}: {{ data.ratio_adjustment }}
+{% endapply %}

@@ -1,0 +1,4 @@
+# If this file did not exist then a default containing just *.yml would be
+# created, to match core/.prettierignore. Having this file gives more control.
+
+# Do not ignore any files, they all pass the Prettier formatting rules as configured.

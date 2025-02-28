@@ -1,0 +1,5 @@
+# JS and CSS for sms_sendtophone
+default:
+  css:
+    theme:
+      sms_sendtophone.css: {}

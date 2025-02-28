@@ -1,0 +1,4 @@
+sms_gateway_settings:
+  type: mapping
+  label: 'SMS gateway settings'
+  mapping: []

@@ -1,0 +1,7 @@
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'

@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Contains update functions for Color Button module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function colorbutton_requirements($phase) {
+  $requirements = [];
+
+  // @todo Remove backward compatibility conditions when we bump Drupal
+  //   requirement to 8.9.0. See https://www.drupal.org/node/3099614
+  if (\Drupal::hasService('library.libraries_directory_file_finder')) {
+    /** @var \Drupal\Core\Asset\LibrariesDirectoryFileFinder $library_file_finder */
+    $path = \Drupal::service('library.libraries_directory_file_finder')->find('colorbutton/plugin.js');
+  }
+  else {
+    $path = DRUPAL_ROOT . '/libraries/colorbutton/plugin.js';
+    if (\Drupal::moduleHandler()->moduleExists('libraries')) {
+      $path = libraries_get_path('colorbutton') . '/plugin.js';
+    }
+  }
+
+  if (!file_exists($path)) {
+    $requirements['colorbutton'] = [
+      'title' => t('Colorbutton library is missing'),
+      'value' => t('Plugin not detected'),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => t('Colorbutton requires the plugin.js library.
+       Download the plugin from http://ckeditor.com/addon/colorbutton at least 
+       version 4.5.6, and place it in the libraries folder 
+       (/libraries/colorbutton)'),
+    ];
+  }
+  else {
+    $requirements['colorbutton'] = [
+      'title' => t('CKEditor Colorbutton'),
+      'value' => t('Plugin detected'),
+      'severity' => REQUIREMENT_OK,
+    ];
+  }
+
+  return $requirements;
+}

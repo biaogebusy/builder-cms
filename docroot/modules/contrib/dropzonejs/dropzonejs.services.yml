@@ -1,0 +1,7 @@
+services:
+  dropzonejs.upload_save:
+    class: Drupal\dropzonejs\DropzoneJsUploadSave
+    arguments: ['@entity_type.manager', '@file.mime_type.guesser', '@file_system', '@logger.factory', '@renderer', '@config.factory', '@token', '@messenger', '@stream_wrapper_manager']
+  dropzonejs.upload_handler:
+    class: Drupal\dropzonejs\UploadHandler
+    arguments: ['@request_stack', '@config.factory', '@transliteration', '@language_manager', '@event_dispatcher']

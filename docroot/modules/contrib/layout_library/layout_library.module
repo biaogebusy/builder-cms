@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * @file
+ * Provides hook implementations for Layout Library.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function layout_library_entity_view_display_insert(LayoutEntityDisplayInterface $display) {
+  layout_library_entity_view_display_update($display);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function layout_library_entity_view_display_update(LayoutEntityDisplayInterface $display) {
+  // This function changes config, so bail out immediately during config sync.
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+  if (!$display->isLayoutBuilderEnabled()) {
+    return;
+  }
+
+  $entity_type = $display->getTargetEntityTypeId();
+  $bundle = $display->getTargetBundle();
+  $field_name = 'layout_selection';
+
+  // If the display supports layout overrides, create an entity reference field
+  // so that entities which are using layout can "import" a stored layout from
+  // their library as a base for customization. If the display does not support
+  // overrides, remove the field from the target entity type and bundle, if it
+  // exists.
+  if ($display->getThirdPartySetting('layout_library', 'enable', FALSE)) {
+    // Reuse the existing field storage if possible.
+    $field_storage = FieldStorageConfig::loadByName($entity_type, $field_name);
+
+    if (!$field_storage) {
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => $field_name,
+        'entity_type' => $entity_type,
+        'type' => 'entity_reference',
+      ]);
+      $field_storage->setSetting('target_type', 'layout');
+      $field_storage->setLocked(TRUE);
+      $field_storage->save();
+    }
+
+    // Create the entity reference field if it doesn't already exist.
+    $field = FieldConfig::loadByName($entity_type, $bundle, $field_name);
+
+    if (!$field) {
+      $field = FieldConfig::create([
+        'field_storage' => $field_storage,
+        'bundle' => $bundle,
+      ]);
+      $field->setSetting('handler', 'layout_library');
+      $field->setLabel(t('Layout'));
+      $field->save();
+    }
+
+    $form_display = \Drupal::service('entity_display.repository')->getFormDisplay($entity_type, $bundle, 'default');
+
+    if (!$form_display->getComponent($field_name)) {
+      $form_display->setComponent($field_name, [
+        'type' => \Drupal::moduleHandler()->moduleExists('options') ? 'options_select' : 'entity_reference_autocomplete',
+        'region' => 'content',
+      ])->save();
+    }
+  }
+  else {
+    $field_is_used = (bool) \Drupal::entityTypeManager()
+      ->getStorage($display->getEntityTypeId())
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('targetEntityType', $display->getTargetEntityTypeId())
+      ->condition('bundle', $display->getTargetBundle())
+      ->condition('mode', $display->getMode(), '<>')
+      ->condition('third_party_settings.layout_library.enable', TRUE)
+      ->count()
+      ->execute();
+
+    if (!$field_is_used && $field = FieldConfig::loadByName($entity_type, $bundle, $field_name)) {
+      $field->delete();
+      field_purge_batch(10);
+
+      \Drupal::service('entity_display.repository')->getFormDisplay($entity_type, $bundle, 'default')
+        ->removeComponent($field_name)
+        ->save();
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function layout_library_form_entity_view_display_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  $enable_library = $form_state->getFormObject()
+    ->getEntity()
+    ->getThirdPartySetting('layout_library', 'enable', FALSE);
+
+  $form['layout']['library'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow content editors to use stored layouts'),
+    '#default_value' => $enable_library,
+  ];
+  $form['#entity_builders']['layout_library'] = '_layout_library_entity_view_display_form_entity_builder';
+}
+
+/**
+ * Entity builder for entity_view_display_edit_form.
+ */
+function _layout_library_entity_view_display_form_entity_builder($entity_type_id, LayoutEntityDisplayInterface $display, &$form, FormStateInterface &$form_state) {
+  if ($display->isLayoutBuilderEnabled()) {
+    $enable_library = (bool) $form_state->getValue(['layout', 'library'], FALSE);
+    $display->setThirdPartySetting('layout_library', 'enable', $enable_library);
+  }
+}

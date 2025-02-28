@@ -1,0 +1,4 @@
+services:
+  recently_read:
+    class: Drupal\recently_read\RecentlyReadService
+    arguments: ['@current_user', '@entity_type.manager', '@session_manager', '@config.factory']

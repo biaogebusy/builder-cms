@@ -1,0 +1,15 @@
+type: module
+name: 'Page Manager Contextual Links Test'
+description: 'Required for page manager tests only.'
+package: Testing
+core_version_requirement: '^9.3 || ^10'
+dependencies:
+  - drupal:block_content
+  - drupal:user
+  - drupal:views
+  - page_manager:page_manager
+
+# Information added by Drupal.org packaging script on 2022-12-16
+version: '8.x-4.0-rc2'
+project: 'page_manager'
+datestamp: 1671210023

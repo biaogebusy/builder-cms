@@ -1,0 +1,6 @@
+bootstrap_styles.settings:
+  title: 'Bootstrap Styles'
+  route_name: bootstrap_styles.settings
+  parent: system.admin_config_content
+  description: 'Manage Bootstrap Styles Settings.'
+  weight: 10

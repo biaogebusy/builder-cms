@@ -1,0 +1,13 @@
+{
+    "name": "drupal/yunke_pay",
+    "description": "drupal yunke pay module",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "http://www.indrupal.com",
+
+    "require": {
+        "wechatpay/wechatpay-guzzle-middleware": "^0.2.0",
+	"alipaysdk/easysdk": "^2.2"
+    }
+
+}

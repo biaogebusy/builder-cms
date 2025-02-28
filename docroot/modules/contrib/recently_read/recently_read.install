@@ -1,0 +1,33 @@
+<?php
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_update_N().
+ */
+function recently_read_update_8001() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('recently_read.configuration');
+  $config->set('config_delete', ['never']);
+  $config->save(TRUE);
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function recently_read_update_8002() {
+  $schema = Database::getConnection()->schema();
+  if (!$schema->indexExists('recently_read', 'session_id')) {
+    $spec = [
+      'fields' => [
+        'session_id' => [
+          'description' => 'session id',
+          'type' => 'varchar',
+          'not null' => TRUE,
+          'default' => '',
+        ],
+      ],
+    ];
+    $schema->addIndex('recently_read', 'session_id', ['session_id'], $spec);
+  }
+}

@@ -1,0 +1,13 @@
+{
+    "name": "drupal/multiselect",
+    "description": "D8 Port of multiselect",
+    "type": "drupal-module",
+    "authors": [
+        {
+            "name": "Adam Bergstein",
+            "email": "nerdstein@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}

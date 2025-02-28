@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.dropzonejs_test.field_dropzonejs_image
+    - node.type.dropzonejs_test
+  module:
+    - user
+id: node.dropzonejs_test.default
+targetEntityType: node
+bundle: dropzonejs_test
+mode: default
+content:
+  field_dropzonejs_image:
+    type: entity_reference_entity_view
+    weight: 101
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden: {  }

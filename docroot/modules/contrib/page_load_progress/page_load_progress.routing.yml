@@ -1,0 +1,7 @@
+page_load_progress.admin_settings:
+  path: '/admin/config/user-interface/page-load-progress'
+  defaults:
+    _title: 'Page Load Progress'
+    _form: 'Drupal\page_load_progress\Form\SettingsForm'
+  requirements:
+    _permission: 'administer page load progress'

@@ -1,0 +1,17 @@
+module_filter.settings:
+  type: config_object
+  label: 'Module filter settings'
+  mapping:
+    tabs:
+      type: boolean
+      label: 'Boolean indicating whether the Extend page should be enhanced with tabs'
+    path:
+      type: boolean
+      label: 'Show module path in modules list'
+    enabled_filters:
+      type: mapping
+      label: 'Enabled filters'
+      mapping:
+        permissions:
+          type: boolean
+          label: 'Enable filter on the permissions page'

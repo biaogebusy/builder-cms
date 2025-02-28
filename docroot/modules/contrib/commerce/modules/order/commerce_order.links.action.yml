@@ -1,0 +1,35 @@
+entity.commerce_order.add_page:
+  route_name: entity.commerce_order.add_page
+  title: 'Create a new order'
+  appears_on:
+    - entity.commerce_order.collection
+
+entity.commerce_order.resend_receipt_form:
+  route_name: entity.commerce_order.resend_receipt_form
+  title: 'Resend receipt'
+  appears_on:
+    - entity.commerce_order.canonical
+
+entity.commerce_order_type.add_form:
+  route_name: entity.commerce_order_type.add_form
+  title: 'Add order type'
+  appears_on:
+    - entity.commerce_order_type.collection
+
+entity.commerce_order_item_type.add_form:
+  route_name: entity.commerce_order_item_type.add_form
+  title: 'Add order item type'
+  appears_on:
+    - entity.commerce_order_item_type.collection
+
+entity.commerce_order.canonical:
+  route_name: entity.commerce_order.canonical
+  title: 'Manage this order'
+  appears_on:
+    - entity.commerce_order.user_view
+
+entity.commerce_order.reassign_form:
+  route_name: entity.commerce_order.reassign_form
+  title: 'Reassign order'
+  appears_on:
+    - entity.commerce_order.canonical

@@ -1,0 +1,47 @@
+# Schema for generic webform submission field.
+views.field.webform_submission_field:
+  type: views_field
+  label: 'Webform submission field'
+  mapping:
+    webform_element_format:
+      type: string
+      label: 'Format'
+    webform_multiple_value:
+      type: boolean
+      label: 'Whether to show all multiple values in a single field'
+    webform_multiple_delta:
+      type: integer
+      label: 'Delta to use'
+
+# Schema definition for select filter.
+views.filter.webform_submission_select_filter:
+  type: views.filter.in_operator
+
+# Schema definition for webform status.
+views.filter.webform_views_webform_status:
+  type: views.filter.in_operator
+
+# Schema definition for date filter.
+views.filter.webform_submission_date_filter:
+  type: views.filter.date
+
+views.filter_value.webform_submission_date_filter:
+  type: views.filter_value.date
+
+# Schema definition for date filter.
+views.filter.webform_submission_datetime_filter:
+  type: views.filter.date
+
+views.filter_value.webform_submission_datetime_filter:
+  type: views.filter_value.date
+
+# Schema definition for numeric filter.
+views.filter.webform_submission_numeric_filter:
+  type: views.filter.numeric
+
+views.filter_value.webform_submission_numeric_filter:
+  type: views.filter_value.numeric
+
+# Schema definition for composite field filter.
+views.filter.webform_submission_composite_field_filter:
+  type: views.filter.string

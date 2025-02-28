@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the Fivestar module.
+ */
+
+/**
+ * Updates the Fivestar stars widget settings.
+ *
+ * @see https://www.drupal.org/project/fivestar/issues/3136366
+ *
+ * This hook attempts to update the Fivestar stars widget settings. This
+ * update will work for all stars widgets provided by the Fivestar
+ * module, but may not work for stars widgets provided by other modules
+ * unless they followed the naming convention used by Fivestar (that
+ * naming convention was never required or enforced).
+ *
+ * If we were unsuccessful in renaming the stars widget, then no data is
+ * lost. However you will then need to perform the update manually by
+ * setting the stars widgets on the manage display form for the content
+ * type, reachable from /admin/structure/types.
+ *
+ * The 'old' value was stored as a file path to the CSS file for
+ * the stars widget, relative to DRUPAL_ROOT.
+ *
+ * The 'new' value is a string key which may be used to look up
+ * the stars widget library in the output of hook_fivestar_widgets().
+ */
+function fivestar_update_8101() {
+
+  // Find all entity bundles that have a Fivestar field attached.
+  $fivestar_field_map = \Drupal::service('entity_field.manager')->getFieldMapByFieldType('fivestar');
+
+  // Assemble a list of all available Fivestar star widgets.
+  $widgets = \Drupal::moduleHandler()->invokeAll('fivestar_widgets');
+
+  // FieldWidgets can be used on view displays and form displays only.
+  foreach (['entity_view_display', 'entity_form_display'] as $display) {
+    // Perform an entity query to find all the entity display modes that
+    // use a fivestar_widget but have that widget set to something OTHER than
+    // one of the current star widget names. This will identify our legacy
+    // settings.
+    foreach ($fivestar_field_map as $entity => $details) {
+      foreach ($details as $field => $values) {
+        $display_map[$field] = \Drupal::service('entity_type.manager')->getStorage($display)->getQuery()
+          ->condition('targetEntityType', $entity)
+          ->condition("content.$field.settings.fivestar_widget", array_keys($widgets), 'NOT IN')
+          ->execute();
+      }
+    }
+
+    // Now parse the output of the query and grab the fivestar widget setting
+    // out of the configuration.
+    foreach ($display_map as $field => $entities) {
+      foreach ($entities as $entity) {
+        $config = \Drupal::configFactory()->getEditable("core.$display.$entity");
+
+        // Do the renaming, using our best guess of what the new name should be.
+        $old_name = $config->get("content.$field.settings.fivestar_widget");
+        $new_name = basename($old_name, '.css');
+        $config->set("content.$field.settings.fivestar_widget", $new_name);
+        $config->save();
+      }
+    }
+  }
+
+}

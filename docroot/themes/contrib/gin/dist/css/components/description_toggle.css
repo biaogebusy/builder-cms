@@ -1,0 +1,135 @@
+.help-icon {
+  display: flex;
+}
+
+.help-icon__description-toggle {
+  all: unset;
+  flex-shrink: 0;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+}
+
+[dir="ltr"] .help-icon__description-toggle {
+  margin: .1rem var(--gin-spacing-m) 0 .3rem;
+}
+
+[dir="rtl"] .help-icon__description-toggle {
+  margin: .1rem .3rem 0 var(--gin-spacing-m);
+}
+
+.help-icon__description-toggle:before {
+  background-color: var(--gin-icon-color);
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: url("../../media/sprite.svg#help-view");
+          mask-image: url("../../media/sprite.svg#help-view");
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center center;
+          mask-position: center center;
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+}
+
+.help-icon__description-toggle:hover:before {
+  background-color: var(--gin-color-primary);
+}
+
+.form-type--checkbox > .help-icon__element-has-description,
+.form-type--radio > .help-icon__element-has-description {
+  display: flex;
+  align-items: normal;
+}
+
+[dir="ltr"] .form-type--checkbox > .help-icon__element-has-description > label,
+[dir="ltr"] .form-type--radio > .help-icon__element-has-description > label {
+  margin-left: 6px;
+}
+
+[dir="rtl"] .form-type--checkbox > .help-icon__element-has-description > label,
+[dir="rtl"] .form-type--radio > .help-icon__element-has-description > label {
+  margin-right: 6px;
+}
+
+[dir="ltr"] .form-type--checkbox .checkbox-toggle + .help-icon,
+[dir="ltr"] .form-type--radio .checkbox-toggle + .help-icon {
+  padding-left: var(--gin-spacing-xxs);
+}
+
+[dir="rtl"] .form-type--checkbox .checkbox-toggle + .help-icon,
+[dir="rtl"] .form-type--radio .checkbox-toggle + .help-icon {
+  padding-right: var(--gin-spacing-xxs);
+}
+
+.form-type-checkbox .help-icon__element-has-description .checkbox-toggle {
+  width: 50px !important;
+}
+
+.field-group-details.help-icon__description-container .help-icon__description-toggle {
+  margin-top: 0;
+}
+
+[dir="ltr"] fieldset:not(.fieldgroup) .help-icon > .fieldset__legend .fieldset__label {
+  padding-right: 0;
+}
+
+[dir="rtl"] fieldset:not(.fieldgroup) .help-icon > .fieldset__legend .fieldset__label {
+  padding-left: 0;
+}
+
+.field-group-fieldset > .help-icon > .help-icon__description-toggle,
+fieldset.media-library-widget .help-icon > .help-icon__description-toggle,
+.field--type-datetime fieldset .help-icon > .help-icon__description-toggle {
+  margin-top: 1rem;
+}
+
+[dir="ltr"] .field-group-fieldset > .fieldset__description,
+[dir="ltr"] fieldset.media-library-widget .fieldset__description,
+[dir="ltr"] .field--type-datetime fieldset .fieldset__description {
+  padding-left: var(--gin-spacing-m);
+}
+
+[dir="rtl"] .field-group-fieldset > .fieldset__description,
+[dir="rtl"] fieldset.media-library-widget .fieldset__description,
+[dir="rtl"] .field--type-datetime fieldset .fieldset__description {
+  padding-right: var(--gin-spacing-m);
+}
+
+@media (min-width: 48em) {
+  [dir="ltr"] .field-group-fieldset > .fieldset__description,
+  [dir="ltr"] fieldset.media-library-widget .fieldset__description,
+  [dir="ltr"] .field--type-datetime fieldset .fieldset__description {
+    padding-left: var(--gin-spacing-l);
+  }
+
+  [dir="rtl"] .field-group-fieldset > .fieldset__description,
+  [dir="rtl"] fieldset.media-library-widget .fieldset__description,
+  [dir="rtl"] .field--type-datetime fieldset .fieldset__description {
+    padding-right: var(--gin-spacing-l);
+  }
+}
+
+.system-modules .table-filter .form-type--search,
+.system-modules-uninstall .table-filter .form-type--search {
+  position: relative;
+}
+
+.system-modules .table-filter .form-type--search .help-icon__description-toggle,
+.system-modules-uninstall .table-filter .form-type--search .help-icon__description-toggle {
+  position: absolute;
+  top: var(--gin-spacing-m);
+}
+
+[dir="ltr"] .system-modules .table-filter .form-type--search .help-icon__description-toggle,
+[dir="ltr"] .system-modules-uninstall .table-filter .form-type--search .help-icon__description-toggle {
+  right: calc(var(--gin-spacing-xs) * -1);
+}
+
+[dir="rtl"] .system-modules .table-filter .form-type--search .help-icon__description-toggle,
+[dir="rtl"] .system-modules-uninstall .table-filter .form-type--search .help-icon__description-toggle {
+  left: calc(var(--gin-spacing-xs) * -1);
+}
+

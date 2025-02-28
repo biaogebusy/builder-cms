@@ -1,0 +1,128 @@
+{
+    "name": "drupal/charts_highcharts",
+    "description": "Charts module integration with Highcharts library.",
+    "type": "drupal-module",
+    "homepage": "http://drupal.org/project/charts",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/charts"
+    },
+    "license": "GPL-2.0+",
+    "require": {
+        "highcharts/3d": "11.1.0",
+        "highcharts/accessibility": "11.1.0",
+        "highcharts/export-data": "11.1.0",
+        "highcharts/exporting": "11.1.0",
+        "highcharts/highcharts": "11.1.0",
+        "highcharts/more": "11.1.0"
+    },
+    "repositories": {
+        "highcharts": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/highcharts",
+                "version": "11.1.0",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/11.1.0/highcharts.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_3d": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/3d",
+                "version": "11.1.0",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_3d"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/11.1.0/highcharts-3d.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_accessibility": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/accessibility",
+                "version": "11.1.0",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_accessibility"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/11.1.0/modules/accessibility.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_export_data": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/export-data",
+                "version": "11.1.0",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_export-data"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/11.1.0/modules/export-data.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_exporting": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/exporting",
+                "version": "11.1.0",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_exporting"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/11.1.0/modules/exporting.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_more": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/more",
+                "version": "11.1.0",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_more"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/11.1.0/highcharts-more.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        }
+    }
+}

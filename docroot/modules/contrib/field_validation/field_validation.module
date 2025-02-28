@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file
+ * Field validation.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+
+/**
+ * Implements hook_entity_bundle_field_info_alter().
+ */
+function field_validation_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
+
+  $ruleset_name = $entity_type->id() . '_' . $bundle;
+  $ruleset = \Drupal::entityTypeManager()->getStorage('field_validation_rule_set')->load($ruleset_name);
+
+  if ($ruleset) {
+    // Remove this code. Replace it with following code.
+    // foreach ($fields as $field) {
+    //  $field->addConstraint('FieldValidationConstraint', [
+    //    'ruleset_name' => $ruleset_name,
+    //    'rule_uuid' => '',
+    //  ]);
+    //}
+
+    $rules = $ruleset->getFieldValidationRules();
+    foreach ($rules as $field_validation_rule) {
+      $field_name = $field_validation_rule->getFieldName();
+      if (isset($fields[$field_name])) {
+        $fields[$field_name]->addConstraint('FieldValidationConstraint', [
+          'ruleset_name' => $ruleset_name,
+          'rule_uuid' => '',
+        ]);
+      }
+    }
+  }
+
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function field_validation_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  $rulesets = \Drupal::entityTypeManager()->getStorage('field_validation_rule_set')->loadByProperties(['entity_type' => $entity_type->id()]);
+  foreach ($rulesets as $ruleset_name => $ruleset) {
+    $rules = $ruleset->getFieldValidationRules();
+    foreach ($rules as $field_validation_rule) {
+      $field_name = $field_validation_rule->getFieldName();
+      if (isset($fields[$field_name])) {
+        $fields[$field_name]->addConstraint('FieldValidationConstraint', [
+          'ruleset_name' => $ruleset_name,
+          'rule_uuid' => '',
+        ]);
+      }
+    }
+  }
+}

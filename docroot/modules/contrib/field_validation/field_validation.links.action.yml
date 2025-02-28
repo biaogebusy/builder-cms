@@ -1,0 +1,5 @@
+field_validation_rule_add_action:
+  route_name: field_validation.field_validation_rule_set_add
+  title: 'Add field validation rule set'
+  appears_on:
+    - entity.field_validation_rule_set.collection

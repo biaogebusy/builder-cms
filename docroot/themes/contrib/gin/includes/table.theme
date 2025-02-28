@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * table.theme
+ */
+
+/**
+ * Implements form_alter() for table.
+ */
+function gin_theme_suggestions_table_alter(array &$suggestions, array $variables): void {
+  if (empty($variables['attributes']['class'])) {
+    return;
+  }
+
+  if (is_array($variables['attributes']['class']) && in_array('field-multiple-table', $variables['attributes']['class'])) {
+    $suggestions[] = 'table__simple';
+  }
+}

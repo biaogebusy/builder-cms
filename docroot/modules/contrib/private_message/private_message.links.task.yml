@@ -1,0 +1,21 @@
+private_message.private_message_settings_tab:
+  route_name: private_message.private_message_settings
+  title: Settings
+  base_route: private_message.private_message_settings
+
+private_message.private_message_thread_settings_tab:
+  route_name: private_message.private_message_thread_settings
+  title: Settings
+  base_route: private_message.private_message_thread_settings
+
+private_message.view:
+  route_name: entity.private_message.canonical
+  title: 'View'
+  base_route: entity.private_message.canonical
+  class: '\Drupal\private_message\Plugin\Menu\PrivateMessageTab'
+
+private_message.delete:
+  route_name: entity.private_message.delete
+  title: 'Delete'
+  base_route: entity.private_message.canonical
+  class: '\Drupal\private_message\Plugin\Menu\PrivateMessageTab'

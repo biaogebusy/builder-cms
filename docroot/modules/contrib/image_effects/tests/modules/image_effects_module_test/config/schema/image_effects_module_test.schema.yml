@@ -1,0 +1,17 @@
+image.effect.image_effects_module_test_font_selection:
+  type: mapping
+  label: 'Tests that the font selector works'
+  mapping:
+    font_name:
+      type: string
+      label: 'Selected font name'
+    font_uri:
+      type: string
+      label: 'Selected font URI'
+image.effect.image_effects_module_test_image_selection:
+  type: mapping
+  label: 'Tests that the basic image selector works'
+  mapping:
+    image_uri:
+      type: string
+      label: 'Selected image URI'

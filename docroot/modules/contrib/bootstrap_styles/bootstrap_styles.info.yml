@@ -1,0 +1,14 @@
+name: 'Bootstrap Styles'
+description: 'Add a plugins builder and a collection of reusable plugins to the Layout Builder module.'
+type: module
+core_version_requirement: <10.3
+package: 'Layout Builder'
+configure: bootstrap_styles.settings
+dependencies:
+  - drupal:layout_builder
+  - media_library_form_element:media_library_form_element
+
+# Information added by Drupal.org packaging script on 2024-10-21
+version: '1.1.10'
+project: 'bootstrap_styles'
+datestamp: 1729496383

@@ -1,0 +1,7 @@
+# Bootstrap Layout Builder base styles.
+layout_builder_form_style:
+  css:
+    theme:
+      css/layout-tab-styles.css: { }
+  js:
+    js/layout-tab-scripts.js: { }

@@ -1,0 +1,4 @@
+services:
+  plugin.manager.field_validation.field_validation_rule:
+    class: Drupal\field_validation\FieldValidationRuleManager
+    parent: default_plugin_manager

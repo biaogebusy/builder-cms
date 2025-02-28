@@ -1,0 +1,5 @@
+services:
+  entity_module_test.query_access_subscriber:
+    class: Drupal\entity_module_test\EventSubscriber\QueryAccessSubscriber
+    tags:
+      - { name: event_subscriber }

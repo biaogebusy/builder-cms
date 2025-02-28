@@ -1,0 +1,5 @@
+sms_devel.message_form:
+  title: 'Test SMS'
+  description: 'Send or receive a test SMS.'
+  route_name: sms_devel.message
+  parent: 'system.admin_config_development'

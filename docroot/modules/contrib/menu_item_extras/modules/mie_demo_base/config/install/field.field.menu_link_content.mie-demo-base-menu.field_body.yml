@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.menu_link_content.field_body
+    - system.menu.mie-demo-base-menu
+  module:
+    - text
+id: menu_link_content.mie-demo-base-menu.field_body
+field_name: field_body
+entity_type: menu_link_content
+bundle: mie-demo-base-menu
+label: Body
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

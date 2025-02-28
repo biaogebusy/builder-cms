@@ -1,0 +1,6 @@
+charts.settings.library_plugin.charts_test_library:
+  type: mapping
+  mapping:
+    foo:
+      label: Foo
+      type: string

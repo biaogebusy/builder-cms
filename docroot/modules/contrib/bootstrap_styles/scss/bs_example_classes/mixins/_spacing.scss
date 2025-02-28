@@ -1,0 +1,63 @@
+// Main spacing.
+@mixin make-spacing($prop, $abbrev) {
+  // Generate the general spacing classes first.
+  @each $size, $length in $bs_spacers {
+    .#{$bs_class_prefix}#{$abbrev}-#{$size} {
+      #{$prop}: $length !important;
+    }
+    .#{$bs_class_prefix}#{$abbrev}l-#{$size} { 
+      #{$prop}-left: $length !important;
+    }
+    .#{$bs_class_prefix}#{$abbrev}r-#{$size} {
+      #{$prop}-right: $length !important;
+    }
+    .#{$bs_class_prefix}#{$abbrev}t-#{$size} {
+      #{$prop}-top: $length !important;
+    }
+    .#{$bs_class_prefix}#{$abbrev}b-#{$size} {
+      #{$prop}-bottom: $length !important;
+    }
+  }
+
+  // Then generate the spacing classes for Breakpoints.
+  @each $size, $length in $bs_spacers {
+    @each $breakpoint_key, $media in $bs_breakpoints {
+      @media #{$media} {
+        .#{$bs_class_prefix}#{$abbrev}-#{$breakpoint_key}-#{$size} {
+          #{$prop}: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}l-#{$breakpoint_key}-#{$size} { 
+          #{$prop}-left: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}r-#{$breakpoint_key}-#{$size} {
+          #{$prop}-right: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}t-#{$breakpoint_key}-#{$size} {
+          #{$prop}-top: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}b-#{$breakpoint_key}-#{$size} {
+          #{$prop}-bottom: $length !important;
+        }
+      }
+
+      // Fix the padding and margin for breakpoints in the layout builder dialog.
+      .ui-dialog-off-canvas {
+        .#{$bs_class_prefix}#{$abbrev}-#{$breakpoint_key}-#{$size} {
+          #{$prop}: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}l-#{$breakpoint_key}-#{$size} {
+          #{$prop}-left: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}r-#{$breakpoint_key}-#{$size} {
+          #{$prop}-right: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}t-#{$breakpoint_key}-#{$size} {
+          #{$prop}-top: $length !important;
+        }
+        .#{$bs_class_prefix}#{$abbrev}b-#{$breakpoint_key}-#{$size} {
+          #{$prop}-bottom: $length !important;
+        }
+      }
+    }
+  }
+}

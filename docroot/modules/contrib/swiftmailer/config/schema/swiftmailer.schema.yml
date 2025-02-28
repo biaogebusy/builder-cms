@@ -1,0 +1,80 @@
+swiftmailer.message:
+  type: config_object
+  label: 'Swift Mailer message settings'
+  mapping:
+    content_type:
+      type: string
+      label: 'Content type'
+    text_format:
+      type: string
+      label: 'Text format'
+    generate_plain:
+      type: boolean
+      label: 'Generate alternative plain text version'
+    character_set:
+      type: string
+      label: 'Character set'
+
+swiftmailer.transport:
+  type: config_object
+  label: 'Swift Mailer transport settings'
+  mapping:
+    transport:
+      type: string
+      label: 'Transport method'
+    smtp_host:
+      type: string
+      label: 'SMTP Host'
+    smtp_port:
+      type: integer
+      label: 'SMTP Port'
+    smtp_encryption:
+      type: string
+      label: 'SMTP encryption'
+    sendmail_path:
+      type: string
+      label: 'Sendmail path'
+    sendmail_mode:
+      type: string
+      label: 'Sendmail mode'
+    smtp_credential_provider:
+      type: string
+      label: 'SMTP Credential provider'
+    smtp_credentials:
+      type: sequence
+      label: 'SMTP Credentials'
+      sequence:
+        type: swiftmailer.transport.smtp_credentials.[%key]
+    spool_directory:
+      type: string
+      label: 'Spool directory'
+
+swiftmailer.transport.smtp_credentials.swiftmailer:
+  type: mapping
+  label: 'Swift Mailer SMTP credentials'
+  mapping:
+    username:
+      type: string
+      label: 'SMTP Username key'
+    password:
+      type: string
+      label: 'SMTP Password key'
+
+swiftmailer.transport.smtp_credentials.key:
+  type: mapping
+  label: 'Swift Mailer SMTP credentials with Key Module'
+  mapping:
+    username:
+      type: string
+      label: 'SMTP Username key'
+    password:
+      type: string
+      label: 'SMTP Password key'
+
+swiftmailer.transport.smtp_credentials.multikey:
+  type: mapping
+  label: 'Swift Mailer SMTP credentials with Key Module (user/password keys)'
+  mapping:
+    user_password:
+      type: string
+      label: 'SMTP User/Password key'

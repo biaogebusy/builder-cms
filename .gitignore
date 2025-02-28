@@ -1,0 +1,31 @@
+# Ignore binaries.
+#/bin
+
+/docroot/sites/*/settings.php
+/docroot/sites/*/services*
+/docroot/sites/*/settings.local.php
+/docroot/sites/*/settings*
+/docroot/sites/*/drushrc.php
+/docroot/sites/*/local.settings.php
+/docroot/sites/all/drush/drushrc.php
+/docroot/sites/*/files
+/docroot/sites/*/files/*
+*.sql
+*.sql.gz
+*.tar.gz
+/docker-compose.yml
+/config
+/backup
+/docker/data
+
+# Ignore IDE config
+/.settings/*
+/.settings
+/.buildpath
+/.project
+/.idea
+.DS_Store
+/.vscode
+
+# node modules
+**/node_modules/

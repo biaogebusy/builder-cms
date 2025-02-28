@@ -1,0 +1,39 @@
+////
+/// General theme configuration.
+/// @group Configuration
+////
+
+/// z-index organization.
+/// See links below for more information.
+///
+/// @link https://css-tricks.com/handling-z-index/
+/// @link http://www.sitepoint.com/using-sass-maps/
+$z-layers: (
+  skip-link: 8000,
+  ajax-throbber: 7000,
+  debug: 1000,
+  default: 0,
+  bottomless-pit: -9999,
+  fixed: 500,
+  above: 1,
+  under: -1,
+
+  // example nested z-index.
+  example: (
+    default: 100,
+    image: -2
+  )
+);
+
+/// Button config
+$buttons: (
+  _base: (
+    background: $primary-color,
+    color: $white,
+    border: 2px solid transparent,
+    hover-background: $light-gray,
+    hover-color: $white,
+    hover-border: $light-gray,
+    active-background: $light-gray,
+  ),
+);

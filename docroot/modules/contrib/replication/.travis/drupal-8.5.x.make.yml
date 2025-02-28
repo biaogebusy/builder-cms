@@ -1,0 +1,19 @@
+api: 2
+
+core: 8.x
+
+projects:
+  drupal: 8.5.x
+  key_value: 1.x
+  conflict:
+    type: module
+    download:
+      type: git
+      branch: 8.x-1.x
+      url: "https://github.com/drupaldeploy/drupal-conflict.git"
+  multiversion:
+    type: module
+    download:
+      type: git
+      branch: 8.x-1.x
+      url: https://github.com/dickolsson/drupal-multiversion.git

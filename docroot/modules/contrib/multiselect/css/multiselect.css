@@ -1,0 +1,117 @@
+/**
+ * @file
+ * Styles for the multiselect module.
+ */
+
+.multiselect-wrapper:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.multiselect-wrapper select.form-multiselect {
+  padding: 2px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-top-color: #999;
+  background: #fff;
+  color: #333;
+}
+
+.multiselect-wrapper select.form-multiselect:focus {
+  border-color: #ace;
+  color: #000;
+}
+.multiselect-wrapper label {
+  color: #999;
+  font-weight: bold;
+}
+div.multiselect-available,
+div.multiselect-selected {
+  float: left;
+  width: 250px;
+}
+[dir="rtl"] div.multiselect-available,
+[dir="rtl"] div.multiselect-selected {
+  float: right;
+}
+.form-disabled select.form-multiselect {
+  background-color: #eee;
+  color: #777;
+}
+.multiselect-btns > ul {
+  float: left;
+  margin: 10px 10px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+[dir="rtl"] .multiselect-btns > ul {
+  float: right;
+  margin: 10px 20px 0 10px;
+}
+.multiselect-btns > ul > li.multiselect-add,
+.multiselect-btns > ul > li.multiselect-remove {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  width: 33px;
+  height: 38px;
+  background: url(../images/remove.png) no-repeat 0 0;
+  text-indent: -9999px;
+}
+[dir="rtl"] .multiselect-btns > ul > li.multiselect-add,
+[dir="rtl"] .multiselect-btns > ul > li.multiselect-remove {
+  background: url(../images/remove-rtl.png) no-repeat 0 0;
+}
+.multiselect-btns > ul > li.multiselect-add {
+  margin-bottom: 15px;
+  background: url(../images/add.png) no-repeat 0 0;
+}
+[dir="rtl"] .multiselect-btns > ul > li.multiselect-add {
+  background: url(../images/add-rtl.png) no-repeat 0 0;
+}
+.multiselect-btns > ul > li.multiselect-add:hover,
+.multiselect-btns > ul > li.multiselect-remove:hover {
+  background-position: -33px 0;
+}
+.multiselect-btns > ul > li.multiselect-add:active,
+.multiselect-btns > ul > li.multiselect-remove:active {
+  background-position: -66px 0;
+}
+
+/* Responsive Styles */
+
+@media screen and (max-width: 991px) {
+
+  .multiselect-wrapper select.form-multiselect {
+    width: 100%;
+  }
+  div.multiselect-available,
+  div.multiselect-selected {
+    float: none;
+    width: 100%;
+  }
+  .multiselect-btns > ul {
+    float: none;
+    display: flex;
+    position: relative;
+    left: 35%;
+    top: 10px;
+  }
+  .multiselect-available.form-multiselect option,
+  .multiselect-selected.form-multiselect option {
+    padding: 15px;
+  }
+  .multiselect-btns > ul > li.multiselect-add {
+    background: url(../images/add-mobile.png) no-repeat 0 0;
+  }
+  .multiselect-btns > ul > li.multiselect-remove {
+    background: url(../images/remove-mobile.png) no-repeat 0 0;
+  }
+  .multiselect-btns > ul > li.multiselect-add,
+  .multiselect-btns > ul > li.multiselect-remove {
+    margin-right: 50px;
+    width: 35px;
+  }
+}

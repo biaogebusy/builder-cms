@@ -1,0 +1,168 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for commerce_store module.
+ */
+
+use Drupal\commerce_store\Entity\Store;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Add the URL alias path field to stores.
+ */
+function commerce_store_update_8201() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  if (!\Drupal::moduleHandler()->moduleExists('path')) {
+    \Drupal::service('module_installer')->install(['path']);
+  }
+
+  $storage_definition = BaseFieldDefinition::create('path')
+    ->setLabel(t('URL alias'))
+    ->setDescription(t('The store URL alias.'))
+    ->setTranslatable(TRUE)
+    ->setDisplayOptions('form', [
+      'type' => 'path',
+      'weight' => 30,
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setCustomStorage(TRUE);
+
+  $definition_update_manager->installFieldStorageDefinition('path', 'commerce_store', 'commerce_store', $storage_definition);
+}
+
+/**
+ * Update entity keys for stores.
+ */
+function commerce_store_update_8202() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $uid_storage_definition = $definition_update_manager->getFieldStorageDefinition('uid', 'commerce_store');
+  $entity_type = $definition_update_manager->getEntityType('commerce_store');
+  $keys = $entity_type->getKeys();
+  $keys['owner'] = 'uid';
+  $keys['uid'] = 'uid';
+  $entity_type->set('entity_keys', $keys);
+  $definition_update_manager->updateEntityType($entity_type);
+  $definition_update_manager->updateFieldStorageDefinition($uid_storage_definition);
+}
+
+/**
+ * Add the timezone field to stores.
+ */
+function commerce_store_update_8203() {
+  $site_timezone = Store::getSiteTimezone();
+  $site_timezone = reset($site_timezone);
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('list_string')
+    ->setLabel(t('Timezone'))
+    ->setDescription(t('Used when determining promotion and tax availability.'))
+    ->setInitialValue($site_timezone)
+    ->setCardinality(1)
+    ->setRequired(TRUE)
+    ->setDefaultValueCallback('Drupal\commerce_store\Entity\Store::getSiteTimezone')
+    ->setSetting('allowed_values_function', ['\Drupal\commerce_store\Entity\Store', 'getTimezones'])
+    ->setDisplayOptions('form', [
+      'type' => 'options_select',
+      'weight' => 3,
+    ])
+    ->setDisplayConfigurable('view', TRUE)
+    ->setDisplayConfigurable('form', TRUE);
+
+  $definition_update_manager->installFieldStorageDefinition('timezone', 'commerce_store', 'commerce_store', $storage_definition);
+}
+
+/**
+ * Add the 'is_default' field to stores.
+ */
+function commerce_store_update_8204() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Default'))
+    ->setDescription(t('Whether this is the default store.'))
+    ->setDefaultValue(FALSE)
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => TRUE,
+      ],
+      'weight' => 90,
+    ])
+    ->setDisplayConfigurable('view', TRUE)
+    ->setDisplayConfigurable('form', TRUE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('is_default', 'commerce_store', 'commerce_store', $storage_definition);
+}
+
+/**
+ * Update the 'uid' field.
+ */
+function commerce_store_update_8205() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $base_field_override_storage = \Drupal::entityTypeManager()->getStorage('base_field_override');
+  $storage_definition = $definition_update_manager->getFieldStorageDefinition('uid', 'commerce_store');
+  $default_value_callback = Store::class . '::getDefaultEntityOwner';
+
+  $base_field_overrides = $base_field_override_storage->loadByProperties([
+    'entity_type' => 'commerce_store',
+    'field_name' => 'uid',
+  ]);
+  /** @var \Drupal\Core\Field\FieldDefinitionInterface $base_field_override */
+  foreach ($base_field_overrides as $base_field_override) {
+    if ($base_field_override->getDefaultValueCallback() !== $storage_definition->getDefaultValueCallback()) {
+      continue;
+    }
+    // Update the "default_value_callback" for base field overrides, as long
+    // as they're using the default one.
+    $base_field_override->setDefaultValueCallback($default_value_callback);
+    $base_field_override->save();
+  }
+
+  $storage_definition->setDefaultValueCallback($default_value_callback);
+  $definition_update_manager->updateFieldStorageDefinition($storage_definition);
+}
+
+/**
+ * Add created and changed fields to stores.
+ */
+function commerce_store_update_8206() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definitions['created'] = BaseFieldDefinition::create('created')
+    ->setLabel(t('Created'))
+    ->setDescription(t('The time when the store was created.'))
+    ->setTranslatable(TRUE)
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  $storage_definitions['changed'] = BaseFieldDefinition::create('changed')
+    ->setLabel(t('Changed'))
+    ->setDescription(t('The time when the store was last edited.'))
+    ->setTranslatable(TRUE);
+
+  foreach ($storage_definitions as $name => $definition) {
+    // If the content_translation module already provides base fields holding
+    // the created/changed time of the translation, take the initial values from
+    // those fields.
+    $content_translation_field_name = "content_translation_$name";
+    $has_content_translation_field = $definition_update_manager
+      ->getFieldStorageDefinition($content_translation_field_name, 'commerce_store');
+    if ($has_content_translation_field) {
+      $definition->setInitialValueFromField($content_translation_field_name);
+    }
+    $definition_update_manager->installFieldStorageDefinition($name, 'commerce_store', 'commerce_store', $definition);
+  }
+}
+
+/**
+ * Uninstall the created / changed fields added by content_translation.
+ */
+function commerce_store_update_8207() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  foreach (['content_translation_created', 'content_translation_changed'] as $field_name) {
+    if ($field_storage_definition = $definition_update_manager->getFieldStorageDefinition($field_name, 'commerce_store')) {
+      $definition_update_manager->uninstallFieldStorageDefinition($field_storage_definition);
+    }
+  }
+}

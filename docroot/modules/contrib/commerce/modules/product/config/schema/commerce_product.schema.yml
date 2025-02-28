@@ -1,0 +1,162 @@
+commerce.commerce_condition.plugin.order_product:
+  type: commerce_condition_configuration
+  mapping:
+    products:
+      type: sequence
+      label: 'Products'
+      sequence:
+        type: mapping
+        mapping:
+          product:
+            type: uuid
+            label: 'Product'
+
+commerce.commerce_condition.plugin.order_item_product:
+  type: commerce.commerce_condition.plugin.order_product
+
+commerce.commerce_condition.plugin.order_product_category:
+  type: commerce_condition_configuration
+  mapping:
+    terms:
+      type: sequence
+      label: 'Categories'
+      orderby: value
+      sequence:
+        type: uuid
+        label: 'Category'
+
+commerce.commerce_condition.plugin.order_item_product_category:
+  type: commerce.commerce_condition.plugin.order_product_category
+
+commerce.commerce_condition.plugin.order_product_type:
+  type: commerce_condition_configuration
+  mapping:
+    product_types:
+      type: sequence
+      label: 'Product types'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Product type'
+
+commerce.commerce_condition.plugin.order_item_product_type:
+  type: commerce.commerce_condition.plugin.order_product_type
+
+commerce.commerce_condition.plugin.order_variation_type:
+  type: commerce_condition_configuration
+  mapping:
+    variation_types:
+      type: sequence
+      label: 'Product variation types'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Product variation type'
+
+commerce.commerce_condition.plugin.order_item_variation_type:
+  type: commerce.commerce_condition.plugin.order_variation_type
+
+commerce_product.commerce_product_type.*:
+  type: commerce_config_entity_bundle
+  label: 'Product type'
+  mapping:
+    description:
+      type: text
+      label: 'Description'
+    variationType:
+      type: string
+      label: 'Legacy Variation type will be removed in 3.x'
+    variationTypes:
+      type: sequence
+      label: 'Variation types'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Variation type'
+    multipleVariations:
+      type: boolean
+      label: 'Allow each product to have multiple variations'
+    injectVariationFields:
+      type: boolean
+      label: 'Inject product variation fields into the rendered product'
+
+commerce_product.commerce_product_variation_type.*:
+  type: commerce_config_entity_bundle
+  label: 'Product variation type'
+  mapping:
+    orderItemType:
+      type: string
+      label: 'Order item type'
+    generateTitle:
+      type: boolean
+      label: 'Generate variation titles based on attribute values'
+
+commerce_product.commerce_product_attribute.*:
+  type: config_entity
+  label: 'Product attribute'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    elementType:
+      type: string
+      label: 'Element type'
+
+field.formatter.settings.commerce_add_to_cart:
+  type: mapping
+  mapping:
+    show_quantity:
+      type: boolean
+      label: 'Whether to display a quantity input field on the add to cart form.'
+    default_quantity:
+      type: string
+      label: 'Default quantity'
+    combine:
+      type: boolean
+      label: 'Whether to attempt to combine order items containing the same product variation'
+
+field.formatter.settings.commerce_product_attributes_overview:
+  type: mapping
+  mapping:
+    attributes:
+      type: sequence
+      label: 'Attributes to render.'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Attribute ID'
+    view_mode:
+      type: string
+      label: 'View mode'
+
+field.widget.settings.commerce_product_variation_title:
+  type: mapping
+  label: 'Product variation title widget settings'
+  mapping:
+    label_display:
+      type: boolean
+      label: 'Label display'
+    label_text:
+      type: label
+      label: 'Label text'
+    hide_single:
+      type: boolean
+      label: 'Hide if there''s only one product variation'
+
+action.configuration.commerce_publish_product:
+  type: action_configuration_default
+  label: 'Configuration for the Publish product action'
+
+action.configuration.commerce_unpublish_product:
+  type: action_configuration_default
+  label: 'Configuration for the Unpublish product action'
+
+views.field.commerce_product_variation_view_link:
+  type: views.field.entity_link
+
+views.filter.commerce_product_attribute_value:
+  type: views.filter.in_operator
+  label: 'Product attribute filter'

@@ -1,0 +1,10 @@
+views-infinite-scroll:
+  version: VERSION
+  js:
+    js/infinite-scroll.js : {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.debounce
+    - views/views.ajax

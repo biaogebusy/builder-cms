@@ -1,0 +1,29 @@
+entity.commerce_product.add_page:
+  route_name: entity.commerce_product.add_page
+  title: 'Add product'
+  appears_on:
+    - entity.commerce_product.collection
+
+entity.commerce_product_attribute.add_form:
+  route_name: entity.commerce_product_attribute.add_form
+  title: 'Add product attribute'
+  appears_on:
+    - entity.commerce_product_attribute.collection
+
+entity.commerce_product_type.add_form:
+  route_name: entity.commerce_product_type.add_form
+  title: 'Add product type'
+  appears_on:
+    - entity.commerce_product_type.collection
+
+entity.commerce_product_variation_type.add_form:
+  route_name: entity.commerce_product_variation_type.add_form
+  title: 'Add product variation type'
+  appears_on:
+    - entity.commerce_product_variation_type.collection
+
+entity.commerce_product_variation.add_page:
+  route_name: entity.commerce_product_variation.add_page
+  title: 'Add variation'
+  appears_on:
+    - entity.commerce_product_variation.collection

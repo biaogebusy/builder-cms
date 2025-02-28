@@ -1,0 +1,20 @@
+{
+  "name": "drupal/autogrow",
+  "type": "drupal-module",
+  "description": "Adds the ability to count words and/or characters to CKEditor.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "http://drupal.org/project/autogrow",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Kevin Quillen (kevinquillen)",
+      "homepage": "https://www.drupal.org/u/kevinquillen",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "http://drupal.org/project/issues/autogrow",
+    "source": "http://cgit.drupalcode.org/autogrow"
+  }
+}

@@ -1,0 +1,5 @@
+media_entity_instagram.settings:
+  title: 'Instagram settings'
+  parent: system.admin_config_media
+  description: 'Manage instagram settings.'
+  route_name: media_entity_instagram.settings

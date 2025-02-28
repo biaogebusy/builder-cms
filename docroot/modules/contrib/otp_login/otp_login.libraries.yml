@@ -1,0 +1,11 @@
+intl-phone:
+  version: '1.0'
+  css:
+    theme:
+      css/intlTelInput.min.css: {}
+  js:
+    js/intlTelInput.min.js: {}
+    js/intl_phone.js: {}
+
+  dependencies:
+    - core/drupal

@@ -1,0 +1,13 @@
+name: 'Webform Test Editorial'
+type: module
+description: 'Provides editorial management tools for the Webform module.'
+package: 'Webform Testing'
+core_version_requirement: ^9.4 || ^10
+configure: webform_test_editorial.index
+dependencies:
+  - 'webform:webform'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

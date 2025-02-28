@@ -1,0 +1,64 @@
+{
+    "name": "drupal/diff",
+    "description": "Compares two entity revisions",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+          "name": "Miro Dietiker (miro_dietiker)",
+          "homepage": "https://www.drupal.org/u/miro_dietiker",
+          "role": "Maintainer"
+        },
+        {
+          "name": "Juampy NR (juampynr)",
+          "homepage": "https://www.drupal.org/u/juampynr",
+          "role": "Maintainer"
+        },
+        {
+          "name": "Lucian Hangea (lhangea)",
+          "homepage": "https://www.drupal.org/u/lhangea",
+          "role": "Maintainer"
+        },
+        {
+          "name": "Alan D.",
+          "homepage": "https://www.drupal.org/u/alan-d.",
+          "role": "Maintainer"
+        },
+        {
+          "name": "Brian Gilbert (realityloop).",
+          "homepage": "https://www.drupal.org/u/realityloop",
+          "role": "Maintainer"
+        },
+        {
+            "name": "Adam Bramley (acbramley)",
+            "homepage": "https://www.drupal.org/u/acbramley",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/diff",
+        "source": "https://git.drupalcode.org/project/diff"
+    },
+    "minimum-stability": "dev",
+    "require":{
+        "mkalkbrenner/php-htmldiff-advanced": "~0.0.8",
+        "drupal/core": "^9.3 || ^10"
+    },
+    "require-dev": {
+        "jangregor/phpstan-prophecy": "dev-master",
+        "mglaman/phpstan-drupal": "^1.2.10",
+        "phpstan/extension-installer": "^1.2",
+        "phpstan/phpstan": "^1.11",
+        "phpstan/phpstan-deprecation-rules": "*",
+        "phpstan/phpstan-phpunit": "1.4.x-dev",
+        "phpstan/phpstan-strict-rules": "^1@stable",
+        "previousnext/coding-standard": "^1"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
+    }
+}

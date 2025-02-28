@@ -1,0 +1,6 @@
+services:
+  advancedqueue.commands:
+    class: \Drupal\advancedqueue\Commands\AdvancedQueueCommands
+    arguments: ['@entity_type.manager', '@advancedqueue.processor']
+    tags:
+      - { name: drush.command }

@@ -1,0 +1,87 @@
+services:
+  commerce.configurable_field_manager:
+    class: Drupal\commerce\ConfigurableFieldManager
+    arguments: ['@entity_type.manager']
+
+  commerce.credentials_check_flood:
+    class: Drupal\commerce\CredentialsCheckFlood
+    arguments: ['@flood', '@entity_type.manager', '@config.factory']
+
+  commerce.current_country:
+    class: Drupal\commerce\CurrentCountry
+    arguments: ['@request_stack', '@commerce.chain_country_resolver']
+
+  commerce.chain_country_resolver:
+    class: Drupal\commerce\Resolver\ChainCountryResolver
+    tags:
+      - { name: service_collector, call: addResolver, tag: commerce.country_resolver }
+
+  commerce.default_country_resolver:
+    class: Drupal\commerce\Resolver\DefaultCountryResolver
+    arguments: ['@config.factory']
+    tags:
+      - { name: commerce.country_resolver, priority: -100 }
+
+  commerce.current_locale:
+    class: Drupal\commerce\CurrentLocale
+    arguments: ['@request_stack', '@commerce.chain_locale_resolver']
+
+  commerce.chain_locale_resolver:
+    class: Drupal\commerce\Resolver\ChainLocaleResolver
+    tags:
+      - { name: service_collector, call: addResolver, tag: commerce.locale_resolver }
+
+  commerce.default_locale_resolver:
+    class: Drupal\commerce\Resolver\DefaultLocaleResolver
+    arguments: ['@language_manager', '@commerce.current_country']
+    tags:
+      - { name: commerce.locale_resolver, priority: -100 }
+
+  commerce.availability_manager:
+    class: Drupal\commerce\AvailabilityManager
+    tags:
+      - { name: service_collector, tag: commerce.availability_checker, call: addChecker }
+
+  commerce.config_updater:
+    class: Drupal\commerce\Config\ConfigUpdater
+    arguments: ['@entity_type.manager', '@config.storage', '@config.factory']
+
+  commerce.entity_uuid_mapper:
+    class: Drupal\commerce\EntityUuidMapper
+    arguments: ['@database', '@entity_type.manager']
+
+  commerce.twig_extension:
+    class: Drupal\commerce\TwigExtension\CommerceTwigExtension
+    tags:
+      - { name: twig.extension }
+
+  cache_context.country:
+    class: Drupal\commerce\Cache\Context\CountryCacheContext
+    arguments: ['@commerce.current_country']
+    tags:
+      - { name: cache.context}
+
+  plugin.manager.commerce_condition:
+    class: Drupal\commerce\ConditionManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager', '@event_dispatcher']
+
+  plugin.manager.commerce_entity_trait:
+    class: Drupal\commerce\EntityTraitManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@commerce.configurable_field_manager']
+
+  plugin.manager.commerce_inline_form:
+    class: Drupal\commerce\InlineFormManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+
+  commerce.mail_handler:
+    class: Drupal\commerce\MailHandler
+    arguments: ['@language.default', '@language_manager', '@plugin.manager.mail', '@event_dispatcher']
+
+  commerce.purchasable_entity_type_repository:
+    class: Drupal\commerce\PurchasableEntityTypeRepository
+    arguments: ['@entity_type.manager']
+
+  commerce.response_subscriber:
+    class: Drupal\commerce\EventSubscriber\ResponseSubscriber
+    tags:
+      - { name: event_subscriber }

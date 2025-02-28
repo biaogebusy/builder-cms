@@ -1,0 +1,18 @@
+opt_login:
+  version: '1.0'
+  css:
+    theme:
+      css/otp-login.css: {}
+  js:
+    js/opt_login.js: {}
+  dependencies:
+    - core/drupal
+opt_find_pass:
+  version: '1.0'
+  css:
+    theme:
+      css/otp-login.css: {}
+  js:
+    js/opt_find_pass.js: {}
+  dependencies:
+    - core/drupal

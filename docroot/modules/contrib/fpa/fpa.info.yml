@@ -1,0 +1,10 @@
+name: Fast Permissions Administration
+type: module
+description: Fast filtering on permissions administration form.
+core_version_requirement: ^9.4 || ^10.0
+package: Administration
+
+# Information added by Drupal.org packaging script on 2022-12-29
+version: '4.0.0'
+project: 'fpa'
+datestamp: 1672325750

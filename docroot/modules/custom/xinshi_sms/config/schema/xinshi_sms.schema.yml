@@ -1,0 +1,8 @@
+# Schema for the configuration files of the SMS module.
+field.widget.settings.xinshi_sms_telephone:
+  type: mapping
+  label: 'SMS Framework telephone widget settings'
+  mapping:
+    placeholder:
+      type: label
+      label: 'Placeholder'

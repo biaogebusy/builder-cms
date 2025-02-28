@@ -1,0 +1,12 @@
+name: Autogrow
+type: module
+description: "Enables integration with the Autogrow plugin for CKEditor."
+core: '8.x'
+core_version_requirement: ^8 || ^9
+package: CKEditor
+dependencies:
+  - drupal:ckeditor
+# Information added by Drupal.org packaging script on 2016-09-16
+version: '8.x-1.0'
+project: 'autogrow'
+datestamp: 1474039443

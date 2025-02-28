@@ -1,0 +1,27 @@
+{
+    "name": "drupal/jsonapi_extras",
+    "description": "JSON:API Extras provides a means to override and provide limited configurations to the default zero-configuration implementation provided by the JSON:API module.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Mateu Aguiló Bosch",
+            "email": "mateu.aguilo.bosch@gmail.com"
+        },
+        {
+            "name": "Martin Kolar",
+            "homepage": "https://www.drupal.org/u/mkolar"
+        },
+        {
+            "name": "Karel Majzlik",
+            "homepage": "https://www.drupal.org/u/karlos007"
+        },
+        {
+            "name": "Björn Brala",
+            "homepage": "https://www.drupal.org/u/bbrala"
+        }
+    ],
+    "require": {
+        "e0ipso/shaper": "^1"
+    }
+}

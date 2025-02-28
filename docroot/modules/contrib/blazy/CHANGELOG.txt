@@ -1,0 +1,1551 @@
+
+Blazy 8.x-2.0-dev, 2024-04-13
+------------------------------
+- Fixed for native grid masonry.
+
+Blazy 8.x-2.0-dev, 2024-04-13
+------------------------------
+- Changed grid dimensions to object due to breaking NestedArray downstream.
+
+Blazy 8.x-2.0-dev, 2024-04-12
+------------------------------
+- Improved media player responsiveness.
+
+Blazy 8.x-2.0-dev, 2024-04-11
+------------------------------
+- Fixed for SVG thumbnail.
+
+Blazy 8.x-2.0-dev, 2024-03-14
+------------------------------
+- Issue #3427632 by Mortarion: Shortcode compatibility with CKeditor5.
+
+Blazy 8.x-2.0-dev, 2024-03-09
+------------------------------
+- Issue #3424212: Performance issues with S3 (or other).
+- Issue #3424739 by chanelwheeler: Unable to assign link to image.
+
+Blazy 8.x-2.0-dev, 2024-02-01
+------------------------------
+- Issue #3411047 by heddn: The definition for the sequence declares the type of
+  its items in a way that is deprecated in drupal:8.0.0
+
+Blazy 8.x-2.0-dev, 2023-11-06
+------------------------------
+- Issue #3399304 by gausarts, Corn696: Loading indicator no longer working.
+
+Blazy 8.x-2.0-dev, 2023-11-04
+------------------------------
+- Issue #3397750 by shalini_jha, R_H-L: XML Namespace incorrect in placeholder
+  SVG.
+- Issue #3397716 by YazanMajadba: Images not loaded on AMP pages.
+- Issue #3396231 by joelpittet: DOMpurify library missing license URL.
+
+Blazy 8.x-2.0-dev, 2023-10-17
+------------------------------
+- Added Media switcher > Image linked by Link field option for plain images.
+
+Blazy 8.x-2.0-dev, 2023-10-13
+------------------------------
+- Issue #3393539 by gausarts, jghyde, Striknin: Not compatible anymore with
+  Drupal 8.
+
+Blazy 8.x-2.0-dev, 2023-10-08
+------------------------------
+- Added Blazy Title formatter with sub-title.
+
+Blazy 8.x-2.0-dev, 2023-10-05
+------------------------------
+- Issue #3389889 by ARUN AK, Thomas Kaisuka: Make loading animation play nice
+  with Blur animation.
+
+Blazy 8.x-2.0-dev, 2023-10-03
+------------------------------
+- Added back supports for thumbnails without image style.
+- Added supports for string array with dBlazy.addClass and dBlazy.removeClass.
+
+Blazy 8.x-2.0-dev, 2023-09-30
+------------------------------
+- Added Media switcher > Image linked by Link field option.
+- Added a dedicated Link field option to Blazy Media formatter.
+
+Blazy 8.x-2.0-dev, 2023-09-29
+------------------------------
+- Issue #3390513 by W01F, gausarts: Option to configure caption title tag.
+- Issue #3390399 by gaia, gausarts: Title attribute missing.
+
+Blazy 8.x-2.0-dev, 2023-09-28
+------------------------------
+- Issue #3390158 by Matthijs: Use LanguageManagerInterface in BlazyBase.
+- Issue #3390209 by gausarts, Luispe: Field Formatter lose "View mode".
+
+Blazy 8.x-2.0-dev, 2023-09-23
+------------------------------
+- Issue #3388977 by smokris, gausarts: After updating from Blazy 2.16 to 2.17,
+  captions are missing.
+
+Blazy 8.x-2.0-dev, 2023-09-22
+------------------------------
+- Fixed for captions.overlay.
+
+Blazy 8.x-2.0-dev, 2023-09-21
+------------------------------
+- Fixed for Native Masonry with Views captions.
+- Fixed for IO infinite pager lock.
+
+Blazy 8.x-2.0-dev, 2023-09-18
+------------------------------
+- Issue #3387974 by mkalkbrenner: Undefined array key "applicable" in
+  Drupal\blazy\Views\BlazyStylePluginBase->buildElement().
+- Issue #3387933 by thomas.frobieter, gausarts: Blazy Image to Iframe
+  doesn'\''t work if Blazy Player buttons overridden in Twig (using the new
+  button attributes).
+- Issue #3387947 by jurgenhaas, gausarts, perpignan: After update to 2.17, it
+  breaks sites on PHP 7.4.
+
+Blazy 8.x-2.0-dev, 2023-09-18
+------------------------------
+- Masonry (Flexbox and or Native Grid) are messed up, try uninstalling BigPipe.
+
+Blazy 8.x-2.0-dev, 2023-09-17
+------------------------------
+- Fixed for native grid/flexbox masonry with VIS/ IO.
+
+Blazy 8.x-2.0-dev, 2023-09-13
+------------------------------
+- Fixed for native grid masonry with captions.
+
+Blazy 8.x-2.0-dev, 2023-09-12
+------------------------------
+- Simplified returned values for dBlazy.find().
+- Added new events: bio:done for entire collections, bio:resizing, bio:resized,
+  blazy:mediaPlaying, blazy:mediaStopped.
+- Deprecated blazy.done event for colonized blazy:done to allow namespacing.
+- Deprecated bio.intersecting event for colonized bio:intersecting.
+- Removed blazy.resizing for bio:resizing event.
+- Decoupled blur from blazy.animate.js
+- Disabled blur when being unlazy since it requires lazy load as a trigger.
+
+Blazy 8.x-2.0-dev, 2023-09-05
+------------------------------
+- Fixed for discreet behavior BlazyFilter where data:image reset into real URL.
+- Micro optimization: Changed entity formatter loop into \Generator.
+- Micro optimization: Removed sliders lazy loads to avoid complication for just
+  Blazy.
+- Deprecated is.blur for use.blur, is.bg for use.bg, is.player for use.player,
+  is.iframe for use.iframe.
+
+Blazy 8.x-2.0-dev, 2023-09-03
+------------------------------
+- Fixed for Views delta_limit option.
+- Fixed for local video thumbnails when embedded in a view.
+
+Blazy 8.x-2.0-dev, 2023-09-01
+------------------------------
+- Fixed for fluid data-ratios regressions with Responsive image.
+- Changed lightbox HREF to point to original sites ethically and consistently.
+
+Blazy 8.x-2.0-dev, 2023-08-31
+------------------------------
+- Fixed for Pinterest within more lightboxes.
+- Fixed for vanilla VEF as a Views Main stage.
+
+Blazy 8.x-2.0-dev, 2023-08-30
+------------------------------
+- Updated blazy.api.php.
+
+Blazy 8.x-2.0-dev, 2023-08-29
+------------------------------
+- Fixed for lazy-loaded Pinterest.
+- Fixed for Twitter, Pinterest within Colorbox.
+- Fixed for default ugly media.label filename as popup image title.
+
+Blazy 8.x-2.0-dev, 2023-08-26
+------------------------------
+- Fixed for Views style Main stage regressions if not using Blazy or core Image
+  formatters.
+
+Blazy 8.x-2.0-dev, 2023-08-25
+------------------------------
+- Deprecated colorbox body classes for local classes in #colorbox selector.
+
+Blazy 8.x-2.0-dev, 2023-08-23
+------------------------------
+- Fixed for mixed multiple multimedia playing.
+- Safari guess works for #3279316.
+- Fixed for Instagram within more lightboxes.
+
+Blazy 8.x-2.0-dev, 2023-08-20
+------------------------------
+- Fixed for Instagram within Colorbox.
+- Added a new option to lazy load media HTML.
+- Fixed for VEF Instagram failures, and other VEF compatibility.
+- Added Use oEmbed option specific for VEF compatibility.
+
+Blazy 8.x-2.0-dev, 2023-08-17
+------------------------------
+- Added oEmbed provider check for cross-compat with VEF providers.
+- Prepared Blazy as a service at 3.x.
+- Deprecated duplicated Blazy methods for BlazyInterface to allow Blazy a
+  service at 3.x.
+
+Blazy 8.x-2.0-dev, 2023-08-15
+------------------------------
+- Full-fledged core media integration 99%, and Blazy has just begun in 2.17.
+- Fixed for HTML attribute opration regressions, seen at Jumper.module.
+
+Blazy 8.x-2.0-dev, 2023-08-14
+------------------------------
+- Fixed for broken dBlazy.attr() given elements with length, like forms, etc.
+
+Blazy 8.x-2.0-dev, 2023-08-11
+------------------------------
+- Added a Flybox, a non-disruptive lightbox.
+- Finalized BlazyMedia conversion from static into non-static class.
+- Fixed for ambiguous space delimited attributes.
+- Fixed for thirdPartyFormatters.
+- Renamed BlazyAttribute into Attributes.
+- Renamed BlazyInternal into Internals.
+- Deprecated .litebox-caption for .litebox__caption to get correct BEM.
+
+Blazy 8.x-2.0-dev, 2023-08-09
+------------------------------
+- Updated BlazyOEmbed service parameters.
+- Changed BlazyMedia into a service as planned.
+
+Blazy 8.x-2.0-dev, 2023-08-07
+------------------------------
+- Fixed for lightbox caption regressions.
+- Added non-functional blazy.libraries service for blazy:3.x and BC.
+
+Blazy 8.x-2.0-dev, 2023-08-06
+------------------------------
+- Fixed for out of synced local media.
+
+Blazy 8.x-2.0-dev, 2023-08-04
+------------------------------
+- Fixed for BlazyFilter figure mixed with [data-caption], specific to grids.
+- Added theme_blazy() to replace sub-modules theme_ITEM() content for filters.
+
+Blazy 8.x-2.0-dev, 2023-08-02
+------------------------------
+- Added supports for title for BlazyFilter shortcodes.
+- Added hook_blazy_settings_grid_alter().
+- Added supports for Media SVG for sub-modules inheritance.
+- Fixed for Native Grid with grid chunks ala sliders.
+
+Blazy 8.x-2.0-dev, 2023-08-01
+------------------------------
+- Fixed for background image with loading slider option.
+- Added option to use theme_blazy() to replace sub-modules theme_ITEM() content.
+- Triggered few more deprecation errors.
+
+Blazy 8.x-2.0-dev, 2023-07-30
+------------------------------
+- Updated theme_blazy() to replace sub-modules theme_ITEM() contents at 3.x.
+
+Blazy 8.x-2.0-dev, 2023-07-28
+------------------------------
+- Added supports for SVG Image Field module.
+- Re-purposed Blazy Image with VEF (deprecated) formatter for SVG (WIP).
+
+Blazy 8.x-2.0-dev, 2023-07-26
+------------------------------
+- Fixed for lightbox caption token regression.
+- Added minimal default settings for Blazy OEmbed formatter within Views UI.
+
+Blazy 8.x-2.0-dev, 2023-07-24
+------------------------------
+- Added image ALT and TITLE for VEF which has none.
+
+Blazy 8.x-2.0-dev, 2023-07-23
+------------------------------
+- Fixed for deprecated VEF regressions.
+
+Blazy 8.x-2.0-dev, 2023-07-22
+------------------------------
+- Added supports for SVG image dimensions.
+
+Blazy 8.x-2.0-dev, 2023-07-21
+------------------------------
+- Added supports for local audio with background cover via settings.image.
+- Remove unused abundant CSS classes: media__image, media__iframe.
+
+Blazy 8.x-2.0-dev, 2023-07-18
+------------------------------
+- Added micro optimization for aspect ratio fluid to use non JS, if possible.
+- Changed settings key to #settings, etc. to avoid leaks/ render errors, see CR:
+  https://www.drupal.org/node/3375158.
+
+Blazy 8.x-2.0-dev, 2023-07-16
+------------------------------
+- Added a dedicated title field to BlazyMediaFormatter to differ from attribute.
+
+Blazy 8.x-2.0-dev, 2023-07-15
+------------------------------
+- Issue #3374519 by rex.barkdoll: Keeping Custom Attributes in CKEditor.
+
+Blazy 8.x-2.0-dev, 2023-07-14
+------------------------------
+- Removed and cleaned out stone-age admin CSS for modern nativegrid.
+
+Blazy 8.x-2.0-dev, 2023-07-11
+------------------------------
+- Updated blazy.api.php.
+- Renamed legacy Foundation block-NATIVEGRID to b-nativegrid, etc. to avoid
+  conflict with core block.
+
+Blazy 8.x-2.0-dev, 2023-07-10
+------------------------------
+- Improved Native Grid repeat.
+- The last two standing cleanups post migrations to BlazySettings, etc.
+
+Blazy 8.x-2.0-dev, 2023-07-09
+------------------------------
+- Added hook_blazy_is_blazy_alter() for lightboxes to inject data-LIGHTBOX.
+- Added supports for grid items as generators.
+
+Blazy 8.x-2.0-dev, 2023-07-08
+------------------------------
+- Issue #3373309 by tmanhollan: Deprecated: Creation of dynamic property in
+  projects that extend Blazy.
+- Fixed for media player DOM ready.
+- Fixed for soundcloud and other iframe-based media entity integrations.
+
+Blazy 8.x-2.0-dev, 2023-07-07
+------------------------------
+- Fixed for core image_formatter link to content with URL object.
+- Fixed for background image regressions given core image, not blazy formatter.
+
+Blazy 8.x-2.0-dev, 2023-07-06
+------------------------------
+- Fixed for incorrect deprecated settings.
+
+Blazy 8.x-2.0-dev, 2023-07-03
+------------------------------
+- Micro optimization: changed few loops to generators.
+
+Blazy 8.x-2.0-dev, 2023-07-02
+------------------------------
+- Added wrapper_class option to make blazy field/ views classes optional. Be
+  sure to re-save the Blazy UI form to enable/ disable it.
+- Fixed for local video image URI vs. file URI regressions.
+- Added supports for DOMPurify library for lightbox HTML contents.
+
+Blazy 8.x-2.0-dev, 2023-06-29
+------------------------------
+- Fixed for BlazyEntity class not designed for multiple entities, but given
+  multiple entities upstream.
+- Added real supports for data URI for BlazyFilter to exercise frontend muscle
+  memory a bit.
+
+Blazy 8.x-2.0-dev, 2023-06-22
+------------------------------
+- Updated docs for warnings about Responsive image within lightboxes.
+- Fixed Responsive image empty option regression seen at PHP8.2.
+- Fixed local video dimensions within lightboxes.
+
+Blazy 8.x-2.0-dev, 2023-06-21
+------------------------------
+- Fixed for Blazy field_item wrapper regressions when embedded as Views blocks,
+  regular node field formatters are never affected.
+
+Blazy 8.x-2.0-dev, 2023-06-20
+------------------------------
+- Issue #3363404 by Aneida: Warning: Undefined array key "target_bundles".
+- Fixed for BlazyFilter image formatter name typo.
+
+Blazy 8.x-2.0-dev, 2023-06-19
+------------------------------
+- Fixed for original image dimensions without image style regressions.
+
+Blazy 8.x-2.0-dev, 2023-06-17
+------------------------------
+- Fixed for fake image item.
+- Added vanilla Blazy Grid formatter for entity references.
+- Fixed for vanilla, seen at gridstack paragraphs, not others.
+- Deprecated blazy.admin.extended for blazy.admin.formatter due to very minimal
+  difference, and to make Blazy Grid work for Paragraphs + other entities later.
+
+Blazy 8.x-2.0-dev, 2023-06-16
+------------------------------
+- Added a Change Record https://www.drupal.org/node/3367304 for deprecations.
+- Added a Change Record https://www.drupal.org/node/3367291 for deprecations.
+- Fixed for SVG regressions as thumbnails.
+- Removed deprecated entity_view().
+
+Blazy 8.x-2.0-dev, 2023-06-13
+------------------------------
+- Added visible_class option.
+
+Blazy 8.x-2.0-dev, 2023-06-12
+------------------------------
+- Added hook_blazy_item_alter(), useful for mixed media.
+- Fixed for local video regressions within lightboxes.
+- Added box_media_style for BlazyFilter.
+
+Blazy 8.x-2.0-dev, 2023-06-09
+------------------------------
+- Added persistent "is-b-visible" CSS class.
+- Added blur minor optimization.
+
+Blazy 8.x-2.0-dev, 2023-06-07
+------------------------------
+- Issue #3364903 by SadySierralta, gausarts: W3C validation - Bad value for
+  attribute srcset on element source.
+
+Blazy 8.x-2.0-dev, 2023-06-02
+------------------------------
+- Fixed for D10 breaking changes with Blazy lightboxes within Views.
+
+Blazy 8.x-2.0-dev, 2023-06-02
+------------------------------
+- Fixed for LB off-canvas modal.
+- Removed 1.x unused services: blazy.media, blazy, blazy.formatter.manager.
+- Removed unused classes: BlazyUtil.
+- Issue #3253012 by Rajab Natshah, gausarts, Anybody: Drupal 10.
+- Added few more strict contracts.
+- Implemented BlazyBase service to separate Media from basic reusable methods.
+
+Blazy 8.x-2.0-dev, 2023-05-28
+------------------------------
+- Fixed for D10 breaking-changes Blazy formatter with lightboxes.
+
+Blazy 8.x-2.0-dev, 2023-05-28
+------------------------------
+- Updated to account for PHP8.1+.
+
+Blazy 8.x-2.0-dev, 2023-05-15
+------------------------------
+- Fixed for non-refreshable cached options, e.g: missing Media switcher option.
+- Issue #3349558 by Carlitus: Trying to access array offset on value of type
+  null in Drupal\blazy\Field\BlazyEntityVanillaBase->getAvailableBundles().
+- Added supports for Views `group_rows` when Blazy is embedded by sub-modules.
+- Fixed for `use_theme_field` alter.
+- Fixed for few strict contracts.
+- Moved Drupal\blazy\Dejavu views-related classes into Drupal\blazy\Views.
+- Moved deprecated methods to bottom for easy removal at 3.x.
+- Added property $admin for sub-module filter integration.
+
+Blazy 8.x-2.0-dev, 2023-03-22
+------------------------------
+- Issue #3332385 by vacho: Missing schemas for _item and _uri.
+
+Blazy 8.x-2.0-dev, 2022-12-15
+------------------------------
+- Issue #3317773 by Elvin - Albania Drupal Developer: Missing ALT attribute when
+  using Decorative Image and Responsive Image.
+- Issue #3322138 by Luispe: Activate Responsive Image Styles on Blazy OEmbed
+  Formatter.
+- Issue #3325423 by AnasNaamneh: Delete button at slick UI admin page is not
+  shown.
+- Issue #3321264 by trickfun, gausarts: Call to a member function storage() on
+  array in Drupal\blazy\BlazyManager->buildContent().
+- Issue #3326389 by Berdir: Drupal 10: TypeError: ParameterBag::getInt():
+  Argument #2 ($default) must be of type int, null given.
+- Issue #3323439 by rcodina: Inserting a slideshare iframe causes a PHP error.
+
+Blazy 8.x-2.0-dev, 2022-09-30
+------------------------------
+- Issue #3299609 by DD 85: The service "blazy.base" has a dependency on a
+  non-existent parameter "app.root".
+- Issue #3308524 by balintpekker, nkoporec, mglaman: Drupal 10
+  compatibility - off canvas.
+
+Blazy 8.x-2.0-dev, 2022-07-15
+-----------------------------
+- Issue #3285374 by vinitk, djsagar: Blazy module hiding media gallery image
+  with gin admin theme.
+- Issue #3296139 by Carlos Romero, gausarts: Lightbox gallery not working for
+  Blazy custom Views fields.
+
+Blazy 8.x-2.0-dev, 2022-05-31
+-----------------------------
+- Issue #3283156 by YazanMajadba: Support align/style(float) attribute on
+  blazy filter.
+- Issue #3282785 by jurgenhaas, Anybody, gausarts, Rajab Natshah: WSOD after
+  update to 2.12: Error: Call to a member function get() on null.
+
+Blazy 8.x-2.0-dev, 2022-05-18
+-----------------------------
+- Fixed for vanilla regressions.
+
+Blazy 8.x-2.0-dev, 2022-05-17
+-----------------------------
+- Issue #3279831 by poedan: Allow multiple thumbnails on the same video url.
+- Issue #3280769 by gausarts, bgreco: "Lightbox image style" setting does
+  not work.
+
+Blazy 8.x-2.0-dev, 2022-05-07
+-----------------------------
+- Fixed for dup thumbnail regression, see #3278525.
+- Fixed for lightbox caption with token regression.
+- Issue #3278009 by gausarts, hunterbuchanan: Default image no longer
+  shows up in image field using Blazy 2.10.
+
+Blazy 8.x-2.0-dev, 2022-04-24
+-----------------------------
+- Issue #3118368 by gausarts, W01F: Lightboxes are gone.
+
+Blazy 8.x-2.0-dev, 2022-04-20
+-----------------------------
+- Fixed for Slick caption not visible anymore by stopopol (#3276156).
+
+Blazy 8.x-2.0-dev, 2022-04-14
+-----------------------------
+- Added Drupal\blazy\BlazyBase service for non-media methods for 3.x.
+- Fixed for Colorbox gallery ID regression.
+- Fixed for D10 access check explicit requirement (3201242).
+
+Blazy 8.x-2.0-dev, 2022-04-13
+-----------------------------
+- Fixed for Image title within Media regression: #3241415.
+- Issue #3274730 by gausarts, trickfun: Padding bottom under the image.
+
+Blazy 8.x-2.0-dev, 2022-04-07
+-----------------------------
+- Issue #3273663 by gausarts, vistree: Update to version > 2.6 breaks svg_image.
+
+Blazy 8.x-2.0-dev, 2022-04-05
+-----------------------------
+- Fixed for BVEF BC, lightbox gallery regression, etc.
+
+Blazy 8.x-2.0-dev, 2022-04-04
+-----------------------------
+- Fixed for thumbnail regression for sub-modules.
+
+Blazy 8.x-2.0-dev, 2022-04-03
+-----------------------------
+- Issue #3273186 by gausarts: Improve Main stage display at Paragraphs
+  integration.
+
+Blazy 8.x-2.0-dev, 2022-03-28
+-----------------------------
+- Moved some exclusive field formatters out into Blazy to prepare filters taste
+  like formatters.
+- Added optional client-side Blur.
+
+Blazy 8.x-2.0-dev, 2022-03-26
+-----------------------------
+- Issue #3210759 by gausarts, jlstrecker, aminorking: Generated SVG placeholder
+  dimensions are not using the responsive image style dimensions.
+- Prioritized custom Placeholder ('/blank.svg') to fix for Views rewrite
+  results to override Responsive image `data:image` which causes 404.
+- Prevents double-downloading the fallback image, enforced since 2.10, to
+  allow having non `data:image` as fallback image.
+
+Blazy 8.x-2.0-dev, 2022-03-25
+-----------------------------
+- Moved duplicate boilerplates at sub-modules into Blazy to avoid previous
+  mistakes like they were left behind from Blazy betterments with Loading
+  priority and No JavaScript: lazy option aka decoupled lazy loaders.
+- Disabled Blur and animation when not using Blazy, like Slick/ Splide own lazy
+  load since they require Blazy lazy load to function.
+- Fixed for missing a few options at sub-modules due to not being updated, yet.
+
+Blazy 8.x-2.0-dev, 2022-03-23
+-----------------------------
+- Regressions fixes: Vanilla view mode, random admin form item visibility when
+  core JS spit errors at View UI, etc.
+
+Blazy 8.x-2.0-dev, 2022-03-22
+-----------------------------
+- Added src/Media/Preloader.php.
+- Added src/Plugin/Field/FieldFormatter/BlazyFormatterViewBaseTrait.php.
+- Added src/Traits/PluginScopesTrait.php to reduce boilerplate at sub-modules.
+
+Blazy 8.x-2.0-dev, 2022-03-21
+-----------------------------
+- Fixed for multi-breakpoint background image regressions.
+- Fixed for Image formatter embedded within Blazy ecosystem regression.
+
+Blazy 8.x-2.0-dev, 2022-03-17
+-----------------------------
+- Moved field base formatters from Dejavu into Drupal\blazy\Field namespace.
+- Moved field operations from BlazyEntity into Drupal\blazy\Field\BlazyField.
+- Changed DIV to FIGCAPTION specific for BlazyFilter captions.
+- Added settings by container attributes for all blazy-related filters.
+- Moved internal BlazyGrid into Drupal\blazy\Theme namespace.
+- Moved internal BlazyLightbox into Drupal\blazy\Theme namespace.
+
+Blazy 8.x-2.0-dev, 2022-03-15
+-----------------------------
+- Fixed for empty bundles if formatters are accessed from Views UI, not Field
+  UI, causing failure to select like poster (local) video for the supported
+  lightboxes Splidebox, Blazy PhotoSwipe, etc. Specific for the poster image.
+- Moved internal BlazyViews Drupal\blazy\Theme namespace.
+- Moved internal BlazyLightbox into Drupal\blazy\Theme namespace.
+- Moved internal BlazyTheme into Drupal\blazy\Theme namespace.
+- Moved anything internal attributes from Blazy into Attributes.
+- Added Drupal\blazy\Theme\Attributes for anything internal attributes.
+
+Blazy 8.x-2.0-dev, 2022-03-12
+-----------------------------
+- Issue #3269222 by gausarts: Move more settings into BlazySettings for sanity.
+- Fixed for blur attributes regressions.
+- Changed BlazyOEmbed::build() arguments to DRY at sub-modules.
+- Moved basic image-related methods into BlazyImage.php for sanity.
+
+Blazy 8.x-2.0-dev, 2022-03-07
+-----------------------------
+- Issue #3268089 by gausarts, victoria-marina, hammerslammer, marciaibanez: Typo
+  in BlazyMedia.php
+
+Blazy 8.x-2.0-dev, 2022-03-01
+-----------------------------
+- Issue #3267769 by gausarts, ramirojoaquin, apaderno: CSS background, data-src
+  removed and style tag not created.
+
+Blazy 8.x-2.0-dev, 2022-03-01
+-----------------------------
+- Added `defer` loading as per [#3120696](https://drupal.org/node/3120696).
+
+Blazy 8.x-2.0-dev, 2022-02-28
+-----------------------------
+- Issue #3266748 by gausarts, xamount: padding-bottom not calculated correctly.
+
+Blazy 8.x-2.0-dev, 2022-02-26
+-----------------------------
+- Issue #3266482 by gausarts, demon326: After update to 2.7 images in views
+  load more (VIS) are not loaded.
+
+Blazy 8.x-2.0-dev, 2022-02-23
+-----------------------------
+- Issue #3265909 by fgm: Warning with PHP 8.1: Deprecated function: trim().
+
+Blazy 8.x-2.0-dev, 2022-02-20
+-----------------------------
+- Added core D9.2 webp client-side fallback for those who want to support old
+  browsers and want modern ones have cleaner native image markups.
+
+Blazy 8.x-2.0-dev, 2022-02-17
+-----------------------------
+- Added core/once compat to save headaches and easy migration when min D9.2.
+- Issue #3264754 by Qusai Taha: Fix Undefined index: ratio in
+  Drupal\blazy\BlazyFormatter->preBuildElements().
+- Fixed for local video autoplay which be on lightboxes, not inline.
+- Added core/once as soft dependencies, etc.
+
+Blazy 8.x-2.0-dev, 2022-02-15
+-----------------------------
+- Added `settings.blazies` grouping for sanity and to avoid conflict with
+  sub-modules till all settings converted into BlazySettings at 3+.
+- Issue #3264039 by xamount, gausarts: WSOD when using preload with a responsive
+  image style with no sizes attribute.
+
+Blazy 8.x-2.0-dev, 2022-02-11
+-----------------------------
+- Moved media-related classes and services into \Drupal\blazy\Media namespace.
+- Added hook_uninstall().
+
+Blazy 8.x-2.0-dev, 2022-02-09
+-----------------------------
+- Added Magnific Popup as decent replacement for Colorbox and Photobox.
+- Issue #3263027 by gausarts, kobusvw, mably, bogdog400: Incompatible with
+  Drupal 8, release 2.6 - app.root error.
+
+Blazy 8.x-2.0-dev, 2022-02-08
+-----------------------------
+- Fixed for NativeGrid Masonry with AJAX loaded contents like IO infinite pager.
+- Fixed for Bio.js immutable object regressions.
+
+Blazy 8.x-2.0-dev, 2022-02-06
+-----------------------------
+- Issue #3262804 by gausarts: Add preload option to help boost actual and
+  perceived performance.
+- Issue #3262724 by gausarts: Add option for (un-)loading attribute, a buffer
+  for anti-pattern.
+
+Blazy 8.x-2.0-dev, 2022-01-26
+-----------------------------
+- Issue #3260089 by akalam: EntityMalformedException when using blazy in layout
+  builder in a entity view display.
+
+Blazy 8.x-2.0-dev, 2022-01-24
+-----------------------------
+- Issue #3258851 by gausarts: Forked old bLazy to minimize workarounds and
+  complexity due to lacking of Native lazy supports. Native lazy was born 2019,
+  3 years after bLazy ceased 2016. But gotta move forward.
+- Fixed for IE9 and other oldies multi-breakpoint BG and aspect ratio.
+- Merged dBlazy.[un]bindEvent() into dBlazy[on|off]() to save bytes.
+
+Blazy 8.x-2.0-dev, 2022-01-21
+-----------------------------
+- Fixed for basic IE9 functionality.
+- Fixed for without JavaScript within/without JavaScript browsers.
+- Decoupled animate from dblazy.js for being optional like background, etc.
+
+Blazy 8.x-2.0-dev, 2022-01-18
+-----------------------------
+- No more fights under a single source of truth.
+- Issue #3258851 by gausarts: Make old bLazy as fallback for IO, not competing.
+
+Blazy 8.x-2.0-dev, 2022-01-16
+-----------------------------
+- Added more massive optimization.
+- Decoupled more components: Polyfills, Background, Blur, Loading, Dataset, etc.
+- Added more No JavaScript polyfill options: raf, promise, and few basic ones.
+- Added IO fallback for old browsers to avoid all or nothing.
+- Renamed and merged library blazy/colorbox.skin for blazy/colorbox.
+- Renamed and merged library blazy/fx.blur for blazy/blur.
+
+Blazy 8.x-2.0-dev, 2022-01-14
+-----------------------------
+- Issue #3257916 by gausarts: Consider native API like ResizeObserver,
+  IntersectionObserver, MutationObserver.
+
+Blazy 8.x-2.0-dev, 2022-01-08
+-----------------------------
+- Issue #3257512 by gausarts: Decouple lazyload JavaScript. Leaving Blazy as DRY
+  buster for sub-modules.
+
+Blazy 8.x-2.0-dev, 2022-01-07
+-----------------------------
+- Issue #3256703 by ronchica: Blazy formatted images not rendering correctly in
+  revisions.
+- Issue #3255370 by gausarts: Fixed for DRY with ResizeObserver, folder
+  organization, doc comments, etc.
+
+Blazy 8.x-2.0-dev, 2022-01-04
+-----------------------------
+- Issue #3255370 by gausarts: Organized assets for sanity.
+- Minified back all JS files to avoid expensive server/ on-the-fly minification.
+- Made dBlazy DOM methods chainable.
+- Made dBlazy pluginized/ extensible to reduce complexity.
+
+Blazy 8.x-2.0-dev, 2022-01-02
+-----------------------------
+- Micro optimization: Refactored selfish methods, too much me, saving 0.6KB.
+- Moved polyfills out of dBlazy for easy removal.
+
+Blazy 8.x-2.0-dev, 2022-01-01
+-----------------------------
+- When jQuery is not at home, dBlazy is the honorable host for $ sign.
+- Deprecated Photobox due to being unmaintained.
+
+Blazy 8.x-2.0-dev, 2021-12-21
+-----------------------------
+- Issue #3255370 by gausarts: Move Blazy theme-related alias methods to a
+  dedicated BlazyTheme.
+
+Blazy 8.x-2.0-dev, 2021-12-15
+-----------------------------
+- Issue #3254692 by gausarts: Drupal 10, identify deprecation, etc.
+- Issue #3253012 by gausarts: Added Drupal ^10 to track potential disruption.
+- Issue #3254668 by gausarts: Replace builtin once with core once.
+- Issue #3101810 by gausarts, mittoD: Play nice with AMP.
+- Issue #3243817 by lolgm: Added CSS Admin disable option in Layout Builder.
+- Issue #3254222 by Jingting, wells: ARIA dialog and alertdialog nodes should
+  have an accessible name.
+- Issue #3241415 by nanobyt3, codesmith: Respect the image title from a Media
+  Image for captions.
+
+Blazy 8.x-2.0-dev, 2021-10-06
+-----------------------------
+- Issue #3210635 by grathbone, jastraat, Bwolf: Lazyloaded image-to-iframes /
+  videos are not accessible.
+
+Blazy 8.x-2.0-dev, 2021-09-27
+-----------------------------
+- Issue #3239351 by gausarts: Provides shortcodes for Blazy Filter.
+
+Blazy 8.x-2.0-dev, 2021-09-26
+-----------------------------
+- Made Blazy filter extensible to support sub-modules builtin shortcodes.
+
+Blazy 8.x-2.0-dev, 2021-09-23
+-----------------------------
+- Issue #3238403 by gausarts, VasiliyRepin: Blazy does not output link to
+  content at image for Commerce Product.
+
+Blazy 8.x-2.0-dev, 2021-09-22
+-----------------------------
+- Fixed for Native Grid given various known contents.
+- Added a separate Composer section.
+- Fixed for Eslint with ES5.
+
+Blazy 8.x-2.0-dev, 2021-09-17
+-----------------------------
+- Issue #3233555 by gausarts: Adopt modern grids: Flexbox and or Native Grid.
+
+Blazy 8.x-2.0-dev, 2021-09-15
+-----------------------------
+- Issue #3225859 by Fernly, gausarts, alexrayu, nbanderson: Blazy 2.3+ breaks in
+  use with stage_file_proxy and or CDN.
+
+Blazy 8.x-2.0-dev, 2021-07-06
+-----------------------------
+- Issue #3220632 by gausarts, bgreco: WSOD when the responsive_image module is
+  not enabled
+
+Blazy 8.x-2.0-dev, 2021-06-17
+-----------------------------
+- Issue #3213258 by gausarts: Remove obsolete "Native browser lazy load.
+- Reverted tests ::setup method due to causing failing tests at sub-modules.
+- Issue #3218962 by gausarts, wrd: Problem with optionset checkboxes in "Gin"
+  admin theme.
+
+Blazy 8.x-2.0-dev, 2021-06-15
+-----------------------------
+- Issue #3214002 by Anybody, gausarts, FiNeX: Media switcher output doesn'\''t
+  work with i18n.
+
+Blazy 8.x-2.0-dev, 2021-06-07
+-----------------------------
+- Issue #3214002 by gausarts, FiNeX: Media switcher output doesn'\''t work with
+  i18n.
+- Issue #3217404 by justanothermark: Incorrect URI built for sites with base
+  path.
+
+Blazy 8.x-2.0-dev, 2021-05-31
+-----------------------------
+- Added a common config entity to DRY for Slick, Splide, ElevateZoomPLus,
+  GridStack, etc.
+- Issue #3214001 by Vinay15: Label is displayed for a newly created Paragraph
+  entity instead of its preview in layout builder
+- Added rendered_entity field to support navigation with Vanilla option for the
+  new Splide module.
+
+Blazy 8.x-2.0-dev, 2021-05-11
+-----------------------------
+- Issue #3213260 by gausarts: Leverage asynchronous "decoding" HTML attribute
+  for improved performance.
+
+Blazy 8.x-2.0-dev, 2021-05-09
+-----------------------------
+- Added autoplay for local video within lightbox to save another click.
+- Fixed for fatal _responsive_image_build_source_attributes if file is missing.
+- Fixed for Blazy Filter hard-coded image url without dimensions and file API.
+- Reverted the revert as per https://drupal.org/node/3210636#comment-14097266.
+- Added BC for non-oembed such as Video Embed Field without Media migration.
+- Reverted video lightbox checks to 2.1.
+
+Blazy 8.x-2.0-dev, 2021-05-08
+-----------------------------
+- Added (Responsive) image style as fallbacks to Blazy Filter.
+
+Blazy 8.x-2.0-dev, 2021-05-05
+-----------------------------
+- Added Lightbox image style option with Responsive image to Blazy Filter.
+- Fixed for Responsive image overflow sizes within Colorbox.
+- Issue #3212194 by gausarts: Supports Responsive image for lightboxes.
+- Reverted the forgotten $settings['blazy_data']['dimensions'] = $srcset;
+
+Blazy 8.x-2.0-dev, 2021-05-04
+-----------------------------
+- Changed video_embed_media to video_embed_field to support manual or drush.
+
+Blazy 8.x-2.0-dev, 2021-05-01
+-----------------------------
+- Issue #3190087 by gausarts, playful: Blazy Filter HTML caption added via text
+  editor being stripped out.
+- Fixed for Undefined property: Drupal\views\ViewExecutable::$row_index required
+  by by Drupal\views\Plugin\views\field\EntityField->prepareItemsByDelta.
+
+Blazy 8.x-2.0-dev, 2021-04-30
+-----------------------------
+- Issue #3211636 by gausarts, timlie, jacklee0410: Regressions with lightbox
+  dimensions.
+- Issue #3210344 by gausarts, manarak: Broken CSS background and responsive
+  image styles with aspect ratio Fluid.
+
+Blazy 8.x-2.0-dev, 2021-04-26
+-----------------------------
+- Issue #3210636 by grathbone: Solution to supporting image-to-iframe embeds for
+  non oembed videos (Video Embed Field)
+
+Blazy 8.x-2.0-dev, 2021-04-24
+-----------------------------
+- Issue #3158152 by manarak, renguer0: Uncaught TypeError: Cannot use '\''in'\''
+
+Blazy 8.x-2.0-dev, 2021-04-14
+-----------------------------
+- Issue #3208686 by Firass Ziedan: Call to a member function getPluginId() on
+  null on taxonomy term pages.
+
+Blazy 8.x-2.0-dev, 2021-04-09
+-----------------------------
+- Issue #3166057 by xavier.masson: Partial clear loading classes after success /
+  error load
+- Issue #3118078 by GaëlG, wells: Compatibility with image styles inside
+  CKEditor
+- Issue #3160061 by gena.io: Replace assertions involving calls to strpos() with
+  more accurate string assertions
+- Issue #3204070 by recrit: Services cache IO settings based on first called
+  attach array
+- Issue #3203933 by recrit: The blazy.formatter service erroneously caches the
+  first item object of the last built field formatter
+- Issue #3174661 by qusai taha, RajabNatshah, markdc, ericdsd, FiNeX: Fix
+  notice: undefined index ratio by check the value if not empty
+- Issue #3167100 by rembrandx, jastraat, Dennis Cohn, gausarts: Element “source”
+  is missing required attribute “srcset”
+- Issue #3173562 by csedax90: Rendered media in Oembed from Paragraph is not
+  translated
+- Issue #3185885 by adevms, Shenron_segamag, FiNeX, NigelCunningham: Rotating
+  blue square doesn'\''t go away
+
+Blazy 8.x-2.0-dev, 2020-06-30
+-----------------------------
+- Issue #3154185 by Corn696: SVG placeholder html validation error space is not
+  allowed.
+- Added supports for reduce motion for vestibular people.
+- Fixed for potential non-integer lightbox dimensions.
+- Added partial supports for rich media lightbox contents.
+- Deprecated .media--loading for .is-b-loading to reuse at non-media.
+
+Blazy 8.x-2.0-dev, 2020-06-21
+-----------------------------
+- Issue #3149843 by Guido_S, gausarts: Support SVG Images.
+
+Blazy 8.x-2.0-dev, 2020-06-20
+-----------------------------
+- Issue #3137757 by gausarts: Blur effect causes extra slow page load after
+  update from 8.x-2.0 to 8.x-2.1.
+
+Blazy 8.x-2.0-dev, 2020-06-18
+-----------------------------
+- Issue #3142503 by gausarts: Add option for native browser lazy load.
+
+Blazy 8.x-2.0-dev, 2020-06-17
+-----------------------------
+- Added supports for field label via Field UI for grid displays.
+- Fixed for Views content/ entity title option being overriden by Image Title.
+- Fixed for placeholder hook_alter not being respected.
+- Fixed for Title label being overridden by Image Title at Views options.
+- Simplified few checks.
+- Issue #3136504 by gausarts, hammerslammer: Endless loading of image which is
+  not found (status 404).
+- Issue #3143794 by gausarts, julianrozor, jrochate: Layout Builder: Error: Call
+  to a member function getFileUri() on null.
+- Issue #3138996 by FiNeX: Check if image style exists to avoid Error.
+- Issue #3135220 by Grimreaper, jhmnieuwenhuis, lindsay.wils: Wrong srcset in
+  responsive image.
+
+Blazy 8.x-2.0-dev, 2020-05-09
+-----------------------------
+- Fixed for rare cases with similar colorbox galleries on a page.
+- Fixed for weird null document after closing colorbox.
+
+Blazy 8.x-2.0-dev, 2020-05-08
+-----------------------------
+- Issue #3123435 by sasanikolic, Berdir: Uncaught TypeError: Cannot read
+  property '\''mobiledetect'\'' of undefined.
+
+Blazy 8.x-2.0-dev, 2020-05-07
+-----------------------------
+- Issue #3134323 by timlie: Undefined index: fx in
+  Drupal\blazy\BlazyManagerBase->postSettings().
+- Issue #3133891 by prudloff: Error when adding a new text format.
+- Fixed for artifacts during loading with different animation than blur.
+
+Blazy 8.x-2.0-dev, 2020-05-04
+-----------------------------
+- Reduced picture abrupt ratio changes for the rest after the first loaded.
+
+Blazy 8.x-2.0-dev, 2020-05-01
+-----------------------------
+- Issue #3132545 by prudloff: Undefined index notices when image file is not
+  available.
+- Issue #3132537 by lolandese: License "GPL-2.0+" is a deprecated SPDX license
+  identifier.
+
+Blazy 8.x-2.0-dev, 2020-04-24
+-----------------------------
+- Issue #3120696 by gausarts, jwilson3, Corn696, bkosborne: Delay native lazy
+  loading till one is hit
+
+Blazy 8.x-2.0-dev, 2020-04-22
+-----------------------------
+- Issue #3119527 by mortona2k: Responsive image fallback uses original image.
+- Issue #3126146 by electrokate: Undefined Item error.
+- Issue #3127586 by YahyaAlHamad: Blur effect messes up Responsive image with
+  fluid ratio.
+- Issue #3125240 by Mykola Veryha: Notice : Undefined variable: content.
+- Changed blur effect approach to be replaceable by animate.css easily with just
+  hook_blazy_image_effects_alter.
+- Made Responsive image utilities available outside formatters such as for
+  BlazyEntity or the new GridStack for Layout Builder with Media Library
+  and Responsive image integration.
+- Added preface and overlay variable for any extra content prefacing and
+  overlaying the image/ video.
+
+Blazy 8.x-2.0-dev, 2020-04-08
+-----------------------------
+- Issue #3124204 by slbrassard: Incorrect entity cache tag causes blazy
+  formatted fields not to be updated.
+- Issue #3120654 by thalles: Replace old "source" property value by new.
+- Fixed for regression with lightboxes and iframes.
+- Added micro-optimization for BlazyStyleBaseTrait::getFirstImage.
+- Opened supports for Responsive image for GridStack since the removal of custom
+  breakpoints at blazy:2.0.
+- Cleaned up few more TODOs.
+- Removed no longer relevant D8.7 traces.
+- Disabled BlazymanagerBase::buildSkins for sub-module own skin implementations.
+- Moved Blazymanager::setAttachments into BlazymanagerBase::setAttachments to
+  re-use for sub-modules.
+- Moved BlazymanagerBase::isCrop into BlazyFormatter::isCrop due to being usable
+  only at formatter level, not Views, etc.
+
+Blazy 8.x-2.0-dev, 2020-03-16
+-----------------------------
+- Issue #3118712 by prudloff: Images are not centered correctly.
+- Issue #3119739 by gausarts, DD 85: Do not apply aspect ratio with empty width.
+- Issue #3117132 by pivica: Media position relative rule is too general.
+- Issue #3118739 by wells: Using an image style in a render array without
+  setting a specific width.
+
+Blazy 8.x-2.0-dev, 2020-02-29
+-----------------------------
+- Added library blazy/base as failsafe when blazy JS library might not be loaded
+  or even disabled such as with Blazy text for CSS grid only.
+- Fixed for the newly supported CSS background for Responsive image regression
+  with multi-breakpoint CSS background. Doh.
+- Added generic container classes to apply to sub-modules as well.
+
+Blazy 8.x-2.0-dev, 2020-02-27
+-----------------------------
+- Added another compatibility for Claro.
+- Renamed CSS class hint to b-hint to avoid potential conflicts.
+- Cleaned up few deprecated CSS stuffs related to custom breakpoints removal.
+
+Blazy 8.x-2.0-dev, 2020-02-26
+-----------------------------
+- Added blazy.css to reduce dups and for basic blazy module features.
+- Cleaned up irrelevant iframe attributes due to iframe within iframe since 8.6.
+- Removed useless iframe for when Image to iframe is enabled to save few bytes.
+- Added supports for iframe only without Image to iframe for uncool people.
+
+Blazy 8.x-2.0-dev, 2020-02-25
+-----------------------------
+- Cleaned up no longer relevant settings due to deprecation.
+- Added supports for youtube/embed which is ignored by OEmbed Resource.
+- Added micro optimization for BlazyFilter.
+
+Blazy 8.x-2.0-dev, 2020-02-24
+-----------------------------
+- Added a hook_update() to remove unused settings and cache clearing.
+- Removed deprecated BlazyAdminBreakpointTrait.
+- Removed few deprecated classes and methods:
+  Drupal\blazy\BlazyBreakpoint, Drupal\blazy\Dejavu\BlazyDefault.
+  Deprecated formatters are still kept till 3.x, or sooner.
+
+Blazy 8.x-2.0-dev, 2020-02-23
+-----------------------------
+- Updated tests to use Selenium.
+- Added micro optimization for OEmbed.
+- Simplified BlazyOEmbed::getAutoPlayUrl.
+- Removed no longer relevant autoplay_url check which is now done within iframe.
+- Updated hard-coded iframe so that can be cleanly removed via variables.
+
+Blazy 8.x-2.0-dev, 2020-02-20
+-----------------------------
+- Issue #3114838 by gausarts, lexsoft: Add a NULL check, else cannot read
+  property hasAttribute of null.
+- Issue #3114486 by gausarts, hunterbuchanan: Default image no longer shows up
+  in image field using Blazy 8.x-2.0-rc7.
+
+Blazy 8.x-2.0-dev, 2020-02-17
+-----------------------------
+- Issue #3079167 by gausarts, nashkrammer, Kristen Pol, Berdir: Implement
+  TrustedCallbackInterface to fix deprecation notices.
+- Issue #3114035 by chr.fritsch: Missing schema for optionset.
+- Fixed for the new formatter schemas: blazy_oembed and blazy_text.
+- Removed no longer useful BlazyFormatterOEmbedTrait.
+- Removed and cleaned up deprecated custom breakpoints, wish me luck.
+
+Blazy 8.x-2.0-dev, 2020-02-15
+-----------------------------
+- Issue #3113094 by thalles: Fix subclassing and stop overriding constructors
+  in blazy\Plugin\Field\FieldFormatter\BlazyTestEntityReferenceFormatterTest.
+- Issue #3113074 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in blazy\Plugin\Field\FieldFormatter\BlazyFileFormatterBase.
+- Issue #3113092 by thalles: Fix subclassing and stop overriding constructors
+  in blazy\Plugin\Field\FieldFormatter\BlazyTextFormatter.
+- Issue #3113089 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in blazy\Plugin\Field\FieldFormatter\BlazyMediaFormatterBase.
+
+Blazy 8.x-2.0-dev, 2020-02-14
+-----------------------------.
+- Removed not-so-useful option Native lazy loading, and enabled by default.
+
+Blazy 8.x-2.0-dev, 2020-02-12
+-----------------------------
+- Issue #3112881 by thalles: Fix subclassing and stop overriding constructors
+  in blazy_ui\Form\BlazySettingsForm.
+
+Blazy 8.x-2.0-dev, 2020-02-11
+-----------------------------
+- Added a new option container to support old bLazy (IO does not need it) within
+  scrolling containers such as Drupal modal like Media library.
+- Issue #3112354 by chr.fritsch: Integrate the new
+  libraries_directory_file_finder service.
+
+Blazy 8.x-2.0-dev, 2020-02-10
+-----------------------------
+- Removed few CSS DOM and JS hacks for OEmbed for CSS solutions thanks to D8.8+.
+
+Blazy 8.x-2.0-dev, 2020-02-08
+-----------------------------
+- Fixed for Picture glicthes with Fluid aspect ratio.
+- Added supports for multi-breakpoint CSS background via Responsive image.
+- Added supports for animate.css for the cool people.
+- Added supports for different image effects on a page via .media--fx--EFFECT.
+- Fixed for CKEditor collapsed container due to parent display: flex, or
+  inline-block.
+
+Blazy 8.x-2.0-dev, 2020-02-05
+-----------------------------
+- Removed deprecated core/classList library for IE9 below.
+- Added minor cleansup and adjustments.
+- Reached 99% integration with Responsive image, including CSS background and
+  the notorious aspect ratio Fluid. The remaining 1% is unknown glicthes.
+
+Blazy 8.x-2.0-dev, 2020-02-04
+-----------------------------
+- Added temp fix for Picture vs. Responsive image insanity with Fluid aspect
+  ratio.
+- Fixed for RC3 regression with BlazyGrid when a grid is given value 1.
+- Fixed for Blazy when embedded in non-related-blazy (Views style) plugins.
+- Added a new service @blazy.media to existing class BlazyMedia to accommodate
+  and finalize core Media integration.
+- Moved BlazyEntityMediaBase::buildStage to BlazyMedia::imageItem for reuse or
+  easy removal due to deprecated File for Media integration.
+- Reverted BlazyUtil::isPreview back to Blazy::isPreview for global usages.
+
+Blazy 8.x-2.0-dev, 2020-02-03
+-----------------------------
+- Added postscript: Any extra content to put into blazy goes here. Use keyed or
+  indexed array to not conflict with or nullify other providers, e.g.:
+  postscript.cta, or postscript.widget. Avoid postscript = cta.
+- Fixed for Entity Browser AJAX integration such as for Slick Browser widgets.
+
+Blazy 8.x-2.0-dev, 2020-01-31
+-----------------------------
+- Removed deprecated tests: BlazyBreakpointUnitTest.
+- Removed deprecated methods known used internally, though public:
+  BlazyManager::getEntityView, BlazyManager::getResponsiveImageCacheTags,
+  Blazy::buildAttributes.
+
+Blazy 8.x-2.0-dev, 2020-01-29
+-----------------------------
+- Deprecated custom breakpoints for removal as per #3105243.
+- Added TODO depreciation for BlazyViewsFieldFile, anything File for Media.
+- Added TODO for file entity (non-media) for future removal if file entity
+  integration should be totally removed for pure Media.
+- Cleaned up Caption fields option to declutter.
+- Added BlazySetting class for the new features.
+- Added a new option Image to have custom high-res video poster or poster-like
+  image for rich media.
+- Fixed for the new third party file video formatter schema.
+- Added Blazy::containerAttributes() to replace individual efforts.
+
+Blazy 8.x-2.0-dev, 2020-01-27
+-----------------------------
+- Cleaned up few useless or deprecated classes and methods.
+- Added supports for linked_field.module for Blazy Grid display.
+- Reverted Blazy::buildResponsiveImage() to RC6, and change parameters to get
+  consistent with the rest.
+
+Blazy 8.x-2.0-dev, 2020-01-26
+-----------------------------
+- Changed media--BUNDLE CSS class to media--bundle--BUNDLE to avoid conflict
+  with media--TYPE where TYPE has been hard-coded since 1.x to very limited
+  video, audio, image. We had no Media nor Media bundles in core at 1.x.
+- Issue #3108755 by gausarts: Make rich media to be part of theme_blazy() if
+  applicable.
+
+Blazy 8.x-2.0-dev, 2020-01-24
+-----------------------------
+- Removed @image.factory references wherever BlazyVideoTrait is removed.
+- Removed BlazyVideoTrait references wherever BlazyOEmbed is in use.
+- Added @image.factory service to BlazyOEmbed to completely deprecate
+  BlazyVideoTrait which was coupled to deprecated VEF/VEM.
+- Moved utility methods from Blazy into BlazyUtil, mostly new methods post RC5.
+
+Blazy 8.x-2.0-dev, 2020-01-22
+-----------------------------
+- Added micro optimizations, similarity found -> code reuse, etc.
+- Fixed for file video blazy assets if no other Blazy is present on the page.
+- Updated docs, cleanups, minor fixes.
+
+Blazy 8.x-2.0-dev, 2020-01-21
+-----------------------------
+- Fixed for hook_ckeditor_css_alter() to only load Blazy CSS if applicable.
+- Added few more micro optimizations.
+- Added minor fixes.
+- Added blazy.preview.css to disable interactive elements such as (remote| file)
+  video within CKEditor iframe.
+- Added third party formatter settings for simple overrides such as file video.
+- Issue #3048454 by gausarts, Mohammed J. Razem: Add Blazy to be a formatter for
+  core'\''s oEmbed URL widget.
+
+Blazy 8.x-2.0-dev, 2020-01-19
+-----------------------------
+- Disabled IO integration by default till required due to being optional.
+- Added micro optimizations for Blazy Grid texts.
+- Issue #3054032 by geek-merlin, wombatbuddy, gausarts, anruether, jim22: Blazy
+  breaks in ckeditor.
+
+Blazy 8.x-2.0-dev, 2020-01-15
+-----------------------------
+- Fixed for Blazy::generatePlaceholder not considering image style dimensions.
+- Fixed for the uniqueness of multiple fields such as Views galleries mixed with
+  formatters local to the current page, and similar images present at the same
+  page which is uncommon, but possible.
+- Merged common shared attributes for both Responsive and Image.
+
+Blazy 8.x-2.0-dev, 2020-01-13
+-----------------------------
+- Prepared custom breakpoint removal as per #3105243.
+
+Blazy 8.x-2.0-dev, 2020-01-10
+-----------------------------
+- Added BlazyDeprecatedTrait for easy removal deprecated methods and declutter.
+- Reverted BlazyManager::isCrop since still usable without custom breakpoints.
+
+Blazy 8.x-2.0-dev, 2020-01-09
+-----------------------------
+- Fixed for regression with multiple video playing at once.
+- Added more micro optimizations as planned in the ROADMAP.
+- Changed blazy.html.twig.
+- Ported method Blazy::transformDimensions().
+- Renamed variable original_width to _width, original_height to _height.
+- Deprecated Blazy::buildIframeAttributes for ::buildIframe.
+- Deprecated BlazyFormatter::setDimensionsOnce for :: setImageDimensions.
+- Removed Aspect ratio enforced since Responsive image now works with fluid.
+- Removed fallback or baby sitting codes since the relevant options (aspect
+  ratio, image style, etc.) including doc warnings are provided.
+
+Blazy 8.x-2.0-dev, 2020-01-07
+-----------------------------
+- Renamed the new BlazyBreakpoint::buildBeakpointAttributes to ::attributes.
+- Issue #3104542 by gausarts: Adopt hybrid lazy loading, native with fallback.
+
+Blazy 8.x-2.0-dev, 2020-01-04
+-----------------------------
+- Deprecated Blazy::buildUrlAndDimensions for ::urlAndDimensions.
+- Deprecated Blazy::buildLazyAttributes for ::lazyAttributes.
+- Deprecated Blazy::buildImageAttributes for ::imageAttributes.
+- Deprecated Blazy::buildAspectRatio for ::aspectRatioAttributes.
+- Deprecated Blazy::configSchemaInfoAlter for BlazyAlter::configSchemaInfoAlter.
+- Deprecated Blazy::buildAttributes for ::preprocessBlazy.
+- Deprecated BlazyManager::getResponsiveImageCacheTags for
+  ::getResponsiveImageStyles.
+- Renamed BlazyManager::prepareImage to ::prepareBlazy.
+- Renamed BlazyManager::preRenderImage to ::preRenderBlazy.
+- Changed Blazy::buildResponsiveImage signature for clarity.
+- Added a new class BlazyAlter to reduce complexity at Blazy.
+- Added a new class BlazyBreakpoint to centralize all custom breakpoints.
+- Added BlazyOEmbedInterface, BlazyEntityInterface, BlazyFormatterInterface.
+- Added a new service blazy.formatter to replace blazy.formatter.manager.
+- Changed deprecation removal from blazy:8.x-3.0 to blazy:8.x-3.0.
+- Added micro optimizations, or organizations.
+
+Blazy 8.x-2.0-dev, 2020-01-03
+-----------------------------
+- Issue #3097685 by gausarts, jwilson3: Support aspect ratio for Responsive
+  image.
+- Issue #3077839 by gausarts, renguer0, anruether: Add image effects during
+  loading such as blur, etc.
+
+Blazy 8.x-2.0-dev, 2020-01-02
+-----------------------------
+- Issue #2838131 by kevineinarsson, JaceRider: Use SVG as placeholder image.
+- Issue #3069280 by gausarts, samasonj: Support local video, such as mp4, etc.
+- Issue #3061965 by bgreco, gausarts, W01F: Support basic non-field image
+  title/alt for captions
+
+Blazy 8.x-2.0-dev, 2020-01-01
+-----------------------------
+- Issue #3103816 by gausarts, W01F: Compatibility with Claro theme.
+
+Blazy 8.x-2.0-dev, 2019-12-25
+-----------------------------
+- Added a check for stream_wrapper_manager to pass the tests due to non-DI.
+- Updated for core removing simpletest files.
+- Fixed for coding standard issues, see #3024461.
+- Issue #3088298 by effulgentsia, chr.fritsch, anavarre, Kristen Pol: [META]
+  Drupal 9 Deprecation Notices for Blazy
+
+Blazy 8.x-2.0-dev, 2019-12-01
+-----------------------------
+- Added fallback to source since Title is NULL from thumbnail, likely core bug.
+- Issue #3087084 by thalles: Add new key core_version_requirement in info.yml
+- Issue #3085580 by michiellucas, lindsaywilson23, anruether: IE 11: Js error -
+  Object doesn'\''t support property or method '\''closest'\'''
+
+Blazy 8.x-2.0-dev, 2019-08-23
+-----------------------------
+- Issue #3070575 by gausarts, DuneBL: Notice: Undefined index: resimage
+- Issue #3057691 by recrit: Un-hidden images not loaded after resizing when
+  using minimal field markup
+- Issue #3059509 by gausarts, tepelena: Lazy load inline images error
+- Issue #3054051 by thalles, gausarts: hook_help return empty without Markdown
+  class
+- Issue #3075938 by recrit: dBlazy library uses incorrect polyfill for
+  CustomEvent
+- Issue #3072137 by ilchovuchkov: Update src/BlazyDefault.php and
+  src/BlazyEntity.php
+
+Blazy 8.x-2.0-dev, 2019-08-22
+-----------------------------
+- Issue #3065845 by GaëlG: Blazy library not loading if the first code using the
+Blazy text format filter does not handle the attachments
+
+Blazy 8.x-2.0-dev, 2019-06-14
+-----------------------------
+- Issue #3054230 by jigarius: Images added via RTE with caption enabled not
+  displayed.
+- Changed minimum grid from 1 to 2 to allow plain theme_item_list().
+
+Blazy 8.x-2.0-dev, 2019-04-19
+-----------------------------
+- Added tests for IO.
+- Updated blazy.html.twig with the new optional use_loading option.
+- Added option use_loading to make it easily overridden.
+- Moved IO media specific methods from bio.js to bio.media.js.
+- Added ISSUE_TEMPLATE.md.
+
+Blazy 8.x-2.0-dev, 2019-04-18
+-----------------------------
+- Issue #3048605 by thalles: Replace LibraryDiscovery by
+  LibraryDiscoveryInterface in Form/BlazySettingsForm.
+- Issue #3048607 by thalles: Replace DateFormatter by DateFormatterInterface
+  in Form/BlazyAdminBase.php.
+- Updated IO to match the fallback bLazy.
+
+Blazy 8.x-2.0-dev, 2019-04-14
+-----------------------------
+- Fixed for few glitches.
+
+Blazy 8.x-2.0-dev, 2019-04-13
+-----------------------------
+- Issue #3047067 by gausarts, RajabNatshah: Inline image/png;base64 will have a
+  path  and Failed to load resource: the server responded with a status.
+
+Blazy 8.x-2.0-dev, 2019-04-12
+-----------------------------
+- Added BlazyFilterInterface.php for better doc comments.
+- Fixed for BlazyFilter incorrect delta.
+- Added AJAX support for old bLazy as well.
+- Fixed for space delimited CSS classes.
+- Added Bio.prototype.intersecting() to avoid full method overrides.
+- Improved Bio fallback to old Blazy.
+- Improved attributes handling.
+
+Blazy 8.x-2.0-dev, 2019-04-03
+-----------------------------
+- Updated tests for D8.7+ depreciation compatibility.
+- Enforced Blazy loader to prevent JS error due to being optional.
+- Fixed for image error handling.
+
+Blazy 8.x-2.0-dev, 2019-04-02
+-----------------------------
+- Added support for Views Infinite Scroll, alike.
+
+Blazy 8.x-2.0-dev, 2019-04-01
+-----------------------------
+- Added check to drupalSettings before usage.
+
+Blazy 8.x-2.0-dev, 2019-03-31
+-----------------------------
+- Optimized IO integration with multiple instances.
+- Fixed for multi-breakpoint background derailed from original implementation.
+- Fixed for docs.
+
+Blazy 8.x-2.0-dev, 2019-03-30
+-----------------------------
+- Fixed for background SRC overlap when using multi-serving background images.
+- Converted IO integration into plugin to declutter and re-use.
+
+Blazy 8.x-2.0-dev, 2019-03-27
+-----------------------------
+- Issue #3043264 by gausarts: Modernize Blazy with IntersectionObsever.
+
+Blazy 8.x-2.0-dev, 2019-03-25
+-----------------------------
+- Ported Blazy::buildAspectRatio() and Blazy::buildImageAttributes() for
+  readability.
+- Changed Blazy::buildResponsiveImage() parameters.
+- Removed deprecated Blazy::buildUrl() for Blazy::urlAndDimensions().
+- Moved BlazyManager::setDimensionsOnce() to BlazyFormatterManager.
+- Moved Responsive image building to #pre_render to reduce dup ifities.
+- Optimized Responsive image integration.
+- Added supports to build Blazy multimedia gallery via Views UI CSS class.
+
+Blazy 8.x-2.0-dev, 2019-03-23
+-----------------------------
+- Fixed for double escape markdown for admin/help.
+- Added troubleshooting.
+
+Blazy 8.x-2.0-dev, 2019-03-21
+-----------------------------
+- Added BlazyManagerBase::getCacheMetadata() for Blazy, Slick, GridStack, etc.
+- Micro optimizations with breakpoint and crop style checks.
+- Moved obvious module features into #pre_render.
+- Moved few doc comments to Interface.
+- Fixed for few doc comments and type hints.
+- Added Blazy::transformRelative() to pass tests for procedural anywhere else.
+- Removed the newly added not-so-useful Blazy::transformDimensions().
+
+Blazy 8.x-2.0-dev, 2019-03-18
+-----------------------------
+- Added Blazy::transformDimensions().
+
+Blazy 8.x-2.0-dev, 2019-03-18
+-----------------------------
+- Updated admin CSS.
+
+Blazy 8.x-2.0-dev, 2019-03-17
+-----------------------------
+- Fixed for dups.
+
+Blazy 8.x-2.0-dev, 2019-03-16
+-----------------------------
+- Reverted broken optimization with attributes insanity.
+- Cleaned ups deprecated, and TODOs.
+
+Blazy 8.x-2.0-dev, 2019-03-15
+-----------------------------
+- Fixed for conflict with Bootstrap CSS .media which makes Blazy collapsed if
+  not using aspect ratio.
+- Fixed for multiple blazybox.
+- Fixed for Blazy Filter URI.
+
+Blazy 8.x-2.0-dev, 2019-03-14
+-----------------------------
+- Fixed for unclean Blazy Filter grid when blazy is embedded in Caption filters.
+
+Blazy 8.x-2.0-dev, 2019-03-13
+-----------------------------
+- Added room for sub-modules to extend blazy settings easily.
+- Renamed blazy_settings UI to blazy_settings_form to abide by conventions.
+- Fixed for Blazy Filter with Grid of inline images taking over the contents.
+
+Blazy 8.x-2.0-dev, 2019-03-12
+-----------------------------
+- Updated tests to reflect the new optional image item.
+- Changed image item to be optional to reduce barriers to the API, the only
+  required is URI.
+- Fixed for attributes insanity.
+
+Blazy 8.x-2.0-dev, 2019-03-11
+-----------------------------
+- Added supports for lightbox Media gallery embedded within Blazy Grid with
+  'Use field template' disabled. This opens up Views goodness: limit field
+  amount to display, Views markup, etc. without using field template.
+- Added hook_blazy_settings_views_alter() to modify views-related settings.
+- Moved JS checkbox into a function.
+
+Blazy 8.x-2.0-dev, 2019-03-09
+-----------------------------
+- Fixed for Views lightbox gallery embedded within Blazy Grid with `Use field
+  template` being disabled.
+
+Blazy 8.x-2.0-dev, 2019-03-08
+-----------------------------
+- Fixed for Caption filter captions.
+- Fixed for BlazyFilter grid TODO to integrate grid with the existing grid.
+- Removed BlazyFormatterBaseTrait.
+- Moved BlazyFormatterBaseTrait contents to BlazyFormatterTrait.
+- Moved BlazyFormatterTrait contents to BlazyFormatterBlazy.
+- Split docs.
+
+Blazy 8.x-2.0-dev, 2019-03-06
+-----------------------------
+- Fix for Twig inline_template and Views rewrite results striping out style
+  required by aspect ratio.
+- Fixed for regression broken formatters when embedded inside Views Blazy Grid.
+- Re-use first_uri, first_item things for colorbox/zoom-like gallery.
+- #3037325 by daften: The config dependencies don'\''t include the used image
+  style.
+- Changed BlazyAdminBase::openingForm() parameters.
+- Added hook_blazy_build_alter() to modify the entire Blazy outputs.
+- Refactored BlazyGrid to be usable for non-grid, plain list.
+- Moved re-usable methods into BlazyManagerbase, for Views style plugins.
+- Added #pre_render to BlazyGrid for easy overrides before reaching Twig.
+
+Blazy 8.x-2.0-dev, 2019-03-03
+-----------------------------
+- Micro optimization with breakpoints.
+
+Blazy 8.x-2.0-dev, 2019-03-03
+-----------------------------
+- #3027842 by gmrossello: Lazy images are not loaded when resizing.
+
+Blazy 8.x-2.0-dev, 2019-03-01
+-----------------------------
+- Marked core Media integration done.
+- Fixed for Media captions.
+- Split BlazyEntityReferenceBase into BlazyEntityMediaBase for simple needs.
+- Split BlazyStylePluginTrait into re-usable traits: BlazyStyleBaseTrait,
+  BlazyStyleOptionsTrait for all views-related styles.
+- Refactored entity reference formatters.
+
+Blazy 8.x-2.0-dev, 2019-02-27
+-----------------------------
+- Renamed BlazyManager::getImage() into BlazyManager::getBlazy() for clarity.
+- Added a new argument date.formatter to blazy.admin.base service. Be sure to
+  run the update, clear cache or drush cr.
+- Updated Views and other test files to the latest Drupal.
+- Cleaned up no longer supported VEF/ VEM leftovers from test files.
+- Moved hook_help() into Blazy UI to match D7.
+
+Blazy 8.x-2.0-dev, 2019-02-17
+-----------------------------
+- Cleaned up few deprecated.
+- Renamed BlazyFormatter class to BlazyImageFormatter for clarity. Be
+  sure to run the update, clear cache or drush cr.
+- Added a new service BlazyEntity to replace deprecated BlazyEntityTrait. Be
+  sure to run the update, clear cache or drush cr.
+- Added Blazy Grid formatter for texts.
+
+Blazy 8.x-2.0-dev, 2019-02-15
+-----------------------------
+- Added Blazybox for full screen video preview: Intense, Slick Browser.
+- Changed settings.player to be more flexible to support a hybrid of media
+  switcher and quasi-lightbox (lightbox-like but inline) like Zooming.
+
+Blazy 8.x-2.0-dev, 2019-02-13
+-----------------------------
+- Eslint says no space before COLON. Coder says must HAVE space. Confusing!
+- Updated eslint location.
+- Fixed for lightbox/ photoswipe video size regression from 8.x branch.
+
+Blazy 8.x-2.0-dev, 2019-02-12
+-----------------------------
+- Moved heavy lifting (breakpoints, dimensions, URL, etc) to #pre_render.
+- Split Blazy::buildAttributes() to three methods to make readable lines.
+- Cleaned up few fail safes so to reduce dup lines.
+- Renamed Blazy::buildUrl() to Blazy::urlAndDimensions() for clarity.
+- Added docs in Markdown for easy reading at /admin/help.
+- Added an optional BlazyMarkdown utility class for /admin/help.
+
+Blazy 8.x-2.0-dev, 2019-01-14
+-----------------------------
+- Added option to disable custom breakpoints permanently which is normally
+  disabled when using Responsive breakpoints.
+
+Blazy 8.x-2.0-dev, 2019-01-02
+-----------------------------
+- Removed deprecated methods, workaround left over, redundant iframe_lazy
+  (the point to use Blazy is to lazy load, especially iframes).
+- Added a simple lightbox support for Blazy Filter.
+- Changed unreliable iframe JS approach to HTML to avoid FOUC.
+- Issue #3023345 by gausarts: Image to iframe doesn't autoplay oEmbed video.
+- Issue #3023230 by gausarts: Add a new Blazy Media oEmbed service.
+
+Blazy 8.x-2.0-dev, 2019-01-01
+-----------------------------
+- Added back the BC layer to avoid broken formatters.
+- Added a new dedicated Blazy oEmbed service to declutter a few plugins:
+  BlazyVideoTrait, BlazyFilter, BlazyMediaFormatterBase and other plugins.
+- Happy new year!
+
+Blazy 8.x-2.0-dev, 2018-12-30
+-----------------------------
+- Issue #2928806 by gausarts, tepelena: Integrate with Filter for Inline images
+  and oEmbed/ videos
+
+Blazy 8.x-2.0-dev, 2018-12-28
+-----------------------------
+- Initial commit to support core Media as per 3022743.

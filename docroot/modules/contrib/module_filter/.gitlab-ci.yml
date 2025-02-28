@@ -1,0 +1,111 @@
+################
+# DrupalCI GitLabCI template
+#
+# Gitlab-ci.yml to replicate DrupalCI testing for Contrib
+#
+# With thanks to:
+#   * The GitLab Acceleration Initiative participants
+#   * DrupalSpoons
+################
+
+################
+# Guidelines
+#
+# This template is designed to give any Contrib maintainer everything they need to test, without requiring modification.
+# It is also designed to keep up to date with Core Development automatically through the use of include files that can
+# be centrally maintained.
+#
+# However, you can modify this template if you have additional needs for your project.
+################
+
+################
+# Includes
+#
+# Additional configuration can be provided through includes.
+# One advantage of include files is that if they are updated upstream, the changes affect all pipelines using that include.
+#
+# Includes can be overridden by re-declaring anything provided in an include, here in gitlab-ci.yml
+# https://docs.gitlab.com/ee/ci/yaml/includes.html#override-included-configuration-values
+################
+
+include:
+  ################
+  # DrupalCI includes:
+  # As long as you include this, any future includes added by the Drupal Association will be accessible to your pipelines automatically.
+  # View these include files at https://git.drupalcode.org/project/gitlab_templates/
+  ################
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+################
+# Pipeline configuration variables
+#
+# These are the variables provided to the Run Pipeline form that a user may want to override.
+#
+# Docs at https://git.drupalcode.org/project/gitlab_templates/-/blob/1.0.x/includes/include.drupalci.variables.yml
+################
+
+variables:
+  OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_PREVIOUS_MINOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 0
+  OPT_IN_TEST_MAX_PHP: 0
+  # _PHPUNIT_CONCURRENT=1 uses run-tests.sh, 0 uses phpunit directly.
+  _PHPUNIT_CONCURRENT: 1
+  # Skip (1) or execute (0) the following jobs.
+  SKIP_COMPOSER: 0
+  SKIP_COMPOSER_LINT: 0
+  SKIP_ESLINT: 0
+  SKIP_STYLELINT: 0
+  SKIP_PHPCS: 0
+  SKIP_PHPSTAN: 0
+  SKIP_PHPUNIT: 0
+
+eslint:
+  before_script:
+    - echo "ESLINT version $(${CI_PROJECT_DIR}/${_WEB_ROOT}/core/node_modules/.bin/eslint --version)"
+    - cd $CI_PROJECT_DIR/$_WEB_ROOT/modules/custom/$CI_PROJECT_NAME
+    - yarn install
+  allow_failure: false
+
+stylelint:
+  allow_failure: false
+
+phpcs:
+  allow_failure: false
+
+# Add re-usable reference for applying the core patches in all phpunit tests.
+.module-filter-core-patches: &module-filter-core-patches
+  # Provide some context on the test run. This is also done later, but the job will halt if the patching fails, so do it here too.
+  - drush status
+  # Apply core patch from https://www.drupal.org/project/drupal/issues/2895388 which is on MR 3273 (for core 10.1) and MR 5496 for 10.2
+  # This adds the machine to the uninstall page and includes the small tableresponsive change from issue 3331975
+  # @todo Remove this when the above issue is committed and the new core version is used in this job step.
+  - echo $_TARGET_CORE | grep 10.1 && export MR_DIFF="3273.diff"
+  - echo $_TARGET_CORE | grep 10.2 && export MR_DIFF="5496.diff"
+  - echo $_TARGET_CORE | grep 11. && export MR_DIFF="5496.diff"
+  - echo "_TARGET_CORE=$_TARGET_CORE, MR_DIFF is $MR_DIFF"
+  - |
+    if [ "$MR_DIFF" != "" ]; then
+      cd $CI_PROJECT_DIR/$_WEB_ROOT
+      curl https://git.drupalcode.org/project/drupal/-/merge_requests/$MR_DIFF | patch -p1
+      cd $CI_PROJECT_DIR
+    fi
+
+# Patch core file. This will be added to all phpunit jobs.
+phpunit:
+  before_script:
+    - *module-filter-core-patches
+
+# For the 'next minor' core test show deprecations, and set allow_failure:true
+# so the jobs ends with an amber warning not red error.
+phpunit (next minor):
+  allow_failure: true
+  variables:
+    # Use core ignoreFile to show deprecations. This will only work with $_PHPUNIT_CONCURRENT=1
+    SYMFONY_DEPRECATIONS_HELPER: "ignoreFile=$CI_PROJECT_DIR/$_WEB_ROOT/core/.deprecation-ignore.txt"

@@ -1,0 +1,7 @@
+ckeditor.plugin.colorbutton:
+  type: mapping
+  label: 'Color button'
+  mapping:
+    colors:
+      type: text
+      label: 'Text colors'

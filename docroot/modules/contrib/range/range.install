@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the range module.
+ */
+
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+
+/**
+ * Implements hook_update_N().
+ *
+ * Set 'range_combine' settings to FALSE for the existing range_unformatted
+ * field formatters.
+ *
+ * @see https://www.drupal.org/node/3142758
+ */
+function range_update_8101(array &$sandbox) {
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $view_display */
+  foreach (EntityViewDisplay::loadMultiple() as $view_display) {
+    $should_be_updated = FALSE;
+    foreach ($view_display->getComponents() as $name => $component) {
+      if (!empty($component['type']) && $component['type'] === 'range_unformatted') {
+        $component['settings']['range_combine'] = FALSE;
+        $view_display->setComponent($name, $component);
+        $should_be_updated = TRUE;
+      }
+    }
+    if ($should_be_updated) {
+      $view_display->save();
+    }
+  }
+}

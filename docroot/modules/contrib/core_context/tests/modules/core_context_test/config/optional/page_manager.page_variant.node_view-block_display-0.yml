@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - page_manager.page.node_view
+  module:
+    - system
+id: node_view-block_display-0
+label: Test
+variant: block_display
+variant_settings:
+  blocks:
+    51f4d65e-ecee-477d-ad2d-03b6a0f417c1:
+      id: system_powered_by_block
+      label: 'Powered by Drupal'
+      provider: system
+      label_display: '0'
+      region: top
+      weight: 0
+      uuid: 51f4d65e-ecee-477d-ad2d-03b6a0f417c1
+      context_mapping: {  }
+  id: block_display
+  uuid: a0afe519-ff48-4c5b-b82a-d2546947d84d
+  label: null
+  weight: 0
+  page_title: Test
+page: node_view
+weight: 0
+selection_criteria: {  }
+selection_logic: and
+static_context: {  }

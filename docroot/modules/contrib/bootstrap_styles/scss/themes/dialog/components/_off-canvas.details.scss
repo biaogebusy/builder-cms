@@ -1,0 +1,109 @@
+/**
+ * @file
+ * Visual styling for summary and details in the off-canvas dialog.
+ */
+
+details {
+  padding: 0;
+  margin: 0 -10px;
+  border: 0;
+}
+
+details,
+summary,
+.ui-dialog-content {
+  outline: 0;
+  color: $panel_text_color;
+  background: transparent;
+}
+
+details,
+summary,
+.details-wrapper {
+  /* Cancel out the padding of the parent. */
+  margin: 0;
+  padding: 0;
+  background-image: none;
+  -webkit-appearance: none;
+}
+
+.details-wrapper {
+  padding: 1rem;
+  display: block;
+}
+
+summary {
+  position: relative;
+  border-radius: $border_radius;
+  margin: 4px 0;
+  min-height: 40px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  background-color: $summary_bg_color;
+  cursor: pointer;
+
+  * {
+    cursor: pointer;
+  }
+
+  img,
+  svg {
+    margin-right: 1rem;
+    width: 24px;
+
+    g,
+    path {
+      fill: $panel_text_color;
+    }
+  }
+
+  &:after {
+    @include smooth-all-transition;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    content: '';
+    display: inline-block;
+    border-right: 2px solid $summary_link_color;
+    border-bottom: 2px solid $summary_link_color;
+    width: 9px;
+    height: 9px;
+    transform: rotate(45deg);
+  }
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+summary {
+  &[aria-expanded='true'],
+  &:hover,
+  &:focus {
+    color: $summary_link_color_hover;
+    background-color: $summary_bg_color_hover;
+
+    &:after {
+      border-right-color: $summary_link_color_hover;
+      border-bottom-color: $summary_link_color_hover;
+    }
+  }
+}
+
+details[open] > summary {
+  color: $summary_link_color_active;
+  background-color: $summary_bg_color_active;
+
+  &:after {
+    top: 20px;
+    transform: rotate(-135deg);
+  }
+}
+
+details[open] > summary:hover {
+  color: $summary_link_color_active;
+  background-color: $summary_bg_color_active;
+}

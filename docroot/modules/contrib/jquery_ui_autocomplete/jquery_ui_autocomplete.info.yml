@@ -1,0 +1,13 @@
+name: jQuery UI Autocomplete
+type: module
+description: 'Provides jQuery UI Autocomplete library.'
+package: jQuery UI
+core_version_requirement: ^9.2 || ^10
+dependencies:
+  - jquery_ui:jquery_ui
+  - jquery_ui_menu:jquery_ui_menu
+
+# Information added by Drupal.org packaging script on 2022-12-12
+version: '2.0.0'
+project: 'jquery_ui_autocomplete'
+datestamp: 1670871463

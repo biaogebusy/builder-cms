@@ -1,0 +1,58 @@
+profile.type.*:
+  type: config_entity
+  label: 'Profile type settings'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    display_label:
+      type: label
+      label: 'Display label'
+    multiple:
+      type: boolean
+      label: 'Allow multiple profiles per user'
+    registration:
+      type: boolean
+      label: 'Registration'
+    roles:
+      type: sequence
+      label: 'Allowed roles'
+      sequence:
+        type: string
+    allow_revisions:
+      type: boolean
+      label: 'Whether this profile type allows revisions'
+    new_revision:
+      type: boolean
+      label: 'Whether a new revision should be created by default'
+
+field.field.*.*.*.third_party.profile:
+  type: mapping
+  label: 'Profile private'
+  mapping:
+    profile_private:
+      type: boolean
+      label: 'Whether this field is private or not.'
+
+field.widget.settings.profile_form:
+  type: mapping
+  label: 'Profile form widget settings'
+  mapping:
+    form_mode:
+      type: string
+      label: 'Form mode'
+
+action.configuration.profile_delete_action:
+  type: action_configuration_default
+  label: 'Delete profile configuration'
+
+action.configuration.profile_publish_action:
+  type: action_configuration_default
+  label: 'Publish selected profile configuration'
+
+action.configuration.profile_unpublish_action:
+  type: action_configuration_default
+  label: 'Unpublish selected profile configuration'

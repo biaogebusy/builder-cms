@@ -1,0 +1,21 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of a Color shift effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this watermark effect, including:
+ *   - RGB: The configured hexadecimal color value.
+ *   - color_info: A render element for color information including a color
+ *     preview.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  - {{ 'Shift'|t }}: {{ data.color_info }}
+{% endapply %}

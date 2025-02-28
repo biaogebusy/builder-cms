@@ -1,0 +1,3 @@
+administer require login:
+  title: "Administer login requirements"
+  restrict access: true

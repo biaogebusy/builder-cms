@@ -1,0 +1,46 @@
+footable:
+  version: 1.x
+  js:
+    js/footable.js: {}
+  dependencies:
+    - core/once
+
+footable_standalone_source:
+  version: 3.x
+  js:
+    /libraries/footable/compiled/footable.js: {}
+  css:
+    component:
+      /libraries/footable/compiled/footable.standalone.css: {}
+  dependencies:
+    - footable/footable
+
+footable_standalone_minified:
+  version: 3.x
+  js:
+    /libraries/footable/compiled/footable.min.js: {}
+  css:
+    component:
+      /libraries/footable/compiled/footable.standalone.min.css: {}
+  dependencies:
+    - footable/footable
+
+footable_bootstrap_source:
+  version: 3.x
+  js:
+    /libraries/footable/compiled/footable.js: {}
+  css:
+    component:
+      /libraries/footable/compiled/footable.bootstrap.css: {}
+  dependencies:
+    - footable/footable
+
+footable_bootstrap_minified:
+  version: 3.x
+  js:
+    /libraries/footable/compiled/footable.min.js: {}
+  css:
+    component:
+      /libraries/footable/compiled/footable.bootstrap.min.css: {}
+  dependencies:
+    - footable/footable

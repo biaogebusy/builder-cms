@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - state_machine
+    - entity_test
+id: entity_test_with_bundle.field_state
+field_name: field_state
+entity_type: entity_test_with_bundle
+type: state
+settings: {  }
+module: state_machine
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

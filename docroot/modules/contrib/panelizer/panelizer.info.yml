@@ -1,0 +1,23 @@
+type: module
+name: Panelizer
+description: 'Allow any entity view mode to be rendered using a Panels display.'
+package: Layout
+# version: VERSION
+core_version_requirement: '^9.3 || ^10'
+dependencies:
+  # Core.
+  - drupal:layout_builder
+  # @todo Break the dependency on Field UI.
+  - drupal:field_ui
+  # Contrib
+  - core_context:core_context
+  - ctools:ctools_block
+  - layout_library:layout_library
+  - panels:panels
+  # @todo Allow editing without the IPE.
+  - panels:panels_ipe
+
+# Information added by Drupal.org packaging script on 2023-11-04
+version: '8.x-5.0'
+project: 'panelizer'
+datestamp: 1699124957

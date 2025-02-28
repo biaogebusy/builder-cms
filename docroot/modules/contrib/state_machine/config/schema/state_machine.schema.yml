@@ -1,0 +1,32 @@
+field.field_settings.state:
+  type: mapping
+  mapping:
+    workflow:
+      type: string
+      label: Workflow
+    workflow_callback:
+      type: string
+      label: Workflow callback
+
+field.formatter.settings.state_transition_form:
+  type: mapping
+  label: 'Formatter settings'
+  mapping:
+    require_confirmation:
+      type: boolean
+      label: 'Require confirmation before applying the state transition.'
+    use_modal:
+      type: boolean
+      label: 'Display confirmation in a modal dialog.'
+
+field.value.state:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    value:
+      type: string
+      label: 'Value'
+
+views.filter.state_machine_state:
+  type: views.filter.in_operator
+  label: 'State'

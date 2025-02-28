@@ -1,0 +1,84 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the dropzonejs module.
+ */
+
+use Drupal\Core\Asset\LibraryDiscoveryInterface;
+
+/**
+ * Implements hook_requirements().
+ */
+function dropzonejs_requirements($phase) {
+
+  $requirements = [];
+
+  /** @var \Drupal\Core\Asset\LibrariesDirectoryFileFinder $library_file_finder */
+  $library_file_finder = \Drupal::service('library.libraries_directory_file_finder');
+
+  $js_candidates = [
+    'dropzone/dropzone-min.js',
+    'dropzone/dropzone.min.js',
+    'dropzone/min/dropzone.min.js',
+    'dropzone/dist/min/dropzone.min.js',
+  ];
+  $js_path = NULL;
+  foreach ($js_candidates as $js_candidate) {
+    if ($js_path = $library_file_finder->find($js_candidate)) {
+      break;
+    }
+  }
+
+  if ($js_path) {
+    $requirements['dropzonejs_library'] = [
+      'title' => t('Dropzone library found'),
+      'description' => t('Library location: @js_path', ['@js_path' => $js_path]),
+      'severity' => REQUIREMENT_OK,
+    ];
+  }
+  else {
+    $requirements['dropzonejs_library'] = [
+      'title' => t('Dropzone library missing'),
+      'description' => t('Dropzonejs requires the dropzone.min.js library.
+        Download it (https://github.com/dropzone/dropzone) and place it in the
+        libraries folder (/libraries)'),
+      'severity' => REQUIREMENT_ERROR,
+    ];
+  }
+
+  return $requirements;
+}
+
+/**
+ * The upload handler should use stream wrappers.
+ */
+function dropzonejs_update_8001() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('dropzonejs.settings');
+  $config->clear('tmp_dir');
+  $config->set('tmp_upload_scheme', 'temporary');
+  $config->save(TRUE);
+}
+
+/**
+ * Set default value for transliterate file name.
+ */
+function dropzonejs_update_8002() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('dropzonejs.settings');
+  $config->clear('filename_transliteration');
+  $config->set('filename_transliteration', TRUE);
+  $config->save(TRUE);
+}
+
+/**
+ * Set default value for upload timeout.
+ */
+function dropzonejs_update_8003() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('dropzonejs.settings');
+  $config->clear('upload_timeout_ms');
+  $config->set('upload_timeout_ms', 0);
+  $config->save(TRUE);
+}

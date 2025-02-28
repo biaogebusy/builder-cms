@@ -1,0 +1,33 @@
+votingapi.settings:
+  type: config_object
+  label: 'VotingApi settings'
+  mapping:
+    anonymous_window:
+      type: integer
+      label: 'Anonymous vote rollover'
+    user_window:
+      type: integer
+      label: 'Registered user vote rollover'
+    calculation_schedule:
+      type: string
+      label: 'Vote tallying'
+    delete_everywhere:
+      type: boolean
+      label: 'Delete everywhere'
+
+votingapi.vote_type.*:
+  type: config_entity
+  label: 'Vote Type'
+  mapping:
+    id:
+      type: string
+      label: 'Machine-readable name'
+    label:
+      type: label
+      label: 'Name'
+    value_type:
+      type: string
+      label: 'Type of vote value (percentage, points, etc.)'
+    description:
+      type: text
+      label: 'Description'

@@ -1,0 +1,211 @@
+.media-library-item {
+  flex: 1 1 auto;
+  position: relative;
+  justify-content: center;
+  vertical-align: top;
+  min-width: 25%;
+  background: rgba($panel_text_color, .1);
+  border: 1px solid $box_input_hover_border;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  padding: .5rem;
+
+  *, *:not(div) {
+    background: transparent;
+  }
+
+  .button.media-library-item__remove {
+    @include smooth-all-transition;
+    position: absolute;
+    z-index: 1;
+    top: 10px;
+    right: 10px;
+    width: 1.5rem;
+    min-width: auto;
+    max-width: 1.5rem;
+    height: 1.5rem;
+    margin: .5rem;
+    padding: 0;
+    color: transparent;
+    font-size: 0;
+    border-radius: 1.5rem;
+    background: #{$close_circle_icon} center center no-repeat $panel_bg_color;
+    background-size: contain;
+    text-shadow: none;
+    min-width: auto;
+
+    &:hover,
+    &:focus {
+      background: #{$close_circle_icon} center center no-repeat $panel_bg_color;
+      background-size: contain;
+    }
+
+    &.button {
+      &:disabled, &:disabled:active, &:hover, &:focus {
+        opacity: .7;
+      }
+    }
+  }
+
+  .js-click-to-select-trigger {
+    overflow: hidden;
+    cursor: pointer;
+  }
+}
+
+.media-library-views-form,
+.media-library-selection,
+.media-library-add-form__selected-media .details-wrapper,
+.media-library-views-form__bulk_form,
+.media-library-view .form--inline {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.media-library-item__preview {
+  padding-bottom: 34px;
+}
+
+.media-library-form-element {
+  .media-library-form-element-empty-text,
+  .description,
+  .js-hide,
+  .media-library-selection:empty {
+    display: none !important;
+  }
+}
+
+.media-library-item__attributes {
+  position: absolute;
+  bottom: .75rem;
+  left: .5rem;
+  right: .5rem;
+  display: block;
+  overflow: hidden;
+  max-width: calc(100% - 1rem);
+  padding: 0;
+  text-align: center;
+}
+
+.media-library-item__name {
+  font-size: .75rem;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba($panel_text_color, .8);
+}
+
+.media-library-item--grid:before {
+  display: none;
+}
+
+.media-library-selection {
+  margin: 0;
+  display: flex;
+}
+
+.media-library-item--grid .field--name-thumbnail {
+  overflow: hidden;
+  text-align: center;
+}
+
+.media-library-item--grid .field--name-thumbnail img {
+  height: 135px;
+  object-fit: contain;
+  object-position: center center;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 5px 5px 0 0;
+  background-color: rgba($panel_bg_color, .1);
+}
+
+.media-library-item--grid.is-hover:before,
+.media-library-item--grid.checked:before,
+.media-library-item--grid.is-focus:before {
+  top: 5px;
+  left: 5px;
+  border-width: 3px;
+  border-color: #40b6ff;
+  border-radius: 3px;
+}
+
+.media-library-item--grid.checked:before {
+  border-color: #0076c0;
+}
+
+.media-library-item__click-to-select-checkbox {
+  position: absolute;
+  z-index: 1;
+  top: 16px;
+  left: 16px; /* LTR */
+  display: block;
+}
+
+[dir="rtl"] .media-library-item__click-to-select-checkbox {
+  right: 16px;
+  left: auto;
+}
+
+.media-library-item__click-to-select-checkbox input {
+  width: 20px;
+  height: 20px;
+}
+
+.media-library-item__click-to-select-checkbox .form-item {
+  margin: 0;
+}
+
+.media-library-item__click-to-select-trigger {
+  overflow: hidden;
+  height: 100%;
+  cursor: pointer;
+}
+
+// Background Opacity
+.form-type-range {
+  label {
+    font-weight: normal;
+    margin-bottom: 15px;
+  }
+
+  input {
+    width: 100%;
+  }
+}
+
+// Give our legends a bit more space.
+.bs_background--options,
+.bs_background--attachment,
+.bs_background--size,
+.bs_background--type,
+.bs_responsive {
+  legend {
+    margin-bottom: 10px;
+  }
+}
+
+// Background type
+.bs_background--type,
+.bs_responsive {
+  .fieldset-wrapper > div {
+    display: flex;
+
+    // Our actual form item.
+    > div {
+      @include bs_boxed_inputs($height: 42px, $bg: $panel_bg_color, $active_color: $panel_bg_color, $active_bg: $panel_link_color);
+    }
+  }
+}
+
+// Background attachment/size
+.bs_background--attachment,
+.bs_background--size {
+  .fieldset-wrapper > div {
+    display: flex;
+
+    // Our actual form item.
+    > div {
+      @include blb_box_inputs($rounded: true);
+    }
+  }
+}

@@ -1,0 +1,173 @@
+bootstrap_layout_builder.breakpoint.*:
+  type: config_entity
+  label: 'Bootstrap Layout Builder breakpoint config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    base_class:
+      type: string
+      label: 'Base class'
+    weight:
+      type: integer
+      label: 'Weight'
+bootstrap_layout_builder.layout.*:
+  type: config_entity
+  label: 'Bootstrap Layout Builder Layout config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    number_of_columns:
+      type: integer
+      label: 'Number of columns'
+bootstrap_layout_builder.layout_option.*:
+  type: config_entity
+  label: 'Bootstrap Layout Builder Layout option config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    layout_id:
+      type: string
+      label: 'Layout ID'
+    label:
+      type: label
+      label: 'Label'
+    structure:
+      type: string
+      label: 'Structure'
+    breakpoints:
+      type: sequence
+      sequence:
+        type: string
+        label: Breakpoints
+    default_breakpoints:
+      type: sequence
+      sequence:
+        type: string
+        label: Default Breakpoints
+    weight:
+      type: integer
+      label: 'Weight'
+bootstrap_layout_builder.settings:
+  type: config_entity
+  label: 'Bootstrap Layout Builder Layout settings'
+  mapping:
+    hide_section_settings:
+      type: boolean
+      label: 'Hide section settings'
+    live_preview:
+      type: boolean
+      label: 'Enable live preview'
+    one_col_layout_class:
+      type: string
+      label: 'One col layout class'
+    background_colors:
+      type: string
+      label: 'Background colors'
+    background_image:
+      type: mapping
+      label: 'Relationship'
+      mapping:
+        bundle:
+          type: string
+          label: 'Bundle'
+        field:
+          type: string
+          label: 'Field'
+    background_local_video:
+      type: mapping
+      label: 'Relationship'
+      mapping:
+        bundle:
+          type: string
+          label: 'Bundle'
+        field:
+          type: string
+          label: 'Field'
+bootstrap_layout_builder.styles:
+  type: config_entity
+  label: 'Bootstrap Layout Builder Styles'
+  mapping:
+    plugins:
+      type: sequence
+      label: Style Group
+      sequence:
+        type: sequence
+        label: Plugin
+        sequence:
+          type: mapping
+          mapping:
+            enabled:
+              type: boolean
+              label: Enabled
+
+layout_plugin.settings.bootstrap_layout_builder:*:
+  type: config_entity
+  label: 'Bootstrap Layout Builder Layouts'
+  mapping:
+    label:
+      type: string
+      label: 'Label'
+    container_wrapper_classes:
+      type: string
+      label: 'Container Wrapper Class'
+    container_wrapper_attributes:
+      type: string
+      label: 'Container Wrapper Attributes'
+    container_wrapper:
+      type: sequence
+      label: 'Container Wrapper'
+      sequence:
+        type: '[%key].container_wrapper'
+    container_wrapper_bg_color_class:
+      type: string
+      label: 'Container Wrapper Background Color Class'
+    container_wrapper_bg_media:
+      type: string
+      label: 'Container Wrapper Background Media'
+    container:
+      type: string
+      label: 'Container'
+    section_classes:
+      type: string
+      label: 'Section Classes'
+    section_attributes:
+      type: string
+      label: 'Section Attributes'
+    regions_classes:
+      type: sequence
+      sequence:
+        type: string
+        label: 'Region Classes'
+    regions_attributes:
+      type: sequence
+      sequence:
+        type: string
+        label: 'Region Attributes'
+    breakpoints:
+      type: sequence
+      sequence:
+        type: string
+        label: 'Breakpoints'
+    layout_regions_classes:
+      type: sequence
+      sequence:
+        type: 'boostrap_layout_builder_layout_regions_classes.[%key]'
+    remove_gutters:
+      type: string
+      label: 'Remove Gutters'
+
+boostrap_layout_builder_layout_regions_classes.*:
+  type: sequence
+  label: 'Layout Regions Classes'
+  sequence:
+    type: string
+    label: 'Layout Regions Class'

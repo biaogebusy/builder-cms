@@ -1,0 +1,8 @@
+services:
+  menu_breadcrumb.breadcrumb.default:
+    class: Drupal\menu_breadcrumb\MenuBasedBreadcrumbBuilder
+    arguments: ['@config.factory', '@menu.active_trail', '@plugin.manager.menu.link', '@router.admin_context', '@title_resolver', '@request_stack', '@language_manager', '@entity_type.manager', '@cache.menu', '@lock']
+    tags:
+      # The priority must be higher than core taxonomy builder (priority: 1002)
+      # see https://www.drupal.org/node/1495510
+      - { name: breadcrumb_builder, priority: 1010 }

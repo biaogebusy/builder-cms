@@ -1,0 +1,7 @@
+multiselect.admin_settings:
+  path: '/admin/config/content/multiselect'
+  defaults:
+    _form: '\Drupal\multiselect\Form\SettingsForm'
+    _title: 'Multiselect'
+  requirements:
+    _permission: 'administer site configuration'

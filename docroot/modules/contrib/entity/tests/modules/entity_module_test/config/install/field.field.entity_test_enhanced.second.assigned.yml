@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.entity_test_enhanced.assigned
+id: entity_test_enhanced.second.assigned
+field_name: assigned
+entity_type: entity_test_enhanced
+bundle: second
+label: Assigned
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

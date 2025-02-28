@@ -1,0 +1,4 @@
+services:
+  file_mdm_exif.tag_mapper:
+    class: Drupal\file_mdm_exif\ExifTagMapper
+    arguments: ['@logger.channel.file_mdm', '@config.factory', '@cache.file_mdm']

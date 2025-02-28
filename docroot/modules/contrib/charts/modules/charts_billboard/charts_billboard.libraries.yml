@@ -1,0 +1,36 @@
+charts_billboard:
+  version: 1.x
+  js:
+    js/charts_billboard.js: { weight: -1 }
+  dependencies:
+    - charts/global
+    - core/drupal
+    - core/once
+d3:
+  remote: 'https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js'
+  version: 7.8.5
+  license:
+    name: BSD
+    url: 'https://en.wikipedia.org/wiki/BSD_licenses'
+    gpl-compatible: false
+  cdn:
+    /libraries/d3/: https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/
+  js:
+    /libraries/d3/d3.min.js: { minified: true }
+billboard:
+  remote: 'https://naver.github.io/billboard.js/release/3.10.3/dist/billboard.min.js'
+  version: 3.10.3
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+    gpl-compatible: true
+  cdn:
+    /libraries/billboard/: https://naver.github.io/billboard.js/release/3.10.3/
+  css:
+    theme:
+      /libraries/billboard/dist/billboard.min.css: { minified: true }
+  js:
+    /libraries/billboard/dist/billboard.min.js: { minified: true }
+  dependencies:
+    - charts_billboard/charts_billboard
+    - charts_billboard/d3

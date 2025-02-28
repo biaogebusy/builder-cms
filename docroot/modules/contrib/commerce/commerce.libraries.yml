@@ -1,0 +1,10 @@
+conditions:
+  version: VERSION
+  js:
+    js/conditions.js: {}
+
+toolbar:
+  version: VERSION
+  css:
+    theme:
+      css/commerce.icons.css: {}

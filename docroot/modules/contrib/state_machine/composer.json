@@ -1,0 +1,11 @@
+{
+    "name": "drupal/state_machine",
+    "type": "drupal-module",
+    "description": "Provides code-driven workflow functionality.",
+    "homepage": "http://drupal.org/project/state_machine",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.0.8",
+        "drupal/core": "^9.2 || ^10"
+    }
+}

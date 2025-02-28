@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Implement module related hooks for the charts_chartjs module.
+ */
+
+/**
+ * Implements hook_charts_version3_to_new_settings_structure_alter().
+ */
+function charts_chartjs_charts_version3_to_new_settings_structure_alter(array &$new_settings, string $for) {
+  $config_factory = \Drupal::configFactory();
+  $is_config = $for === 'config';
+  $chartjs_config = $is_config ? $config_factory->getEditable('charts_chartjs.settings') : NULL;
+  if (!$is_config || !$chartjs_config || empty($new_settings['library']) || $new_settings['library'] !== 'chartjs') {
+    if ($chartjs_config) {
+      $chartjs_config->delete();
+    }
+    return;
+  }
+
+  $new_settings['library_config'] = [
+    'xaxis' => [
+      'autoskip' => TRUE,
+      'horizontal_axis_title_align' => 'start',
+    ],
+    'yaxis' => [
+      'vertical_axis_title_align' => 'start',
+    ],
+  ];
+  $chartjs_config->delete();
+}

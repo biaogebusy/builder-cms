@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Defines the Store entity and associated features.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+
+/**
+ * Implements hook_mail_alter().
+ *
+ * Sets the default "from" address to the current store email.
+ */
+function commerce_store_mail_alter(&$message) {
+  if (substr($message['id'], 0, 9) == 'commerce_' && empty($message['params']['from'])) {
+    /** @var \Drupal\commerce_store\CurrentStoreInterface $current_store */
+    $current_store = \Drupal::service('commerce_store.current_store');
+    $current_store = $current_store->getStore();
+    if ($current_store) {
+      $message['from'] = $current_store->getEmailFromHeader();
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_store_theme() {
+  return [
+    'commerce_store' => [
+      'render element' => 'elements',
+    ],
+    'commerce_store_form' => [
+      'render element' => 'form',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_field_widget_single_element_form_alter().
+ */
+function commerce_store_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
+  /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
+  $field_definition = $context['items']->getFieldDefinition();
+  $field_name = $field_definition->getName();
+  $entity_type = $field_definition->getTargetEntityTypeId();
+  $widget_name = $context['widget']->getPluginId();
+  if ($field_name == 'billing_countries' && $entity_type == 'commerce_store' && $widget_name == 'options_select') {
+    $element['#options']['_none'] = t('- All countries -');
+    $element['#size'] = 5;
+  }
+  elseif ($field_name == 'path' && $entity_type == 'commerce_store' && $widget_name == 'path') {
+    $element['alias']['#description'] = t('The alternative URL for this store. Use a relative path. For example, "/my-store".');
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_commerce_store().
+ */
+function commerce_store_theme_suggestions_commerce_store(array $variables) {
+  return _commerce_entity_theme_suggestions('commerce_store', $variables);
+}
+
+/**
+ * Prepares variables for store templates.
+ *
+ * Default template: commerce-store.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_commerce_store(array &$variables) {
+  /** @var Drupal\commerce_store\Entity\StoreInterface $store */
+  $store = $variables['elements']['#commerce_store'];
+
+  $variables['store_entity'] = $store;
+  $variables['store_url'] = $store->isNew() ? '' : $store->toUrl();
+  $variables['store'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['store'][$key] = $variables['elements'][$key];
+  }
+}

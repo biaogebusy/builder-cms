@@ -1,0 +1,5 @@
+entity_print.settings:
+  title: Entity Print
+  description: 'Configure the PDF engine and defaults for PDF generation.'
+  route_name: entity_print.settings
+  parent: system.admin_config_content

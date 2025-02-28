@@ -1,0 +1,13 @@
+name: 'Search API Database Autocomplete Test'
+type: module
+description: 'Support module for testing Autocomplete support of the "Database" backend'
+package: Testing
+dependencies:
+  - search_api:search_api_test_views
+  - search_api_autocomplete:search_api_autocomplete
+hidden: true
+
+# Information added by Drupal.org packaging script on 2023-10-15
+version: '8.x-1.30'
+project: 'search_api'
+datestamp: 1697366294

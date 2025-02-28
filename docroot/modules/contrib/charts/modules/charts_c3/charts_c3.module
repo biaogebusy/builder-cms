@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Implement module related hooks for the charts_c3 module.
+ */
+
+/**
+ * Implements hook_charts_version3_to_new_settings_structure_alter().
+ */
+function charts_c3_charts_version3_to_new_settings_structure_alter(array &$new_settings, string $for) {
+  $config_factory = \Drupal::configFactory();
+  $c3_config = $config_factory->getEditable('charts_c3.settings');
+  if ($c3_config) {
+    $c3_config->delete();
+  }
+}

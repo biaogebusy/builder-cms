@@ -1,0 +1,23 @@
+.block-private-message-inbox-block .private-message-thread {
+  position: relative;
+  margin-bottom: 10px;
+  border: dotted black 1px;
+  padding: 5px; }
+  .block-private-message-inbox-block .private-message-thread:hover {
+    background-color: grey; }
+  .block-private-message-inbox-block .private-message-thread .private-message-inbox-thread-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-bottom: none; }
+.block-private-message-inbox-block .unread-thread {
+  border: solid black 2px; }
+.block-private-message-inbox-block .active-thread {
+  border-color: #0096ff; }
+.block-private-message-inbox-block #load-previous-threads-button-wrapper a {
+  display: block;
+  text-align: center;
+  font-size: 0.8em;
+  border-bottom: none; }

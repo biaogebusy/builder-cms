@@ -1,0 +1,19 @@
+{
+  "name": "drupal/json_editor",
+  "description": "Json Editor is text formatter for drupal.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/json_editor",
+  "authors": [
+    {
+      "name": "Websolutions Agency",
+      "homepage": "https://www.drupal.org/websolutions-agency",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/json_editor",
+    "source": "http://cgit.drupalcode.org/json_editor"
+  },
+  "require": {}
+}

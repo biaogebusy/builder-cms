@@ -1,0 +1,38 @@
+entity.profile.set_default:
+  path: '/profile/{profile}/set-default'
+  defaults:
+    _controller: '\Drupal\profile\Controller\ProfileController::setDefault'
+  options:
+    parameters:
+      profile:
+        type: entity:profile
+  requirements:
+    _entity_access: 'profile.update'
+    _csrf_token: 'TRUE'
+
+profile.user_page.single:
+  path: '/user/{user}/{profile_type}'
+  defaults:
+    _controller: '\Drupal\profile\Controller\UserController::singlePage'
+    _title_callback: '\Drupal\profile\Controller\UserController::title'
+  requirements:
+    _profile_type_multiple: 'FALSE'
+    _custom_access: '\Drupal\profile\Controller\UserController::checkAccess'
+
+profile.user_page.multiple:
+  path: '/user/{user}/{profile_type}/list'
+  defaults:
+    _controller: '\Drupal\profile\Controller\UserController::multiplePage'
+    _title_callback: '\Drupal\profile\Controller\UserController::title'
+  requirements:
+    _profile_type_multiple: 'TRUE'
+    _custom_access: '\Drupal\profile\Controller\UserController::checkAccess'
+
+profile.user_page.add_form:
+  path: '/user/{user}/{profile_type}/add'
+  defaults:
+    _controller: '\Drupal\profile\Controller\UserController::addForm'
+    _title: 'Add profile'
+  requirements:
+    _profile_type_multiple: 'TRUE'
+    _custom_access: '\Drupal\profile\Controller\UserController::checkCreateAccess'

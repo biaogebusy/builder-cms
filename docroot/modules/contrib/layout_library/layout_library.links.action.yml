@@ -1,0 +1,6 @@
+layout_library.layout.add:
+  route_name: entity.layout.add_form
+  title: 'Add layout'
+  weight: 1
+  appears_on:
+    - entity.layout.collection

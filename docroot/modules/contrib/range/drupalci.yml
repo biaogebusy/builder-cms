@@ -1,0 +1,49 @@
+# This is the DrupalCI testbot build file for Range module.
+# Learn to make one for your own drupal.org project:
+# https://www.drupal.org/drupalorg/docs/drupal-ci/customizing-drupalci-testing
+# https://www.drupal.org/docs/updating-drupal/how-to-prepare-your-drupal-7-or-8-site-for-drupal-9/deprecation-checking-and#s-drupalorg-testing-support-for-deprecation-checking
+build:
+  assessment:
+    validate_codebase:
+      container_command:
+        commands:
+          - |
+            cd ${SOURCE_DIR}
+            DRUPAL_CORE_MAJOR_VERSION=`git rev-parse --abbrev-ref HEAD | awk -F'.' '{print $1}'`
+            if [ "$DRUPAL_CORE_MAJOR_VERSION" = "8" ]; then
+              # Make every $modules property protected on classes extending BrowserTestBase and KernelTestBase. See https://www.drupal.org/project/drupal/issues/3179960
+              sudo -u www-data curl https://www.drupal.org/files/issues/2020-10-31/drupal-3179960-3.patch | sudo -u www-data patch -p1 --verbose
+              # Make tests pass with Drupal 8.9.x
+              sudo -u www-data patch -p1 --verbose -d ${PROJECT_DIR} < ${PROJECT_DIR}/tests/fixtures/drupal8.9.x-test-compatibility.patch
+            elif [ "$DRUPAL_CORE_MAJOR_VERSION" = "9" ]; then
+              # Make tests pass with Drupal 9.x
+              sudo -u www-data patch -p1 --verbose -d ${PROJECT_DIR} < ${PROJECT_DIR}/tests/fixtures/drupal9.x-test-compatibility.patch
+            fi
+      phplint:
+      csslint:
+        halt-on-fail: false
+      phpcs:
+        # phpcs will use core's specified version of Coder.
+        sniff-all-files: false
+        halt-on-fail: false
+      phpstan:
+        halt-on-fail: false
+    testing:
+      # run_tests task is executed several times in order of performance speeds.
+      # suppress-deprecations is false in order to be alerted to usages of
+      # deprecated code.
+      run_tests.phpunit:
+        types: 'PHPUnit-Unit'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false

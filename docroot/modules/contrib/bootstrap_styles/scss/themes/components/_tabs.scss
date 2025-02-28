@@ -1,0 +1,113 @@
+// Horizontal Icon Tabs
+#bs_nav-tabs {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  margin: 0 -30px 30px -30px;
+  width: calc(100% + 60px);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  li {
+    flex: 1 1 auto;
+    margin: 0;
+    list-style: none;
+
+    a {
+      @include smooth-all-transition;
+      cursor: pointer;
+      position: relative;
+      padding: .5rem .75rem;
+      min-height: 68px;
+      min-width: 16.666%;
+      color: $tab_text_color;
+      background: $tab_bg_color;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: .2s background-color ease-in-out;
+
+      &:after {
+        @include smooth-all-transition;
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 2px;
+        background-color: $tabs_bottom_border_color;
+        z-index: 1;
+      }
+
+      &:hover {
+        color: $tab_text_color_hover;
+        text-decoration: none;
+
+        .bs_tooltip {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0px);
+        }
+
+        svg * {
+          fill: $tab_text_color_hover;
+        }
+      }
+
+      &.active,
+      &.active:hover {
+        color: $tab_text_color_active;
+        background-color: $tab_bg_color_active;
+
+        &:after {
+          background-color: $tab_text_color_active;
+          left: -1px;
+          bottom: 0;
+          right: -1px;
+          width: calc(100% + 2px);
+          height: 5px;
+          border-radius: $border_radius;
+        }
+
+        svg * {
+          fill: $tab_text_color_active;
+        }
+      }
+
+      .blb_icon,
+      span[role='img'] {
+        max-width: 25px;
+        margin: 0 .75rem;
+      }
+
+      svg {
+        max-width: 100%;
+        height: auto;
+        background: none;
+
+        * {
+          @include smooth-all-transition;
+          fill: $tab_text_color;
+        }
+      }
+    }
+  }
+}
+
+//
+// Tabs Panes
+// Hide tabbable panes to start, show them when `.active`
+#bs_tabContent {
+  > .bs_tab-pane {
+    display: none;
+  }
+
+  > .active {
+    display: block;
+  }
+}

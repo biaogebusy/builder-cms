@@ -1,0 +1,7 @@
+require_login.settings:
+  path: "/admin/config/people/login-requirements"
+  defaults:
+    _form: \Drupal\require_login\Form\LoginSettingsForm
+    _title: "Login requirements"
+  requirements:
+    _permission: "administer require login"

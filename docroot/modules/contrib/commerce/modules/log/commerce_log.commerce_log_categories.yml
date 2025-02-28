@@ -1,0 +1,11 @@
+commerce_cart:
+  label: Cart
+  entity_type: commerce_order
+
+commerce_order:
+  label: Order
+  entity_type: commerce_order
+
+commerce_payment:
+  label: Payment
+  entity_type: commerce_order

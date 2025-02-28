@@ -1,0 +1,7 @@
+services:
+  json_editor.libraries_manager:
+    class: Drupal\json_editor\JsonEditorLibrariesManager
+    arguments: ['@library.discovery', '@config.factory', '@module_handler', '@renderer']
+
+  json_editor.cli_service:
+    class: Drupal\json_editor\Commands\JsonEditorCliService

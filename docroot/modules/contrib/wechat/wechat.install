@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the wechat module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function wechat_schema() {
+  $schema['wechat_access_token'] = array(
+    'description' => 'Stores wechat access token.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique wechat access token ID.',
+      ),
+      'app_id' => array(
+        'description' => t('Wechat app ID.'),
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+      ),
+      'token' => array(
+        'description' => t('Wechat access token.'),
+        'type' => 'varchar',
+        'length' => 256,
+        'not null' => TRUE,
+      ),
+      'expire' => array(
+        'description' => t('The expire time of wechat access token.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+
+      'create_time' => array(
+        'description' => t('The create time of wechat access token.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  return $schema;
+}

@@ -1,0 +1,11 @@
+entity_test.entity_test_bundle.*.third_party.core_context:
+  type: core_context.sequence
+  label: 'Contexts'
+
+core.entity_view_display.*.*.*.third_party.core_context:
+  type: core_context.sequence
+  label: 'Contexts'
+
+block.settings.context_block:
+  type: ignore
+  label: 'context_block plugin settings'

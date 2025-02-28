@@ -1,0 +1,39 @@
+assets:
+  version: VERSION
+  js:
+    assets/js/autocomplete_deluxe.js: {}
+  css:
+    theme:
+      assets/css/autocomplete_deluxe.css: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/jquery
+    - core/once
+    - core/drupal.autocomplete
+    - core/drupal.dialog
+    - core/sortable
+
+assets.seven:
+  version: VERSION
+  css:
+    theme:
+      assets/css/autocomplete_deluxe.seven.css: {}
+  dependencies:
+    - autocomplete_deluxe/assets
+
+assets.claro:
+  version: VERSION
+  css:
+    theme:
+      assets/css/autocomplete_deluxe.claro.css: {}
+  dependencies:
+    - autocomplete_deluxe/assets
+
+assets.gin:
+  version: VERSION
+  css:
+    theme:
+      assets/css/autocomplete_deluxe.gin.css: {}
+  dependencies:
+    - autocomplete_deluxe/assets

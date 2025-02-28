@@ -1,0 +1,21 @@
+services:
+  require_login.requirements_manager:
+    class: Drupal\require_login\LoginRequirementsManager
+    arguments:
+      [
+        "@module_handler",
+        "@messenger",
+        "@config.factory",
+        "@request_stack",
+        "@current_user",
+        "@current_route_match",
+        "@context.repository",
+        "@context.handler",
+        "@plugin.manager.condition",
+      ]
+
+  require_login.event_subscriber:
+    class: Drupal\require_login\EventSubscriber\LoginEventSubscriber
+    arguments: ["@require_login.requirements_manager"]
+    tags:
+      - { name: event_subscriber }

@@ -1,0 +1,69 @@
+//
+// Tooltips
+//
+.bs_tooltip {
+  bottom: 100%;
+  color: $tooltip_text_color;
+  background: $tooltip_bg_color;
+  display: block;
+  left: 50%;
+  margin-left: -37.5px;
+  margin-bottom: 15px;
+  opacity: 0;
+  padding: 9px 10px;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+  width: 75px;
+  transform: translateY(-10px);
+  transition: all .25s ease-out;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  border-radius: $border_radius / 2;
+  white-space: normal;
+  z-index: 1;
+  font-size: .875rem;
+  font-weight: normal;
+
+  &.bs_tooltip-lg {
+    width: 150px;
+    margin-left: -75px;
+  }
+
+  &:after {
+    border-left: solid transparent 10px;
+    border-right: solid transparent 10px;
+    border-top: solid $tooltip_bg_color 10px;
+    bottom: -10px;
+    content: " ";
+    height: 0;
+    left: 50%;
+    margin-left: -13px;
+    position: absolute;
+    width: 0;
+  }
+
+  &[data-placement="bottom"] {
+    bottom: auto;
+    top: 100%;
+    margin-top: 15px;
+    transform: translateY(10px);
+
+    &:after {
+      border-top: 0;
+      border-bottom: solid $tooltip_bg_color 10px;
+      top: -10px;
+      bottom: auto;
+    }
+  }
+}
+
+// Show on hover
+label {
+  position: relative;
+
+  &:hover .bs_tooltip {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0px);
+  }
+}

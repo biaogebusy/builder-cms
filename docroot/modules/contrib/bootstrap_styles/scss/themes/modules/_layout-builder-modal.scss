@@ -1,0 +1,75 @@
+#layout-builder-modal {
+  color: $panel_text_color;
+  background: $panel_bg_color;
+  padding: 1.5rem 2rem;
+  border-radius: 0 0 $border_radius $border_radius;
+
+  @import "../dialog/components/*";
+
+  // Update Button.
+  #bs_ui  {
+    margin: -1.5rem -2rem;
+
+    #bs_nav-tabs {
+      margin: 0 -40px 30px -40px;
+      width: calc(100% + 40px);
+    }
+
+    .blb_tab-content {
+      padding: 0 2rem;
+    }
+  }
+
+  // Primary modal action button.
+  form > {
+    #bs_ui,
+    .form-wrapper {
+      ~ button.button,
+      ~ input[type="submit"].button {
+        float: right;
+        margin: 1.5rem 0;
+        width: auto !important;
+      }
+    }
+  }
+}
+
+// Layout Builder Modal
+.ui-dialog.ui-layout-builder-modal {
+  border: 0;
+  border-radius: $border_radius;
+  background: transparent;
+
+  .ui-dialog-titlebar {
+    font-weight: normal;
+    font-size: 1.5rem;
+    padding: 1rem 2rem;
+    border-radius: $border_radius $border_radius 0 0;
+    background-color: $tab_bg_color;
+    color: $panel_text_color;
+    border: 0;
+  }
+
+  .ui-dialog-titlebar-close {
+    right: 2rem;
+    top: 50%;
+    margin-top: -.75rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: .6;
+    border: 0;
+    background: #{$close_circle_icon} center center no-repeat $panel_bg_color;
+    background-size: contain;
+    outline: 0;
+    border-radius: 1.5rem;
+
+    &:hover,
+    &:focus {
+      opacity: 1;
+      border: 0;
+      background: #{$close_circle_icon} center center no-repeat $panel_bg_color;
+      background-size: contain;
+    }
+  }
+}
+

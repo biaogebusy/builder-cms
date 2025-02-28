@@ -1,0 +1,40 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - media.type.dropzonejs_media
+  module:
+    - dropzonejs_eb_widget
+    - media
+name: dropzonejs_eb_test
+label: 'Dropzonejs eb test'
+display: iframe
+display_configuration:
+  width: '650'
+  height: '500'
+  link_text: 'Select entities'
+  auto_open: false
+selection_display: no_display
+selection_display_configuration: {  }
+widget_selector: single
+widget_selector_configuration: {  }
+widgets:
+  44b1e6ea-637d-4dd6-b79e-edeefc546c1c:
+    settings:
+      media_type: dropzonejs_media
+      upload_location: 'public://'
+      dropzone_description: 'Drop files here to upload them'
+      max_filesize: 2M
+      extensions: 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'
+      clientside_resize: false
+      resize_width: null
+      resize_height: null
+      resize_quality: !!float 1
+      resize_method: contain
+      thumbnail_method: contain
+      submit_text: 'Select entities'
+      auto_select: false
+    uuid: 44b1e6ea-637d-4dd6-b79e-edeefc546c1c
+    weight: 2
+    label: 'Dropzonejs media'
+    id: dropzonejs_media_entity

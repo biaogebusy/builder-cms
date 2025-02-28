@@ -1,0 +1,33 @@
+// Background attachment/size
+.bs_radio-tabs {
+
+  legend {
+    margin-bottom: 10px;
+  }
+
+  .fieldset-wrapper > div {
+    display: flex;
+
+    // Our actual form item.
+    > div {
+      @include blb_box_inputs;
+
+      &:first-child input + label {
+        border-right: 0;
+      }
+
+      &:last-child input + label {
+        border-left: 0;
+      }
+
+      // Pill style toggle.
+      &:first-child input + label {
+        border-radius: 8px 0 0 8px;
+      }
+
+      &:last-child input + label {
+        border-radius: 0 8px 8px 0;
+      }
+    }
+  }
+}

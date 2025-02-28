@@ -1,0 +1,3 @@
+administer otp login authentication:
+  title: 'Administer OTP Login Authentication'
+  restrict access: true

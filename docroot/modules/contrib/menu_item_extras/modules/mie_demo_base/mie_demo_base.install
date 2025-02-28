@@ -1,0 +1,162 @@
+<?php
+
+/**
+ * @file
+ * Installation hooks for mie_demo_base module.
+ */
+
+use Drupal\Core\Link;
+use Drupal\mie_demo_base\Utility\MieDemoBaseUtility;
+
+/**
+ * Implements hook_install().
+ */
+function mie_demo_base_install() {
+  // Create test image files.
+  $sample_one = MieDemoBaseUtility::createFile('sample-one.png');
+  $sample_one_child = MieDemoBaseUtility::createFile('sample-one-child.jpg');
+  $sample_banner = MieDemoBaseUtility::createFile('sample-banner.jpg');
+  $sample_two = MieDemoBaseUtility::createFile('sample-two.jpg');
+  $sample_three = MieDemoBaseUtility::createFile('sample-three.jpeg');
+  $sample_four = MieDemoBaseUtility::createFile('sample-four.jpg');
+  // Create test terms.
+  $terms = [];
+  $terms[] = MieDemoBaseUtility::createMieDemoContentTerm('Demo Term 1', NULL, $sample_two);
+  $terms[] = MieDemoBaseUtility::createMieDemoContentTerm('Demo Term 2', NULL, $sample_three);
+  $terms[] = MieDemoBaseUtility::createMieDemoContentTerm('Demo Term 3', NULL, $sample_four);
+  // Create test links.
+  $first_sample_link_first_level = MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+    'Link of Level One', 'http://example.com', 0, 'Sample Description', '', 'default', TRUE, 'Link of Level One Body Value', NULL, $sample_one->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Link of Level Two', 'http://example.com', 1, 'Sample Description', $first_sample_link_first_level->uuid(), 'banner', FALSE, 'Level Two Body Value', NULL, $sample_one_child->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Link of Level Two', 'http://example.com', 2, 'Sample Description', $first_sample_link_first_level->uuid(), 'banner', FALSE, 'Level Two Body Value', NULL, $sample_one_child->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Link of Level Two', 'http://example.com', 2, 'Sample Description', $first_sample_link_first_level->uuid(), 'banner', FALSE, 'Level Two Body Value', NULL, $sample_one_child->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Link of Level Two', 'http://example.com', 2, 'Sample Description', $first_sample_link_first_level->uuid(), 'banner', FALSE, 'Level Two Body Value', NULL, $sample_one_child->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Link of Level Two', 'http://example.com', 2, 'Sample Description', $first_sample_link_first_level->uuid(), 'banner', FALSE, 'Level Two Body Value', NULL, $sample_one_child->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Link of Level Two', 'http://example.com', 2, 'Sample Description', $first_sample_link_first_level->uuid(), 'banner', FALSE, 'Level Two Body Value', NULL, $sample_one_child->id()
+  );
+
+  $second_sample_link_first_level = MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+    'Link of Level One', 'http://example.com', 3, 'Sample Description', '', 'banner', TRUE, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', NULL, $sample_banner->id()
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 4, 'Sample Description', $second_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+
+  $fourth_sample_link_second_level = MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 5, 'Sample Description', $second_sample_link_first_level->uuid(), 'default', TRUE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+        'Link of Level Three', 'http://example.com', 6, 'Sample Description', $fourth_sample_link_second_level->uuid(), 'default', FALSE, 'Link of Level Three Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+        'Link of Level Three', 'http://example.com', 6, 'Sample Description', $fourth_sample_link_second_level->uuid(), 'default', FALSE, 'Link of Level Three Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+        'Link of Level Three', 'http://example.com', 6, 'Sample Description', $fourth_sample_link_second_level->uuid(), 'default', FALSE, 'Link of Level Three Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 7, 'Sample Description', $second_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 7, 'Sample Description', $second_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 7, 'Sample Description', $second_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+
+  // Create links with view block reference.
+  $body = "Menu Item Extras - a new way for Drupal Mega Menus!\nIt allows add fields to menus and configures the display.";
+  $terms_item_sample_link_first_level = MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+          'Menu Item with Terms', 'http://example.com', 8, 'Sample Description', '', 'terms', TRUE, $body, $terms
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+  MieDemoBaseUtility::createMieDemoBaseMenuMenuLinkContent(
+      'Level Two', 'http://example.com', 9, 'Sample Description', $terms_item_sample_link_first_level->uuid(), 'default', FALSE, 'Level Two Body Value'
+  );
+
+  $default_theme_name = \Drupal::config('system.theme')->get('default');
+  $regions = array_keys(system_region_list($default_theme_name));
+  $region = 'primary_menu';
+  $pluginId = 'system_menu_block:mie-demo-base-menu';
+  /** @var \Drupal\block\BlockInterface $block */
+  $block = \Drupal::entityTypeManager()->getStorage('block')
+    ->create([
+      'id' => 'menuitemextrasdemomenuq',
+      'theme' => $default_theme_name,
+      'plugin' => $pluginId,
+      'status' => TRUE,
+      'provider' => 'system',
+      'weight' => 0,
+      'settings' => [
+        'id' => $pluginId,
+        'label' => 'Menu Item Extras Demo Menu',
+        'provider' => 'system',
+        'label_display' => '0',
+        'level' => 1,
+        'depth' => 0,
+      ],
+    ]);
+  if (in_array($region, $regions, 1)) {
+    $block->setRegion($region);
+  }
+  else {
+    $link = Link::createFromRoute(
+      t('block edit page'),
+      'entity.block.edit_form',
+      [
+        'block' => $block->id(),
+      ]
+    );
+    /** @var \Drupal\Core\Messenger\MessengerInterface $messenger */
+    $messenger = \Drupal::service('messenger');
+    $messenger->addStatus(t(
+      'There is no <b>%region</b> region in the current theme. Please go to the %link to correctly set block placement configuration.',
+      [
+        '%link' => $link->toString(),
+        '%region' => $region,
+      ]
+    ));
+  }
+  $block->save();
+}

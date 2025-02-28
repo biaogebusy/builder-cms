@@ -1,0 +1,96 @@
+<?php
+
+/**
+ * @file
+ * Provides a new Views Field plugin for all entity fields.
+ */
+
+use Drupal\Core\Extension\MissingDependencyException;
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function rest_views_views_data_alter(array &$data) {
+  foreach ($data as $table_alias => $fields) {
+    /** @var array[] $fields */
+    foreach ($fields as $field_alias => $field) {
+      // Find all handlers that use the core Field plugin.
+      if (isset($field['field']['id']) && $field['field']['id'] === 'field') {
+        // Add a second handler that uses the Rest Field plugin.
+        if (isset($field['title'])) {
+          $field['title'] = t('@field (serializable)', ['@field' => $field['title']]);
+        }
+        $field['field']['id'] = 'field_export';
+
+        // Only expose the field handler as the others are redundant.
+        unset($field['argument'], $field['filter'], $field['sort']);
+        $data[$table_alias]["{$field_alias}_export"] = $field;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_modules_installed().
+ */
+function rest_views_modules_installed($modules) {
+  /** @var \Drupal\Core\Extension\ModuleExtensionList $availableModules */
+  $availableModules = Drupal::service('extension.list.module');
+  /** @var \Drupal\Core\Extension\ModuleHandlerInterface $installedModules */
+  $installedModules = Drupal::service('module_handler');
+  /** @var \Drupal\Core\Extension\ModuleInstallerInterface $moduleInstaller */
+  $moduleInstaller = Drupal::service('module_installer');
+
+  $to_install = [];
+  $reasons = [];
+
+  // Check all modules in the REST Views package.
+  foreach ($availableModules->getAllAvailableInfo() as $name => $info) {
+    if ($info['package'] === 'REST Views' && $name !== 'rest_views') {
+      $install = FALSE;
+      $dependency_names = [];
+
+      // Check if all dependencies are installed, and one of them just now.
+      foreach ($info['dependencies'] as $dependency) {
+        $dependency = explode(' ', $dependency)[0];
+        if (!$installedModules->moduleExists($dependency)) {
+          $install = FALSE;
+          break;
+        }
+        if (in_array($dependency, $modules, TRUE)) {
+          $install = TRUE;
+        }
+        if ($dependency !== 'rest_views') {
+          $dependency_names[] = $installedModules->getName($dependency);
+        }
+      }
+
+      if ($install) {
+        $to_install[$name] = $availableModules->getName($name);
+        $reasons[] = implode(', ', $dependency_names);
+      }
+    }
+
+    if ($to_install) {
+      try {
+        $moduleInstaller->install(array_keys($to_install));
+        Drupal::messenger()->addStatus(
+          t(
+            'REST Views automatically installed @modules to support @dependencies.',
+            [
+              '@modules'       => implode(', ', $to_install),
+              '@dependencies' => implode(', ', $reasons),
+            ]
+          )
+        );
+      }
+      catch (MissingDependencyException $e) {
+        // Don't do anything on failure.
+        watchdog_exception($e);
+      }
+      catch (ExtensionNameLengthException $e) {
+        watchdog_exception($e);
+      }
+    }
+  }
+}

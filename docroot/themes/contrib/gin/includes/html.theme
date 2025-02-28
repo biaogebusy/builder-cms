@@ -1,0 +1,95 @@
+<?php
+
+/**
+ * @file
+ * html.theme
+ */
+
+use Drupal\gin\GinContentFormHelper;
+use Drupal\gin\GinNavigation;
+use Drupal\gin\GinSettings;
+
+/**
+ * Implements hook_preprocess_HOOK() for html.
+ */
+function gin_preprocess_html(&$variables) {
+  // Are we relevant?
+  $gin_activated = _gin_is_active();
+
+  if ($gin_activated) {
+    // Get theme settings.
+    /** @var \Drupal\gin\GinSettings $settings */
+    $settings = \Drupal::classResolver(GinSettings::class);
+    $toolbar = $settings->get('classic_toolbar');
+
+    // Set accent color.
+    $variables['attributes']['data-gin-accent'] = $settings->get('preset_accent_color');
+
+    // Set focus color.
+    $variables['attributes']['data-gin-focus'] = $settings->get('preset_focus_color');
+
+    // High contrast mode.
+    if ($settings->get('high_contrast_mode')) {
+      $variables['attributes']['class'][] = 'gin--high-contrast-mode';
+    }
+
+    // Set layout density.
+    $variables['attributes']['data-gin-layout-density'] = $settings->get('layout_density');
+
+    // Edit form? Use the new Gin Edit form layout.
+    if (\Drupal::classResolver(GinContentFormHelper::class)->isContentForm()) {
+      $variables['attributes']['class'][] = 'gin--edit-form';
+    }
+
+    // Only add gin--classic-toolbar class if user has permission.
+    if (!\Drupal::currentUser()->hasPermission('access toolbar')) {
+      return;
+    }
+
+    // Check for new Drupal navigation.
+    if ($toolbar === 'new') {
+      /** @var \Drupal\gin\GinNavigaton $navigation */
+      $navigation = \Drupal::classResolver(GinNavigation::class);
+      // Get new navigation.
+      $variables['page_top']['navigation'] = $navigation->getNavigationStructure();
+      // Get active trail.
+      $variables['#attached']['drupalSettings']['active_trail_paths'] = $navigation->getNavigationActiveTrail();
+      // Set toolbar class.
+      $variables['attributes']['class'][] = 'gin--navigation';
+    }
+    else {
+      // Set toolbar class.
+      $variables['attributes']['class'][] = 'gin--' . $toolbar . '-toolbar';
+    }
+
+    // Gin secondary toolbar.
+    if ($toolbar !== 'classic') {
+      $variables['page']['gin_secondary_toolbar'] = [
+        '#type' => 'toolbar',
+        '#access' => \Drupal::currentUser()->hasPermission('access toolbar'),
+        '#cache' => [
+          'keys' => ['toolbar_secondary'],
+          'contexts' => ['user.permissions'],
+        ],
+        '#attributes' => [
+          'id' => 'toolbar-administration-secondary',
+        ],
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for html__entity_browser__modal.
+ */
+function gin_preprocess_html__entity_browser__modal(&$variables) {
+  gin_preprocess_html($variables);
+
+  // Remove toolbar class in entity browser modal.
+  if (isset($variables['attributes']['class'])) {
+    $toolbar_class = preg_grep('/gin--(.*)-toolbar/', $variables['attributes']['class']);
+    foreach ($toolbar_class as $key => $class) {
+      unset($variables['attributes']['class'][$key]);
+    }
+  }
+}

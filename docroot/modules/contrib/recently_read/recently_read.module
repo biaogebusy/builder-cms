@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * The module will track user activities on the website.
+ */
+
+use Drupal\recently_read\Entity\RecentlyReadType;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+/**
+ * Implements hook_entity_view().
+ */
+function recently_read_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  $recentlyRead = \Drupal::service('recently_read');
+
+  // Get recently read config for current entity.
+  $readTypeConfig = RecentlyReadType::load($entity->getEntityTypeId());
+
+  if ($readTypeConfig && !$entity->in_preview && $view_mode === "full") {
+    // Disable cache.
+    $renderer = \Drupal::service('renderer');
+    $renderer->addCacheableDependency($build, $entity->id());
+
+    $allowedTypes = $readTypeConfig->getTypes();
+    // Check entity type and act properly based on entityType.
+    switch ($allowedTypes) {
+      case TRUE:
+        if (in_array($entity->bundle(), $allowedTypes)) {
+          $recentlyRead->insertEntity($entity);
+        }
+        break;
+
+      case FALSE:
+        $recentlyRead->insertEntity($entity);
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function recently_read_cron() {
+  $config = Drupal::configFactory()->getEditable('recently_read.configuration');
+  $recentlyRead = \Drupal::service('recently_read');
+  switch ($config->get('delete_config')) {
+    case "time":
+      $time = $config->get('delete_time');
+      $query = \Drupal::entityQuery('recently_read')
+        ->condition('created', strtotime($time), '<=');
+      $records = $query->execute();
+      if ($records) {
+        $recentlyRead->deleteRecords($records);
+      }
+      break;
+  }
+}

@@ -1,0 +1,9 @@
+views_data_export:
+  version: 1.x
+  css:
+    theme:
+      css/views_data_export.css: {}
+  js:
+    js/views_data_export_auto_download.js: {}
+  dependencies:
+    - core/once

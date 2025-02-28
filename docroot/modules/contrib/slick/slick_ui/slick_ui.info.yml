@@ -1,0 +1,13 @@
+name: 'Slick UI'
+type: module
+description: 'Provides Slick carousel configuration UI.'
+core_version_requirement: ^8.8 || ^9 || ^10
+package: Slick
+configure: entity.slick.collection
+dependencies:
+  - slick:slick (>= 2.x)
+
+# Information added by Drupal.org packaging script on 2024-04-11
+version: '8.x-2.11'
+project: 'slick'
+datestamp: 1712817718

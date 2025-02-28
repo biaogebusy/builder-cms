@@ -1,0 +1,8 @@
+#module-filter-update-status-form .table-filter {
+  float: right;
+  text-align: right;
+}
+#module-filter-update-status-form .table-filter .module-filter-status .form-item {
+  display: inline-block;
+  padding-left: 1em;
+}

@@ -1,0 +1,17 @@
+services:
+  state_machine_test.fulfillment_guard:
+    class: Drupal\state_machine_test\Guard\FulfillmentGuard
+    tags:
+      - { name: state_machine.guard, group: entity_test_with_bundle }
+
+  state_machine_test.generic_guard:
+    class: Drupal\state_machine_test\Guard\GenericGuard
+    arguments: ['@current_user']
+    tags:
+      - { name: state_machine.guard }
+
+  state_machine_test.event_subscriber:
+    class: Drupal\state_machine_test\EventSubscriber\WorkflowTransitionEventSubscriber
+    arguments: ['@messenger']
+    tags:
+      - { name: event_subscriber }

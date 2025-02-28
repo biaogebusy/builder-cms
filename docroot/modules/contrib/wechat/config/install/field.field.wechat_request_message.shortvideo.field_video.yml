@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.wechat_request_message.field_video
+    - wechat.request_message_type.shortvideo
+  module:
+    - file
+id: wechat_request_message.shortvideo.field_video
+field_name: field_video
+entity_type: wechat_request_message
+bundle: shortvideo
+label: Video
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  file_directory: 'wechat/request/videos/[date:custom:Y]-[date:custom:m]'
+  file_extensions: mp4
+  max_filesize: ''
+  description_field: false
+  handler: 'default:file'
+  handler_settings: {  }
+field_type: file

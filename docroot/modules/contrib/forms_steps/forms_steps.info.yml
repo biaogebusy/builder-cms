@@ -1,0 +1,15 @@
+type: module
+name: Forms Steps
+description: 'Provides Drupal multiple forms steps capability using forms views.'
+package: Forms
+core_version_requirement: ^8 || ^9 || ^10
+configure: entity.forms_steps.collection
+dependencies:
+  - drupal:field
+  - drupal:field_ui
+  - drupal:block
+
+# Information added by Drupal.org packaging script on 2023-11-23
+version: '8.x-1.6'
+project: 'forms_steps'
+datestamp: 1700775789

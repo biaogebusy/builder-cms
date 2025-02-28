@@ -1,0 +1,75 @@
+/**
+ * @file
+ * Styling for Workspace toolbar.
+ */
+
+.toolbar .toolbar-icon-changes:before {
+  background-image: url("../icons/bebebe/changes.svg");
+}
+
+.toolbar .toolbar-icon-changes.is-active:before {
+  background-image: url("../icons/ffffff/changes.svg");
+}
+
+.toolbar .toolbar-icon-workspace:before {
+  background-image: url("../icons/bebebe/workspace.svg");
+}
+
+.toolbar .toolbar-icon-workspace.is-active:before {
+  background-image: url("../icons/ffffff/workspace.svg");
+}
+
+.toolbar .toolbar-icon-workspace-update:before {
+  background-image: url("../icons/bebebe/update.svg");
+}
+
+.toolbar .toolbar-icon-workspace-update.is-active:before {
+  background-image: url("../icons/ffffff/update.svg");
+}
+
+.toolbar .toolbar-bar .workspace-toolbar-tab.toolbar-tab,
+.toolbar .toolbar-bar .workspace-update-toolbar-tab.toolbar-tab{
+  float: right;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray input[type="submit"] {
+  display: block;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 1em 1.3333em;
+  font-weight: normal;
+  font-size: 1em;
+  line-height: 1;
+  color: #565656;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray input[type="submit"]:hover {
+  text-decoration: underline;
+  color: #000000;
+  box-shadow: none;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray input[type="submit"].is-active {
+  color: #000000;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray.toolbar-tray-horizontal input[type="submit"] {
+  float: left;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray.toolbar-tray-vertical input[type="submit"] {
+  padding-left: 2.75em;
+  padding-right: 4em;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray.toolbar-tray-vertical form {
+  background-color: #ffffff;
+}
+
+.toolbar #toolbar-item-workspace-switcher-tray a.add-workspace {
+  float: right;
+}

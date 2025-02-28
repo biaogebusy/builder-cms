@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the image_effects module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function image_effects_requirements($phase) {
+  $requirements = [];
+
+  // Check PHP GD2 FreeType support.
+  if (function_exists('gd_info')) {
+    $info = gd_info();
+    if (!function_exists('imagettftext') || !isset($info["FreeType Support"])) {
+      // No FreeType support, raise warning.
+      $requirements['image_effects_gd_freetype'] = [
+        'title' => t('GD library FreeType support'),
+        'value' => t('Not installed'),
+        'severity' => REQUIREMENT_WARNING,
+        'description' => t('The GD Library for PHP is enabled, but was compiled without FreeType support. Image effects using fonts will not be available with the GD image toolkit.'),
+      ];
+    }
+  }
+
+  // Check Color module installed if farbtastic color picker is on.
+  if (\Drupal::config('image_effects.settings')->get('color_selector.plugin_id') === 'farbtastic' && !\Drupal::service('module_handler')->moduleExists('color')) {
+    $requirements['image_effects_farbtastic'] = [
+      'title' => t('Farbtastic library'),
+      'value' => t('Color module not installed'),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => t('The Image Effects module requires the Color module to be installed to use the Farbtastic library.'),
+    ];
+  }
+
+  return $requirements;
+}
+
+/**
+ * Minimum 2.x schema version to allow upgrading from.
+ */
+function image_effects_update_last_removed() {
+  return 8203;
+}

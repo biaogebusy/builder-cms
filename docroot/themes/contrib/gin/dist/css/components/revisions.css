@@ -1,0 +1,27 @@
+.revision-current {
+  background-color: transparent;
+}
+
+.revision-current td:first-of-type {
+  position: relative;
+}
+
+.revision-current td:first-of-type::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+}
+
+[dir="ltr"] .revision-current td:first-of-type::before {
+  left: 0;
+  border-left: 6px solid var(--gin-color-green);
+}
+
+[dir="rtl"] .revision-current td:first-of-type::before {
+  right: 0;
+  border-right: 6px solid var(--gin-color-green);
+}
+

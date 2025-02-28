@@ -1,0 +1,7 @@
+services:
+  colorbox.commands:
+    class: \Drupal\colorbox\Commands\ColorboxCommands
+    arguments:
+      - '@library.discovery'
+    tags:
+      - { name: drush.command }

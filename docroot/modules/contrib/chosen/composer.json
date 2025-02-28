@@ -1,0 +1,17 @@
+{
+    "name": "drupal/chosen",
+    "description": "Makes select elements more friendly using the Chosen jQuery plugin",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "support": {
+        "issues": "https://drupal.org/project/issues/chosen",
+        "source": "https://drupal.org/project/chosen"
+    },
+    "keywords": [
+        "Drupal",
+        "Chosen"
+    ],
+    "require": {
+        "harvesthq/chosen": "^1.8.7"
+    }
+}

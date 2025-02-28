@@ -1,0 +1,50 @@
+<?php
+/**
+ * @file
+ * Install file for the CKEditor Upload Image module.
+ */
+
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_requirements().
+ */
+function ckeditor_uploadimage_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'install') {
+    $plugins = [
+      'uploadimage' => t('CKEditor Upload Image plugin'),
+      'uploadwidget' => t('CKEditor Upload Widget plugin'),
+      'filetools' => t('CKEditor File Tools plugin'),
+      'notification' => t('CKEditor Notification plugin'),
+      'notificationaggregator' => t('CKEditor Notification Aggregator plugin'),
+    ];
+    /** @var \Drupal\Core\File\FileSystem $filesystem */
+    $filesystem = \Drupal::service('file_system');
+    $dir = $filesystem->realpath('');
+    foreach ($plugins as $plugin => $label) {
+      $path = "libraries/ckeditor/plugins/$plugin/plugin.js";
+      if (!$filesystem->realpath($path) && !$filesystem->realpath("profiles/" . \Drupal::installProfile() . "/$path")) {
+        $requirements[$plugin . '_ckeditor_plugin'] = [
+          'description' => t(
+            'CKEditor Upload Image module requires the @plugin. Download, 
+            extract and place the contents in %path', [
+            '@plugin' => Link::fromTextAndUrl($label, Url::fromUri("http://ckeditor.com/addon/$plugin"))->toString(),
+            '%path'   => "$dir/libraries/ckeditor/plugins/$plugin",
+          ]),
+          'severity' => REQUIREMENT_ERROR,
+        ];
+      }
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Rebuild the CKEditor Upload Image permission and menu router.
+ */
+function ckeditor_uploadimage_update_8001() {
+  drupal_flush_all_caches();
+}

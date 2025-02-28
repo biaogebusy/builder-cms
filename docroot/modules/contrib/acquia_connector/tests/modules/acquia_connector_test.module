@@ -1,0 +1,10 @@
+<?php
+
+/**
+ * @file
+ * Helper module for the Acquia Connector tests.
+ */
+
+if (!defined('ACQUIA_CONNECTOR_TEST_ACQUIA_DEVELOPMENT_NOSSL')) {
+  define('ACQUIA_CONNECTOR_TEST_ACQUIA_DEVELOPMENT_NOSSL', TRUE);
+}

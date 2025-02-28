@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Main module file for FPA.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\fpa\FpaFormBuilder;
+
+const FPA_ATTR_PERMISSION = 'fpa-permission';
+const FPA_ATTR_MODULE = 'fpa-module';
+const FPA_ATTR_ROLE = 'fpa-role';
+const FPA_ATTR_CHECKED = 'fpa-checked';
+const FPA_ATTR_NOT_CHECKED = 'fpa-not-checked';
+const FPA_ATTR_SYSTEM_NAME = 'fpa-system-name';
+
+/**
+ * Implements hook_help().
+ */
+function fpa_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'user.admin_permissions':
+      $output = '';
+      $output .= '<p>' . t('Permissions and Module names will match on the readable or system name. The system name is provided as a togglable column.') . '</p>';
+      $output .= '<p>' . t('Enter in the format of "permission@module", e.g. "admin@system" will show only permissions with the text "admin" in modules with the text "system".') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function fpa_form_user_admin_permissions_alter(&$form, &$form_state) {
+  // Prevent duplication of memory limit warning.
+  $filter_perm_exists = \Drupal::service('module_handler')->moduleExists('filter_perms');
+  if ($filter_perm_exists && empty($form_state->getUserInput())) {
+    $memory_limit = ini_get('memory_limit');
+    if (!FpaFormBuilder::checkMemoryLimit()) {
+      \Drupal::messenger()->addWarning(t('If you attempt to display all roles and permissions on this page at the same time, you will most likely exceed your PHP memory limit of %memory_limit.', ['%memory_limit' => $memory_limit]));
+    }
+  }
+}

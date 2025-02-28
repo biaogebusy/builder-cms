@@ -1,0 +1,12 @@
+services:
+  xinshi_api.twig.extension:
+    class: Drupal\xinshi_api\TwigExtension\DefaultTwigExtension
+    tags:
+      - { name: twig.extension }
+  xinshi_api.route_subscriber:
+    class: Drupal\xinshi_api\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  xinshi_api.auth:
+    class: Drupal\xinshi_api\UserAuth
+    arguments: ['@entity_type.manager', '@password']

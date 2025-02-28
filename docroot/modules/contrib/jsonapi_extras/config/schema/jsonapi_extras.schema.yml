@@ -1,0 +1,77 @@
+jsonapi_extras.jsonapi_resource_config.*:
+  type: config_entity
+  label: 'JSON:API Resource Config'
+  mapping:
+    id:
+      type: string
+      label: 'Original Resource ID.'
+    disabled:
+      type: boolean
+      label: 'Disabled'
+      description: 'Is the resource disabled?'
+    path:
+      type: string
+      label: 'Path'
+      description: 'The path for the resource.'
+    resourceType:
+      type: string
+      label: 'Type'
+      description: 'The value for the resource type.'
+    resourceFields:
+      type: sequence
+      label: 'Fields'
+      sequence:
+        type: jsonapi_extras.resource_field
+
+jsonapi_extras.resource_field:
+  type: mapping
+  mapping:
+    disabled:
+      type: boolean
+      label: 'Disabled'
+      description: 'Is the field disabled?'
+    fieldName:
+      type: string
+      label: 'Entity field name'
+    publicName:
+      type: string
+      label: 'Public attribute name'
+    enhancer:
+      type: mapping
+      label: 'Enhancer plugin'
+      description: 'A plugin that carries additional (de)normalization tasks.'
+      mapping:
+        id:
+          type: string
+          description: 'The enhancer plugin ID'
+        settings:
+          type: jsonapi_extras.enhancer_plugin.[%parent.id]
+
+jsonapi_extras.enhancer_plugin.date_time:
+  type: mapping
+  mapping:
+    dateTimeFormat:
+      type: string
+
+jsonapi_extras.enhancer_plugin.nested:
+  type: mapping
+  mapping:
+    path:
+      type: string
+
+jsonapi_extras.settings:
+  type: config_object
+  label: 'JSON:API Extras settings'
+  mapping:
+    path_prefix:
+      type: string
+      label: 'Path prefix'
+      description: 'The path prefix for JSON:API'
+    include_count:
+      type: boolean
+      label: 'Include count in collection responses'
+      description: 'If activated, all collection responses will return a total record count for the provided query.'
+    default_disabled:
+      type: boolean
+      label: 'Disabled by default'
+      description: "If activated, all resource types that don't have a matching enabled resource config will be disabled."

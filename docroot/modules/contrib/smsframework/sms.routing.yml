@@ -1,0 +1,85 @@
+route_callbacks:
+  - '\Drupal\sms\Routing\RouteSubscriber::routes'
+
+sms.admin:
+  path: '/admin/config/smsframework'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'SMS Framework'
+  requirements:
+    _permission: 'administer smsframework'
+
+# Phone numbers
+sms.phone_number_settings.list:
+  path: '/admin/config/smsframework/phone_number'
+  defaults:
+    _entity_list: 'phone_number_settings'
+    _title: 'Phone number settings'
+  requirements:
+    _permission: 'administer smsframework'
+
+entity.phone_number_settings.add:
+  path: '/admin/config/smsframework/phone_number/add'
+  defaults:
+    _entity_form: 'phone_number_settings.add'
+    _title: 'Add phone number settings'
+  requirements:
+    _permission: 'administer smsframework'
+
+entity.phone_number_settings.edit_form:
+  path: '/admin/config/smsframework/phone_number/{phone_number_settings}'
+  defaults:
+    _entity_form: 'phone_number_settings.edit'
+    _title: 'Edit phone number settings'
+  requirements:
+    _permission: 'administer smsframework'
+
+entity.phone_number_settings.delete_form:
+  path: '/admin/config/smsframework/phone_number/{phone_number_settings}/delete'
+  defaults:
+    _entity_form: 'phone_number_settings.delete'
+    _title: 'Delete phone number settings'
+  requirements:
+    _permission: 'administer smsframework'
+
+# Settings
+sms.settings:
+  path: '/admin/config/smsframework/settings'
+  defaults:
+    _form: '\Drupal\sms\Form\SmsSettingsForm'
+    _title: 'SMS Settings'
+  requirements:
+    _permission: 'administer smsframework'
+
+# Gateways
+sms.gateway.list:
+  path: '/admin/config/smsframework/gateways'
+  defaults:
+    _entity_list: 'sms_gateway'
+    _title: 'Gateways'
+  requirements:
+    _permission: 'administer smsframework'
+
+entity.sms_gateway.add:
+  path: '/admin/config/smsframework/gateways/add'
+  defaults:
+    _entity_form: 'sms_gateway.add'
+    _title: 'Add gateway'
+  requirements:
+    _permission: 'administer smsframework'
+
+entity.sms_gateway.edit_form:
+  path: '/admin/config/smsframework/gateways/{sms_gateway}'
+  defaults:
+    _entity_form: 'sms_gateway.edit'
+    _title: 'Edit gateway'
+  requirements:
+    _permission: 'administer smsframework'
+
+entity.sms_gateway.delete_form:
+  path: '/admin/config/smsframework/gateways/{sms_gateway}/delete'
+  defaults:
+    _entity_form: 'sms_gateway.delete'
+    _title: 'Delete gateway'
+  requirements:
+    _permission: 'administer smsframework'

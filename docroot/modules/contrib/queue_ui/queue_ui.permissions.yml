@@ -1,0 +1,6 @@
+permission_callbacks:
+  - \Drupal\queue_ui\QueueUIPermissions::permissions
+
+admin queue_ui:
+  title: 'Administer queues'
+  description: 'View, run, and delete queues'

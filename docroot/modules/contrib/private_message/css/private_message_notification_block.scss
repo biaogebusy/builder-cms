@@ -1,0 +1,33 @@
+.block-private-message-notification-block {
+  height:30px;
+  width:32.75px;
+  position:relative;
+  overflow:hidden;
+  .private-message-notification-image {
+    height:30px;
+    width:65.5px;
+    position:absolute;
+    top:0;
+    left:0;
+    max-width:none;
+  }
+  .private-message-page-link {
+    height:100%;
+    width:100%;
+    position:absolute;
+    top:0;
+    left:0;
+    text-align:center;
+    line-height:26px;
+    color:#000;
+  }
+  .unread-threads {
+    .private-message-notification-image {
+      left:auto;
+      right:0;
+    }
+    .private-message-page-link {
+      color:#FF0000;
+    }
+  }
+}

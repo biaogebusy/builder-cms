@@ -1,0 +1,15 @@
+name: 'OTP Login'
+type: module
+description: 'OTP Login'
+core: 8.x
+core_version_requirement: ^8 || ^9
+package: 'Authentication'
+dependencies:
+  - drupal:sms
+  - drupal:sms_user
+configure: 'otp_login.admin_settings'
+
+# Information added by Drupal.org packaging script on 2020-09-05
+version: '8.x-2.2'
+project: 'otp_login'
+datestamp: 1599331289

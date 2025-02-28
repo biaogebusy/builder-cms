@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'MIE Demo Content'
+vid: mie_demo_content
+description: 'Demo content for Menu Item Extras module'
+hierarchy: 0
+weight: 0

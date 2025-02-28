@@ -1,0 +1,16 @@
+{
+    "name": "drupal/fivestar",
+    "description": "Enables fivestar ratings on content, users, etc.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/fivestar",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/fivestar",
+        "source": "https://git.drupalcode.org/project/fivestar"
+    },
+    "require": {
+        "drupal/core": "^9.2 || ^10",
+        "drupal/votingapi": "^3.0"
+    },
+    "minimum-stability": "dev"
+}

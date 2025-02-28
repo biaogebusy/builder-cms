@@ -1,0 +1,11 @@
+sms.gateway.list:
+  title: 'Gateways'
+  description: 'Available SMS gateways.'
+  route_name: sms.gateway.list
+  base_route: sms.gateway.list
+  weight: -10
+
+entity.sms_gateway.edit_form:
+  title: 'Edit'
+  route_name: entity.sms_gateway.edit_form
+  base_route: entity.sms_gateway.edit_form

@@ -1,0 +1,32 @@
+includes:
+  - phar://phpstan.phar/conf/bleedingEdge.neon
+
+parameters:
+  level: 0
+  paths:
+    - .
+  ignoreErrors:
+    # new static() is a common pattern in Drupal core and contrib.
+    # https://www.drupal.org/docs/develop/development-tools/phpstan/handling-unsafe-usage-of-new-static
+    -
+      message: "#^Unsafe usage of new static#"
+
+    -
+      message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+      count: 1
+      path: src/Controller/QuickNodeCloneNodeController.php
+
+    -
+      message: "#^Parameter \\$event of method Drupal\\\\quick_node_clone\\\\EventSubscriber\\\\AddressEventSubscriber\\:\\:onInitialValues\\(\\) has invalid type Drupal\\\\address\\\\Event\\\\InitialValuesEvent\\.$#"
+      count: 1
+      path: src/EventSubscriber/AddressEventSubscriber.php
+
+    -
+      message: "#^Class Drupal\\\\quick_node_clone\\\\Form\\\\QuickNodeCloneNodeForm extends @internal class Drupal\\\\node\\\\NodeForm\\.$#"
+      count: 1
+      path: src/Form/QuickNodeCloneNodeForm.php
+
+    -
+      message: "#^Method Drupal\\\\quick_node_clone\\\\Form\\\\QuickNodeCloneNodeForm\\:\\:save\\(\\) should return int but return statement is missing\\.$#"
+      count: 1
+      path: src/Form/QuickNodeCloneNodeForm.php

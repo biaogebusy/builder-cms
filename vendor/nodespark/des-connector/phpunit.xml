@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="./vendor/autoload.php"
+         forceCoversAnnotation="true"
+         colors="true">
+
+    <testsuites>
+        <testsuite name="unit">
+            <directory suffix="Test.php">tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">src</directory>
+        </whitelist>
+    </filter>
+
+    <logging>
+        <log type="coverage-html" target="coverage"/>
+        <log type="coverage-clover" target="coverage/coverage.xml"/>
+    </logging>
+
+</phpunit>

@@ -1,0 +1,6 @@
+autologout.set_admin:
+  title: 'Automated logout settings'
+  parent: user.admin_index
+  description: 'Configure default automated logout settings.'
+  weight: -10
+  route_name: autologout.set_admin

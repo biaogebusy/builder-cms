@@ -1,0 +1,4 @@
+hide_show: 0
+hide_on_content: 2
+admin_bypass_access_front: false
+admin_bypass_access_admin: true

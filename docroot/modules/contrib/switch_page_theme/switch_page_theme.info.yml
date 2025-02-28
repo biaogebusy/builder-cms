@@ -1,0 +1,13 @@
+name: Switch Page Theme
+description: 'Switches active theme on specific pages.'
+package: User Interface
+type: module
+# core: 8.x
+
+configure: switch_page_theme.settings
+
+# Information added by Drupal.org packaging script on 2017-09-18
+version: '8.x-1.0'
+core_version_requirement: ^8 || ^9
+project: 'switch_page_theme'
+datestamp: 1505717645

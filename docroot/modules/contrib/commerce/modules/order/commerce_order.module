@@ -1,0 +1,457 @@
+<?php
+
+/**
+ * @file
+ * Defines the Order entity and associated features.
+ */
+
+use Drupal\commerce_order\Entity\OrderTypeInterface;
+use Drupal\commerce_order\Plugin\Field\FieldFormatter\PriceCalculatedFormatter;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\entity\BundleFieldDefinition;
+use Drupal\field\FieldStorageConfigInterface;
+use Drupal\profile\Entity\ProfileType;
+use Drupal\profile\Entity\ProfileTypeInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_order_theme($existing, $type, $theme, $path) {
+  return [
+    'commerce_order' => [
+      'render element' => 'elements',
+    ],
+    'commerce_order__admin' => [
+      'base hook' => 'commerce_order',
+      'render element' => 'elements',
+    ],
+    'commerce_order__user' => [
+      'base hook' => 'commerce_order',
+      'render element' => 'elements',
+    ],
+    'commerce_order_edit_form' => [
+      'render element' => 'form',
+    ],
+    'commerce_order_receipt' => [
+      'variables' => [
+        'order_entity' => NULL,
+        'billing_information' => NULL,
+        'shipping_information' => NULL,
+        'payment_method' => NULL,
+        'totals' => NULL,
+      ],
+    ],
+    'commerce_order_receipt__entity_print' => [
+      'base hook' => 'commerce_order_receipt',
+    ],
+    'commerce_order_total_summary' => [
+      'variables' => [
+        'order_entity' => NULL,
+        'totals' => NULL,
+      ],
+    ],
+    'commerce_order_item' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_commerce_order_item().
+ */
+function commerce_order_theme_suggestions_commerce_order_item(array $variables) {
+  return _commerce_entity_theme_suggestions('commerce_order_item', $variables);
+}
+
+/**
+ * Prepares variables for commerce order item templates.
+ *
+ * Default template: commerce-order-item.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_commerce_order_item(array &$variables) {
+  /** @var Drupal\commerce_order\Entity\OrderItemInterface $product_variation */
+  $commerce_order_item = $variables['elements']['#commerce_order_item'];
+
+  $variables['order_item_entity'] = $commerce_order_item;
+
+  $variables['order_item'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['order_item'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info_alter().
+ */
+function commerce_order_entity_extra_field_info_alter(&$info) {
+  if (isset($info['commerce_order'])) {
+    // Show the 'View PDF' link by default.
+    foreach ($info['commerce_order'] as $bundle => &$fields) {
+      if (isset($fields['display']['entity_print_view_pdf'])) {
+        $fields['display']['entity_print_view_pdf']['visible'] = TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ *
+ * Replaces the commerce_price PriceCalculatedFormatter with
+ * the expanded commerce_order one.
+ */
+function commerce_order_field_formatter_info_alter(array &$info) {
+  $info['commerce_price_calculated']['class'] = PriceCalculatedFormatter::class;
+  $info['commerce_price_calculated']['provider'] = 'commerce_order';
+}
+
+/**
+ * Implements hook_field_widget_single_element_form_alter().
+ *
+ * - Changes the label of the purchased_entity field to the label of the
+ *   target type (e.g. 'Product variation').
+ * - Forbids editing the purchased_entity once the order item is no longer new.
+ */
+function commerce_order_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
+  $field_definition = $context['items']->getFieldDefinition();
+  $field_name = $field_definition->getName();
+  $entity_type = $field_definition->getTargetEntityTypeId();
+  if ($field_name == 'purchased_entity' && $entity_type == 'commerce_order_item') {
+    if (!empty($element['target_id']['#target_type'])) {
+      $target_type = \Drupal::service('entity_type.manager')->getDefinition($element['target_id']['#target_type']);
+      $element['target_id']['#title'] = $target_type->getLabel();
+      if (!$context['items']->getEntity()->isNew()) {
+        $element['#disabled'] = TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * Prepares variables for order templates.
+ *
+ * Default template: commerce-order.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_commerce_order(array &$variables) {
+  $view_mode = $variables['elements']['#view_mode'];
+  /** @var Drupal\commerce_order\Entity\OrderInterface $order */
+  $order = $variables['elements']['#commerce_order'];
+
+  $variables['order_entity'] = $order;
+  $variables['order'] = [];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['order'][$key] = $variables['elements'][$key];
+  }
+  // Inject order fields not manually printed in a separate variable for easier
+  // rendering.
+  if (in_array($view_mode, ['user', 'admin'], TRUE)) {
+    $printed_fields = ['order_items', 'total_price', 'activity', 'completed', 'placed', 'changed', 'uid', 'mail', 'ip_address', 'billing_information', 'shipping_information', 'state', 'balance'];
+    $variables['additional_order_fields'] = array_diff_key($variables['order'], array_combine($printed_fields, $printed_fields));
+
+    if ($view_mode === 'admin') {
+      // Show the order's store only if there are multiple available.
+      /** @var \Drupal\commerce_store\StoreStorageInterface $store_storage */
+      $store_storage = \Drupal::entityTypeManager()->getStorage('commerce_store');
+      $store_query = $store_storage->getQuery()->accessCheck(TRUE);
+      $variables['stores_count'] = (int) $store_query->count()->execute();
+    }
+  }
+
+  if ($billing_profile = $order->getBillingProfile()) {
+    $profile_view_bulder = \Drupal::entityTypeManager()->getViewBuilder('profile');
+    $variables['order']['billing_information'] = $profile_view_bulder->view($billing_profile, $view_mode);
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_commerce_order().
+ */
+function commerce_order_theme_suggestions_commerce_order(array $variables) {
+  return _commerce_entity_theme_suggestions('commerce_order', $variables);
+}
+
+/**
+ * Implements hook_theme_suggestions_commerce_order_receipt().
+ */
+function commerce_order_theme_suggestions_commerce_order_receipt(array $variables) {
+  $suggestions = [];
+  if (isset($variables['order_entity'])) {
+    $order = $variables['order_entity'];
+    $suggestions[] = $variables['theme_hook_original'] . '__' . $order->bundle();
+  }
+  return $suggestions;
+}
+
+/**
+ * Adds the default order_items field to an order type.
+ *
+ * @param \Drupal\commerce_order\Entity\OrderTypeInterface $order_type
+ *   The order type.
+ *
+ * @deprecated in commerce:8.x-2.16 and is removed from commerce:3.x. The order
+ *   items field is now a base field.
+ *
+ * @see https://www.drupal.org/node/3090561
+ */
+function commerce_order_add_order_items_field(OrderTypeInterface $order_type) {
+  @trigger_error('commerce_order_add_order_items_field() function is deprecated in commerce:8.x-2.16 and is removed from commerce:3.x. The order_items field is now a base field. See https://www.drupal.org/node/3090561', E_USER_DEPRECATED);
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function commerce_order_views_data_alter(array &$data) {
+  $data['commerce_order']['store_id']['field']['id'] = 'commerce_store';
+}
+
+/**
+ * Implements hook_entity_type_build().
+ *
+ * Adds the address book form classes to profile entities.
+ * Referenced in commerce_order.routing.yml.
+ */
+function commerce_order_entity_type_build(array &$entity_types) {
+  if (isset($entity_types['profile'])) {
+    /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+    $entity_types['profile']->setFormClass('address-book-add', 'Drupal\commerce_order\Form\ProfileAddressBookForm');
+    $entity_types['profile']->setFormClass('address-book-edit', 'Drupal\commerce_order\Form\ProfileAddressBookForm');
+    $entity_types['profile']->setFormClass('address-book-delete', 'Drupal\commerce_order\Form\ProfileAddressBookDeleteForm');
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function commerce_order_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  // During tests, always have order versioning throw an exception.
+  if (drupal_valid_test_ua()) {
+    $entity_types['commerce_order']->set('log_version_mismatch', FALSE);
+  }
+  else {
+    $config = \Drupal::config('commerce_order.settings');
+    $entity_types['commerce_order']->set('log_version_mismatch', $config->get('log_version_mismatch'));
+  }
+  // Remove the "EntityChanged" constraint, our "OrderVersion" constraint
+  // replaces it.
+  $constraints = $entity_types['commerce_order']->getConstraints();
+  unset($constraints['EntityChanged']);
+  $entity_types['commerce_order']->setConstraints($constraints);
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ *
+ * Removes profile tabs for profile types managed through the address book tab.
+ */
+function commerce_order_local_tasks_alter(&$definitions) {
+  /** @var \Drupal\commerce_order\AddressBookInterface $address_book */
+  $address_book = \Drupal::service('commerce_order.address_book');
+  if (!$address_book->hasUi()) {
+    return;
+  }
+
+  $profile_types = $address_book->loadTypes();
+  foreach ($profile_types as $profile_type) {
+    $derivative_key = 'profile.user_page:' . $profile_type->id();
+    if (isset($definitions[$derivative_key])) {
+      unset($definitions[$derivative_key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for 'profile_type_form'.
+ */
+function commerce_order_form_profile_type_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\profile\Entity\ProfileTypeInterface $profile_type */
+  $profile_type = $form_state->getFormObject()->getEntity();
+  $customer_flag = $profile_type->getThirdPartySetting('commerce_order', 'customer_profile_type');
+  $address_has_data = FALSE;
+  if ($customer_flag && !$profile_type->isNew()) {
+    /** @var \Drupal\commerce\ConfigurableFieldManagerInterface $configurable_field_manager */
+    $configurable_field_manager = \Drupal::service('commerce.configurable_field_manager');
+    $address_field_definition = commerce_order_build_address_field_definition($profile_type->id());
+    $address_has_data = $configurable_field_manager->hasData($address_field_definition);
+  }
+
+  $form['#tree'] = TRUE;
+  $form['commerce_order'] = [
+    '#type' => 'container',
+    '#weight' => 1,
+  ];
+  $form['commerce_order']['customer_profile_type'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Profiles of this type represent Commerce customer profiles'),
+    '#description' => t("Used to store the customer's billing or shipping information."),
+    '#default_value' => $customer_flag,
+    // The flag is always TRUE for the profile type provided by Commerce.
+    '#disabled' => $profile_type->id() == 'customer' || $address_has_data,
+  ];
+  $form['actions']['submit']['#submit'][] = 'commerce_order_profile_type_form_submit';
+}
+
+/**
+ * Submission handler for commerce_order_form_profile_type_form_alter().
+ */
+function commerce_order_profile_type_form_submit(array $form, FormStateInterface $form_state) {
+  /** @var \Drupal\profile\Entity\ProfileTypeInterface $profile_type */
+  $profile_type = $form_state->getFormObject()->getEntity();
+  $customer_flag = $form_state->getValue(['commerce_order', 'customer_profile_type']);
+  $previous_customer_flag = $profile_type->getThirdPartySetting('commerce_order', 'customer_profile_type');
+  /** @var \Drupal\commerce\ConfigurableFieldManagerInterface $configurable_field_manager */
+  $configurable_field_manager = \Drupal::service('commerce.configurable_field_manager');
+  $address_field_definition = commerce_order_build_address_field_definition($profile_type->id());
+  if ($customer_flag && !$previous_customer_flag) {
+    $configurable_field_manager->createField($address_field_definition, FALSE);
+  }
+  elseif (!$customer_flag && $previous_customer_flag) {
+    $configurable_field_manager->deleteField($address_field_definition);
+  }
+
+  $profile_type->setThirdPartySetting('commerce_order', 'customer_profile_type', $customer_flag);
+  $profile_type->save();
+}
+
+/**
+ * Builds the $profile->address field definition.
+ *
+ * @param string $profile_type_id
+ *   The profile type ID.
+ *
+ * @return \Drupal\entity\BundleFieldDefinition
+ *   The field definition.
+ */
+function commerce_order_build_address_field_definition($profile_type_id) {
+  $address_field_definition = BundleFieldDefinition::create('address')
+    ->setTargetEntityTypeId('profile')
+    ->setTargetBundle($profile_type_id)
+    ->setName('address')
+    ->setLabel('Address')
+    ->setRequired(TRUE)
+    ->setDisplayOptions('view', [
+      'label' => 'hidden',
+      'type' => 'address_default',
+    ])
+    ->setDisplayOptions('form', [
+      'type' => 'address_default',
+    ]);
+
+  return $address_field_definition;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ *
+ * Forbids the "customer" profile type from being deletable.
+ */
+function commerce_order_profile_type_access(ProfileTypeInterface $profile_type, $operation, AccountInterface $account) {
+  if ($profile_type->id() === 'customer' && $operation === 'delete') {
+    return AccessResult::forbidden();
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ *
+ * Forbids the profile "address" field from being deletable.
+ * This is an alternative to locking the field which still leaves
+ * the field editable.
+ */
+function commerce_order_field_storage_config_access(FieldStorageConfigInterface $field_storage, $operation) {
+  if ($field_storage->id() == 'profile.address' && $operation == 'delete') {
+    return AccessResult::forbidden();
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ *
+ * Hides the "Storage settings" operation for the profile "address" field.
+ */
+function commerce_order_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if ($entity->getEntityTypeId() == 'field_config') {
+    /** @var \Drupal\Core\Field\FieldConfigInterface $entity */
+    if ($entity->getTargetEntityTypeId() == 'profile' && $entity->getName() == 'address') {
+      unset($operations['storage-settings']);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for 'field_config_edit_form'.
+ *
+ * Hides the "Required" and "Available countries" settings for the customer
+ * profile "address" field.
+ */
+function commerce_order_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Field\FieldConfigInterface $entity */
+  $entity = $form_state->getFormObject()->getEntity();
+  if ($entity->getTargetEntityTypeId() == 'profile' && $entity->getName() == 'address') {
+    // Make sure that the profile type is a customer profile type, to avoid
+    // affecting other types which just reuse the address field.
+    $profile_type = ProfileType::load($entity->getTargetBundle());
+    if ($profile_type->getThirdPartySetting('commerce_order', 'customer_profile_type')) {
+      // The field must always be required.
+      $form['required']['#default_value'] = TRUE;
+      $form['required']['#access'] = FALSE;
+      // Available countries are taken from the store.
+      $form['settings']['available_countries']['#access'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_jsonapi_ENTITY_TYPE_filter_access().
+ */
+function commerce_order_jsonapi_commerce_order_filter_access(EntityTypeInterface $entity_type, AccountInterface $account) {
+  // Entity API automatically hooks into the JSON:API query filter system for
+  // entities that has a permission_provider and query_handler. However, orders
+  // do not have an `owner` key and are not evaluated for the
+  // JSONAPI_FILTER_AMONG_OWN check. This means only JSONAPI_FILTER_AMONG_ALL is
+  // evaluated, which defaults to the admin permission.
+  //
+  // Since we have a query_handler configured and inaccessible entities will
+  // be filtered out automatically, we set it to allowed.
+  return ([
+    JSONAPI_FILTER_AMONG_ALL => AccessResult::allowed(),
+  ]);
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function commerce_order_theme_registry_alter(&$theme_registry) {
+  $theme_registry['commerce_price_calculated']['variables'] += [
+    'result' => NULL,
+    'base_price' => NULL,
+    'adjustments' => [],
+  ];
+}
+
+/**
+ * Implements hook_field_group_content_element_keys_alter().
+ *
+ * Allow orders to render fields groups defined from Fields UI.
+ */
+function commerce_order_field_group_content_element_keys_alter(&$keys) {
+  $keys['commerce_order'] = 'order';
+  $keys['commerce_order_item'] = 'order_item';
+}

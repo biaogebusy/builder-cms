@@ -1,0 +1,21 @@
+{
+    "name": "drupal/toolbar_visibility",
+    "description": "Remove toolbar on specific themes or domains.",
+    "type": "drupal-module",
+    "homepage": "https://www.drupal.org/project/toolbar_visibility",
+    "authors": [
+        {
+            "name": "George Anderson (geoanders)",
+            "homepage": "https://www.drupal.org/u/geoanders",
+            "role": "Maintainer"
+        }
+    ],
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/toolbar_visibility",
+        "source": "https://git.drupalcode.org/project/toolbar_visibility"
+    },
+    "license": "GPL-2.0+",
+    "require": {
+        "drupal/core": "^8 || ^9 || ^10"
+    }
+}

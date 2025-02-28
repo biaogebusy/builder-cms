@@ -1,0 +1,12 @@
+entity.profile_type.add_form:
+  route_name: entity.profile_type.add_form
+  title: 'Add profile type'
+  appears_on:
+    - entity.profile_type.collection
+
+profile.user_page.add_form:
+  route_name: profile.user_page.add_form
+  title: 'Add profile'
+  appears_on:
+    - profile.user_page.multiple
+  class: '\Drupal\profile\Plugin\Menu\LocalAction\ProfileLocalAction'

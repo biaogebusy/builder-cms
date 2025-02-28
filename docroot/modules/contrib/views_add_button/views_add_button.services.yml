@@ -1,0 +1,4 @@
+services:
+  plugin.manager.views_add_button:
+    class: Drupal\views_add_button\ViewsAddButtonManager
+    arguments: ['@container.namespaces', '@cache.default', '@module_handler']

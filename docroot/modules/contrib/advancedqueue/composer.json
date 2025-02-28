@@ -1,0 +1,13 @@
+{
+    "name": "drupal/advancedqueue",
+    "description": "Provides a better Queue API.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "extra": {
+        "drush": {
+            "services": {
+                "drush.services.yml": "^11"
+            }
+        }
+    }
+}

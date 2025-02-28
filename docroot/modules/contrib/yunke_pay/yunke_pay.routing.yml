@@ -1,0 +1,48 @@
+#模块设置表单
+yunke_pay.settings:
+  path: '/admin/config/system/yunke-payment'
+  defaults:
+    _form: '\Drupal\yunke_pay\Form\PaySettingsForm'
+    _title: 'Payment settings'
+  requirements:
+    _permission: 'yunke pay settings'
+
+#微信支付设置表单
+yunke_pay.settings.wechat:
+  path: '/admin/config/system/yunke-payment/wechat'
+  defaults:
+    _form: '\Drupal\yunke_pay\Form\WeChatSettingsForm'
+    _title: 'WeChat settings'
+  requirements:
+    _permission: 'yunke pay settings'
+
+#支付宝支付设置表单
+yunke_pay.settings.alipay:
+  path: '/admin/config/system/yunke-payment/alipay'
+  defaults:
+    _form: '\Drupal\yunke_pay\Form\AlipaySettingsForm'
+    _title: 'Alipay settings'
+  requirements:
+    _permission: 'yunke pay settings'
+
+#微信支付辅助处理,用于继续处理微信浏览器下单时用户授权获取openid后的操作
+yunke_pay.wechat.jsapi_order:
+  path: '/yunke-pay/wechat/jsapi_order'
+  defaults:
+    _controller: '\Drupal\yunke_pay\Pay\WechatHelp::index'
+    _title: 'jsapi order'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE
+
+#微信支付辅助处理,用于PC付款时显示二维码
+yunke_pay.wechat.native_order.qrcode:
+  path: '/yunke-pay/wechat/qrcode-pay/{order}'
+  defaults:
+    _controller: '\Drupal\yunke_pay\Pay\WechatHelp::qrcodePay'
+    _title: 'native order qrcode pay'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE

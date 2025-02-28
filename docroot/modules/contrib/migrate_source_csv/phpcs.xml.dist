@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Module">
+  <file>.</file>
+  <arg name="extensions" value="php,module,inc,install,test,profile,theme,css,info,txt,md,yml"/>
+
+  <!-- Initially include all Drupal and DrupalPractice sniffs. -->
+  <rule ref="vendor/drupal/coder/coder_sniffer/Drupal"/>
+  <rule ref="vendor/drupal/coder/coder_sniffer/DrupalPractice"/>
+
+  <!-- Use 's' to print the full sniff name in the report. -->
+  <!-- A '-' is prefixed to each of these, so s becomes -s, etc. -->
+  <arg value="s"/>
+  <arg value="-colors"/>
+  <arg name='report-width' value='120'/>
+
+  <!-- Ignore all files that match these patterns. They are matched against -->
+  <!-- the full file path and there is an implied wildcard at each end. -->
+  <!-- Periods must be escaped using \. -->
+  <!-- The first two are key to isolating just this project's files. -->
+  <exclude-pattern>web/</exclude-pattern>
+  <exclude-pattern>vendor/</exclude-pattern>
+  <exclude-pattern>\.patch</exclude-pattern>
+  <exclude-pattern>interdiff</exclude-pattern>
+
+</ruleset>

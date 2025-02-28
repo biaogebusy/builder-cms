@@ -1,0 +1,16 @@
+charts.settings:
+  title: 'Charts Settings'
+  route_name: charts.settings
+  base_route: charts.settings
+
+charts.settings.default:
+  title: 'Default'
+  route_name: charts.settings
+  parent_id: charts.settings
+  weight: 10
+
+charts.settings.advanced:
+  title: 'Advanced'
+  route_name: charts.settings.advanced
+  parent_id: charts.settings
+  weight: 20

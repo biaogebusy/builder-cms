@@ -1,0 +1,6 @@
+menu_item_extras.utility:
+  type: config_object
+  mapping:
+    entity_type_build_status:
+     type: boolean
+     label: 'Status of entity in menu_item_extras_entity_type_build(). Used on uninstall.'

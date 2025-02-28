@@ -1,0 +1,11 @@
+memcache_admin.settings:
+  title: Memcache
+  description: Show memcache statistics at the bottom of each page.
+  parent: system.admin_config_system
+  route_name: memcache_admin.settings
+
+memcache_admin.reports:
+  title: Memcache statistics
+  description: View statistics for all configured memcache servers.
+  parent: system.admin_reports
+  route_name: memcache_admin.reports

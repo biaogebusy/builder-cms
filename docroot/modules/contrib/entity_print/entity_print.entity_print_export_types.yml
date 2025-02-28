@@ -1,0 +1,9 @@
+pdf:
+  label: PDF
+  file_extension: pdf
+epub:
+  label: EPub
+  file_extension: epub
+word_docx:
+  label: Word Document
+  file_extension: docx

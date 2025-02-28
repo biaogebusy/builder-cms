@@ -1,0 +1,19 @@
+id: entity_print_settings
+label: Entity print configuration
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: variable
+  variables:
+    - entity_print_default_css
+  source_module: entity_print
+process:
+  default_css:
+    plugin: default_value
+    strict: true
+    default_value: true
+    source: entity_print_default_css
+destination:
+  plugin: config
+  config_name: entity_print.settings

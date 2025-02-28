@@ -1,0 +1,814 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 1
+			path: diff.module
+
+		-
+			message: "#^Function diff_help\\(\\) has parameter \\$route_name with no type specified\\.$#"
+			count: 1
+			path: diff.module
+
+		-
+			message: "#^Method Drupal\\\\Core\\\\Form\\\\FormBuilderInterface\\:\\:getForm\\(\\) invoked with 2 parameters, 1 required\\.$#"
+			count: 1
+			path: src/Controller/NodeRevisionController.php
+
+		-
+			message: "#^Parameter \\#2 \\$left_revision of method Drupal\\\\diff\\\\Controller\\\\PluginRevisionController\\:\\:compareEntityRevisions\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\RevisionableInterface\\|null given\\.$#"
+			count: 1
+			path: src/Controller/NodeRevisionController.php
+
+		-
+			message: "#^Parameter \\#3 \\$right_revision of method Drupal\\\\diff\\\\Controller\\\\PluginRevisionController\\:\\:compareEntityRevisions\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\RevisionableInterface\\|null given\\.$#"
+			count: 1
+			path: src/Controller/NodeRevisionController.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/Controller/NodeRevisionController.php
+
+		-
+			message: """
+				#^Call to deprecated method loadRevision\\(\\) of class Drupal\\\\Core\\\\Entity\\\\EntityStorageInterface\\:
+				in drupal\\:10\\.1\\.0 and is removed from drupal\\:11\\.0\\.0\\. Use
+				\\\\Drupal\\\\Core\\\\Entity\\\\RevisionableStorageInterface\\:\\:loadRevision instead\\.$#
+			"""
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^If condition is always true\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Left side of && is always true\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, array\\|null given\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, string\\|null given\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Parameter \\#1 \\$entity of method Drupal\\\\diff\\\\Controller\\\\PluginRevisionController\\:\\:buildLayoutNavigation\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface given\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Parameter \\#1 \\$entity of method Drupal\\\\diff\\\\Controller\\\\PluginRevisionController\\:\\:buildRevisionsNavigation\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface given\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Property Drupal\\\\diff\\\\Controller\\\\PluginRevisionController\\:\\:\\$config \\(Drupal\\\\Core\\\\Config\\\\ImmutableConfig\\) does not accept Drupal\\\\Core\\\\Config\\\\Config\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Right side of && is always true\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Controller/PluginRevisionController.php
+
+		-
+			message: "#^Call to an undefined method Drupal\\\\Core\\\\Field\\\\FieldStorageDefinitionInterface\\:\\:getDisplayOptions\\(\\)\\.$#"
+			count: 1
+			path: src/DiffBuilderManager.php
+
+		-
+			message: "#^Casting to array something that's already array\\.$#"
+			count: 1
+			path: src/DiffBuilderManager.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 2
+			path: src/DiffBuilderManager.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffBuilderManager\\:\\:clearCachedDefinitions\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/DiffBuilderManager.php
+
+		-
+			message: "#^Only booleans are allowed in &&, mixed given on the left side\\.$#"
+			count: 1
+			path: src/DiffBuilderManager.php
+
+		-
+			message: "#^Property Drupal\\\\diff\\\\DiffBuilderManager\\:\\:\\$pluginDefinitions \\(array\\) in isset\\(\\) is not nullable\\.$#"
+			count: 1
+			path: src/DiffBuilderManager.php
+
+		-
+			message: "#^Access to an undefined property Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:\\$moderation_state\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Left side of && is always true\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffEntityComparison\\:\\:getRows\\(\\) should return array but returns string\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffEntityComparison\\:\\:processStateLine\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffEntityComparison\\:\\:setModerationInformation\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Only booleans are allowed in &&, Drupal\\\\content_moderation\\\\ModerationInformationInterface given on the left side\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Only booleans are allowed in &&, Drupal\\\\diff\\\\FieldDiffBuilderInterface\\|null given on the left side\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^PHPDoc tag @var for variable \\$field_items contains generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Parameter \\#1 \\$from_lines of class Drupal\\\\Component\\\\Diff\\\\Diff constructor expects array, string given\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Parameter \\#1 \\$revision of method Drupal\\\\diff\\\\DiffEntityComparison\\:\\:summary\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface given\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Parameter \\#2 \\$to_lines of class Drupal\\\\Component\\\\Diff\\\\Diff constructor expects array, string given\\.$#"
+			count: 1
+			path: src/DiffEntityComparison.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 1
+			path: src/DiffEntityParser.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, Drupal\\\\diff\\\\FieldDiffBuilderInterface\\|null given\\.$#"
+			count: 1
+			path: src/DiffEntityParser.php
+
+		-
+			message: "#^PHPDoc tag @var for variable \\$field_items contains generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/DiffEntityParser.php
+
+		-
+			message: "#^Parameter \\#1 \\$entity of method Drupal\\\\diff\\\\DiffEntityParser\\:\\:parseEntity\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface given\\.$#"
+			count: 1
+			path: src/DiffEntityParser.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/DiffEntityParser.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$build does not exist\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$options does not exist\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$revision_link does not exist\\.$#"
+			count: 2
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:buildConfigurationForm\\(\\) should return array but return statement is missing\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:buildRevisionLink\\(\\) should return Drupal\\\\Core\\\\Link but returns Drupal\\\\Core\\\\GeneratedLink\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:getConfiguration\\(\\) should return array but returns Drupal\\\\Core\\\\Config\\\\Config\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:setConfiguration\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:validateConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Only booleans are allowed in a negated boolean, string given\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, string\\|null given\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/DiffLayoutBase.php
+
+		-
+			message: "#^Only booleans are allowed in &&, mixed given on the left side\\.$#"
+			count: 1
+			path: src/DiffLayoutManager.php
+
+		-
+			message: "#^Only booleans are allowed in &&, mixed given on the right side\\.$#"
+			count: 1
+			path: src/DiffLayoutManager.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, mixed given\\.$#"
+			count: 1
+			path: src/DiffLayoutManager.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\FieldDiffBuilderBase\\:\\:setConfiguration\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/FieldDiffBuilderBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\FieldDiffBuilderBase\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/FieldDiffBuilderBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\FieldDiffBuilderBase\\:\\:validateConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/FieldDiffBuilderBase.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/FieldDiffBuilderBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\FieldDiffBuilderInterface\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/FieldDiffBuilderInterface.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\FieldReferenceInterface\\:\\:getEntitiesToDiff\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/FieldReferenceInterface.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 3
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$field_row does not exist\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\FieldsSettingsForm\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\FieldsSettingsForm\\:\\:getTableHeader\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\FieldsSettingsForm\\:\\:multiStepSubmit\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\FieldsSettingsForm\\:\\:submitForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\FieldsSettingsForm\\:\\:validateForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Only booleans are allowed in &&, array given on the left side\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Only booleans are allowed in &&, mixed given on the right side\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, Drupal\\\\diff\\\\FieldDiffBuilderInterface\\|null given\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, mixed given\\.$#"
+			count: 3
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Form/FieldsSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\GeneralSettingsForm\\:\\:buildForm\\(\\) has parameter \\$field_type with no type specified\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\GeneralSettingsForm\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\GeneralSettingsForm\\:\\:submitForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\GeneralSettingsForm\\:\\:validateForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Only booleans are allowed in a negated boolean, array\\<int\\<0, max\\>, mixed\\> given\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, mixed given\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Short ternary operator is not allowed\\. Use null coalesce operator if applicable or consider using long ternary\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Form/GeneralSettingsForm.php
+
+		-
+			message: "#^Call to an undefined method Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:getRevisionCreationTime\\(\\)\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Call to an undefined method Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:getRevisionUser\\(\\)\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$build does not exist\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildForm\\(\\) has parameter \\$node with no type specified\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:submitForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:validateForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, Drupal\\\\Core\\\\Entity\\\\RevisionableInterface\\|null given\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Parameter \\#2 \\$return_val of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildSelectColumn\\(\\) expects string, int given\\.$#"
+			count: 4
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Parameter \\#2 \\$username of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildRevision\\(\\) expects string, array\\<string, mixed\\> given\\.$#"
+			count: 2
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Parameter \\#3 \\$default_val of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildSelectColumn\\(\\) expects string, false given\\.$#"
+			count: 2
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Parameter \\#3 \\$default_val of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildSelectColumn\\(\\) expects string, int given\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Parameter \\#3 \\$default_val of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildSelectColumn\\(\\) expects string, int\\|false given\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Parameter \\#4 \\$previous_revision of method Drupal\\\\diff\\\\Form\\\\RevisionOverviewForm\\:\\:buildRevision\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\|null, Drupal\\\\Core\\\\Entity\\\\RevisionableInterface\\|null given\\.$#"
+			count: 2
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Form/RevisionOverviewForm.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\CommentFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/CommentFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\CommentFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/CommentFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\CoreFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/CoreFieldBuilder.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/CoreFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\EntityReferenceFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/EntityReferenceFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\EntityReferenceFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/EntityReferenceFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\FileFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/FileFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\FileFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/FileFieldBuilder.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/ImageFieldBuilder.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$image_style might not exist\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/ImageFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\ImageFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/ImageFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\ImageFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/ImageFieldBuilder.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, array\\|null given\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/ImageFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\LinkFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/LinkFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\LinkFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/LinkFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\ListFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/ListFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\ListFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/ListFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\TextFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/TextFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\TextFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/TextFieldBuilder.php
+
+		-
+			message: "#^Access to protected property Drupal\\\\filter\\\\Entity\\\\FilterFormat\\:\\:\\$name\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/TextWithSummaryFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\TextWithSummaryFieldBuilder\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: src/Plugin/diff/Field/TextWithSummaryFieldBuilder.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\diff\\\\Field\\\\TextWithSummaryFieldBuilder\\:\\:submitConfigurationForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/diff/Field/TextWithSummaryFieldBuilder.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 4
+			path: src/Plugin/diff/Layout/SplitFieldsDiffLayout.php
+
+		-
+			message: "#^Short ternary operator is not allowed\\. Use null coalesce operator if applicable or consider using long ternary\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/SplitFieldsDiffLayout.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/SplitFieldsDiffLayout.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 4
+			path: src/Plugin/diff/Layout/UnifiedFieldsDiffLayout.php
+
+		-
+			message: "#^Parameter \\#1 \\$revision of method Drupal\\\\diff\\\\DiffLayoutBase\\:\\:buildRevisionLink\\(\\) expects Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface, Drupal\\\\Core\\\\Entity\\\\EntityInterface given\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/UnifiedFieldsDiffLayout.php
+
+		-
+			message: "#^Short ternary operator is not allowed\\. Use null coalesce operator if applicable or consider using long ternary\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/UnifiedFieldsDiffLayout.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/UnifiedFieldsDiffLayout.php
+
+		-
+			message: "#^Access to an undefined property Drupal\\\\Core\\\\Entity\\\\ContentEntityInterface\\:\\:\\$in_preview\\.$#"
+			count: 2
+			path: src/Plugin/diff/Layout/VisualInlineDiffLayout.php
+
+		-
+			message: "#^Call to an undefined method HtmlDiffAdvancedInterface\\:\\:build\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/VisualInlineDiffLayout.php
+
+		-
+			message: "#^Call to an undefined method HtmlDiffAdvancedInterface\\:\\:getConfig\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/VisualInlineDiffLayout.php
+
+		-
+			message: "#^Short ternary operator is not allowed\\. Use null coalesce operator if applicable or consider using long ternary\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/VisualInlineDiffLayout.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/diff/Layout/VisualInlineDiffLayout.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\views\\\\field\\\\DiffFrom\\:\\:getToFieldId\\(\\) should return string\\|null but return statement is missing\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffFrom.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\views\\\\field\\\\DiffFrom\\:\\:viewsForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffFrom.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\views\\\\field\\\\DiffFrom\\:\\:viewsFormSubmit\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffFrom.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/Plugin/views/field/DiffFrom.php
+
+		-
+			message: """
+				#^Call to deprecated method loadRevision\\(\\) of class Drupal\\\\Core\\\\Entity\\\\EntityStorageInterface\\:
+				in drupal\\:10\\.1\\.0 and is removed from drupal\\:11\\.0\\.0\\. Use
+				\\\\Drupal\\\\Core\\\\Entity\\\\RevisionableStorageInterface\\:\\:loadRevision instead\\.$#
+			"""
+			count: 1
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 2
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\views\\\\field\\\\DiffPluginBase\\:\\:getValue\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\views\\\\field\\\\DiffPluginBase\\:\\:query\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Plugin\\\\views\\\\field\\\\DiffPluginBase\\:\\:viewsForm\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Only booleans are allowed in a ternary operator condition, mixed given\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: src/Plugin/views/field/DiffPluginBase.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Routing\\\\DiffRouteProvider\\:\\:getDiffRoute\\(\\) should return Symfony\\\\Component\\\\Routing\\\\Route\\|null but return statement is missing\\.$#"
+			count: 1
+			path: src/Routing/DiffRouteProvider.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, Symfony\\\\Component\\\\Routing\\\\Route\\|null given\\.$#"
+			count: 1
+			path: src/Routing/DiffRouteProvider.php
+
+		-
+			message: "#^Method Drupal\\\\diff\\\\Routing\\\\RouteSubscriber\\:\\:alterRoutes\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/Routing/RouteSubscriber.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, Symfony\\\\Component\\\\Routing\\\\Route\\|null given\\.$#"
+			count: 1
+			path: src/Routing/RouteSubscriber.php
+
+		-
+			message: "#^Function diff_test_entity_field_access\\(\\) has parameter \\$items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: tests/modules/diff_test/diff_test.module
+
+		-
+			message: "#^Function diff_test_entity_field_access\\(\\) has parameter \\$operation with no type specified\\.$#"
+			count: 1
+			path: tests/modules/diff_test/diff_test.module
+
+		-
+			message: "#^Method Drupal\\\\diff_test\\\\Plugin\\\\diff\\\\Field\\\\TestHeavierTextPlugin\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: tests/modules/diff_test/src/Plugin/diff/Field/TestHeavierTextPlugin.php
+
+		-
+			message: "#^Method Drupal\\\\diff_test\\\\Plugin\\\\diff\\\\Field\\\\TestLighterTextPlugin\\:\\:build\\(\\) has parameter \\$field_items with generic interface Drupal\\\\Core\\\\Field\\\\FieldItemListInterface but does not specify its types\\: T$#"
+			count: 1
+			path: tests/modules/diff_test/src/Plugin/diff/Field/TestLighterTextPlugin.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$edit does not exist\\.$#"
+			count: 1
+			path: tests/src/Functional/DiffPluginFileTest.php
+
+		-
+			message: "#^Property Drupal\\\\Tests\\\\diff\\\\Functional\\\\DiffPluginTestBase\\:\\:\\$formDisplay \\(Drupal\\\\Core\\\\Entity\\\\Display\\\\EntityFormDisplayInterface\\) does not accept Drupal\\\\Core\\\\Config\\\\Entity\\\\ConfigEntityStorage\\.$#"
+			count: 1
+			path: tests/src/Functional/DiffPluginTestBase.php
+
+		-
+			message: "#^Property Drupal\\\\Tests\\\\diff\\\\Functional\\\\DiffPluginTestBase\\:\\:\\$viewDisplay \\(Drupal\\\\Core\\\\Entity\\\\Display\\\\EntityViewDisplayInterface\\) does not accept Drupal\\\\layout_builder\\\\Entity\\\\LayoutBuilderEntityViewDisplayStorage\\.$#"
+			count: 1
+			path: tests/src/Functional/DiffPluginTestBase.php
+
+		-
+			message: "#^Access to an undefined property Drupal\\\\node\\\\NodeInterface\\:\\:\\$field_timestamp\\.$#"
+			count: 1
+			path: tests/src/Functional/DiffPluginVariousTest.php
+
+		-
+			message: "#^Implicit array creation is not allowed \\- variable \\$settings does not exist\\.$#"
+			count: 1
+			path: tests/src/Functional/DiffPluginVariousTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$timestamp of method Drupal\\\\Core\\\\Datetime\\\\DateFormatter\\:\\:format\\(\\) expects int, string given\\.$#"
+			count: 2
+			path: tests/src/Functional/DiffPluginVariousTest.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 1
+			path: tests/src/Functional/DiffTestBase.php
+
+		-
+			message: "#^PHPDoc type array of property Drupal\\\\Tests\\\\diff\\\\FunctionalJavascript\\\\DiffLocaleTest\\:\\:\\$modules is not the same as PHPDoc type array\\<string\\> of overridden property Drupal\\\\Tests\\\\diff\\\\FunctionalJavascript\\\\DiffTestBase\\:\\:\\$modules\\.$#"
+			count: 1
+			path: tests/src/FunctionalJavascript/DiffLocaleTest.php
+
+		-
+			message: "#^Construct empty\\(\\) is not allowed\\. Use more strict comparison\\.$#"
+			count: 1
+			path: tests/src/FunctionalJavascript/DiffTestBase.php
+
+		-
+			message: "#^Call to an undefined method Drupal\\\\Core\\\\Config\\\\ImmutableConfig\\:\\:shouldNotBeCalled\\(\\)\\.$#"
+			count: 1
+			path: tests/src/Unit/VisualDiffThemeNegotiatorTest.php
+
+		-
+			message: "#^Call to an undefined method Drupal\\\\Core\\\\Config\\\\ImmutableConfig\\:\\:willReturn\\(\\)\\.$#"
+			count: 2
+			path: tests/src/Unit/VisualDiffThemeNegotiatorTest.php
+
+		-
+			message: "#^Only booleans are allowed in an if condition, string given\\.$#"
+			count: 2
+			path: tests/src/Unit/VisualDiffThemeNegotiatorTest.php
+
+		-
+			message: "#^Property Drupal\\\\Tests\\\\diff\\\\Unit\\\\VisualDiffThemeNegotiatorTest\\:\\:\\$configFactory with generic interface Prophecy\\\\Prophecy\\\\ProphecyInterface does not specify its types\\: T$#"
+			count: 1
+			path: tests/src/Unit/VisualDiffThemeNegotiatorTest.php

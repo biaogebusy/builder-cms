@@ -1,0 +1,3 @@
+administer profile types:
+  title: 'Administer profile types'
+  restrict access: true

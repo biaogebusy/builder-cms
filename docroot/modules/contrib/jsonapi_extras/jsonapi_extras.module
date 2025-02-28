@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * Module implementation file.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function jsonapi_extras_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'entity.jsonapi_resource_config.collection':
+      $output = '';
+      $output .= '<p>' . t('The following table shows the list of JSON:API resource types available.') . '</p>';
+      $output .= '<p>' . t("Use the overwrite operation to overwrite a resource type's configuration. You can revert back to the default configuration using the revert operation.") . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function jsonapi_extras_theme() {
+  return [
+    'expandable_rows_table' => [
+      'variables' => [
+        'header' => NULL,
+        'rows' => NULL,
+        'footer' => NULL,
+        'attributes' => [],
+        'caption' => NULL,
+        'colgroups' => [],
+        'sticky' => FALSE,
+        'responsive' => TRUE,
+        'empty' => '',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for expandable rows table template.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing a Form API structure to be
+ *     rendered as a table.
+ */
+function template_preprocess_expandable_rows_table(array &$variables) {
+  template_preprocess_table($variables);
+}

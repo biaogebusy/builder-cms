@@ -1,0 +1,11 @@
+entity.menu.view_modes_settings:
+  title: 'View Modes Settings'
+  route_name: entity.menu.view_modes_settings
+  base_route: entity.menu.edit_form
+  weight: 10
+  
+entity.menu.view_modes_settings.default:
+  title: 'Default'
+  route_name: entity.menu.view_modes_settings
+  parent_id: entity.menu.view_modes_settings
+  weight: 1

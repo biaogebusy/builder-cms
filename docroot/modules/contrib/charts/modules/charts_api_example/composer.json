@@ -1,0 +1,16 @@
+{
+  "name": "drupal/charts_api_example",
+  "type": "drupal-module",
+  "description": "How to interact with the Charts Api",
+  "keywords": [
+    "Drupal"
+  ],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/charts_api_example",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/charts_api_example",
+    "source": "http://cgit.drupalcode.org/charts_api_example"
+  },
+  "require": {}
+}

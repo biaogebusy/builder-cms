@@ -1,0 +1,76 @@
+/**
+ * @file
+ * Visual styling for buttons in the off-canvas dialog.
+ *
+ * @see seven/css/components/buttons.css
+ */
+
+button.link {
+  color: $button_text_color;
+}
+
+button.link:hover,
+button.link:focus {
+  color: $button_text_color_hover;
+}
+
+button.button,
+input[type="submit"].button {
+  margin: 1rem 0 0 0;
+  padding: 11px 20px;
+  color: $button_text_color;
+  border-radius: $border_radius;
+  background: $button_bg_color;
+  font-weight: normal;
+  font-family: inherit;
+  border: 0;
+  width: 100%;
+  min-width: auto;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: $button_text_color;
+    background: $button_bg_color_hover;
+  }
+}
+
+button.button--primary,
+input[type="submit"].button--primary {
+  color: $button_text_color;
+  background: $button_bg_color;
+  border: 0;
+  text-align: center;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: $button_text_color;
+    background: $button_bg_color_hover;
+  }
+}
+
+.button:disabled,
+.button:disabled:active,
+.button.is-disabled,
+.button.is-disabled:active {
+  color: #5c5c5c;
+  background: #555;
+}
+
+.button--danger {
+  color: $state_error;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: darken($state_error, 10%);
+  }
+
+  &:disabled,
+  &.is-disabled {
+    color: #737373;
+  }
+}
+
+

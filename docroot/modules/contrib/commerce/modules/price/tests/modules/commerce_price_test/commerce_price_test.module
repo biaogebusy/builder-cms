@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * @file
+ * Test module for Price.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_price_test_theme($existing, $type, $theme, $path) {
+  return [
+    'commerce_price_test' => [
+      'template' => 'commerce-price-test-price-filter',
+      'variables' => [
+        'price' => NULL,
+        'options' => [],
+      ],
+    ],
+  ];
+}

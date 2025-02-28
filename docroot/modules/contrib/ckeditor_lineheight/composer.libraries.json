@@ -1,0 +1,29 @@
+{
+    "name": "drupal/ckeditor_lineheight",
+    "description": "Integrates CKEditor's Line Height plugin to Drupal's CKEditor integration adding a new button to modify the line height.",
+    "type": "drupal-module",
+    "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "homepage": "https://drupal.org/project/ckeditor_lineheight",
+    "repositories": {
+        "ckeditor.lineheight":
+        {
+            "type": "package",
+            "package": {
+                "name": "ckeditor/lineheight",
+                "version": "1.0.4",
+                "type": "drupal-library",
+                "dist": {
+                    "url": "https://download.ckeditor.com/lineheight/releases/lineheight_1.0.4.zip",
+                    "type": "zip"
+                },
+                "require": {
+                    "composer/installers": "~1.0"
+                }
+            }
+        }
+    },
+    "require": {
+        "ckeditor/lineheight": "1.0.4"
+    }
+}

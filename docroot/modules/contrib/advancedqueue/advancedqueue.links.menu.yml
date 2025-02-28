@@ -1,0 +1,6 @@
+entity.advancedqueue_queue.collection:
+  title: 'Queues'
+  route_name: 'entity.advancedqueue_queue.collection'
+  parent: 'system.admin_config_system'
+  description: 'Manage your queues.'
+  weight: 90

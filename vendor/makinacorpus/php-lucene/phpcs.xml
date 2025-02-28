@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="php-lucene-query">
+    <description>PHP Codesniffer configuration.</description>
+    <file>./src</file>
+    <file>./tests</file>
+    <arg name="extensions" value="php"/>
+    <arg name="report" value="full"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <rule ref="PSR12"/>
+</ruleset>

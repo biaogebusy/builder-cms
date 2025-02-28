@@ -1,0 +1,7 @@
+node_edit_protection:
+  version: 1.x
+  js:
+    node-edit-protection.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal

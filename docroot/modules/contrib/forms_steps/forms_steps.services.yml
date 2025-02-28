@@ -1,0 +1,36 @@
+services:
+  forms_steps.service.routes:
+    class: Drupal\node\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  forms_steps.route_subscriber:
+    class: Drupal\forms_steps\EventSubscriber\RouteSubscriber
+    arguments:
+      - '@state'
+      - '@entity_type.manager'
+      - '@config.factory'
+    tags:
+      - { name: 'event_subscriber' }
+
+  forms_steps.manager:
+    class: Drupal\forms_steps\Service\FormsStepsManager
+    arguments:
+      - '@entity_display.repository'
+      - '@config.factory'
+
+  forms_steps.workflow.manager:
+    class: Drupal\forms_steps\Service\WorkflowManager
+    arguments:
+      - '@entity_type.manager'
+      - '@forms_steps.manager'
+      - '@uuid'
+      - '@current_route_match'
+
+  forms_steps.helper:
+    class: Drupal\forms_steps\Service\FormsStepsHelper
+    arguments: ['@forms_steps.manager', '@current_route_match']
+
+  forms_steps.workflow.repository:
+    class: Drupal\forms_steps\Repository\WorkflowRepository
+    arguments: ['@database', '@string_translation']

@@ -1,0 +1,26 @@
+.views-data-export-feed {
+  display: inline;
+}
+.views-data-export-feed .feed-icon {
+  background: no-repeat;
+  overflow: hidden;
+  text-indent: -9999px;
+  display: block;
+  width: 36px;
+}
+.json-feed .feed-icon {
+  background-image: url(../images/json.png);
+}
+.xml-feed .feed-icon {
+  background-image: url(../images/xml.png);
+}
+.csv-feed .feed-icon {
+  background-image: url(../images/csv.png);
+}
+.xls-feed .feed-icon {
+  background-image: url(../images/xls.png);
+}
+.xlsx-feed .feed-icon {
+  background-image: url(../images/xlsx.png);
+  width: 43px;
+}

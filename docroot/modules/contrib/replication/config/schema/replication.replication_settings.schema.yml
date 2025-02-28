@@ -1,0 +1,16 @@
+replication.replication_settings.*:
+  type: config_entity
+  label: 'Replication settings config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    filter_id:
+      type: string
+      label: 'Filter plugin ID'
+    parameters:
+      type: ignore
+      label: 'Filter parameters'

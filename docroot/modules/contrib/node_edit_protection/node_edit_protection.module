@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Stops page from changing when user is posting.
+ */
+
+/**
+ * Implements hook_form_alter().
+ */
+function node_edit_protection_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state, $form_id) {
+  $class = $form['#attributes']['class'] ?? NULL;
+  if (is_array($class)) {
+    if (!empty($form['#attributes']['class']) && array_search('node-form', $form['#attributes']['class'])) {
+      $form['#attached']['library'][] = 'node_edit_protection/node_edit_protection';
+    }
+  }
+}

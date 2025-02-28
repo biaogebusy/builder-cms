@@ -1,0 +1,14 @@
+#conflict-overview-form {
+    display: none;
+}
+
+.conflict-overview-form-description {
+    font-size: 1.1em;
+    margin-bottom: 1em;
+}
+
+#conflict-overview-form details {
+    border:none;
+    margin-top: 0;
+    margin-bottom: 0;
+}

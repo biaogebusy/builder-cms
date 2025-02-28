@@ -1,0 +1,181 @@
+diff --git a/js/panels_ipe/panels_ipe.js b/js/panels_ipe/panels_ipe.js
+index 36af774..6fadd3a 100644
+--- a/js/panels_ipe/panels_ipe.js
++++ b/js/panels_ipe/panels_ipe.js
+@@ -34,7 +34,7 @@
+             // Remove our changes and refresh the page.
+             revert_tab.set({loading: true});
+             $.ajax({
+-              url: drupalSettings.path.baseUrl + 'admin/panelizer/panels_ipe/' + entity.entity_type_id + '/' + entity.entity_id + '/' + entity.view_mode + '/revert_to_default',
++              url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'admin/panelizer/panels_ipe/' + entity.entity_type_id + '/' + entity.entity_id + '/' + entity.view_mode + '/revert_to_default',
+               data: {},
+               type: 'POST'
+             }).done(function (data) {
+diff --git a/src/Controller/PanelizerPanelsIPEController.php b/src/Controller/PanelizerPanelsIPEController.php
+index 6e14bc2..bee6669 100644
+--- a/src/Controller/PanelizerPanelsIPEController.php
++++ b/src/Controller/PanelizerPanelsIPEController.php
+@@ -6,13 +6,13 @@ use Drupal\Component\Serialization\Json;
+ use Drupal\Core\Access\AccessResult;
+ use Drupal\Core\Controller\ControllerBase;
+ use Drupal\Core\Entity\FieldableEntityInterface;
++use Drupal\Core\Language\LanguageInterface;
+ use Drupal\Core\Session\AccountInterface;
++use Drupal\Core\TypedData\TranslatableInterface;
+ use Drupal\panelizer\PanelizerInterface;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+-use Symfony\Component\HttpFoundation\Request;
+ use Symfony\Component\HttpFoundation\Response;
+ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+-use Symfony\Component\HttpKernel\Exception\HttpException;
+
+ /**
+  * Controller for Panelizer's Panels IPE routes.
+@@ -59,6 +59,13 @@ class PanelizerPanelsIPEController extends ControllerBase {
+    * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
+    */
+   public function revertToDefault(FieldableEntityInterface $entity, $view_mode) {
++    $langcode = $this->languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
++    if ($entity instanceof TranslatableInterface
++      && $entity->hasTranslation($langcode)
++      && $entity->language()->getId() !== $langcode) {
++      $entity = $entity->getTranslation($langcode);
++    }
++
+     // Get the bundle specific default display as a fallback.
+     $settings = $this->panelizer->getPanelizerSettings($entity->getEntityTypeId(), $entity->bundle(), $view_mode);
+     $default = $settings['default'];
+@@ -96,4 +103,4 @@ class PanelizerPanelsIPEController extends ControllerBase {
+     return AccessResult::allowedIf($this->panelizer->hasEntityPermission('revert to default', $entity, $view_mode, $account));
+   }
+
+-}
+\ No newline at end of file
++}
+diff --git a/src/Plugin/PanelsStorage/PanelizerFieldPanelsStorage.php b/src/Plugin/PanelsStorage/PanelizerFieldPanelsStorage.php
+index 15d1135..5033028 100644
+--- a/src/Plugin/PanelsStorage/PanelizerFieldPanelsStorage.php
++++ b/src/Plugin/PanelsStorage/PanelizerFieldPanelsStorage.php
+@@ -15,6 +15,9 @@ use Drupal\panelizer\PanelizerInterface;
+ use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+ use Drupal\panels\Storage\PanelsStorageBase;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
++use Drupal\Core\Entity\TranslatableInterface;
++use Drupal\Core\Language\LanguageInterface;
++use Drupal\Core\Language\LanguageManagerInterface;
+
+ /**
+  * Panels storage service that stores Panels displays in the Panelizer field.
+@@ -33,6 +36,14 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+    */
+   protected $panelizer;
+
++  /**
++   * The language manager.
++   *
++   * @var \Drupal\Core\Language\LanguageManagerInterface $language_manager
++   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
++   */
++  protected $languageManager;
++
+   /**
+    * Constructs a PanelizerDefaultPanelsStorage.
+    *
+@@ -46,10 +57,13 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+    *   The entity type manager.
+    * @param \Drupal\panelizer\PanelizerInterface $panelizer
+    *   The Panelizer service.
++   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
++   *   The language manager.
+    */
+-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PanelizerInterface $panelizer) {
++  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PanelizerInterface $panelizer, LanguageManagerInterface $language_manager) {
+     $this->entityTypeManager = $entity_type_manager;
+     $this->panelizer = $panelizer;
++    $this->languageManager = $language_manager;
+     parent::__construct($configuration, $plugin_id, $plugin_definition);
+   }
+
+@@ -62,20 +76,21 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+       $plugin_id,
+       $plugin_definition,
+       $container->get('entity_type.manager'),
+-      $container->get('panelizer')
++      $container->get('panelizer'),
++      $container->get('language_manager')
+     );
+   }
+
+   /**
+    * Gets the underlying entity from storage.
+    *
+-   * @param $id
++   * @param string $id
+    *   The storage service id.
+    *
+    * @return \Drupal\Core\Entity\EntityInterface|NULL
+    */
+   protected function loadEntity($id) {
+-    list ($entity_type, $id, , $revision_id) = array_pad(explode(':', $id), 4, NULL);
++    [$entity_type, $id, , $revision_id] = array_pad(explode(':', $id), 4, NULL);
+
+     $storage = $this->entityTypeManager->getStorage($entity_type);
+     if ($revision_id) {
+@@ -85,6 +100,13 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+       $entity = $storage->load($id);
+     }
+
++    $langcode = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
++    if ($entity instanceof TranslatableInterface
++      && $entity->hasTranslation($langcode)
++      && $entity->language()->getId() !== $langcode) {
++      $entity = $entity->getTranslation($langcode);
++    }
++
+     return $entity;
+   }
+
+@@ -110,7 +132,7 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+    */
+   public function load($id) {
+     if ($entity = $this->loadEntity($id)) {
+-      list ($entity_type_id, , $view_mode) = explode(':', $id);
++      [$entity_type_id, , $view_mode] = explode(':', $id);
+       if ($panels_display = $this->panelizer->getPanelsDisplay($entity, $view_mode)) {
+         // Set the entity as a context on the Panels display.
+         $contexts = [
+@@ -128,7 +150,7 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+   public function save(PanelsDisplayVariant $panels_display) {
+     $id = $panels_display->getStorageId();
+     if ($entity = $this->loadEntity($id)) {
+-      list (,, $view_mode) = explode(':', $id);
++      [,, $view_mode] = explode(':', $id);
+       // If we're dealing with an entity that has a documented default, we
+       // don't want to lose that information when we save our customizations.
+       // This enables us to revert to the correct default at a later date.
+@@ -169,7 +191,7 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+       $entity_operations = [
+         'read' => 'view',
+         'update' => 'update',
+-        'delete'=> 'delete',
++        'delete' => 'delete',
+         'change layout' => 'update',
+       ];
+       // Do not add entity cacheability metadata to the forbidden result,
+@@ -177,13 +199,13 @@ class PanelizerFieldPanelsStorage extends PanelsStorageBase implements Container
+       $access->orIf(isset($entity_operations[$op]) ? $entity->access($entity_operations[$op], $account, TRUE) : AccessResult::forbidden());
+
+       if (!$access->isForbidden() && $entity instanceof FieldableEntityInterface) {
+-        list (,, $view_mode) = explode(':', $id);
++        [,, $view_mode] = explode(':', $id);
+         if ($op == 'change layout') {
+           if ($this->panelizer->hasEntityPermission('change layout', $entity, $view_mode, $account)) {
+             return $access->orIf(AccessResult::allowed());
+           }
+         }
+-        else if ($op == 'read' || $this->panelizer->hasEntityPermission('change content', $entity, $view_mode, $account)) {
++        elseif ($op == 'read' || $this->panelizer->hasEntityPermission('change content', $entity, $view_mode, $account)) {
+           return $access->orIf(AccessResult::allowed());
+         }
+       }
+

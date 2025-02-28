@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an image mask effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this mask effect, including:
+ *   - mask_image: The mask image.
+ *   - mask_width: The mask resize width.
+ *   - mask_height: The mask resize height.
+ *   - placement: The position of the mask on the underlying image.
+ *   - x_offset: The x_offset of the mask image.
+ *   - y_offset: The y_offset of the mask image.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  - {{ 'Image'|t }}: <strong>{{ data.mask_image|e }}</strong>
+  {% if data.mask_width or data.mask_height %}
+    - {{ 'Mask width'|t }}:
+    {% if data.mask_width %}{{ data.mask_width|e }}{% else %}{{ '(scaled)'|t }}{% endif %},
+    {{ 'height'|t }}:
+    {% if data.mask_height %}{{ data.mask_height|e }}{% else %}{{ '(scaled)'|t }}{% endif %}
+  {% endif %}
+  - {{ 'Placement'|t }}: {{ data.placement|e }}
+  {% if data.x_offset %}- {{ 'X offset'|t }}: {{ data.x_offset|e }}{% endif %}
+  {% if data.y_offset %}- {{ 'Y offset'|t }}: {{ data.y_offset|e }}{% endif %}
+{% endapply %}

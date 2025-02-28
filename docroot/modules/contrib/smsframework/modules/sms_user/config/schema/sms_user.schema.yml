@@ -1,0 +1,70 @@
+# Schema for the configuration files of the SMS User module.
+
+sms_user.settings:
+  type: config_object
+  label: 'SMS User settings'
+  mapping:
+    active_hours:
+      type: mapping
+      mapping:
+        status:
+          type: boolean
+          label: 'Enable sleep hours'
+        ranges:
+          type: sequence
+          sequence:
+            - type: mapping
+              mapping:
+                start:
+                  type: string
+                  label: 'Start time in PHP strtotime natural language.'
+                end:
+                  type: string
+                  label: 'End time in PHP strtotime natural language.'
+    account_registration:
+      type: mapping
+      label: 'Options to create user accounts when a message is received.'
+      mapping:
+        unrecognized_sender:
+          label: 'Create user accounts for all phone numbers not associated with existing users.'
+          type: mapping
+          mapping:
+            status:
+              type: boolean
+              label: 'Enable account creation based on unrecognised phone numbers.'
+            reply:
+              type: mapping
+              mapping:
+                status:
+                  type: boolean
+                  label: 'Enable reply message'
+                message:
+                  type: string
+                  label: 'The reply message when an account was successfully created.'
+        incoming_pattern:
+          type: mapping
+          mapping:
+            status:
+              type: boolean
+              label: 'Enable account creation based on incoming message patterns.'
+            incoming_messages:
+              type: sequence
+              label: 'Incoming message patterns.'
+              sequence:
+               - type: string
+                 label: 'An incoming message pattern matcher.'
+            send_activation_email:
+              type: boolean
+              label: 'Option to send an account email if email address is present and password is omitted.'
+            reply:
+              type: mapping
+              mapping:
+                status:
+                  type: boolean
+                  label: 'Enable reply message'
+                message:
+                  type: string
+                  label: 'The reply message when an account was successfully created.'
+                message_failure:
+                  type: string
+                  label: 'The reply message when an account creation failed.'

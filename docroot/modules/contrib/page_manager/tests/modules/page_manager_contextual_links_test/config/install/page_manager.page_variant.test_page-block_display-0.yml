@@ -1,0 +1,49 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - page_manager.page.test_page
+    - views.view.who_s_online
+  content:
+    - 'block_content:simple_block:86ed355c-2ce2-4835-8e6e-baeb8227d724'
+  module:
+    - block_content
+    - views
+id: test_page-block_display-0
+label: 'Test page'
+variant: block_display
+variant_settings:
+  blocks:
+    045a22b3-f932-45e7-96e8-c2ccf4757c51:
+      id: 'block_content:86ed355c-2ce2-4835-8e6e-baeb8227d724'
+      label: 'Test custom block'
+      provider: block_content
+      label_display: visible
+      status: true
+      info: ''
+      view_mode: full
+      region: top
+      weight: 0
+      uuid: 045a22b3-f932-45e7-96e8-c2ccf4757c51
+      context_mapping: {  }
+    55feb0af-28e4-47c8-9ff5-4fb2b1e4bf24:
+      id: 'views_block:who_s_online-who_s_online_block'
+      label: "Who's online"
+      provider: views
+      label_display: visible
+      views_label: ''
+      items_per_page: none
+      region: top
+      weight: 0
+      uuid: 55feb0af-28e4-47c8-9ff5-4fb2b1e4bf24
+      context_mapping: {  }
+  id: block_display
+  uuid: 55a8c875-ce3e-41f4-b408-6d70f4de5935
+  label: null
+  weight: 0
+  page_title: 'Test page'
+page: test_page
+weight: 0
+selection_criteria: {  }
+selection_logic: and
+static_context: {  }

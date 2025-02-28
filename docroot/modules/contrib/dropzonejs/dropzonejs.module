@@ -1,0 +1,179 @@
+<?php
+
+/**
+ * @file
+ * Contains dropzonejs.module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\dropzonejs\Form\DropzoneJsUploadForm;
+
+/**
+ * Implements hook_help().
+ */
+function dropzonejs_help($route_name, RouteMatchInterface $route_match) {
+  $output = '';
+  switch ($route_name) {
+    // Main module help for the dropzonejs module.
+    case 'help.page.dropzonejs':
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('DropzoneJS') . '</p>';
+    default:
+  }
+  return $output;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function dropzonejs_theme() {
+  return [
+    'dropzonejs' => [
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for dropzone form element.
+ *
+ * Default template: dropzonejs.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element representing the file.
+ */
+function template_preprocess_dropzonejs(array &$variables) {
+  $translation = \Drupal::translation();
+  $element = $variables['element'];
+
+  $variables['attributes'] = [];
+  if (isset($element['#id'])) {
+    $variables['attributes']['id'] = $element['#id'];
+  }
+  if (!empty($element['#attributes']['class'])) {
+    $variables['attributes']['class'] = (array) $element['#attributes']['class'];
+  }
+  $cardinality = 0;
+  if (isset($element['#max_files'])) {
+    $cardinality = $element['#max_files'];
+  }
+
+  $variables['dropzone_description'] = $element['#dropzone_description'];
+  $variables['or_text'] = t('or');
+  $variables['select_files_button_text'] = $translation->formatPlural($cardinality, 'Select file', 'Select files');
+  $variables['uploaded_files'] = $element['uploaded_files'];
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function dropzonejs_library_info_build() {
+  $libraries = [];
+
+  /** @var \Drupal\Core\Asset\LibrariesDirectoryFileFinder $library_file_finder */
+  $library_file_finder = \Drupal::service('library.libraries_directory_file_finder');
+  $exif_path = $library_file_finder->find('exif-js/exif.js');
+
+  if ($exif_path && file_exists($exif_path)) {
+    $libraries['exif-js'] = [
+      'title' => 'Exif',
+      'website' => 'https://github.com/exif-js/exif-js',
+      'version' => 'v2.3.0',
+      'license' => [
+        'name' => 'MIT',
+        'url' => 'https://github.com/exif-js/exif-js/blob/master/LICENSE.md',
+        'gpl-compatible' => TRUE,
+      ],
+      'js' => [
+        '/libraries/exif-js/exif.js' => [],
+      ],
+    ];
+
+  }
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function dropzonejs_library_info_alter(&$libraries, $extension) {
+  if ($extension !== 'dropzonejs') {
+    return;
+  }
+
+  /** @var \Drupal\Core\Asset\LibrariesDirectoryFileFinder $library_file_finder */
+  $library_file_finder = \Drupal::service('library.libraries_directory_file_finder');
+
+  $js_candidates = [
+    'dropzone/dropzone-min.js',
+    'dropzone/dropzone.min.js',
+    'dropzone/min/dropzone.min.js',
+    'dropzone/dist/min/dropzone.min.js',
+  ];
+  foreach ($js_candidates as $js_candidate) {
+    if ($js_min_path = $library_file_finder->find($js_candidate)) {
+      $libraries['dropzonejs']['js'] = ['/' . $js_min_path => []];
+    }
+  }
+
+  $css_candidates = [
+    'dropzone/dropzone.css',
+    'dropzone/min/dropzone.min.css',
+    'dropzone/dist/min/dropzone.min.css',
+  ];
+  foreach ($css_candidates as $css_candidate) {
+    if ($css_path = $library_file_finder->find($css_candidate)) {
+      $libraries['dropzonejs']['css']['component'] = ['/' . $css_path => []];
+    }
+  }
+}
+
+/**
+ * Implements hook_media_source_info_alter().
+ */
+function dropzonejs_media_source_info_alter(array &$sources) {
+  if (isset($sources['image'])) {
+    $sources['image']['forms']['media_library_add'] = DropzoneJsUploadForm::class;
+  }
+
+  if (isset($sources['video_file'])) {
+    $sources['video_file']['forms']['media_library_add'] = DropzoneJsUploadForm::class;
+  }
+
+  if (isset($sources['audio_file'])) {
+    $sources['audio_file']['forms']['media_library_add'] = DropzoneJsUploadForm::class;
+  }
+
+  if (isset($sources['file'])) {
+    $sources['file']['forms']['media_library_add'] = DropzoneJsUploadForm::class;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function dropzonejs_form_system_file_system_settings_alter(array &$form, FormStateInterface $form_state) {
+  $dropzone_config = \Drupal::config('dropzonejs.settings');
+
+  $form['dropzonejs_filename_sanitization'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Enable custom filename sanitization and transliteration for DropzoneJS (deprecated)'),
+    '#description' => t('When enabled, files uploaded through DropzoneJS go through a hardcoded and not customizable sanitization/transliteration process. Starting with Drupal 10.2, site-wide transliteration options are available that also always apply to files uploaded through DropzoneJS. It is recommend to configure those settings and disable this. This feature will be removed in a future version.'),
+    '#weight' => 99,
+    '#default_value' => $dropzone_config->get('filename_transliteration'),
+  ];
+  $form['#submit'][] = 'dropzonejs_form_system_file_system_settings_submit';
+}
+
+/**
+ * Form submission handler for file system settings form.
+ */
+function dropzonejs_form_system_file_system_settings_submit(array &$form, FormStateInterface $form_state) {
+  $config = \Drupal::configFactory()
+    ->getEditable('dropzonejs.settings')
+    ->set('filename_transliteration', $form_state->getValue('dropzonejs_filename_transliteration'));
+  $config->save();
+}

@@ -1,0 +1,12 @@
+name: yunke QRcode
+type: module
+description: 'Provides a render element that generates a QR code from the front-end JS'
+package: yunke
+# version: '1.0.0'
+core_version_requirement: '~8.8 || ^9'
+# datestamp: 1623762624
+
+# Information added by Drupal.org packaging script on 2021-06-16
+version: '8.x-1.0'
+project: 'yunke_qrcode'
+datestamp: 1623830389

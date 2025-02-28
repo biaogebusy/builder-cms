@@ -1,0 +1,16 @@
+<?php
+
+/**
+ * @file
+ * Contains allowed_formats_base_fields_test.module.
+ */
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function allowed_formats_base_fields_test_entity_base_field_info_alter(&$fields, $entity_type) {
+  if ($entity_type->id() == 'taxonomy_term') {
+    // Configure allowed format settings.
+    $fields['description']->setSetting('allowed_formats', ['basic_html' => 'basic_html', 'restricted_html' => 'restricted_html']);
+  }
+}

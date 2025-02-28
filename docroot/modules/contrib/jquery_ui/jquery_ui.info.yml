@@ -1,0 +1,10 @@
+name: jQuery UI
+type: module
+description: 'Provides jQuery UI library.'
+package: jQuery UI
+core_version_requirement: ^9.2 || ^10
+
+# Information added by Drupal.org packaging script on 2022-11-15
+version: '8.x-1.6'
+project: 'jquery_ui'
+datestamp: 1668521201

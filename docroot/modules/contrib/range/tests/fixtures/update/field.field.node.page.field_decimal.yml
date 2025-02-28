@@ -1,0 +1,28 @@
+uuid: c676455d-c07b-4198-86c1-07b7291beb2d
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_decimal
+    - node.type.page
+  module:
+    - range
+id: node.page.field_decimal
+field_name: field_decimal
+entity_type: node
+bundle: page
+label: Decimal
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  from:
+    prefix: ''
+    suffix: ''
+  to:
+    prefix: ''
+    suffix: ''
+field_type: range_decimal

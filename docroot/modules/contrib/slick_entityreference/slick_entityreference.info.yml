@@ -1,0 +1,13 @@
+name: Slick Entity Reference
+type: module
+description: 'Provides Slick integration with Entity References.'
+core_version_requirement: ^8 || ^9 || ^10
+package: Slick
+
+dependencies:
+  - slick:slick
+
+# Information added by Drupal.org packaging script on 2022-12-15
+version: '8.x-2.1'
+project: 'slick_entityreference'
+datestamp: 1671145516

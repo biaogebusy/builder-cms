@@ -1,0 +1,49 @@
+{
+    "name": "drupal/charts_billboard",
+    "description": "Charts module integration with Billboard.js Charts.",
+    "type": "drupal-module",
+    "homepage": "http://drupal.org/project/charts",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/charts"
+    },
+    "license": "GPL-2.0+",
+    "require": {
+        "billboardjs/billboard": "3.10.3",
+        "d3/d3": "7.8.5"
+    },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "billboardjs/billboard",
+                "version": "3.10.3",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "billboard"
+                },
+                "dist": {
+                    "url": "https://github.com/naver/billboard.js/archive/3.10.3.zip",
+                    "type": "zip"
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "d3/d3",
+                "version": "7.8.5",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "d3"
+                },
+                "dist": {
+                    "url": "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        }
+    ]
+}

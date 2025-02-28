@@ -1,0 +1,26 @@
+.block-private-message-notification-block {
+  height: 30px;
+  width: 32.75px;
+  position: relative;
+  overflow: hidden; }
+  .block-private-message-notification-block .private-message-notification-image {
+    height: 30px;
+    width: 65.5px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: none; }
+  .block-private-message-notification-block .private-message-page-link {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: center;
+    line-height: 26px;
+    color: #000; }
+  .block-private-message-notification-block .unread-threads .private-message-notification-image {
+    left: auto;
+    right: 0; }
+  .block-private-message-notification-block .unread-threads .private-message-page-link {
+    color: #FF0000; }

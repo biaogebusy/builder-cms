@@ -1,0 +1,746 @@
+bootstrap_styles.settings:
+  type: config_object
+  label: 'Bootstrap styles settings'
+  mapping:
+    layout_builder_theme:
+      type: string
+      label: "Layout builder theme"
+    background_colors:
+      type: string
+      label: "Background colors"
+    background_colors_hex:
+      type: string
+      label: "Background colors hex"
+    background_image:
+      type: mapping
+      label: 'Relationship'
+      mapping:
+        bundle:
+          type: string
+          label: 'Bundle'
+        field:
+          type: string
+          label: 'Field'
+    background_local_video:
+      type: mapping
+      label: 'Relationship'
+      mapping:
+        bundle:
+          type: string
+          label: 'Bundle'
+        field:
+          type: string
+          label: 'Field'
+    text_colors:
+      type: string
+      label: "Text colors"
+    text_alignment:
+      type: string
+      label: "Text alignment"
+    padding:
+      type: string
+      label: "Padding"
+    padding_left:
+      type: string
+      label: "Left padding"
+    padding_top:
+      type: string
+      label: "Top padding"
+    padding_right:
+      type: string
+      label: "Right padding"
+    padding_bottom:
+      type: string
+      label: "Bottom padding"
+    margin:
+      type: string
+      label: "Margin"
+    margin_left:
+      type: string
+      label: "Left margin"
+    margin_top:
+      type: string
+      label: "Top margin"
+    margin_right:
+      type: string
+      label: "Right margin"
+    margin_bottom:
+      type: string
+      label: "Bottom margin"
+    border_style:
+      type: string
+      label: "Border style"
+    border_left_style:
+      type: string
+      label: "Left border style"
+    border_top_style:
+      type: string
+      label: "Top border style"
+    border_right_style:
+      type: string
+      label: "Right border style"
+    border_bottom_style:
+      type: string
+      label: "Bottom border style"
+    border_width:
+      type: string
+      label: "Border width"
+    border_left_width:
+      type: string
+      label: "Left border width"
+    border_top_width:
+      type: string
+      label: "Top border width"
+    border_right_width:
+      type: string
+      label: "Right border width"
+    border_bottom_width:
+      type: string
+      label: "Bottom border width"
+    border_color:
+      type: string
+      label: "Border color"
+    border_left_color:
+      type: string
+      label: "Left border color"
+    border_top_color:
+      type: string
+      label: "Top border color"
+    border_right_color:
+      type: string
+      label: "Right border color"
+    border_bottom_color:
+      type: string
+      label: "Bottom border color"
+    rounded_corners:
+      type: string
+      label: "Rounded corners"
+    rounded_corner_top_left:
+      type: string
+      label: "Top left rounded corners"
+    rounded_corner_top_right:
+      type: string
+      label: "Top right rounded corners"
+    rounded_corner_bottom_left:
+      type: string
+      label: "Bottom left rounded corners"
+    rounded_corner_bottom_right:
+      type: string
+      label: "Bottom right rounded corners"
+    box_shadow:
+      type: string
+      label: "Box shadow"
+    scroll_effects:
+      type: string
+      label: "Scroll effects"
+    attribute_type:
+      type: string
+      label: "Attribute type"
+    data_key:
+      type: string
+      label: "Data key"
+    scroll_effects_attr_type:
+      type: boolean
+      label: "Scroll effects attribute type"
+    scroll_effects_data_key:
+      type: string
+      label: "Scroll effects data key"
+    scroll_effects_library_type:
+      type: string
+      label: "Scroll effects library type"
+
+bootstrap_styles.container_wrapper:
+  type: config_entity
+  label: 'Boostrap Styles Container Wrapper'
+  mapping:
+    background:
+      type: mapping
+      label: 'Background'
+      mapping:
+        background_type:
+          type: string
+          label: 'Background Type'
+    background_color:
+      type: mapping
+      label: 'Background Color'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    background_color_desktop:
+      type: mapping
+      label: 'Background Color Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    background_color_laptop:
+      type: mapping
+      label: 'Background Color Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    background_color_tablet:
+      type: mapping
+      label: 'Background Color Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    background_color_mobile:
+      type: mapping
+      label: 'Background Color Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    background_media:
+      type: mapping
+      label: 'Background Media'
+      mapping:
+        image:
+          type: mapping
+          label: 'Image'
+          mapping:
+            media_id:
+              type: string
+              label: 'Media ID'
+        video:
+          type: mapping
+          label: 'Video'
+          mapping:
+            media_id:
+              type: string
+              label: 'Media ID'
+        background_options:
+          type: mapping
+          label: 'Background Options'
+          mapping:
+            background_position:
+              type: string
+              label: 'Background Position'
+            background_repeat:
+              type: string
+              label: 'Background Repeat'
+            background_attachment:
+              type: string
+              label: 'Background Attachment'
+            background_size:
+              type: string
+              label: 'Background Size'
+    text_color:
+      type: mapping
+      label: 'Text Color'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding:
+      type: mapping
+      label: 'Padding'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_left:
+      type: mapping
+      label: 'Padding Left'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_top:
+      type: mapping
+      label: 'Padding Top'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_right:
+      type: mapping
+      label: 'Padding Right'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_bottom:
+      type: mapping
+      label: 'Padding Bottom'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin:
+      type: mapping
+      label: 'Margin'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_left:
+      type: mapping
+      label: 'Margin Left'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_top:
+      type: mapping
+      label: 'Margin Top'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_right:
+      type: mapping
+      label: 'Margin Right'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_bottom:
+      type: mapping
+      label: 'Margin Bottom'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_mobile:
+      type: mapping
+      label: 'Padding Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_left_mobile:
+      type: mapping
+      label: 'Padding Left Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_top_mobile:
+      type: mapping
+      label: 'Padding Top Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_right_mobile:
+      type: mapping
+      label: 'Padding Right Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_bottom_mobile:
+      type: mapping
+      label: 'Padding Bottom Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_mobile:
+      type: mapping
+      label: 'Margin Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_left_mobile:
+      type: mapping
+      label: 'Margin Left Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_top_mobile:
+      type: mapping
+      label: 'Margin Top Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_right_mobile:
+      type: mapping
+      label: 'Margin Right Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_bottom_mobile:
+      type: mapping
+      label: 'Margin Bottom Mobile'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_tablet:
+      type: mapping
+      label: 'Padding Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_left_tablet:
+      type: mapping
+      label: 'Padding Left Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_top_tablet:
+      type: mapping
+      label: 'Padding Top Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_right_tablet:
+      type: mapping
+      label: 'Padding Right Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_bottom_tablet:
+      type: mapping
+      label: 'Padding Bottom Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_tablet:
+      type: mapping
+      label: 'Margin Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_left_tablet:
+      type: mapping
+      label: 'Margin Left Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_top_tablet:
+      type: mapping
+      label: 'Margin Top Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_right_tablet:
+      type: mapping
+      label: 'Margin Right Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_bottom_tablet:
+      type: mapping
+      label: 'Margin Bottom Tablet'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_desktop:
+      type: mapping
+      label: 'Padding Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_left_desktop:
+      type: mapping
+      label: 'Padding Left Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_top_desktop:
+      type: mapping
+      label: 'Padding Top Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_right_desktop:
+      type: mapping
+      label: 'Padding Right Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_bottom_desktop:
+      type: mapping
+      label: 'Padding Bottom Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_desktop:
+      type: mapping
+      label: 'Margin Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_left_desktop:
+      type: mapping
+      label: 'Margin Left Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_top_desktop:
+      type: mapping
+      label: 'Margin Top Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_right_desktop:
+      type: mapping
+      label: 'Margin Right Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_bottom_desktop:
+      type: mapping
+      label: 'Margin Bottom Desktop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_laptop:
+      type: mapping
+      label: 'Padding Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_left_laptop:
+      type: mapping
+      label: 'Padding Left Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_top_laptop:
+      type: mapping
+      label: 'Padding Top Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_right_laptop:
+      type: mapping
+      label: 'Padding Right Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    padding_bottom_laptop:
+      type: mapping
+      label: 'Padding Bottom Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_laptop:
+      type: mapping
+      label: 'Margin Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_left_laptop:
+      type: mapping
+      label: 'Margin Left Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_top_laptop:
+      type: mapping
+      label: 'Margin Top Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_right_laptop:
+      type: mapping
+      label: 'Margin Right Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    margin_bottom_laptop:
+      type: mapping
+      label: 'Margin Bottom Laptop'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    border:
+      type: mapping
+      label: 'Border'
+      mapping:
+        border_style:
+          type: mapping
+          label: 'Border Style'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_width:
+          type: mapping
+          label: 'Border Width'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_color:
+          type: mapping
+          label: 'Border Color'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        rounded_corners:
+          type: mapping
+          label: 'Rounded Corners'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_left_style:
+          type: mapping
+          label: 'Border Left Style'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_left_width:
+          type: mapping
+          label: 'Border Left Width'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_left_color:
+          type: mapping
+          label: 'Border Left Color'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_top_style:
+          type: mapping
+          label: 'Border Top Style'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_top_width:
+          type: mapping
+          label: 'Border Top Width'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_top_color:
+          type: mapping
+          label: 'Border Top Color'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_right_style:
+          type: mapping
+          label: 'Border Right Style'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_right_width:
+          type: mapping
+          label: 'Border Right Width'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_right_color:
+          type: mapping
+          label: 'Border Right Color'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_bottom_style:
+          type: mapping
+          label: 'Border Bottom Style'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_bottom_width:
+          type: mapping
+          label: 'Border Bottom Width'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        border_bottom_color:
+          type: mapping
+          label: 'Border Bottom Color'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        rounded_corner_top_left:
+          type: mapping
+          label: 'Rounded Corner Top Left'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        rounded_corner_top_right:
+          type: mapping
+          label: 'Rounded Corner Top Right'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        rounded_corner_bottom_left:
+          type: mapping
+          label: 'Rounded Corner Bottom Left'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+        rounded_corner_bottom_right:
+          type: mapping
+          label: 'Rounded Corner Bottom Right'
+          mapping:
+            class:
+              type: string
+              label: 'Class'
+    scroll_effects:
+      type: mapping
+      label: 'Scroll Effects'
+      mapping:
+        class:
+          type: string
+          label: 'Class'
+    text_alignment:
+      type: mapping
+      label: 'Text Alignment'
+      mapping:
+        class:
+          type: string
+          label: 'Class'

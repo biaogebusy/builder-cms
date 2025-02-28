@@ -1,0 +1,61 @@
+{#
+/**
+ * @file
+ * The default template file for e-mails.
+ *
+ * Available variables:
+ * - subject: The subject.
+ * - body: The message content.
+ * - is_html: True if generating HTML output, false for plain text.
+ * - message: The $message array created and used in the mail building
+ *   procedure. Its content varies between cases, but typically contains at
+ *   least the following elements:
+ *   - id: The message identifier.
+ *   - module: The module that handles the building of the message.
+ *   - key: The key of the message.
+ *   - to: The recipient email address.
+ *   - from: The email address of the sender.
+ *   - langcode: The langcode to use to compose the e-mail.
+ *   - params: The message parameters.
+ * - base_url: The site base url including scheme, without trailing slash.
+ *
+ * This template may be overriden by module and/or mail key, using any of the
+ * following template names:
+ * - swiftmailer.html.twig: global, used by default.
+ * - swiftmailer--mymodule.html.twig: only emails sent by the module "mymodule".
+ * - swiftmailer--mymodule--test.html.twig: only emails by the module
+ *   "mymodule" with key "test".
+ *
+ * @see template_preprocess()
+ * @see template_preprocess_swiftmailer()
+ *
+ * @ingroup themeable
+ */
+#}
+{% if is_html %}
+<html>
+<head>
+<style type="text/css">
+table tr td {
+  font-family: Arial;
+  font-size: 12px;
+}
+</style>
+</head>
+<body>
+<div>
+  <table width="800px" cellpadding="0" cellspacing="0">
+    <tr>
+      <td>
+        <div style="padding: 0px 0px 0px 0px;">
+          {{ body }}
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>
+{% else %}
+{{ body }}
+{% endif %}

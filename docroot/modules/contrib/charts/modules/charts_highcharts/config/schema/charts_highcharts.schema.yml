@@ -1,0 +1,149 @@
+charts.settings.library_plugin.highcharts:
+  type: charts_settings_library_plugin
+  mapping:
+    legend:
+      label: Legend
+      type: mapping
+      mapping:
+        layout:
+          label: Layout
+          type: string
+        background_color:
+          label: 'Background color'
+          type: string
+        border_width:
+          label: 'Border width'
+          type: string
+        item_style:
+          label: 'Border width'
+          type: mapping
+          mapping:
+            color:
+              label: Color
+              type: string
+            overflow:
+              label: 'Text overflow'
+              type: string
+        shadow:
+          label: 'Enable legend shadow'
+          type: boolean
+    exporting_library:
+      label: 'Enable exporting library'
+      type: boolean
+    texture_library:
+      label: 'Enable texture library'
+      type: boolean
+    global_options:
+      label: 'Global options'
+      type: mapping
+      mapping:
+        lang:
+          type: mapping
+          label: Language
+          mapping:
+            download_CSV:
+              type: label
+              label: 'Download CSV'
+            download_JPEG:
+              type: label
+              label: 'Download JPEG'
+            download_PDF:
+              type: label
+              label: 'Download PDF'
+            download_PNG:
+              type: label
+              label: 'Download PNG'
+            download_SVG:
+              type: label
+              label: 'Download SVG'
+            download_XLS:
+              type: label
+              label: 'Download XLS'
+            exit_fullscreen:
+              type: label
+              label: 'Exit fullscreen'
+            hide_data:
+              type: label
+              label: 'Hide data'
+            loading:
+              type: label
+              label: 'Loading'
+            main_breadcrumb:
+              type: label
+              label: 'Main breadcrumb'
+            thousands_sep:
+              type: label
+              label: 'Number formatting: Thousand separator'
+            decimal_point:
+              type: label
+              label: 'Number formatting: Decimal point'
+            no_data:
+              type: label
+              label: 'No data'
+            print_chart:
+              type: label
+              label: 'Print chart'
+            reset_zoom:
+              type: label
+              label: 'Reset zoom'
+            reset_zoom_title:
+              type: label
+              label: 'Reset zoom title'
+            view_data:
+              type: label
+              label: 'View data'
+            view_fullscreen:
+              type: label
+              label: 'View fullscreen'
+            context_button_title:
+              type: label
+              label: 'Context button title'
+            drill_up_text:
+              type: label
+              label: 'Drill up text'
+            invalid_date:
+              type: label
+              label: 'Invalid date'
+            months:
+              type: sequence
+              label: Months
+              sequence:
+                type: label
+                label: Month
+            short_months:
+              type: sequence
+              label: 'Short Months'
+              sequence:
+                type: label
+                label: 'Short Month'
+            weekdays:
+              type: sequence
+              label: Weekdays
+              sequence:
+                type: label
+                label: Weekday
+            short_weekdays:
+              type: sequence
+              label: 'Short Weekdays'
+              sequence:
+                type: label
+                label: 'Short Weekday'
+            export_data:
+              type: mapping
+              label: 'Export data'
+              mapping:
+                annotation_header:
+                  type: label
+                  label: 'The annotation column title'
+                category_datetime_header:
+                  type: label
+                  label: 'The category column title when axis type set to "datetime"'
+                category_header:
+                  type: label
+                  label: 'The category column title'
+            numeric_symbols:
+              type: sequence
+              label: 'Numeric symbols'
+              sequence:
+                type: label
+                label: 'Numeric symbol'

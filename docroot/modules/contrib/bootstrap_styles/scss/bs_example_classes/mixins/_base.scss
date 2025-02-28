@@ -1,0 +1,6 @@
+// Mixin that generate the base rule.
+@mixin base-rule($selector, $prop, $value) {
+  #{$selector} {
+    #{$prop}: #{$value};
+  }
+}

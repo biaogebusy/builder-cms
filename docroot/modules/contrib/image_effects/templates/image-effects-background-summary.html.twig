@@ -1,0 +1,30 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an image background effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this background effect, including:
+ *   - placement: The position of the source image on the background image.
+ *   - x_offset: The X offset vs placement.
+ *   - y_offset: The Y offset vs placement.
+ *   - opacity: The opacity of the source image when overlaid on the background
+ *     image.
+ *   - background_image: The background image file URI/path.
+ *   - background_image_width: The background image width.
+ *   - background_image_height: The background image height.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  - {{ 'Image'|t }}: <strong>{{ data.background_image|e }}</strong> ({{ data.background_image_width|e }}x{{ data.background_image_height|e }}),
+    {{ 'Placement'|t }}: {{ data.placement|e }},
+    {% if data.x_offset %}{{ 'X offset'|t }}: {{ data.x_offset|e }}px,{% endif %}
+    {% if data.y_offset %}{{ 'Y offset'|t }}: {{ data.y_offset|e }}px,{% endif %}
+    {{ 'Opacity'|t }}: {{ data.opacity|e }}%
+{% endapply %}

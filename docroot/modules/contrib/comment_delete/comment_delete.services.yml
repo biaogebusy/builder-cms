@@ -1,0 +1,16 @@
+services:
+  comment_delete.thread_manager:
+    class: Drupal\comment_delete\CommentThreadManager
+    arguments: ["@database"]
+
+  comment_delete.manager:
+    class: Drupal\comment_delete\CommentDeleteManager
+    arguments:
+      [
+        "@database",
+        "@token",
+        "@messenger",
+        "@entity_type.manager",
+        "@entity_field.manager",
+        "@comment_delete.thread_manager",
+      ]

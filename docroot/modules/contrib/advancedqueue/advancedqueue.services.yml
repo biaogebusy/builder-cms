@@ -1,0 +1,12 @@
+services:
+  plugin.manager.advancedqueue_backend:
+    class: Drupal\advancedqueue\BackendManager
+    parent: default_plugin_manager
+
+  plugin.manager.advancedqueue_job_type:
+    class: Drupal\advancedqueue\JobTypeManager
+    parent: default_plugin_manager
+
+  advancedqueue.processor:
+    class: Drupal\advancedqueue\Processor
+    arguments: ['@event_dispatcher', '@datetime.time', '@plugin.manager.advancedqueue_job_type', '@logger.channel.cron']

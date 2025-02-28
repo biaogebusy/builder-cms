@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * @file
+ * This is the primary module file.
+ */
+
+use Drupal\Core\Render\Markup;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+
+include_once __DIR__ . '/includes/helpers/utilities.inc';
+
+// Define message formats.
+define('SWIFTMAILER_FORMAT_PLAIN', 'text/plain');
+define('SWIFTMAILER_FORMAT_HTML', 'text/html');
+
+// Define transport types.
+define('SWIFTMAILER_TRANSPORT_SMTP', 'smtp');
+define('SWIFTMAILER_TRANSPORT_SENDMAIL', 'sendmail');
+define('SWIFTMAILER_TRANSPORT_SPOOL', 'spool');
+define('SWIFTMAILER_TRANSPORT_NULL', 'null');
+
+// Define header types.
+define('SWIFTMAILER_HEADER_TEXT', 'text');
+define('SWIFTMAILER_HEADER_PARAMETERIZED', 'parameterized');
+define('SWIFTMAILER_HEADER_MAILBOX', 'mailbox');
+define('SWIFTMAILER_HEADER_DATE', 'date');
+define('SWIFTMAILER_HEADER_ID', 'ID');
+define('SWIFTMAILER_HEADER_PATH', 'path');
+
+/**
+ * Implements hook_mail().
+ */
+function swiftmailer_mail($key, &$message) {
+  $user = \Drupal::currentUser();
+  $message['headers']['Content-Type'] = SWIFTMAILER_FORMAT_HTML;
+
+  $text[] = '<h3>' . t('Dear @user,', ['@user' => $user->getDisplayName()]) . '</h3>';
+  $text[] = '<p>' . t('This e-mail has been sent from @site by the Swift Mailer module. The module has been successfully configured.', ['@site' => \Drupal::config('system.site')->get('name')]) . '</p>';
+  $text[] = t('Kind regards') . '<br /><br />';
+  $text[] = t('The Swift Mailer module');
+
+  $message['subject'] = t('Swift Mailer has been successfully configured!');
+  $message['body'] = array_map(function ($text) {
+    return Markup::create($text);
+  }, $text);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function swiftmailer_theme($existing, $type, $theme, $path) {
+  return [
+    'swiftmailer' => [
+      'variables' => [
+        'message' => [],
+        'is_html' => FALSE,
+      ],
+      'mail theme' => TRUE,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK() for swiftmailer.
+ */
+function swiftmailer_theme_suggestions_swiftmailer(array $variables) {
+  $suggestions = [];
+  $suggestions[] = 'swiftmailer__' . $variables['message']['module'];
+  $suggestions[] = 'swiftmailer__' . $variables['message']['module'] . '__' . strtr($variables['message']['key'], '-', '_');
+  return $suggestions;
+}
+
+/**
+ * Prepares variables for swiftmailer templates.
+ *
+ * Default template: swiftmailer.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - message: An associative array containing the message array.
+ *   - is_html: True if generating HTML output, false for plain text.
+ */
+function template_preprocess_swiftmailer(&$variables) {
+  $variables['base_url'] = $GLOBALS['base_url'];
+  $variables['subject'] = $variables['message']['subject'];
+  $variables['body'] = $variables['message']['body'];
+}
+
+/**
+ * Implements hook_help().
+ */
+function swiftmailer_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.swiftmailer':
+    case 'swiftmailer.transport_settings':
+    case 'swiftmailer.message_settings':
+    case 'swiftmailer.test':
+      $output = '';
+      $output .= '<p>' . t('The Swift Mailer module is designed to replace the default mail system that is shipped with Drupal. The initial configuration of this is done through the <a href=":mailsystem_settings">Mail System module</a>. Swift Mailer allows you to choose how e-mails should be sent. To read more about how this module works, please have a look at the <a href=":documentation">Swift Mailer documentation</a>.', [':mailsystem_settings' => Url::fromRoute('mailsystem.settings')->toString(), ':documentation' => 'https://swiftmailer.symfony.com/docs/introduction.html']) . '</p>';
+      return $output;
+  }
+}

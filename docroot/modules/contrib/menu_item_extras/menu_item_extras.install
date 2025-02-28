@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * @file
+ * Contains install/uninstall functionality of module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function menu_item_extras_install() {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  $menus = \Drupal::entityTypeManager()
+    ->getStorage('menu')
+    ->loadMultiple();
+  /** @var \Drupal\menu_item_extras\Service\MenuLinkContentService $mlc_helper */
+  $mlc_helper = \Drupal::service('menu_item_extras.menu_link_content_helper');
+  $mlc_helper->doEntityUpdate();
+  $mlc_helper->updateMenuLinkContentBundle();
+  $mlc_helper->installViewModeField();
+  if (!empty($menus)) {
+    foreach ($menus as $menu_id => $menu) {
+      $mlc_helper->updateMenuItemsBundle($menu_id);
+    }
+  }
+  $mlc_helper->doBundleFieldUpdate();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function menu_item_extras_uninstall() {
+  $menus = \Drupal::entityTypeManager()
+    ->getStorage('menu')
+    ->loadMultiple();
+  /** @var \Drupal\menu_item_extras\Service\MenuLinkContentService $mlc_helper */
+  $mlc_helper = \Drupal::service('menu_item_extras.menu_link_content_helper');
+  $mlc_helper->doEntityUpdate();
+  $mlc_helper->doBundleFieldUpdate();
+  // Clear cache plugins for invoking hook_entity_type_build and rebuid entity.
+  // @see menu_item_extras_entity_type_build().
+  \Drupal::configFactory()->getEditable('menu_item_extras.utility')->delete();
+  \Drupal::service('plugin.cache_clearer')->clearCachedDefinitions();
+  $mlc_helper->updateMenuLinkContentBundle();
+  if (!empty($menus)) {
+    foreach ($menus as $menu_id => $menu) {
+      $mlc_helper->updateMenuItemsBundle($menu_id, FALSE);
+    }
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Collect data to update.
+ */
+function menu_item_extras_update_8021(&$sandbox) {
+  /** @var \Drupal\Core\Database\Query\SelectInterface $query */
+  $query = \Drupal::database()
+    ->select('menu_link_content_data', 'md')
+    ->fields('md', [
+      'id',
+      'menu_name',
+      'body__value',
+      'body__format',
+    ])
+    ->condition('body__value', NULL, 'IS NOT NULL');
+  $result = $query
+    ->execute()
+    ->fetchAllAssoc('id');
+  \Drupal::state()->set('menu_item_extras_1_to_2', $result);
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Prepare 1.x body fields for entity updater.
+ */
+function menu_item_extras_update_8022(&$sandbox) {
+  \Drupal::database()
+    ->update('menu_link_content_data')
+    ->fields([
+      'body__value' => NULL,
+      'body__format' => NULL,
+    ])
+    ->execute();
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Apply entity changes.
+ */
+function menu_item_extras_update_8023(&$sandbox) {
+  \Drupal::service('config.factory')
+    ->getEditable('menu_item_extras.utility')
+    ->set('entity_type_build_status', TRUE)
+    ->save();
+  menu_item_extras_install();
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Update entity definitions after disabling automated entity updates.
+ */
+function menu_item_extras_update_8024(&$sandbox) {
+  /** @var \Drupal\menu_item_extras\Service\MenuLinkContentService $mlc_helper */
+  $mlc_helper = \Drupal::service('menu_item_extras.menu_link_content_helper');
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('menu_link_content');
+  \Drupal::service('entity.definition_update_manager')->updateFieldableEntityType($entity_type, \Drupal::service('entity_field.manager')->getFieldStorageDefinitions('menu_link_content'), $sandbox);
+  if (empty($sandbox['progress'])) {
+    $sandbox['progress'] = TRUE;
+    $mlc_helper->doBundleFieldUpdate();
+  }
+}

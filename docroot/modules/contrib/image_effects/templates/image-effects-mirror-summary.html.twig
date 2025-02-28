@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of an image mirror effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this mirror effect, including:
+ *   - x_axis: Horizontal flop.
+ *   - y_axis: Vertical flip.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  {% if data.x_axis and data.y_axis %}
+    {{ 'both horizontal and vertical'|t }}
+  {% elseif data.x_axis %}
+    {{ 'horizontal'|t }}
+  {% elseif data.y_axis %}
+    {{ 'vertical'|t }}
+  {% endif %}
+{% endapply %}

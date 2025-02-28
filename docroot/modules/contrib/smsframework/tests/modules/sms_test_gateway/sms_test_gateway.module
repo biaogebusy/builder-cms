@@ -1,0 +1,26 @@
+<?php
+
+declare(strict_types = 1);
+
+/**
+ * @file
+ * A test gateway to be used for testing the SMS Framework.
+ */
+
+/**
+ * Gets incoming data from static.
+ */
+function sms_test_gateway_get_incoming($reset = FALSE) {
+  $key = 'sms_test_gateway_sms_incoming_preprocess';
+  $result = &drupal_static($key);
+
+  if (!isset($result)) {
+    $result = \Drupal::state()->get($key, []);
+  }
+
+  if ($reset) {
+    \Drupal::state()->delete($key);
+    drupal_static_reset($key);
+  }
+  return $result;
+}

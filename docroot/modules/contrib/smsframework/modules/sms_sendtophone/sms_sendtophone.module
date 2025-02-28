@@ -1,0 +1,91 @@
+<?php
+
+declare(strict_types = 1);
+
+/**
+ * @file
+ * Provides hooks for Send To Phone.
+ */
+
+use Drupal\sms\Exception\PhoneNumberSettingsException;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
+use Drupal\user\Entity\User;
+
+/**
+ * Implements hook_page_attachments().
+ *
+ * @todo Need to optimize this later.
+ */
+function sms_sendtophone_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'sms_sendtophone/default';
+}
+
+/**
+ * Implements hook_node_links_alter().
+ */
+function sms_sendtophone_node_links_alter(array &$links, NodeInterface $node, array &$context) {
+  /** @var \Drupal\sms\Provider\PhoneNumberProviderInterface $phone_number_provider */
+  $phone_number_provider = \Drupal::service('sms.phone_number');
+  /** @var \Drupal\user\UserInterface $user */
+  $user = User::load(\Drupal::currentUser()->id());
+
+  $phone_numbers = [];
+  try {
+    $phone_numbers = $phone_number_provider->getPhoneNumbers($user);
+  }
+  catch (PhoneNumberSettingsException $e) {
+
+  }
+
+  $types = \Drupal::config('sms_sendtophone.settings')->get('content_types');
+  $build = [];
+  if (in_array($node->bundle(), $types)) {
+    if ($user->hasPermission('send to any number') || count($phone_numbers)) {
+      // Only show "send to phone" link if user is permitted to do so.
+      $url = Url::fromRoute(
+        'sms_sendtophone.page',
+        ['type' => 'node', 'extra' => $node->id()],
+        ['query' => \Drupal::destination()->getAsArray()]
+      );
+
+      $build['sms_sendtophone'] = [
+        'title' => t('Send to phone'),
+        'url' => $url,
+        'attributes' => [
+          'class' => 'sms-sendtophone',
+          'title' => 'Send a link via SMS.',
+        ],
+      ];
+    }
+    elseif ($user->isAuthenticated()) {
+      // Show messages to encourage users to register their mobile number.
+      if (!count($phone_numbers)) {
+        $build['sms_sendtophone'] = [
+          'title' => t('Set up and confirm your mobile number to send to phone.'),
+          'url' => Url::fromRoute('entity.user.edit_form', ['user' => $user->id()]),
+        ];
+      }
+    }
+    $links['sms_sendtophone'] = [
+      '#theme' => 'links__node__sms_sendtophone',
+      '#links' => $build,
+      '#attributes' => ['class' => ['links', 'inline']],
+    ];
+  }
+
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function sms_sendtophone_form_alter(&$form, FormStateInterface &$form_state, $form_id) {
+  if ($form_id == 'sms_sendtophone_inline_form' || $form_id == 'sms_sendtophone_node_form' || $form_id == 'sms_sendtophone_cck_form') {
+    if (!\Drupal::currentUser()->hasPermission('send to any number')) {
+      // Makes number field plain text.
+      $form['sms']['number']['#type'] = 'item';
+      $form['sms']['number']['#value'] = $form['sms']['number']['#default_value'];
+    }
+  }
+}

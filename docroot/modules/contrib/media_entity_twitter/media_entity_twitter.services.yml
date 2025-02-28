@@ -1,0 +1,13 @@
+services:
+  media_entity_twitter.tweet_fetcher:
+    class: Drupal\media_entity_twitter\TweetFetcher
+    arguments:
+      - '@cache.tweets'
+
+  cache.tweets:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments:
+      - tweets

@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of a Rotate effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this rotate effect, including:
+ *   - degrees: Degrees to rotate the image, positive values will rotate the
+ *     image clockwise, negative values counter-clockwise.
+ *   - background_color_detail: the background color of the new areas created as
+ *     consequence the rotation.
+ *   - method: Determine how the rotation angle is calculated.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  {{ data.degrees }}°
+  {% if data.method == 'random' %}
+    - {{ 'Random'|t }}
+  {% endif %}
+  {% if data.method == 'pseudorandom' %}
+    - {{ 'Pseudo-random'|t }}
+  {% endif %}
+  {% if data.background_color_detail %}
+    - {{ 'Background color'|t }}: {{ data.background_color_detail }}
+  {% endif %}
+{% endapply %}

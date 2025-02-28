@@ -1,0 +1,65 @@
+winnow:
+  version: VERSION
+  js:
+    js/jquery.winnow.js: {}
+  dependencies:
+    - core/jquery
+    - jquery_ui_autocomplete/autocomplete
+filter:
+  version: VERSION
+  js:
+    js/module_filter.js: {}
+  css:
+    theme:
+      css/module_filter.css: {}
+  dependencies:
+    - module_filter/winnow
+modules:
+  version: VERSION
+  js:
+    js/module_filter.modules.js: {}
+  css:
+    theme:
+      css/module_filter.modules.css: {}
+  dependencies:
+    - core/once
+    - module_filter/filter
+modules.bare:
+  version: VERSION
+  js:
+    js/module_filter.modules_bare.js: {}
+  dependencies:
+    - module_filter/modules
+modules.tabs:
+  version: VERSION
+  js:
+    js/module_filter.modules_tabs.js: {}
+  css:
+    theme:
+      css/module_filter.modules_tabs.css: {}
+  dependencies:
+    - module_filter/modules
+modules.uninstall:
+  version: VERSION
+  js:
+    js/module_filter.modules_uninstall.js: {}
+  dependencies:
+    - core/once
+    - module_filter/filter
+update.status:
+  version: VERSION
+  js:
+    js/module_filter.update_status.js: {}
+  css:
+    theme:
+      css/module_filter.update_status.css: {}
+  dependencies:
+    - core/once
+    - module_filter/filter
+permissions:
+  version: VERSION
+  js:
+    js/module_filter.permissions.js: {}
+  dependencies:
+    - core/once
+    - module_filter/filter

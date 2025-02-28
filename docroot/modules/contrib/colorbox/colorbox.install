@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the colorbox module.
+ */
+
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_install().
+ */
+function colorbox_install() {
+  \Drupal::messenger()->addMessage(t('Thanks for installing Colorbox'));
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function colorbox_requirements($phase) {
+  if ($phase != 'runtime') {
+    return [];
+  }
+
+  $library = \Drupal::service('library.discovery')->getLibraryByName('colorbox', 'colorbox');
+  $library_exists = !empty($library['js'][0]['data']) &&
+    file_exists(DRUPAL_ROOT . '/' . $library['js'][0]['data']);
+
+  $dompurify = \Drupal::service('library.discovery')->getLibraryByName('colorbox', 'dompurify');
+  $dompurify_exists = !empty($dompurify['js'][0]['data']) &&
+    file_exists(DRUPAL_ROOT . '/' . $dompurify['js'][0]['data']);
+
+  $library_requirements = [
+    'colorbox_library_downloaded' => [
+      'title' => t('Colorbox library'),
+      'value' => $library_exists ? t('Installed') : t('Not installed'),
+      'description' => $library_exists ? '' : t('The Colorbox library needs to be <a href="@url">downloaded</a> and extracted into the /libraries/colorbox folder in your Drupal installation directory.', ['@url' => 'https://github.com/jackmoore/colorbox/archive/master.zip']),
+      'severity' => $library_exists ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+    ],
+  ];
+
+  $suppress_warning = \Drupal::config('colorbox.settings')->get('dompurify_hide_warning');
+  if (!$suppress_warning) {
+    $library_requirements['colorbox_dompurify_downloaded'] = [
+      'title' => t('DOMPurify library'),
+      'value' => $dompurify_exists ? t('Installed') : t('Not installed'),
+      'description' => $dompurify_exists ? '' :
+        t('The DOMPurify library is not installed. ' .
+          'The Colorbox module uses this library to sanitize HTML captions. ' .
+          'Without this library, all captions will be treated as plain text. ' .
+          'If you intend to have HTML captions in Colorbox content, ' .
+          'download the <a href="@url">DOMPurify library</a>, extract it, ' .
+          'and copy the dist directory into the /libraries/DOMPurify folder ' .
+          'in your Drupal installation directory. ' .
+          'Specifically, the system looks for ' .
+          '/libraries/DOMPurify/dist/purify.min.js. <br /><br />' .
+          'To avoid potential security ' .
+          'issues, please only install the dist directory, and not any other ' .
+          'files from the archive.<br /><br />' .
+          'If you do not intend to use HTML captions, you can suppress this warning on the ' .
+          '<a href="@config">Colorbox configuration page.</a>',
+          [
+            '@url' => 'https://github.com/cure53/DOMPurify/archive/main.zip',
+            '@config' => Url::fromRoute('colorbox.admin_settings')->toString(),
+          ]),
+      'severity' => $dompurify_exists ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    ];
+  }
+
+  return $library_requirements;
+}

@@ -1,0 +1,10 @@
+services:
+  fivestar.widget_manager:
+    class: Drupal\fivestar\WidgetManager
+    arguments: ['@module_handler']
+  fivestar.vote_manager:
+    class: Drupal\fivestar\VoteManager
+    arguments: ['@entity_type.manager', '@current_user']
+  fivestar.vote_result_manager:
+    class: Drupal\fivestar\VoteResultManager
+    arguments: [ '@plugin.manager.votingapi.resultfunction']

@@ -1,0 +1,21 @@
+services:
+  plugin.manager.charts:
+    class: Drupal\charts\ChartManager
+    parent: default_plugin_manager
+
+  plugin.manager.charts_type:
+    class: Drupal\charts\TypeManager
+    arguments: ['@module_handler', '@cache.discovery', '@event_dispatcher']
+
+  charts.plugins_uninstall_validator:
+    class: Drupal\charts\PluginsUninstallValidator
+    tags:
+      - { name: module_install.uninstall_validator }
+    arguments: ['@config.factory']
+    lazy: true
+
+  charts.config_import_subscriber:
+    class: Drupal\charts\EventSubscriber\ConfigImportSubscriber
+    arguments: ['@plugin.manager.charts', '@plugin.manager.charts_type']
+    tags:
+      - { name: event_subscriber }

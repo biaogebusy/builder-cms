@@ -1,0 +1,40 @@
+services:
+  plugin.manager.entity_print.print_engine:
+    class: Drupal\entity_print\Plugin\EntityPrintPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher', '@config.factory', '@entity_type.manager']
+
+  plugin.manager.entity_print.export_type:
+    class: Drupal\entity_print\Plugin\ExportTypeManager
+    arguments: ['@cache.discovery', '@module_handler', '@theme_handler']
+
+  entity_print.print_builder:
+    class: Drupal\entity_print\PrintBuilder
+    arguments: ['@entity_print.renderer_factory', '@event_dispatcher', '@string_translation']
+
+  entity_print.renderer_factory:
+    class: Drupal\entity_print\Renderer\RendererFactory
+    arguments: ['@service_container']
+
+  entity_print.post_render_subscriber:
+    class: Drupal\entity_print\EventSubscriber\PostRenderSubscriber
+    arguments: ['@config.factory', '@request_stack']
+    tags:
+      - { name: event_subscriber }
+
+  entity_print.asset_collector:
+    class: Drupal\entity_print\Asset\AssetCollector
+    arguments: ['@theme_handler', '@extension.list.theme', '@event_dispatcher']
+
+  entity_print.asset_renderer:
+    class: Drupal\entity_print\Asset\AssetRenderer
+    arguments: ['@asset.resolver', '@asset.css.collection_renderer', '@entity_print.asset_collector']
+
+  entity_print.filename_generator:
+    class: Drupal\entity_print\FilenameGenerator
+    arguments: ['@transliteration', '@event_dispatcher']
+
+  entity_print.print_engine_exception_subscriber:
+    class: Drupal\entity_print\EventSubscriber\PrintEngineExceptionSubscriber
+    arguments: ['@current_route_match', '@entity_type.manager', '@messenger']
+    tags:
+      - { name: event_subscriber }

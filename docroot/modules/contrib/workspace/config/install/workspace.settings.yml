@@ -1,0 +1,3 @@
+upstream: 0
+push_replication_settings: _none
+pull_replication_settings: _none

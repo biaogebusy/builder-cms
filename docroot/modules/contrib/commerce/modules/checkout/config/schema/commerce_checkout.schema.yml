@@ -1,0 +1,120 @@
+commerce_order.commerce_order_type.*.third_party.commerce_checkout:
+  type: mapping
+  label: 'Checkout settings'
+  mapping:
+    checkout_flow:
+      type: string
+      label: 'Checkout flow'
+
+commerce_checkout.commerce_checkout_flow.*:
+  type: config_entity
+  label: 'Checkout flow'
+  mapping:
+    label:
+      type: label
+      label: 'Label'
+    id:
+      type: string
+      label: 'Machine-readable name'
+    plugin:
+      type: string
+      label: 'Plugin'
+    configuration:
+      type: commerce_checkout.commerce_checkout_flow.plugin.[%parent.plugin]
+
+commerce_checkout.commerce_checkout_flow.plugin.*:
+  type: mapping
+  mapping:
+    display_checkout_progress:
+      type: boolean
+      label: 'Display checkout progress'
+    display_checkout_progress_breadcrumb_links:
+      type: boolean
+      label: 'Display checkout progress breadcrumb links'
+    guest_order_assign:
+      type: boolean
+      label: 'Assign an anonymous order to a pre-existing user'
+    guest_new_account:
+      type: boolean
+      label: 'Create a new account for an anonymous order'
+    guest_new_account_notify:
+      type: boolean
+      label: 'Notify customer of their new account'
+
+commerce_checkout.commerce_checkout_flow.plugin.multistep_default:
+  type: commerce_checkout_flow_with_panes_configuration
+
+commerce_checkout_flow_with_panes_configuration:
+  type: mapping
+  mapping:
+    display_checkout_progress:
+      type: boolean
+      label: 'Display checkout progress'
+    display_checkout_progress_breadcrumb_links:
+      type: boolean
+      label: 'Display checkout progress breadcrumb links'
+    guest_order_assign:
+      type: boolean
+      label: 'Assign an anonymous order to a pre-existing user'
+    guest_new_account:
+      type: boolean
+      label: 'Create a new account for an anonymous order'
+    guest_new_account_notify:
+      type: boolean
+      label: 'Notify customer of their new account'
+    order_summary_view:
+      type: string
+      label: 'Order summary view'
+    panes:
+      type: sequence
+      label: 'Panes'
+      sequence:
+        type: commerce_checkout.commerce_checkout_pane.[%key]
+
+commerce_checkout.commerce_checkout_pane.*:
+  type: commerce_checkout_pane_configuration
+
+commerce_checkout.commerce_checkout_pane.contact_information:
+  type: commerce_checkout_pane_configuration
+  mapping:
+    double_entry:
+      type: boolean
+      label: 'Require double entry of email'
+
+commerce_checkout.commerce_checkout_pane.login:
+  type: commerce_checkout_pane_configuration
+  mapping:
+    allow_guest_checkout:
+      type: boolean
+      label: 'Allow guest checkout'
+    allow_registration:
+      type: boolean
+      label: 'Allow registration'
+    registration_form_mode:
+      type: string
+      label: 'Registration Form Mode'
+
+commerce_checkout.commerce_checkout_pane.order_summary:
+  type: commerce_checkout_pane_configuration
+  mapping:
+    view:
+      type: string
+      label: 'View'
+
+commerce_checkout.commerce_checkout_pane.completion_message:
+  type: commerce_checkout_pane_configuration
+  mapping:
+    message:
+      type: text_format
+      label: 'message'
+      translatable: true
+
+commerce_checkout_pane_configuration:
+  type: mapping
+  mapping:
+    step:
+      type: string
+      label: 'Step'
+    weight:
+      type: integer
+      label: 'Weight'

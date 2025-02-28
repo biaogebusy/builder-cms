@@ -1,0 +1,13 @@
+name: Conflict Paragraphs
+description: Fieldwise conflict prevention and resolution support for Paragraphs.
+type: module
+package: Conflict (Experimental)
+core_version_requirement: ^9.2 || ^10
+dependencies:
+  - conflict:conflict
+  - paragraphs:paragraphs
+
+# Information added by Drupal.org packaging script on 2024-04-14
+version: '8.x-2.0-alpha5'
+project: 'conflict'
+datestamp: 1713060031

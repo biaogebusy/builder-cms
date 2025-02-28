@@ -1,0 +1,14 @@
+name: CKEditor Color Button
+type: module
+description: "Adds the Color Button plugin to CKEditor."
+package: CKEditor
+core_version_requirement: ^9.3 || ^10
+
+dependencies:
+  - drupal:ckeditor
+  - panelbutton:panelbutton
+
+# Information added by Drupal.org packaging script on 2022-12-22
+version: '8.x-1.5'
+project: 'colorbutton'
+datestamp: 1671700337

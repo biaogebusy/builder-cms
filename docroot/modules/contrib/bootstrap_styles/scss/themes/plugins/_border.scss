@@ -1,0 +1,107 @@
+// Border Highlighting
+.bs_border--type .fieldset-wrapper > div > div {
+  input {
+
+    // all
+    &[value="border"] {
+      + label:after,
+      &:hover + label:after {
+        border-color: $white;
+      }
+
+      &:checked + label:after {
+        border-color: $panel_link_color;
+      }
+    }
+
+    // left
+    &[value="border_left"] {
+      + label:after,
+      &:hover + label:after {
+        border-left-color: $white;
+      }
+
+      &:checked + label:after {
+        border-left-color: $panel_link_color;
+      }
+    }
+
+    // top
+    &[value="border_top"] {
+      + label:after,
+      &:hover + label:after {
+        border-top-color: $white;
+      }
+
+      &:checked + label:after {
+        border-top-color: $panel_link_color;
+      }
+    }
+
+    // right
+    &[value="border_right"] {
+      + label:after,
+      &:hover + label:after {
+        border-right-color: $white;
+      }
+
+      &:checked + label:after {
+        border-right-color: $panel_link_color;
+      }
+    }
+
+    // bottom
+    &[value="border_bottom"] {
+      + label:after,
+      &:hover + label:after {
+        border-bottom-color: $white;
+      }
+
+      &:checked + label:after {
+        border-bottom-color: $panel_link_color;
+      }
+    }
+  }
+}
+
+// Border Radius
+[class*="border-rounded-corners"],
+[class*="border-rounded-corner"] {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin: 1rem 0;
+  min-height: 35px;
+
+  label,
+  .description {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    height: 35px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .description {
+    background: $box_input_bg;
+
+    svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+  }
+
+  label {
+    z-index: 1;
+  }
+
+  input {
+    margin-left: 45px;
+    padding-left: 1rem;
+  }
+}

@@ -1,0 +1,2 @@
+workspace.revisions:
+  deriver: '\Drupal\workspace\Plugin\Derivative\RevisionsContextual'

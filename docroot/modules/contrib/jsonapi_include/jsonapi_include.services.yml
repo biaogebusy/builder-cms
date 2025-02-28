@@ -1,0 +1,12 @@
+services:
+  jsonapi_include.response:
+    class: Drupal\jsonapi_include\EventSubscriber\ResponseSubscriber
+    arguments: []
+    tags:
+      - { name: event_subscriber }
+    calls:
+      - [setConfig, ['@config.factory']]
+      - [setJsonapiInclude, ['@jsonapi_include.parse']]
+      - [setRouteMatch, ['@current_route_match']]
+  jsonapi_include.parse:
+    class: Drupal\jsonapi_include\JsonapiParse

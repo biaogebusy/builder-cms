@@ -1,0 +1,11 @@
+name: Mailsystem Test
+type: module
+package: Testing
+hidden: true
+dependencies:
+  - mailsystem:mailsystem
+
+# Information added by Drupal.org packaging script on 2022-07-11
+version: '8.x-4.4'
+project: 'mailsystem'
+datestamp: 1657576309

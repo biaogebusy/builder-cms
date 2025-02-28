@@ -1,0 +1,20 @@
+{
+  "name": "bootstrap_styles",
+  "description": "Add a plugins builder and a collection of reusable plugins to the Layout Builder module.",
+  "author": "Mahmoud Zayed & Aaron Christian",
+  "version": "1.0.0",
+  "scripts": {
+    "css:compile": "node-sass --importer node_modules/node-sass-magic-importer/dist/cli.js scss/ --output-style expanded -o css/",
+    "css:build": "npm run css:compile",
+    "css:watch": "nodemon -e scss -x \"npm run css:build\" --ignore dist",
+    "watch": "nodemon -e scss -x \"npm run build\" --ignore dist",
+    "build": "npm run css:build"
+  },
+  "dependencies": {
+    "autoprefixer": "^7.1.3",
+    "node-sass": "^5.0.0",
+    "node-sass-magic-importer": "^5.2.0",
+    "nodemon": "^1.12.0",
+    "postcss-cli": "^8.3.1"
+  }
+}

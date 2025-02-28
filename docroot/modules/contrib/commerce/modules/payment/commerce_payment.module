@@ -1,0 +1,213 @@
+<?php
+
+/**
+ * @file
+ * Provides payment functionality.
+ */
+
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\HasPaymentInstructionsInterface;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_commerce_checkout_pane_info_alter().
+ */
+function commerce_payment_commerce_checkout_pane_info_alter(&$definitions) {
+  // The payment_information pane replaces the billing_information one.
+  unset($definitions['billing_information']);
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function commerce_payment_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() === 'commerce_order') {
+    $fields['payment_gateway'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Payment gateway'))
+      ->setDescription(t('The payment gateway.'))
+      ->setSetting('target_type', 'commerce_payment_gateway');
+
+    $fields['payment_method'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Payment method'))
+      ->setDescription(t('The payment method.'))
+      ->setSetting('target_type', 'commerce_payment_method');
+
+    return $fields;
+  }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function commerce_payment_entity_operation(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() === 'commerce_order') {
+    if (\Drupal::currentUser()->hasPermission('administer commerce_payment')) {
+      $operations = [];
+      $operations['payments'] = [
+        'title' => t('Payments'),
+        'url' => Url::fromRoute('entity.commerce_payment.collection', [
+          'commerce_order' => $entity->id(),
+        ]),
+        'weight' => 50,
+      ];
+      return $operations;
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_payment_theme() {
+  return [
+    'commerce_payment_method' => [
+      'render element' => 'elements',
+    ],
+    'commerce_payment_method__credit_card' => [
+      'base hook' => 'commerce_payment_method',
+      'render element' => 'elements',
+    ],
+    'commerce_payment_total_summary' => [
+      'variables' => [
+        'order_entity' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_commerce_payment_method().
+ */
+function commerce_payment_theme_suggestions_commerce_payment_method(array $variables) {
+  return _commerce_entity_theme_suggestions('commerce_payment_method', $variables);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function commerce_payment_commerce_payment_method_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($entity->bundle() == 'credit_card') {
+    $build['#attached']['library'][] = 'commerce_payment/payment_method_icons';
+  }
+}
+
+/**
+ * Prepares variables for payment method templates.
+ *
+ * Default template: commerce-payment-method.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function template_preprocess_commerce_payment_method(array &$variables) {
+  /** @var Drupal\commerce_payment\Entity\PaymentMethodInterface $payment_method */
+  $payment_method = $variables['elements']['#commerce_payment_method'];
+
+  $variables['payment_method_entity'] = $payment_method;
+  $variables['payment_method'] = [
+    // The label is generated dynamically, so it's not present in 'elements'.
+    'label' => [
+      '#markup' => $payment_method->label(),
+    ],
+  ];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['payment_method'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_preprocess_commerce_checkout_completion_message().
+ */
+function commerce_payment_preprocess_commerce_checkout_completion_message(&$variables) {
+  /** @var Drupal\commerce_order\Entity\OrderInterface $order */
+  $order = $variables['order_entity'];
+  if ($order->get('payment_gateway')->isEmpty()) {
+    return;
+  }
+
+  /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $payment_gateway */
+  $payment_gateway = $order->get('payment_gateway')->entity;
+  /** @var \Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\HasPaymentInstructionsInterface $payment_gateway_plugin */
+  $payment_gateway_plugin = $payment_gateway->getPlugin();
+  if ($payment_gateway_plugin instanceof HasPaymentInstructionsInterface) {
+    $payment_storage = \Drupal::entityTypeManager()->getStorage('commerce_payment');
+    $payments = $payment_storage->loadMultipleByOrder($order);
+    $payments = array_filter($payments, function ($payment) use ($payment_gateway) {
+      return $payment->getPaymentGatewayId() == $payment_gateway->id();
+    });
+    $payment = reset($payments);
+    if ($payment) {
+      $variables['payment_instructions'] = $payment_gateway_plugin->buildPaymentInstructions($payment);
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_commerce_order().
+ */
+function commerce_payment_preprocess_commerce_order(&$variables) {
+  /** @var Drupal\commerce_order\Entity\OrderInterface $order */
+  $order = $variables['order_entity'];
+  /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $payment_gateway */
+  $payment_gateway = $order->get('payment_gateway')->entity;
+  /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface $payment_method */
+  $payment_method = $order->get('payment_method')->entity;
+
+  // The payment_method variable represents the selected payment option.
+  // Uses the payment gateway display label if payment methods are not
+  // supported, matching the logic in PaymentOptionsBuilder::buildOptions().
+  $variables['payment_method'] = NULL;
+  if ($payment_method) {
+    $variables['payment_method'] = [
+      '#markup' => $payment_method->label(),
+    ];
+  }
+  elseif ($payment_gateway) {
+    $payment_gateway_plugin = $payment_gateway->getPlugin();
+    if (!($payment_gateway_plugin instanceof SupportsStoredPaymentMethodsInterface)) {
+      $variables['payment_method'] = [
+        '#markup' => $payment_gateway_plugin->getDisplayLabel(),
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_commerce_order_receipt().
+ */
+function commerce_payment_preprocess_commerce_order_receipt(&$variables) {
+  commerce_payment_preprocess_commerce_order($variables);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function commerce_payment_form_commerce_checkout_flow_edit_form_alter(array &$form, FormStateInterface $form_state) {
+  $form['#validate'][] = 'commerce_payment_validate_checkout_flow';
+}
+
+/**
+ * Validate callback for the checkout flow form.
+ *
+ * Prevents users from putting the PaymentInformation and PaymentProcess panes
+ * on the same step, which would result in an infinite loop.
+ */
+function commerce_payment_validate_checkout_flow(array $form, FormStateInterface $form_state) {
+  $pane_configuration = $form_state->getValue(['configuration', 'panes']);
+  if (!isset($pane_configuration['payment_information'], $pane_configuration['payment_process'])) {
+    return;
+  }
+  $payment_information_step = $pane_configuration['payment_information']['step_id'];
+  $payment_process_step = $pane_configuration['payment_process']['step_id'];
+  if ($payment_information_step !== '_disabled' && $payment_information_step === $payment_process_step) {
+    $form_state->setError($form, t('<em>Payment information</em> and <em>Payment process</em> panes need to be on separate steps.'));
+  }
+}

@@ -1,0 +1,10 @@
+entity.commerce_product.edit_form:
+  route_name: entity.commerce_product.edit_form
+  group: commerce_product
+  title: Edit
+
+entity.commerce_product.delete_form:
+  route_name: entity.commerce_product.delete_form
+  group: commerce_product
+  title: Delete
+  weight: 10

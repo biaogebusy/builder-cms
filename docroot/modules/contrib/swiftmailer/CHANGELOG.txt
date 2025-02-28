@@ -1,0 +1,58 @@
+2011-14-06
+- Package has been changed from 'E-mail' to 'Mail' in swift_mailer.info.
+- The SWIFTMailSystem.inc file is now included in the files[] array provided
+  in swift_mailer.info.
+- A configuration path has been provided in swift_mailer.info.
+- A trailing linefeed has been added to swift_mailer.info.
+- Changed variable 'mail_system_old' to 'swift_mailer_mail_system_old' in
+  swift_mailer.install.
+- The format() function in SWIFTMailSystem.inc assumed that the provided 
+  $message variable always would be an array. The function now checks that
+  $message is not empty and that it is an array before doing any work on it.
+- Replaced occurrences of '\r\n' with variable_get('mail_line_endings',
+  MAIL_LINE_ENDINGS)
+- Renamed $supressable_headers to $suppressable_headers in SwiftMailSystem.inc.
+- Corrected the spelling mistake 'attachments needs to' to 'attachments need to'
+  in SwiftMailSystem.inc.
+- Dynamic values which are to be passed to watchdog() are now provided via the
+  $variables argument, instead of being embedded in the actual message, in
+  SwiftMailSystem.inc.
+
+2011-24-09
+ - Replaced 'parametrized' with 'parameterized' in functions names in
+   conversion.inc
+ - Removed blank lines between subsequent @param declarations in conversion.inc
+ - Updated function signatures to reflect documentation in conversion.inc
+ - Replaced 'excact' with 'exact' in documentation in conversion.inc
+ - Replaced 'prodived' with 'provided' in utilities.inc
+ - Renamed files and functions for administration to follow naming conventions.
+ - Changed module name from 'swift_mailer' to 'swiftmailer'.
+
+2011-25-09
+ - Finished first round of work based on initial feedback.
+ - Corrected issues identified by the Coder module.
+ - Updated documentation.
+ 
+ 2011-06-12
+ - Finished worked on theming support. E-mails can now be themed through 
+   Drupal's theme system. Adding inline images should also be much easier for
+   themers now.
+ - Renamed CHANGELOG.TXT to CHANGELOG.txt
+ - Renamed README.TXT to README.txt
+ - The 'swiftmailer.info' file now only contains classes in the files[] array.
+ - Hook documentation blocks have been improved.
+ - Indentation issues have been fixed.
+
+2012-08-02
+  - Cleaned up code.
+  - Worked on moving from 'master' branch to version branch.
+
+2012-03-30
+  - Cleaned up code according to module review.
+
+2012-05-14
+  - Changed package name from 'Mail' to 'Other' in 'swiftmailer.info'
+  - Changed 'DEFINE' to 'define' in 'conversion.inc'
+
+2012-17-05
+  - Cleaned up code.

@@ -1,0 +1,9 @@
+uuid: 4b90917a-b73a-49ee-bb5b-2e2f3775ac7a
+status: true
+dependencies:
+  module:
+    - node
+id: node.unformatted_formatter
+label: Unformatted formatter
+targetEntityType: node
+cache: true

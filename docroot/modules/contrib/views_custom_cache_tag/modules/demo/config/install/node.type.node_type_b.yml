@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {}
+third_party_settings: {}
+name: 'Node type B'
+type: node_type_b
+description: ''
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: true

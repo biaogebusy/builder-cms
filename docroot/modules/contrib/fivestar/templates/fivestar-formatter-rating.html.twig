@@ -1,0 +1,18 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the Fivestar rating formatter.
+ *
+ * Available variables:
+ * - average: The average rating, expressed as an integer from 0 to 100.
+ * - stars: The number number of stars being used to rate. Usually 5.
+ * - rating: Rating is a number from 0 to the number of available stars.
+ *   For example, if the average vote is 40, and the number of stars being
+ *   used is 5 stars, the rating would be 2.
+ *
+ * @see template_preprocess_fivestar_formatter_rating()
+ *
+ * @ingroup themeable
+ */
+#}
+<span class="fivestar-rating">{{ rating ~ '/' ~ stars }}</span>

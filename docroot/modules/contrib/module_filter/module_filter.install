@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the module_filter module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function module_filter_install() {
+  $state = \Drupal::state();
+  $state->set('module_filter.recent', ['module_filter' => \Drupal::time()->getRequestTime()]);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function module_filter_uninstall() {
+  $state = \Drupal::state();
+  $state->delete('module_filter.recent');
+}
+
+/**
+ * Add the filters_enabled.permission default configuration.
+ */
+function module_filter_update_9401() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('module_filter.settings');
+  $config->set('enabled_filters.permissions', TRUE);
+  $config->save(TRUE);
+}
+
+/**
+ * Ensure that the 'path' configuration property is a boolean.
+ */
+function module_filter_update_9402() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('module_filter.settings');
+  $config->set('path', (bool) $config->get('path'));
+  $config->save(TRUE);
+}
+
+/**
+ * Enable jQuery UI Autocomplete module.
+ */
+function module_filter_update_9403() {
+  \Drupal::service('module_installer')->install(['jquery_ui_autocomplete']);
+}

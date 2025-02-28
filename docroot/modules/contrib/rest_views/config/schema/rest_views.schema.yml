@@ -1,0 +1,9 @@
+field.formatter.settings.entity_reference_export:
+  type: field.formatter.settings.entity_reference_entity_view
+  mapping:
+    title:
+      type: boolean
+      label: 'Export title'
+    url:
+      type: boolean
+      label: 'Export URL'

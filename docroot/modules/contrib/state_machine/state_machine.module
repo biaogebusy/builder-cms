@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Provides workflow functionality.
+ */
+
+use Drupal\state_machine\Form\StateTransitionConfirmForm;
+
+/**
+ * Implements hook_field_widget_info_alter().
+ */
+function state_machine_field_widget_info_alter(array &$info) {
+  $info['options_select']['field_types'][] = 'state';
+}
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function state_machine_field_formatter_info_alter(array &$info) {
+  $info['list_default']['field_types'][] = 'state';
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function state_machine_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  foreach ($entity_types as $entity_type) {
+    // Sets a default state-transition-confirm form class for all entity types
+    // defining a "state-transition-form" link template.
+    if (!$entity_type->hasLinkTemplate('state-transition-form') ||
+      $entity_type->getFormClass('state-transition-confirm')) {
+      continue;
+    }
+    $entity_type->setFormClass('state-transition-confirm', StateTransitionConfirmForm::class);
+  }
+}

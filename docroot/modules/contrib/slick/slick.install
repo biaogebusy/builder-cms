@@ -1,0 +1,146 @@
+<?php
+
+/**
+ * @file
+ * Installation actions for Slick.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function slick_requirements($phase) {
+  if ($phase != 'runtime') {
+    return [];
+  }
+
+  $exists = FALSE;
+
+  /* @phpstan-ignore-next-line */
+  $path = slick('skin')->getSlickPath();
+  if (is_dir($path)) {
+    $exists = is_file($path . '/slick/slick.min.js');
+  }
+
+  if (slick('skin')->config('library') == 'accessible-slick') {
+    $name = 'Accessible Slick';
+    $url = 'https://github.com/Accessible360/accessible-slick';
+    $libpath = '<strong>/libraries/accessible-slick/slick/slick.min.js</strong>';
+  }
+  else {
+    $name = 'Slick';
+    $url = 'https://github.com/kenwheeler/slick/';
+    $libpath = '<strong>/libraries/slick-carousel/slick/slick.min.js</strong>, or <strong>/libraries/slick/slick/slick.min.js</strong>';
+  }
+
+  return [
+    'slick_library' => [
+      'title'       => t('Slick library'),
+      'description' => $exists ? '' : t('The <a href=":url">@name library</a> should be installed at @libpath, or any path supported by libraries.module if installed. Check out file or folder permissions if troubled.', [
+        ':url' => $url,
+        '@name' => $name,
+        '@libpath' => $libpath,
+      ]),
+      'severity'    => $exists ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+      'value'       => $exists ? t('@name library installed at @path', [
+        '@name' => $name,
+        '@path' => $path,
+      ]) : t('@name library not installed', ['@name' => $name]),
+    ],
+  ];
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function slick_uninstall() {
+  blazy_filter_cleanup('slick');
+}
+
+/**
+ * Added pauseOnFocus option.
+ */
+function slick_update_8201() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('slick.optionset.') as $optionset_name) {
+    $config = $config_factory->getEditable($optionset_name);
+    $config->set('options.settings.pauseOnFocus', TRUE);
+
+    $config->save(TRUE);
+  }
+}
+
+/**
+ * Change skins to use plugin system: https://www.drupal.org/node/3105670.
+ */
+function slick_update_8202() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Removed HTML tags from arrows due to translation issue as per #3075838.
+ */
+function slick_update_8203() {
+  // Configuration translation disallowed HTML.
+  // See https://drupal.org/node/3075838
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('slick.optionset.') as $optionset_name) {
+    $optionset = $config_factory->getEditable($optionset_name);
+    foreach (['prevArrow', 'nextArrow'] as $key) {
+      // Don't bother with Optimized ON, as arrows are removed already.
+      if ($value = $optionset->get('options.settings.' . $key)) {
+        $optionset->set('options.settings.' . $key, trim(strip_tags($value)));
+      }
+    }
+    $optionset->save(TRUE);
+  }
+}
+
+/**
+ * Added app.root service to SlickSkinManager.
+ */
+function slick_update_8204() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Updated SlickFormatter service to extend BlazyFormatter as per blazy:rc7+.
+ */
+function slick_update_8205() {
+  // Do nothing to clear cache.
+}
+
+/**
+ * Removing traces of the Slick media module after merging.
+ */
+function slick_update_8206() {
+  $moduleHandler = \Drupal::moduleHandler();
+  if (!$moduleHandler->moduleExists('slick_media')) {
+    $schema_store = \Drupal::keyValue('system.schema');
+    $schema_store->delete('slick_media');
+  }
+}
+
+/**
+ * Added new options provided by Accessible Slick library.
+ */
+function slick_update_8207() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('slick.optionset.') as $optionset_name) {
+    $config = $config_factory->getEditable($optionset_name);
+    $config->set('options.settings.regionLabel', 'carousel');
+    $config->set('options.settings.useGroupRole', TRUE);
+    $config->set('options.settings.instructionsText', '');
+    $config->set('options.settings.useAutoplayToggleButton', TRUE);
+    $config->set('options.settings.pauseIcon', 'slick-pause-icon');
+    $config->set('options.settings.playIcon', 'slick-play-icon');
+    $config->set('options.settings.arrowsPlacement', '');
+    $config->save(TRUE);
+  }
+}
+
+/**
+ * Matching a more relevant module version.
+ */
+function slick_update_8210() {
+  // Do nothing to clear cache.
+}

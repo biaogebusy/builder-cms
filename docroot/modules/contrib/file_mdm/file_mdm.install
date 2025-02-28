@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Provides a service to manage file metadata.
+ */
+
+/**
+ * Clear caches to discover service changes.
+ */
+function file_mdm_update_8200() {
+  // Empty function.
+}

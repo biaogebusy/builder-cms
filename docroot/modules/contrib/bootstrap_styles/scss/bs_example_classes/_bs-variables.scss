@@ -1,0 +1,32 @@
+// The Drupal off canvas selector.
+// Change it only if drupal core change that selector.
+$bs_off_canvas_selector:       '.ui-dialog-off-canvas';
+
+// All the generated classes starts with the following prefix.
+// Replace 'bs-' with your own prefix to prevent any overrides come from
+// the future updates for the module.
+$bs_class_prefix:              'bs-';
+
+// Define the breakpoints and its media query.
+$bs_breakpoints: (
+  sm:                          'screen and (max-width: 576px)',
+  md:                          '(min-width: 576px) and (max-width: 992px)',
+  lg:                          '(min-width: 992px) and (max-width: 1200px)',
+  xl:                          '(min-width: 1200px)'
+) !default;
+
+// Spacer options for paddings and margins.
+$bs_spacer: 1rem !default;
+$bs_spacers: (
+  1:                           ($bs_spacer * .25),
+  2:                           ($bs_spacer * .5),
+  3:                           $bs_spacer,
+  4:                           ($bs_spacer * 1.5),
+  5:                           ($bs_spacer * 3)
+) !default;
+
+// Text colors.
+$bs_text_colors: (
+  "white":                  #ffffff,
+  "black":                  #000000
+) !default;

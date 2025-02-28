@@ -1,0 +1,9 @@
+/* Farbtastic color picker */
+
+.image-effects-farbtastic-color-selector .image-effects-color-textfield {
+  vertical-align: top;
+}
+
+.image-effects-farbtastic-color-selector .field-suffix {
+  display: inline-block;
+}

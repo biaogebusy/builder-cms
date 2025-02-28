@@ -1,0 +1,130 @@
+diff --git a/tests/src/Functional/Update/RangeUpdatePathTest.php b/tests/src/Functional/Update/RangeUpdatePathTest.php
+index b062efc..1d09888 100644
+--- a/tests/src/Functional/Update/RangeUpdatePathTest.php
++++ b/tests/src/Functional/Update/RangeUpdatePathTest.php
+@@ -49,7 +49,7 @@ class RangeUpdatePathTest extends UpdatePathTestBase {
+    */
+   protected function setDatabaseDumpFiles() {
+     $this->databaseDumpFiles = [
+-      DRUPAL_ROOT . '/core/modules/system/tests/fixtures/update/drupal-9.4.0.bare.standard.php.gz',
++      DRUPAL_ROOT . '/core/modules/system/tests/fixtures/update/drupal-8.8.0.bare.standard.php.gz',
+       __DIR__ . '/../../../fixtures/update/drupal-8.range-8100.php',
+     ];
+   }
+diff --git a/tests/src/Functional/Views/RangeViewsTestBase.php b/tests/src/Functional/Views/RangeViewsTestBase.php
+index aeccc1f..6e248e6 100644
+--- a/tests/src/Functional/Views/RangeViewsTestBase.php
++++ b/tests/src/Functional/Views/RangeViewsTestBase.php
+@@ -6,6 +6,7 @@ use Drupal\field\Entity\FieldConfig;
+ use Drupal\field\Entity\FieldStorageConfig;
+ use Drupal\node\Entity\NodeType;
+ use Drupal\Tests\views\Functional\ViewTestBase;
++use Drupal\views\Tests\ViewTestData;
+ 
+ /**
+  * Base class for testing range handlers.
+@@ -58,6 +59,8 @@ abstract class RangeViewsTestBase extends ViewTestBase {
+   protected function setUp($import_test_views = TRUE, $modules = ['range_test']): void {
+     parent::setUp($import_test_views, $modules);
+ 
++    ViewTestData::createTestViews(get_class($this), ['range_test']);
++
+     // Add a date field to page nodes.
+     $node_type = NodeType::create([
+       'type' => $this->bundle,
+diff --git a/tests/src/Kernel/Migrate/d6/MigrateRangeFieldTest.php b/tests/src/Kernel/Migrate/d6/MigrateRangeFieldTest.php
+index c3f3ce2..532e30d 100644
+--- a/tests/src/Kernel/Migrate/d6/MigrateRangeFieldTest.php
++++ b/tests/src/Kernel/Migrate/d6/MigrateRangeFieldTest.php
+@@ -62,8 +62,8 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
+     /** @var \Drupal\field\FieldStorageConfigInterface $field */
+     $field = FieldStorageConfig::load($id);
+     $this->assertInstanceOf(FieldStorageConfigInterface::class, $field);
+-    $this->assertSame($type, $field->getType());
+-    $this->assertSame($settings, $field->getSettings());
++    $this->assertEqual($type, $field->getType());
++    $this->assertEqual($settings, $field->getSettings());
+   }
+ 
+   /**
+@@ -100,8 +100,8 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
+   public function testFieldInstanceMigration($id, $default_value, $settings) {
+     /** @var \Drupal\Core\Field\FieldConfigInterface $field */
+     $field = FieldConfig::load($id);
+-    $this->assertSame($default_value, $field->getDefaultValueLiteral());
+-    $this->assertSame($settings, $field->getSettings());
++    $this->assertEqual($default_value, $field->getDefaultValueLiteral());
++    $this->assertEqual($settings, $field->getSettings());
+   }
+ 
+   /**
+@@ -162,8 +162,8 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
+    */
+   public function testFieldWidgetMigration($display_id, $component_id, $type, $settings) {
+     $component = EntityFormDisplay::load($display_id)->getComponent($component_id);
+-    $this->assertSame($type, $component['type']);
+-    $this->assertSame($settings, $component['settings']);
++    $this->assertEqual($type, $component['type']);
++    $this->assertEqual($settings, $component['settings']);
+   }
+ 
+   /**
+@@ -209,8 +209,8 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
+   public function testFieldFormatterMigration($display_id, $component_id, $type, $settings) {
+     $component = EntityViewDisplay::load($display_id)->getComponent($component_id);
+     $this->assertIsArray($component);
+-    $this->assertSame($type, $component['type']);
+-    $this->assertSame($settings, $component['settings']);
++    $this->assertEqual($type, $component['type']);
++    $this->assertEqual($settings, $component['settings']);
+   }
+ 
+   /**
+diff --git a/tests/src/Kernel/Migrate/d7/MigrateRangeFieldTest.php b/tests/src/Kernel/Migrate/d7/MigrateRangeFieldTest.php
+index b20e6f5..9bd0fb4 100644
+--- a/tests/src/Kernel/Migrate/d7/MigrateRangeFieldTest.php
++++ b/tests/src/Kernel/Migrate/d7/MigrateRangeFieldTest.php
+@@ -61,8 +61,8 @@ class MigrateRangeFieldTest extends MigrateDrupal7TestBase {
+     /** @var \Drupal\field\FieldStorageConfigInterface $field */
+     $field = FieldStorageConfig::load($id);
+     $this->assertInstanceOf(FieldStorageConfigInterface::class, $field);
+-    $this->assertSame($type, $field->getType());
+-    $this->assertSame($settings, $field->getSettings());
++    $this->assertEqual($type, $field->getType());
++    $this->assertEqual($settings, $field->getSettings());
+   }
+ 
+   /**
+@@ -99,8 +99,8 @@ class MigrateRangeFieldTest extends MigrateDrupal7TestBase {
+   public function testFieldInstanceMigration($id, $default_value, $settings) {
+     /** @var \Drupal\Core\Field\FieldConfigInterface $field */
+     $field = FieldConfig::load($id);
+-    $this->assertSame($default_value, $field->getDefaultValueLiteral());
+-    $this->assertSame($settings, $field->getSettings());
++    $this->assertEqual($default_value, $field->getDefaultValueLiteral());
++    $this->assertEqual($settings, $field->getSettings());
+   }
+ 
+   /**
+@@ -161,8 +161,8 @@ class MigrateRangeFieldTest extends MigrateDrupal7TestBase {
+    */
+   public function testFieldWidgetMigration($display_id, $component_id, $type, $settings) {
+     $component = EntityFormDisplay::load($display_id)->getComponent($component_id);
+-    $this->assertSame($type, $component['type']);
+-    $this->assertSame($settings, $component['settings']);
++    $this->assertEqual($type, $component['type']);
++    $this->assertEqual($settings, $component['settings']);
+   }
+ 
+   /**
+@@ -208,8 +208,8 @@ class MigrateRangeFieldTest extends MigrateDrupal7TestBase {
+   public function testFieldFormatterMigration($display_id, $component_id, $type, $settings) {
+     $component = EntityViewDisplay::load($display_id)->getComponent($component_id);
+     $this->assertIsArray($component);
+-    $this->assertSame($type, $component['type']);
+-    $this->assertSame($settings, $component['settings']);
++    $this->assertEqual($type, $component['type']);
++    $this->assertEqual($settings, $component['settings']);
+   }
+ 
+   /**

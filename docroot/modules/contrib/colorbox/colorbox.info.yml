@@ -1,0 +1,14 @@
+name: 'Colorbox'
+type: module
+description: 'A light-weight, customizable lightbox plugin for jQuery.'
+package: Media
+core_version_requirement: ^8.8 || ^9
+configure: colorbox.admin_settings
+
+dependencies:
+  - drupal:image
+
+# Information added by Drupal.org packaging script on 2022-04-19
+version: '8.x-1.10'
+project: 'colorbox'
+datestamp: 1650376981

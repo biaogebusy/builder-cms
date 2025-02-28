@@ -1,0 +1,128 @@
+# Workspace routing definition
+entity.workspace.add:
+  path: '/admin/structure/workspace/add'
+  defaults:
+    _controller: '\Drupal\workspace\Controller\WorkspaceController::add'
+    _title: 'Add workspace'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer workspaces+create_workspace'
+
+entity.workspace.add_form:
+  path: '/admin/structure/workspace/add/{workspace_type}'
+  defaults:
+    _controller: '\Drupal\workspace\Controller\WorkspaceController::addForm'
+    _title_callback: '\Drupal\workspace\Controller\WorkspaceController::getAddFormTitle'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'administer workspaces'
+
+entity.workspace.collection:
+  path: '/admin/structure/workspace'
+  defaults:
+    _title: 'Workspaces'
+    _entity_list: 'workspace'
+  requirements:
+    _permission: 'administer workspaces+edit_any_workspace'
+
+entity.workspace.activate_form:
+  path: '/admin/structure/workspace/{workspace}/activate'
+  defaults:
+    _title: 'Activate Workspace'
+    _form: '\Drupal\workspace\Form\WorkspaceActivateForm'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _workspace_view: 'TRUE'
+
+entity.workspace.unarchive_form:
+  path: '/admin/structure/workspace/{workspace}/unarchive'
+  defaults:
+    _title: 'Unarchive Workspace'
+    _form: '\Drupal\workspace\Form\WorkspaceUnarchiveForm'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _workspace_view: 'TRUE'
+
+entity.workspace.conflicts:
+  path: '/admin/structure/workspace/{workspace}/conflicts'
+  defaults:
+    _controller: '\Drupal\workspace\Controller\WorkspaceController::viewConflicts'
+    _title_callback: '\Drupal\workspace\Controller\WorkspaceController::getViewConflictsTitle'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'view_any_workspace'
+
+# WorkspaceType routing definition
+entity.workspace_type.collection:
+  path: '/admin/structure/workspace/types'
+  defaults:
+    _entity_list: 'workspace_type'
+    _title: 'Workspace types'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+entity.workspace_type.add_form:
+  path: '/admin/structure/workspace/types/add'
+  defaults:
+    _entity_form: 'workspace_type.add'
+    _title: 'Add Workspace type'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+entity.workspace.changes:
+  path: '/admin/structure/workspace/{workspace}/changes'
+  defaults:
+    _controller: '\Drupal\workspace\Controller\ChangesListController::viewChanges'
+    _title_callback: '\Drupal\workspace\Controller\ChangesListController::getViewChangesTitle'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'view_any_workspace'
+
+entity.workspace.archived:
+  path: '/admin/structure/workspace/archived'
+  defaults:
+    _title: 'Archived Workspaces'
+    _controller: '\Drupal\workspace\Controller\ArchivedWorkspacesListController::viewArchivedWorkspaces'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'view_any_workspace'
+
+# Update form
+workspace.update.form:
+  path: '/admin/structure/deployment/update'
+  defaults:
+    _form: '\Drupal\workspace\Form\UpdateForm'
+  requirements:
+    _permission: 'update any workspace from upstream'
+  options:
+    _admin_route: TRUE
+
+workspace.config.form:
+  path: 'admin/structure/workspace/settings'
+  defaults:
+    _form: '\Drupal\workspace\Form\WorkspaceConfigForm'
+    _title: 'Workspace settings'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+
+workspace.confirm_clear_replication_queue:
+  path: '/admin/config/workspace/clear-queue'
+  defaults:
+    _form: '\Drupal\workspace\Form\ConfirmClearReplicationQueueForm'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE

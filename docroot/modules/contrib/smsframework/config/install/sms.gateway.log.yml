@@ -1,0 +1,8 @@
+# Default configuration for log gateway.
+langcode: en
+status: true
+dependencies: {  }
+id: log
+label: 'Logger'
+plugin: log
+settings: []

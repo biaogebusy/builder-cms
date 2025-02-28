@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * @file
+ * Check requirements for the CKEditor CodeSnippet module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function codesnippet_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'install' || $phase == 'runtime') {
+    $plugin_detected = file_exists(DRUPAL_ROOT . '/libraries/codesnippet/plugin.js');
+
+    if ($plugin_detected) {
+      $requirements['codesnippet'] = [
+        'title' => t('CodeSnippet'),
+        'value' => t('Plugin detected'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+    else {
+      $requirements['codesnippet'] = [
+        'title' => t('CodeSnippet'),
+        'value' => t('Plugin not detected'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => t('Before you can use the CKEditor CodeSnippet module, you need to download the codesnippet plugin from ckeditor.com and place it in /libraries/codesnippet. Check the README.txt for more information. <a href=":plugin_url">Get the plugin here</a>.', [':plugin_url' => 'http://ckeditor.com/addon/codesnippet']),
+      ];
+    }
+  }
+
+  if ($phase == 'runtime') {
+    $requirements['codesnippet_d10'] = [
+      'title' => t('CodeSnippet'),
+      'value' => t('Upgrading to CKEditor 5'),
+      'severity' => REQUIREMENT_WARNING,
+      'description' => t('CodeSnippet now has an upgrade path to using CKEditor 5 in Drupal core. After upgrading, you no longer need the CodeSnippet module for CKEditor 4. <a href=":d10issue">See this thread for more information</a>.', [':d10issue' => 'https://www.drupal.org/project/drupal/issues/3356929']),
+    ];
+  }
+
+  return $requirements;
+}

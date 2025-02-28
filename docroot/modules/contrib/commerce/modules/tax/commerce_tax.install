@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Tax module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function commerce_tax_install() {
+  if (\Drupal::isConfigSyncing()) {
+    return;
+  }
+  // Expose the tax_number field on customer profile view displays.
+  $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $default_display */
+  $default_display = $storage->load('profile.customer.default');
+  if ($default_display) {
+    $default_display->setComponent('tax_number', [
+      'type' => 'commerce_tax_number_default',
+      'settings' => [
+        'show_verification' => FALSE,
+      ],
+    ]);
+    $default_display->save();
+  }
+
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $admin_display */
+  $admin_display = $storage->load('profile.customer.admin');
+  if ($admin_display) {
+    $admin_display->setComponent('tax_number', [
+      'type' => 'commerce_tax_number_default',
+      'settings' => [
+        'show_verification' => TRUE,
+      ],
+    ]);
+    $admin_display->save();
+  }
+}
+
+/**
+ * Configure the UK VAT if necessary.
+ */
+function commerce_tax_update_8201() {
+  // Ensure the UK VAT plugin is discovered.
+  \Drupal::service('plugin.manager.commerce_tax_type')->clearCachedDefinitions();
+  // Check if there's a store with a billing address in the UK, with a tax
+  // registration in the UK.
+  $query = \Drupal::entityTypeManager()->getStorage('commerce_store')->getQuery();
+  $has_uk_stores = (bool) $query
+    ->condition($query->orConditionGroup()
+      ->condition('tax_registrations', 'GB')
+      ->condition('address.country_code', 'GB')
+    )
+    ->accessCheck(FALSE)
+    ->count()
+    ->execute();
+
+  // No stores found in the UK, stop here.
+  if (!$has_uk_stores) {
+    return;
+  }
+  $tax_type_storage = \Drupal::entityTypeManager()->getStorage('commerce_tax_type');
+  // If there's an enabled EU VAT tax type, create/configure a UK tax type.
+  $has_eu_vat = (bool) $tax_type_storage->getQuery()
+    ->condition('plugin', 'european_union_vat')
+    ->condition('status', TRUE)
+    ->count()
+    ->execute();
+
+  // No EU VAT type configured, stop here.
+  if (!$has_eu_vat) {
+    return;
+  }
+  $uk_vat = $tax_type_storage->create([
+    'id' => 'united_kingdom_vat',
+    'label' => 'UK VAT',
+    'plugin' => 'united_kingdom_vat',
+    'configuration' => [
+      'display_inclusive' => TRUE,
+    ],
+    'status' => TRUE,
+  ]);
+  $uk_vat->save();
+}

@@ -1,0 +1,359 @@
+
+Slick 8.x-2.0-dev, 2024-02-01
+-----------------------------
+- Issue #3411048 by heddn: The definition for the sequence declares the type of
+  its items in a way that is deprecated in drupal:8.0.0.
+
+Slick 8.x-2.0-dev, 2023-10-07
+-----------------------------
+- Fixed for down arrow whitespace.
+
+Slick 8.x-2.0-dev, 2023-09-14
+-----------------------------
+- Fixed for slide__content when enabling Use theme_blazy() option.
+
+Slick 8.x-2.0-dev, 2023-09-04
+-----------------------------
+- Deprecated sliders lazy loads to avoid complication for just Blazy.
+
+Slick 8.x-2.0-dev, 2023-08-30
+-----------------------------
+- Update slick.api.php for blazy:2.17.
+
+Slick 8.x-2.0-dev, 2023-08-02
+-----------------------------
+- Fixed for Native Grid with grid chunks ala sliders.
+
+Slick 8.x-2.0-dev, 2023-08-01
+-----------------------------
+- Removed Slick UI option `Use theme_blazy()` into Blazy UI.
+
+Slick 8.x-2.0-dev, 2023-07-31
+-----------------------------
+- Simplified the notorious ID, only useful for machines, not themers.
+
+Slick 8.x-2.0-dev, 2023-07-29
+-----------------------------
+- Updated theme_slick_slide() to be replaced by theme_blazy() at 3.x to DRY.
+
+Slick 8.x-2.0-dev, 2023-07-29
+-----------------------------
+- Reduced more boilerplates.
+- Updated deprecated admin service parameter.
+- Added supports for SVG Image Field module.
+- Re-purposed Slick Image with VEF (deprecated) formatter for SVG (WIP).
+
+Slick 8.x-2.0-dev, 2023-07-26
+-----------------------------
+- Added image title for thumbnail captions.
+
+Slick 8.x-2.0-dev, 2023-07-20
+-----------------------------
+- Updated to Blazy:2.17.
+
+Slick 8.x-2.0-dev, 2023-07-18
+-----------------------------
+- Changed settings key to #settings, etc. to avoid leaks/ render errors, see CR:
+  https://www.drupal.org/node/3375158.
+
+Slick 8.x-2.0-dev, 2023-07-14
+-----------------------------
+- Update to blazy:2.17 admin form with Native Grid.
+- Removed and cleaned out stone-age admin CSS for modern nativegrid.
+
+Slick 8.x-2.0-dev, 2023-07-11
+-----------------------------
+- Fixed for poorly-informed thumbnails.
+- Changed grid loops to generators.
+
+Slick 8.x-2.0-dev, 2023-07-02
+-----------------------------
+- Deprecated variables.js for variables.options as per slick:2.10.
+- Added more variables to template_preprocess_slick.
+
+Slick 8.x-2.0-dev, 2023-06-29
+-----------------------------
+- Fixed for thumbnail navigation regression post 2.9.
+- Removed unused SlickFormatterViewTrait.
+
+Slick 8.x-2.0-dev, 2023-06-20
+-----------------------------
+- Issue #3367674 by paucala: Using http protocol is insecure. Use https instead.
+
+Slick 8.x-2.0-dev, 2023-06-07
+-----------------------------
+- Fixed for phpstan issues, etc.
+- Updated to and required a minimum Blazy:2.16.
+
+Slick 8.x-2.0-dev, 2023-05-15
+-----------------------------
+- Issue #3340509 by Anybody, gausarts, ericdsd, arnoldbird, ivnish:
+  Incompatibility with BigPipe?
+- Issue #3333772 by jurgenhaas: Translation of aria labels breaks HTML.
+- Upped minimum version to Blazy >= 2.14 to reduce compat issues.
+
+Slick 8.x-2.0-dev, 2022-12-15
+-----------------------------
+- Issue #3279333 by david.mcmeans: How to add breakpoints.
+- Issue #3318321 by adaucyj, viniciuscosta: Use null coalesce operator instead
+  of ternary operator.
+
+Slick 8.x-2.0-dev, 2022-10-16
+-----------------------------
+- Issue #3302250 by Dharti Patel, higherform: Claro Admin Theme + Blazy = Rows
+  of Optionsets Hidden.
+- Issue #3284411 by DamienMcKenna: Document how to make Composer download
+  library to libraries/slick.
+- Issue #3289720 by Project Update Bot: Automated Drupal 10 compatibility fixes.
+
+Slick 8.x-2.0-dev, 2022-05-28
+-----------------------------
+- Updated SlickTextFormatter to extend BlazyTextFormatter.
+
+Slick 8.x-2.0-dev, 2022-04-21
+-----------------------------
+- Fixed for wrong room commit, should be #3272646.
+- Issue #3272646 by hswong3i: Also Search `libraries/accessible360--accessible
+  -slick`.
+- Updated to Blazy:2.10.
+
+Slick 8.x-2.0-dev, 2022-03-24
+-----------------------------
+- Issue #3271346 by gausarts: SlickFilter is not compatible with Blazy Noscript
+  and Blur.
+- Issue #3271217 by chr.fritsch: Fix update hook and add new options to all
+  option sets.
+
+Slick 8.x-2.0-dev, 2022-02-11
+-----------------------------
+- Issue #3257390 by gausarts, crutch, uwe_mue, wrd-oaitsd: It is not possible to
+  uninstall slick.
+
+Slick 8.x-2.0-dev, 2022-02-03
+-----------------------------
+- Micro optimization: Modernizing PHP sections: null coalescing, destructuring.
+- Reverted minimum requirements till D10 rules the entire world. Back to basic
+  dBlazy.once for now, etc.
+
+Slick 8.x-2.0-dev, 2021-12-21
+-----------------------------
+- Issue #3255266 by alexpott: Fix Slick entity information so entity doesn't not
+  change after install.
+
+Slick 8.x-2.0-dev, 2021-12-17
+-----------------------------
+- Issue #3253013 by gausarts: [Slick] Drupal 10.
+- Issue #3254667 by gausarts: Update to use the new vanilla once for 9.3 compat.
+- Issue #3246544 by tanmayk, PCate, joelpittet: Error displayed if package.json
+  is not in the JS library folder.
+- Added Drupal ^10.
+
+Slick 8.x-2.0-dev, 2021-09-29
+-----------------------------
+-Issue #3239708 by gausarts: Drop theme_slick_grid for theme_item_list via
+ Blazy Grid.
+
+Slick 8.x-2.0-dev, 2021-09-26
+-----------------------------
+- Issue #3239256 by gausarts: Provides Slick filter to have shortcodes for
+  WYSIWYG editors.
+
+Slick 8.x-2.0-dev, 2021-09-18
+-----------------------------
+- Issue #3236487 by gausarts: Update to Flexbox and Native Grid
+
+Slick 8.x-2.0-dev, 2021-06-23
+-----------------------------
+- Issue #3220308 by gausarts: [Accessible Slick] Thumbnail navigation no longer
+  navigate slides.
+- Issue #3220286 by gausarts: [Accessible Slick] Provide a check for breaking
+  changes with Accessible Slick.
+- Issue #3196529 by wrd, HeikkiY, galactus86: Support Accessible Slick.
+
+Slick 8.x-2.0-dev, 2021-06-10
+-----------------------------
+- Fixed for Colorbox duplicate clones, ported from Splide.
+
+Slick 8.x-2.0-dev, 2021-05-03
+-----------------------------
+- Issue #3211873 by gausarts: Provide options to load Slick anywhere, except
+  admin pages.
+
+Slick 8.x-2.0-dev, 2021-04-12
+-----------------------------
+- Issue #3123787 by thomas.frobieter, gausarts: Fix ROWS setting default value
+  & description (ROWS needs to be 0 instead of 1) / slick-slide has unnecessary
+  wrappers
+- Issue #3150641 by narendra.rajwar27, johnchque, Berdir, VVS: Slick media has a
+  key in system schema after being uninstalled
+- Issue #3190390 by afagioli: Slick api example without markup
+- Issue #3137067 by YahyaAlHamad, _kom__: Extra thumbnail after upgrade 8.x-2.1
+  >> 8.x-2.2
+- Fixed for Colorbox numbering at first launch and deprecated .media--loading.
+
+Slick 8.x-2.0-dev, 2020-05-02
+-----------------------------
+- Issue #3132905 by hunterbuchanan: Remove Libraries API dependency from project
+  page for Slick 8.x-2.0+.
+- Issue #3132875 by lolandese: License "GPL-2.0+" is a deprecated SPDX license
+  identifier.
+
+Slick 8.x-2.0-dev, 2020-03-16
+-----------------------------
+- Issue #3116234 by sasanikolic: Width recalculation issue after closing
+  colorbox modal.
+
+Slick 8.x-2.0-dev, 2020-02-23
+-----------------------------
+- Updated blazy.formatter.manager to blazy.formatter for blazy:rc7+.
+- Updated to the latest Blazy to re-use method Blazy::containerAttributes, etc.
+- Added SlickManager::buildNavigation for code readability.
+- Added SlickSkinManager::getSlickPath for re-use, and prioritized composer.
+- Re-enabled BC for slick_hook_info() till slick:3.x, or 9.x.
+- Ported BC BlazyManager::buildSkins so that Blazy can remove it safely.
+- Fixed for Vanilla leak with optionset thumbnail.
+- Fixed for default value regression.
+
+Slick 8.x-2.0-dev, 2020-02-17
+-----------------------------
+- Removed and cleaned up deprecated custom breakpoints, wish me luck.
+- Issue #3079155 by nashkrammer: Fix deprecation reported by drupal-check and
+  deprecation errors from test results.
+
+Slick 8.x-2.0-dev, 2020-02-14
+-----------------------------
+- Issue #3112913 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in slick\SlickManager.
+- Issue #3113224 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in slick\Plugin\Field\FieldFormatter\SlickTextFormatter.
+- Issue #3113230 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in slick\Plugin\Field\FieldFormatter\SlickEntityFormatterBase.
+- Issue #3113227 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in
+  slick\Plugin\Field\FieldFormatter\SlickEntityReferenceFormatterBase.
+- Issue #3113159 by thalles, gausarts: Fix subclassing and stop overriding
+  constructors in slick\Plugin\Field\FieldFormatter\SlickFileFormatter.
+
+Slick 8.x-2.0-dev, 2020-01-31
+-----------------------------
+- Issue #3112363 by chr.fritsch: Integrate the new
+  libraries_directory_file_finder service.
+
+Slick 8.x-2.0-dev, 2020-01-31
+-----------------------------
+- Removed deprecated methods used mostly internally such as for/in hook_alter:
+  SlickManager::libraryInfoBuild, SlickManager::getEasingPath, etc.
+- Added app.root service to slick.skin_manager, and other fixes.
+
+Slick 8.x-2.0-dev, 2020-01-22
+-----------------------------
+- Added micro optimizations, similarity found -> code reuse, etc.
+- Updated docs, cleanups, minor fixes.
+
+Slick 8.x-2.0-dev, 2020-01-15
+-----------------------------
+- Removed slick_hook_info() for the new skins as plugins.
+- Updated docs.
+
+Slick 8.x-2.0-dev, 2020-01-13
+-----------------------------
+- Issue #3075838 by volkerk, gausarts: Configuration translation disallowed HTML
+
+Slick 8.x-2.0-dev, 2020-01-11
+-----------------------------
+- Issue #3105670 by gausarts: hook_hook_info is to be deprecated, consider skins
+  as plugins.
+
+Slick 8.x-2.0-dev, 2020-01-01
+-----------------------------
+- Issue #3088244 by aarnau, d70rr3s, igonzalez: [Regression]: Dots are not
+  assigned to the proper slick slider when multiple slick are on the page.
+
+Slick 8.x-2.0-dev, 2019-04-27
+-----------------------------
+- Updated docs.
+- Updated Ajaxin integration.
+- Fixed for colorbox regression with indices due to the previous slick.colorbox
+  library weight change.
+
+Slick 8.x-2.0-dev, 2019-04-18
+-----------------------------
+- Issue #3048629 by fskreuz: Add pauseOnFocus option.
+- Added support for Ajaxin module preloader.
+- Lowered slick.colorbox library weight.
+
+Slick 8.x-2.0-dev, 2019-04-03
+-----------------------------
+- Updated SlickManager::attach() parameter for Blazy RC2+.
+- Fixes for slidesToShow > 1, centerMode, clones with Blazy IO.
+
+Slick 8.x-2.0-dev, 2019-03-30
+-----------------------------
+- Removed deprecated SlickAdmin::settingsSummary() for SlickAdmin
+  ::getSettingsSummary().
+- Removed deprecated Slick::htmlSettings() for SlickDefault::htmlSettings().
+- Removed deprecated Slick::jsSettings() for SlickDefault::jsSettings().
+- Deprecated Slick::getHtmlId() for Blazy::getHtmlId().
+- Updated to the latest Blazy 03/30.
+- Removed BlazyManagerBase::getCacheMetadata() for BlazyManagerBase
+  ::getCacheMetadata() at Blazy RC1.
+- Removed Drupal.blazy.init.revalidate() for Drupal.blazy.init.load() as being
+  too expensive, also for IO compatibility.
+
+Slick 8.x-2.0-dev, 2019-03-23
+-----------------------------
+- Micro optimizations.
+
+Slick 8.x-2.0-dev, 2019-03-21
+-----------------------------
+- Moved obvious module features to #pre_render to declutter preprocess.
+- Added caption_attributes for easy preprocess overrides.
+- Removed useless loop.
+
+Slick 8.x-2.0-dev, 2019-03-19
+-----------------------------
+- Fixed for TODOs.
+
+Slick 8.x-2.0-dev, 2019-03-15
+-----------------------------
+- Added Slick::loadSafely(), and minor fixes.
+
+Slick 8.x-2.0-dev, 2019-03-11
+-----------------------------
+- Added isset check to Slick::getOptions().
+
+Slick 8.x-2.0-beta1, 2019-03-08
+-------------------------------
+- Cleaned up deprecated VEF/ VEM from test files.
+
+Slick 8.x-2.0-dev, 2019-03-07
+-----------------------------
+- Made Slick and Slick UI extensible.
+
+Slick 8.x-2.0-dev, 2019-03-06
+-----------------------------
+- Updated to the latest Blazy change 03-06 with BlazyAdminBase::openingForm().
+- Added hook_slick_build_alter() to modify the entire slick outputs.
+
+Slick 8.x-2.0-dev, 2019-03-01
+-----------------------------
+- Updated to the latest Blazy.
+- Removed SlickMediaFormatterBase as in TODO.
+
+Slick 8.x-2.0-dev, 2019-02-12
+-----------------------------
+- Added weight to Slick library CSS to prevent it from overriding module CSS.
+
+Slick 8.x-2.0-dev, 2019-01-06
+-----------------------------
+- Fixed for dots with thumbnail alt.
+
+Slick 8.x-2.0-dev, 2019-01-04
+-----------------------------
+- Updated README.txt, and minor adjustments.
+
+Slick 8.x-2.0-dev, 2019-01-01
+-----------------------------
+- Added a new dedicated Media integration via SlickMediaFormatterBase.
+- Issue #3023234 by gausarts: Create a new branch for core Media.
+- Initial commit.

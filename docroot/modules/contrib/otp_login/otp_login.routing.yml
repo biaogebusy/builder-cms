@@ -1,0 +1,25 @@
+otp_login.admin_settings:
+  path: '/admin/config/people/otp_login'
+  defaults:
+    _title: 'OTP Login Settings'
+    _form: '\Drupal\otp_login\Form\BasicSettingsForm'
+  requirements:
+    _permission: 'administer otp login authentication'
+  options:
+    _admin_route: TRUE
+otp_login.admin_settings.user_purge:
+  path: '/admin/config/people/otp_login/user_purge'
+  defaults:
+    _title: 'OTP login - purge users'
+    _form: '\Drupal\otp_login\Form\UserPurgeForm'
+  requirements:
+    _permission: 'administer otp login authentication'
+  options:
+    _admin_route: TRUE
+otp_login.otp_login_form:
+  path: '/otp/login'
+  defaults:
+    _form: '\Drupal\otp_login\Form\OtpLoginForm'
+    _title: 'OTP Login Form'
+  requirements:
+    _role: 'anonymous'

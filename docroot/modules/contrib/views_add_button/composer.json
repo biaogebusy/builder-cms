@@ -1,0 +1,13 @@
+{
+  "name": "drupal/views_add_button",
+  "description": "Views Add Button",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/views_add_button",
+  "license": "GPL-2.0",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/search/views_add_button"
+  },
+  "require": {
+    "drupal/token": "~1.5"
+  }
+}

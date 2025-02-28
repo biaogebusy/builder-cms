@@ -1,0 +1,114 @@
+commerce_config_entity_bundle:
+  type: config_entity
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    traits:
+      type: sequence
+      label: 'Traits'
+      orderby: value
+      sequence:
+        type: string
+    locked:
+      type: boolean
+      label: 'Locked'
+
+commerce_condition:
+  type: mapping
+  label: 'Condition'
+  mapping:
+    plugin:
+      type: string
+      label: 'Plugin'
+    configuration:
+      type: commerce.commerce_condition.plugin.[%parent.plugin]
+
+commerce.commerce_condition.plugin.*:
+  type: commerce_condition_configuration
+
+commerce_condition_configuration:
+  type: mapping
+
+commerce.commerce_condition.plugin.entity_bundle:
+  type: commerce_condition_configuration
+  mapping:
+    bundles:
+      type: sequence
+      label: 'Bundles'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Bundle'
+
+field.value.commerce_remote_id:
+ type: mapping
+ label: 'Default value'
+ mapping:
+   provider:
+     type: string
+     label: 'Provider'
+   remote_id:
+     type: string
+     label: 'Remote ID'
+
+field.widget.settings.commerce_conditions:
+  type: mapping
+  label: 'Conditions widget settings'
+  mapping:
+    entity_types:
+      type: sequence
+      label: 'Entity types'
+      orderby: value
+      sequence:
+        type: string
+
+field.widget.settings.commerce_entity_select:
+  type: mapping
+  label: 'Entity select widget settings'
+  mapping:
+    hide_single_entity:
+      type: boolean
+      label: 'Hide if there''s only one entity'
+    autocomplete_threshold:
+      type: integer
+      label: 'Autocomplete threshold'
+    autocomplete_size:
+      type: integer
+      label: 'Autocomplete size'
+    autocomplete_placeholder:
+      type: string
+      label: 'Autocomplete placeholder'
+
+views.argument_validator.commerce_current_user:
+  type: mapping
+  label: 'Current user'
+  mapping:
+    admin_permission:
+      type: string
+      label: 'Admin permission'
+
+views.field.commerce_entity_bundle:
+  type: views.field.field
+  mapping:
+    hide_single_bundle:
+      type: boolean
+      label: 'Hide if there''s only one bundle.'
+
+views.filter.commerce_entity_bundle:
+  type: views.filter.in_operator
+  label: 'Bundle'
+  mapping:
+    expose:
+      type: mapping
+      label: 'Expose'
+      mapping:
+        reduce:
+          type: boolean
+          label: 'Reduce'
+        hide_single_bundle:
+          type: boolean
+          label: 'Hide if there''s only one bundle.'

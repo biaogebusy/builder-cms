@@ -1,0 +1,10 @@
+// Import default variables.
+@import "../variables";
+
+// Colours
+// ... this is our default theme.
+// ... colors here are the defined in the main _variables.scss file.
+// ... look at the light.scss file to create your own theme!
+
+// Import our components with our default theme variables.
+@import "common";

@@ -1,0 +1,20 @@
+span.label {
+  padding: 2px 5px;
+  color: #333;
+  border-radius: 5px;
+  background-color: #e0e0d8;
+  font-weight: normal;
+}
+
+span.label--overwritten {
+  background-color: #f39c12;
+}
+
+span.label--status {
+  color: white;
+  background-color: #27ae60;
+}
+
+span.label--status--disabled {
+  background-color: #c0392b;
+}

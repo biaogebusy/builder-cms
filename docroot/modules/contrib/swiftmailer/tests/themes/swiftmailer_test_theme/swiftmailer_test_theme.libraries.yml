@@ -1,0 +1,4 @@
+swiftmailer:
+  css:
+    theme:
+      test.mail.css: {}

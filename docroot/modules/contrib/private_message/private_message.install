@@ -1,0 +1,361 @@
+<?php
+
+/**
+ * @file
+ * Holds install and update hooks for the Private Message module.
+ */
+
+use Drupal\Core\Database\IntegrityConstraintViolationException;
+
+/**
+ * Implements hook_uninstall().
+ */
+function private_message_uninstall() {
+  \Drupal::configFactory()->getEditable('core.entity_view_display.user.user.private_message_author')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_view_mode.user.private_message_author')->delete();
+  \Drupal::configFactory()->getEditable('message.template.private_message_notification')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_view_display.message.private_message_notification.mail_body')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_view_display.message.private_message_notification.mail_subject')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_form_display.message.private_message_notification.default')->delete();
+  \Drupal::configFactory()->getEditable('core.entity_view_display.message.private_message_notification.default')->delete();
+}
+
+/**
+ * Implements hook_update_n().
+ */
+function private_message_update_8001() {
+  $config_factory = \Drupal::configFactory();
+
+  $config_factory->getEditable('private_message.settings')
+    ->set('enable_email_notifications', TRUE)
+    ->set('send_by_default', TRUE)
+    ->save(TRUE);
+
+  $message_notifcation_mail_map = [
+    'subject' => 'Private message at [site:name]',
+    'body' => "[user:display-name],\n\nYou have received a private message at [site:name] from [private_message:author_name]\n\nThe message is as follows:\n\n[private_message:message]\n\nYou can view the entire thread and reply to this message at:\n\n[private_message_thread:url]\n\n\nThank you,\n\n--  [site:name]",
+  ];
+
+  $config_factory->getEditable('private_message.mail')
+    ->set('message_notification', $message_notifcation_mail_map)
+    ->save(TRUE);
+}
+
+/**
+ * Add the create private message label.
+ */
+function private_message_update_8002() {
+  $config_factory = \Drupal::configFactory();
+  $config_factory->getEditable('private_message.settings')
+    ->set('create_message_label', 'Create Private Message')
+    ->save(TRUE);
+}
+
+/**
+ * Implements hook_schema().
+ */
+function private_message_schema() {
+  $schema['pm_thread_history'] = [
+    'description' => 'A record of which {users} have read which {node}s.',
+    'fields' => [
+      'uid' => [
+        'description' => 'The {users}.uid that read the {private_message_threads} id.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'thread_id' => [
+        'description' => 'The {private_message_threads}.id that was read.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'access_timestamp' => [
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'delete_timestamp' => [
+        'description' => 'The Unix timestamp at which the delete occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+    ],
+    'primary key' => ['uid', 'thread_id'],
+    'indexes' => [
+      'thread_id' => ['thread_id'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Add the create private message label.
+ */
+function private_message_update_8003() {
+  $config_factory = \Drupal::configFactory();
+  $config_factory->getEditable('private_message.settings')
+    ->set('create_message_label', 'Create Private Message')
+    ->save(TRUE);
+}
+
+/**
+ * Install the module shcema.
+ */
+function private_message_update_8004() {
+  $database = \Drupal::database();
+
+  // Create database table.
+  if (!$database->schema()->tableExists('pm_thread_history')) {
+    $database->schema()->createTable('pm_thread_history', [
+      'description' => 'A record of which {users} have read which {private_message_threads}.',
+      'fields' => [
+        'uid' => [
+          'description' => 'The {users}.uid that read the {private_message_threads} id.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'thread_id' => [
+          'description' => 'The {private_message_threads}.id that was read.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'access_timestamp' => [
+          'description' => 'The Unix timestamp at which the read occurred.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'delete_timestamp' => [
+          'description' => 'The Unix timestamp at which the delete occurred.',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['uid', 'thread_id'],
+      'indexes' => [
+        'thread_id' => ['thread_id'],
+      ],
+    ]);
+  }
+}
+
+/**
+ * Migrate the records into a new table.
+ */
+function private_message_update_8005(&$sandbox) {
+  // Store last processed thread ID, so the sites with a huge amount of threads
+  // will have at least some chances to complete this update in a few runs.
+  $last_processed = \Drupal::state()->get('scalable_bridge_last', 0);
+  $database = \Drupal::database();
+
+  if (empty($sandbox['max'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['max'] = $database
+      ->select('private_message_threads', 't')
+      ->condition('t.id', $last_processed, '>')
+      ->countQuery()->execute()
+      ->fetchField();
+  }
+
+  // Select a range of the threads:
+  $query = $database->select('private_message_threads', 't');
+  $query->fields('t', ['id']);
+  $query->condition('t.id', $last_processed, '>');
+  $query->range(0, 10);
+  $query->orderBy('t.id');
+  $threads = $query->execute()->fetchCol();
+
+  if (empty($threads)) {
+    $sandbox['#finished'] = 1;
+    // Reset last processed thread.
+    \Drupal::state()->delete('scalable_bridge_last');
+    $sandbox['messages'][] = t('@total threads processed.', [
+      '@total' => $sandbox['max'],
+    ]);
+    return;
+  }
+
+  // Select the thread-member pairs:
+  $query = $database->select('private_message_threads', 't');
+  $query->fields('t', ['id']);
+  $query->condition('t.id', $threads, 'IN');
+  $query->orderBy('t.id');
+  $query->leftJoin('private_message_thread__members', 'm', 't.id = m.entity_id');
+  $query->fields('m', ['members_target_id']);
+  $thread_member_pairs = $query->execute()->fetchAll();
+
+  foreach ($thread_member_pairs as $thread_member_pair) {
+    $thread_id = $thread_member_pair->id;
+    $member_id = $thread_member_pair->members_target_id;
+
+    // Get the last access timestamp of the member for thread.
+    $query = $database->select('private_message_thread__last_access_time', 'la');
+    $query->leftJoin('pm_thread_access_time', 'at', 'at.id = la.last_access_time_target_id');
+    $query->condition('la.entity_id', $thread_id);
+    $query->condition('at.owner', $member_id);
+    $query->addExpression('MAX(at.access_time)', 'access_time');
+    $access_timestamp = $query->execute()->fetchField() ?: 0;
+
+    // Get the last delete timestamp of the member for thread.
+    $query = $database->select('private_message_thread__last_delete_time', 'ld');
+    $query->leftJoin('pm_thread_delete_time', 'dt', 'dt.id = ld.last_delete_time_target_id');
+    $query->condition('ld.entity_id', $thread_id);
+    $query->condition('dt.owner', $member_id);
+    $query->addExpression('MAX(dt.delete_time)', 'delete_time');
+    $delete_timestamp = $query->execute()->fetchField() ?: 0;
+
+    try {
+      // Update the new table with the access/delete time.
+      $database->insert('pm_thread_history')
+        ->fields([
+          'uid' => $member_id,
+          'thread_id' => $thread_id,
+          'access_timestamp' => $access_timestamp,
+          'delete_timestamp' => $delete_timestamp,
+        ])->execute();
+    }
+    catch (IntegrityConstraintViolationException $e) {
+      // Just skip if row already exists.
+    }
+  }
+
+  $sandbox['progress'] += count($threads);
+  $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+
+  // At the end of run update the last processed thread ID.
+  $last_processed = end($threads);
+  \Drupal::state()->set('scalable_bridge_last', $last_processed);
+  // Or reset it when all the threads processed.
+  if ($sandbox['#finished'] === 1) {
+    \Drupal::state()->delete('scalable_bridge_last');
+  }
+
+  $sandbox['messages'][] = t('@current/@total threads processed.', [
+    '@count' => $sandbox['progress'],
+    '@total' => $sandbox['max'],
+  ]);
+}
+
+/**
+ * Drop the old entity types and field definitions.
+ */
+function private_message_update_8006(&$sandbox) {
+  $entity_update_manager = \Drupal::entityDefinitionUpdateManager();
+  foreach (['pm_thread_access_time', 'pm_thread_delete_time'] as $entity_type_id) {
+    $entity_type = $entity_update_manager->getEntityType($entity_type_id);
+    $entity_update_manager->uninstallEntityType($entity_type);
+  }
+  foreach (['last_access_time', 'last_delete_time'] as $field_name) {
+    $definition = $entity_update_manager->getFieldStorageDefinition($field_name, 'private_message_thread');
+    $entity_update_manager->uninstallFieldStorageDefinition($definition);
+  }
+}
+
+/**
+ * Enable notifications submodule.
+ */
+function private_message_update_8007() {
+  // Delete the configs that will be migrated to private_message_notify.
+  // Only delete configurations if private_message_notify is not installed
+  // already.
+  if (!\Drupal::moduleHandler()->moduleExists('private_message_notify')) {
+    // We should delete configurations that will be migrated to
+    // private_message_notify to prevent database update errors.
+    $configs = [
+      'core.entity_form_display.message.private_message_notification.default',
+      'core.entity_view_display.message.private_message_notification.default',
+      'core.entity_view_display.message.private_message_notification.mail_body',
+      'core.entity_view_display.message.private_message_notification.mail_subject',
+      'field.field.message.private_message_notification.field_message_pm_thread',
+      'field.field.message.private_message_notification.field_message_private_message',
+      'field.storage.message.field_message_pm_thread',
+      'field.storage.message.field_message_private_message',
+      'message.template.private_message_notification',
+    ];
+
+    $config_factory = \Drupal::configFactory();
+
+    // Some users could edit the configuration, so we need to save it temporarily
+    // and update after private_message_notify will be enabled
+    // @see private_message_update_8010
+    foreach ($configs as $name) {
+      $config = $config_factory->getEditable($name);
+      if ($config->isNew()) {
+        continue;
+      }
+
+      // Set config data to a new temporary config.
+      $config_tmp = $config_factory->getEditable("{$name}.tmp");
+      $config_tmp->setData($config->getRawData())->save();
+
+      // Delete config.
+      $config->delete();
+    }
+  }
+
+  // Enable notifications submodule.
+  $module = 'private_message_notify';
+  if (!\Drupal::moduleHandler()->moduleExists($module)) {
+    /** @var \Drupal\Core\Extension\ModuleInstallerInterface $installer */
+    $installer = \Drupal::service('module_installer');
+    $installer->install([$module]);
+  }
+
+  // Update the configs that were migrated to private_message_notify.
+  try {
+    $config_factory = \Drupal::configFactory();
+
+    foreach ($configs as $name) {
+      // Load temporary config.
+      $config_tmp = $config_factory->getEditable("{$name}.tmp");
+
+      // If there is not exist a temporary config, do nothing.
+      if ($config_tmp->isNew()) {
+        continue;
+      }
+
+      // Load temporary config and update original one.
+      $config = $config_factory->getEditable($name);
+      $config->setData($config_tmp->getRawData())->save();
+
+      // Delete temporary config.
+      $config_tmp->delete();
+    }
+  }
+  catch (Exception $e) {
+    \Drupal::logger('private_message')->error($e->getMessage());
+  }
+}
+
+/**
+ * Skip update because of unnecessary.
+ */
+function private_message_update_8008() {
+  // Leave this hook update empty because it already passed who applied patch
+  // from issue https://www.drupal.org/project/private_message/issues/3265901
+}
+
+/**
+ * Skip update because of unnecessary.
+ */
+function private_message_update_8009() {
+  // Leave this hook update empty because it already passed who applied patch
+  // from issue https://www.drupal.org/project/private_message/issues/3265901
+}
+
+/**
+ * Skip update because of unnecessary.
+ */
+function private_message_update_8010() {
+  // Leave this hook update empty because it already passed who applied patch
+  // from issue https://www.drupal.org/project/private_message/issues/3265901
+}

@@ -1,0 +1,12 @@
+wechat_request_message_type_add:
+  route_name: wechat.request_message_type_add
+  title: 'Add request message type'
+  appears_on:
+    - entity.wechat_request_message_type.collection
+
+wechat_response_message_type_add:
+  route_name: wechat.response_message_type_add
+  title: 'Add response message type'
+  appears_on:
+    - entity.wechat_response_message_type.collection
+

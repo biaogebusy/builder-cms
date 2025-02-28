@@ -1,0 +1,5 @@
+entity.user_default_page_config_entity.add_form:
+  route_name: 'entity.user_default_page_config_entity.add_form'
+  title: 'Add User default page'
+  appears_on:
+    - entity.user_default_page_config_entity.collection

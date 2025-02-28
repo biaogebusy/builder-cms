@@ -1,0 +1,5 @@
+services:
+  replication_alter_test.content.subscriber:
+    class: Drupal\replication_alter_test\Event\ContentEntityTestAlterSubscriber
+    tags:
+      - { name: event_subscriber }

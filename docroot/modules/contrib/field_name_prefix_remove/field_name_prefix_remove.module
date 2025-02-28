@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * For: field_ui_field_storage_add_form
+ */
+function field_name_prefix_remove_form_field_ui_field_storage_add_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+
+  //Remove the unnecessary field_ prefix.
+  $language = \Drupal::languageManager()->getCurrentLanguage();
+  $form['new_storage_wrapper']['field_name']['#field_prefix'] = '<span dir="' . $language->getDirection() . '">';
+
+  // Attach validate function to prevent adding the field_ prefix.
+  $form['#validate'][] = 'field_name_prefix_remove_form_field_ui_field_overview_form_remove_field_prefix';
+
+  // Increase maximum characters to 32 as per database constraint
+  $form['new_storage_wrapper']['field_name']['#maxlength'] = 32;
+}
+
+/**
+ * Validate function to prevent adding the field_ prefix.
+ */
+function field_name_prefix_remove_form_field_ui_field_overview_form_remove_field_prefix(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+
+  $field_name = preg_replace('/^field_/', '', $form_state->getValue('field_name'));
+  $form_state->setValue('field_name', $field_name);
+}

@@ -1,0 +1,5 @@
+table:
+  label: 'Table'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false

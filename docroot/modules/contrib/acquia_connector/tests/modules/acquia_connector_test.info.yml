@@ -1,0 +1,10 @@
+name: Acquia Connector test
+type: module
+package: Testing
+description: Support module for the Acquia Connector module tests.
+hidden: true
+
+# Information added by Drupal.org packaging script on 2022-10-14
+version: '3.0.6'
+project: 'acquia_connector'
+datestamp: 1665784290

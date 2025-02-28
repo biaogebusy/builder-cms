@@ -1,0 +1,12 @@
+.toolbar-bar .acquia-inactive-subscription:before {
+  background-image: url('../images/error.svg');
+}
+
+.toolbar-bar .acquia-active-subscription:before {
+  background-image: url('../images/check.svg');
+}
+
+.toolbar .toolbar-bar .toolbar-tab .acquia-active-subscription,
+.toolbar .toolbar-bar .toolbar-tab .acquia-inactive-subscription {
+  z-index: 0;
+}

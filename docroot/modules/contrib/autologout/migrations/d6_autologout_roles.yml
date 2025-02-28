@@ -1,0 +1,17 @@
+id: d6_autologout_roles
+label: Automated Logout Roles Configuration
+migration_tags:
+  - Drupal 6
+  - Configuration
+source:
+  plugin: d6_autologout_roles
+process:
+  enabled: enabled
+  timeout: timeout
+destination:
+  plugin: config:autologout
+  config_name: autologout.role.
+migration_dependencies:
+  required:
+    - d6_user_role
+    - d6_autologout_settings

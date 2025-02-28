@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Implement module related hooks for the charts_highcharts module.
+ */
+
+use Drupal\charts\ConfigUpdater;
+use Drupal\charts_highcharts\Plugin\chart\Library\Highcharts;
+
+/**
+ * Implements hook_charts_version3_to_new_settings_structure_alter().
+ */
+function charts_highcharts_charts_version3_to_new_settings_structure_alter(array &$new_settings, string $for, ConfigUpdater $config_updater) {
+  $config_factory = \Drupal::configFactory();
+  $is_config = $for === 'config';
+  $highcharts_config = $is_config ? $config_factory->getEditable('charts_highcharts.settings') : NULL;
+  if (!$is_config || !$highcharts_config || empty($new_settings['library']) || $new_settings['library'] !== 'highcharts') {
+    if ($highcharts_config) {
+      $highcharts_config->delete();
+    }
+    return;
+  }
+
+  $mapping_keys = [
+    'legend_layout' => 'legend_layout',
+    'legend_background_color' => 'legend_background_color',
+    'legend_border_width' => 'legend_border_width',
+    'legend_shadow' => 'legend_shadow',
+    'item_style_color' => 'legend_item_style_color',
+    'text_overflow' => 'legend_item_style_overflow',
+  ];
+  $library_config = [
+    'legend' => [
+      'layout' => NULL,
+      'background_color' => '',
+      'border_width' => 0,
+      'shadow' => FALSE,
+      'item_style' => [
+        'color' => '',
+        'overflow' => '',
+      ],
+    ],
+    'exporting_library' => TRUE,
+    'texture_library' => TRUE,
+    'global_options' => Highcharts::defaultGlobalOptions(),
+  ];
+
+  foreach ($highcharts_config->getRawData() as $config_key => $config_value) {
+    $setting_key_map = $mapping_keys[$config_key] ?? '';
+    if (!$setting_key_map || substr($setting_key_map, 0, 6) !== 'legend') {
+      continue;
+    }
+
+    // Stripping the 'legend_' in front of the mapping key.
+    $setting_key_map = substr($setting_key_map, 7, strlen($setting_key_map));
+    $value = $config_updater->transformBoolStringValueToBool($config_value);
+    switch ($setting_key_map) {
+      case 'layout':
+        $library_config['legend']['layout'] = $value;
+        break;
+
+      case 'background_color':
+        $library_config['legend']['background_color'] = $value;
+        break;
+
+      case 'border_width':
+        $library_config['legend']['border_width'] = $value;
+        break;
+
+      case 'shadow':
+        $library_config['legend']['shadow'] = $value;
+        break;
+
+      case 'item_style_color':
+        $library_config['legend']['item_style']['color'] = $value;
+        break;
+
+      default:
+        $library_config['legend']['item_style']['overflow'] = $value;
+    }
+
+    $new_settings['library_config'] = $library_config;
+    $highcharts_config->delete();
+  }
+}

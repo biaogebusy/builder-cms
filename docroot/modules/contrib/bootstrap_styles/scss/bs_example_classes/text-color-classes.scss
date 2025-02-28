@@ -1,0 +1,8 @@
+// This file provide classes examples for Text color Plugin.
+// We only use these classes in configuration page when install the module.
+// Note: this is just example, you can use any class from your theme.
+@import "bs-variables";
+@import "mixins/color";
+
+// Generate text colors classes by make-color mixin.
+@include make-color(color, text);

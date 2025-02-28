@@ -1,0 +1,10 @@
+<ruleset name="csv_serialization">
+  <description>PHP CodeSniffer configuration for CSV Serialization.</description>
+  <file>.</file>
+  <exclude-pattern>/vendor/</exclude-pattern>
+  <arg value="s"/>
+  <arg value="p"/>
+  <arg value="-colors"/>
+  <rule ref="Drupal"/>
+  <rule ref="DrupalPractice"/>
+</ruleset>

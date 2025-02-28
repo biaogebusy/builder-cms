@@ -1,0 +1,33 @@
+{#
+ /**
+  * @file
+  * Default theme implementation of spacing preview box.
+  *
+  * @ingroup themeable
+  */
+#}
+
+{{ attach_library('bootstrap_styles/plugins_groups.spacing.spacing_preview') }}
+
+<div class="spacing-preview">
+
+  <div class="preview-box margin-box">
+    <span class="title">{{ 'Margin'|t }}</span>
+    <span class="left margin-left">0</span>
+    <span class="top margin-top">0</span>
+    <span class="right margin-right">0</span>
+    <span class="bottom margin-bottom">0</span>
+
+
+  <div class="preview-box padding-box">
+    <span class="title">{{ 'Padding'|t }}</span>
+    <span class="left padding-left">0</span>
+    <span class="top padding-top">0</span>
+    <span class="right padding-right">0</span>
+    <span class="bottom padding-bottom">0</span>
+  </div>
+  </div>
+
+</div>
+
+<div id="bs_spacing_preview_calc"></div> 

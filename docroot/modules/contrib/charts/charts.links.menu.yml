@@ -1,0 +1,5 @@
+charts.settings:
+  title: 'Charts configuration'
+  description: 'Set the default library, behavior, and style of charts.'
+  parent: system.admin_config_content
+  route_name: charts.settings

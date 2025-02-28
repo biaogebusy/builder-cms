@@ -1,0 +1,13 @@
+name: 'Lightning Roles'
+core_version_requirement: '^9.3 || ^10'
+type: module
+package: Lightning
+description: 'Automatically manages user roles and permissions.'
+dependencies:
+  - drupal:node
+configure: lightning_roles.settings
+
+# Information added by Drupal.org packaging script on 2023-01-10
+version: '8.x-5.14'
+project: 'lightning_core'
+datestamp: 1673367902

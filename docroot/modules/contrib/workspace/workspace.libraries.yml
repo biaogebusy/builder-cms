@@ -1,0 +1,17 @@
+drupal.workspace.toolbar:
+  version: VERSION
+  css:
+    theme:
+      css/workspace.toolbar.css: {}
+
+drupal.workspace.admin:
+  version: VERSION
+  css:
+    theme:
+      css/workspace.admin.css: {}
+
+drupal.workspace.switcher:
+  version: VERSION
+  css:
+    theme:
+      css/workspace.switcher.css: {}

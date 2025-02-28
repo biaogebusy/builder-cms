@@ -1,0 +1,6 @@
+charts.settings.library_plugin.google:
+  type: charts_settings_library_plugin
+  mapping:
+    use_material_design:
+      label: 'Use Material Design'
+      type: boolean

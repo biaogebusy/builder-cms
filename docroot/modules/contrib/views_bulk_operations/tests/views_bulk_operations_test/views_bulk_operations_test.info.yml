@@ -1,0 +1,13 @@
+name: 'Views Bulk Operations test'
+type: module
+description: 'Support module for testing Views Bulk Operations.'
+package: Testing
+core_version_requirement: ^8.8 || ^9
+dependencies:
+  - drupal:views_bulk_operations
+  - drupal:node
+
+# Information added by Drupal.org packaging script on 2021-04-29
+version: '8.x-3.13'
+project: 'views_bulk_operations'
+datestamp: 1619697069

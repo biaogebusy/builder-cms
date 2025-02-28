@@ -1,0 +1,7 @@
+/* Color box in image effects UI */
+
+.image-effects-color-box {
+  border: 1px solid;
+  font-weight: bold;
+  padding: 0.1em 0.5em;
+}

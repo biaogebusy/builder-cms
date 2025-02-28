@@ -1,0 +1,9 @@
+vertical_tabs:
+  version: VERSION
+  js:
+    js/paragraphs_tabs_widget_vertical_tabs.js: {}
+  dependencies:
+    - core/jquery
+    - core/once
+    - core/drupalSettings
+    - core/drupal.vertical-tabs

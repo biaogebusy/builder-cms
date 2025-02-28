@@ -1,0 +1,149 @@
+<?php
+
+/**
+ * @file
+ * Print any entity.
+ */
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\entity_print\Renderer\ContentEntityRenderer;
+
+/**
+ * Implements hook_theme().
+ */
+function entity_print_theme($existing, $type, $theme, $path) {
+  return [
+    'entity_print' => [
+      'path' => $path . '/templates',
+      'template' => 'entity-print',
+      'variables' => [
+        'title' => '',
+        'content' => NULL,
+        'entity_print_css' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function entity_print_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+  foreach ($entity_types as $entity_type) {
+    if ($entity_type->entityClassImplements(ContentEntityInterface::class) && !$entity_type->hasHandlerClass('entity_print')) {
+      $entity_type->setHandlerClass('entity_print', ContentEntityRenderer::class);
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function entity_print_entity_extra_field_info() {
+  $export_types = \Drupal::service('plugin.manager.entity_print.export_type')->getDefinitions();
+  $bundle_info = \Drupal::service('entity_type.bundle.info')->getAllBundleInfo();
+
+  $extra_fields = [];
+
+  foreach ($bundle_info as $entity_type_id => $bundles) {
+    foreach ($bundles as $bundle_id => $bundle) {
+      foreach ($export_types as $export_type => $definition) {
+        $extra_fields[$entity_type_id][$bundle_id]['display']['entity_print_view_' . $export_type] = [
+          'label' => t('View @label', ['@label' => $definition['label']]),
+          'description' => t('Provides a link to view the Print version of the entity'),
+          'weight' => 0,
+          'visible' => FALSE,
+        ];
+      }
+    }
+  }
+
+  return $extra_fields;
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function entity_print_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  $export_types = \Drupal::service('plugin.manager.entity_print.export_type')->getDefinitions();
+  $access_manager = \Drupal::accessManager();
+  foreach ($export_types as $export_type => $definition) {
+    $key = 'entity_print_view_' . $export_type;
+    if ($component = $display->getComponent($key)) {
+      $route_params = [
+        'entity_type' => $entity->getEntityTypeId(),
+        'entity_id' => $entity->id(),
+        'export_type' => trim($export_type, '_engine'),
+      ];
+
+      $build[$key] = [
+        '#type' => 'print_link',
+        '#title' => $display->getThirdPartySetting('entity_print', $export_type . '_label', t('View @label', ['@label' => $definition['label']])),
+        '#export_type' => $export_type,
+        '#url' => Url::fromRoute('entity_print.view', $route_params),
+        '#weight' => $component['weight'] ?? 0,
+        '#access' => $access_manager->checkNamedRoute('entity_print.view', $route_params, NULL, TRUE),
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function entity_print_form_entity_view_display_edit_form_alter(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\Entity\EntityViewDisplay $display */
+  $display = $form_state->getFormObject()->getEntity();
+  $export_types = \Drupal::service('plugin.manager.entity_print.export_type')->getDefinitions();
+
+  foreach ($export_types as $export_type => $definition) {
+    $form['fields']['entity_print_view_' . $export_type]['empty_cell'] = [
+      '#type' => 'textfield',
+      '#title' => '',
+      '#default_value' => $display->getThirdPartySetting('entity_print', $export_type . '_label', t('View @label', ['@label' => $definition['label']])),
+    ];
+  }
+
+  $form['#validate'][] = 'entity_print_form_entity_view_display_edit_form_validate';
+  $form['actions']['submit']['#submit'][] = 'entity_print_form_entity_view_display_edit_form_submit';
+}
+
+/**
+ * Entity display form validation handler.
+ */
+function entity_print_form_entity_view_display_edit_form_validate(&$form, FormStateInterface $form_state) {
+  $export_types = \Drupal::service('plugin.manager.entity_print.export_type')->getDefinitions();
+  foreach ($export_types as $export_type => $definition) {
+    $key = 'entity_print_view_' . $export_type;
+    if (empty($form_state->getValue(['fields', $key, 'empty_cell']))) {
+      $form_state->setErrorByName("fields][$key][empty_cell", t('The Entity Print fields settings have not been saved. Please enter a non-empty value for the @label field.', [
+        '@label' => $definition['label'],
+      ]));
+    }
+  }
+}
+
+/**
+ * Entity display form submit handler.
+ */
+function entity_print_form_entity_view_display_edit_form_submit(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\Entity\EntityViewDisplay $display */
+  $display = $form_state->getFormObject()->getEntity();
+
+  $export_types = \Drupal::service('plugin.manager.entity_print.export_type')->getDefinitions();
+  foreach ($export_types as $export_type => $definition) {
+    $key = 'entity_print_view_' . $export_type;
+    // If we've enabled the entity_print_view field then save the label for
+    // rendering later.
+    if ($display->getComponent($key)) {
+      $value = $form_state->getValue(['fields', $key])['empty_cell'];
+      $display->setThirdPartySetting('entity_print', $export_type . '_label', $value);
+    }
+  }
+  $display->save();
+}

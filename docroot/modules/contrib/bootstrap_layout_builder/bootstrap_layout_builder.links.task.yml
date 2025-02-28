@@ -1,0 +1,16 @@
+bootstrap_layout_builder.breakpoints_collection:
+  route_name: entity.blb_breakpoint.collection
+  title: 'Breakpoints'
+  base_route: entity.blb_breakpoint.collection
+bootstrap_layout_builder.layouts_collection:
+  route_name: entity.blb_layout.collection
+  title: 'Layouts'
+  base_route: entity.blb_breakpoint.collection
+bootstrap_layout_builder.styles:
+  route_name: bootstrap_layout_builder.styles
+  title: 'Styles'
+  base_route: entity.blb_breakpoint.collection
+bootstrap_layout_builder.settings:
+  route_name: bootstrap_layout_builder.settings
+  title: 'Settings'
+  base_route: entity.blb_breakpoint.collection

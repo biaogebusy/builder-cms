@@ -1,0 +1,13 @@
+name: 'Advanced Queue'
+type: module
+description: 'Provides a better Queue API.'
+package: Other
+core_version_requirement: ^9.1 || ^10
+configure: entity.advancedqueue_queue.collection
+dependencies:
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2024-02-26
+version: '8.x-1.0'
+project: 'advancedqueue'
+datestamp: 1708984560

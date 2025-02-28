@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- https://github.com/squizlabs/PHP_CodeSniffer/wiki/Annotated-Ruleset -->
+<ruleset name="Example">
+
+  <description>An example PHP CodeSniffer configuration.</description>
+
+  <arg name="colors"/>
+  <arg name="cache" value=".phpcs-cache"/>
+  <arg name="parallel" value="10"/>
+
+  <file>.</file>
+
+  <!-- Temporary workaround until acquia/coding-standards-php works around this
+       breaking change in Coder 8.3.7: https://git.drupalcode.org/project/coder/commit/69b071b610803080e8ac1ca6757ed4e64524171c -->
+  <arg name="extensions" value="php,module,inc,install,test,profile,theme,css,info,txt,md,yml"/>
+
+  <exclude-pattern>vendor/*</exclude-pattern>
+
+  <rule ref="AcquiaDrupalTransitional"/>
+
+</ruleset>

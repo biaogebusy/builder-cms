@@ -1,0 +1,71 @@
+fivestar.base:
+  version: VERSION
+  css:
+    component:
+      css/fivestar.css: {}
+  js:
+    js/fivestar.js: {}
+
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.ajax
+
+fivestar.admin:
+  version: VERSION
+  css:
+    component:
+      css/fivestar-admin.css: {}
+
+# Widgets
+# Right now does not include RTL handling
+basic:
+  css:
+    component:
+      widgets/basic/basic.css: {}
+
+craft:
+  css:
+    component:
+      widgets/craft/craft.css: {}
+
+drupal:
+  css:
+    component:
+      widgets/drupal/drupal.css: {}
+
+flames:
+  css:
+    component:
+      widgets/flames/flames.css: {}
+
+hearts:
+  css:
+    component:
+      widgets/hearts/hearts.css: {}
+
+lullabot:
+  css:
+    component:
+      widgets/lullabot/lullabot.css: {}
+
+minimal:
+  css:
+    component:
+      widgets/minimal/minimal.css: {}
+
+outline:
+  css:
+    component:
+      widgets/outline/outline.css: {}
+
+oxygen:
+  css:
+    component:
+      widgets/oxygen/oxygen.css: {}
+
+small:
+  css:
+    component:
+      widgets/small/small.css: {}

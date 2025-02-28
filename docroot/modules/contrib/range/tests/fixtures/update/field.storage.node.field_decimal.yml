@@ -1,0 +1,21 @@
+uuid: 27aeb54d-748e-4960-9cf2-3f3281ef5fc0
+langcode: und
+status: true
+dependencies:
+  module:
+    - node
+    - range
+id: node.field_decimal
+field_name: field_decimal
+entity_type: node
+type: range_decimal
+settings:
+  precision: 12
+  scale: 4
+module: range
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,52 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - private_message
+    - text
+id: private_message.private_message.default
+targetEntityType: private_message
+bundle: private_message
+mode: default
+content:
+  created:
+    label: hidden
+    weight: -1
+    region: content
+    settings:
+      date_format: short
+      custom_date_format: ''
+      timezone: ''
+      tooltip:
+        date_format: long
+        custom_date_format: ''
+      time_diff:
+        enabled: false
+        future_format: '@interval hence'
+        past_format: '@interval ago'
+        granularity: 2
+        refresh: 60
+    third_party_settings: {  }
+    type: timestamp
+  message:
+    label: hidden
+    type: text_default
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  owner:
+    label: inline
+    type: entity_reference_entity_view
+    weight: 1
+    region: content
+    settings:
+      view_mode: private_message_author
+      link: false
+    third_party_settings: {  }
+  timestamp:
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }

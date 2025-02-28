@@ -1,0 +1,146 @@
+.project-update {
+  &__version-links {
+    padding-right: 0;
+  }
+
+  &__status {
+    &-icon {
+      width: 24px;
+      height: 24px;
+      display: inline-block;
+      vertical-align: bottom;
+
+      img {
+        display: none;
+      }
+    }
+
+    // Error
+    & &-icon {
+      padding-left: 0;
+      background-color: var(--gin-color-danger);
+      mask-image: icon('error');
+      mask-position: center right;
+      mask-repeat: no-repeat;
+      mask-size: 20px 20px;
+    }
+
+    &--security-error {
+      color: var(--gin-color-danger);
+
+      span {
+        position: relative;
+        top: 2px;
+      }
+    }
+
+    // Outdated
+    &--not-current &-icon {
+      background-color: var(--gin-color-warning);
+      mask-image: icon('warning');
+      mask-position: center right;
+      mask-repeat: no-repeat;
+      mask-size: 20px 20px;
+    }
+
+    // Current
+    &--current &-icon {
+      background-color: var(--gin-color-green);
+      mask-image: icon('status');
+      mask-position: center right;
+      mask-repeat: no-repeat;
+      mask-size: 20px 20px;
+    }
+  }
+}
+
+.color-success,
+tr.color-success,
+.color-checked,
+.drupal-upgrade-status-summary-form tr.no-known-error
+{
+  border-left: var(--gin-border-m) solid var(--gin-color-green);
+  background-color: transparent;
+
+  &:hover, &:active, &:focus {
+    background-color: var(--gin-bg-green-light);
+  }
+}
+
+.color-warning,
+tr.color-warning,
+.upgrade-status-next-step-remove tr,
+.drupal-upgrade-status-summary-form tr.known-warnings {
+  border-left: var(--gin-border-m) solid var(--gin-color-warning);
+  background-color: transparent;
+
+  &:hover, &:active, &:focus {
+    background-color: var(--gin-bg-warning-light);
+
+    .gin--dark-mode & {
+      color: var(--gin-color-warning);
+    }
+  }
+}
+
+.color-error,
+tr.color-error,
+.drupal-upgrade-status-summary-form tr.known-errors {
+  border-left: var(--gin-border-m) solid var(--gin-color-danger);
+  background-color: transparent;
+
+  &:hover, &:active, &:focus {
+    background-color: var(--gin-bg-danger-light);
+
+    .gin--dark-mode & {
+      color: var(--gin-color-danger);
+    }
+  }
+}
+
+.color-success,
+.color-warning,
+.color-error,
+.color-checked {
+  color: var(--gin-color-text);
+  box-sizing: border-box;
+}
+
+.update {
+  margin: 0;
+  border: 0 none;
+
+  tbody {
+    tr:last-child {
+      border-bottom: 0 none;
+    }
+  }
+}
+
+.gin-layer-wrapper {
+  .responsive-enabled {
+    margin-top: 0;
+  }
+}
+
+.block-system > form .gin-layer-wrapper,
+.panel .admin-list,
+.block-system > form .dataset-table-wrapper {
+  padding: 0;
+  border: 0 none;
+  box-shadow: none;
+}
+
+// fix overflow issue in FF
+.block-system > form .gin-layer-wrapper {
+  padding-bottom: 1px;
+}
+
+.compact-link {
+  font-size: var(--gin-font-size-s);
+  text-align: right;
+}
+
+#update-status > p {
+  margin-bottom: var(--gin-spacing-xl);
+}

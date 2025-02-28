@@ -1,0 +1,23 @@
+advancedqueue.job.release:
+  path: /admin/config/system/queues/{advancedqueue_queue}/jobs/{job_id}/release
+  defaults:
+    _form: \Drupal\advancedqueue\Form\ReleaseJob
+    _title: Release job
+  requirements:
+    _permission: 'administer advancedqueue'
+
+advancedqueue.job.delete:
+  path: /admin/config/system/queues/{advancedqueue_queue}/jobs/{job_id}/delete
+  defaults:
+    _form: \Drupal\advancedqueue\Form\DeleteJob
+    _title: Delete job
+  requirements:
+    _permission: 'administer advancedqueue'
+
+advancedqueue.job.retry:
+  path: /admin/config/system/queues/{advancedqueue_queue}/jobs/{job_id}/retry
+  defaults:
+    _form: \Drupal\advancedqueue\Form\RetryJob
+    _title: Retry job
+  requirements:
+    _permission: 'administer advancedqueue'

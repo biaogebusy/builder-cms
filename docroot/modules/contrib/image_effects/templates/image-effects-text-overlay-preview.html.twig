@@ -1,0 +1,15 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a text overlay preview theme.
+ *
+ * Available variables:
+ * - preview: A Textimage formatter array.
+ *
+ * @ingroup theme
+ */
+#}
+{% if success %}
+  {{ attach_library('image_effects/image_effects.text_overlay_preview') }}
+{% endif %}
+<div id="text-overlay-preview">{{ preview }}</div>

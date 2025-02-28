@@ -1,0 +1,15 @@
+# Schema for the views cache.
+views.cache.custom_tag:
+  type: mapping
+  label: 'Custom tag cache'
+  mapping:
+    type:
+      type: string
+      label: 'Cache type'
+    options:
+      type: mapping
+      label: 'Custom tag options'
+      mapping:
+        custom_tag:
+          type: string
+          label: 'Custom tag list'

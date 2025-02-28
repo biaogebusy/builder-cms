@@ -1,0 +1,22 @@
+entity.menu.clear_extra_data:
+  path: '/admin/structure/menu/manage/{menu}/clear'
+  defaults:
+    _entity_form: 'menu.clear'
+    _title_callback: '\Drupal\menu_ui\Controller\MenuController::menuTitle'
+  requirements:
+    _entity_access: 'menu.update'
+entity.menu.view_modes_settings:
+  path: '/admin/structure/menu/manage/{menu}/view_modes_settings/default'
+  defaults:
+    _entity_form: 'menu.view_modes_settings'
+    _title_callback: '\Drupal\menu_ui\Controller\MenuController::menuTitle'
+  requirements:
+    _entity_access: 'menu.update'
+menu_item_extras.clear_all_extra_data:
+  path: '/admin/modules/uninstall/extra_data/menu_item_extras'
+  defaults: 
+    _controller: '\Drupal\menu_item_extras\Controller\MenuController::removeExtraData'
+    _title: 'Remove menu item extra data'
+  requirements:
+    _permission: 'administer menu'
+    _csrf_token: 'TRUE'

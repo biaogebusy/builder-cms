@@ -1,0 +1,34 @@
+.block-private-message-inbox-block {
+  .private-message-thread {
+    position:relative;
+    margin-bottom:10px;
+    border:dotted black 1px;
+    padding:5px;
+    &:hover {
+      background-color:grey;
+    }
+    .private-message-inbox-thread-link {
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      border-bottom:none;
+    }
+  }
+  .unread-thread {
+    border:solid black 2px;  
+  }
+  .active-thread {
+    border-color:#0096ff;
+  }
+
+  #load-previous-threads-button-wrapper {
+    a {
+      display:block;
+      text-align:center;
+      font-size:0.8em;
+      border-bottom:none;
+    }
+  }
+}

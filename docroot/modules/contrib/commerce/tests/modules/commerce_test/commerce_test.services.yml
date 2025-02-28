@@ -1,0 +1,5 @@
+services:
+  commerce_test.referenceable_plugin_types_subscriber:
+    class: \Drupal\commerce_test\EventSubscriber\ReferenceablePluginTypesSubscriber
+    tags:
+      - { name: event_subscriber }

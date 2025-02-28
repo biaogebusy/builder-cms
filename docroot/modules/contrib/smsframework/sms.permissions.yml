@@ -1,0 +1,5 @@
+administer smsframework:
+  title: 'Administer SMS Framework'
+  restrict access: 1
+sms verify phone number:
+  title: 'Verify phone number'

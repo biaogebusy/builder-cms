@@ -1,0 +1,175 @@
+.bs-bg-success {
+  background-color: green !important;
+}
+
+.bs-bg-warning {
+  background-color: yellow !important;
+}
+
+.bs-bg-danger {
+  background-color: red !important;
+}
+
+.bs-bg-light {
+  background-color: lightgray !important;
+}
+
+.ui-dialog-off-canvas .bs-bg-sm-success {
+  background-color: green !important;
+}
+
+@media screen and (max-width: 576px) {
+  .bs-bg-sm-success {
+    background-color: green !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-sm-warning {
+  background-color: yellow !important;
+}
+
+@media screen and (max-width: 576px) {
+  .bs-bg-sm-warning {
+    background-color: yellow !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-sm-danger {
+  background-color: red !important;
+}
+
+@media screen and (max-width: 576px) {
+  .bs-bg-sm-danger {
+    background-color: red !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-sm-light {
+  background-color: lightgray !important;
+}
+
+@media screen and (max-width: 576px) {
+  .bs-bg-sm-light {
+    background-color: lightgray !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-md-success {
+  background-color: green !important;
+}
+
+@media (min-width: 576px) and (max-width: 992px) {
+  .bs-bg-md-success {
+    background-color: green !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-md-warning {
+  background-color: yellow !important;
+}
+
+@media (min-width: 576px) and (max-width: 992px) {
+  .bs-bg-md-warning {
+    background-color: yellow !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-md-danger {
+  background-color: red !important;
+}
+
+@media (min-width: 576px) and (max-width: 992px) {
+  .bs-bg-md-danger {
+    background-color: red !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-md-light {
+  background-color: lightgray !important;
+}
+
+@media (min-width: 576px) and (max-width: 992px) {
+  .bs-bg-md-light {
+    background-color: lightgray !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-lg-success {
+  background-color: green !important;
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+  .bs-bg-lg-success {
+    background-color: green !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-lg-warning {
+  background-color: yellow !important;
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+  .bs-bg-lg-warning {
+    background-color: yellow !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-lg-danger {
+  background-color: red !important;
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+  .bs-bg-lg-danger {
+    background-color: red !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-lg-light {
+  background-color: lightgray !important;
+}
+
+@media (min-width: 992px) and (max-width: 1200px) {
+  .bs-bg-lg-light {
+    background-color: lightgray !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-xl-success {
+  background-color: green !important;
+}
+
+@media (min-width: 1200px) {
+  .bs-bg-xl-success {
+    background-color: green !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-xl-warning {
+  background-color: yellow !important;
+}
+
+@media (min-width: 1200px) {
+  .bs-bg-xl-warning {
+    background-color: yellow !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-xl-danger {
+  background-color: red !important;
+}
+
+@media (min-width: 1200px) {
+  .bs-bg-xl-danger {
+    background-color: red !important;
+  }
+}
+
+.ui-dialog-off-canvas .bs-bg-xl-light {
+  background-color: lightgray !important;
+}
+
+@media (min-width: 1200px) {
+  .bs-bg-xl-light {
+    background-color: lightgray !important;
+  }
+}

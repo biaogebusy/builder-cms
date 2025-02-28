@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the JSON API Defaults module.
+ */
+
+/**
+ * Update third party settings default_include.
+ */
+function jsonapi_defaults_update_8001() {
+  /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+  $config_factory = \Drupal::configFactory();
+  $config_list = $config_factory->listAll('jsonapi_extras.jsonapi_resource_config');
+  /** @var \Drupal\Core\Config\Config $config */
+  foreach ($config_list as $config) {
+    $config = $config_factory->getEditable($config);
+    $third_party = $config->get('third_party_settings');
+    if (isset($third_party['jsonapi_defaults']['default_include'])
+      && is_string($third_party['jsonapi_defaults']['default_include'])
+    ) {
+      $third_party_defaults = str_replace(" ", "", $third_party['jsonapi_defaults']['default_include']);
+      $third_party_array = explode(",", $third_party_defaults);
+      $third_party['jsonapi_defaults']['default_include'] = $third_party_array;
+      $config->set('third_party_settings', $third_party);
+      $config->save();
+    }
+  }
+}

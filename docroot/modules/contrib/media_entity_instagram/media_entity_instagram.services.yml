@@ -1,0 +1,4 @@
+services:
+  media_entity_instagram.oembed.url_resolver:
+    class: Drupal\media_entity_instagram\OEmbed\InstagramUrlResolver
+    arguments: ['@media.oembed.provider_repository', '@media.oembed.resource_fetcher', '@http_client', '@module_handler', '@cache.default']

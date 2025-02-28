@@ -1,0 +1,15 @@
+name: Commerce Tax
+type: module
+description: 'Provides tax functionality.'
+package: Commerce
+core_version_requirement: ^9.3 || ^10
+configure: entity.commerce_tax_type.collection
+dependencies:
+  - commerce:commerce
+  - commerce:commerce_price
+  - commerce:commerce_order
+
+# Information added by Drupal.org packaging script on 2023-06-01
+version: '8.x-2.36'
+project: 'commerce'
+datestamp: 1685624439

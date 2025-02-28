@@ -1,0 +1,177 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the commerce_payment module.
+ */
+
+use Drupal\commerce\CommerceContentEntityStorageSchema;
+use Drupal\commerce_payment\Entity\PaymentMethod;
+use Drupal\commerce_payment\Event\PaymentEvent;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_install().
+ */
+function commerce_payment_install() {
+  // Allow authenticated users to manage own payment methods.
+  user_role_grant_permissions(AccountInterface::AUTHENTICATED_ROLE, ['manage own commerce_payment_method']);
+}
+
+/**
+ * Add the payment_gateway_mode field to payments and payment methods.
+ */
+function commerce_payment_update_8200() {
+  $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Payment gateway mode'))
+    ->setDescription(t('The payment gateway mode.'))
+    ->setRequired(TRUE);
+  $entity_definition_update->installFieldStorageDefinition('payment_gateway_mode', 'commerce_payment', 'commerce_payment', $storage_definition);
+  $entity_definition_update->installFieldStorageDefinition('payment_gateway_mode', 'commerce_payment_method', 'commerce_payment', $storage_definition);
+}
+
+/**
+ * Remove the authorization_expires field from payments, add the expires and completed fields.
+ */
+function commerce_payment_update_8201() {
+  $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('timestamp')
+    ->setName('authorization_expires')
+    ->setTargetEntityTypeId('commerce_payment')
+    ->setLabel(t('Authorization expires'))
+    ->setDescription(t('The time when the payment authorization expires.'))
+    ->setDisplayConfigurable('view', TRUE);
+  $entity_definition_update->uninstallFieldStorageDefinition($storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('timestamp')
+    ->setLabel(t('Expires'))
+    ->setDescription(t('The time when the payment expires.'))
+    ->setDisplayConfigurable('view', TRUE);
+  $entity_definition_update->installFieldStorageDefinition('expires', 'commerce_payment', 'commerce_payment', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('timestamp')
+    ->setLabel(t('Completed'))
+    ->setDescription(t('The time when the payment was completed.'))
+    ->setDisplayConfigurable('view', TRUE);
+  $entity_definition_update->installFieldStorageDefinition('completed', 'commerce_payment', 'commerce_payment', $storage_definition);
+}
+
+/**
+ * Make payment_gateway and payment_method order fields optional.
+ */
+function commerce_payment_update_8202() {
+  $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definition = $entity_definition_update->getFieldStorageDefinition('payment_gateway', 'commerce_order');
+  $field_definition->setRequired(FALSE);
+  $entity_definition_update->updateFieldStorageDefinition($field_definition);
+
+  $field_definition = $entity_definition_update->getFieldStorageDefinition('payment_method', 'commerce_order');
+  $field_definition->setRequired(FALSE);
+  $entity_definition_update->updateFieldStorageDefinition($field_definition);
+}
+
+/**
+ * Update entity keys for payment methods.
+ */
+function commerce_payment_update_8203() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $uid_storage_definition = $definition_update_manager->getFieldStorageDefinition('uid', 'commerce_payment_method');
+  $entity_type = $definition_update_manager->getEntityType('commerce_payment_method');
+  $keys = $entity_type->getKeys();
+  $keys['owner'] = 'uid';
+  $keys['uid'] = 'uid';
+  $entity_type->set('entity_keys', $keys);
+  $definition_update_manager->updateEntityType($entity_type);
+  $definition_update_manager->updateFieldStorageDefinition($uid_storage_definition);
+}
+
+/**
+ * Add the event handler to the payment entity type.
+ */
+function commerce_payment_update_8204() {
+  $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $entity_definition_update->getEntityType('commerce_payment');
+  $entity_type->setHandlerClass('event', PaymentEvent::class);
+  $entity_definition_update->updateEntityType($entity_type);
+}
+
+/**
+ * Update the 'uid' field.
+ */
+function commerce_payment_update_8205() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $base_field_override_storage = \Drupal::entityTypeManager()->getStorage('base_field_override');
+  $storage_definition = $definition_update_manager->getFieldStorageDefinition('uid', 'commerce_payment_method');
+  $default_value_callback = PaymentMethod::class . '::getDefaultEntityOwner';
+
+  $base_field_overrides = $base_field_override_storage->loadByProperties([
+    'entity_type' => 'commerce_payment_method',
+    'field_name' => 'uid',
+  ]);
+  /** @var \Drupal\Core\Field\FieldDefinitionInterface $base_field_override */
+  foreach ($base_field_overrides as $base_field_override) {
+    if ($base_field_override->getDefaultValueCallback() !== $storage_definition->getDefaultValueCallback()) {
+      continue;
+    }
+    // Update the "default_value_callback" for base field overrides, as long
+    // as they're using the default one.
+    $base_field_override->setDefaultValueCallback($default_value_callback);
+    $base_field_override->save();
+  }
+
+  $storage_definition->setDefaultValueCallback($default_value_callback);
+  $definition_update_manager->updateFieldStorageDefinition($storage_definition);
+}
+
+/**
+ * Add the avs_response_code and avs_response_code_label fields to payments.
+ */
+function commerce_payment_update_8206() {
+  $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('AVS response code'))
+    ->setDescription(t('The AVS response code.'))
+    ->setDisplayConfigurable('view', TRUE);
+  $entity_definition_update->installFieldStorageDefinition('avs_response_code', 'commerce_payment', 'commerce_payment', $storage_definition);
+
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('AVS response code label'))
+    ->setDescription(t('The AVS response code label.'))
+    ->setDisplayConfigurable('view', TRUE);
+  $entity_definition_update->installFieldStorageDefinition('avs_response_code_label', 'commerce_payment', 'commerce_payment', $storage_definition);
+}
+
+/**
+ * Ensure new field indexes on the payment and payment method entities.
+ */
+function commerce_payment_update_8207() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Get the current payment entity type definition, ensure the storage schema
+  // class is set.
+  $entity_type = $entity_type_manager->getDefinition('commerce_payment')
+    ->setHandlerClass('storage_schema', CommerceContentEntityStorageSchema::class);
+
+  // Regenerate entity type indexes.
+  $definition_update_manager->updateEntityType($entity_type);
+
+  $entity_type = $entity_type_manager->getDefinition('commerce_payment_method')
+    ->setHandlerClass('storage_schema', CommerceContentEntityStorageSchema::class);
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Update the remote_id field definition.
+ */
+function commerce_payment_update_8208() {
+  $definition_update_manager = \Drupal::service('entity.definition_update_manager');
+  $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('remote_id', 'commerce_payment'));
+  $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('remote_id', 'commerce_payment_method'));
+}

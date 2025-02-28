@@ -1,0 +1,24 @@
+services:
+  logger.channel.image_effects:
+    parent: logger.channel_base
+    arguments: ['image_effects']
+  plugin.manager.image_effects.color_selector:
+    class: Drupal\image_effects\Plugin\ImageEffectsPluginManager
+    parent: default_plugin_manager
+    arguments: ['color_selector', '@config.factory']
+  plugin.manager.image_effects.image_selector:
+    class: Drupal\image_effects\Plugin\ImageEffectsPluginManager
+    parent: default_plugin_manager
+    arguments: ['image_selector', '@config.factory']
+  plugin.manager.image_effects.font_selector:
+    class: Drupal\image_effects\Plugin\ImageEffectsPluginManager
+    parent: default_plugin_manager
+    arguments: ['font_selector', '@config.factory']
+  image_effects.converter:
+    class: Drupal\image_effects\ImageEffectsConverter
+  image_effects.uninstall_validator:
+    class: Drupal\image_effects\ImageEffectsUninstallValidator
+    tags:
+      - { name: module_install.uninstall_validator }
+    arguments: ['@config.factory', '@string_translation']
+    lazy: true

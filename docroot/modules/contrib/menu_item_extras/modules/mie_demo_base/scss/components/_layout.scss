@@ -1,0 +1,19 @@
+body {
+  overflow-x: hidden;
+}
+
+.field--name-field-mie-demo-content-terms {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -5px;
+  justify-content: center;
+
+  > .field__item {
+    width: 50%;
+    padding: 5px;
+
+    &:nth-child(3):last-child {
+      margin-top: -120px;
+    }
+  }
+}

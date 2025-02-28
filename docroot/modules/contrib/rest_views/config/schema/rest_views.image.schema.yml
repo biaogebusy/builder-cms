@@ -1,0 +1,9 @@
+field.formatter.settings.rest_views_image:
+  type: field.formatter.settings.image
+  mapping:
+    export_alt:
+      type: boolean
+      label: 'Export the alt attribute'
+    export_title:
+      type: boolean
+      label: 'Export the title attribute'

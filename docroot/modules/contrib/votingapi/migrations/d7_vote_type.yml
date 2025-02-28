@@ -1,0 +1,22 @@
+id: d7_vote_type
+label: Vote Type
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: d7_vote_type
+  constants:
+    value_type: points
+    description: Migrated from Drupal 7
+process:
+  id:
+    - plugin: machine_name
+      source: tag
+  label:
+    plugin: callback
+    source: tag
+    callable: ucfirst
+  value_type: 'constants/value_type'
+  description: 'constants/description'
+destination:
+  plugin: entity:vote_type

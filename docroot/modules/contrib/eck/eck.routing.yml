@@ -1,0 +1,67 @@
+# The routing.yml file defines the paths for the module.
+
+# Route for listing all ECK entity types.
+eck.entity_type.list:
+  path: '/admin/structure/eck'
+  defaults:
+    _entity_list: 'eck_entity_type'
+    _title: 'ECK Entity Types'
+  requirements:
+    _permission: 'administer eck entity types'
+
+# Route for adding an ECK entity type.
+eck.entity_type.add:
+  path: '/admin/structure/eck/add'
+  defaults:
+    _title: 'Add entity type'
+    _entity_form: eck_entity_type.add
+  requirements:
+    _permission: 'administer eck entity types'
+
+# Route for editing an ECK entity type.
+entity.eck_entity_type.edit_form:
+  path: '/admin/structure/eck/{eck_entity_type}'
+  defaults:
+    _entity_form: 'eck_entity_type.edit'
+    _title: 'Edit entity type'
+  requirements:
+    _permission: 'administer eck entity types'
+
+# Route for deleting an ECK entity type.
+entity.eck_entity_type.delete_form:
+  path: '/admin/structure/eck/{eck_entity_type}/delete'
+  defaults:
+    _title: 'Delete entity type'
+    _entity_form: eck_entity_type.delete
+  requirements:
+    _permission: 'administer eck entity types'
+
+# Route for adding content for an entity.
+eck.entity.add_page:
+  path: '/admin/content/{eck_entity_type}/add'
+  defaults:
+    _title_callback: '\Drupal\eck\Controller\EckContentController::addPageTitle'
+    _controller: '\Drupal\eck\Controller\EckContentController::addPage'
+  requirements:
+    _eck_entity_create_access: '{eck_entity_type}'
+  options:
+    parameters:
+      eck_entity_type:
+        type: entity:eck_entity_type
+
+eck.entity.add:
+  path: '/admin/content/{eck_entity_type}/add/{eck_entity_bundle}'
+  defaults:
+    _controller: '\Drupal\eck\Controller\EckContentController::add'
+    _title_callback: '\Drupal\eck\Controller\EckContentController::addContentPageTitle'
+  requirements:
+    _eck_entity_create_access: '{eck_entity_type}'
+  options:
+    parameters:
+      eck_entity_type:
+        type: entity:eck_entity_type
+    _eck_operation_route: TRUE
+    _admin_route: FALSE
+
+route_callbacks:
+  - '\Drupal\eck\Routing\EckRoutes::routes'

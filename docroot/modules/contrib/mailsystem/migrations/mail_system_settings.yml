@@ -1,0 +1,26 @@
+id: mail_system_settings
+label: Mail system configuration
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: variable
+  variables:
+    - mailsystem_theme
+    - mail_system
+  source_module: mailsystem
+process:
+  theme: mailsystem_theme
+  defaults/sender:
+    plugin: static_map
+    source: 'mail_system/default-system'
+    map:
+      TestingMailSystem: test_mail_collector
+    default_value: php_mail
+  defaults/formatter: '@defaults/sender'
+  modules:
+    plugin: mailsystem_modules
+    source: mail_system
+destination:
+  plugin: config
+  config_name: mailsystem.settings

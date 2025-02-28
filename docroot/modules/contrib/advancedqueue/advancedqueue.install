@@ -1,0 +1,118 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for Advanced queue.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_schema().
+ */
+function advancedqueue_schema() {
+  $schema['advancedqueue'] = [
+    'description' => 'Stores jobs in queues.',
+    'fields' => [
+      'job_id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Primary Key: Job ID.',
+      ],
+      'queue_id' => [
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The queue ID.',
+      ],
+      'type' => [
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The job type.',
+      ],
+      'payload' => [
+        'type' => 'blob',
+        'not null' => TRUE,
+        'size' => 'big',
+        'description' => 'The job payload, stored as JSON.',
+      ],
+      'state' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'The job state.',
+      ],
+      'message' => [
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'medium',
+        'description' => 'The job message, stored after processing the job.',
+      ],
+      'num_retries' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'small',
+        'description' => 'The number of times the job has been retried.',
+      ],
+      'available' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The availability timestamp.',
+      ],
+      'processed' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The processing timestamp.',
+      ],
+      'expires' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The lease expiration timestamp.',
+      ],
+    ],
+    'primary key' => ['job_id'],
+    'indexes' => [
+      'queue' => ['queue_id', 'state', 'available', 'expires'],
+      'queue_state' => ['state'],
+      'queue_expires' => ['expires'],
+      'queue_processed' => ['processed'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Add an index to the state column.
+ */
+function advancedqueue_update_8101() {
+  $spec = advancedqueue_schema();
+  $schema = Database::getConnection()->schema();
+  $schema->addIndex('advancedqueue', 'queue_state', ['state'], $spec['advancedqueue']);
+}
+
+/**
+ * Add an index to the expires column.
+ */
+function advancedqueue_update_8102() {
+  $spec = advancedqueue_schema();
+  $schema = Database::getConnection()->schema();
+  $schema->addIndex('advancedqueue', 'queue_expires', ['expires'], $spec['advancedqueue']);
+}
+
+/**
+ * Add an index to the processed column.
+ */
+function advancedqueue_update_8103() {
+  $spec = advancedqueue_schema();
+  $schema = Database::getConnection()->schema();
+  $schema->addIndex('advancedqueue', 'queue_processed', ['processed'], $spec['advancedqueue']);
+}

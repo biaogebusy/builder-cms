@@ -1,0 +1,15 @@
+{
+    "name": "drupal/paragraphs_tabs_widget",
+    "description": "Displays each paragraph's widget in a set of tabs.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [],
+    "homepage": "https://drupal.org/project/paragraphs_tabs_widget",
+    "support": {
+        "issues": "https://drupal.org/project/issues/paragraphs_tabs_widget",
+        "source": "https://git.drupalcode.org/project/paragraphs_tabs_widget"
+    },
+    "require": {
+        "drupal/paragraphs": "^1.3"
+    }
+}

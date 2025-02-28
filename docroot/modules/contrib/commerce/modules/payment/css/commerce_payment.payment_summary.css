@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Default styles for the payments summary.
+ */
+
+.payment-summary-line {
+  padding: 0 10px;
+  text-align: right;
+}
+.payment-summary-line-balance {
+  padding-top: 5px;
+  font-weight: bold;
+}
+.payment-summary-line-label {
+  display: inline-block;
+}
+.payment-summary-line-value {
+  display: inline-block;
+  width: 80px;
+  text-align: right;
+}

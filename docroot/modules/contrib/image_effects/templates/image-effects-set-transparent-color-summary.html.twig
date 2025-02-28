@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a summary of a Set transparent color effect.
+ *
+ * Available variables:
+ * - data: The current configuration for this set tranparent color effect,
+ *   including:
+ *   - transparent_color: The configured hexadecimal color value.
+ *   - color_info: A render element for color information including a color
+ *     preview.
+ * - effect: The effect information, including:
+ *   - id: The effect identifier.
+ *   - label: The effect name.
+ *   - description: The effect description.
+ *
+ * @ingroup themeable
+ */
+#}
+{% apply spaceless %}
+  {% if data.transparent_color %}
+    {{ data.color_info }}
+  {% else %}
+    - <em>{{ 'Source image'|t }}</em>
+  {% endif %}
+{% endapply %}

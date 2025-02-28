@@ -1,0 +1,22 @@
+{#
+/**
+ * @file
+ * Template for the store add/edit form.
+ *
+ * Available variables:
+ * - form: The form.
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="layout-store-form clearfix">
+  <div class="layout-region layout-region-store-main">
+    {{ form|without('advanced', 'actions') }}
+  </div>
+  <div class="layout-region layout-region-store-secondary">
+    {{ form.advanced }}
+  </div>
+  <div class="layout-region layout-region-store-footer">
+    {{ form.actions }}
+  </div>
+</div>

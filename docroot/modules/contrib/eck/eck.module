@@ -1,0 +1,338 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Entity\ContentEntityType;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\eck\ArrayDeprecationWrapper;
+use Drupal\eck\Entity\EckEntity;
+use Drupal\eck\Entity\EckEntityType;
+
+/**
+ * Defines the online documentation url of the ECK module.
+ */
+const ECK_DOCUMENTATION_PAGE = 'https://drupal.org/node/1366144';
+
+/**
+ * Defines the max length of entity id machine name.
+ */
+const ECK_ENTITY_ID_MAX_LENGTH = 27;
+
+/**
+ * Implements hook_help().
+ */
+function eck_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.eck':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Entity Construction Kit (ECK) builds upon the entity system to create a flexible and extensible data modeling system both with a UI for site builders, and with useful abstractions (classes, plugins, etc) to help developers use entities with ease. For more information, see the <a href="@eck">online documentation for the ECK module</a>.', ['@eck' => ECK_DOCUMENTATION_PAGE]) . '</p>';
+      break;
+
+    default:
+      break;
+  }
+
+  return (!empty($output)) ? $output : '';
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function eck_entity_type_build(array &$entity_types) {
+  static $recursionDepth;
+
+  // Infinite loops can occur when workspaces module is enabled. We therefore
+  // keep track of the number of times this function is called without being
+  // completed. We know we're in an infinite recursion when that number grows
+  // beyond 1, so we just return early to break out of the recursion.
+  if ($recursionDepth++ > 2) {
+    return;
+  }
+
+  // Check for eck_entity_type config entity.
+  if (!empty($entity_types['eck_entity_type'])) {
+    $eck_entity_type = $entity_types['eck_entity_type'];
+
+    $eck_types = \Drupal::entityTypeManager()->createHandlerInstance(
+      $eck_entity_type->getHandlerClass('storage'),
+      $eck_entity_type
+    )->loadMultiple();
+
+    // Base definitions for the entity type.
+    $base_definition = [
+      'handlers' => [
+        'view_builder' => 'Drupal\Core\Entity\EntityViewBuilder',
+        'form' => [
+          'default' => 'Drupal\eck\Form\Entity\EckEntityForm',
+          'edit' => 'Drupal\eck\Form\Entity\EckEntityForm',
+          'delete' => 'Drupal\eck\Form\Entity\EckEntityDeleteForm',
+
+        ],
+        'list_builder' => 'Drupal\eck\Controller\EckEntityListBuilder',
+        'access' => 'Drupal\eck\EckEntityAccessControlHandler',
+        'views_data' => 'Drupal\views\EntityViewsData',
+        'translation' => 'Drupal\content_translation\ContentTranslationHandler',
+        'route_provider' => [
+          'html' => 'Drupal\eck\Entity\EckEntityRouteProvider',
+        ],
+      ],
+      'entity_keys' => [
+        'id' => 'id',
+        'bundle' => 'type',
+        'label' => 'title',
+        'uuid' => 'uuid',
+        'langcode' => 'langcode',
+      ],
+      'translatable' => TRUE,
+      'provider' => 'eck',
+      'class' => 'Drupal\eck\Entity\EckEntity',
+    ];
+    // Base definitions for bundles.
+    $bundle_base_definition = [
+      'entity_keys' => [
+        'id' => 'type',
+        'label' => 'name',
+      ],
+      'provider' => 'eck',
+      'class' => 'Drupal\eck\Entity\EckEntityBundle',
+      'handlers' => [
+        'form' => [
+          'add' => 'Drupal\eck\Form\EntityBundle\EckEntityBundleForm',
+          'edit' => 'Drupal\eck\Form\EntityBundle\EckEntityBundleForm',
+          'delete' => 'Drupal\eck\Form\EntityBundle\EckEntityBundleDeleteConfirm',
+          'default' => 'Drupal\eck\Form\Entity\EckEntityForm',
+        ],
+        'list_builder' => 'Drupal\eck\Controller\EckEntityBundleListBuilder',
+        'access' => 'Drupal\eck\EckBundleAccessControlHandler',
+      ],
+      'admin_permission' => 'administer eck entity bundles',
+    ];
+
+    // Add custom particular definitions for each entity.
+    foreach ($eck_types as $eck_type) {
+      // Definitions for the entity type.
+      $definition = [
+        'id' => $eck_type->id,
+        'label' => t($eck_type->label),
+        'bundle_label' => t('@eck_type type', ['@eck_type' => $eck_type->label]),
+        'base_table' => $eck_type->id,
+        'data_table' => $eck_type->id . '_field_data',
+        'links' => [
+          'canonical' => "/{$eck_type->id}/{{$eck_type->id}}",
+          'edit-form' => "/{$eck_type->id}/{{$eck_type->id}}/edit",
+          'delete-form' => "/{$eck_type->id}/{{$eck_type->id}}/delete",
+        ],
+        'bundle_entity_type' => $eck_type->id . '_type',
+        'field_ui_base_route' => 'entity.' . $eck_type->id . '_type.edit_form',
+        'permission_granularity' => 'bundle',
+        'group' => 'content',
+        'group_label' => t('Content'),
+      ];
+      // Merge the definitions.
+      $definition = array_merge($definition, $base_definition);
+      // Add the new content entity to the entity types.
+      $entity_types[$definition['id']] = new ContentEntityType($definition);
+
+      // Definitions for the entity types bundle.
+      $bundle_definition = [
+        'id' => $eck_type->id . '_type',
+        'label' => t('@entity_type type', ['@entity_type' => $eck_type->label]),
+        'bundle_of' => $eck_type->id,
+        'config_prefix' => 'eck_type.' . $eck_type->id,
+        'group' => 'configuration',
+        'group_label' => t('Configuration'),
+        'links' => [
+          'edit-form' => '/admin/structure/eck/entity/' . $eck_type->id . '/bundles/{' . $eck_type->id . '_type}/edit',
+          'delete-form' => '/admin/structure/eck/entity/' . $eck_type->id . '/bundles/{' . $eck_type->id . '_type}/delete',
+          'collection' => '/admin/structure/eck/' . $eck_type->id . '/bundles',
+        ],
+        'config_export' => ['type', 'name', 'description'],
+      ];
+      // Merge the definitions.
+      $bundle_definition = array_merge($bundle_definition, $bundle_base_definition);
+      // Add the new content entity to the entity types.
+      $entity_types[$bundle_definition['id']] = new ConfigEntityType($bundle_definition);
+    }
+  }
+
+  // We reset the recursion depth tracker to ensure consecutive calls to this
+  // function don't return without processing.
+  $recursionDepth = 0;
+}
+
+/**
+ * Implements hook_menu_local_actions_alter().
+ */
+function eck_menu_local_actions_alter(&$local_actions) {
+  $eck_types = EckEntityType::loadMultiple();
+
+  /** @var \Drupal\eck\EckEntityTypeBundleInfo $eckBundleInfo */
+  $eckBundleInfo = Drupal::service('eck.entity_type.bundle.info');
+
+  $defaults = [
+    'class' => 'Drupal\Core\Menu\LocalActionDefault',
+    'provider' => 'eck',
+    'options' => [],
+    'weight' => 0,
+  ];
+
+  /* @var string $name */
+  /* @var \Drupal\eck\Entity\EckEntity $type */
+  foreach ($eck_types as $name => $type) {
+    $local_actions['eck.bundle.' . $type->id() . '.add'] = $defaults + [
+      'id' => 'eck.bundle.' . $type->id() . '.add',
+      'route_name' => 'eck.entity.' . $type->id() . '_type.add',
+      'title' => t('Add @label bundle', ['@label' => $type->label()]),
+      'appears_on' => [
+        'eck.entity.' . $type->id() . '_type.list',
+      ],
+    ];
+
+    if ($eckBundleInfo->entityTypeHasBundles($type->id())) {
+      $bundle_machine_names = $eckBundleInfo->getEntityTypeBundleMachineNames($type->id());
+      $local_actions['eck.' . $type->id() . '.add'] = $defaults + [
+        'id' => 'eck.' . $type->id() . '.add',
+        'title' => t('Add @label', ['@label' => $type->label()]),
+        'appears_on' => [
+          'eck.entity.' . $type->id() . '.list',
+        ],
+        'route_parameters' => [
+          'eck_entity_type' => $type->id(),
+        ],
+      ];
+
+      if (count($bundle_machine_names) === 1) {
+        $local_actions['eck.' . $type->id() . '.add']['route_name'] = 'eck.entity.add';
+        $local_actions['eck.' . $type->id() . '.add']['route_parameters']['eck_entity_bundle'] = reset($bundle_machine_names);
+      }
+      else {
+        $local_actions['eck.' . $type->id() . '.add']['route_name'] = 'eck.entity.add_page';
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function eck_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
+  if ($entity instanceof EckEntity) {
+    // Generalize the entity-type-specific defaults for easier default theming.
+    $build['#theme'] = 'eck_entity';
+    $build['#eck_entity'] = $entity;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function eck_theme() {
+  $templates['eck_entity'] = [
+    'render element' => 'elements',
+  ];
+
+  $templates['eck_content_add_list'] = [
+    'variables' => ['content' => NULL, 'entity_type' => NULL],
+    'file' => 'eck.pages.inc',
+  ];
+
+  return $templates;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function eck_theme_suggestions_eck_entity(array $variables) {
+  /** @var \Drupal\eck\Entity\EckEntity $entity */
+  $entity = $variables['elements']['#eck_entity'];
+  $sanitized_view_mode = strtr($variables['elements']['#view_mode'], '.', '_');
+
+  $suggestions[] = 'eck_entity__' . $sanitized_view_mode;
+  $suggestions[] = 'eck_entity__' . $entity->getEntityTypeId();
+  $suggestions[] = 'eck_entity__' . $entity->getEntityTypeId() . '__' . $sanitized_view_mode;
+  $suggestions[] = 'eck_entity__' . $entity->getEntityTypeId() . '__' . $entity->bundle();
+  $suggestions[] = 'eck_entity__' . $entity->getEntityTypeId() . '__' . $entity->bundle() . '__' . $sanitized_view_mode;
+  $suggestions[] = 'eck_entity__' . $entity->id();
+  $suggestions[] = 'eck_entity__' . $entity->id() . '__' . $sanitized_view_mode;
+
+  return $suggestions;
+}
+
+/**
+ * Implements template_preprocess_HOOK().
+ */
+function template_preprocess_eck_entity(&$variables) {
+  $variables['eck_entity'] = $variables['elements']['#eck_entity'];
+
+  $variables['entity_type'] = $variables['eck_entity']->getEntityTypeId();
+  $variables['bundle'] = $variables['eck_entity']->bundle();
+
+  // Build the $content variable for templates.
+  $variables += ['content' => []];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['content'][$key] = $variables['elements'][$key];
+  }
+
+  $deprecationWarning = "You are using the 'entity' variable in your eck-entity template. You should use 'content' instead. The 'entity' variable will be removed before the release of 8.x-1.0-beta1";
+  $variables['entity'] = new ArrayDeprecationWrapper($variables['content'], $deprecationWarning);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Alters the theme form to use the admin theme on eck editing.
+ *
+ * @see eck_form_system_themes_admin_form_submit()
+ */
+function eck_form_system_themes_admin_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form['admin_theme']['eck_use_admin_theme'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Use the administration theme when editing or creating ECK entities'),
+    '#description' => t('Control which roles can "View the administration theme" on the <a href=":permissions">Permissions page</a>.', [
+      ':permissions' => Url::fromRoute('user.admin_permissions')
+        ->toString(),
+    ]),
+    '#default_value' => \Drupal::configFactory()
+      ->getEditable('eck.settings')
+      ->get('use_admin_theme'),
+  ];
+  $form['#submit'][] = 'eck_form_system_themes_admin_form_submit';
+}
+
+/**
+ * Form submission handler for system_themes_admin_form().
+ *
+ * @see eck_form_system_themes_admin_form_alter()
+ */
+function eck_form_system_themes_admin_form_submit($form, FormStateInterface $form_state) {
+  \Drupal::configFactory()->getEditable('eck.settings')
+    ->set('use_admin_theme', $form_state->getValue('eck_use_admin_theme'))
+    ->save();
+  \Drupal::service('router.builder')->setRebuildNeeded();
+}
+
+/**
+ * Implements hook_jsonapi_entity_filter_access() for all eck entities.
+ */
+function eck_jsonapi_entity_filter_access(ContentEntityType $entity_type, AccountInterface $account) {
+  $result = [];
+  if ($entity_type->getProvider() == 'eck') {
+    $result = [
+      JSONAPI_FILTER_AMONG_ALL => AccessResult::allowedIfHasPermission($account, "view any {$entity_type->id()} entities"),
+      JSONAPI_FILTER_AMONG_OWN => AccessResult::allowedIfHasPermission($account, "view own {$entity_type->id()} entities"),
+    ];
+  }
+
+  return $result;
+}

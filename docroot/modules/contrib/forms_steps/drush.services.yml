@@ -1,0 +1,8 @@
+services:
+  forms_steps.commands:
+    class: Drupal\forms_steps\Commands\FormsStepsCommands
+    tags:
+      - { name: drush.command }
+    arguments:
+      - '@entity_type.manager'
+      - '@uuid'

@@ -1,0 +1,49 @@
+services:
+  cache_context.cart:
+    class: Drupal\commerce_cart\Cache\Context\CartCacheContext
+    arguments: ['@current_user', '@commerce_cart.cart_provider']
+    tags:
+      - { name: cache.context }
+
+  commerce_cart.cron:
+    class: Drupal\commerce_cart\Cron
+    arguments: ['@entity_type.manager', '@queue']
+
+  commerce_cart.cart_session:
+    class: Drupal\commerce_cart\CartSession
+    arguments: ['@session']
+
+  commerce_cart.cart_provider:
+    class: Drupal\commerce_cart\CartProvider
+    arguments: ['@entity_type.manager', '@commerce_store.current_store', '@current_user', '@commerce_cart.cart_session']
+
+  commerce_cart.cart_manager:
+    class: Drupal\commerce_cart\CartManager
+    arguments: ['@entity_type.manager', '@commerce_cart.order_item_matcher', '@event_dispatcher']
+
+  commerce_cart.order_item_matcher:
+    class: Drupal\commerce_cart\OrderItemMatcher
+    arguments: ['@entity_type.manager', '@event_dispatcher']
+
+  commerce_cart.cart_subscriber:
+    class: Drupal\commerce_cart\EventSubscriber\CartEventSubscriber
+    arguments: ['@messenger', '@string_translation', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  commerce_cart.order_subscriber:
+    class: Drupal\commerce_cart\EventSubscriber\OrderEventSubscriber
+    arguments: ['@commerce_cart.cart_provider']
+    tags:
+      - { name: event_subscriber }
+
+  commerce_cart.order_label_subscriber:
+    class: Drupal\commerce_cart\EventSubscriber\OrderLabelSubscriber
+    tags:
+      - { name: event_subscriber, priority: -100 }
+
+  commerce_cart.query_access_subscriber:
+    class: Drupal\commerce_cart\EventSubscriber\QueryAccessSubscriber
+    arguments: ['@commerce_cart.cart_provider', '@commerce_cart.cart_session']
+    tags:
+      - { name: event_subscriber, priority: 100 }

@@ -1,0 +1,26 @@
+# Schema for the range views plugins.
+
+views.filter.range:
+  type: views_filter
+  label: 'Range'
+  mapping:
+    value:
+      type: float
+      label: 'Value'
+    include_endpoints:
+      type: boolean
+      label: 'Include endpoints'
+
+views.argument.range:
+  type: views_argument
+  label: 'Range'
+  mapping:
+    value:
+      type: float
+      label: 'Value'
+    include_endpoints:
+      type: boolean
+      label: 'Include endpoints'
+    operator:
+      type: string
+      label: 'Operator'

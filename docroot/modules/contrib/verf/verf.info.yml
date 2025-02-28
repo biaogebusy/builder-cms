@@ -1,0 +1,4 @@
+name: Views Entity Reference Filter
+description: Provides Views filters for entity reference fields.
+type: module
+core_version_requirement: ^9 || ^10

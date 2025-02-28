@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Implement module related hooks for the charts_billboard module.
+ */
+
+/**
+ * Implements hook_charts_version3_to_new_settings_structure_alter().
+ */
+function charts_billboard_charts_version3_to_new_settings_structure_alter(array &$new_settings, string $for) {
+  $config_factory = \Drupal::configFactory();
+  $billboard_config = $config_factory->getEditable('charts_billboard.settings');
+  if ($billboard_config) {
+    $billboard_config->delete();
+  }
+}

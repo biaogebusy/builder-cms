@@ -1,0 +1,33 @@
+user_default_page.user_default_page_config_entity.*:
+  type: config_entity
+  label: 'User default page config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+    user_roles:
+      type: mapping
+      label: 'User Role'
+    users:
+      type: string
+      label: 'User(s)'
+    weight:
+      type: integer
+      label: 'Weight'
+    login_redirect:
+      type: string
+      label: 'Login Redirect'
+    login_redirect_message:
+      type: string
+      label: 'Login Redirect Message'
+    logout_redirect:
+      type: string
+      label: 'Logout Redirect'
+    logout_redirect_message:
+      type: string
+      label: 'Logout Redirect Message'

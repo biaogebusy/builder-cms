@@ -1,0 +1,17 @@
+name: Queue Order Override UpdateTest
+type: module
+description: 'Provides testing definitions for Queue Order module'
+package: Testing
+dependencies:
+  - queue_ui:queue_ui
+  - queue_order:queue_order
+  - queue_order:queue_order_definition_fixtures
+
+# Tell CI to upload dependant project.
+test_dependencies:
+  - queue_order:queue_order
+
+# Information added by Drupal.org packaging script on 2024-02-18
+version: '3.1.4'
+project: 'queue_ui'
+datestamp: 1708276958

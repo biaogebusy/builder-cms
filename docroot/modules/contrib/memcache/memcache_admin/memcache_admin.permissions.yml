@@ -1,0 +1,6 @@
+access memcache statistics:
+  title: Access memcache statistics
+
+access slab cachedump:
+  title: Access cachedump of memcache slab
+  restrict access: true

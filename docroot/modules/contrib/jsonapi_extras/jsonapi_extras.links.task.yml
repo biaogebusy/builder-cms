@@ -1,0 +1,24 @@
+# @todo this one should be defined in Drupal core in principle.
+jsonapi.settings:
+  route_name: jsonapi.settings
+  base_route: jsonapi.settings
+  title: 'Settings'
+  parent: system.admin_config_services
+
+# Define a "JSON:API Extras tab" to contain all of its subtabs.
+jsonapi.settings.extras:
+  route_name: jsonapi_extras.settings
+  base_route: jsonapi.settings
+  title: 'JSON:API Extras'
+
+# The two subtabs.
+jsonapi.settings.extras.settings:
+  route_name: jsonapi_extras.settings
+  base_route: jsonapi_extras.settings
+  title: 'Settings'
+  parent_id: jsonapi.settings.extras
+jsonapi.settings.extras.resources:
+  route_name: entity.jsonapi_resource_config.collection
+  base_route: entity.jsonapi_resource_config.collection
+  title: 'Resource overrides'
+  parent_id: jsonapi.settings.extras

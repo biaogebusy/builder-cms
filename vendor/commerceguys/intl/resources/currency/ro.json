@@ -1,0 +1,476 @@
+{
+	"AFN": {
+		"name": "afgani afgan"
+	},
+	"MGA": {
+		"name": "ariary malgaș"
+	},
+	"THB": {
+		"name": "baht thailandez"
+	},
+	"PAB": {
+		"name": "balboa panameză"
+	},
+	"ETB": {
+		"name": "birr etiopian"
+	},
+	"VES": {
+		"name": "bolívar soberano"
+	},
+	"BOB": {
+		"name": "boliviano"
+	},
+	"GHS": {
+		"name": "cedi ghanez"
+	},
+	"CRC": {
+		"name": "colón costarican"
+	},
+	"SVC": {
+		"name": "colon El Salvador"
+	},
+	"NIO": {
+		"name": "córdoba oro"
+	},
+	"CZK": {
+		"name": "coroană cehă"
+	},
+	"DKK": {
+		"name": "coroană daneză"
+	},
+	"ISK": {
+		"name": "coroană islandeză"
+	},
+	"NOK": {
+		"name": "coroană norvegiană"
+	},
+	"SEK": {
+		"name": "coroană suedeză"
+	},
+	"GMD": {
+		"name": "dalasi din Gambia"
+	},
+	"MKD": {
+		"name": "denar"
+	},
+	"DZD": {
+		"name": "dinar algerian"
+	},
+	"BHD": {
+		"name": "dinar din Bahrain"
+	},
+	"JOD": {
+		"name": "dinar iordanian"
+	},
+	"IQD": {
+		"name": "dinar irakian"
+	},
+	"KWD": {
+		"name": "dinar kuweitian"
+	},
+	"LYD": {
+		"name": "dinar libian"
+	},
+	"RSD": {
+		"name": "dinar sârbesc"
+	},
+	"TND": {
+		"name": "dinar tunisian"
+	},
+	"AED": {
+		"name": "dirham din Emiratele Arabe Unite"
+	},
+	"MAD": {
+		"name": "dirham marocan"
+	},
+	"STN": {
+		"name": "dobra din São Tomé și Príncipe"
+	},
+	"USD": {
+		"name": "dolar american"
+	},
+	"AUD": {
+		"name": "dolar australian"
+	},
+	"CAD": {
+		"name": "dolar canadian"
+	},
+	"BSD": {
+		"name": "dolar din Bahamas"
+	},
+	"BBD": {
+		"name": "dolar din Barbados"
+	},
+	"BZD": {
+		"name": "dolar din Belize"
+	},
+	"BMD": {
+		"name": "dolar din Bermuda"
+	},
+	"BND": {
+		"name": "dolar din Brunei"
+	},
+	"HKD": {
+		"name": "dolar din Hong Kong"
+	},
+	"KYD": {
+		"name": "dolar din Insulele Cayman"
+	},
+	"SBD": {
+		"name": "dolar din Insulele Solomon"
+	},
+	"TTD": {
+		"name": "dolar din Trinidad și Tobago"
+	},
+	"XCD": {
+		"name": "dolar est-caraib"
+	},
+	"FJD": {
+		"name": "dolar fijian"
+	},
+	"GYD": {
+		"name": "dolar guyanez"
+	},
+	"JMD": {
+		"name": "dolar jamaican"
+	},
+	"LRD": {
+		"name": "dolar liberian"
+	},
+	"NAD": {
+		"name": "dolar namibian"
+	},
+	"NZD": {
+		"name": "dolar neozeelandez"
+	},
+	"TWD": {
+		"name": "dolar nou din Taiwan"
+	},
+	"SGD": {
+		"name": "dolar singaporez"
+	},
+	"SRD": {
+		"name": "dolar surinamez"
+	},
+	"ZWL": {
+		"name": "dolar Zimbabwe (2009)"
+	},
+	"VND": {
+		"name": "dong vietnamez"
+	},
+	"AMD": {
+		"name": "dram armenesc"
+	},
+	"CVE": {
+		"name": "escudo caboverdian"
+	},
+	"EUR": {
+		"name": "euro"
+	},
+	"AWG": {
+		"name": "florin aruban"
+	},
+	"HUF": {
+		"name": "forint"
+	},
+	"BIF": {
+		"name": "franc burundez"
+	},
+	"XOF": {
+		"name": "franc CFA BCEAO",
+		"symbol": "F CFA"
+	},
+	"XAF": {
+		"name": "franc CFA BEAC",
+		"symbol": "FCFA"
+	},
+	"XPF": {
+		"name": "franc CFP",
+		"symbol": "CFPF"
+	},
+	"KMF": {
+		"name": "franc comorian"
+	},
+	"CDF": {
+		"name": "franc congolez"
+	},
+	"DJF": {
+		"name": "franc djiboutian"
+	},
+	"CHF": {
+		"name": "franc elvețian"
+	},
+	"GNF": {
+		"name": "franc guineean"
+	},
+	"RWF": {
+		"name": "franc rwandez"
+	},
+	"HTG": {
+		"name": "gourde din Haiti"
+	},
+	"UAH": {
+		"name": "grivnă"
+	},
+	"PYG": {
+		"name": "guarani"
+	},
+	"ANG": {
+		"name": "gulden neerlandez antilez"
+	},
+	"PGK": {
+		"name": "kina din Papua-Noua Guinee"
+	},
+	"LAK": {
+		"name": "kip laoțian"
+	},
+	"MWK": {
+		"name": "kwacha malawiană"
+	},
+	"ZMW": {
+		"name": "kwacha zambian"
+	},
+	"AOA": {
+		"name": "kwanza angoleză"
+	},
+	"MMK": {
+		"name": "kyat din Myanmar"
+	},
+	"GEL": {
+		"name": "lari georgian"
+	},
+	"ALL": {
+		"name": "lek"
+	},
+	"HNL": {
+		"name": "lempira honduriană"
+	},
+	"SLE": {
+		"name": "leone din Sierra Leone"
+	},
+	"SLL": {
+		"name": "leone din Sierra Leone (1964—2022)"
+	},
+	"MDL": {
+		"name": "leu moldovenesc"
+	},
+	"RON": {
+		"name": "leu românesc"
+	},
+	"BGN": {
+		"name": "leva"
+	},
+	"SZL": {
+		"name": "lilangeni din Swaziland"
+	},
+	"GIP": {
+		"name": "liră din Gibraltar"
+	},
+	"FKP": {
+		"name": "liră din Insulele Falkland"
+	},
+	"SHP": {
+		"name": "liră din Sfânta Elena (Sfânta Elena și Ascension)"
+	},
+	"SSP": {
+		"name": "liră din Sudanul de Sud"
+	},
+	"EGP": {
+		"name": "liră egipteană"
+	},
+	"LBP": {
+		"name": "liră libaneză"
+	},
+	"SYP": {
+		"name": "liră siriană"
+	},
+	"GBP": {
+		"name": "liră sterlină"
+	},
+	"SDG": {
+		"name": "liră sudaneză"
+	},
+	"TRY": {
+		"name": "liră turcească"
+	},
+	"LSL": {
+		"name": "loti lesothian"
+	},
+	"AZN": {
+		"name": "manat azer"
+	},
+	"TMT": {
+		"name": "manat turkmen"
+	},
+	"BAM": {
+		"name": "marcă convertibilă"
+	},
+	"MZN": {
+		"name": "metical mozambican"
+	},
+	"NGN": {
+		"name": "naira nigeriană"
+	},
+	"ERN": {
+		"name": "nakfa eritreeană"
+	},
+	"BTN": {
+		"name": "ngultrum din Bhutan"
+	},
+	"MRU": {
+		"name": "ouguiya mauritană"
+	},
+	"TOP": {
+		"name": "pa’anga tongană"
+	},
+	"MOP": {
+		"name": "pataca din Macao"
+	},
+	"ARS": {
+		"name": "peso argentinian"
+	},
+	"CLP": {
+		"name": "peso chilian"
+	},
+	"COP": {
+		"name": "peso columbian"
+	},
+	"CUP": {
+		"name": "peso cubanez"
+	},
+	"CUC": {
+		"name": "peso cubanez convertibil"
+	},
+	"DOP": {
+		"name": "peso dominican"
+	},
+	"PHP": {
+		"name": "peso filipinez"
+	},
+	"MXN": {
+		"name": "peso mexican"
+	},
+	"UYU": {
+		"name": "peso uruguayan"
+	},
+	"BWP": {
+		"name": "pula Botswana"
+	},
+	"GTQ": {
+		"name": "quetzal guatemalez"
+	},
+	"ZAR": {
+		"name": "rand sud-african"
+	},
+	"BRL": {
+		"name": "real"
+	},
+	"IRR": {
+		"name": "rial iranian"
+	},
+	"OMR": {
+		"name": "rial omanez"
+	},
+	"QAR": {
+		"name": "rial qatarian"
+	},
+	"SAR": {
+		"name": "rial saudit"
+	},
+	"YER": {
+		"name": "rial yemenit"
+	},
+	"KHR": {
+		"name": "riel cambodgian"
+	},
+	"MYR": {
+		"name": "ringgit malaiezian"
+	},
+	"BYN": {
+		"name": "rublă belarusă"
+	},
+	"RUB": {
+		"name": "rublă rusească"
+	},
+	"MVR": {
+		"name": "rufiyaa maldiviană"
+	},
+	"INR": {
+		"name": "rupie indiană"
+	},
+	"IDR": {
+		"name": "rupie indoneziană"
+	},
+	"MUR": {
+		"name": "rupie mauritiană"
+	},
+	"NPR": {
+		"name": "rupie nepaleză"
+	},
+	"PKR": {
+		"name": "rupie pakistaneză"
+	},
+	"SCR": {
+		"name": "rupie seychelleză"
+	},
+	"LKR": {
+		"name": "rupie srilankeză"
+	},
+	"ILS": {
+		"name": "shekel israelian nou"
+	},
+	"PEN": {
+		"name": "sol"
+	},
+	"KGS": {
+		"name": "som kârgâz"
+	},
+	"TJS": {
+		"name": "somoni tadjic"
+	},
+	"UZS": {
+		"name": "sum Uzbekistan"
+	},
+	"KES": {
+		"name": "șiling kenyan"
+	},
+	"SOS": {
+		"name": "șiling somalez"
+	},
+	"TZS": {
+		"name": "șiling tanzanian"
+	},
+	"UGX": {
+		"name": "șiling ugandez"
+	},
+	"BDT": {
+		"name": "taka din Bangladesh"
+	},
+	"WST": {
+		"name": "tala samoană"
+	},
+	"KZT": {
+		"name": "tenge kazahă"
+	},
+	"MNT": {
+		"name": "tugrik mongol"
+	},
+	"VUV": {
+		"name": "vatu din Vanuatu"
+	},
+	"KPW": {
+		"name": "won nord-coreean"
+	},
+	"KRW": {
+		"name": "won sud-coreean"
+	},
+	"JPY": {
+		"name": "yen japonez"
+	},
+	"CNY": {
+		"name": "yuan chinezesc"
+	},
+	"PLN": {
+		"name": "zlot"
+	}
+}

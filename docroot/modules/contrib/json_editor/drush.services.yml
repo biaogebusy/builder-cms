@@ -1,0 +1,6 @@
+services:
+  json_editor.commands:
+    class: \Drupal\json_editor\Commands\JsonEditorCommands
+    arguments: ['@json_editor.cli_service']
+    tags:
+      - { name: drush.command }

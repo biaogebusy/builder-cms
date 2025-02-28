@@ -1,0 +1,12 @@
+name: 'Webform Variant Example'
+type: module
+description: 'Provides an example of webform variants.'
+package: 'Webform example'
+core_version_requirement: ^9.4 || ^10
+dependencies:
+  - 'webform:webform'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

@@ -1,0 +1,17 @@
+{
+  "name": "drupal/eck",
+  "description": "ECK (Entity Construction Kit) allows users to create and administer entity types, bundles and entities from the UI.",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/eck",
+  "authors": [
+    {
+      "name": "See contributors",
+      "homepage": "https://www.drupal.org/node/1155832/committers"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/eck",
+    "source": "http://git.drupal.org/project/eck.git"
+  },
+  "license": "GPL-2.0+"
+}

@@ -1,0 +1,70 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the Fivestar summary output.
+ *
+ * Note that passing in explicit data types is extremely important for the next
+ * variables in this template:
+ *   - average_rating
+ *   - user_rating
+ *   - votes
+ * A NULL value will exclude the value entirely from display, while a 0 value
+ * indicates that the text should be shown but it has no value yet.
+ *
+ * Available variables
+ * - average_rating: The desired average rating to display out of 100 (i.e. 80
+ *    is 4 out of 5 stars), or NULL for not to show average rating.
+ *    Defaults to NULL.
+ * - votes: The total number of votes.
+ * - stars: The number of stars being displayed.
+ * - microdata: An additional data to show rating in the search engines
+ *   results.
+ * - user_rating: The rating set by the user on the enclosing entity as an
+ *   integer 1..100, or NULL for not to show user rating. Defaults to NULL.
+ * - average_rating_microdata: An additional data to show average rating
+ *   in the search engines results.
+ * - rating_count_microdata: An additional data to show the number of votes in
+ *   the search engines results.
+ * - average_stars: rounded rating to display (example: 4.0)
+ * - output_type: a word indicating the desired output style. One of:
+ *     - "user" when display user rating.
+ *     - "user-count" when display votes number and user rating.
+ *     - "average" when display average rating.
+ *     - "average-count" when display votes number and average rating.
+ *     - "combo" when display user and average rating.
+ *     - "count" when display the number of the votes.
+ *
+ * @see template_preprocess_fivestar_summary()
+ *
+ * @ingroup themeable
+ */
+#}
+{% set classes = ['fivestar-summary', 'fivestar-summary-' ~ output_type] %}
+<div{{ attributes.addClass(classes) }}>
+  {% if user_rating %}
+    <span class="user-rating">
+      {{ 'Your rating:'|t }} <span>{{ user_stars }}</span>
+    </span>
+  {% endif %}
+
+  {% if average_rating %}
+    <span class="average-rating">
+      {{ 'Average:'|t }} <span{{ average_rating_microdata }}>{{ average_stars }}</span>
+    </span>
+  {% endif %}
+
+  {% if votes is not empty %}
+    {% if votes == 0 %}
+      <span class="empty">{{ 'No votes yet'|t }}</span>
+    {% else %}
+      <span class="total-votes">
+        {% set votes_suffix = votes > 1 ? 'votes'|t : 'vote'|t %}
+        {% if user_rating or average_rating %}
+          (<span{{ rating_count_microdata }}>{{ votes }}</span> {{ votes_suffix }})
+        {% else %}
+          <span{{ rating_count_microdata }}>{{ votes }}</span> {{ votes_suffix }}
+        {% endif %}
+      </span>
+    {% endif %}
+  {% endif %}
+</div>

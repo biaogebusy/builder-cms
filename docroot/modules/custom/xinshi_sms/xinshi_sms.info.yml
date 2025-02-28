@@ -1,0 +1,12 @@
+name: 'XINSHI SMS'
+type: module
+description: 'sms for xinshi.'
+core: 8.x
+core_version_requirement: '^8 || ^9'
+package: "XINSHI"
+# Information added by Drupal.org packaging script on 2020-09-03
+version: '1.0'
+project: 'xinshi_sms'
+dependencies:
+  - drupal:sms
+  - drupal:otp_login

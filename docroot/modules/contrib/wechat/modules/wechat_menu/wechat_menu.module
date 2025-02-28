@@ -1,0 +1,184 @@
+<?php
+/**
+ * @file
+ * Wechat menu module.
+ */
+use  Drupal\wechat\Entity\WechatRequestMessage;
+use Drupal\views\Views;
+
+
+/**
+ * Implements hook_wechat_build_response_message().
+ */
+function wechat_menu_wechat_build_response_message(WechatRequestMessage $request_message) {
+  //\Drupal::logger('wechat_menu')->notice('abcd:success');
+	  //经过invokeAll,无法直接调用 $request_message->from_user_name->value;，只能使用方法了。
+	  //所以以后，尽量使用事件分法机制。所以这里需要重新加载一遍。  
+  $request_message = \Drupal::entityManager()
+      ->getStorage('wechat_request_message')
+      ->load($request_message->id());	
+   //\Drupal::logger('wechat_menu')->notice('to_user:' . $request_message->from_user_name->value);
+/*   
+  if(is_array($request_message)){
+    foreach($request_message as $key =>$value){
+	  \Drupal::logger('wechat_menu')->notice('key:' . $key);
+	}
+  }
+  
+  if(is_object($request_message)){
+    \Drupal::logger('wechat_menu')->notice('object:success');
+  }
+  */
+  // \Drupal::logger('wechat_menu')->notice(var_export($request_message));
+  //$request_message = isset($args['request_message']) ? $args['request_message'] : null;
+  //\Drupal::logger('wechat_menu')->notice('abcd:success');
+  if(empty($request_message)){
+    return;
+  }
+  $type = $request_message->getMsgType();
+  if (($type == 'text') || ($type == 'voice')) {
+    //\Drupal::logger('wechat_menu')->notice('abcd:success123');
+	$wechat_content = '';
+	if($type == 'text'){
+	  $wechat_content = $request_message->field_content->value;
+	}
+	if($type == 'voice'){
+	  $wechat_content = $request_message->field_recognition->value;
+	  //语音经常添加句号
+	  $wechat_content =  str_replace('。', '', $wechat_content);
+	}
+	
+	if(empty($wechat_content)){
+	  return;
+	}
+
+    $config = \Drupal::config('wechat_menu.default_search');
+	
+	$view_array =array(
+	  'view_name' => $config->get('view_name'),
+	  'view_display' => $config->get('view_display'),
+	  'view_arg' => array(),
+	  //'exposed_input' => $config->get('view_filter_identifier')
+	);
+	$filter_identifier = $config->get('view_filter_identifier');
+	if(!empty($filter_identifier)){
+	  $view_array['exposed_input'] = array(
+	    $filter_identifier => $wechat_content
+	  );
+	}
+	$xml_str = wechat_menu_build_news_reply_xml_helper($request_message, $view_array);
+	if(!empty($xml_str)){
+	  echo $xml_str;
+	  exit();
+	}
+  
+  }
+
+  if ($type == 'event') {
+    //\Drupal::logger('wechat_menu')->notice('event:success');
+    $wechat_event = $request_message->field_event->value;
+	if ($wechat_event == 'CLICK') {
+	  $event_key = $request_message->field_event_key->value;
+	  //\Drupal::logger('wechat_menu')->notice('eventkey:' .$event_key);
+	  if (!empty($event_key)) {
+	    $view_array = wechat_menu_get_view_by_key($event_key);
+		if(empty($view_array)){
+		   return;
+		}
+		//\Drupal::logger('wechat_menu')->notice('view_array:' .$event_key);
+		$xml_str = wechat_menu_build_news_reply_xml_helper($request_message, $view_array);
+		//\Drupal::logger('wechat_menu')->notice('xml_str:' .$event_key);
+		if(!empty($xml_str)){
+		  echo $xml_str;
+		  exit();
+		}
+		
+		
+	  }
+	}
+  
+  }
+  
+
+}
+function wechat_menu_get_view_by_key($event_key){
+    $query = \Drupal::entityQuery('wechat_menu_item');
+    $query->condition('wechat_key', $event_key);
+	$query->range(0, 1);
+	$query->sort('weight', 'ASC');
+
+    $wmi_ids = $query->execute();
+    $wechat_menu_items = \Drupal::entityManager()
+      ->getStorage('wechat_menu_item')
+      ->loadMultiple($wmi_ids);	
+	if(!empty($wechat_menu_items)){
+	  $wechat_menu_item = reset($wechat_menu_items);
+	  
+      $data = $wechat_menu_item->data->value;
+	  //$view_array = array();
+	  if(!empty($data['view_name'])){
+	    return $data;
+	  }
+    }
+    return FALSE;
+}
+
+function wechat_menu_build_news_reply_xml_helper($request_message, $view_array){
+  	$result_str = '';
+	$view_name =  isset($view_array['view_name']) ?  $view_array['view_name'] : '';
+	$view = Views::getView($view_name);
+	
+	
+	if (is_object($view)) {
+	  
+	  $view_display_id =  isset($view_array['view_display']) ? $view_array['view_display'] : '';
+      if (is_string($view_display_id)) {
+        $view->setDisplay($view_display_id);
+      }	 
+      $view_args =  isset($view_array['view_arg']) ?  $view_array['view_arg'] : '';
+      if(is_string($view_args) && !empty($view_args)){
+	    $view_args = explode("/", $view_args);
+	  } 
+	  
+      if (is_array($view_args)) {
+        $view->setArguments($view_args);
+      }
+      $exposed_input = isset($view_array['exposed_input']) ?  $view_array['exposed_input'] : array();
+	  if(!empty($exposed_input) && is_array($exposed_input)){
+        $view->setExposedInput($exposed_input);	  
+	  }
+      $view->get_total_rows = true;
+      $view->preExecute();
+      $view->execute();
+      	
+	  //$article_count = $view->total_rows;
+      $article_count = count($view->result);
+	  //\Drupal::logger('wechat_menu')->notice('article_count：' .$article_count);
+	  if($article_count == 0){
+	    return '';
+	  }
+	  if($article_count > 8){
+	    \Drupal::logger('wechat_menu')->notice('微信视图返回的文章数量不能超过8');	
+	    return '';
+	  }
+	  
+	  $result = $view->render();
+	  $str = drupal_render_root($result);
+	  //经过invokeAll,无法直接调用 $request_message->from_user_name->value;，只能使用方法了。
+	  //所以以后，尽量使用事件分法机制。
+      $to_user_name = $request_message->from_user_name->value;
+      $from_user_name = $request_message->to_user_name->value;	
+      $request_time = time();
+		$result_str .= "<xml>";
+		$result_str .= "<ToUserName><![CDATA[" . $to_user_name . "]]></ToUserName>";
+		$result_str .= "<FromUserName><![CDATA[" . $from_user_name . "]]></FromUserName>";
+		$result_str .= "<CreateTime>" . $request_time . "</CreateTime>";
+		$result_str .= "<MsgType><![CDATA[news]]></MsgType>";
+		$result_str .= "<ArticleCount>" . $article_count . "</ArticleCount>";
+		$result_str .= $str;
+		//$result_str .= "<Articles>";	
+       $result_str .= "</xml>";	
+    }
+	
+	return $result_str;
+}

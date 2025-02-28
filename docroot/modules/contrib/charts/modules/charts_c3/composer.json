@@ -1,0 +1,49 @@
+{
+    "name": "drupal/charts_c3",
+    "description": "Charts module integration with C3 Charts.",
+    "type": "drupal-module",
+    "homepage": "http://drupal.org/project/charts",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/charts"
+    },
+    "license": "GPL-2.0+",
+    "require": {
+        "c3js/c3": "0.7.20",
+        "d3/d3": "4.9.1"
+    },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "c3js/c3",
+                "version": "v0.7.20",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "c3"
+                },
+                "dist": {
+                    "url": "https://github.com/c3js/c3/archive/v0.7.20.zip",
+                    "type": "zip"
+                }
+            }
+        },
+        {
+            "type": "package",
+            "package": {
+                "name": "d3/d3",
+                "version": "v4.9.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "d3"
+                },
+                "dist": {
+                    "url": "https://github.com/d3/d3/archive/v4.9.1.zip",
+                    "type": "zip"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        }
+    ]
+}

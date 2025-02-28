@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.mie_demo_content.field_mie_image
+    - image.style.mie_demo_teaser
+    - taxonomy.vocabulary.mie_demo_content
+  module:
+    - image
+id: taxonomy_term.mie_demo_content.default
+targetEntityType: taxonomy_term
+bundle: mie_demo_content
+mode: default
+content:
+  field_mie_image:
+    weight: 0
+    label: hidden
+    settings:
+      image_style: mie_demo_teaser
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+hidden:
+  description: true

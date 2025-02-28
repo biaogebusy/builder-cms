@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * Default commerce price calculated template.
+ *
+ * Available variables:
+ * - result: The calculated price result
+ * - base_price: The base price.
+ * - calculated_price: The calculated price.
+ * - adjustments: An array of adjustments.
+ * - purchasable_entity: The purchasable entity.
+ *
+ * @ingroup themeable
+ */
+#}
+{{- calculated_price -}}
+{% for adjustment in adjustments %}
+  <div>{{ adjustment.label }}: {{ adjustment.amount|commerce_price_format }}</div>
+{% endfor %}

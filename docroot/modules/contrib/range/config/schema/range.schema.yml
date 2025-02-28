@@ -1,0 +1,380 @@
+# Schema for the configuration of the "Range (integer)" field type.
+
+field.storage_settings.range_integer:
+  type: mapping
+  label: 'Range (integer) settings'
+
+field.field_settings.range_integer:
+  type: mapping
+  label: 'Range (integer) settings'
+  mapping:
+    min:
+      type: integer
+      label: 'Minimum'
+    max:
+      type: integer
+      label: 'Maximum'
+    field:
+      type: mapping
+      label: 'FIELD'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    from:
+      type: mapping
+      label: 'FROM'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    to:
+      type: mapping
+      label: 'TO'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    combined:
+      type: mapping
+      label: 'COMBINED'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+
+field.value.range_integer:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    from:
+      type: integer
+      label: 'FROM'
+    to:
+      type: integer
+      label: 'TO'
+
+# Schema for the configuration of the "Range (decimal)" field type.
+
+field.storage_settings.range_decimal:
+  type: mapping
+  label: 'Range (decimal) settings'
+  mapping:
+    precision:
+      type: integer
+      label: 'Precision'
+    scale:
+      type: integer
+      label: 'Scale'
+
+field.field_settings.range_decimal:
+  type: mapping
+  label: 'Range (decimal) settings'
+  mapping:
+    min:
+      type: float
+      label: 'Minimum'
+    max:
+      type: float
+      label: 'Maximum'
+    field:
+      type: mapping
+      label: 'FIELD'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    from:
+      type: mapping
+      label: 'FROM'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    to:
+      type: mapping
+      label: 'TO'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    combined:
+      type: mapping
+      label: 'COMBINED'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+
+field.value.range_decimal:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    from:
+      type: float
+      label: 'FROM'
+    to:
+      type: float
+      label: 'TO'
+
+# Schema for the configuration of the "Range (float)" field type.
+
+field.storage_settings.range_float:
+  type: mapping
+  label: 'Range (float) settings'
+
+field.field_settings.range_float:
+  type: mapping
+  label: 'Range (float) settings'
+  mapping:
+    min:
+      type: float
+      label: 'Minimum'
+    max:
+      type: float
+      label: 'Maximum'
+    field:
+      type: mapping
+      label: 'FIELD'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    from:
+      type: mapping
+      label: 'FROM'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    to:
+      type: mapping
+      label: 'TO'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+    combined:
+      type: mapping
+      label: 'COMBINED'
+      mapping:
+        prefix:
+          type: label
+          label: 'Prefix'
+        suffix:
+          type: label
+          label: 'Suffix'
+
+field.value.range_float:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    from:
+      type: float
+      label: 'FROM'
+    to:
+      type: float
+      label: 'TO'
+
+# Schema for the configuration of the "Text fields" field widget.
+
+field.widget.settings.range:
+  type: mapping
+  label: 'Range text fields widget settings'
+  mapping:
+    label:
+      type: mapping
+      label: 'Form element label'
+      mapping:
+        from:
+          type: label
+          label: 'FROM form element label'
+        to:
+          type: label
+          label: 'TO form element label'
+    placeholder:
+      type: mapping
+      label: 'Placeholder'
+      mapping:
+        from:
+          type: label
+          label: 'FROM placeholder'
+        to:
+          type: label
+          label: 'TO placeholder'
+
+# Schema for the configuration of the default integer field formatter.
+
+field.formatter.settings.range_integer:
+  type: mapping
+  label: Range 'Default' (integer) display format settings
+  mapping:
+    range_separator:
+      type: string
+      label: 'Range separator'
+    thousand_separator:
+      type: string
+      label: 'Thousand marker'
+    range_combine:
+      type: boolean
+      label: 'Combine equivalent values'
+    field_prefix_suffix:
+      type: boolean
+      label: 'Display FIELD value prefix and suffix'
+    from_prefix_suffix:
+      type: boolean
+      label: 'Display FROM value prefix and suffix'
+    to_prefix_suffix:
+      type: boolean
+      label: 'Display TO value prefix and suffix'
+    combined_prefix_suffix:
+      type: boolean
+      label: 'Display COMBINED value prefix and suffix'
+
+# Schema for the configuration of the default decimal & float field formatter.
+
+field.formatter.settings.range_decimal:
+  type: mapping
+  label: Range 'Default' (decimal & float) display format settings
+  mapping:
+    range_separator:
+      type: string
+      label: 'Range separator'
+    thousand_separator:
+      type: string
+      label: 'Thousand marker'
+    decimal_separator:
+      type: string
+      label: 'Decimal marker'
+    scale:
+      type: integer
+      label: 'Scale'
+    range_combine:
+      type: boolean
+      label: 'Combine equivalent values'
+    field_prefix_suffix:
+      type: boolean
+      label: 'Display FIELD value prefix and suffix'
+    from_prefix_suffix:
+      type: boolean
+      label: 'Display FROM value prefix and suffix'
+    to_prefix_suffix:
+      type: boolean
+      label: 'Display TO value prefix and suffix'
+    combined_prefix_suffix:
+      type: boolean
+      label: 'Display COMBINED value prefix and suffix'
+
+# Schema for the configuration of the integer sprintf field formatter.
+
+field.formatter.settings.range_integer_sprintf:
+  type: mapping
+  label: Range 'Formatted string' (integer) display format settings
+  mapping:
+    range_separator:
+      type: string
+      label: 'Range separator'
+    format_string:
+      type: string
+      label: 'Format'
+    range_combine:
+      type: boolean
+      label: 'Combine equivalent values'
+    field_prefix_suffix:
+      type: boolean
+      label: 'Display FIELD value prefix and suffix'
+    from_prefix_suffix:
+      type: boolean
+      label: 'Display FROM value prefix and suffix'
+    to_prefix_suffix:
+      type: boolean
+      label: 'Display TO value prefix and suffix'
+    combined_prefix_suffix:
+      type: boolean
+      label: 'Display COMBINED value prefix and suffix'
+
+# Schema for the configuration of the decimal & float sprintf field formatter.
+
+field.formatter.settings.range_decimal_sprintf:
+  type: mapping
+  label: Range 'Formatted string' (decimal & float) display format settings
+  mapping:
+    range_separator:
+      type: string
+      label: 'Range separator'
+    format_string:
+      type: string
+      label: 'Format'
+    range_combine:
+      type: boolean
+      label: 'Combine equivalent values'
+    field_prefix_suffix:
+      type: boolean
+      label: 'Display FIELD value prefix and suffix'
+    from_prefix_suffix:
+      type: boolean
+      label: 'Display FROM value prefix and suffix'
+    to_prefix_suffix:
+      type: boolean
+      label: 'Display TO value prefix and suffix'
+    combined_prefix_suffix:
+      type: boolean
+      label: 'Display COMBINED value prefix and suffix'
+
+# Schema for the configuration of the "Unformatted" field formatter.
+
+field.formatter.settings.range_unformatted:
+  type: mapping
+  label: Range 'Unformatted' (integer, decimal & float) display format settings
+  mapping:
+    range_separator:
+      type: string
+      label: 'Range separator'
+    range_combine:
+      type: boolean
+      label: 'Combine equivalent values'
+    field_prefix_suffix:
+      type: boolean
+      label: 'Display FIELD value prefix and suffix'
+    from_prefix_suffix:
+      type: boolean
+      label: 'Display FROM value prefix and suffix'
+    to_prefix_suffix:
+      type: boolean
+      label: 'Display TO value prefix and suffix'
+    combined_prefix_suffix:
+      type: boolean
+      label: 'Display COMBINED value prefix and suffix'

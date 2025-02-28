@@ -1,0 +1,13 @@
+diff --git a/tests/src/Functional/Update/RangeUpdatePathTest.php b/tests/src/Functional/Update/RangeUpdatePathTest.php
+index b062efc..1d09888 100644
+--- a/tests/src/Functional/Update/RangeUpdatePathTest.php
++++ b/tests/src/Functional/Update/RangeUpdatePathTest.php
+@@ -49,7 +49,7 @@ class RangeUpdatePathTest extends UpdatePathTestBase {
+    */
+   protected function setDatabaseDumpFiles() {
+     $this->databaseDumpFiles = [
+-      DRUPAL_ROOT . '/core/modules/system/tests/fixtures/update/drupal-9.4.0.bare.standard.php.gz',
++      DRUPAL_ROOT . '/core/modules/system/tests/fixtures/update/drupal-8.8.0.bare.standard.php.gz',
+       __DIR__ . '/../../../fixtures/update/drupal-8.range-8100.php',
+     ];
+   }

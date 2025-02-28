@@ -1,0 +1,15 @@
+name: Commerce Promotion
+type: module
+description: 'Provides a UI for managing promotions.'
+package: Commerce
+core_version_requirement: ^9.3 || ^10
+configure: entity.commerce_promotion.collection
+dependencies:
+  - commerce:commerce
+  - commerce:commerce_order
+  - drupal:options
+
+# Information added by Drupal.org packaging script on 2023-06-01
+version: '8.x-2.36'
+project: 'commerce'
+datestamp: 1685624439

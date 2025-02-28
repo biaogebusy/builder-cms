@@ -1,0 +1,11 @@
+.winnow-input {
+  position: relative;
+  display: inline-block;
+}
+.winnow-input input.form-search {
+  padding-right: 2em;
+}
+.admin-missing {
+  /* Use Claro variable, but give a default as this will not exist in other themes */
+  color: var(--color-maximumred, #f00);
+}

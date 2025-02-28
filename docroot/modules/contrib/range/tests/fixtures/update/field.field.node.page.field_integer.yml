@@ -1,0 +1,28 @@
+uuid: 37a0bf1f-57c6-4a33-b16b-2309d4e6d4c6
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_integer
+    - node.type.page
+  module:
+    - range
+id: node.page.field_integer
+field_name: field_integer
+entity_type: node
+bundle: page
+label: Integer
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  from:
+    prefix: 'FROM Prefix'
+    suffix: ' FROM Suffix'
+  to:
+    prefix: 'TO PREFIX'
+    suffix: 'TO SUFFIX'
+field_type: range_integer

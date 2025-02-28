@@ -1,0 +1,109 @@
+# Declaration of forms_steps routings.
+
+
+### forms_steps settings form
+forms_steps.settings:
+  path: '/admin/config/workflow/forms_steps/settings'
+  defaults:
+    _form: '\Drupal\forms_steps\Form\FormsStepsSettingsForm'
+    _title: 'forms_steps settings'
+  requirements:
+    _permission: 'administer forms_steps'
+  options:
+    _admin_route: TRUE
+
+### forms_steps collection
+entity.forms_steps.collection:
+  path: '/admin/config/workflow/forms_steps'
+  defaults:
+    _entity_list: 'forms_steps'
+    _title: 'Forms Steps'
+  requirements:
+    _permission: 'administer forms_steps'
+  options:
+    _admin_route: TRUE
+
+entity.forms_steps.add_form:
+  path: '/admin/config/workflow/forms_steps/add'
+  defaults:
+    _entity_form: 'forms_steps.add'
+    _title: 'Add a Forms Steps'
+  requirements:
+    _permission: 'administer forms_steps'
+
+entity.forms_steps.edit_form:
+  path: '/admin/config/workflow/forms_steps/edit/{forms_steps}'
+  defaults:
+    _entity_form: 'forms_steps.edit'
+    _title_callback: '\Drupal\forms_steps\Form\FormsStepsEditForm::getTitle'
+  requirements:
+    _permission: 'administer forms_steps'
+
+entity.forms_steps.delete_form:
+  path: '/admin/config/workflow/forms_steps/delete/{forms_steps}'
+  defaults:
+    _entity_form: 'forms_steps.delete'
+  requirements:
+    _permission: 'administer forms_steps'
+
+entity.forms_steps.add_step_form:
+  path: '/admin/config/workflow/forms_steps/{forms_steps}/add_step'
+  defaults:
+    _entity_form: 'forms_steps.add-step'
+    _title: 'Add step'
+  requirements:
+    _entity_access: 'forms_steps.edit'
+
+entity.forms_steps.edit_step_form:
+  path: '/admin/config/workflow/forms_steps/{forms_steps}/step/{forms_steps_step}'
+  defaults:
+    _entity_form: 'forms_steps.edit-step'
+    _title: 'Edit step'
+  requirements:
+    _entity_access: 'forms_steps.edit'
+
+entity.forms_steps.delete_step_form:
+  path: '/admin/config/workflow/forms_steps/{forms_steps}/step/{forms_steps_step}/delete'
+  defaults:
+    _form: '\Drupal\forms_steps\Form\FormsStepsStepDeleteForm'
+    _title: 'Delete step'
+  requirements:
+    _permission: 'administer forms_steps'
+
+entity.forms_steps.add_progress_step_form:
+  path: '/admin/config/workflow/forms_steps/{forms_steps}/add_progress_step'
+  defaults:
+    _entity_form: 'forms_steps.add-progress-step'
+    _title: 'Add progress step'
+  requirements:
+    _entity_access: 'forms_steps.edit'
+
+entity.forms_steps.edit_progress_step_form:
+  path: '/admin/config/workflow/forms_steps/{forms_steps}/progress_step/{forms_steps_progress_step}'
+  defaults:
+    _entity_form: 'forms_steps.edit-progress-step'
+    _title: 'Edit progress step'
+  requirements:
+    _entity_access: 'forms_steps.edit'
+
+entity.forms_steps.delete_progress_step_form:
+  path: '/admin/config/workflow/forms_steps/{forms_steps}/progress_step/{forms_steps_progress_step}/delete'
+  defaults:
+    _form: '\Drupal\forms_steps\Form\FormsStepsProgressStepDeleteForm'
+    _title: 'Delete progress step'
+  requirements:
+    _permission: 'administer forms_steps'
+
+entity.forms_steps_workflow.collection:
+  path: '/admin/config/workflow/forms_steps/workflows/list'
+  defaults:
+    # Calls the list controller, defined in the annotation of the contact entity.
+    _entity_list: 'forms_steps_workflow'
+    _title: 'Workflow Instance list'
+  requirements:
+    # Checks for permission directly.
+    _permission: 'view forms_steps_workflow entity'
+
+# Dynamic routing for forms steps
+route_callbacks:
+  - 'forms_steps.route_subscriber:routes'

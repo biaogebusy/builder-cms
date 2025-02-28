@@ -1,0 +1,27 @@
+id: d7_profile2
+label: Profile2
+audit: true
+migration_tags:
+  - Drupal 7
+  - Content
+deriver: Drupal\profile\Plugin\migrate\D7Profile2Deriver
+source:
+  plugin: d7_profile2
+  constants:
+    status: 1
+    is_default: 1
+process:
+  profile_id: pid
+  type: type
+  uid: uid
+  status: 'constants/status'
+  is_default: 'constants/is_default'
+  created: created
+  changed: changed
+destination:
+  plugin: entity:profile
+migration_dependencies:
+  required:
+    - d7_profile2_type
+  optional:
+    - d7_field_instance

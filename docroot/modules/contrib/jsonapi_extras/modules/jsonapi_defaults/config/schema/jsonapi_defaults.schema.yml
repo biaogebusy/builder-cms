@@ -1,0 +1,25 @@
+jsonapi_extras.jsonapi_resource_config.*.third_party.jsonapi_defaults:
+  type: mapping
+  label: 'JSONAPI Defaults settings'
+  mapping:
+    default_include:
+      type: sequence
+      label: 'Default includes list'
+      sequence:
+        type: string
+        label: 'Key and value'
+    default_filter:
+      type: sequence
+      label: 'Default filters list'
+      sequence:
+        type: string
+        label: 'Key and value'
+    default_sorting:
+      type: sequence
+      label: 'Default sorting list'
+      sequence:
+        type: string
+        label: 'Key and value'
+    page_limit:
+      type: integer
+      label: 'Limit of records fetched per page'

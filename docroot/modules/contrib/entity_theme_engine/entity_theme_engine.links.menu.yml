@@ -1,0 +1,10 @@
+entity.entity_widget.collection:
+  title: 'Entity Widget'
+  route_name: entity.entity_widget.collection
+  description: 'Manage entity widgets'
+  parent: system.admin_structure
+  weight: 99
+entity_theme_engine.admin_settings:
+  title: 'Entity Theme Engine'
+  route_name: entity_theme_engine.settings
+  parent: system.admin_config_development

@@ -1,0 +1,17 @@
+services:
+  cache.file_mdm:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: ['file_mdm']
+  logger.channel.file_mdm:
+    parent: logger.channel_base
+    arguments: ['file_mdm']
+  file_metadata_manager:
+    class: Drupal\file_mdm\FileMetadataManager
+    arguments: ['@plugin.manager.file_metadata', '@logger.channel.file_mdm', '@config.factory', '@file_system', '@cache.file_mdm', '@stream_wrapper_manager']
+  plugin.manager.file_metadata:
+    class: Drupal\file_mdm\Plugin\FileMetadataPluginManager
+    parent: default_plugin_manager
+    arguments: ['@config.factory']

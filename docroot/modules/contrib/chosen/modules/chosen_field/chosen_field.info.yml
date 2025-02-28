@@ -1,0 +1,13 @@
+name: Chosen Field
+description: Makes select elements more user-friendly using <a href="https://harvesthq.github.com/chosen/">Chosen</a>.
+package: User interface
+configure: chosen.admin
+core_version_requirement: ^9.2 || ^10
+type: module
+dependencies:
+  - chosen:chosen
+
+# Information added by Drupal.org packaging script on 2023-01-15
+version: '3.0.5'
+project: 'chosen'
+datestamp: 1673783709

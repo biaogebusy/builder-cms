@@ -1,0 +1,16 @@
+name: Better Exposed Filters
+description: Provides advanced options (e.g. links, checkboxes, or other widgets) to exposed Views elements.
+core_version_requirement: ^9 || ^10
+type: module
+package: Views
+dependencies:
+  - drupal:views
+  - jquery_ui:jquery_ui
+  - jquery_ui_slider:jquery_ui_slider
+  - jquery_ui_touch_punch:jquery_ui_touch_punch
+  - jquery_ui_datepicker:jquery_ui_datepicker
+
+# Information added by Drupal.org packaging script on 2024-04-19
+version: '6.0.5'
+project: 'better_exposed_filters'
+datestamp: 1713570806

@@ -1,0 +1,34 @@
+{#
+/**
+ * @file
+ * Default theme implementation to present a menu link entity entity.
+ *
+ * Available variables:
+ * - menu_link_content: Menu link entity.
+ * - show_item_link: Indicator for menu item link.
+ *
+ * @see template_preprocess_menu_link_content()
+ *
+ * @ingroup themeable
+ */
+#}
+{% import _self as menu %}
+
+{{ menu.build_menu_link_content(attributes, menu_link_content, show_item_link, content, elements) }}
+
+{% macro build_menu_link_content(attributes, menu_link_content, show_item_link, content, elements) %}
+  {% set menu_dropdown_classes = [
+    'menu-dropdown',
+    elements['#menu_level'] is defined ? 'menu-dropdown-' ~ elements['#menu_level'],
+    elements['#view_mode'] ? 'menu-type-' ~ elements['#view_mode'],
+  ] %}
+
+  <div{{ attributes.addClass(menu_dropdown_classes) }}>
+    {% if show_item_link %}
+      {{ link(menu_link_content.getTitle(), menu_link_content.getUrlObject()) }}
+    {% endif %}
+    {% if content %}
+      {{ content }}
+    {% endif %}
+  </div>
+{% endmacro %}

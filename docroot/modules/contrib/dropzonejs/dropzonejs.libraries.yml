@@ -1,0 +1,35 @@
+dropzonejs:
+  title: 'Dropzonejs'
+  website: http://www.dropzonejs.com
+  version: 5.7.2
+  license:
+    name: MIT
+    url: https://github.com/enyo/dropzone/blob/master/LICENSE
+    gpl-compatible: true
+  js:
+    /libraries/dropzone/dropzone-min.js: { minified: true }
+  css:
+    component:
+      /libraries/dropzone/dropzone.css: { minified: true }
+widget:
+  version: VERSION
+  css:
+    theme:
+      css/dropzone.widget.css: {}
+integration:
+  version: VERSION
+  js:
+    js/dropzone.integration.js: {}
+  dependencies:
+    - core/once
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - dropzonejs/dropzonejs
+
+media_library:
+  version: VERSION
+  js:
+    js/dropzone.media_library.js: {}
+  dependencies:
+    - dropzonejs/integration

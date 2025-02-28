@@ -1,0 +1,37 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - media.type.dropzonejs_media
+  module:
+    - dropzonejs_eb_widget
+    - media
+name: dropzonejs_eb_standalone_test
+label: 'Dropzonejs EB standalone test'
+display: standalone
+display_configuration:
+  path: /dropzonejs-eb-standalone-test
+selection_display: no_display
+selection_display_configuration: {  }
+widget_selector: single
+widget_selector_configuration: {  }
+widgets:
+  9f5dc972-346e-4aca-95bf-f18571b98228:
+    id: dropzonejs_media_entity
+    uuid: 9f5dc972-346e-4aca-95bf-f18571b98228
+    label: 'DropzoneJS media entity'
+    weight: 1
+    settings:
+      submit_text: 'Select entities'
+      auto_select: false
+      upload_location: 'public://[date:custom:Y]-[date:custom:m]'
+      dropzone_description: 'Drop files here to upload them'
+      max_filesize: 100M
+      extensions: 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'
+      clientside_resize: false
+      resize_width: null
+      resize_height: null
+      resize_quality: !!float 1
+      resize_method: contain
+      thumbnail_method: contain
+      media_type: dropzonejs_media

@@ -1,0 +1,33 @@
+field.widget.settings.paragraphs_tabs_widget_vertical_tabs:
+  type: mapping
+  mapping:
+    # Widget settings defined by this module.
+    summary_selector:
+      type: string
+      label: 'Tab summary selector'
+      translatable: false
+
+    # Widget settings inherited from field.widget.settings.paragraphs.
+    title:
+      type: label
+    title_plural:
+      type: label
+    edit_mode:
+      type: string
+    closed_mode:
+      type: string
+    autocollapse:
+      type: string
+    closed_mode_threshold:
+      type: integer
+    add_mode:
+      type: string
+    form_display_mode:
+      type: string
+    default_paragraph_type:
+      type: string
+    features:
+      type: sequence
+      orderby: key
+      sequence:
+        type: string

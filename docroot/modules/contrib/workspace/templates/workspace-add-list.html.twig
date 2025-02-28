@@ -1,0 +1,22 @@
+{#
+/**
+ * @file
+ * Default theme implementation to present a list of custom Workspace types.
+ *
+ * Available variables:
+ * - types: A collection of all the available custom Workspace types.
+ *   Each Workspace type contains the following:
+ *   - link: A link to add a Workspace of this type.
+ *
+ * @see template_preprocess_block_content_add_list()
+ *
+ * @ingroup themeable
+ */
+#}
+<ul class="admin-list">
+    {% for type in types %}
+        <li class="clearfix">
+            <a href="{{ type.url }}"><span class="label">{{ type.label }}</span></a>
+        </li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,100 @@
+$bg-pos-toggle-size: 15px;
+
+// Background position
+.bs_background--position {
+  margin: 0;
+
+  .form-radios {
+    border: 1px solid $box_input_hover_border;
+    height: 70px;
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 50%;
+    margin-top: 4px;
+
+    > div {
+      margin: 0;
+    }
+
+    input {
+      @include sr-only;
+
+      &:checked + label,
+      &:checked + label:hover {
+        background-color: $panel_link_color;
+        border: 1px solid $box_input_bg;
+        box-shadow: inset 0 0 0 2px $panel_bg_color;
+        transform: scale(1.2);
+      }
+
+      ~ label {
+        position: absolute;
+        background-color: $box_input_bg_checked;
+        border: 2px solid $panel_bg_color;
+        border-radius: 50%;
+        width: $bg-pos-toggle-size;
+        height: $bg-pos-toggle-size;
+        font-size: 0;
+        cursor: pointer;
+        margin: 0;
+
+        transform: perspective(1px) translateZ(0);
+        transition-duration: 0.5s;
+
+        &:hover {
+          background-color: $panel_text_color;
+          animation: hover-pop 0.3s linear 1;
+        }
+      }
+
+      // Left side
+      &[value='left top'] ~ label {
+        left: calc(-15px / 2);
+        top: calc(-15px / 2);
+      }
+
+      &[value='left center'] ~ label {
+        left: calc(-15px / 2);
+        top: calc(50% - calc(15px / 2));
+      }
+
+      &[value='left bottom'] ~ label {
+        left: calc(-15px / 2);
+        bottom: calc(-15px / 2);
+      }
+
+      // Center
+      &[value='center top'] ~ label {
+        left: calc(50% - calc(15px / 2));
+        top: calc(-15px / 2);
+      }
+
+      &[value='center'] ~ label {
+        left: calc(50% - calc(15px / 2));
+        top: calc(50% - calc(15px / 2));
+      }
+
+      &[value='center bottom'] ~ label {
+        left: calc(50% - calc(15px / 2));
+        bottom: calc(-15px / 2);
+      }
+
+      // Right
+      &[value='right top'] ~ label {
+        right: calc(-15px / 2);
+        top: calc(-15px / 2);
+      }
+
+      &[value='right center'] ~ label {
+        right: calc(-15px / 2);
+        top: calc(50% - calc(15px / 2));
+      }
+
+      &[value='right bottom'] ~ label {
+        right: calc(-15px / 2);
+        bottom: calc(-15px / 2);
+      }
+    }
+  }
+}

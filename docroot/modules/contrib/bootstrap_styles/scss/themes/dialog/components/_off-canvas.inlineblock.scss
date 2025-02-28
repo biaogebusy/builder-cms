@@ -1,0 +1,89 @@
+/**
+ * @file
+ * Visual styling for buttons in the off-canvas inline custom block creation.
+ *
+ * @see seven/css/components/buttons.css
+ */
+
+.inline-block-create-button,
+.inline-block-list__item {
+  @include smooth-all-transition;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: auto;
+  cursor: pointer;
+  text-align: center;
+  border: 0 !important;
+  border-radius: $border_radius;
+  font-size: 1rem;
+  font-weight: normal;
+  box-shadow: none;
+  text-decoration: none !important;
+}
+
+.inline-block-create-button {
+  width: auto;
+  color: $button_text_color !important;
+  background: $button_bg_color !important;
+  padding: 15px 2rem !important;
+  margin: 20px auto !important;
+
+  &:hover {
+    background: darken($button_bg_color, 10%) !important;
+  }
+
+  &:before {
+    content: '';
+    width: 2rem;
+    height: 2rem;
+    position: absolute;
+    left: 1.5rem;
+    top: 50%;
+    display: block;
+    margin-top: -1rem;
+    background: $add_block_icon transparent;
+    background-size: contain;
+  }
+}
+
+.inline-block-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -5px;
+  margin-left: -5px;
+  column-gap: 0.5rem;
+
+  li {
+    display: flex;
+    padding: 0.75rem 0 1rem 0;
+    width: calc(50% - 0.25rem);
+  }
+}
+
+.inline-block-list__item {
+  font-size: .75rem;
+  padding: 0 !important;
+  color: $panel_text_color !important;
+  background: $box_input_bg !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: center;
+  border-radius: 0;
+  min-height: 80px;
+  border-radius: $border-radius;
+  border: 2px solid transparent !important;
+
+  &:hover {
+    border: 2px solid $panel_link_color !important;
+  }
+
+  &:focus {
+    color: $panel_bg_color !important;
+    background-color: $panel_link_color !important;
+  }
+}

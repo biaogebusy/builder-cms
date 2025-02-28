@@ -1,0 +1,32 @@
+# Schema for the configuration files of the Serial module.
+
+field.storage_settings.serial:
+  type: mapping
+  label: 'Serial settings'
+  mapping:
+    start_value:
+      type: integer
+      label: 'Starting value'
+    init_existing_entities:
+      type: integer
+      label: 'Start on existing entities'
+
+field.field_settings.serial:
+  type: mapping
+  label: 'Serial settings'
+
+field.value.serial:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    value:
+      type: integer
+      label: 'Value'
+
+field.formatter.settings.serial_default_formatter:
+  type: mapping
+  label: 'Serial default format settings'
+
+field.widget.settings.serial_default_widget:
+  type: mapping
+  label: 'Serial default settings'

@@ -1,0 +1,56 @@
+/**
+ * @file
+ * Styles for dropbuttons in the off-canvas dialog.
+ */
+
+.dropbutton-widget {
+  color: #fff;
+  background: #277abd;
+}
+.dropbutton-widget:hover {
+  background: #2b8bd8;
+}
+
+/*
+ * Style dropbutton single.
+ */
+
+.dropbutton li,
+.dropbutton a {
+  color: $panel_link_color;
+}
+.dropbutton li:hover,
+.dropbutton li:focus,
+.dropbutton a:hover,
+.dropbutton a:focus {
+  color: darken($panel_link_color, 10%);
+  background: transparent;
+}
+
+/*
+ * Style dropbutton multiple.
+ */
+
+.dropbutton-multiple .dropbutton-widget:hover {
+  background-color: lighten($panel_link_color, 20%);
+}
+
+/* The toggle to expand the button. */
+.dropbutton-toggle {
+  color: $panel_text_color;
+}
+
+/* The toggle arrow. */
+.dropbutton-arrow {
+  color: $panel_text_color;
+}
+
+/* Push the widget to the right so text expands left. */
+td .dropbutton-widget {
+  background: lighten($panel_link_color, 20%) none;
+}
+
+td .dropbutton-multiple.open .dropbutton li,
+td .dropbutton-multiple.open .dropbutton a {
+  color: $panel_text_color;
+}

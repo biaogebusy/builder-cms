@@ -1,0 +1,4 @@
+'administer commerce_order_type':
+  title: 'Administer order types'
+  description: 'Maintain the types of orders available and the fields that are associated with those types.'
+  restrict access: true

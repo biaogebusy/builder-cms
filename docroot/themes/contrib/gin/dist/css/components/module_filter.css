@@ -1,0 +1,123 @@
+.modules-tabs {
+  background: transparent;
+  border: 0 none;
+}
+
+.modules-tabs__pane, .modules-tabs__menu, .modules-tabs__menu-item {
+  background: var(--gin-bg-layer);
+}
+
+.modules-tabs__pane {
+  padding: var(--gin-spacing-l) var(--gin-spacing-l) 0 var(--gin-spacing-l);
+}
+
+[dir="ltr"] .modules-tabs__pane {
+  border-left: 1px solid var(--gin-border-color);
+}
+
+[dir="rtl"] .modules-tabs__pane {
+  border-right: 1px solid var(--gin-border-color);
+}
+
+.modules-tabs__pane table tr.enabling {
+  background: var(--gin-bg-green-light);
+}
+
+.modules-tabs__menu-item {
+  border-top: 1px solid var(--gin-border-color);
+}
+
+.modules-tabs__menu-item.tab__new {
+  border-bottom: 1px solid var(--gin-border-color);
+}
+
+.modules-tabs__menu-item.disabled {
+  background-color: transparent;
+  border-top-color: var(--gin-border-color);
+  border-bottom-color: transparent;
+}
+
+.modules-tabs__menu-item.suggest,
+.modules-tabs__menu-item a:hover,
+.modules-tabs__menu-item a:focus,
+.modules-tabs__menu-item a:active {
+  background: var(--gin-bg-item-hover);
+}
+
+.modules-tabs__menu-item.is-selected a,
+.modules-tabs__menu-item.is-selected a:hover,
+.modules-tabs__menu-item.is-selected a:focus,
+.modules-tabs__menu-item.is-selected a:active {
+  background: var(--gin-bg-layer);
+}
+
+.modules-tabs__menu-item ul.enabling {
+  color: var(--gin-color-green);
+}
+
+#module-filter-update-status-form .table-filter {
+  float: none;
+}
+
+[dir="ltr"] #module-filter-update-status-form .table-filter {
+  text-align: left;
+}
+
+[dir="rtl"] #module-filter-update-status-form .table-filter {
+  text-align: right;
+}
+
+#module-filter-update-status-form .table-filter .winnow-input {
+  width: 100%;
+}
+
+#module-filter-update-status-form .table-filter .winnow-clear {
+  width: 44px;
+}
+
+#module-filter-update-status-form .table-filter .winnow-clear:after {
+  top: 10px;
+}
+
+[dir="ltr"] #module-filter-update-status-form .table-filter .winnow-clear:after {
+  right: var(--gin-spacing-xs);
+}
+
+[dir="rtl"] #module-filter-update-status-form .table-filter .winnow-clear:after {
+  left: var(--gin-spacing-xs);
+}
+
+#module-filter-update-status-form .table-filter input.form-search {
+  width: 100%;
+  padding: var(--gin-spacing-m);
+}
+
+#module-filter-update-status-form .table-filter .form-type--search {
+  margin-top: 0;
+  margin-bottom: var(--gin-spacing-xs);
+}
+
+.system-modules-uninstall .winnow-input {
+  width: 100%;
+}
+
+[dir="ltr"] .module-filter-status {
+  margin-left: -1em;
+}
+
+[dir="rtl"] .module-filter-status {
+  margin-right: -1em;
+}
+
+[dir="ltr"] .modules-tabs .module-filter-status {
+  margin-left: 0;
+}
+
+[dir="rtl"] .modules-tabs .module-filter-status {
+  margin-right: 0;
+}
+
+.system-modules td details a {
+  color: var(--gin-color-primary);
+}
+

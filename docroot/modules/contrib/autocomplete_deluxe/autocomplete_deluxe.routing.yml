@@ -1,0 +1,6 @@
+autocomplete_deluxe.autocomplete:
+  path: "/autocomplete_deluxe/{target_type}/{selection_handler}/{selection_settings_key}"
+  defaults:
+    _controller: '\Drupal\autocomplete_deluxe\Controller\AutocompleteDeluxeController::handleAutocomplete'
+  requirements:
+    _permission: "access content"

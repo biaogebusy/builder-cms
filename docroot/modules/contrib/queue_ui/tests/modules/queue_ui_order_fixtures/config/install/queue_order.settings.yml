@@ -1,0 +1,7 @@
+order:
+  queue_order_worker_A: 30
+  queue_order_worker_B: 20
+  queue_order_worker_C: 10
+  queue_order_worker_D: 0
+  queue_order_worker_E: -10
+  queue_order_worker_F: -20

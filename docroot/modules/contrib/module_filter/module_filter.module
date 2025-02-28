@@ -1,0 +1,263 @@
+<?php
+
+/**
+ * @file
+ * Provides a filtering mechanism to various admin pages.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function module_filter_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.module_filter':
+      $output = '';
+      $output .= '<p>';
+      $output .= t('The modules list page can become quite big when dealing with a fairly large site or even just a dev site meant for testing new and various modules being considered.');
+      $output .= '</p>';
+      $output .= '<p>';
+      $output .= t('What this module aims to accomplish is the ability to quickly find the module you are looking for without having to rely on the browsers search feature which more times than not shows you the module name in the -Required by- or -Depends on- sections of the various modules or even some other location on the page like a menu item.');
+      $output .= '</p>';
+      $output .= '<p>';
+      $output .= t('See the <a href=":project_page">project page on Drupal.org</a> for more details.', [':project_page' => 'https://www.drupal.org/project/module_filter']);
+
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function module_filter_form_system_modules_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $request_object = \Drupal::request();
+  $config = \Drupal::config('module_filter.settings');
+
+  $key = array_search('system/drupal.system.modules', $form['#attached']['library']);
+  if ($key !== FALSE) {
+    unset($form['#attached']['library'][$key]);
+  }
+  $form['#attached']['library'][] = $config->get('tabs') ? 'module_filter/modules.tabs' : 'module_filter/modules.bare';
+  unset($form['filters']['text']['#description']);
+  $form['filters']['text']['#placeholder'] = t('Filter by module name or description');
+  if (!empty($request_object->query->get('filter'))) {
+    $form['filters']['text']['#default_value'] = $request_object->query->get('filter');
+  }
+
+  $status_defaults = [
+    ((!empty($request_object->query->get('enabled'))) ? $request_object->query->get('enabled') : 1) ? 'enabled' : '',
+    ((!empty($request_object->query->get('disabled'))) ? $request_object->query->get('disabled') : 1) ? 'disabled' : '',
+    ((!empty($request_object->query->get('unavailable'))) ? $request_object->query->get('unavailable') : 1) ? 'unavailable' : '',
+  ];
+  $form['filters']['status'] = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => [
+        'module-filter-status',
+      ],
+    ],
+    'checkboxes' => [
+      '#type' => 'checkboxes',
+      '#default_value' => array_filter($status_defaults),
+      '#options' => [
+        'enabled' => t('Enabled'),
+        'disabled' => t('Disabled'),
+        'unavailable' => t('Unavailable'),
+      ],
+    ],
+  ];
+
+  $state = \Drupal::state();
+  $recent = $state->get('module_filter.recent') ?: [];
+
+  // Remove recent items older than a week.
+  $recent = array_filter($recent, function ($val) {
+    return !($val < \Drupal::time()->getRequestTime() - 60 * 60 * 24 * 7);
+  });
+  $state->set('module_filter.recent', $recent);
+
+  if (!empty($recent)) {
+    foreach ($recent as $module => $time) {
+      foreach (Element::children($form['modules']) as $package) {
+        if (isset($form['modules'][$package][$module])) {
+          $form['modules'][$package][$module]['#attributes']['class'][] = 'recent';
+          break;
+        }
+      }
+    }
+  }
+
+  $modules = \Drupal::service('extension.list.module')->getList();
+
+  foreach ($modules as $name => $module) {
+    $ctime = filectime($module->getPathname());
+    if (($ctime - strtotime('-1 week')) > 0) {
+      foreach (Element::children($form['modules']) as $package) {
+        if (isset($form['modules'][$package][$name])) {
+          $form['modules'][$package][$name]['#attributes']['class'][] = 'new';
+          break;
+        }
+      }
+    }
+    foreach (array_keys($module->requires) as $requires_name) {
+      // If the required name is not in $modules then that module is missing, so
+      // change the name into a link to assist admins to get the project. We
+      // assume that the project at least has a page on drupal.org even if the
+      // primary source repo is hosted somewhere else.
+      if (empty($modules[$requires_name])) {
+        $package = $module->info['package'];
+        if (isset($form['modules'][$package][$name]['#requires'][$requires_name])) {
+          $project = Link::fromTextAndUrl($requires_name, Url::fromUri('https://www.drupal.org/project/' . $requires_name));
+          $missing_link = t('<strong>@module_name</strong> (<span class="admin-missing">missing</span>)', ['@module_name' => $project->toString()]);
+          $form['modules'][$package][$name]['#requires'][$requires_name] = $missing_link;
+        }
+      }
+    }
+  }
+
+  $form['#submit'][] = 'module_filter_system_modules_recent_enabled_submit';
+  $form['#submit'][] = 'module_filter_system_modules_redirect_submit';
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function module_filter_form_system_modules_confirm_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $request_object = \Drupal::request();
+  $form['filters']['text'] = [
+    '#type' => 'value',
+    '#value' => !empty($request_object->query->get('filter')) ? $request_object->query->get('filter') : '',
+  ];
+  $form['#submit'][] = 'module_filter_system_modules_redirect_submit';
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function module_filter_form_system_modules_uninstall_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $request_object = \Drupal::request();
+  // Remove the 'system/drupal.system.modules' library if it is attached, and
+  // replace it with this module's 'module_filter/modules.uninstall' library.
+  $key = array_search('system/drupal.system.modules', $form['#attached']['library']);
+  if ($key !== FALSE) {
+    unset($form['#attached']['library'][$key]);
+  }
+  $form['#attached']['library'][] = 'module_filter/modules.uninstall';
+  unset($form['filters']['text']['#description']);
+  $form['filters']['text']['#placeholder'] = t('Filter by module name, description or machine name');
+  // Increase the input field size to cater for longer placeholder.
+  $form['filters']['text']['#size'] = 50;
+  if (!empty($request_object->query->get('filter'))) {
+    $form['filters']['text']['#default_value'] = $request_object->query->get('filter');
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function module_filter_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $config = \Drupal::config('module_filter.settings');
+  if (!$config->get('enabled_filters.permissions')) {
+    return;
+  }
+
+  $request_object = \Drupal::request();
+  $form['filters'] = [
+    '#type' => 'container',
+    '#attributes' => [
+      'class' => ['table-filter', 'js-show'],
+    ],
+  ];
+  $form['filters']['text'] = [
+    '#type' => 'search',
+    '#title' => t('Filter modules'),
+    '#title_display' => 'invisible',
+    '#size' => 30,
+    '#placeholder' => t('Filter by module or permission'),
+    '#attributes' => [
+      'class' => ['table-filter-text'],
+      'data-table' => '#permissions',
+      'autocomplete' => 'off',
+    ],
+    '#weight' => -1000,
+  ];
+  if (!empty($request_object->query->get('filter'))) {
+    $form['filters']['text']['#default_value'] = $request_object->query->get('filter');
+  }
+  $form['#attached']['library'][] = 'module_filter/permissions';
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function module_filter_theme_registry_alter(&$theme_registry) {
+  // We need to alter the system-modules-details template so we can add
+  // applicable requires and required-by classes.
+  $theme_registry['system_modules_details']['path'] = \Drupal::service('extension.list.module')->getPath('module_filter') . '/templates';
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function module_filter_preprocess_system_modules_details(&$variables) {
+  $display_path = \Drupal::config('module_filter.settings')->get('path');
+  if ($display_path) {
+    foreach ($variables['modules'] as &$module) {
+      // Get the module id from parents.
+      // Because core does not provide it in
+      // template_preprocess_system_modules_details.
+      $id = $module['name']['#parents'][1];
+      $path = \Drupal::service('extension.list.module')->getPath($id);
+      if (!empty($path)) {
+        $module['path'] = $path;
+      }
+    }
+  }
+}
+
+/**
+ * Form submit callback to track recently enabled modules.
+ */
+function module_filter_system_modules_recent_enabled_submit($form, FormStateInterface $form_state) {
+  $state = \Drupal::state();
+  $recent = $state->get('module_filter.recent') ?: [];
+
+  // Drupal 8.3.0 simplified the module form structure which requires checking
+  // the version of Drupal and building the $modules array accordingly.
+  // @see https://www.drupal.org/node/2851653
+  $modules = [];
+  if (version_compare(\Drupal::VERSION, '8.3.0', '<')) {
+    foreach ($form_state->getValue('modules') as $package) {
+      $modules += $package;
+    }
+  }
+  else {
+    $modules = $form_state->getValue('modules');
+  }
+
+  foreach (Element::children($form['modules']) as $package) {
+    foreach ($modules as $module => $details) {
+      if (isset($form['modules'][$package][$module]) && $form['modules'][$package][$module]['enable']['#default_value'] != $details['enable']) {
+        $recent[$module] = \Drupal::time()->getRequestTime();
+      }
+    }
+  }
+
+  $state->set('module_filter.recent', $recent);
+}
+
+/**
+ * Form submit callback for remembering the filter value.
+ */
+function module_filter_system_modules_redirect_submit($form, FormStateInterface $form_state) {
+  if ($text = $form_state->getValue('text')) {
+    /** @var \Drupal\Core\Url $route_name */
+    $route_name = ($redirect = $form_state->getRedirect()) ? $redirect->getRouteName() : 'system.modules_list';
+    $form_state->setRedirect($route_name, ['filter' => $text]);
+  }
+}

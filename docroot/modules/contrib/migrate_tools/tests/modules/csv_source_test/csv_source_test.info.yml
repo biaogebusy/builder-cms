@@ -1,0 +1,15 @@
+type: module
+name: CSV Source edit test
+description: 'Test editing of source plugin via the UI.'
+package: Testing
+core: 8.x
+core_version_requirement: ^8 || ^9
+dependencies:
+  - drupal:migrate
+  - migrate_plus:migrate_plus
+  - migrate_plus:migrate_source_csv
+
+# Information added by Drupal.org packaging script on 2022-12-30
+version: '8.x-5.2'
+project: 'migrate_tools'
+datestamp: 1672425096

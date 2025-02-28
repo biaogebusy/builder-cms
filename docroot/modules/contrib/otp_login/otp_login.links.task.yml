@@ -1,0 +1,8 @@
+otp_login.config:
+  route_name: otp_login.admin_settings
+  base_route: otp_login.admin_settings
+  title: 'OTP login configuration'
+otp_login.config.user_purge:
+  route_name: otp_login.admin_settings.user_purge
+  base_route: otp_login.admin_settings
+  title: 'OTP login - purge users'

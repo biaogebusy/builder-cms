@@ -1,0 +1,16 @@
+name: SMS Framework
+description: Provides an extensible API that facilitates communication between Drupal and various SMS gateways.
+package: SMS Framework
+core_version_requirement: '>=9.2'
+php: 7.4
+type: module
+configure: sms.admin
+dependencies:
+  - drupal:system (>= 8.5)
+  - drupal:telephone
+  - dynamic_entity_reference:dynamic_entity_reference
+
+# Information added by Drupal.org packaging script on 2022-12-05
+version: '2.1.0'
+project: 'smsframework'
+datestamp: 1670240398

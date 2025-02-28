@@ -1,0 +1,42 @@
+field.widget.settings.select_or_other_reference:
+  type: mapping
+  label: 'Select or other reference widget display format settings'
+  mapping:
+    select_element_type:
+      type: string
+      label: 'Type of select form element'
+    sort_options:
+      type: string
+      label: 'Chosen sorting of options'
+    other_placeholder:
+      type: string
+      label: 'Other placeholder'
+    other_option:
+      type: string
+      label: 'Other option'
+    other_field_label:
+      type: string
+      label: 'Label of the other field'
+
+field.widget.settings.select_or_other_list:
+  type: mapping
+  label: 'Select or other list widget display format settings'
+  mapping:
+    select_element_type:
+      type: string
+      label: 'Type of select form element'
+    sort_options:
+      type: string
+      label: 'Chosen sorting of options'
+    other_placeholder:
+      type: string
+      label: 'Other placeholder'
+    other_option:
+      type: string
+      label: 'Other option'
+    other_field_label:
+      type: string
+      label: 'Label of the other field'
+    add_other_value_to_allowed_values:
+      type: boolean
+      label: 'Add entered values from the other field to the allowed values list'

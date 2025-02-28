@@ -1,0 +1,5 @@
+autologout.config:
+  title: 'Autologout'
+  base_route_name: autologout.set_admin
+  names:
+    - autologout.settings

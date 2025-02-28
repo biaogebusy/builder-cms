@@ -1,0 +1,5 @@
+wechat_menu_item_add:
+  route_name: entity.wechat_menu_item.add
+  title: 'Add menu item'
+  appears_on:
+    - entity.wechat_menu_item.collection

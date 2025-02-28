@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * The module file.
+ */
+
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Url;
+use Drupal\media\OEmbed\Provider;
+
+/**
+ * Implements hook_oembed_resource_url_alter().
+ */
+function media_entity_instagram_oembed_resource_url_alter(array &$parsed_url, Provider $provider) {
+  if ($provider->getName() !== 'Instagram') {
+    return;
+  }
+  $settings = \Drupal::config('media_entity_instagram.settings');
+
+  if (empty($settings->get('facebook_app_id')) || empty($settings->get('facebook_app_secret'))) {
+    \Drupal::messenger()->addError(t('The Facebook credentials have not been configured. Please visit <a href=":form">the settings form</a> .', [
+      ':form' => Url::fromRoute('media_entity_instagram.settings')->toString(),
+    ]));
+  }
+
+  // Get the second endpoint (GraphAPI) and use it.
+  $endpoints = $provider->getEndpoints();
+  $endpoint = reset($endpoints);
+  if (count($endpoints) > 1) {
+    $endpoint = $endpoints[1];
+  }
+
+  $url = UrlHelper::parse($parsed_url['query']['url'])['path'];
+  $parsed_url['query']['url'] = $url;
+  $resource_url = $endpoint->buildResourceUrl($parsed_url['query']['url']);
+
+  $parsed_url['path'] = UrlHelper::parse($resource_url)['path'];
+
+  $parsed_url['query']['access_token'] = sprintf("%s|%s", $settings->get('facebook_app_id'), $settings->get('facebook_app_secret'));
+  $parsed_url['query']['omitscript'] = TRUE;
+}

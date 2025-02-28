@@ -1,0 +1,8 @@
+// This file provide classes examples for Padding Plugin.
+// We only use these classes in configuration page when install the module.
+// Note: this is just example, you can use any classes from your theme.
+@import "bs-variables";
+@import "mixins/spacing";
+
+// Generate padding classes by make-spacing mixin.
+@include make-spacing(padding, p);

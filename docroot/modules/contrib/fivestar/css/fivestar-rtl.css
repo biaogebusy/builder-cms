@@ -1,0 +1,53 @@
+[dir="rtl"] div.fivestar-widget-static .star,
+[dir="rtl"] div.fivestar-widget .cancel,
+[dir="rtl"] div.fivestar-widget .star {
+  float: right;
+}
+
+/* Combo Static and Rate Widget */
+[dir="rtl"] .fivestar-combo-stars .fivestar-static-form-item {
+  float: right;
+  margin-left: 40px;
+  margin-right: 0;
+}
+[dir="rtl"] .fivestar-combo-stars .fivestar-form-item {
+  float: right;
+}
+
+/* Static View-only Star Version */
+[dir="rtl"] div.fivestar-widget-static br {
+  clear: right;
+}
+
+[dir="rtl"] div.fivestar-widget-static .star {
+  float: right;
+  background-position: right 0;
+}
+
+[dir="rtl"] div.fivestar-widget-static .star span.on {
+  background-position: right -32px;
+}
+
+[dir="rtl"] div.fivestar-widget-static .star span.off {
+  background-position: right 0;
+}
+
+/* Javascript Star Version */
+[dir="rtl"] div.fivestar-widget .cancel,
+[dir="rtl"] div.fivestar-widget .cancel a {
+  background-position: right -16px;
+}
+
+[dir="rtl"] div.fivestar-widget .star,
+[dir="rtl"] div.fivestar-widget .star a,
+[dir="rtl"] div.fivestar-widget .cancel a {
+  background-position: right 0;
+}
+
+[dir="rtl"] div.fivestar-widget div.on a {
+  background-position: right -16px;
+}
+[dir="rtl"] div.fivestar-widget div.hover a,
+[dir="rtl"] div.rating div a:hover {
+  background-position: right -32px;
+}

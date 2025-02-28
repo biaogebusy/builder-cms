@@ -1,0 +1,7 @@
+entity_theme_engine.settings:
+  path: '/admin/config/development/entity-theme-engine'
+  defaults:
+    _title: 'Entity Theme Engine'
+    _form: '\Drupal\entity_theme_engine\Form\SettingsForm'
+  requirements:
+    _permission: 'access administration pages'

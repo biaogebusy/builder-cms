@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies: {  }
+id: default
+label: Default
+plugin: multistep_default
+configuration:
+  display_checkout_progress: true
+  display_checkout_progress_breadcrumb_links: false
+  guest_order_assign: false
+  guest_new_account: false
+  guest_new_account_notify: false
+  panes:
+    login:
+      allow_guest_checkout: true
+      allow_registration: false
+      step: login
+      weight: 0
+    contact_information:
+      double_entry: true
+      step: order_information
+      weight: 1
+    billing_information:
+      step: order_information
+      weight: 2
+    review:
+      step: review
+      weight: 3
+    completion_message:
+      message:
+        value: "Your order number is [commerce_order:order_number].\r\nYou can view your order on your account page when logged in."
+        format: plain_text
+      step: complete
+      weight: 4
+    order_summary:
+      view: null
+      step: _sidebar
+      weight: 5

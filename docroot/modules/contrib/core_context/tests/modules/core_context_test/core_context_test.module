@@ -1,0 +1,12 @@
+<?php
+
+use Drupal\core_context\SettingsContextHandler;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function core_context_test_entity_type_alter(array &$entity_types) {
+  if (array_key_exists('entity_test_bundle', $entity_types)) {
+    $entity_types['entity_test_bundle']->setHandlerClass('context', SettingsContextHandler::class);
+  }
+}

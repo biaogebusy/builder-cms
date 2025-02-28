@@ -1,0 +1,10 @@
+name: Diff
+type: module
+description: Shows changes between content revisions.
+core_version_requirement: ^9.3 || ^10
+configure: diff.general_settings
+
+# Information added by Drupal.org packaging script on 2024-04-12
+version: '8.x-1.3'
+project: 'diff'
+datestamp: 1712883860

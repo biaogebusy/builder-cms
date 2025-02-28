@@ -1,0 +1,47 @@
+{
+    "name": "drupal/lightning_core",
+    "type": "drupal-module",
+    "description": "Shared functionality for the Lightning distribution.",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "composer-runtime-api": "^2",
+        "drupal/acquia_telemetry-acquia_telemetry": "1.0-alpha6",
+        "drupal/contact_storage": "^1.0",
+        "drupal/metatag": "^1.13",
+        "drupal/pathauto": "^1.8",
+        "drupal/redirect": "^1.5",
+        "drupal/search_api": "^1.16",
+        "drupal/token": "^1.7",
+        "phpdocumentor/reflection-docblock": "^5"
+    },
+    "conflict": {
+        "drupal/drupal-extension": "<3.4.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-8.x-5.x": "5.x-dev"
+        },
+        "drush": {
+            "services": {
+                "drush.services.yml": "^9 || ^10"
+            }
+        },
+        "patches": {
+            "drupal/core": {
+                "2869592 - Disabled update module shouldn't produce a status report warning": "https://www.drupal.org/files/issues/2869592-remove-update-warning-7.patch"
+            }
+        }
+    },
+    "repositories": {
+        "drupal": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require-dev": {
+        "drush/drush": "^11",
+        "drupal/quickedit": "^1.0"
+    }
+}

@@ -1,0 +1,62 @@
+elasticsearch_connector.cluster.*:
+  type: config_entity
+  label: 'Elasticsearch Cluster'
+  mapping:
+    cluster_id:
+      type: string
+      label: 'Cluster ID'
+    name:
+      type: string
+      label: 'Cluster Name'
+    status:
+      type: string
+      label: 'Cluster Status'
+    url:
+      type: string
+      label: 'Cluster URL'
+    proxy:
+      type: string
+      label: 'Cluster Proxy'
+    options:
+      type: mapping
+      label: 'Options'
+      mapping:
+        multiple_nodes_connection:
+          type: boolean
+          label: 'Multiple Nodes Connection'
+        use_authentication:
+          type: boolean
+          label: 'Use HTTP authentication method to connect to Elasticsearch.'
+        authentication_type:
+          type: string
+          label: 'HTTP authentication type'
+        username:
+          type: string
+          label: 'The username for authentication'
+        password:
+          type: string
+          label: 'The password for authentication'
+        timeout:
+          type: integer
+          label: 'Connection timeout, in seconds'
+        rewrite:
+          type: mapping
+          label: 'Options for altering the index name'
+          mapping:
+            rewrite_index:
+              type: boolean
+              label: 'Whether to alter the index name'
+            index:
+              type: mapping
+              label: 'Index-specific options for rewrite'
+              mapping:
+                prefix:
+                  type: string
+                  label: 'Prefix to use for the final index name'
+                suffix:
+                  type: string
+                  label: 'Suffix to use for the final index name'
+
+    locked:
+      type: boolean
+      label: 'Locked'

@@ -1,0 +1,4 @@
+administer field validation rule set:
+  title: 'Administer field validation rules'
+  description: 'Allow access to configure field validation rules.'
+  restrict access: true

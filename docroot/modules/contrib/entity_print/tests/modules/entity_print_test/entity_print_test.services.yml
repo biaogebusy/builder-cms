@@ -1,0 +1,5 @@
+services:
+  entity_print_test.configuration_alter:
+    class: Drupal\entity_print_test\EventSubscriber\TestEngineConfigurationAlter
+    tags:
+      - { name: event_subscriber }

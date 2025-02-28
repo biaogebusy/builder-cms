@@ -1,0 +1,16 @@
+opt.login:
+  route_name: xinshi_sms.otp_login_form
+  base_route: user.page
+  title: 'OTP Log in'
+  weight: -99
+
+opt.find_password:
+  route_name: xinshi_sms.find_password
+  base_route: user.page
+  title: 'Find Password'
+  weight: 99
+
+xinshi_sms.settings:
+  route_name: xinshi_sms.settings
+  base_route: xinshi_sms.settings
+  title: 'Settings'

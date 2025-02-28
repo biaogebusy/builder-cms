@@ -1,0 +1,11 @@
+name: Commerce Test
+type: module
+description: Contains various non-specific things needed in tests.
+package: Testing
+dependencies:
+  - commerce:commerce_store
+
+# Information added by Drupal.org packaging script on 2023-06-01
+version: '8.x-2.36'
+project: 'commerce'
+datestamp: 1685624439

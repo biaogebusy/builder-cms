@@ -1,0 +1,1 @@
+!function(s,c,i){"use strict";var a,n,r=c.blazy||{},t=(c.Ajax||{}).prototype;t&&(t.success=(n=t.success,function(t,o){var e;return r.init&&(e=r.options,clearTimeout(a),a=setTimeout(function(){s.find(i,s.selector(e,!0))&&(s.once.removeSafely("b-root","body",i),c.attachBehaviors(i.body))},100)),n.apply(this,arguments)}))}(dBlazy,Drupal,this.document);

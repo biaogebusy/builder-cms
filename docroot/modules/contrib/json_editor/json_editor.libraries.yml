@@ -1,0 +1,10 @@
+json-editor:
+  css:
+    theme:
+      /libraries/jsoneditor/dist/jsoneditor.css: { minified: true }
+  js:
+    /libraries/jsoneditor/dist/jsoneditor.js: { minified: true }
+    /libraries/filesaver/dist/FileSaver.js: { minified: true }
+    js/jsoneditor.js: {}
+  dependencies:
+    - core/drupal

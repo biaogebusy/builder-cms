@@ -1,0 +1,13 @@
+type: module
+name: Page Manager UI
+description: 'Provides a simple UI for Page Manager.'
+package: Layout
+core_version_requirement: '^9.3 || ^10'
+dependencies:
+  - page_manager
+configure: entity.page.collection
+
+# Information added by Drupal.org packaging script on 2022-12-16
+version: '8.x-4.0-rc2'
+project: 'page_manager'
+datestamp: 1671210023

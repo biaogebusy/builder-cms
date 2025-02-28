@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default payments summary template.
+ *
+ * Available variables:
+ * - order_entity: The order entity object.
+ *
+ * @ingroup themeable
+ */
+#}
+{{ attach_library('commerce_payment/payment_summary') }}
+<div>
+  <div class="payment-summary-line payment-summary-line-total-paid">
+    <span class="payment-summary-line-label">{{ 'Total paid'|t }} </span><span class="payment-summary-line-value">{{ order_entity.getTotalPaid|commerce_price_format }}</span>
+  </div>
+  <div class="payment-summary-line payment-summary-line-balance">
+    <span class="payment-summary-line-label">{{ 'Order balance'|t }} </span><span class="payment-summary-line-value">{{ order_entity.getBalance|commerce_price_format }}</span>
+  </div>
+</div>

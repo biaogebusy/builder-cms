@@ -1,0 +1,216 @@
+<?php
+
+/**
+ * @file
+ * Provides expanded entity APIs.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\entity\BundlePlugin\BundlePluginHandler;
+use Drupal\entity\QueryAccess\Condition;
+use Drupal\entity\QueryAccess\EntityQueryAlter;
+use Drupal\entity\QueryAccess\ViewsQueryAlter;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\Plugin\views\query\Sql;
+use Drupal\views\ViewExecutable;
+
+/**
+ * Implements hook_entity_operation().
+ */
+function entity_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  $entity_type = $entity->getEntityType();
+  if ($entity_type->hasLinkTemplate('duplicate-form') && $entity->access('duplicate')) {
+    $operations['duplicate'] = [
+      'title' => t('Duplicate'),
+      'weight' => 40,
+      'url' => $entity->toUrl('duplicate-form'),
+    ];
+  }
+
+  return $operations;
+}
+
+/**
+ * Gets the entity types which use bundle plugins.
+ *
+ * @return \Drupal\Core\Entity\EntityTypeInterface[]
+ *   The entity types.
+ */
+function entity_get_bundle_plugin_entity_types() {
+  $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+  $entity_types = array_filter($entity_types, function (EntityTypeInterface $entity_type) {
+    return $entity_type->hasHandlerClass('bundle_plugin');
+  });
+
+  return $entity_types;
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function entity_entity_type_build(array &$entity_types) {
+  foreach ($entity_types as $entity_type) {
+    if ($entity_type->get('bundle_plugin_type')) {
+      if (!$entity_type->hasKey('bundle')) {
+        throw new \LogicException(sprintf('The %s entity type uses a bundle plugin type but has no bundle key.', $entity_type->id()));
+      }
+
+      if (!$entity_type->hasHandlerClass('bundle_plugin')) {
+        $entity_type->setHandlerClass('bundle_plugin', BundlePluginHandler::class);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function entity_entity_type_alter(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    // Sets a default query_access handler for all entity types that have none.
+    if (!$entity_type->hasHandlerClass('query_access')) {
+      // Query access does not apply to config entities.
+      if (!$entity_type->entityClassImplements(ConfigEntityInterface::class)) {
+        // Query access only works for SQL storages.
+        if (is_subclass_of($entity_type->getStorageClass(), SqlEntityStorageInterface::class)) {
+          $entity_type->setHandlerClass('query_access', 'Drupal\entity\QueryAccess\EventOnlyQueryAccessHandler');
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_bundle_info().
+ */
+function entity_entity_bundle_info() {
+  $bundles = [];
+  foreach (entity_get_bundle_plugin_entity_types() as $entity_type) {
+    /** @var \Drupal\entity\BundlePlugin\BundlePluginHandler $bundle_handler */
+    $bundle_handler = \Drupal::entityTypeManager()->getHandler($entity_type->id(), 'bundle_plugin');
+    $bundles[$entity_type->id()] = $bundle_handler->getBundleInfo();
+  }
+  return $bundles;
+}
+
+/**
+ * Implements hook_entity_field_storage_info().
+ */
+function entity_entity_field_storage_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->hasHandlerClass('bundle_plugin')) {
+    /** @var \Drupal\entity\BundlePlugin\BundlePluginHandler $bundle_handler */
+    $bundle_handler = \Drupal::entityTypeManager()->getHandler($entity_type->id(), 'bundle_plugin');
+    return $bundle_handler->getFieldStorageDefinitions();
+  }
+}
+
+/**
+ * Implements hook_entity_bundle_field_info().
+ */
+function entity_entity_bundle_field_info(EntityTypeInterface $entity_type, $bundle) {
+  if ($entity_type->hasHandlerClass('bundle_plugin')) {
+    /** @var \Drupal\entity\BundlePlugin\BundlePluginHandler $bundle_handler */
+    $bundle_handler = \Drupal::entityTypeManager()->getHandler($entity_type->id(), 'bundle_plugin');
+    return $bundle_handler->getFieldDefinitions($bundle);
+  }
+}
+
+/**
+ * Implements hook_modules_installed().
+ */
+function entity_modules_installed($modules) {
+  foreach (entity_get_bundle_plugin_entity_types() as $entity_type) {
+    \Drupal::service('entity.bundle_plugin_installer')->installBundles($entity_type, $modules);
+  }
+}
+
+/**
+ * Implements hook_module_preuninstall().
+ */
+function entity_module_preuninstall($module) {
+  foreach (entity_get_bundle_plugin_entity_types() as $entity_type) {
+    \Drupal::service('entity.bundle_plugin_installer')->uninstallBundles($entity_type, [$module]);
+  }
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function entity_query_entity_query_alter(SelectInterface $query) {
+  $entity_type_id = $query->getMetaData('entity_type');
+  if ($query->hasTag($entity_type_id . '_access')) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type = $entity_type_manager->getDefinition($entity_type_id);
+
+    \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(EntityQueryAlter::class)
+      ->alter($query, $entity_type);
+  }
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function entity_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  if ($query instanceof Sql && empty($query->options['disable_sql_rewrite'])) {
+    \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ViewsQueryAlter::class)
+      ->alter($query, $view);
+  }
+}
+
+/**
+ * Implements hook_jsonapi_entity_filter_access().
+ *
+ * Controls access to JSON:API filtering for entity types with a query_access
+ * handler. Only maps condition groups consisting of "owner" and/or "published"
+ * field conditions.
+ */
+function entity_jsonapi_entity_filter_access(EntityTypeInterface $entity_type, AccountInterface $account) {
+  if (!$entity_type->hasHandlerClass('query_access')) {
+    return [];
+  }
+  /** @var \Drupal\entity\QueryAccess\QueryAccessHandlerInterface $query_access */
+  $query_access = \Drupal::entityTypeManager()->getHandler($entity_type->id(), 'query_access');
+  $conditions = $query_access->getConditions('view', $account);
+  if ($conditions->isAlwaysFalse()) {
+    return [];
+  }
+
+  $allowed = AccessResult::allowed()->addCacheableDependency($conditions);
+  $result = [];
+  if ($conditions->count() === 0) {
+    $result[JSONAPI_FILTER_AMONG_ALL] = $allowed;
+  }
+  elseif ($conditions->count() === 1 || $conditions->getConjunction() === 'OR') {
+    $published_key = $entity_type->getKey('published');
+    $owner_key = $entity_type->getKey('owner');
+    foreach ($conditions->getConditions() as $condition) {
+      if (!($condition instanceof Condition)) {
+        // Nested condition groups imply logic that is too complex to be mapped.
+        return [];
+      }
+
+      if ($published_key && $condition->getField() === $published_key && $condition->getOperator() === '=' && (string) $condition->getValue() === '1') {
+        $result[JSONAPI_FILTER_AMONG_PUBLISHED] = $allowed;
+      }
+      elseif ($owner_key && $condition->getField() === $owner_key && $condition->getOperator() === '=' && $condition->getValue() === $account->id()) {
+        $result[JSONAPI_FILTER_AMONG_OWN] = $allowed;
+      }
+      else {
+        // Unsupported condition, no access can be granted.
+        return [];
+      }
+    }
+  }
+
+  return $result;
+}

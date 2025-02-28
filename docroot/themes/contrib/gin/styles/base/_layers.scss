@@ -1,0 +1,94 @@
+.page-content {
+  margin-top: 0;
+
+  > .help,
+  > .region-content,
+  > .region-highlighted {
+    @include mq(small) {
+      margin-top: var(--gin-spacing-l);
+    }
+  }
+}
+
+.gin-layer-wrapper,
+.gin-layer-wrapper-shadow,
+.block-system > form,
+.views-exposed-form.views-exposed-form,
+.views-edit-view,
+.views-preview-wrapper,
+.modules-tabs,
+#views-entity-list,
+.admin.my-workbench,
+.media-library-views-form,
+.user-admin-permissions
+{
+  margin-top: 0;
+  box-shadow: var(--gin-shadow-l1);
+  border-radius: var(--gin-border-l);
+
+  .gin--dark-mode & {
+    box-shadow: 0 6px 16px var(--gin-border-color-layer);
+  }
+
+  .gin--high-contrast-mode & {
+    box-shadow: none;
+  }
+}
+
+.gin-layer-wrapper,
+.block-system-main-block > form,
+.views-exposed-form.views-exposed-form,
+.views-edit-view,
+.views-preview-wrapper,
+#views-entity-list,
+.admin.my-workbench,
+.media-library-views-form,
+.user-admin-permissions
+{
+  width: 100%;
+  padding: var(--gin-spacing-s);
+  background: var(--gin-bg-layer);
+  border: 1px solid var(--gin-border-color-layer);
+  box-sizing: border-box;
+
+  @include mq(small) {
+    padding: var(--gin-spacing-l);
+  }
+
+  // Remove extra spacing on top of form.
+  > .form-wrapper:first-of-type .form-item,
+  .layout-region-node-main > .form-wrapper:first-of-type .form-item {
+    margin-top: 0;
+  }
+}
+
+#system-clear-cache + #system-performance-settings,
+.gin-layer-wrapper + .imageapi-optimize-default-pipeline {
+  margin-top: var(--gin-spacing-l);
+}
+
+// Unplublished node
+.node--unpublished {
+  background-color: var(--gin-bg-unpublished);
+}
+
+// Has table filter
+.block-system-main-block > form:has(.table-filter) {
+  .table-filter {
+    padding: 0;
+    margin-bottom: var(--gin-spacing-l);
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    .form-type--search {
+      margin-block: 0;
+    }
+
+    .table-filter-text {
+      width: 100%;
+      padding: var(--gin-spacing-m);
+      margin-top: 0;
+    }
+  }
+}

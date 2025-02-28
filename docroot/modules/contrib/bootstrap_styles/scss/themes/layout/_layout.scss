@@ -1,0 +1,184 @@
+$conainer_icon_path: '../../images/layout/';
+
+// Container types
+.fieldgroup.blb_container_type {
+  .fieldset-wrapper > div {
+    display: flex;
+
+    // Our actual form item.
+    > div {
+      @include bs_boxed_inputs($width: 100%, $height: 70px, $bg: $box_input_bg, $active_color: inherit, $active_bg: $box_input_bg_checked);
+
+      input {
+        + label {
+          font-size: 10px;
+          font-weight: normal;
+          padding: 8px;
+          margin: 2px;
+          width: calc(100% - 4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          cursor: pointer;
+          border-radius: 0;
+          background-color: $icon_box_input_bg;
+          flex-direction: column;
+
+          &:hover {
+            background-color: $icon_box_input_bg_hover;
+          }
+        }
+
+        // Active state.
+        &:checked + label {
+          font-weight: bold;
+          color: $panel_link_color;
+          background-color: $icon_box_input_bg_checked;
+
+          .input-icon:after {
+            background-image: url($conainer_icon_path + 'container-active.svg');
+          }
+        }
+      }
+
+      .input-icon {
+        width: 50px !important;
+        height: 26px;
+        margin-bottom: 10px;
+        background: url($conainer_icon_path + 'stripe-sm.svg') center top repeat;
+
+        &:after {
+          content: '';
+          display: block;
+          margin: 0 auto 1rem auto;
+          width: 100%;
+          height: 100%;
+          background-image: url($conainer_icon_path + 'container.svg');
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-color: $box_input_bg;
+          background-size: 100% 26px;
+        }
+
+        // Containers
+        &.container:after {
+          width: 60%;
+        }
+
+        &.container-fluid:after {
+            width: 80%;
+        }
+
+        &.w-100:after {
+          width: 100%;
+        }
+
+        // Gutter Types
+      }
+    }
+  }
+}
+
+// Gutters
+.fieldgroup.blb_gutter_type {
+  .fieldset-wrapper > div {
+    display: flex;
+
+    // Our actual form item.
+    > div {
+      @include bs_boxed_inputs($width: 100%, $height: 105px, $bg: transparent, $active_color: inherit, $active_bg: transparent);
+
+      input {
+        + label {
+          font-size: 10px;
+          font-weight: normal;
+          padding: 8px;
+          margin: 2px;
+          width: calc(100% - 4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          cursor: pointer;
+          border-radius: 0;
+          background-color: transparent;
+          flex-direction: column;
+
+          &:hover {
+            background-color: transparent;
+          }
+        }
+
+        // Active state.
+        &:checked + label {
+          font-weight: bold;
+          color: $panel_link_color;
+
+          .input-icon:after {
+            background-image: url($conainer_icon_path + 'gutter-active.svg');
+          }
+        }
+      }
+
+      .input-icon {
+        width: 80%;
+        height: 66px;
+        margin-bottom: 10px;
+        background: url($conainer_icon_path + 'stripe-lg.svg') center top repeat;
+
+        &:after {
+          content: '';
+          display: block;
+          margin: 0 auto 1rem auto;
+          width: 100%;
+          height: 100%;
+          background-image: url($conainer_icon_path + 'gutter.svg');
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-color: $box_input_bg;
+          background-size: cover;
+        }
+
+        // Container Types
+        &.container:after {
+          width: 60%;
+        }
+
+        &.container-fluid:after {
+          width: 70%;
+        }
+
+        &.w-100:after {
+          width: 100%;
+        }
+
+        // Gutter Types
+        &.gutter-icon-0:after {
+          width: 80%;
+        }
+      }
+    }
+  }
+}
+
+// Graphical Layout Columns
+.blb_breakpoint_cols label:hover .blb_breakpoint_col {
+  background-color: rgba($panel_text_color, .8);
+  color: $panel_bg_color;
+}
+
+input:checked + label .blb_breakpoint_col {
+  color: $panel_bg_color;
+  background-color: $panel_link_color;
+}
+
+.blb_breakpoint_col {
+  color: $panel_text_color;
+  background-color: rgba($panel_text_color, .2);
+
+  &.bp-selected {
+    color: $panel_text_color;
+    background-color: $panel_link_color;
+  }
+}

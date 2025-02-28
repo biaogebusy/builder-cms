@@ -1,0 +1,11 @@
+/* Adjust the background position when using this widget with a RTL language. */
+[dir="rtl"] .fivestar-oxygen div.fivestar-widget-static .star span.on {
+  background-position: right -32px;
+}
+[dir="rtl"] .fivestar-oxygen div.fivestar-widget div.on a {
+  background-position: right -16px;
+}
+[dir="rtl"] .fivestar-oxygen div.fivestar-widget div.hover a,
+[dir="rtl"] .fivestar-oxygen div.rating div a:hover {
+  background-position: right -32px;
+}

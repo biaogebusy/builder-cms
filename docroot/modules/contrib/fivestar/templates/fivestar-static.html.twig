@@ -1,0 +1,50 @@
+{#
+/**
+ * @file
+ * Default theme implementation for the Fivestar static(view-only) output.
+ *
+ * Available variables:
+ * - rating: The desired rating to display on a scale of 1 to 100. For example,
+ *   a rating of 80 corresponds to 4 out of 5 stars.
+ * - stars: The total number of stars used for this rating.
+ * - vote_type: The type of vote.
+ * - widget: Base widget data.
+ * - numeric_rating: Number of selected stars.
+ * - stars_data: An array keyed by star number. Each item contains the
+ *   following parameters:
+ *   - star_value: The value of star. For example, a total number of stars 5,
+ *     selected 4 stars then the second star will have value 40.
+ *   - percent: Used in the case when need to display rating element as partly
+ *     selected.
+ *
+ * @see template_preprocess_fivestar_static()
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="fivestar-{{ widget.name }}">
+  <div class="fivestar-widget-static fivestar-widget-static-{{ vote_type }} fivestar-widget-static-{{ stars }} clearfix">
+    {% for n, data in stars_data %}
+      {% set zebra_class = loop.index is odd ? 'star-odd' : 'star-even' %}
+      {% set first_item_class = loop.first ? ' star-first' : '' %}
+      {% set last_item_class = loop.last ? ' star-last' : '' %}
+      <div class="star star-{{ n }} {{ zebra_class }}{{ first_item_class }}{{ last_item_class }}">
+        {# Preparing rating item attributes. #}
+        {% set rating_item_attributes = create_attribute([]) %}
+        {% if data.percent is not empty %}
+          {% set rating_item_attributes = rating_item_attributes.addClass('on').setAttribute('style', 'width:'~data.percent~'%') %}
+        {% elseif rating >= data.star_value %}
+          {% set rating_item_attributes = rating_item_attributes.addClass('on') %}
+        {% else %}
+          {% set rating_item_attributes = rating_item_attributes.addClass('off') %}
+        {% endif %}
+
+        <span{{ rating_item_attributes }}>
+          {% if loop.first == 1 %}
+            {{ numeric_rating }}
+          {% endif %}
+        </span>
+      </div>
+    {% endfor %}
+  </div>
+</div>

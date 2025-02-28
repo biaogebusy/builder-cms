@@ -1,0 +1,311 @@
+# Everything is optional since 2.6. Nothing will be loaded when `No JavaScript`
+# lazy option is enabled, unless exceptions met.
+# Re-usable library, even for Ultimenu, or any modules wish to have vanilla.
+# All dBlazy plugins should weight ~ -5.5 to be usable by blazy/drupal, etc.
+dblazy:
+  js:
+    js/dblazy.min.js: { minified: true, weight: -6 }
+    # The integrated basic plugins, separated for readability:
+    js/plugin/blazy.once.min.js: { minified: true, weight: -5.9 }
+    js/plugin/blazy.sanitizer.min.js: { minified: true, weight: -5.9 }
+    # Can be ditched for Cash, or core DOM library, if any.
+    js/plugin/blazy.dom.min.js: { minified: true, weight: -5.9 }
+
+dompurify:
+  remote: https://github.com/cure53/DOMPurify
+  version: VERSION
+  license:
+    name: MPL
+    url: https://raw.githubusercontent.com/cure53/DOMPurify/main/LICENSE
+    gpl-compatible: false
+  js:
+    /libraries/dompurify/dist/purify.min.js: { minified: true, weight: -16 }
+
+# This library appears to be unmaintained, yet it is great and stable for 2KB.
+# Forked it as a module asset to expose private function/methods and minimize
+# dups, and more integrated with Native lazy and module features.
+blazy:
+  license:
+    name: MIT
+    url: https://github.com/dinbror/blazy/blob/master/LICENSE
+    gpl-compatible: true
+  js:
+    js/base/blazy.min.js: { minified: true, weight: -5.02 }
+  dependencies:
+    - blazy/dataset
+
+# An IntersectionObserver with fallback to old bLazy with Native support,
+# implemented by blazy/compat, blazy/load, or IO.module to DRY.
+bio:
+  js:
+    js/base/io/bio.min.js: { minified: true, weight: -5.01 }
+  dependencies:
+    - blazy/dblazy
+    - blazy/dataset
+    - blazy/observer
+
+# Separate IO for Media from IO for ajaxified blocks and infinite pager.
+bio.media:
+  js:
+    js/base/io/bio.media.min.js: { minified: true, weight: -2 }
+  dependencies:
+    - blazy/bio
+
+# Drupal-related base.
+base:
+  css:
+    component:
+      css/blazy.css: {}
+
+# Shared drupal-related methods normally driven by Drupal UI options.
+drupal:
+  js:
+    js/base/blazy.base.min.js: { minified: true, weight: -5.8 }
+    js/base/blazy.drupal.min.js: { minified: true, weight: -1.7 }
+  dependencies:
+    - core/drupal
+    # @todo watch out for core namespace change.
+    - core/drupal.debounce
+    # @todo when min D9.2 - core/once
+    - blazy/dblazy
+    - blazy/base
+
+# The bLazy, IO, Native loader aka initializer for IE9+ and modern browsers.
+load:
+  js:
+    js/blazy.load.min.js: { minified: true, weight: -1.5 }
+  dependencies:
+    - blazy/bio.media
+    - blazy/drupal
+    - blazy/loading
+
+# Compat methods between Native and lazyload script when being ditched to enact
+# lost module features: Blur, VIDEO, multi-breakpoint BG and aspect ratio.
+# @todo refine to not depend on bio.media.
+compat:
+  js:
+    js/blazy.compat.min.js: { minified: true, weight: -1.4 }
+  dependencies:
+    - blazy/bio.media
+    - blazy/drupal
+
+# Ajax helper for VIS, alike.
+bio.ajax:
+  js:
+    js/base/io/bio.ajax.min.js: { minified: true }
+  dependencies:
+    - core/drupal.ajax
+    - blazy/compat
+
+# Cosmetic components.
+loading:
+  css:
+    component:
+      css/components/blazy.loading.css: {}
+  js:
+    js/plugin/blazy.loading.min.js: { minified: true, weight: -5.5 }
+  dependencies:
+    - blazy/base
+    - blazy/dblazy
+
+filter:
+  css:
+    component:
+      css/components/blazy.filter.css: {}
+  js:
+    js/components/blazy.filter.min.js: { minified: true, weight: -1.6 }
+  dependencies:
+    - core/drupal
+    - blazy/dblazy
+
+blur:
+  css:
+    component:
+      css/components/blazy.blur.css: {}
+  js:
+    js/components/blazy.blur.min.js: { minified: true, weight: -1.8 }
+  dependencies:
+    - blazy/animate
+
+media:
+  css:
+    component:
+      css/components/blazy.media.css: {}
+  js:
+    js/components/blazy.media.min.js: { minified: true }
+  dependencies:
+    - blazy/drupal
+    - blazy/ratio
+    # - blazy/multimedia
+
+oembed:
+  css:
+    component:
+      css/components/blazy.oembed.css: {}
+
+preview:
+  css:
+    component:
+      css/components/blazy.preview.css: {}
+
+ratio:
+  css:
+    component:
+      css/components/blazy.ratio.css: {}
+  dependencies:
+    - blazy/base
+
+# CSS grids.
+column:
+  css:
+    component:
+      css/components/grid/blazy.column.css: {}
+  dependencies:
+    - blazy/base
+
+flex:
+  css:
+    component:
+      css/components/grid/blazy.flex.css: {}
+  js:
+    js/components/grid/blazy.flex.min.js: { minified: true, weight: -0.04 }
+  dependencies:
+    - blazy/compat
+
+grid:
+  css:
+    component:
+      css/components/grid/blazy.grid.css: {}
+  dependencies:
+    - blazy/base
+
+nativegrid:
+  css:
+    component:
+      css/components/grid/blazy.nativegrid.css: {}
+  dependencies:
+    - blazy/base
+
+nativegrid.masonry:
+  css:
+    component:
+      css/components/grid/blazy.nativegrid.masonry.css: {}
+  js:
+    js/components/grid/blazy.nativegrid.masonry.min.js: { minified: true, weight: -0.04 }
+  dependencies:
+    - blazy/compat
+    - blazy/nativegrid
+
+# Lightboxes.
+lightbox:
+  css:
+    component:
+      css/components/box/blazy.lightbox.css: {}
+  dependencies:
+    - blazy/base
+
+blazybox:
+  css:
+    component:
+      css/components/box/blazy.blazybox.css: {}
+  js:
+    js/components/box/blazy.blazybox.min.js: { minified: true }
+  dependencies:
+    - blazy/drupal
+    - blazy/lightbox
+    # - blazy/multimedia
+    - blazy/ratio
+
+flybox:
+  css:
+    component:
+      css/components/box/blazy.flybox.css: {}
+  js:
+    js/components/box/blazy.flybox.min.js: { minified: true }
+  dependencies:
+    - blazy/blazybox
+
+colorbox:
+  css:
+    component:
+      css/components/box/blazy.colorbox.css: {}
+  js:
+    js/components/jquery/blazy.colorbox.min.js: { minified: true }
+  dependencies:
+    - blazy/drupal
+    - blazy/ratio
+    - colorbox/colorbox
+
+# A decent altenative for the deprecated photobox, and too old colorbox.
+# Cannot depend on its module due to libraries and loader are not separated.
+magnific_popup:
+  remote: https://dimsemenov.com/plugins/magnific-popup/
+  version: 1.0
+  license:
+    name: MIT
+    url: https://github.com/dimsemenov/Magnific-Popup/blob/master/LICENSE
+    gpl-compatible: true
+  js:
+    /libraries/magnific-popup/dist/jquery.magnific-popup.min.js: { minified: true }
+  css:
+    base:
+      /libraries/magnific-popup/dist/magnific-popup.css: {}
+  dependencies:
+    - core/jquery
+
+mfp:
+  css:
+    theme:
+      css/components/box/blazy.mfp.css: {}
+  js:
+    js/components/jquery/blazy.mfp.min.js: { minified: true }
+  dependencies:
+    - blazy/magnific_popup
+    # @todo revert if not enough: - blazy/compat
+    - blazy/lightbox
+    - blazy/media
+
+admin.grid:
+  css:
+    theme:
+      css/components/admin/blazy.admin-grid.css: {}
+  dependencies:
+    - blazy/nativegrid
+
+admin.optionset:
+  css:
+    theme:
+      css/components/admin/blazy.admin-optionset.css: {}
+
+admin:
+  css:
+    theme:
+      css/components/admin/blazy.admin.css: {}
+      css/components/admin/blazy.admin-modal.css: {}
+      css/components/admin/blazy.admin.tooltip.css: {}
+  js:
+    js/components/jquery/blazy.admin.min.js: { minified: true }
+  dependencies:
+    - core/jquery
+    - blazy/drupal
+    - blazy/dblazy
+    - blazy/admin.grid
+
+# deprecated at 2.5 and removed at 3.+, unmaintained. Use PhotoSwipe, etc.
+photobox:
+  remote: https://github.com/yairEO/photobox/
+  version: 1.x
+  license:
+    name: MIT
+    url: https://github.com/yairEO/photobox/issues/17
+    gpl-compatible: true
+  css:
+    base:
+      /libraries/photobox/photobox/photobox.css: {}
+  js:
+    /libraries/photobox/photobox/jquery.photobox.js: {}
+    js/components/jquery/blazy.photobox.min.js: { minified: true }
+  dependencies:
+    - core/jquery
+    - blazy/drupal
+  deprecated: The %library_id% is deprecated in blazy:2.5 and is removed in blazy:3.0.0.

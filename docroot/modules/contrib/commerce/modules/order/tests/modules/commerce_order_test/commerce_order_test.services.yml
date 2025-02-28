@@ -1,0 +1,20 @@
+services:
+  commerce_order_test.order_paid_subscriber:
+    class: Drupal\commerce_order_test\EventSubscriber\OrderPaidSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  commerce_order_test.order_label_subscriber:
+    class: Drupal\commerce_order_test\EventSubscriber\OrderLabelSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  commerce_order_test.test_availability_checker:
+    class: Drupal\commerce_order_test\TestAvailabilityChecker
+    tags:
+      - { name: commerce_order.availability_checker }
+
+  commerce_order_test.test_adjustment_processor:
+    class: Drupal\commerce_order_test\TestAdjustmentProcessor
+    tags:
+      - { name: commerce_order.order_processor, priority: 500, adjustment_type: test_adjustment_type }

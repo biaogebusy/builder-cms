@@ -1,0 +1,104 @@
+$scroll_effects_icon_path: '../../images/plugins/scroll-effects/';
+
+.field-scroll-effects {
+  .fieldset-wrapper > div {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+
+    > div {
+      @include bs_boxed_inputs($width: 33%, $height: 70px, $bg: $box_input_bg, $active_color: inherit, $active_bg: $box_input_bg_checked);
+      @include bs_boxed_inputs_cards;
+
+      .input-icon {
+        &.fade-up {
+          background-image: url($scroll_effects_icon_path + 'fade-up.svg');
+        }
+
+        &.fade-down {
+          background-image: url($scroll_effects_icon_path + 'fade-down.svg');
+        }
+
+        &.fade-left {
+          background-image: url($scroll_effects_icon_path + 'fade-left.svg');
+        }
+
+        &.fade-right {
+          background-image: url($scroll_effects_icon_path + 'fade-right.svg');
+        }
+
+        &.fade-up-right {
+          background-image: url($scroll_effects_icon_path + 'fade-up-right.svg');
+        }
+
+        &.fade-down-right {
+          background-image: url($scroll_effects_icon_path + 'fade-down-right.svg');
+        }
+
+        &.fade-up-left {
+          background-image: url($scroll_effects_icon_path + 'fade-up-left.svg');
+        }
+
+        &.fade-down-left {
+          background-image: url($scroll_effects_icon_path + 'fade-down-left.svg');
+        }
+
+        &.flip-left {
+          background-image: url($scroll_effects_icon_path + 'flip-left.svg');
+        }
+
+        &.flip-right {
+          background-image: url($scroll_effects_icon_path + 'flip-right.svg');
+        }
+
+        &.flip-up {
+          background-image: url($scroll_effects_icon_path + 'flip-up.svg');
+        }
+
+        &.flip-down {
+          background-image: url($scroll_effects_icon_path + 'flip-down.svg');
+        }
+
+        &.zoom-in {
+          background-image: url($scroll_effects_icon_path + 'zoom-in.svg');
+        }
+
+        &.zoom-in-up {
+          background-image: url($scroll_effects_icon_path + 'zoom-in-up.svg');
+        }
+
+        &.zoom-in-down {
+          background-image: url($scroll_effects_icon_path + 'zoom-in-down.svg');
+        }
+
+        &.zoom-in-left {
+          background-image: url($scroll_effects_icon_path + 'zoom-in-left.svg');
+        }
+
+        &.zoom-in-right {
+          background-image: url($scroll_effects_icon_path + 'zoom-in-right.svg');
+        }
+
+        &.zoom-out {
+          background-image: url($scroll_effects_icon_path + 'zoom-out.svg');
+        }
+
+        &.zoom-out-up {
+          background-image: url($scroll_effects_icon_path + 'zoom-out-up.svg');
+        }
+
+        &.zoom-out-down {
+          background-image: url($scroll_effects_icon_path + 'zoom-out-down.svg');
+        }
+
+        &.zoom-out-left {
+          background-image: url($scroll_effects_icon_path + 'zoom-out-left.svg');
+        }
+
+        &.zoom-out-right {
+          background-image: url($scroll_effects_icon_path + 'zoom-out-right.svg');
+        }
+      }
+    }
+  }
+}

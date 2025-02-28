@@ -1,0 +1,12 @@
+name: CKEditor Font
+type: module
+description: This plugin adds Font Size and Font Family dropdowns that applies as inline element style.
+core_version_requirement: ^9.3 || ^10
+package: CKEditor
+dependencies:
+  - drupal:ckeditor
+
+# Information added by Drupal.org packaging script on 2023-02-28
+version: '8.x-1.4'
+project: 'ckeditor_font'
+datestamp: 1677594933

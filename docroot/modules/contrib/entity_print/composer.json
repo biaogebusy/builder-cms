@@ -1,0 +1,20 @@
+{
+  "name": "drupal/entity_print",
+  "type": "drupal-module",
+  "description": "PDF print solution for any Drupal entity.",
+  "keywords": ["drupal", "web", "PDF", "print"],
+  "homepage": "http://drupal.org/project/entity_print",
+  "license": "GPL-2.0+",
+  "authors": [
+    {
+      "name": "Ben Dougherty",
+      "homepage": "https://www.drupal.org/u/benjy"
+    }
+  ],
+  "require": {
+    "dompdf/dompdf": ">=2.0.7"
+  },
+  "suggest": {
+    "mikehaertl/phpwkhtmltopdf": "PhpWkhtmlToPdf provides the PHP library to use Wkhtmltopdf"
+  }
+}

@@ -1,0 +1,15 @@
+# Configuration schema for sms_sendtophone
+
+sms_sendtophone.settings:
+  type: config_object
+  label: 'SMS SendToPhone Settings'
+  mapping:
+    content_types:
+      type: sequence
+      label: 'Content types'
+      description: 'Which content types to show the Send To Phone feature.'
+      sequence:
+        type: string
+    archive_max_age_days:
+      type: integer
+      label: 'Number of days after which archive is purged'

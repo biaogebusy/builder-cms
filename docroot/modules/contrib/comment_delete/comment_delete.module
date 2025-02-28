@@ -1,0 +1,296 @@
+<?php
+
+/**
+ * @file
+ * Advanced comment deletion rules with threaded replies handler.
+ */
+
+use Drupal\comment\CommentInterface;
+use Drupal\comment_delete\CommentDeleteAccess;
+use Drupal\comment_delete\CommentDeleteConstants;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_form_field_config_edit_form_alter().
+ */
+function comment_delete_form_field_config_edit_form_alter(&$form, FormStateInterface $form_state, $form_id): void {
+  $entity = $form_state->getFormObject()->getEntity();
+  if ($entity->get('field_type') !== 'comment') {
+    return;
+  }
+  $config = $entity->getThirdPartySettings('comment_delete');
+  $ops = CommentDeleteConstants::getOperations();
+
+  $form['third_party_settings']['comment_delete'] = [
+    '#type' => 'details',
+    '#title' => t('Comment Delete'),
+  ];
+  $form['third_party_settings']['comment_delete']['operation'] = [
+    '#type' => 'checkboxes',
+    '#title' => t('Allowed operations'),
+    '#description' => t('Defines the allowed operations when someone is deleting a comment. Disabled if none are selected.'),
+    '#options' => $ops,
+    '#default_value' => $config['operation'] ?? [],
+  ];
+  $form['third_party_settings']['comment_delete']['visibility'] = [
+    '#type' => 'radios',
+    '#title' => t('Operation visibility'),
+    '#description' => t('Change the operation radio option visibility.'),
+    '#options' => [
+      'visible' => t('Always visible'),
+      'visible_multiple' => t('Visible when multiple operations are available'),
+      'invisible' => t('Invisible (always use the default selected operation)'),
+    ],
+    '#default_value' => $config['visibility'] ?? 'visible',
+  ];
+  $form['third_party_settings']['comment_delete']['label'] = [
+    '#type' => 'details',
+    '#title' => t('Option labels'),
+    '#description' => t('Customize the delete comment operation label. Leave blank to use default.'),
+  ];
+  $form['third_party_settings']['comment_delete']['message'] = [
+    '#type' => 'details',
+    '#title' => t('Confirmation messages'),
+    '#description' => t('Customize the deleted comment confirmation message for each allowed operation. Leave blank to use default.'),
+  ];
+  foreach ($ops as $key => $label) {
+    $form['third_party_settings']['comment_delete']['label'][$key] = [
+      '#type' => 'textfield',
+      '#title' => t('Label: %label', ['%label' => $label]),
+      '#default_value' => $config['label'][$key] ?? NULL,
+      '#states' => [
+        'visible' => [
+          ':input[name="third_party_settings[comment_delete][operation][' . $key . ']"]' => [
+            'checked' => TRUE,
+          ],
+        ],
+      ],
+    ];
+    $form['third_party_settings']['comment_delete']['message'][$key] = [
+      '#type' => 'textarea',
+      '#title' => t('Message: %label', ['%label' => $label]),
+      '#default_value' => $config['message'][$key] ?? NULL,
+      '#states' => [
+        'visible' => [
+          ':input[name="third_party_settings[comment_delete][operation][' . $key . ']"]' => [
+            'checked' => TRUE,
+          ],
+        ],
+      ],
+    ];
+  }
+  $form['third_party_settings']['comment_delete']['message']['tokens'] = [
+    '#theme' => 'token_tree_link',
+    '#token_types' => ['comment'],
+  ];
+  $form['third_party_settings']['comment_delete']['mode'] = [
+    '#type' => 'select',
+    '#title' => t('Soft delete mode'),
+    '#description' => t('Unset values removes all text and selections from the comment subject and additional fields.'),
+    '#options' => [
+      'unset' => t('Unset values (recommended)'),
+      'unpublished' => t('Set to unpublished'),
+    ],
+    '#default_value' => $config['mode'] ?? 'unset',
+    '#states' => [
+      'visible' => [
+        ':input[name="third_party_settings[comment_delete][operation][soft]"]' => [
+          'checked' => TRUE,
+        ],
+      ],
+    ],
+  ];
+  $form['third_party_settings']['comment_delete']['mode_warning'] = [
+    '#type' => 'container',
+    [
+      '#theme' => 'status_messages',
+      '#message_list' => [
+        'warning' => [t('Set to unpublished maintains thread levels but may result in hidden comments for less privileged users.')],
+      ],
+      '#status_headings' => [
+        'warning' => t('Warning message'),
+      ],
+    ],
+    '#states' => [
+      'visible' => [
+        ':input[name="third_party_settings[comment_delete][mode]"]' => [
+          'value' => 'unpublished',
+        ],
+      ],
+    ],
+  ];
+  $form['third_party_settings']['comment_delete']['anonymize'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Set author to %anon on soft delete', [
+      '%anon' => \Drupal::config('user.settings')->get('anonymous'),
+    ]),
+    '#description' => t('Applicable only to the originally deleted comment. Replies retain their authors.'),
+    '#default_value' => $config['anonymize'] ?? 0,
+    '#states' => [
+      'visible' => [
+        ':input[name="third_party_settings[comment_delete][operation][soft]"]' => [
+          'checked' => TRUE,
+        ],
+        ':input[name="third_party_settings[comment_delete][mode]"]' => [
+          'value' => 'unset',
+        ],
+      ],
+    ],
+  ];
+  $form['third_party_settings']['comment_delete']['default'] = [
+    '#type' => 'radios',
+    '#title' => t('Default selected operation'),
+    '#description' => t('Set the default selected operation on the comment deletion form.'),
+    '#options' => $ops,
+    '#default_value' => $config['default'] ?? [],
+    '#element_validate' => ['comment_delete_validate_default_selection'],
+    '#states' => [
+      'visible' => [
+          [
+            ':input[name^="third_party_settings[comment_delete][operation][hard]"]' => [
+              'checked' => TRUE,
+            ],
+          ],
+          [
+            ':input[name^="third_party_settings[comment_delete][operation][hard_partial]"]' => [
+              'checked' => TRUE,
+            ],
+          ],
+          [
+            ':input[name^="third_party_settings[comment_delete][operation][soft]"]' => [
+              'checked' => TRUE,
+            ],
+          ],
+      ],
+    ],
+  ];
+  $form['third_party_settings']['comment_delete']['time_limit'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Delete time limit'),
+    '#description' => t('Allow comment to be deleted only within a certain amount of time after creation.'),
+    '#default_value' => $config['time_limit'] ?? 0,
+  ];
+  $form['third_party_settings']['comment_delete']['timer'] = [
+    '#type' => 'number',
+    '#title' => t('Delete timer'),
+    '#description' => t('Amount of time in seconds to allow deletion after creation.'),
+    '#min' => 0,
+    '#default_value' => $config['timer'] ?? NULL,
+    '#states' => [
+      'visible' => [
+        ':input[name="third_party_settings[comment_delete][time_limit]"]' => [
+          'checked' => TRUE,
+        ],
+      ],
+      'required' => [
+        ':input[name="third_party_settings[comment_delete][time_limit]"]' => [
+          'checked' => TRUE,
+        ],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Validate the comment delete default operation selection.
+ *
+ * @see comment_delete_form_field_config_edit_form_alter()
+ */
+function comment_delete_validate_default_selection(array &$element, FormStateInterface $form_state): void {
+  $config = $form_state->getValue('third_party_settings');
+  if (!in_array($config['comment_delete']['default'], $config['comment_delete']['operation'], TRUE)) {
+    $form_state->setError($element, t('Comment delete default selected operation must be one of the allowed operations.'));
+  }
+}
+
+/**
+ * Implements hook_form_comment_confirm_form_alter().
+ */
+function comment_delete_form_comment_confirm_form_alter(array &$form, FormStateInterface $form_state): void {
+  /** @var \Drupal\comment\CommentInterface $comment */
+  $comment = $form_state->getFormObject()->getEntity();
+
+  // Prevent delete override on non-default translations.
+  if (!$comment->isDefaultTranslation()) {
+    return;
+  }
+
+  // Get the configuration for the commented entity comment field.
+  /** @var \Drupal\comment_delete\CommentDeleteManagerInterface $commentDeleteManager */
+  $commentDeleteManager = \Drupal::service('comment_delete.manager');
+  $config = $commentDeleteManager->getConfig($comment);
+
+  // Change default operation when at least one operation is enabled.
+  if ($ops = array_filter($config['operation'] ?? [])) {
+    $entityTypeId = $config['commented_entity']->getEntityTypeId();
+    $bundleId = $config['commented_entity']->bundle();
+    $fieldName = $comment->getFieldName();
+
+    $defaultOps = CommentDeleteConstants::getOperations();
+    array_walk($ops, function (&$label) use ($config, $defaultOps): void {
+      $label = $config['label'][$label] ?: $defaultOps[$label];
+    });
+    $options = array_filter(
+      $ops,
+      function ($key) use ($entityTypeId, $bundleId, $fieldName) {
+        return \Drupal::currentUser()
+          ->hasPermission("allow $entityTypeId $bundleId $fieldName $key delete");
+      },
+      ARRAY_FILTER_USE_KEY
+    );
+    if (($config['visibility'] === 'visible' || $config['visibility'] === 'visible_multiple') && count($options) > 1) {
+      $form['operation'] = [
+        '#type' => 'radios',
+        '#title' => t('How should replies to this comment be handled?'),
+        '#options' => $options,
+        '#required' => TRUE,
+        '#disabled' => count($ops) === 1,
+        '#default_value' => $config['default'],
+      ];
+    }
+    else {
+      $form['operation'] = [
+        '#type' => 'hidden',
+        '#value' => $config['default'],
+      ];
+    }
+
+    $form['description']['#markup'] = t('This action cannot be undone.');
+    $form['actions']['submit']['#submit'] = ['comment_delete_confirm_form_submit'];
+  }
+}
+
+/**
+ * Form submit handler for comment_confirm_form.
+ */
+function comment_delete_confirm_form_submit(array &$form, FormStateInterface $form_state): void {
+  /** @var \Drupal\comment\CommentInterface $comment */
+  $comment = $form_state->getFormObject()->getEntity();
+
+  /** @var \Drupal\comment_delete\CommentDeleteManagerInterface $commentDeleteManager */
+  $commentDeleteManager = \Drupal::service('comment_delete.manager');
+  $commentDeleteManager->delete($comment, $form_state->getValue('operation'));
+
+  $entityType = $comment->getCommentedEntityTypeId();
+  $form_state->setRedirect("entity.$entityType.canonical", [
+    $entityType => $comment->getCommentedEntityId(),
+  ]);
+
+  // Disable the form redirect on Ajax-enabled delete confirmation form.
+  if (\Drupal::request()->isXmlHttpRequest()) {
+    $form_state->disableRedirect();
+  }
+}
+
+/**
+ * Implements hook_comment_access().
+ */
+function comment_delete_comment_access(CommentInterface $entity, $operation, AccountInterface $account): AccessResultInterface {
+  if ($operation === 'delete') {
+    return CommentDeleteAccess::access($entity, $account);
+  }
+  return AccessResult::neutral();
+}

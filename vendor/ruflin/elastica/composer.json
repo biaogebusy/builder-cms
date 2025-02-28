@@ -1,0 +1,54 @@
+{
+    "name": "ruflin/elastica",
+    "description": "Elasticsearch Client",
+    "license": "MIT",
+    "type": "library",
+    "keywords": [
+        "search",
+        "client"
+    ],
+    "authors": [
+        {
+            "name": "Nicolas Ruflin",
+            "homepage": "http://ruflin.com/"
+        }
+    ],
+    "homepage": "http://elastica.io/",
+    "require": {
+        "php": "^7.2 || ^8.0",
+        "ext-json": "*",
+        "elasticsearch/elasticsearch": "^7.10",
+        "nyholm/dsn": "^2.0.0",
+        "psr/log": "^1.0 || ^2.0 || ^3.0",
+        "symfony/deprecation-contracts": "^2.2 || ^3.0",
+        "symfony/polyfill-php73": "^1.19"
+    },
+    "require-dev": {
+        "aws/aws-sdk-php": "^3.155",
+        "guzzlehttp/guzzle": "^6.3 || ^7.2",
+        "phpstan/phpstan": "^1.5",
+        "phpstan/phpstan-phpunit": "^1.1",
+        "phpunit/phpunit": "^8.5.8 || ^9.4",
+        "symfony/phpunit-bridge": "^6.0"
+    },
+    "suggest": {
+        "aws/aws-sdk-php": "Allow using IAM authentication with Amazon ElasticSearch Service",
+        "guzzlehttp/guzzle": "Allow using guzzle as transport",
+        "monolog/monolog": "Logging request"
+    },
+    "autoload": {
+        "psr-4": {
+            "Elastica\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Elastica\\Test\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "7.0.x-dev"
+        }
+    }
+}

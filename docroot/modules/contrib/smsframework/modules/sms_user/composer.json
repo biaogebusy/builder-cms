@@ -1,0 +1,27 @@
+{
+  "name": "drupal/sms_user",
+  "description": "Provides integration between the SMS Framework and Drupal users.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "http://drupal.org/project/smsframework",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/smsframework",
+    "source": "http://cgit.drupalcode.org/smsframework"
+  },
+  "authors": [
+    {
+      "name": "Aniebiet Udoh",
+      "homepage": "https://www.drupal.org/u/almaudoh",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Daniel Phin",
+      "homepage": "http://danielph.in",
+      "role": "Maintainer"
+    }
+  ],
+  "require": {
+    "drupal/user": "^8.5",
+    "drupal/smsframework": "^1.0"
+  }
+}

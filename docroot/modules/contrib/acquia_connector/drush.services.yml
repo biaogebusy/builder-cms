@@ -1,0 +1,5 @@
+services:
+  acquia_connector.commands:
+    class: Drupal\acquia_connector\Commands\AcquiaConnectorCommands
+    tags:
+      - { name: drush.command }

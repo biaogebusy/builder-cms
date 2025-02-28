@@ -1,0 +1,5 @@
+entity.footable_breakpoint.collection:
+  route_name: entity.footable_breakpoint.collection
+  title: FooTable
+  description: 'Configure FooTable breakpoints.'
+  parent: system.admin_config_ui

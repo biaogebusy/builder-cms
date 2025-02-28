@@ -1,0 +1,77 @@
+.webform-filter-form {
+  margin-bottom: var(--gin-spacing-xl);
+
+  > .container-inline {
+     margin-block: 0;
+  }
+
+  .details-wrapper {
+    margin-top: 0;
+    margin-bottom: var(--gin-spacing-xs);
+  }
+
+  // Followed by a title
+  + div:not(.gin-layer-wrapper) {
+    // @extend h3;
+    margin-bottom: var(--gin-spacing-s);
+  }
+}
+
+.webform-ui-element-type-change-form {
+  .gin-layer-wrapper {
+    padding: 0;
+  }
+}
+
+.webform-element-help {
+  color: var(--gin-color-text);
+  background: transparent;
+  border-color: var(--gin-color-text);
+
+  &:hover,
+  &:active,
+  &:focus {
+    color: var(--gin-color-primary);
+    border-color: var(--gin-color-primary);
+    background-color: transparent;
+  }
+}
+
+.ui-tooltip.ui-widget {
+  font-size: var(--gin-font-size-s);
+  color: var(--gin-color-text);
+  padding: var(--gin-spacing-m);
+  background: var(--gin-bg-layer3);
+  box-shadow:  20px 20px 60px rgba(0, 0, 0, .2);
+  border: 0 none;
+  border-radius: 6px;
+
+  hr {
+    margin: var(--gin-spacing-xs) 0;
+  }
+}
+
+.webform-details-toggle-state {
+  color: var(--gin-color-primary);
+}
+
+.webform-ui-elements-table {
+  tr.webform-ui-element-type-webform_actions {
+    td {
+      border-top: none;
+      border-bottom: none;
+      background: none;
+    }
+  }
+}
+
+.webform-tabs.ui-tabs {
+  .ui-tabs-nav {
+    border-bottom: 0 none;
+
+    .ui-tabs-active.ui-state-active a {
+      border: 2px solid var(--gin-color-primary);
+      border-radius: var(--gin-border-m);
+    }
+  }
+}

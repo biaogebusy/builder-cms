@@ -1,0 +1,10 @@
+views.field.entity_print_link:
+  type: views.field.entity_link
+  label: 'Print link'
+  mapping:
+    export_type:
+      type: string
+      label: 'The machine name of the export type'
+    open_new_window:
+      type: boolean
+      label: 'Open link in new window'

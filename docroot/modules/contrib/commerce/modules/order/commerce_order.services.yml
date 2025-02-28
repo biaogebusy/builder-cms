@@ -1,0 +1,104 @@
+services:
+  access_check.address_book:
+    class: Drupal\commerce_order\Access\AddressBookAccessCheck
+    arguments: ['@commerce_order.address_book']
+    tags:
+      - { name: access_check, applies_to: _address_book_access }
+
+  plugin.manager.commerce_adjustment_type:
+    class: Drupal\commerce_order\AdjustmentTypeManager
+    arguments: ['@module_handler', '@cache.discovery']
+
+  commerce_order.availability_manager:
+    class: Drupal\commerce_order\AvailabilityManager
+    tags:
+      - { name: service_collector, tag: commerce.availability_checker, call: addLegacyChecker }
+      - { name: service_collector, tag: commerce_order.availability_checker, call: addChecker }
+
+  commerce_order.chain_order_type_resolver:
+    class: Drupal\commerce_order\Resolver\ChainOrderTypeResolver
+    tags:
+      - { name: service_collector, call: addResolver, tag: commerce_order.order_type_resolver }
+
+  commerce_order.default_order_type_resolver:
+    class: Drupal\commerce_order\Resolver\DefaultOrderTypeResolver
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: commerce_order.order_type_resolver, priority: -100 }
+
+  commerce_order.adjustment_transformer:
+    class: Drupal\commerce_order\AdjustmentTransformer
+    arguments: ['@plugin.manager.commerce_adjustment_type', '@commerce_price.rounder']
+
+  commerce_order.address_book:
+    class: Drupal\commerce_order\AddressBook
+    arguments: ['@entity_type.bundle.info', '@entity_type.manager']
+
+  commerce_order.order_assignment:
+    class: Drupal\commerce_order\OrderAssignment
+    arguments: ['@entity_type.manager', '@event_dispatcher']
+
+  commerce_order.order_refresh:
+    class: Drupal\commerce_order\OrderRefresh
+    arguments: ['@entity_type.manager', '@commerce_price.chain_price_resolver', '@current_user', '@datetime.time']
+    tags:
+      - { name: service_collector, call: addPreprocessor, tag: commerce_order.order_preprocessor }
+      - { name: service_collector, call: addProcessor, tag: commerce_order.order_processor }
+
+  commerce_order.availability_order_processor:
+    class: Drupal\commerce_order\AvailabilityOrderProcessor
+    arguments: ['@commerce_order.availability_manager', '@entity_type.manager']
+    tags:
+      - { name: commerce_order.order_processor, priority: 300 }
+
+  commerce_order.address_book_subscriber:
+    class: Drupal\commerce_order\EventSubscriber\AddressBookSubscriber
+    arguments: ['@commerce_order.address_book']
+    tags:
+      - { name: event_subscriber }
+
+  commerce_order.profile_label_subscriber:
+    class: Drupal\commerce_order\EventSubscriber\ProfileLabelSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  commerce_order.timestamp_event_subscriber:
+    class: Drupal\commerce_order\EventSubscriber\TimestampEventSubscriber
+    arguments: ['@datetime.time']
+    tags:
+      - { name: event_subscriber }
+
+  commerce_order.order_number_subscriber:
+    class: Drupal\commerce_order\EventSubscriber\OrderNumberSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  commerce_order.order_receipt_subscriber:
+    class: Drupal\commerce_order\EventSubscriber\OrderReceiptSubscriber
+    arguments: ['@entity_type.manager', '@commerce_order.order_receipt_mail']
+    tags:
+      - { name: 'event_subscriber' }
+
+  commerce_order.order_receipt_mail:
+    class: Drupal\commerce_order\Mail\OrderReceiptMail
+    arguments: ['@entity_type.manager', '@commerce.mail_handler', '@commerce_order.order_total_summary', '@token']
+
+  commerce_order.order_total_summary:
+    class: Drupal\commerce_order\OrderTotalSummary
+    arguments: ['@commerce_order.adjustment_transformer']
+
+  commerce_order.order_store_resolver:
+    class: Drupal\commerce_order\Resolver\OrderStoreResolver
+    arguments: ['@current_route_match']
+    tags:
+      - { name: commerce_store.store_resolver, priority: 100 }
+
+  commerce_order.price_splitter:
+    class: Drupal\commerce_order\PriceSplitter
+    arguments: ['@entity_type.manager', '@commerce_price.rounder']
+
+  commerce_order.price_calculator:
+    class: Drupal\commerce_order\PriceCalculator
+    arguments: ['@commerce_order.adjustment_transformer', '@commerce_order.chain_order_type_resolver', '@commerce_price.chain_price_resolver', '@entity_type.manager', '@request_stack']

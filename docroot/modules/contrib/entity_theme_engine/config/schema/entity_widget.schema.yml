@@ -1,0 +1,42 @@
+entity_theme_engine.entity_widget.*:
+  type: config_entity
+  label: 'Entity widget'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    uuid:
+      type: string
+    label:
+      type: label
+      label: 'Label'
+    entity_type:
+      type: string
+      label: 'Entity type'
+    bundle:
+      type: string
+      label: 'Entity bundle'
+    display:
+      type: string
+      label: 'Display Mode'
+    theme:
+      type: string
+      label: 'Theme'
+    library:
+      type: string
+      label: 'Attached Library'
+    category:
+      type: label
+      label: 'Widget Category'
+    preview:
+      type: string
+      label: 'Preview Image Path'
+    attach:
+      type: boolean
+      label: 'Attach Context Entity'
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    template:
+      type: string
+      label: 'Twig Template'

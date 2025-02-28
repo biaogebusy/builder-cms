@@ -1,0 +1,27 @@
+id: d6_sms_number
+label: SMS User Number
+migration_tags:
+  - Drupal 6
+  - SMS Framework
+source:
+  plugin: d6_sms_number
+process:
+  'entity/target_type':
+    plugin: default_value
+    default_value: user
+  'entity/target_id':
+    plugin: migration_lookup
+    migration: d6_user
+    source: uid
+  phone: number
+  status:
+    plugin: sms_verification_status
+    source: status
+  code: code
+destination:
+  plugin: entity:sms_phone_number_verification
+migration_dependencies:
+  required:
+    - phone_number_settings
+    - d6_user
+  optional: { }

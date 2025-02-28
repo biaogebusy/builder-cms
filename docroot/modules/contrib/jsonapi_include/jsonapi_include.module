@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains jsonapi_include.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function jsonapi_include_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the jsonapi_include module.
+    case 'help.page.jsonapi_include':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Add include data to json output') . '</p>';
+      return $output;
+
+    default:
+  }
+}

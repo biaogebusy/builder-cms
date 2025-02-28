@@ -1,0 +1,19 @@
+build:
+  assessment:
+    validate_codebase:
+      phplint:
+      csslint:
+        halt-on-fail: false
+      eslint:
+        halt-on-fail: false
+      phpcs:
+        sniff-all-files: false
+        halt-on-fail: false
+      phpstan:
+        halt-on-fail: false
+    testing:
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: '--all'
+        suppress-deprecations: false
+        halt-on-fail: false

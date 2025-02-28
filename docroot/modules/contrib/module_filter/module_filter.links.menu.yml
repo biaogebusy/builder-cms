@@ -1,0 +1,6 @@
+module_filter.config_admin_menu_item:
+  title: 'Module filter'
+  description: 'Settings for the Module Filter module.'
+  menu_name: admin
+  parent: system.admin_config_ui
+  route_name: module_filter.settings

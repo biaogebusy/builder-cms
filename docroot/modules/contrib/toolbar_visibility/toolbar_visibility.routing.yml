@@ -1,0 +1,9 @@
+toolbar_visibility.settings:
+  path: '/admin/config/toolbar-visibility'
+  defaults:
+    _form: '\Drupal\toolbar_visibility\Form\ToolbarVisibilitySettingsForm'
+    _title: 'Toolbar Visibility'
+  requirements:
+    _permission: 'administer toolbar visibility'
+  options:
+    _admin_route: TRUE

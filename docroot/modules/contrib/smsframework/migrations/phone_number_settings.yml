@@ -1,0 +1,38 @@
+id: phone_number_settings
+label: 'Phone number verification settings from D6 / D7 sms_user settings.'
+migration_tags:
+  - Drupal 6
+  - Drupal 7
+  - SMS Framework
+source:
+  plugin: variable
+  variables:
+    - sms_user_confirmation_message
+    - sms_user_registration_form
+    - sms_user_sleep
+    - user_register
+  constants:
+    config_id: user.user
+    entity_type: user
+    bundle: user
+    field_names:
+      phone_number: phone_number
+process:
+  id: 'constants/config_id'
+  entity_type: 'constants/entity_type'
+  bundle: 'constants/bundle'
+  verification_message:
+    plugin: phone_number_settings
+    source: sms_user_confirmation_message
+  verification_code_lifetime:
+    plugin: default_value
+    default_value: 600
+  purge_verification_phone_number:
+    plugin: default_value
+    default_value: true
+  fields: 'constants/field_names'
+destination:
+  plugin: entity:phone_number_settings
+migration_dependencies:
+  required: { }
+  optional: { }

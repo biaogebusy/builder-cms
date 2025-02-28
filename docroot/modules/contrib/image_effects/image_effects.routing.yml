@@ -1,0 +1,9 @@
+# image_effects module routes
+
+image_effects.settings:
+  path: '/admin/config/media/image_effects'
+  defaults:
+    _form: '\Drupal\image_effects\Form\SettingsForm'
+    _title: 'Image Effects'
+  requirements:
+    _permission: 'administer site configuration'

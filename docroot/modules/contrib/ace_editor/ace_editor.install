@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Install functions for the Ace Editor module.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function ace_editor_install() {
+  $lib_path = ace_editor_lib_path();
+
+  if (!$lib_path) {
+    \Drupal::messenger()->addMessage(t('Ace library is missing. Please download the more convenient version to you from <a href="@link">Ace Editor Page</a> and copy it under @path; Ace Editor module will use the first found version of ace.js located under @path.', ['@link' => 'https://github.com/ajaxorg/ace-builds', '@path' => '/libraries/']), 'warning');
+  }
+  else {
+    \Drupal::messenger()->addMessage(t('Ace library found at @location', ['@location' => $lib_path]));
+  }
+
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function ace_editor_requirements($phase) {
+
+  $requirements = [];
+  if ($phase == 'runtime') {
+    $requirements['ace_editor']['title'] = t('Ace library');
+
+    $lib_path = ace_editor_lib_path();
+    if ($lib_path) {
+      $requirements['ace_editor']['value'] = t('Installed at @location', ['@location' => $lib_path]);
+      $requirements['ace_editor']['severity'] = REQUIREMENT_OK;
+    }
+    else {
+      $requirements['ace_editor']['value'] = t('Not installed');
+      $requirements['ace_editor']['severity'] = REQUIREMENT_ERROR;
+      $requirements['ace_editor']['description'] = t('Please download the Ace library from <a href="@url">@url</a> to the @location directory for using the Ace Editor module.', ['@url' => 'https://github.com/ajaxorg/ace-builds', '@location' => '/libraries/']);
+    }
+
+  }
+  return $requirements;
+}

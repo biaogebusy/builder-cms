@@ -1,0 +1,18 @@
+# Schema for the configuration files of the Menu Per Role module.
+
+menu_per_role.settings:
+  type: config_object
+  label: 'Menu Per Role settings'
+  mapping:
+    admin_bypass_access_front:
+      type: boolean
+      label: 'Administrator role bypass access check in front.'
+    admin_bypass_access_admin:
+      type: boolean
+      label: 'Administrator role bypass access check in admin context.'
+    hide_show:
+      type: integer
+      label: 'Select what is shown when editing menu items.'
+    hide_on_content:
+      type: integer
+      label: 'Show fields on menu items that point to content.'

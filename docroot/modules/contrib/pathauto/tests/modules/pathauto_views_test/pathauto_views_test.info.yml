@@ -1,0 +1,11 @@
+name: 'Views Test Config'
+type: module
+description: 'Provides default views for tests.'
+package: Testing
+dependencies:
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2023-10-08
+version: '8.x-1.12'
+project: 'pathauto'
+datestamp: 1696776686

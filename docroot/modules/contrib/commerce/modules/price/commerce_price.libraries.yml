@@ -1,0 +1,5 @@
+admin:
+  version: VERSION
+  css:
+    theme:
+      css/commerce_price.admin.css: {}

@@ -1,0 +1,6 @@
+menu_per_role.settings:
+  title: 'Administer Menu Per Role'
+  parent: system.admin_config_system
+  description: 'Permission for who can access the Menu Per Role forms.'
+  weight: -10
+  route_name: menu_per_role.settings

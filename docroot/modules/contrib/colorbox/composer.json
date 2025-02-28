@@ -1,0 +1,51 @@
+{
+  "name": "drupal/colorbox",
+  "description": "A light-weight, customizable lightbox plugin for jQuery.",
+  "type": "drupal-module",
+  "homepage": "https://www.drupal.org/project/colorbox",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/colorbox",
+    "source": "https://git.drupalcode.org/project/colorbox"
+  },
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Neslee Canil Pinto",
+      "homepage": "https://www.drupal.org/u/neslee-canil-pinto",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Fredrik Jonsson",
+      "homepage": "https://www.drupal.org/u/frjo",
+      "role": "Maintainer"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "package",
+      "package": {
+        "name": "jackmoore/colorbox",
+        "version": "1.6.4",
+        "type": "drupal-library",
+        "dist": {
+          "url": "https://github.com/jackmoore/colorbox/archive/1.6.4.zip",
+          "type": "zip"
+        }
+      }
+    }
+  ],
+  "require": {
+      "drupal/core": "^8.8 || ^9"
+  },
+  "suggest": {
+    "jackmoore/colorbox": "The Colorbox library is required to use the drupal/colorbox module."
+  },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9"
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+media_entity_instagram.settings:
+  path: '/admin/config/media/instagram-settings'
+  defaults:
+    _form: '\Drupal\media_entity_instagram\Form\InstagramSettingsForm'
+    _title: 'Instagram settings'
+  requirements:
+    _permission: 'administer media'

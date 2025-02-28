@@ -1,0 +1,9 @@
+name: 'Chosen test'
+type: module
+description: 'Support module for Chosen tests.'
+package: Testing
+
+# Information added by Drupal.org packaging script on 2023-01-15
+version: '3.0.5'
+project: 'chosen'
+datestamp: 1673783709

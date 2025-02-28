@@ -1,0 +1,12 @@
+name: 'C3.js Charts'
+type: module
+description: 'Charts module integration with C3.js Charts.'
+package: Charts
+core_version_requirement: ^9.2 || ^10
+dependencies:
+  - 'charts:charts'
+
+# Information added by Drupal.org packaging script on 2024-07-22
+version: '5.0.16'
+project: 'charts'
+datestamp: 1721677971

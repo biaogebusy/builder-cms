@@ -1,0 +1,9 @@
+{
+  "name": "drupal/replication",
+  "description": "Provides services and entities types so assist with and log content replication.",
+  "type": "drupal-module",
+  "homepage": "http://drupal.org/project/replication",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "license": "GPL-2.0+"
+}

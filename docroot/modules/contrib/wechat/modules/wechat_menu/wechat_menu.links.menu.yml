@@ -1,0 +1,13 @@
+wechat_menu.admin.wechat.config.menu:
+  title: Wechat Menu
+  description: 'Wechat Menu.'
+  route_name: entity.wechat_menu_item.collection
+  parent: wechat.admin.wechat.config
+  weight: 5
+  
+wechat_menu.admin.wechat.config.default_search:
+  title: Wechat default search
+  description: 'Wechat default search.'
+  route_name: wechat_menu.default_search
+  parent: wechat.admin.wechat.config
+  weight: 2

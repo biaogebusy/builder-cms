@@ -1,0 +1,6 @@
+services:
+  layout_library.element.prepare_layout:
+    class: Drupal\layout_library\EventSubscriber\PrepareLayout
+    arguments: ['@layout_builder.tempstore_repository']
+    tags:
+      - { name: event_subscriber }

@@ -1,0 +1,13 @@
+name: Serial
+type: module
+description: 'Defines atomic auto increment (serial) field type.'
+package: Field types
+core: 8.x
+core_version_requirement: ^8 || ^9
+dependencies:
+  - drupal:field
+
+# Information added by Drupal.org packaging script on 2020-04-22
+version: '8.x-1.0-alpha2'
+project: 'serial'
+datestamp: 1587592270

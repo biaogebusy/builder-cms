@@ -1,0 +1,6 @@
+jsonapi_include.jsonapi_include_settings:
+  title: 'JSON:API Include'
+  route_name: jsonapi_include.jsonapi_include_settings
+  description: 'Settings for jsonapi include'
+  parent: system.admin_config_services
+  weight: 99

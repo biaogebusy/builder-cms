@@ -1,0 +1,145 @@
+<?php
+
+/**
+ * @file
+ * Main functions and methods for the "Simple hierarchical select" module.
+ */
+
+use Drupal\Core\Database\Database;
+use Drupal\taxonomy\TermInterface;
+
+/**
+ * List all javascript classes used to create models and views in the widget.
+ *
+ * @param string $field_name
+ *   Name of field to get the definitions for.
+ * @param array $context
+ *   Additional information about the current context (i.e. additional field
+ *   settings).
+ *
+ * @see hook_shs_class_definitions_alter()
+ *
+ * @return array
+ *   List of javascript classes keyed by type ("models", "views").
+ */
+function shs_get_class_definitions($field_name, array $context = []) {
+  $definitions = [
+    'models' => [
+      'app' => 'Drupal.shs.AppModel',
+      'container' => 'Drupal.shs.ContainerModel',
+      'widget' => 'Drupal.shs.WidgetModel',
+      'widgetItem' => 'Drupal.shs.WidgetItemModel',
+      'widgetItemOption' => 'Drupal.shs.WidgetItemOptionModel',
+    ],
+    'views' => [
+      'app' => 'Drupal.shs.AppView',
+      'addNew' => 'Drupal.shs.AddNewView',
+      'container' => 'Drupal.shs.ContainerView',
+      'widget' => 'Drupal.shs.WidgetView',
+      'widgetItem' => 'Drupal.shs.WidgetItemView',
+    ],
+  ];
+
+  $hooks = [
+    'shs_class_definitions',
+    "shs_{$field_name}_class_definitions",
+  ];
+
+  // Allow other modules to override the list of class definitions.
+  \Drupal::moduleHandler()->alter($hooks, $definitions, $context);
+
+  return $definitions;
+}
+
+/**
+ * Helper function to load only a single ancestry for a given term.
+ *
+ * A single ancestry is needed because for terms with multiple parents, the
+ * hierarchy cannot be determined.
+ *
+ * @param int $tid
+ *   The taxonomy term ID.
+ * @param string $target_type
+ *   The entity type. Defaults to 'taxonomy_term'.
+ *
+ * @return array
+ *   An array of term parents.
+ *
+ * @see \Drupal\taxonomy\TermStorage::loadAllParents
+ *
+ * @todo Remove this when https://www.drupal.org/node/2793243 lands.
+ */
+function shs_term_load_all_parents($tid, $target_type = 'taxonomy_term') {
+  $parents_all = &drupal_static(__FUNCTION__, []);
+  if (!isset($parents_all[$tid])) {
+    $parents = [];
+    /** @var \Drupal\taxonomy\TermStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage($target_type);
+    if ($term = $storage->load($tid)) {
+      $parents[$term->id()] = $term;
+      $terms_to_search[] = $term->id();
+
+      while ($tid = array_shift($terms_to_search)) {
+        if ($new_parents = $storage->loadParents($tid)) {
+          // Here, only take the first parent found. This differs from
+          // the `loadAllParents` method.
+          if ($new_parent = reset($new_parents)) {
+            if (!isset($parents[$new_parent->id()])) {
+              $parents[$new_parent->id()] = $new_parent;
+              $terms_to_search[] = $new_parent->id();
+            }
+          }
+        }
+      }
+    }
+    $parents_all[$tid] = $parents;
+  }
+  return $parents_all[$tid];
+}
+
+/**
+ * Determine whether a term has children.
+ *
+ * @param mixed $tid
+ *   Term ID to check existence of children for.
+ *
+ * @return bool
+ *   TRUE if the term has any children, FALSE otherwise.
+ */
+function shs_term_has_children($tid): bool {
+  if (empty($tid)) {
+    return FALSE;
+  }
+
+  $current_user = \Drupal::currentUser();
+
+  /** @var \Drupal\taxonomy\TermInterface $term */
+  $term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($tid);
+  if (!($term instanceof TermInterface)) {
+    return FALSE;
+  }
+  $access_unpublished = $current_user->hasPermission('administer taxonomy') || $current_user->hasPermission('view unpublished terms in ' . $term->bundle());
+
+  $query = Database::getConnection()->select('taxonomy_term_field_data', 't');
+  $query->innerJoin('taxonomy_term__parent', 'p', 'p.entity_id = t.tid');
+  $query->condition('p.parent_target_id', $tid);
+  $query->addTag('term_access');
+
+  if (!$access_unpublished) {
+    // Filter to get published terms only.
+    $query->condition('t.status', 1);
+  }
+
+  return ($query->countQuery()->execute()->fetchField() > 0);
+}
+
+/**
+ * Implements hook_views_plugins_filter_alter().
+ */
+function shs_views_plugins_filter_alter(array &$plugins) {
+  foreach (['taxonomy_index_tid', 'taxonomy_index_tid_depth'] as $plugin) {
+    if (isset($plugins[$plugin])) {
+      $plugins[$plugin]['class'] = $plugins['shs_' . $plugin]['class'];
+    }
+  }
+}

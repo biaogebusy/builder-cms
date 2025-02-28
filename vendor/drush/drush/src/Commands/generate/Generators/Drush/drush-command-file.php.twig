@@ -1,0 +1,39 @@
+<?php
+
+namespace Drupal\{{ machine_name }}\Drush\Commands;
+
+{% if not source %}
+use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
+{% endif %}
+use Drush\Commands\DrushCommands;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * A Drush commandfile.
+ */
+class {{ class }} extends DrushCommands {
+
+  /**
+   * Constructs {{ class|article }} object.
+   */
+  public function __construct(
+{{ di.signature(services) }}
+  ) {
+    parent::__construct();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+{{ di.container(services) }}
+    );
+  }
+
+{% if source %}
+{% include 'ported-methods.php.twig' %}
+{% else %}
+{% include 'default-methods.php.twig' %}
+{% endif %}
+}

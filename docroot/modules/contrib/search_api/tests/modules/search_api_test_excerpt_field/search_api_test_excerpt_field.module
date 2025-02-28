@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the Search API Excerpt Field Test module.
+ */
+
+use Drupal\search_api\Query\ResultSetInterface;
+
+/**
+ * Implements hook_search_api_results_alter().
+ */
+function search_api_test_excerpt_field_search_api_results_alter(ResultSetInterface &$results) {
+  $excerptTemplate = 'Item {{item_id}} test excerpt';
+  $excerptTemplate = \Drupal::state()
+    ->get('search_api_test_excerpt_field', $excerptTemplate);
+  foreach ($results->getResultItems() as $itemId => $item) {
+    $item->setExcerpt(str_replace('{{item_id}}', $itemId, $excerptTemplate));
+  }
+}

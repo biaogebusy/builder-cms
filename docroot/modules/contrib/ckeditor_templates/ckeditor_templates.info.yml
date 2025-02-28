@@ -1,0 +1,12 @@
+name: CKEditor Templates
+description: 'Integrates the CKEditor templates plugin.'
+package: CKEditor
+type: module
+core_version_requirement: ^9.3 || ^10 || ^11
+dependencies:
+- drupal:ckeditor
+
+# Information added by Drupal.org packaging script on 2024-04-21
+version: '8.x-1.4'
+project: 'ckeditor_templates'
+datestamp: 1713711696

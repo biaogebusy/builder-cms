@@ -1,0 +1,15 @@
+# Schema for the configuration files of the workspace module.
+
+workspace.settings:
+  type: config_object
+  label: 'Workspace Settings'
+  mapping:
+    upstream:
+      type: integer
+      label: 'Default target workspace'
+    push_replication_settings:
+      type: string
+      label: 'Push replication settings'
+    pull_replication_settings:
+      type: string
+      label: 'Pull replication settings'

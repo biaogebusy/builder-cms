@@ -1,0 +1,324 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Order module.
+ */
+
+use Drupal\commerce\CommerceContentEntityStorageSchema;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_install().
+ */
+function commerce_order_install() {
+  // Allow authenticated users to view own orders.
+  user_role_grant_permissions(AccountInterface::AUTHENTICATED_ROLE, ['view own commerce_order']);
+}
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function commerce_order_update_dependencies() {
+  if (!\Drupal::moduleHandler()->moduleExists('commerce_product')) {
+    return [];
+  }
+
+  $dependencies = [];
+  // Make sure commerce_order_update_8207 is executed after
+  // commerce_product_update_8209, so that the 'stores' and 'variations'
+  // configurable fields are converted to base fields before the
+  // commerce_number_pattern module is enabled.
+  $dependencies['commerce_order'][8207] = [
+    'commerce_product' => 8209,
+  ];
+
+  return $dependencies;
+}
+
+/**
+ * Add the 'data' field to 'commerce_order_item' entities.
+ */
+function commerce_order_update_8201() {
+  $storage_definition = BaseFieldDefinition::create('map')
+    ->setLabel(t('Data'))
+    ->setDescription(t('A serialized array of additional data.'));
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('data', 'commerce_order_item', 'commerce_order', $storage_definition);
+}
+
+/**
+ * Add the 'overridden_unit_price' field to 'commerce_order_item' entities.
+ */
+function commerce_order_update_8202() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Overridden unit price'))
+    ->setDescription(t('Whether the unit price is overridden.'))
+    ->setDefaultValue(FALSE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('overridden_unit_price', 'commerce_order_item', 'commerce_order', $storage_definition);
+}
+
+/**
+ * Add the 'locked' field to 'commerce_order' entities.
+ */
+function commerce_order_update_8203() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Locked'))
+    ->setSettings([
+      'on_label' => t('Yes'),
+      'off_label' => t('No'),
+    ])
+    ->setDefaultValue(FALSE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('locked', 'commerce_order', 'commerce_order', $storage_definition);
+}
+
+/**
+ * Add the 'uses_legacy_adjustments' field to 'commerce_order_item' entities.
+ */
+function commerce_order_update_8204() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Uses legacy adjustments'))
+    ->setSettings([
+      'on_label' => t('Yes'),
+      'off_label' => t('No'),
+    ])
+    ->setDefaultValue(FALSE)
+    ->setInitialValue(TRUE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('uses_legacy_adjustments', 'commerce_order_item', 'commerce_order', $storage_definition);
+}
+
+/**
+ * Add the 'total_paid' field to 'commerce_order' entities.
+ */
+function commerce_order_update_8205() {
+  $storage_definition = BaseFieldDefinition::create('commerce_price')
+    ->setLabel(t('Total paid'))
+    ->setDescription(t('The total paid price of the order.'))
+    ->setDisplayConfigurable('form', FALSE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('total_paid', 'commerce_order', 'commerce_order', $storage_definition);
+}
+
+/**
+ * Clears the address book for all customers, to avoid duplicates.
+ */
+function commerce_order_update_8206() {
+  // Bypass Entity API for better performance.
+  $database = \Drupal::database();
+  $database->query("UPDATE {profile} SET uid = 0 WHERE type = 'customer'");
+  $database->query("UPDATE {profile_revision} SET uid = 0 WHERE profile_id IN (SELECT profile_id FROM {profile} WHERE type = 'customer')");
+}
+
+/**
+ * Install the Commerce Number Pattern module.
+ */
+function commerce_order_update_8207() {
+  \Drupal::service('module_installer')->install(['commerce_number_pattern']);
+}
+
+/**
+ * Convert the 'order_items' configurable field into a base field.
+ */
+function commerce_order_update_8208() {
+  $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo('commerce_order');
+  $order_types = array_keys($bundle_info);
+  $config_factory = \Drupal::configFactory();
+  $config_manager = \Drupal::service('config.manager');
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+
+  $entity_type_manager->clearCachedDefinitions();
+  $entity_field_manager->clearCachedFieldDefinitions();
+
+  $key = 'commerce_order.field_storage_definitions';
+  $entity_definitions_installed = \Drupal::keyValue('entity.definitions.installed');
+  $definitions = $entity_definitions_installed->get($key);
+  /** @var \Drupal\Core\Field\FieldDefinitionInterface[] $base_field_definitions */
+  $base_field_definitions = $entity_field_manager->getBaseFieldDefinitions('commerce_order');
+  $definitions['order_items'] = $base_field_definitions['order_items']->getFieldStorageDefinition();
+  $entity_definitions_installed->set($key, $definitions);
+
+  $configuration_to_delete = [];
+  foreach ($order_types as $bundle) {
+    $configuration_to_delete[] = 'field.field.commerce_order.' . $bundle . '.order_items';
+  }
+  $configuration_to_delete[] = 'field.storage.commerce_order.order_items';
+
+  $dependents = $config_manager->findConfigEntityDependents('config', $configuration_to_delete);
+  /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $config_entity */
+  foreach ($dependents as $config_name => $config_entity) {
+    $config_entity = $config_factory->getEditable($config_name);
+    $dependencies = $config_entity->get('dependencies.config');
+    $dependencies = array_diff($dependencies, $configuration_to_delete);
+    $config_entity->set('dependencies.config', $dependencies);
+    $config_entity->save();
+  }
+
+  foreach ($configuration_to_delete as $config) {
+    $config_factory->getEditable($config)->delete();
+  }
+}
+
+/**
+ * Update all existing views using a reference to order items.
+ */
+function commerce_order_update_8209() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('views.view.') as $view_config_name) {
+    $view = $config_factory->getEditable($view_config_name);
+    if ($view->get('base_field') != 'order_id') {
+      // Not a commerce_order SQL view.
+      continue;
+    }
+
+    $displays = $view->get('display');
+    foreach ($displays as $display_name => $display) {
+      if (!empty($display['display_options']['relationships'])) {
+        foreach ($display['display_options']['relationships'] as $relationship_name => $relationship) {
+          if ($relationship_name == 'order_items') {
+            // Update the relation field and add entity information.
+            $base = "display.$display_name.display_options.relationships.$relationship_name";
+            $view->set($base . '.field', $relationship_name . '_target_id');
+            $view->set($base . '.entity_type', 'commerce_order');
+            $view->set($base . '.entity_field', $relationship_name);
+          }
+        }
+      }
+
+      if (!empty($display['display_options']['fields'])) {
+        foreach ($display['display_options']['fields'] as $field_name => $field) {
+          if ($field_name == 'order_items') {
+            // Update the relation field and add entity information.
+            $base = "display.$display_name.display_options.fields.$field_name";
+            $view->set($base . '.field', $field_name . '_target_id');
+          }
+        }
+      }
+    }
+    $view->save(TRUE);
+  }
+}
+
+/**
+ * Ensure new field indexes on the order entity.
+ */
+function commerce_order_update_8210() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Get the current order entity type definition, ensure the storage schema
+  // class is set.
+  $entity_type = $entity_type_manager->getDefinition('commerce_order')
+    ->setHandlerClass('storage_schema', CommerceContentEntityStorageSchema::class);
+
+  // Regenerate entity type indexes.
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Add the 'locked' field to 'commerce_order_item' entities.
+ */
+function commerce_order_update_8211() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Locked'))
+    ->setSettings([
+      'on_label' => t('Yes'),
+      'off_label' => t('No'),
+    ])
+    ->setDefaultValue(FALSE)
+    ->setInitialValue(FALSE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('locked', 'commerce_order_item', 'commerce_order_item', $storage_definition);
+}
+
+/**
+ * Update the order_number field definition.
+ */
+function commerce_order_update_8212() {
+  $definition_update_manager = \Drupal::service('entity.definition_update_manager');
+  $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('order_number', 'commerce_order'));
+}
+
+/**
+ * Add the 'balance' field to the 'default' view mode for all order bundles.
+ */
+function commerce_order_update_8213() {
+  $bundles = array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo('commerce_order'));
+  $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+  foreach ($bundles as $bundle) {
+    /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $default_display */
+    $default_display = $storage->load('commerce_order.' . $bundle . '.default');
+    if (!$default_display) {
+      continue;
+    }
+    $default_display->setComponent('balance', [
+      'type' => 'commerce_price_default',
+      'label' => 'inline',
+    ]);
+    $default_display->save();
+  }
+}
+
+/**
+ * Add the 'version' field to 'commerce_order' entities.
+ */
+function commerce_order_update_8214() {
+  $storage_definition = BaseFieldDefinition::create('integer')
+    ->setLabel(t('Version'))
+    ->setDescription(t('The order version number, it gets incremented on each save.'))
+    ->setReadOnly(TRUE)
+    ->setSetting('unsigned', TRUE)
+    ->setDefaultValue(0)
+    // Ensure any existing orders get set to version 1.
+    ->setInitialValue(1);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('version', 'commerce_order', 'commerce_order', $storage_definition);
+
+  return t('The order version number field was created.');
+}
+
+/**
+ * Update the state field definition.
+ */
+function commerce_order_update_8215() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('state', 'commerce_order'));
+}
+
+/**
+ * Update the order form displays to ensure order items are removed by IEF.
+ */
+function commerce_order_update_8216() {
+  // In case the "order_items" field is using the IEF - complex widget, make
+  // sure it is configured to delete order items instead of leaving them
+  // orphaned order items in the DB after deletion from the form.
+  $order_type_storage = \Drupal::entityTypeManager()->getStorage('commerce_order_type');
+  $order_types = $order_type_storage->loadMultiple();
+  /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository */
+  $entity_display_repository = \Drupal::service('entity_display.repository');
+  foreach ($order_types as $order_type) {
+    $form_display = $entity_display_repository->getFormDisplay('commerce_order', $order_type->id());
+    if ($form_display->isNew()) {
+      continue;
+    }
+    $content = $form_display->get('content');
+    if (isset($content['order_items']) &&
+      $content['order_items']['type'] === 'inline_entity_form_complex') {
+      $content['order_items']['settings']['removed_reference'] = 'delete';
+      $form_display->set('content', $content);
+      $form_display->save();
+    }
+  }
+}

@@ -1,0 +1,31 @@
+$text_alignment_icon_path: '../../images/plugins/text-alignment/';
+
+// Text Alignment
+.field-text-alignment .fieldset-wrapper > div > div {
+  input {
+    + label {
+      font-size: 0;
+      text-indent: -999em;
+
+      .input-icon {
+        margin-bottom: 0;
+
+        &[class*="left"] {
+          background-image: url($text_alignment_icon_path + 'text-left.svg');
+        }
+
+        &[class*="center"] {
+          background-image: url($text_alignment_icon_path + 'text-center.svg');
+        }
+
+        &[class*="right"] {
+          background-image: url($text_alignment_icon_path + 'text-right.svg');
+        }
+
+        &[class*="justify"] {
+          background-image: url($text_alignment_icon_path + 'text-justify.svg');
+        }
+      }
+    }
+  }
+}

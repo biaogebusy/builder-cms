@@ -1,0 +1,38 @@
+entity.workspace.collection:
+  title: 'Workspaces'
+  route_name: entity.workspace.collection
+  base_route: entity.workspace.collection
+
+entity.workspace.changes:
+  title: 'Changes on the current workspace'
+  route_name: entity.workspace.changes
+  base_route: entity.workspace.changes
+
+entity.workspace.archived:
+  title: 'Archived Workspaces'
+  route_name: entity.workspace.archived
+  base_route: entity.workspace.collection
+
+entity.workspace_type.collection:
+  title: 'Types'
+  route_name: entity.workspace_type.collection
+  base_route: entity.workspace.collection
+
+entity.workspace.edit_form:
+  route_name: entity.workspace.edit_form
+  base_route: entity.workspace.canonical
+  title: Edit
+
+entity.workspace_type.edit_form:
+  title: 'Edit'
+  route_name: entity.workspace_type.edit_form
+  base_route: entity.workspace_type.edit_form
+
+workspace.revisions:
+  deriver: '\Drupal\workspace\Plugin\Derivative\RevisionsLocalTask'
+
+entity.workspace.config_form:
+  title: 'Settings'
+  route_name: workspace.config.form
+  base_route: entity.workspace.collection
+  weight: 99

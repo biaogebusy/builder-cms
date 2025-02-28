@@ -1,0 +1,23 @@
+bootstrap_styles.settings:
+  path: '/admin/config/bootstrap-styles/settings'
+  defaults:
+    _form: '\Drupal\bootstrap_styles\Form\SettingsForm'
+    _title: 'Bootstrap Styles Settings'
+  requirements:
+    _permission: 'configure bootstrap styles'
+
+bootstrap_styles.ajax_temp_store_set:
+  path: '/bootstrap_styles/ajax/temp_store/set'
+  defaults:
+    _controller: '\Drupal\bootstrap_styles\Controller\TempStoreController::set'
+    _title: 'Temp Store Set Value'
+  requirements:
+    _permission: 'access content'
+
+bootstrap_styles.ajax_temp_store_get:
+  path: '/bootstrap_styles/ajax/temp_store/get'
+  defaults:
+    _controller: '\Drupal\bootstrap_styles\Controller\TempStoreController::get'
+    _title: 'Temp Store Get Value'
+  requirements:
+    _permission: 'access content'

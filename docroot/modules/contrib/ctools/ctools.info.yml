@@ -1,0 +1,10 @@
+name: Chaos Tools
+type: module
+description: 'Provides a number of utility and helper APIs for Drupal developers and site builders.'
+package: Chaos tool suite
+core_version_requirement: ^9.3 || ^10
+
+# Information added by Drupal.org packaging script on 2023-05-17
+version: '8.x-3.14'
+project: 'ctools'
+datestamp: 1684299796

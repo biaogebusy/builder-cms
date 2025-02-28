@@ -1,0 +1,52 @@
+/**
+ * @file
+ * Set base styles for the off-canvas autocomplete.
+ */
+.ui-autocomplete {
+  border: 2px solid $tabs_bottom_border_color;
+  border-radius: $border_radius;
+  background-color: $panel_bg_color;
+  padding: .5rem 0;
+  margin-top: 1rem;
+}
+
+.ui-autocomplete {
+  li {
+    a {
+      @include smooth-all-transition;
+      display: block;
+      width: 100%;
+      padding: .75rem 1rem;
+      color: $panel_link_color !important;
+      border: 0 !important;
+
+      &:hover {
+        color: $panel_bg_color !important;
+        background-color: $panel_link_color !important;
+      }
+    }
+  }
+
+  .ui-state-active,
+  .ui-widget-content .ui-state-active,
+  .ui-widget-header .ui-state-active,
+  .ui-autocomplete, .ui-autocomplete:hover,
+  .ui-menu-item, .ui-menu-item:hover,
+  .ui-menu-item a, .ui-menu-item a:hover,
+  .ui-widget-content .ui-state-focus,
+  .ui-widget-header .ui-state-focus,
+  .ui-widget-content .ui-state-hover,
+  .ui-widget-header .ui-state-hover,
+  .ui-menu .ui-menu-item a.ui-state-focus,
+  .ui-menu .ui-menu-item a.ui-state-active,
+  .ui-menu .ui-menu-item a {
+    margin: 0;
+    display: block;
+    border: 0;
+    border-collapse: collapse;
+  }
+}
+
+
+
+

@@ -1,0 +1,27 @@
+# 支付宝API接口设置
+
+#app ID 默认为''
+appId: ''
+
+#网关协议
+protocol: 'https'
+
+#网关地址
+gatewayHost: 'openapi.alipay.com'
+
+#加密类型  商户生成签名字符串所使用的签名算法类型，目前支持RSA2和RSA，推荐使用RSA2
+signType: 'RSA2'
+
+#应用私钥，例如：MIIEvQIBADANB ... ...
+merchantPrivateKey: ''
+
+#商户应用公钥证书文件的内容 如:appCertPublicKey_2019051064521003.crt
+merchantCert: ''
+
+#支付宝公钥证书文件的内容 如: alipayCertPublicKey_RSA2.crt
+alipayCert: ''
+
+#支付宝根证书文件的内容 如:alipayRootCert.crt
+alipayRootCert: ''
+
+

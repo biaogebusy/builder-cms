@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.node_type_a.body
+    - node.type.node_type_a
+  module:
+    - text
+    - user
+id: node.node_type_a.default
+targetEntityType: node
+bundle: node_type_a
+mode: default
+content:
+  body:
+    label: hidden
+    type: text_default
+    weight: 101
+    settings: {  }
+    third_party_settings: {  }
+  links:
+    weight: 100
+hidden: {  }

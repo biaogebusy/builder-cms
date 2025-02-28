@@ -1,0 +1,91 @@
+{
+  "name": "drupal/ckeditor_uploadimage",
+  "description": "Integrates CKEditor's Upload Image plugin to Drupal. This enables Drupal's default WYSIWYG text editor capable of uploading images that were dropped or pasted from clipboard into the editor as inline image.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+",
+  "homepage": "https://drupal.org/project/ckeditor_uploadimage",
+  "repositories": [
+    {
+      "type": "package",
+      "package": {
+        "name": "ckeditor-plugin/uploadimage",
+        "version": "4.8.0",
+        "type": "drupal-library",
+        "extra": {
+          "installer-name": "uploadimage"
+        },
+        "dist": {
+          "url": "https://download.ckeditor.com/uploadimage/releases/uploadimage_4.8.0.zip",
+          "type": "zip"
+        }
+      }
+    },
+    {
+      "type": "package",
+      "package": {
+        "name": "ckeditor-plugin/uploadwidget",
+        "version": "4.8.0",
+        "type": "drupal-library",
+        "extra": {
+          "installer-name": "uploadwidget"
+        },
+        "dist": {
+          "url": "https://download.ckeditor.com/uploadwidget/releases/uploadwidget_4.8.0.zip",
+          "type": "zip"
+        }
+      }
+    },
+    {
+      "type": "package",
+      "package": {
+        "name": "ckeditor-plugin/filetools",
+        "version": "4.8.0",
+        "type": "drupal-library",
+        "extra": {
+          "installer-name": "filetools"
+        },
+        "dist": {
+          "url": "https://download.ckeditor.com/filetools/releases/filetools_4.8.0.zip",
+          "type": "zip"
+        }
+      }
+    },
+    {
+      "type": "package",
+      "package": {
+        "name": "ckeditor-plugin/notification",
+        "version": "4.8.0",
+        "type": "drupal-library",
+        "extra": {
+          "installer-name": "notification"
+        },
+        "dist": {
+          "url": "https://download.ckeditor.com/notification/releases/notification_4.8.0.zip",
+          "type": "zip"
+        }
+      }
+    },
+    {
+      "type": "package",
+      "package": {
+        "name": "ckeditor-plugin/notificationaggregator",
+        "version": "4.8.0",
+        "type": "drupal-library",
+        "extra": {
+          "installer-name": "notificationaggregator"
+        },
+        "dist": {
+          "url": "https://download.ckeditor.com/notificationaggregator/releases/notificationaggregator_4.8.0.zip",
+          "type": "zip"
+        }
+      }
+    }
+  ],
+  "require": {
+    "ckeditor-plugin/uploadimage": "4.8.0",
+    "ckeditor-plugin/uploadwidget": "4.8.0",
+    "ckeditor-plugin/filetools": "4.8.0",
+    "ckeditor-plugin/notification": "4.8.0",
+    "ckeditor-plugin/notificationaggregator": "4.8.0"
+  }
+}

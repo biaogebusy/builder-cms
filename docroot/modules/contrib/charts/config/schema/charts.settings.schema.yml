@@ -1,0 +1,24 @@
+charts.settings:
+  type: config_object
+  label: 'Charts settings'
+  mapping:
+    charts_default_settings:
+      type: charts_config
+      label: 'Charts default settings'
+    advanced:
+      type: mapping
+      label: Advanced
+      mapping:
+        debug:
+          type: boolean
+          label: 'Enable Charts Debug'
+        requirements:
+          type: mapping
+          label: Requirements
+          mapping:
+            cdn:
+              type: boolean
+              label: 'Check if CDN is being used for external libraries'
+    dependencies:
+      type: config_dependencies
+      label: 'Dependencies'

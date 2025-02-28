@@ -1,0 +1,6 @@
+pendo-js:
+  version: 1.x
+  js:
+    js/pendo.js: {}
+  dependencies:
+    - core/drupalSettings

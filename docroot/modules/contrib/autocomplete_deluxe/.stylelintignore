@@ -1,0 +1,14 @@
+node_modules/**/*.css
+assets/scss/**/*.scss
+**/*.min.css"
+assets/scss/*
+assets/js/*
+tests/*
+config/**/*.yml
+*.yml
+.*
+*.png
+*.svg
+*.ico
+*.json
+*.gif

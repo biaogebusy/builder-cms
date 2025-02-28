@@ -1,0 +1,11 @@
+name: 'Easy Breadcrumb Testing'
+description: 'Provides routes and controllers for automated testing.'
+package: Testing
+core: 8.x
+core_version_requirement: ^8 || ^9
+type: module
+
+# Information added by Drupal.org packaging script on 2024-02-04
+version: '2.0.6'
+project: 'easy_breadcrumb'
+datestamp: 1707084296

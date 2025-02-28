@@ -1,0 +1,189 @@
+<?php
+
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * implements hook_modules_installed().
+ */
+function replication_modules_installed($modules) {
+  if (in_array('replication', $modules)) {
+    $entity_type_id = 'replication_log';
+    $entity_types = \Drupal::service('multiversion.manager')->getSupportedEntityTypes();
+    $entity_type = \Drupal::entityTypeManager()->getStorage($entity_type_id)->getEntityType();
+    if (in_array($entity_type_id, array_keys($entity_types))) {
+      \Drupal::service('multiversion.manager')->enableEntityTypes([$entity_type_id => $entity_type]);
+    }
+  }
+}
+
+/**
+ * Create revisionable fields in the revision table for replication_log entity
+ * type if they are missing.
+ */
+function replication_update_8100() {
+  $connection = Database::getConnection();
+  if ($connection instanceof Connection) {
+    $schema = $connection->schema();
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $manager = \Drupal::service('multiversion.manager');
+
+    $entity_type_id = 'replication_log';
+    $entity_type = $entity_type_manager
+      ->getStorage($entity_type_id)
+      ->getEntityType();
+
+    if($manager->isEnabledEntityType($entity_type)) {
+      $id_key = $entity_type->getKey('id');
+
+      /** @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage $storage */
+      $storage = $entity_type_manager->getStorage($entity_type_id);
+
+      // Get the tables name used for base table and revision table.
+      $table_base = ($entity_type->isTranslatable()) ? $entity_type->getDataTable() : $entity_type->getBaseTable();
+      $table_revision = ($entity_type->isTranslatable()) ? $entity_type->getRevisionDataTable() : $entity_type->getRevisionTable();
+
+      /** @var \Drupal\Core\Entity\Sql\TableMappingInterface $table_mapping */
+      $table_mapping = $storage->getTableMapping();
+      $tables = $table_mapping->getTableNames();
+
+      if (!$table_revision && in_array($entity_type_id . '_field_revision', $tables)) {
+        $table_revision = $entity_type_id . '_field_revision';
+      }
+      elseif (!$table_revision && in_array($entity_type_id . '_revision', $tables)) {
+        $table_revision = $entity_type_id . '_revision';
+      }
+
+      if ($schema->tableExists($table_base) && $table_revision && $schema->tableExists($table_revision)) {
+        // Get data from base table.
+        $table_base_results = $connection->select($table_base)
+          ->fields($table_base)
+          ->execute()->fetchAll();
+
+        // Get data from revision table.
+        $table_revision_results = $connection->select($table_revision)
+          ->fields($table_revision)
+          ->execute()->fetchAll();
+
+        if (in_array($table_revision, $tables)) {
+          $table_revision_fields = $table_mapping->getFieldNames($table_revision);
+          $entity_field_manager = \Drupal::service('entity_field.manager');
+          $entity_field_manager->clearCachedFieldDefinitions();
+          $fields = $entity_field_manager->getBaseFieldDefinitions($entity_type_id);
+          $new_field_storage_definitions = [];
+          // Loop through all the fields, if the field exists in the new
+          // revision table mapping and it doesn't exist in the database,
+          // create the new field.
+          foreach ($fields as $field_name => $field) {
+            if (in_array($field_name, $table_revision_fields) && !$schema->fieldExists($table_revision, $field_name)) {
+              $new_field_storage_definitions[] = $field->getFieldStorageDefinition($field->getName(), $entity_type_id);
+            }
+          }
+
+          if (!empty($new_field_storage_definitions)) {
+            // Remove all data from revision table before adding new fields.
+            $connection->truncate($table_revision)->execute();
+            foreach ($new_field_storage_definitions as $storage_definition) {
+              \Drupal::service('field_storage_definition.listener')->onFieldStorageDefinitionCreate($storage_definition);
+            }
+          }
+
+          // If the revision table has been updated (new field has been added),
+          // complete new fields with data from base table.
+          if (!empty($new_field_storage_definitions)) {
+            $table_base_results_keyed = [];
+            foreach ($table_base_results as $result) {
+              if (isset($result->{$id_key})) {
+                $data = (array) $result;
+                $table_base_results_keyed[$result->{$id_key}] = $data;
+              }
+            }
+            // For the new created revisionable fields take data from base table.
+            foreach ($table_revision_results as $result) {
+              $data = (array) $result;
+              foreach ($table_revision_fields as $field_name) {
+                if (!isset($data[$field_name]) && isset($table_base_results_keyed[$result->{$id_key}][$field_name])) {
+                  $data[$field_name] = $table_base_results_keyed[$result->{$id_key}][$field_name];
+                }
+              }
+              // Save the information in the revision table.
+              $connection->insert($table_revision)
+                ->fields($data)
+                ->execute();
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Update ReplicationHistoryItem property definitions.
+ *
+ * For compatibility with CouchDB 2.0.0.
+ */
+function replication_update_8101() {
+  $connection = Database::getConnection();
+  $entity_definition_update_manager = Drupal::entityDefinitionUpdateManager();
+  $entity_type_id = 'replication_log';
+
+  // Check if we have updates for replication_log entity type.
+  if ($entity_definition_update_manager->needsUpdates()) {
+    $changes = $entity_definition_update_manager->getChangeSummary();
+    if (in_array($entity_type_id, array_keys($changes))) {
+      // Set tables to update (history field tables).
+      $tables_to_update = [
+        $entity_type_id . '__history',
+        $entity_type_id . '_revision__history'
+      ];
+
+      $tables_data = [];
+      // Copy content from entity tables.
+      foreach ($tables_to_update as $table_to_update) {
+        $tables_data[$table_to_update] = $connection->select($table_to_update)
+          ->fields($table_to_update)
+          ->execute()->fetchAll();
+        $connection->truncate($table_to_update)->execute();
+      }
+
+      // Apply updates.
+      $entity_field_manager = \Drupal::service('entity_field.manager');
+      $entity_field_manager->clearCachedFieldDefinitions();
+      $storage_definitions = $entity_field_manager->getFieldStorageDefinitions($entity_type_id);
+      if ($storage_definitions['history']) {
+        $entity_definition_update_manager->updateFieldStorageDefinition($storage_definitions['history']);
+      }
+
+      // Insert content into updated entity tables.
+      foreach ($tables_data as $table_name => $table_data) {
+        foreach ($table_data as $result) {
+          $data = (array) $result;
+          // Save the information in the table.
+          $connection->insert($table_name)
+            ->fields($data)
+            ->execute();
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Set new configuration for Replication module.
+ */
+function replication_update_8102() {
+  \Drupal::configFactory()->getEditable('replication.settings')
+    ->set('changes_limit', 100)
+    ->set('bulk_docs_limit', 100)
+    ->save();
+}
+
+/**
+ * Set the default value for the new replication_execution_limit setting.
+ */
+function replication_update_8103() {
+  $replication_settings = \Drupal::configFactory()->getEditable('replication.settings');
+  $replication_settings->set('replication_execution_limit', 1)->save(TRUE);
+}

@@ -1,0 +1,3 @@
+entity print views access:
+  title: 'Access Printable version of View'
+  description: 'Allow a user to view the printed version of a view.'

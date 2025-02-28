@@ -1,0 +1,18 @@
+parameters:
+  factory.keyvalue_list:
+    default: keyvalue.list.database
+  factory.keyvalue.sorted_set:
+    default: keyvalue.sorted_set.database
+services:
+  keyvalue.list:
+    class: Drupal\key_value\KeyValueStore\KeyValueListFactory
+    arguments: ['@service_container', '%factory.keyvalue_list%']
+  keyvalue.list.database:
+    class: Drupal\key_value\KeyValueStore\KeyValueDatabaseListFactory
+    arguments: ['@serialization.phpserialize', '@database']
+  keyvalue.sorted_set:
+    class: Drupal\key_value\KeyValueStore\KeyValueSortedSetFactory
+    arguments: ['@service_container', '%factory.keyvalue.sorted_set%']
+  keyvalue.sorted_set.database:
+    class: Drupal\key_value\KeyValueStore\KeyValueDatabaseSortedSetFactory
+    arguments: ['@serialization.phpserialize', '@database']

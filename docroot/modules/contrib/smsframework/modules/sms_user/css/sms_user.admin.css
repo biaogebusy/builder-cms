@@ -1,0 +1,8 @@
+.sms_user-radio-indent,
+.form-item.sms_user-radio-indent {
+  margin-left: 1.5em; /* LTR */
+}
+[dir="rtl"] .sms_user-radio-indent,
+[dir="rtl"] .form-item.sms_user-radio-indent {
+  margin-right: 1.5em;
+}

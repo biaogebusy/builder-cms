@@ -1,0 +1,13 @@
+name: Media Entity Instagram
+description: 'Media Entity Instagram provider.'
+type: module
+package: Media
+core_version_requirement: ^9 || ^10
+configure: media_entity_instagram.settings
+dependencies:
+  - drupal:media
+
+# Information added by Drupal.org packaging script on 2023-02-17
+version: '3.0.8'
+project: 'media_entity_instagram'
+datestamp: 1676644236

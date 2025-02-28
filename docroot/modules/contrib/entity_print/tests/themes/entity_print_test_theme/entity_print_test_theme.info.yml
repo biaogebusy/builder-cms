@@ -1,0 +1,17 @@
+name: Entity Print Test Theme
+type: theme
+description: Test theme for testing Entity Print CSS
+hidden: true
+package: Testing
+base theme: stark
+entity_print:
+  all: entity_print_test_theme/all
+  node:
+    all: entity_print_test_theme/node
+    # @see entity_print_test_system_info_alter
+    # page: entity_print_test_theme/page
+
+# Information added by Drupal.org packaging script on 2024-04-24
+version: '8.x-2.14'
+project: 'entity_print'
+datestamp: 1713939910

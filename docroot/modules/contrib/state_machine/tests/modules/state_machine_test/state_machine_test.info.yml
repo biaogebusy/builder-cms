@@ -1,0 +1,11 @@
+name: State Machine Test
+type: module
+package: Testing
+dependencies:
+  - drupal:entity_test
+  - state_machine:state_machine
+
+# Information added by Drupal.org packaging script on 2024-03-15
+version: '8.x-1.11'
+project: 'state_machine'
+datestamp: 1710486010

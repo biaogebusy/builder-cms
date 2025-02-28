@@ -1,0 +1,7 @@
+uuid: 3d63ddce-e2b2-4550-be05-144ccec97810
+langcode: en
+status: true
+dependencies: {}
+id: node
+label: Content
+types: {}

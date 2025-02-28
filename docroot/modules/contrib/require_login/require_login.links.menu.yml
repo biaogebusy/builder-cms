@@ -1,0 +1,5 @@
+system.require_login:
+  title: "Login requirements"
+  description: "Manage the login requirements for all pages."
+  parent: user.admin_index
+  route_name: require_login.settings

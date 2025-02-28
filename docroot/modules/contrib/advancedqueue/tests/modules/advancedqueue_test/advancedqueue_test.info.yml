@@ -1,0 +1,11 @@
+name: 'Advanced Queue Test'
+description: 'Testing module for Advanced Queue'
+type: module
+package: Testing
+dependencies:
+  - advancedqueue:advancedqueue
+
+# Information added by Drupal.org packaging script on 2024-02-26
+version: '8.x-1.0'
+project: 'advancedqueue'
+datestamp: 1708984560

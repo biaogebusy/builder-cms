@@ -1,0 +1,11 @@
+name: 'Views Entity Reference Filter Views Test'
+type: module
+description: 'Support module for Views Entity Reference Filter Views tests'
+package: Testing
+dependencies:
+  - drupal:node
+  - drupal:views
+  - verf:verf
+core: 8.x
+hidden: true
+core_version_requirement: ^8 || ^9

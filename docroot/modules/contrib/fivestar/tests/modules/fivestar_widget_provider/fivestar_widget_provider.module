@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * @file
+ * A test module which provides two rating widgets for use by Fivestar.
+ */
+
+/**
+ * Implements hook_fivestar_widgets().
+ */
+function fivestar_widget_provider_fivestar_widgets(): array {
+  // Widgets defined by this module.
+  $widgets = [
+    'awesome' => [
+      'library' => 'fivestar_widget_provider/awesome',
+      'label' => t('Awesome Stars'),
+    ],
+    'cool' => [
+      'library' => 'fivestar_widget_provider/cool',
+      'label' => t('Cool Stars'),
+    ],
+  ];
+
+  return $widgets;
+}
+
+/**
+ * Implements hook_fivestar_widgets_alter().
+ */
+function fivestar_widget_provider_fivestar_widgets_alter(array &$widgets): void {
+  // Change the label of the 'basic' widget to be 'Altered'.
+  $widgets['basic']['label'] = t('Altered');
+}

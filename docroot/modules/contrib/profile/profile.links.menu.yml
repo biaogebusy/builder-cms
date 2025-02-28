@@ -1,0 +1,11 @@
+entity.profile.collection:
+  title: 'Profiles'
+  description: 'Manage user profiles.'
+  route_name: entity.profile.collection
+  parent: entity.user.collection
+
+entity.profile_type.collection:
+  title: 'Profile types'
+  description: 'Manage profile types, including fields.'
+  route_name: entity.profile_type.collection
+  parent: user.admin_index

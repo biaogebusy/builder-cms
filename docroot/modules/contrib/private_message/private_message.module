@@ -1,0 +1,564 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks for the private message module.
+ */
+
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\user\Entity\User;
+use Drupal\private_message\Entity\PrivateMessage;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function private_message_entity_extra_field_info() {
+
+  $private_message_thread_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('private_message_thread');
+  foreach (array_keys($private_message_thread_bundles) as $bundle) {
+    $fields['private_message_thread'][$bundle]['display']['last_message'] = [
+      'label' => t('Last Message'),
+      'description' => t('Displays the last message in the thread'),
+      'weight' => 100,
+      'visible' => TRUE,
+    ];
+
+    $fields['private_message_thread'][$bundle]['display']['private_message_form'] = [
+      'label' => t('Form'),
+      'description' => t('The form to create a new message'),
+      'weight' => 100,
+      'visible' => FALSE,
+    ];
+
+    $fields['private_message_thread'][$bundle]['display']['no_active_users'] = [
+      'label' => t('No active users'),
+      'description' => t('The notice that there are no active users'),
+      'weight' => 100,
+      'visible' => FALSE,
+    ];
+
+    $fields['private_message_thread'][$bundle]['display']['delete_link'] = [
+      'label' => t('Delete link'),
+      'description' => t('The link to delete the thread'),
+      'weight' => -100,
+      'visible' => TRUE,
+    ];
+
+    $fields['private_message_thread'][$bundle]['display']['clear_history_link'] = [
+      'label' => t('Clear history link'),
+      'description' => t('The link to clear personal messages history in the thread'),
+      'weight' => -100,
+      'visible' => TRUE,
+    ];
+  }
+
+  $private_message_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('private_message');
+  foreach (array_keys($private_message_bundles) as $bundle) {
+    $fields['private_message'][$bundle]['form']['members'] = [
+      'label' => t('Members'),
+      'description' => t('The widget to add members to the private message thread'),
+      'weight' => -100,
+      'visible' => TRUE,
+    ];
+  }
+
+  $user_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('user');
+  foreach (array_keys($user_bundles) as $bundle) {
+    $fields['user'][$bundle]['display']['linked_username'] = [
+      'label' => t('Username (linked if viewer has permission)'),
+      'description' => t('Displays the username, linked to the user profile if the viewer has permission to access user profiles'),
+      'weight' => 0,
+      'visible' => FALSE,
+    ];
+
+    $fields['user'][$bundle]['display']['private_message_link'] = [
+      'label' => t('Private message thread link'),
+      'description' => t('Displays a link to send a private message to the user'),
+      'weight' => 0,
+      'visible' => FALSE,
+    ];
+
+    $fields['user'][$bundle]['form']['private_messages'] = [
+      'label' => t('Private messages'),
+      'description' => t('Settings related to private messages'),
+      'weight' => 0,
+      'visible' => TRUE,
+    ];
+  }
+
+  $node_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('node');
+  foreach (array_keys($node_bundles) as $bundle) {
+    $fields['node'][$bundle]['display']['private_message_link'] = [
+      'label' => t('Private message thread link'),
+      'description' => t('Displays a link to send a private message to the node author'),
+      'weight' => 0,
+      'visible' => FALSE,
+    ];
+  }
+
+  $node_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('comment');
+  foreach (array_keys($node_bundles) as $bundle) {
+    $fields['comment'][$bundle]['display']['private_message_link'] = [
+      'label' => t('Private message thread link'),
+      'description' => t('Displays a link to send a private message to the node author'),
+      'weight' => 0,
+      'visible' => FALSE,
+    ];
+  }
+
+  $profile_bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('profile');
+  foreach (array_keys($profile_bundles) as $bundle) {
+    $fields['profile'][$bundle]['display']['private_message_link'] = [
+      'label' => t('Private message thread link'),
+      'description' => t('Displays a link to send a private message to the profile owner'),
+      'weight' => 0,
+      'visible' => FALSE,
+    ];
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ *
+ * @see hook_entity_view()
+ */
+function private_message_private_message_thread_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($display->getComponent('last_message')) {
+    $messages = $entity->getMessages();
+    if ($messages) {
+      $last_message = array_pop($messages);
+      $view_builder = \Drupal::entityTypeManager()->getViewBuilder('private_message');
+      $build['last_message'] = $view_builder->view($last_message, 'inbox');
+    }
+  }
+
+  if ($display->getComponent('private_message_form')) {
+    $currentUser = \Drupal::currentUser();
+    $members = $entity->getMembers();
+    $activeMembers = [];
+    foreach ($members as $member) {
+      if ($member->isActive() && $member->id() != $currentUser->id()) {
+        $activeMembers[] = $member;
+      }
+    }
+
+    if (empty($activeMembers)) {
+      $build['no_active_users'] = [
+        '#theme' => 'private_message_no_active_users_notice',
+      ];
+    }
+    else {
+      $private_message = PrivateMessage::create();
+      $form_object = \Drupal::entityTypeManager()
+        ->getFormObject('private_message', 'add')
+        ->setEntity($private_message);
+
+      $build['private_message_form'] = \Drupal::formBuilder()
+        ->getForm($form_object, $entity);
+    }
+  }
+
+  if ($display->getComponent('delete_link')) {
+    $url = Url::fromRoute('entity.private_message_thread.delete_form', ['private_message_thread' => $entity->id()]);
+    if ($url->access()) {
+      $build['delete_link'] = [
+        '#prefix' => '<div class="private_message_thread_delete_link_wrapper">',
+        '#suffix' => '</div>',
+        '#type' => 'link',
+        '#url' => $url,
+        '#title' => t('Delete thread'),
+      ];
+    }
+  }
+
+  if ($display->getComponent('clear_history_link')) {
+    $url = Url::fromRoute('entity.private_message_thread.clear_personal_history_form', ['private_message_thread' => $entity->id()]);
+    if ($url->access()) {
+      $build['clear_history_link'] = [
+        '#prefix' => '<div class="private_message_thread_clear_history_link_wrapper">',
+        '#suffix' => '</div>',
+        '#type' => 'link',
+        '#url' => $url,
+        '#title' => t('Clear history'),
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ *
+ * Adds new elements to the User entity.
+ *
+ * @see hook_entity_view()
+ */
+function private_message_user_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+
+  if ($display->getComponent('linked_username')) {
+    if (\Drupal::currentUser()->hasPermission('access user profiles')) {
+      $url = Url::fromRoute('entity.user.canonical', ['user' => $entity->id()]);
+      $build['linked_username'] = [
+        '#prefix' => '<p class="username">',
+        '#suffix' => '</p>',
+        '#type' => 'link',
+        '#url' => $url,
+        '#title' => $entity->getDisplayName(),
+      ];
+    }
+    else {
+      $build['linked_username'] = [
+        '#prefix' => '<p class="username">',
+        '#suffix' => '</p>',
+        '#markup' => $entity->getDisplayName(),
+      ];
+    }
+  }
+
+  \Drupal::service('private_message.service')->createRenderablePrivateMessageThreadLink($build, $entity, $display, $view_mode);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ *
+ * Adds new elements to the Node entity.
+ *
+ * @see hook_entity_view()
+ */
+function private_message_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  \Drupal::service('private_message.service')->createRenderablePrivateMessageThreadLink($build, $entity, $display, $view_mode);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ *
+ * Adds new elements to the Comment entity.
+ *
+ * @see hook_entity_view()
+ */
+function private_message_comment_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  \Drupal::service('private_message.service')->createRenderablePrivateMessageThreadLink($build, $entity, $display, $view_mode);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ *
+ * Adds new elements to the Profile entity.
+ *
+ * @see hook_entity_view()
+ */
+function private_message_profile_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  \Drupal::service('private_message.service')->createRenderablePrivateMessageThreadLink($build, $entity, $display, $view_mode);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function private_message_form_alter(&$form, FormStateInterface $formState, $form_id) {
+  // Act on any implementation of the private message entity form. This form
+  // can potentially exist multiple times on a page, so the form ID will be
+  // dynamic in such a case.
+  if (preg_match('/^private_message_add_form/', $form_id)) {
+    // The form is only ajaxified if/when thread_members has been set.
+    if ($formState->get('thread_members')) {
+      // Add a unique wrapper around the entire form. The build ID will always
+      // be unique.
+      $form['#prefix'] = '<div id="' . $form['#build_id'] . '">';
+      $form['#suffix'] = '</div>';
+      // Set the wrapper to the #ajax on the form button.
+      $form['actions']['submit']['#ajax']['wrapper'] = $form['#build_id'];
+      // Ensure ajax loaded buttons have a unique ID on every ajax load.
+      $form['actions']['submit-' . \Drupal::time()->getRequestTime()] = $form['actions']['submit'];
+      $form['actions']['submit']['#access'] = FALSE;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add private message module specific form elements to the user form.
+ *
+ * @see hook_form_alter()
+ */
+function private_message_form_user_form_alter(array &$form, FormStateInterface $formState) {
+
+  $config = \Drupal::config('private_message.settings');
+
+  // Get the user whose account is being modified.
+  $user = $formState->getFormObject()->getEntity();
+
+  // The form elements are only added if/when notifications have been enabled,
+  // and the account being edited has permission to use the private message
+  // system.
+  if ($config->get('enable_notifications') && $user->hasPermission('use private messaging system')) {
+    $form['private_messages'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Private Messages'),
+      '#tree' => TRUE,
+    ];
+
+    // If the user has not set a value, the system-wide default is used.
+    $default_value = $config->get('notify_by_default');
+    // Try to fetch user's settings if it is not a registration form.
+    if ($user->id()) {
+      // User specific settings are stored and retrieved using the UserData
+      // service.
+      $user_data = \Drupal::service('user.data');
+      $user_setting = $user_data->get('private_message', $user->id(), 'receive_notification');
+      $default_value = is_null($user_setting) ?: $user_setting;
+    }
+
+    $form['private_messages']['receive_notification'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Receive notification of private messages'),
+      '#default_value' => $default_value,
+    ];
+    if (!empty($user_data)) {
+      $user_setting = $user_data->get('private_message', $user->id(), 'notify_when_using');
+    }
+    // If the user has not set a value, the system-wide default is used.
+    $default_value = is_null($user_setting) ? $config->get('notify_when_using') : $user_setting;
+    $form['private_messages']['notify_when_using'] = [
+      '#type' => 'radios',
+      '#title' => t('Send notifications of new messages in a thread'),
+      '#options' => [
+        'yes' => t('For every private message'),
+        'no' => t('Only when not viewing the thread'),
+      ],
+      '#default_value' => $default_value,
+      '#description' => t('Whether or not notifications should be sent when you are viewing a thread'),
+      '#states' => [
+        'visible' => [
+          ':input[name="private_messages[receive_notification]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $options = [
+      60 => t('1 minute'),
+      180 => t('3 minutes'),
+      300 => t('5 minutes'),
+      600 => t('10 minutes'),
+      1800 => t('30 minutes'),
+      3600 => t('1 hour'),
+      14400 => t('4 hours'),
+      21600 => t('6 hours'),
+      43200 => t('12 hours'),
+      86400 => t('1 day'),
+    ];
+
+    if (!empty($user_data)) {
+      $user_setting = (int) $user_data->get('private_message', $user->id(), 'number_of_seconds_considered_away');
+    }
+    // If the user has not set a value, the system-wide default is used.
+    $default_value = is_null($user_setting) ? $config->get('number_of_seconds_considered_away') : $user_setting;
+    // The system default used by administrators is a free value, whereas users
+    // have a limited set of values. If the default value is not in that limited
+    // set of values, then a default of five minutes is used.
+    $default_value = isset($options[$default_value]) ? $default_value : 300;
+    $form['private_messages']['number_of_seconds_considered_away'] = [
+      '#type' => 'select',
+      '#title' => t('Amount of time after leaving a thread that the system starts sending notifications of new messages'),
+      '#options' => $options,
+      '#default_value' => $default_value,
+      '#states' => [
+        'visible' => [
+          ':input[name="private_messages[receive_notification]"]' => ['checked' => TRUE],
+          ':input[name="private_messages[notify_when_using]"]' => ['value' => 'no'],
+        ],
+      ],
+    ];
+
+    // Add a custom submit handler so the form values can be saved.
+    $form['actions']['submit']['#submit'][] = 'private_message_user_form_submit';
+  }
+}
+
+/**
+ * Custom submit handler, saves user settings for the private message module.
+ *
+ * @see private_message_form_user_form_alter()
+ */
+function private_message_user_form_submit(array &$form, FormStateInterface $formState) {
+  // Get the user whose account object is being modified.
+  $user = $formState->getFormObject()->getEntity();
+  $user_data = \Drupal::service('user.data');
+  // Save the submitted data to the user's UserData.
+  $user_data->set('private_message', $user->id(), 'receive_notification', $formState->getValue(['private_messages', 'receive_notification']));
+  $user_data->set('private_message', $user->id(), 'notify_when_using', $formState->getValue(['private_messages', 'notify_when_using']));
+  $user_data->set('private_message', $user->id(), 'number_of_seconds_considered_away', $formState->getValue(['private_messages', 'number_of_seconds_considered_away']));
+}
+
+/**
+ * Implements hook_theme().
+ */
+function private_message_theme() {
+  return [
+    'private_message_thread' => [
+      'render element' => 'elements',
+    ],
+    'private_message' => [
+      'render element' => 'elements',
+    ],
+    'private_message_notification_block' => [
+      'variables' => [
+        'new_message_count' => 0,
+      ],
+      'file' => 'private_message.theme.inc',
+    ],
+    'private_message_no_active_users_notice' => [
+      'render element' => 'elements',
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for private_message_thread templates.
+ *
+ * Default template: private-message-thread.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ *   - private_message_thread: The private message thread object.
+ *   - view_mode: View mode; e.g., 'full', 'teaser', etc.
+ */
+function template_preprocess_private_message_thread(array &$variables) {
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  // Provide a distinct $teaser boolean.
+  $variables['private_message_thread'] = $variables['elements']['#private_message_thread'];
+  /** @var \Drupal\private_message\Entity\PrivateMessageThreadInterface $private_message_thread */
+  $private_message_thread = $variables['private_message_thread'];
+  $variables['last_update'] = \Drupal::service('renderer')->render($variables['elements']['updated']);
+
+  $variables['url'] = $private_message_thread->toUrl('canonical', [
+    'language' => $private_message_thread->language(),
+  ]);
+
+  // Helpful $content variable for templates.
+  $variables += ['content' => []];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['content'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Prepares variables for private_message templates.
+ *
+ * Default template: private-message.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An array of elements to display in view mode.
+ *   - private_message: The private message object.
+ *   - view_mode: View mode; e.g., 'full', 'teaser', etc.
+ */
+function template_preprocess_private_message(array &$variables) {
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
+  // Provide a distinct $teaser boolean.
+  $variables['private_message'] = $variables['elements']['#private_message'];
+  /** @var \Drupal\private_message\Entity\PrivateMessageInterface $private_message */
+  $private_message = $variables['private_message'];
+
+  $variables['url'] = $private_message->toUrl('canonical', [
+    'language' => $private_message->language(),
+  ]);
+
+  // Helpful $content variable for templates.
+  $variables += ['content' => []];
+  foreach (Element::children($variables['elements']) as $key) {
+    $variables['content'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_help().
+ */
+function private_message_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.private_message':
+      return t(
+        '<p>A private message system for users to send messages to each other. It has been written to be fully extendable using Drupal 8 APIs.</p>
+        <p>See the <a href=":project_page">project page on Drupal.org</a> for more details.</p>',
+        [
+          ':project_page' => 'https://www.drupal.org/project/private_message',
+        ]
+      );
+  }
+}
+
+/**
+ * Implements hook_preprocess_field().
+ *
+ * Adds a custom class to the field that can be targeted, as the default classes
+ * may be altered in themes/templates, and therefore should not be depended
+ * upon.
+ */
+function private_message_preprocess_field__private_message_thread__private_messages(&$vars) {
+  foreach (array_keys($vars['items']) as $index) {
+    $vars['items'][$index]['attributes']->setAttribute('class', 'private-message-wrapper');
+  }
+}
+
+/**
+ * Implements hook_preprocess_container().
+ *
+ * Adds a custom class to the containers that can be targeted, as the default
+ * classes may be altered in themes/templates, and therefore should not be
+ * depended upon.
+ */
+function private_message_preprocess_container(&$vars) {
+  if (!empty($vars['element']['#id'])) {
+    if (strpos('edit-members-wrapper', $vars['element']['#id']) === 0) {
+      // Add a custom class to the private message members widget container.
+      $vars['attributes']['class'][] = 'private_message_members_widget_default_wrapper';
+    }
+    elseif (strpos('edit-message-wrapper', $vars['element']['#id']) === 0) {
+      // Add a custom class to the private message members widget container.
+      $vars['attributes']['class'][] = 'private_message_message_widget_default_wrapper';
+    }
+  }
+}
+
+/**
+ * Implements hook_message_view_alter().
+ *
+ * Swaps out tokens with values.
+ */
+function private_message_message_view_alter(array &$build) {
+  if ($build['#message']->bundle() == 'private_message_notification') {
+    $data = [
+      'private_message' => $build['#message']->get('field_message_private_message')->entity,
+      'private_message_thread' => $build['#message']->get('field_message_pm_thread')->entity,
+      'user' => User::load($build['#message']->getOwnerId()),
+    ];
+
+    if ($build['#view_mode'] == 'mail_subject') {
+      $build['partial_0']['#markup'] = \Drupal::token()->replace($build['partial_0']['#markup'], $data);
+    }
+    elseif ($build['#view_mode'] == 'mail_body') {
+      $build['partial_1']['#markup'] = \Drupal::token()->replace($build['partial_1']['#markup'], $data);
+    }
+  }
+}
+
+/**
+ * Implements hook_suggestions_HOOK_alter().
+ */
+function private_message_theme_suggestions_private_message_thread_alter(&$suggestions, &$vars) {
+  $suggestions[] = 'private_message_thread__' . $vars['elements']['#view_mode'];
+}
+
+/**
+ * Implements hook_suggestions_HOOK_alter().
+ */
+function private_message_theme_suggestions_private_message_alter(&$suggestions, &$vars) {
+  $suggestions[] = 'private_message__' . $vars['elements']['#view_mode'];
+}

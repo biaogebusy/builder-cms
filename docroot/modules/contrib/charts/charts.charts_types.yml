@@ -1,0 +1,50 @@
+area:
+  label: 'Area'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: true
+bar:
+  label: 'Bar'
+  axis: 'xy'
+  axis_inverted: true
+  stacking: true
+bubble:
+  label: 'Bubble'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false
+column:
+  label: 'Column'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: true
+donut:
+  label: 'Donut'
+  axis: 'y_only'
+  axis_inverted: false
+  stacking: false
+gauge:
+  label: 'Gauge'
+  axis: 'y_only'
+  axis_inverted: false
+  stacking: false
+line:
+  label: 'Line'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false
+pie:
+  label: 'Pie'
+  axis: 'y_only'
+  axis_inverted: false
+  stacking: false
+scatter:
+  label: 'Scatter'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false
+spline:
+  label: 'Spline'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false

@@ -1,0 +1,11 @@
+type: module
+name: Panelizer Test
+description: 'Required for Panelizer simpletests only.'
+core_version_requirement: ^9.3 || ^10
+dependencies:
+  - panelizer:panelizer
+
+# Information added by Drupal.org packaging script on 2023-11-04
+version: '8.x-5.0'
+project: 'panelizer'
+datestamp: 1699124957

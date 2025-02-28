@@ -1,0 +1,237 @@
+<?php
+
+/**
+ * @file
+ * Provides effects and operations for the Image API.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\ConfigValueException;
+use Drupal\image\ConfigurableImageEffectBase;
+use Drupal\image_effects\Component\ColorUtility;
+use Drupal\image\Entity\ImageStyle;
+
+/**
+ * Implements hook_theme().
+ */
+function image_effects_theme() {
+  return [
+    // Render a color information box and string.
+    'image_effects_color_detail' => [
+      'variables' => [
+        'color' => '#000000',
+        'border' => FALSE,
+        'border_color' => '#000000',
+      ],
+    ],
+    // Aspect switcher image effect - summary.
+    'image_effects_aspect_switcher' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Background image effect - summary.
+    'image_effects_background_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Brightness image effect - summary.
+    'image_effects_brightness_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Color shift image effect - summary.
+    'image_effects_color_shift_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Contrast image effect - summary.
+    'image_effects_contrast_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Gaussian blur effect - summary.
+    'image_effects_gaussian_blur_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // ImageMagick arguments effect - summary.
+    'image_effects_imagemagick_arguments_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Mask image effect - summary.
+    'image_effects_mask_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Mirror image effect - summary.
+    'image_effects_mirror_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Opacity image effect - summary.
+    'image_effects_opacity_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Pixelate image effect - summary.
+    'image_effects_pixelate_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Relative crop image effect - summary.
+    'image_effects_relative_crop_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Resize percentage image effect - summary.
+    'image_effects_resize_percentage_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Rotate image effect - summary.
+    'image_effects_rotate_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Scale and Smart Crop image effect - summary.
+    'image_effects_scale_and_smart_crop_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Set canvas image effect - summary.
+    'image_effects_set_canvas_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Set transparent color image effect - summary.
+    'image_effects_set_transparent_color_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Smart Crop image effect - summary.
+    'image_effects_smart_crop_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Render a preview of the Text Overlay in the image effect UI.
+    'image_effects_text_overlay_preview' => [
+      'variables' => ['success' => FALSE, 'preview' => []],
+    ],
+    // Text overlay image effect - summary.
+    'image_effects_text_overlay_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Watemark image effect - summary.
+    'image_effects_watermark_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Convolution image effect - summary.
+    'image_effects_convolution_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Convolution sharpen image effect - summary.
+    'image_effects_convolution_sharpen_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+    // Interlace image effect - summary.
+    'image_effects_interlace_summary' => [
+      'variables' => ['data' => NULL, 'effect' => []],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_image_effects_text_overlay_text_alter().
+ */
+function image_effects_image_effects_text_overlay_text_alter(&$text, ConfigurableImageEffectBase $image_effect) {
+  // Skip if the effect is not TextOverlayImageEffect or an alternative
+  // implementation.
+  if ($image_effect->getPluginId() !== "image_effects_text_overlay") {
+    return;
+  }
+
+  // Get effect data.
+  $effect_data = $image_effect->getConfiguration()['data'];
+
+  // Strip HTML tags, if requested.
+  if ($effect_data['text']['strip_tags'] === TRUE) {
+    $text = strip_tags($text);
+  }
+
+  // Decode HTML entities, if requested.
+  if ($effect_data['text']['decode_entities'] === TRUE) {
+    $text = Html::decodeEntities($text);
+  }
+
+  // Convert case, if requested.
+  if ($effect_data['text']['case_format']) {
+    $method_map = [
+      'upper' => 'mb_strtoupper',
+      'lower' => 'mb_strtolower',
+      'ucwords' => 'Drupal\Component\Utility\Unicode::ucwords',
+      'ucfirst' => 'Drupal\Component\Utility\Unicode::ucfirst',
+    ];
+    $text = $method_map[$effect_data['text']['case_format']]($text);
+  }
+
+  // Limit the maximum number of characters.
+  if ($effect_data['text']['maximum_chars'] > 0 && mb_strlen($text) > $effect_data['text']['maximum_chars']) {
+    $text = mb_substr($text, 0, $effect_data['text']['maximum_chars']) . $effect_data['text']['excess_chars_text'];
+  }
+}
+
+/**
+ * Prepares variables to get a color info.
+ *
+ * Default template: image-effects-color-detail.html.twig.
+ */
+function image_effects_preprocess_image_effects_color_detail(&$variables) {
+  $variables['#attached']['library'][] = 'image_effects/image_effects.admin.ui';
+  if ($variables['color']) {
+    if ($variables['border']) {
+      if ($variables['border_color'] == 'matchLuma') {
+        $variables['border_color'] = ColorUtility::matchLuma($variables['color']);
+      }
+      else {
+        $variables['border_color'] = mb_substr($variables['border_color'], 0, 7);
+      }
+    }
+    $variables['color_opacity'] = ColorUtility::rgbaToOpacity($variables['color']);
+    $variables['color'] = mb_substr($variables['color'], 0, 7);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for image_style entities.
+ *
+ * This hook checks if the image style that is being saved contains any aspect
+ * switcher effect that refers to the image style itself. If so, this is a
+ * circular reference and we should raise an exception.
+ */
+function image_effects_image_style_presave(ImageStyle $style) {
+  $effects = $style->getEffects();
+  foreach ($effects as $effect) {
+    $effect_data = $effect->getConfiguration()['data'];
+    switch ($effect->getPluginId()) {
+      case 'image_effects_aspect_switcher':
+        if ($style->id() === $effect_data['landscape_image_style']) {
+          throw new ConfigValueException("You can not select the {$style->label()} image style itself for the landscape style");
+        }
+        if ($style->id() === $effect_data['portrait_image_style']) {
+          throw new ConfigValueException("You can not select the {$style->label()} image style itself for the portrait style");
+        }
+        break;
+
+      default:
+        continue 2;
+
+    }
+  }
+}
+
+/**
+ * Implements hook_image_style_flush().
+ *
+ * This hook checks if the image style that is being flushed is used in any
+ * aspect switcher effect. If so, the style that contains the aspect switcher
+ * effect should be flushed as well.
+ */
+function image_effects_image_style_flush(ImageStyle $style) {
+  // Retrieve image styles that have an aspect switcher effect that contains
+  // the style being flushed.
+  $query = \Drupal::entityQuery('image_style');
+  $query->condition('effects.*.id', 'image_effects_aspect_switcher');
+  $group = $query->orConditionGroup()
+    ->condition('effects.*.data.landscape_image_style', $style->id())
+    ->condition('effects.*.data.portrait_image_style', $style->id());
+  $image_style_ids = $query->condition($group)->execute();
+
+  // Flush them all.
+  foreach ($image_style_ids as $image_style_id) {
+    $image_style = ImageStyle::load($image_style_id);
+    $image_style->flush();
+  }
+}

@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies: {  }
+id: blb_col_4
+label: 'Bootstrap 4 Cols'
+number_of_columns: 4

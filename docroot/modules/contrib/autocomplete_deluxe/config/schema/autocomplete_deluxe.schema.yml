@@ -1,0 +1,37 @@
+field.widget.settings.autocomplete_deluxe:
+  type: mapping
+  label: "Autocomplete Deluxe widget settings"
+  mapping:
+    match_operator:
+      type: string
+      label: "Match Operator"
+    autocomplete_route_name:
+      type: string
+      label: "Route Name"
+    size:
+      type: integer
+      label: "Size"
+    selection_handler:
+      type: string
+      label: "Selection Handler"
+    limit:
+      type: integer
+      label: "Limit"
+    min_length:
+      type: integer
+      label: "Min Length"
+    delimiter:
+      type: string
+      label: "Delimiter"
+    not_found_message_allow:
+      type: boolean
+      label: 'Allow "Not Found" message'
+    not_found_message:
+      type: label
+      label: '"Not Found" Message'
+    new_terms:
+      type: boolean
+      label: "Allow New Terms"
+    no_empty_message:
+      type: label
+      label: "No Empty Message"

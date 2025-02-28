@@ -1,0 +1,57 @@
+uuid: da04f493-87dd-47ae-93dc-0acdf9591512
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.default_formatter
+    - field.field.node.page.field_decimal
+    - field.field.node.page.field_float
+    - field.field.node.page.field_integer
+    - node.type.page
+  module:
+    - range
+id: node.page.default_formatter
+targetEntityType: node
+bundle: page
+mode: default_formatter
+content:
+  field_decimal:
+    label: above
+    weight: 0
+    type: range_decimal
+    settings:
+      range_separator: '-'
+      thousand_separator: ''
+      range_combine: TRUE
+      from_prefix_suffix: FALSE
+      to_prefix_suffix: TRUE
+      decimal_separator: '.'
+      scale: 2
+    third_party_settings: {  }
+    region: content
+  field_float:
+    label: above
+    weight: 1
+    type: range_decimal
+    settings:
+      range_separator: ' - '
+      thousand_separator: ' '
+      range_combine: FALSE
+      from_prefix_suffix: TRUE
+      to_prefix_suffix: TRUE
+      decimal_separator: ','
+      scale: 3
+    third_party_settings: {  }
+    region: content
+  field_integer:
+    label: above
+    weight: 2
+    type: range_integer
+    settings:
+      range_separator: '|'
+      thousand_separator: ','
+      range_combine: TRUE
+      from_prefix_suffix: FALSE
+      to_prefix_suffix: FALSE
+    third_party_settings: {  }
+    region: content
+hidden: {  }

@@ -1,0 +1,87 @@
+<?php
+
+/**
+ * @file
+ * Installation hooks for forms_steps.
+ */
+
+use Drupal\Core\Database\Database;
+use Drupal\forms_steps\Entity\Workflow;
+
+/**
+ * Implements hook_update_N().
+ *
+ * Update structure of forms_steps config and workflow storage.
+ */
+function forms_steps_update_8101() {
+  // We update the configuration of all existing forms_steps.
+  $config_factory = \Drupal::configFactory();
+  $formsStepsConfigs = $config_factory->listAll('forms_steps.forms_steps.');
+  foreach ($formsStepsConfigs as $formsStepsConfig) {
+    /** @var \Drupal\Core\Config\Config $config */
+    $config = $config_factory->getEditable($formsStepsConfig);
+
+    if ($config) {
+      $steps = $config->get('steps');
+      foreach ($steps as $key => $step) {
+        $steps[$key]['entity_bundle'] = $step['node_type'];
+        $steps[$key]['entity_type'] = 'node';
+        unset($steps[$key]['node_type']);
+      }
+
+      $config->set('steps', $steps);
+    }
+
+    $config->save();
+  }
+
+  // Now we transfert all data from nodes to workflow entity.
+  // Get DB connection.
+  $cnx = Database::getConnection();
+
+  // Check if the table exists first.  If not, then create the entity.
+  if (!$cnx->schema()->tableExists('forms_steps_workflow')) {
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
+    \Drupal::entityDefinitionUpdateManager()
+      ->installEntityType(\Drupal::entityTypeManager()->getDefinition('forms_steps_workflow'));
+  }
+
+  // We get all node created with a workflow.
+  $query = $cnx->select('node_field_data', 'n');
+  $query->fields(
+    'n',
+    [
+      'nid',
+      'type',
+      'field_forms_steps_id',
+    ])
+    ->isNotNull('field_forms_steps_id');
+
+  /** @var \Drupal\Core\Database\StatementInterface $records */
+  $records = $query->execute();
+
+  // For each record we create a workflow instance.
+  foreach ($records as $record) {
+    $workflow = \Drupal::entityTypeManager()
+      ->getStorage(Workflow::ENTITY_TYPE)
+      ->create([
+        'instance_id' => $record->field_forms_steps_id,
+        'entity_type' => 'node',
+        'bundle' => $record->type,
+        'step' => '',
+        'entity_id' => $record->nid,
+        'form_mode' => '',
+        'forms_steps' => '',
+      ]);
+
+    $workflow->save();
+  }
+
+  // We remove the field_forms_steps_id from node table.
+  $cnx->update('node_field_data')
+    ->fields(['field_forms_steps_id' => NULL])
+    ->isNotNull('field_forms_steps_id')
+    ->execute();
+
+  return t('Forms Steps Node information moved to the new Storage.');
+}

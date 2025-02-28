@@ -1,0 +1,105 @@
+services:
+  logger.channel.search_api:
+    parent: logger.channel_base
+    arguments: ['search_api']
+
+  paramconverter.search_api:
+    class: Drupal\search_api\ParamConverter\SearchApiConverter
+    arguments: ['@entity_type.manager', '@entity.repository', '@tempstore.shared', '@current_user']
+    tags:
+      - { name: paramconverter, priority: 10 }
+    lazy: true
+
+  plugin.manager.search_api.backend:
+    class: Drupal\search_api\Backend\BackendPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher']
+
+  plugin.manager.search_api.data_type:
+    class: Drupal\search_api\DataType\DataTypePluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher']
+
+  plugin.manager.search_api.datasource:
+    class: Drupal\search_api\Datasource\DatasourcePluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher']
+
+  plugin.manager.search_api.display:
+    class: Drupal\search_api\Display\DisplayPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher']
+
+  plugin.manager.search_api.parse_mode:
+    class: Drupal\search_api\ParseMode\ParseModePluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher']
+
+  plugin.manager.search_api.processor:
+    class: Drupal\search_api\Processor\ProcessorPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher', '@string_translation']
+
+  plugin.manager.search_api.tracker:
+    class: Drupal\search_api\Tracker\TrackerPluginManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher']
+
+  search_api.data_type_helper:
+    class: Drupal\search_api\Utility\DataTypeHelper
+    arguments: ['@module_handler', '@event_dispatcher', '@plugin.manager.search_api.data_type']
+
+  search_api.entity_datasource.task_manager:
+    class: Drupal\search_api\Plugin\search_api\datasource\ContentEntityTaskManager
+    arguments: ['@search_api.task_manager', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  search_api.entity_datasource.tracking_manager:
+    class: Drupal\search_api\Plugin\search_api\datasource\ContentEntityTrackingManager
+    arguments: ['@entity_type.manager', '@language_manager', '@search_api.task_manager']
+
+  search_api.fields_helper:
+    class: Drupal\search_api\Utility\FieldsHelper
+    arguments:
+      - '@entity_type.manager'
+      - '@entity_field.manager'
+      - '@entity_type.bundle.info'
+      - '@search_api.data_type_helper'
+      - '@search_api.theme_switcher'
+
+  search_api.index_task_manager:
+    class: Drupal\search_api\Task\IndexTaskManager
+    arguments: ['@search_api.task_manager', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  search_api.plugin_helper:
+    class: Drupal\search_api\Utility\PluginHelper
+    arguments: ['@plugin.manager.search_api.datasource', '@plugin.manager.search_api.processor', '@plugin.manager.search_api.tracker']
+
+  search_api.post_request_indexing:
+    class: Drupal\search_api\Utility\PostRequestIndexing
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: needs_destruction }
+
+  search_api.query_helper:
+    class: Drupal\search_api\Utility\QueryHelper
+    arguments: ['@request_stack', '@module_handler', '@plugin.manager.search_api.parse_mode']
+
+  search_api.server_task_manager:
+    class: Drupal\search_api\Task\ServerTaskManager
+    arguments: ['@search_api.task_manager', '@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  search_api.task_manager:
+    class: Drupal\search_api\Task\TaskManager
+    arguments: ['@entity_type.manager', '@event_dispatcher', '@string_translation', '@messenger']
+
+  search_api.theme_switcher:
+    class: Drupal\search_api\Utility\ThemeSwitcher
+    arguments: ['@theme.manager', '@theme.initialization', '@config.factory']
+
+  search_api.tracking_helper:
+    class: Drupal\search_api\Utility\TrackingHelper
+    arguments: ['@entity_type.manager', '@language_manager', '@event_dispatcher', '@search_api.fields_helper', '@cache.default']
+
+  search_api.vbo_view_data_provider:
+    class: Drupal\search_api\Contrib\ViewsBulkOperationsEventSubscriber
+    tags:
+      - { name: event_subscriber }

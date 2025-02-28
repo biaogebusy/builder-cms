@@ -1,0 +1,368 @@
+// Mixins
+@mixin sr-only() {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@mixin smooth-all-transition() {
+  transition: all .3s ease-in-out;
+}
+
+// Buttons
+@mixin button-variant($background, $border, $hover-background: darken($background, 7.5%), $hover-border: darken($border, 10%), $active-background: darken($background, 10%), $active-border: darken($border, 12.5%)) {
+  color: color-yiq($background);
+  @include gradient-bg($background);
+  border-color: $border;
+  @include box-shadow($btn-box-shadow);
+
+  @include hover() {
+    color: color-yiq($hover-background);
+    @include gradient-bg($hover-background);
+    border-color: $hover-border;
+  }
+
+  &:focus,
+  &.focus {
+    color: color-yiq($hover-background);
+    @include gradient-bg($hover-background);
+    border-color: $hover-border;
+    @if $enable-shadows {
+      @include box-shadow($btn-box-shadow, 0 0 0 $btn-focus-width rgba(mix(color-yiq($background), $border, 15%), .5));
+    } @else {
+      // Avoid using mixin so we can pass custom focus shadow properly
+      box-shadow: 0 0 0 $btn-focus-width rgba(mix(color-yiq($background), $border, 15%), .5);
+    }
+  }
+}
+
+@mixin button-outline-variant($color, $color-hover: color-yiq($color), $active-background: $color, $active-border: $color) {
+  color: $color;
+  border-color: $color;
+
+  @include hover() {
+    color: $color-hover;
+    background-color: $active-background;
+    border-color: $active-border;
+  }
+
+  &:focus,
+  &.focus {
+    box-shadow: 0 0 0 $btn-focus-width rgba($color, .5);
+  }
+}
+
+// Rounded input style toggles (container & background type)
+@mixin blb_box_inputs($width: 100%, $rounded: false, $height: 40px, $border-color: $box_input_bg_checked) {
+  position: relative;
+  flex: $width;
+  width: $width;
+  margin: 0;
+  padding: 0;
+
+  @if $rounded {
+    &:first-child input + label {
+      border-right: 0;
+      border-radius: 8px 0 0 8px;
+    }
+
+    &:last-child input + label {
+      border-left: 0;
+      border-radius: 0 8px 8px 0;
+    }
+  }
+
+  input {
+    @include sr-only;
+
+    + label {
+      @include smooth-all-transition;
+      font-size: .875rem;
+      border: 1px solid $border-color;
+      padding: 10px;
+      height: $height;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      margin: 0;
+
+      &:hover {
+        background-color: rgba($panel_text_color, .1);
+      }
+
+      svg {
+        height: 18px;
+        width: 18px;
+      }
+    }
+
+    // Active state.
+    &:checked + label {
+      color: $white;
+      background-color: $box_input_bg_checked;
+
+      svg,
+      svg * {
+        color: $white;
+      }
+    }
+  }
+}
+
+// Squared input style (spacing/borders inputs)
+@mixin bs_boxed_inputs($width: 100%, $max-width: 100%, $height: 35px, $bg: $box_input_bg, $active_color: inherit, $active_bg: $box_input_bg_checked) {
+  position: relative;
+  flex: $width;
+  max-width: $max-width;
+  width: $width;
+  margin: 0;
+  padding: 0;
+
+  input {
+    @include sr-only;
+
+    + label {
+      @include smooth-all-transition;
+      padding: 8px;
+      height: $height;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      background-color: $box_input_bg;
+
+      &:hover {
+        background-color: $box_input_bg_hover;
+
+        &:after {
+          border-color: $box_input_hover_border;
+        }
+      }
+    }
+
+    // Active state.
+    &:checked + label {
+      color: $active_color;
+      background-color: $active_bg;
+
+      svg,
+      svg * {
+        color: $active_color;
+      }
+
+      &:after {
+        border-color: $box_input_checked_border;
+      }
+    }
+  }
+}
+
+// Card input styles (box shadow, scroll effects)
+@mixin bs_boxed_inputs_cards($height: 80px) {
+  input {
+    + label {
+      font-size: 10px;
+      font-weight: normal;
+      padding: 8px;
+      margin: 2px;
+      width: calc(100% - 4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 0;
+      background-color: $icon_box_input_bg;
+      min-height: $height;
+      flex-direction: column;
+
+      &:hover {
+        background-color: $icon_box_input_bg_hover;
+      }
+
+      // Hide our default tooltip.
+      .bs_tooltip {
+        display: none;
+      }
+    }
+
+    // Active state.
+    @include bs_invert_icon_color_when_checked;
+
+    // Custom fix for Bootstrap 3 Drupal theme.
+    label {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      flex-direction: column;
+      height: $height;
+
+      + input {
+        opacity: 0;
+        position: absolute;
+      }
+
+      // Active state.
+      &.active {
+        color: $panel_bg_color;
+        background-color: $panel_text_color;
+      }
+    }
+  }
+}
+
+@mixin bs_invert_icon_color_when_checked {
+  &:checked + label {
+    font-weight: bold;
+    color: $panel_link_color;
+    background-color: $icon_box_input_bg_checked;
+
+    .input-icon {
+      filter: invert(46%) sepia(100%) saturate(313%) hue-rotate(169deg) brightness(91%) contrast(94%);
+    }
+  }
+}
+
+@mixin bs_circle_inputs($width: 100%) {
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  input {
+    @include sr-only();
+
+    &:checked + label.option {
+      border-color: $panel_link_color;
+
+      &:after {
+        @include smooth-all-transition;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin: -10px 0 0 -10px;
+        content: '';
+        position: absolute;
+        background: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjZmZmZmZmIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwtOTUyLjM2MjE4KSI+PHBhdGggc3R5bGU9InRleHQtaW5kZW50OjA7dGV4dC10cmFuc2Zvcm06bm9uZTtkaXJlY3Rpb246bHRyO2Jsb2NrLXByb2dyZXNzaW9uOnRiO2Jhc2VsaW5lLXNoaWZ0OmJhc2VsaW5lO2NvbG9yOiMwMDAwMDA7ZW5hYmxlLWJhY2tncm91bmQ6YWNjdW11bGF0ZTsiIGQ9Im0gODAuODg3MjA3LDk3OC4zMzcwMSBhIDQuMDAwNCw0LjAwMDQgMCAwIDAgLTIuNzUsMS4yMTg3NSBsIC0zNy41LDM3LjQ5OTk0IC0xOS4yMTg3LC0xNC44NDM3IGEgNC4wMDA0LDQuMDAwNCAwIDEgMCAtNC44NzUsNi4zNDM3IGwgMjIsMTcgYSA0LjAwMDQsNC4wMDA0IDAgMCAwIDUuMjgxMywtMC4zNDM3IGwgNDAsLTM5Ljk5OTk4IGEgNC4wMDA0LDQuMDAwNCAwIDAgMCAtMi45Mzc2LC02Ljg3NTAxIHoiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBtYXJrZXI9Im5vbmUiIHZpc2liaWxpdHk9InZpc2libGUiIGRpc3BsYXk9ImlubGluZSIgb3ZlcmZsb3c9InZpc2libGUiPjwvcGF0aD48L2c+PC9zdmc+") center center no-repeat;
+        background-size: contain;
+      }
+
+      &.bs_yiq-dark:after {
+        background: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjMzgzYTQwIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwtOTUyLjM2MjE4KSI+PHBhdGggc3R5bGU9InRleHQtaW5kZW50OjA7dGV4dC10cmFuc2Zvcm06bm9uZTtkaXJlY3Rpb246bHRyO2Jsb2NrLXByb2dyZXNzaW9uOnRiO2Jhc2VsaW5lLXNoaWZ0OmJhc2VsaW5lO2NvbG9yOiMwMDAwMDA7ZW5hYmxlLWJhY2tncm91bmQ6YWNjdW11bGF0ZTsiIGQ9Im0gODAuODg3MjA3LDk3OC4zMzcwMSBhIDQuMDAwNCw0LjAwMDQgMCAwIDAgLTIuNzUsMS4yMTg3NSBsIC0zNy41LDM3LjQ5OTk0IC0xOS4yMTg3LC0xNC44NDM3IGEgNC4wMDA0LDQuMDAwNCAwIDEgMCAtNC44NzUsNi4zNDM3IGwgMjIsMTcgYSA0LjAwMDQsNC4wMDA0IDAgMCAwIDUuMjgxMywtMC4zNDM3IGwgNDAsLTM5Ljk5OTk4IGEgNC4wMDA0LDQuMDAwNCAwIDAgMCAtMi45Mzc2LC02Ljg3NTAxIHoiIGZpbGw9IiMzODNhNDAiIGZpbGwtb3BhY2l0eT0iMSIgc3Ryb2tlPSJub25lIiBtYXJrZXI9Im5vbmUiIHZpc2liaWxpdHk9InZpc2libGUiIGRpc3BsYXk9ImlubGluZSIgb3ZlcmZsb3c9InZpc2libGUiPjwvcGF0aD48L2c+PC9zdmc+") center center no-repeat;
+        background-size: contain;
+      }
+    }
+
+    // Red "X"
+    &[value="_none"] {
+      + label:after {
+        @include smooth-all-transition;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin: -10px 0 0 -10px;
+        content: '';
+        position: absolute;
+        background: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjZjM1NjU2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDI0IDI0OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZGlzcGxheTpub25lO30KPC9zdHlsZT48Zz48Zz48Zz48cGF0aCBkPSJNMiwyMi41Yy0wLjEyOCwwLTAuMjU2LTAuMDQ5LTAuMzU0LTAuMTQ2Yy0wLjE5NS0wLjE5NS0wLjE5NS0wLjUxMiwwLTAuNzA3bDIwLTIwYzAuMTk1LTAuMTk1LDAuNTEyLTAuMTk1LDAuNzA3LDAgICAgIHMwLjE5NSwwLjUxMiwwLDAuNzA3bC0yMCwyMEMyLjI1NiwyMi40NTEsMi4xMjgsMjIuNSwyLDIyLjV6Ij48L3BhdGg+PC9nPjxnPjxwYXRoIGQ9Ik0yMiwyMi41Yy0wLjEyOCwwLTAuMjU2LTAuMDQ5LTAuMzU0LTAuMTQ2bC0yMC0yMGMtMC4xOTUtMC4xOTUtMC4xOTUtMC41MTIsMC0wLjcwN3MwLjUxMi0wLjE5NSwwLjcwNywwbDIwLDIwICAgICBjMC4xOTUsMC4xOTUsMC4xOTUsMC41MTIsMCwwLjcwN0MyMi4yNTYsMjIuNDUxLDIyLjEyOCwyMi41LDIyLDIyLjV6Ij48L3BhdGg+PC9nPjwvZz48L2c+PC9zdmc+") center center no-repeat;
+        background-size: contain;
+      }
+
+      &:checked + label.option {
+        &:before {
+          display: none;
+        }
+
+        &:after {
+          background: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9JzMwMHB4JyB3aWR0aD0nMzAwcHgnICBmaWxsPSIjZjM1NjU2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDI0IDI0OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZGlzcGxheTpub25lO30KPC9zdHlsZT48Zz48Zz48Zz48cGF0aCBkPSJNMiwyMi41Yy0wLjEyOCwwLTAuMjU2LTAuMDQ5LTAuMzU0LTAuMTQ2Yy0wLjE5NS0wLjE5NS0wLjE5NS0wLjUxMiwwLTAuNzA3bDIwLTIwYzAuMTk1LTAuMTk1LDAuNTEyLTAuMTk1LDAuNzA3LDAgICAgIHMwLjE5NSwwLjUxMiwwLDAuNzA3bC0yMCwyMEMyLjI1NiwyMi40NTEsMi4xMjgsMjIuNSwyLDIyLjV6Ij48L3BhdGg+PC9nPjxnPjxwYXRoIGQ9Ik0yMiwyMi41Yy0wLjEyOCwwLTAuMjU2LTAuMDQ5LTAuMzU0LTAuMTQ2bC0yMC0yMGMtMC4xOTUtMC4xOTUtMC4xOTUtMC41MTIsMC0wLjcwN3MwLjUxMi0wLjE5NSwwLjcwNywwbDIwLDIwICAgICBjMC4xOTUsMC4xOTUsMC4xOTUsMC41MTIsMCwwLjcwN0MyMi4yNTYsMjIuNDUxLDIyLjEyOCwyMi41LDIyLDIyLjV6Ij48L3BhdGg+PC9nPjwvZz48L2c+PC9zdmc+") center center no-repeat;
+          background-size: contain;
+        }
+      }
+    }
+  }
+
+  &.style-selected input:not(:checked) + label {
+    opacity: 0.3;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  label {
+    @include smooth-all-transition;
+    cursor: pointer !important;
+    border: 2px solid $panel_text_color;
+    border-radius: 40px;
+    font-size: 0.00001px;
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    float: left;
+    margin: 0 5px 5px 0;
+    padding: 0;
+    white-space: nowrap;
+    box-shadow: 2px 2px 3px 1px rgba($panel_bg_color, 0.15);
+
+    &:after {
+      display: table;
+      position: absolute;
+      top: 3px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      font-size: 20px;
+      text-align: center;
+      vertical-align: middle;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+// Override input slider colours (padding/margin)
+@mixin bs_range_sliders($track_color: $panel_link_color) {
+  &::-webkit-slider-runnable-track {
+    background: $track_color;
+  }
+
+  &::-moz-range-track {
+    background: $track_color;
+  }
+
+  &::-ms-fill-lower {
+    background: $track_color;
+  }
+
+  &:focus {
+    &::-webkit-slider-runnable-track {
+      background: lighten($track_color, 10%);
+    }
+
+    &::-ms-fill-lower {
+      background: lighten($track_color, 10%);
+    }
+
+    &::-ms-fill-upper {
+      background: lighten($track_color, 10%);
+    }
+  }
+}

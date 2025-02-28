@@ -1,0 +1,5 @@
+toolbar_visibility.settings:
+  title: 'Toolbar Visibility'
+  parent: system.admin_config_ui
+  description: 'Remove toolbar from selected themes.'
+  route_name: toolbar_visibility.settings

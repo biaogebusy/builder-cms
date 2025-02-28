@@ -1,0 +1,12 @@
+qrcode:
+  version: VERSION
+  drupalSettings:
+    QRElementClass: 'yunke_qrcode_element'
+  js:
+    assets/js/jquery.qrcode.min.js: {}
+    assets/js/yunke_qrcode.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupalSettings

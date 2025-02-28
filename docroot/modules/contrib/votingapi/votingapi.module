@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * @file
+ * Contains votingapi.module.
+ *
+ * A generalized voting API for Drupal.
+ *
+ * Maintains and provides an interface for a shared bin of vote and rating
+ * data. Modules can cast votes with arbitrary properties and VotingAPI will
+ * total them automatically. Support for basic anonymous voting by
+ * IP address hash, multi-criteria voting, arbitrary aggregation functions, etc.
+ */
+
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+use Drupal\views\ViewExecutable;
+use Drupal\votingapi\VoteInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function votingapi_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.votingapi':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('VotingAPI helps developers who want to use a standardized API and schema for storing, retrieving and tabulating votes for Drupal content.') . '</p>';
+      $output .= '<p>' . t('Please view the %url page for more details.',
+          [
+            '%url' => Link::fromTextAndUrl(t('Voting API'), Url::fromUri('https://www.drupal.org/project/votingapi'))
+              ->toString(),
+          ]
+        ) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('General') . '</dt>';
+      $output .= '<dd>' . t('VotingAPI uses a flexible, easy-to-use framework for rating, voting, moderation, and consensus-gathering modules in Drupal. Module developers use it to focus on their ideas (say, providing a "rate this thread" widget at the bottom of each forum post) without worrying about the grunt work of storing votes, preventing ballot-stuffing, calculating the results, and so on.') . '</dd>';
+      $output .= '<dt>' . t('Basic Concepts and Features') . '</dt>';
+      $output .= '<dd>' . t('VotingAPI does NOT directly expose any voting mechanisms to end users. It is a framework designed to make life easier for other developers, and to standardize voting data for consumption by other modules (like Views).') . '</dd>';
+      $output .= '<dd>' . t('Two kinds of records are stored: individual votes by each user on each piece of content, and cached "result" records. The cached records aggregate calculated values like the average vote for a piece of content, how many people voted on it, etc. Each time a user votes, the cached result records are automatically recalculated. This means that no "on-the-fly" calculations have to be done when displaying content ratings.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function votingapi_entity_delete(EntityInterface $entity) {
+  // Only act on content entities.
+  if (!($entity instanceof FieldableEntityInterface)) {
+    return;
+  }
+  // Delete all votes and result entries for the deleted entities.
+  if (!($entity instanceof VoteInterface)) {
+    $vote_storage = \Drupal::entityTypeManager()->getStorage('vote');
+    $vote_storage->deleteVotesForDeletedEntity(
+      $entity->getEntityTypeId(), $entity->id()
+    );
+  }
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Recalculate results for any entities that have gotten votes since the last
+ * run.
+ */
+function votingapi_cron() {
+  if (Drupal::config('votingapi.settings')
+    ->get('calculation_schedule') == 'cron'
+  ) {
+    $vote_storage = \Drupal::entityTypeManager()->getStorage('vote');
+    $results = $vote_storage->getVotesSinceMoment();
+    $manager = \Drupal::service('plugin.manager.votingapi.resultfunction');
+    foreach ($results as $entity) {
+      $manager->recalculateResults(
+        $entity['entity_type'],
+        $entity['entity_id'],
+        $entity['type']
+      );
+    }
+    \Drupal::state()->set('votingapi.last_cron', \Drupal::time()
+      ->getRequestTime());
+  }
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function votingapi_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  // The code below allows sorting by voting results
+  // so that no result (when no one voted) means zero.
+  $base_table = $view->storage->get('base_table');
+  if ($query->getBaseId() != 'views_query') {
+    return;
+  }
+  $vr_aliases = [];
+  foreach ($query->tables[$base_table] as $alias => $table_d) {
+    $table_info = $query->getTableInfo($alias);
+    if ($table_info['table'] == 'votingapi_result') {
+      $vr_aliases[$alias] = TRUE;
+    }
+  }
+  $va_fields = [];
+  foreach ($query->fields as $f_name => &$f_data) {
+    if (isset($vr_aliases[$f_data['table']]) && $f_data['field'] == 'value') {
+      $va_fields[$f_name] = $f_data;
+    }
+  }
+  foreach ($va_fields as $va_field) {
+    $query->addField(NULL, 'COALESCE(' . $va_field['table'] . '.value, 0)', $va_field['alias'] . '__coa');
+  }
+  foreach ($query->orderby as &$order) {
+    if (isset($va_fields[$order['field']])) {
+      $order['field'] = $va_fields[$order['field']]['alias'] . '__coa';
+    }
+  }
+}

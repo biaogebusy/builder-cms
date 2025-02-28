@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Provides a better queue API.
+ */
+
+use Drupal\advancedqueue\Entity\QueueInterface;
+
+/**
+ * Implements hook_cron().
+ */
+function advancedqueue_cron() {
+  $queue_processor = \Drupal::service('advancedqueue.processor');
+  $queue_storage = \Drupal::entityTypeManager()->getStorage('advancedqueue_queue');
+  /** @var \Drupal\advancedqueue\Entity\QueueInterface[] $queues */
+  $queues = $queue_storage->loadByProperties(['processor' => QueueInterface::PROCESSOR_CRON]);
+  foreach ($queues as $queue) {
+    $queue_processor->processQueue($queue);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function advancedqueue_theme() {
+  return [
+    'advancedqueue_state_icon' => [
+      'variables' => [
+        'state' => NULL,
+      ],
+    ],
+  ];
+}

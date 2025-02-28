@@ -1,0 +1,6 @@
+mapping_type: uid_1
+uid: 1
+changes_limit: 100
+bulk_docs_limit: 100
+replication_execution_limit: 1
+verbose_logging: FALSE

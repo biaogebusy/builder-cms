@@ -1,0 +1,5 @@
+xinshi_sms.settings:
+  title: 'Xinshi Sms'
+  description: 'Specific settings for SMS Framework.'
+  parent: sms.admin
+  route_name: xinshi_sms.settings

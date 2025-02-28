@@ -1,0 +1,9 @@
+services:
+  queue_ui.commands:
+    class: \Drupal\queue_ui\Commands\QueueUiCommands
+    arguments:
+      - '@plugin.manager.queue_worker'
+      - '@plugin.manager.queue_ui'
+      - '@queue_ui.batch'
+    tags:
+      - { name: drush.command }

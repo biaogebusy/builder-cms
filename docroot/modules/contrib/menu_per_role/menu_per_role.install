@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Menu Per Role module.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\user\Entity\Role;
+
+/**
+ * Permission to bypass menu_per_role access to roles having old permission.
+ */
+function menu_per_role_update_8101(): void {
+  $config = \Drupal::config('menu_per_role.settings');
+  $admin_see_all = $config->get('admin_see_all') ?? FALSE;
+
+  if ($admin_see_all) {
+    /** @var \Drupal\user\Entity\Role[] $roles */
+    $roles = Role::loadMultiple();
+    foreach ($roles as $role) {
+      if ($role->hasPermission('administer menu_per_role')) {
+        $role->grantPermission('bypass menu_per_role access');
+        $role->save();
+      }
+    }
+  }
+}
+
+/**
+ * Removes old config since it is replaced by permission.
+ */
+function menu_per_role_update_8102(): void {
+  \Drupal::configFactory()->getEditable('menu_per_role.settings')
+    ->clear('uid1_see_all')
+    ->clear('admin_see_all')
+    ->save();
+}
+
+/**
+ * Have distinct permissions for front and admin access bypass.
+ */
+function menu_per_role_update_8103(): void {
+  /** @var \Drupal\user\Entity\Role[] $roles */
+  $roles = Role::loadMultiple();
+  foreach ($roles as $role) {
+    if ($role->hasPermission('bypass menu_per_role access')) {
+      $role->revokePermission('bypass menu_per_role access');
+      $role->grantPermission('bypass menu_per_role access front');
+      $role->grantPermission('bypass menu_per_role access admin');
+      $role->save();
+    }
+  }
+}
+
+/**
+ * Init new settings for admin to bypass access.
+ */
+function menu_per_role_update_8104(): void {
+  $config = \Drupal::configFactory()->getEditable('menu_per_role.settings');
+  $config->set('admin_bypass_access_front', FALSE);
+  $config->set('admin_bypass_access_admin', TRUE);
+  $config->save();
+}

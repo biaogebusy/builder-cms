@@ -1,0 +1,5 @@
+entity.advancedqueue_queue.add_form:
+  route_name: entity.advancedqueue_queue.add_form
+  title: 'Add queue'
+  appears_on:
+    - entity.advancedqueue_queue.collection

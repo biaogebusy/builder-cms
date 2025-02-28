@@ -1,0 +1,6 @@
+bootstrap_layout_builder.admin_config:
+  title: 'Bootstrap Layout Builder'
+  route_name: entity.blb_breakpoint.collection
+  parent: system.admin_config_content
+  description: 'Manage Bootstrap Layout Builder Settings.'
+  weight: 10

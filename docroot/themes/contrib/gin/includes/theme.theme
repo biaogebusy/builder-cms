@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * @file
+ * theme.theme
+ */
+
+use Drupal\gin\GinSettings;
+
+/**
+ * Implements hook_theme().
+ */
+function gin_theme() {
+  // Get theme configs.
+  /** @var \Drupal\gin\GinSettings $settings */
+  $settings = \Drupal::classResolver(GinSettings::class);
+  $logo_default = $settings->getDefault('logo.use_default');
+  $icon_path = '';
+
+  if (!$logo_default) {
+    $icon_path = $settings->getDefault('logo.path');
+  }
+
+  // Check if help is enabled.
+  $help_enabled = FALSE;
+  $module_handler = \Drupal::service('module_handler');
+  if ($module_handler->moduleExists('help')) {
+    $help_enabled = TRUE;
+  }
+
+  $items['navigation'] = [
+    'variables' => [
+      'icon_path' => $icon_path,
+      'path' => \Drupal::service('extension.list.theme')->getPath('gin'),
+      'menu_middle' => [],
+      'menu_top' => [],
+      'menu_bottom' => [],
+    ],
+  ];
+
+  $items['menu_region__top'] = [
+    'variables' => [
+      'links' => [],
+      'title' => NULL,
+      'menu_name' => NULL,
+    ],
+  ];
+
+  $items['menu_region__middle'] = [
+    'base hook' => 'menu',
+    'variables' => [
+      'menu_name' => NULL,
+      'items' => [],
+      'attributes' => [],
+      'title' => NULL,
+    ],
+  ];
+
+  $items['menu_region__bottom'] = [
+    'variables' => [
+      'help_enabled' => $help_enabled,
+      'items' => [],
+      'title' => NULL,
+      'menu_name' => NULL,
+      'path' => \Drupal::service('extension.list.theme')->getPath('gin'),
+    ],
+  ];
+
+  return $items;
+}

@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - private_message
+    - system
+  theme:
+    - bartik
+  enforced:
+    module:
+      - private_message
+id: privatemessageactions
+theme: bartik
+region: sidebar_first
+weight: 0
+provider: null
+plugin: private_message_actions_block
+settings:
+  id: private_message_actions_block
+  label: Actions
+  provider: private_message
+  label_display: visible
+visibility:
+  request_path:
+    id: request_path
+    pages: "/private-messages\r\n/private-messages/*\r\n/private-message/create"
+    negate: false
+    context_mapping: {  }

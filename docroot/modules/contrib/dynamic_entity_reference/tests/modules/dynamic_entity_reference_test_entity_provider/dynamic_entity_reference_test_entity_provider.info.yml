@@ -1,0 +1,15 @@
+name: 'Dynamic Entity Reference Entity Provider'
+type: module
+description: 'A provider of an entity type.'
+package: Testing
+core_version_requirement: ^9.3
+php: 7.4
+hidden: TRUE
+dependencies:
+  - dynamic_entity_reference
+  - entity_test
+
+# Information added by Drupal.org packaging script on 2022-02-07
+version: '8.x-1.16'
+project: 'dynamic_entity_reference'
+datestamp: 1644273071

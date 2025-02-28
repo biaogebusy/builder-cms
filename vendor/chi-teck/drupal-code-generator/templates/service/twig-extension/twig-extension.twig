@@ -1,0 +1,67 @@
+{% import '_lib/di.twig' as di %}
+<?php
+
+namespace Drupal\{{ machine_name }};
+
+{% sort %}
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
+use Twig\TwigTest;
+  {% if services %}
+{{ di.use(services) }}
+  {% endif %}
+{% endsort %}
+
+/**
+ * Twig extension.
+ */
+class {{ class }} extends AbstractExtension {
+
+{% if services %}
+{{ di.properties(services) }}
+
+  /**
+   * Constructs a new {{ class }} object.
+   *
+{{ di.annotation(services) }}
+   */
+  public function __construct({{ di.signature(services) }}) {
+{{ di.assignment(services) }}
+  }
+
+{% endif %}
+  /**
+   * {@inheritdoc}
+   */
+  public function getFunctions() {
+    return [
+      new TwigFunction('foo', function ($argument = NULL) {
+        return 'Foo: ' . $argument;
+      }),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    return [
+      new TwigFilter('bar', function ($text) {
+        return str_replace('bar', 'BAR', $text);
+      }),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTests() {
+    return [
+      new TwigTest('color', function ($text) {
+        return preg_match('/^#(?:[0-9a-f]{3}){1,2}$/i', $text);
+      }),
+    ];
+  }
+
+}

@@ -1,0 +1,13 @@
+name: 'Webform Access'
+description: 'Provides webform access controls for webform nodes.'
+core_version_requirement: ^9.4 || ^10
+package: Webform
+type: module
+dependencies:
+  - 'webform:webform'
+  - 'webform:webform_node'
+
+# Information added by Drupal.org packaging script on 2023-12-07
+version: '6.2.2'
+project: 'webform'
+datestamp: 1701948372

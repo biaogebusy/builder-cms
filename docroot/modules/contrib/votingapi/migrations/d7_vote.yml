@@ -1,0 +1,32 @@
+id: d7_vote
+label: Voting API Votes
+migration_tags:
+  - Drupal 7
+  - Content
+
+deriver: Drupal\votingapi\Plugin\migrate\VotingApiDeriver
+
+source:
+  plugin: d7_vote
+
+process:
+  vote_id: vote_id
+  type:
+    - plugin: migration_lookup
+      migration: d7_vote_type
+      no_stub: TRUE
+      source: tag
+  entity_type: entity_type
+  entity_id: entity_id
+  value: value
+  value_type: value_type
+  user_id: uid
+  timestamp: timestamp
+  vote_source: vote_source
+
+destination:
+  plugin: entity:vote
+  default_bundle: vote
+migration_dependencies:
+  required:
+    - d7_vote_type

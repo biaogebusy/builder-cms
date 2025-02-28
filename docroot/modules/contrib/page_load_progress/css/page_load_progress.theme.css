@@ -1,0 +1,27 @@
+.page-load-progress-lock-screen {
+  background-color: #fff;
+  background-color: rgba(245,245,245,0.95);
+  height: 100%;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 9998;
+}
+
+.page-load-progress-lock-screen.page-load-progress-hidden {
+  display: none;
+}
+
+.page-load-progress-throbber {
+  background-image: url('../images/loader.gif');
+  background-repeat: no-repeat;
+  height: 128px;
+  left: 50%;
+  position: fixed;
+  top: 50%;
+  width: 128px;
+  margin-left: -64px;
+  margin-top: -64px;
+  z-index: 9999;
+}

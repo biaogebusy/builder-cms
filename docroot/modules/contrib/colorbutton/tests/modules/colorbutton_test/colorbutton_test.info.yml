@@ -1,0 +1,11 @@
+name: 'Colorbutton Test'
+type: module
+description: 'Module for Colorbutton tests.'
+package: Testing
+dependencies:
+ - drupal:colorbutton
+
+# Information added by Drupal.org packaging script on 2022-12-22
+version: '8.x-1.5'
+project: 'colorbutton'
+datestamp: 1671700337

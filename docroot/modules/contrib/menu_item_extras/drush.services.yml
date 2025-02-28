@@ -1,0 +1,7 @@
+services:
+  menu_item_extras.drush_commands:
+    class: Drupal\menu_item_extras\Commands\MenuItemExtrasCommands
+    arguments:
+      - '@menu_item_extras.menu_link_content_helper'
+    tags:
+      - { name: drush.command }

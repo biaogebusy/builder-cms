@@ -1,0 +1,10 @@
+ckeditor.plugin.font:
+  type: mapping
+  label: 'Font button'
+  mapping:
+    font_names:
+      type: text
+      label: 'Font names'
+    font_sizes:
+      type: text
+      label: 'Font sizes'

@@ -1,0 +1,7 @@
+{
+    "name": "drupal/forms_steps",
+    "type": "drupal-module",
+    "description": "Forms Steps provides an UI to create forms workflows using forms modes. It creates quick and configurable multisteps forms.",
+    "homepage": "https://drupal.org/project/forms_steps",
+    "license": "GPL-2.0-or-later"
+}
