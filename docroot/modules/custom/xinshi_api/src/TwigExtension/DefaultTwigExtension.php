@@ -5,6 +5,7 @@ namespace Drupal\xinshi_api\TwigExtension;
 use Drupal\comment\Entity\Comment;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\file\Entity\File;
+use Drupal\filter\Render\FilteredMarkup;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\xinshi_api\CommonUtil;
@@ -66,6 +67,10 @@ class DefaultTwigExtension extends AbstractExtension {
       new TwigFunction(
         'stateTransitionAccess',
         [$this, 'stateTransitionAccess']
+      ),
+      new TwigFunction(
+        'nodeMate',
+        [$this, 'nodeMate']
       ),
     ];
   }
@@ -275,5 +280,57 @@ class DefaultTwigExtension extends AbstractExtension {
       return $valid_transition_targets ? TRUE : FALSE;
     }
     return FALSE;
+  }
+
+  /**
+   * @param $nid
+   * @param $vid
+   * @return array
+   */
+  public function nodeMate($nid, $vid) {
+    $data = [];
+    $storage = \Drupal::entityTypeManager()->getStorage('node');
+    $node = $storage->loadRevision($vid);
+    if (empty($node) || $node->id() != $nid) {
+      $node = Node::load($nid);
+    }
+    if (empty($node)) {
+      return $data;
+    }
+    if (\Drupal::moduleHandler()->moduleExists('content_translation') &&
+      \Drupal::service('content_translation.manager')->isEnabled($node->getEntityTypeId(), $node->bundle()) &&
+      $node->hasTranslation(\Drupal::languageManager()->getCurrentLanguage()->getId())) {
+      $node = $node->getTranslation(\Drupal::languageManager()->getCurrentLanguage()->getId());
+    }
+    $data['title'] = \Drupal::token()->replace('[node:title] | [site:name]', ['node' => $node]);
+    $data['meta'] = [];
+    if ($node->hasField('meta_tags') && $meta = $node->get('meta_tags')->value) {
+      $meta = unserialize($meta);
+      foreach ($meta as $key => $value) {
+        $content = \Drupal::token()->replace($value, ['node' => $node]);
+        if (empty($content)) {
+          continue;
+        }
+        if ($key == 'title') {
+          $data['title'] = \Drupal::token()->replace($value, ['node' => $node]);
+          continue;
+        }
+        $data['meta'][] = [
+          'name' => $key,
+          'content' => htmlspecialchars_decode($content),
+        ];
+      }
+    }
+    if (!in_array('description', array_column($data['meta'], 'name'))
+      && $node->hasField('body')
+      && $content = $node->body->summary_processed ?: $node->body->processed
+    ) {
+      /** @var $content FilteredMarkup */
+      $data['meta'][] = [
+        'name' => 'description',
+        'content' => htmlspecialchars_decode(strip_tags($content->jsonSerialize())),
+      ];
+    }
+    return $data;
   }
 }
