@@ -67,6 +67,7 @@ class SettingsForm extends ConfigFormBase {
       '#title' => t('Alibaba SMS Settings'),
       '#collapsible' => TRUE,
       '#open' => TRUE,
+      '#access' => FALSE,
     ];
 
     $form['alibaba']['alibaba_sign_name'] = [

@@ -2,6 +2,7 @@
 
 namespace Drupal\xinshi_sms\Plugin\SmsGateway;
 
+use AlibabaCloud\SDK\Dypnsapi\V20170525\Models\SendSmsVerifyCodeResponse;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -13,19 +14,21 @@ use Drupal\sms\Plugin\SmsGatewayPluginBase;
 use Drupal\sms\Message\SmsMessageInterface;
 use Drupal\sms\Message\SmsMessageResult;
 use Darabonba\OpenApi\Models\Config;
-use AlibabaCloud\SDK\Dysmsapi\V20170525\Dysmsapi;
-use AlibabaCloud\SDK\Dysmsapi\V20170525\Models\SendSmsRequest;
+use AlibabaCloud\SDK\Dypnsapi\V20170525\Dypnsapi;
+use AlibabaCloud\SDK\Dypnsapi\V20170525\Models\SendSmsVerifyCodeRequest;
+use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 
 /**
  * Defines a alibaba send sms.
  *
  * @SmsGateway(
- *   id = "alibaba_send",
- *   label = @Translation("阿里云短信服务"),
+ *   id = "alibaba_dypnsapi_send",
+ *   label = @Translation("阿里云 发送短信验证码 融合认证（基于原子能力）"),
  *   outgoing_message_max_recipients = -2,
  * )
  */
-class AlibabaSend extends SmsGatewayPluginBase implements ContainerFactoryPluginInterface {
+class AlibabaDypnsapiSend extends SmsGatewayPluginBase implements ContainerFactoryPluginInterface {
+
 
   /**
    * A logger instance.
@@ -125,7 +128,7 @@ class AlibabaSend extends SmsGatewayPluginBase implements ContainerFactoryPlugin
   public function send(SmsMessageInterface $sms) {
     $result = new SmsMessageResult();
     foreach ($sms->getRecipients() as $number) {
-      $message = $this->sendDysmsapi($number, $sms->getMessage());
+      $message = $this->sendDypnsapi($number, $sms->getMessage());
       $report = (new SmsDeliveryReport())
         ->setRecipient($number)
         ->setStatus(SmsMessageReportStatus::DELIVERED)
@@ -138,39 +141,61 @@ class AlibabaSend extends SmsGatewayPluginBase implements ContainerFactoryPlugin
   }
 
   /**
-   * 使用签名方式
+   * 使用云通信方式
    * @param $number
    * @param $code
    * @return string
    */
-  protected function sendDysmsapi($number, $code) {
+  protected function sendDypnsapi($number, $code) {
+    $client = $this->createClient();
+    $params = [
+      "phoneNumber" => $number,
+      "signName" => $this->configuration['sign_name'],
+      "templateCode" => $this->configuration['template_code'],
+      "templateParam" => json_encode(['code' => $code, 'min' => 5]),
+    ];
+    $sendSmsVerifyCodeRequest = new SendSmsVerifyCodeRequest($params);
+    $runtime = new RuntimeOptions([]);
+    try {
+      // 复制代码运行请自行打印 API 的返回值
+      /** @var SendSmsVerifyCodeResponse $rest */
+      $sms_result = $client->sendSmsVerifyCodeWithOptions($sendSmsVerifyCodeRequest, $runtime);
+      if ($sms_result->body->success) {
+        return $sms_result->body->message;
+      } else {
+        $this->logger->warning('Alibaba SMS message sent to %number failed: @message', [
+          '%number' => $number,
+          '@message' => $sms_result->body->message,
+        ]);
+        return $sms_result->body->message;
+      }
+
+    } catch (\Exception $error) {
+      $this->logger->error('Alibaba SMS message sent to %number failed: @message', [
+        '%number' => $number,
+        '@message' => $error->getMessage(),
+      ]);
+      return $error->getMessage();
+    }
+  }
+
+  /**
+   * 使用凭据初始化账号Client
+   * @return Dypnsapi Client
+   */
+  protected function createClient() {
+    // 工程代码建议使用更安全的无AK方式，凭据配置方式请参见：https://help.aliyun.com/document_detail/311677.html。
     $config = new Config([
+      'type' => 'access_key',
       // AccessKey ID
       "accessKeyId" => $this->configuration['access_key_id'],
       // AccessKey Secret
       "accessKeySecret" => $this->configuration['access_key_secret'],
     ]);
-    // 访问的域名
-    $config->endpoint = "dysmsapi.aliyuncs.com";
-    $client = new Dysmsapi($config);
-    $param['code'] = $code;
-    $sms_request = new SendSmsRequest([
-      "phoneNumbers" => $number,
-      "templateCode" => $this->configuration['template_code'],
-      "templateParam" => json_encode($param),
-      "signName" => $this->configuration['sign_name'],
-    ]);
-    $sms_result = $client->sendSms($sms_request);
-    if ($sms_result->body->code != 'OK') {
-      $this->logger->warning('Alibaba SMS message sent to %number failed: @message', [
-        '%number' => $number,
-        '@message' => $sms_result->body->message,
-      ]);
-    } else {
-      $this->logger->notice('Alibaba SMS message sent to %number success.', [
-        '%number' => $number,
-      ]);
-    }
-    return $sms_result->body->message;
+
+    // Endpoint 请参考 https://api.aliyun.com/product/Dypnsapi
+    $config->endpoint = "dypnsapi.aliyuncs.com";
+    return new Dypnsapi($config);
   }
+
 }
