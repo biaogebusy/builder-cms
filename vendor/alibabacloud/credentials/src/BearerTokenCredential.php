@@ -2,6 +2,8 @@
 
 namespace AlibabaCloud\Credentials;
 
+use AlibabaCloud\Credentials\Utils\Filter;
+use AlibabaCloud\Credentials\Credential\CredentialModel;
 use AlibabaCloud\Credentials\Signature\BearerTokenSignature;
 
 /**
@@ -50,4 +52,16 @@ class BearerTokenCredential implements CredentialsInterface
     {
         return new BearerTokenSignature();
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCredential()
+    {
+        return new CredentialModel([
+            'bearerToken' => $this->bearerToken,
+            'type' => 'bearer',
+        ]);
+    }
+
 }

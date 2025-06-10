@@ -4,14 +4,34 @@
 
 namespace AlibabaCloud\SDK\Dysmsapi\V20170525\Models;
 
-use AlibabaCloud\Tea\Model;
+use AlibabaCloud\Dara\Model;
 
 class QuerySendDetailsRequest extends Model
 {
     /**
+     * @var string
+     */
+    public $bizId;
+
+    /**
+     * @var int
+     */
+    public $currentPage;
+
+    /**
      * @var int
      */
     public $ownerId;
+
+    /**
+     * @var int
+     */
+    public $pageSize;
+
+    /**
+     * @var string
+     */
+    public $phoneNumber;
 
     /**
      * @var string
@@ -26,104 +46,99 @@ class QuerySendDetailsRequest extends Model
     /**
      * @var string
      */
-    public $phoneNumber;
-
-    /**
-     * @var string
-     */
-    public $bizId;
-
-    /**
-     * @var string
-     */
     public $sendDate;
-
-    /**
-     * @var int
-     */
-    public $pageSize;
-
-    /**
-     * @var int
-     */
-    public $currentPage;
     protected $_name = [
-        'ownerId'              => 'OwnerId',
+        'bizId' => 'BizId',
+        'currentPage' => 'CurrentPage',
+        'ownerId' => 'OwnerId',
+        'pageSize' => 'PageSize',
+        'phoneNumber' => 'PhoneNumber',
         'resourceOwnerAccount' => 'ResourceOwnerAccount',
-        'resourceOwnerId'      => 'ResourceOwnerId',
-        'phoneNumber'          => 'PhoneNumber',
-        'bizId'                => 'BizId',
-        'sendDate'             => 'SendDate',
-        'pageSize'             => 'PageSize',
-        'currentPage'          => 'CurrentPage',
+        'resourceOwnerId' => 'ResourceOwnerId',
+        'sendDate' => 'SendDate',
     ];
 
     public function validate()
     {
+        parent::validate();
     }
 
-    public function toMap()
+    public function toArray($noStream = false)
     {
         $res = [];
-        if (null !== $this->ownerId) {
-            $res['OwnerId'] = $this->ownerId;
-        }
-        if (null !== $this->resourceOwnerAccount) {
-            $res['ResourceOwnerAccount'] = $this->resourceOwnerAccount;
-        }
-        if (null !== $this->resourceOwnerId) {
-            $res['ResourceOwnerId'] = $this->resourceOwnerId;
-        }
-        if (null !== $this->phoneNumber) {
-            $res['PhoneNumber'] = $this->phoneNumber;
-        }
         if (null !== $this->bizId) {
             $res['BizId'] = $this->bizId;
         }
-        if (null !== $this->sendDate) {
-            $res['SendDate'] = $this->sendDate;
+
+        if (null !== $this->currentPage) {
+            $res['CurrentPage'] = $this->currentPage;
         }
+
+        if (null !== $this->ownerId) {
+            $res['OwnerId'] = $this->ownerId;
+        }
+
         if (null !== $this->pageSize) {
             $res['PageSize'] = $this->pageSize;
         }
-        if (null !== $this->currentPage) {
-            $res['CurrentPage'] = $this->currentPage;
+
+        if (null !== $this->phoneNumber) {
+            $res['PhoneNumber'] = $this->phoneNumber;
+        }
+
+        if (null !== $this->resourceOwnerAccount) {
+            $res['ResourceOwnerAccount'] = $this->resourceOwnerAccount;
+        }
+
+        if (null !== $this->resourceOwnerId) {
+            $res['ResourceOwnerId'] = $this->resourceOwnerId;
+        }
+
+        if (null !== $this->sendDate) {
+            $res['SendDate'] = $this->sendDate;
         }
 
         return $res;
     }
 
-    /**
-     * @param array $map
-     *
-     * @return QuerySendDetailsRequest
-     */
+    public function toMap($noStream = false)
+    {
+        return $this->toArray($noStream);
+    }
+
     public static function fromMap($map = [])
     {
         $model = new self();
-        if (isset($map['OwnerId'])) {
-            $model->ownerId = $map['OwnerId'];
-        }
-        if (isset($map['ResourceOwnerAccount'])) {
-            $model->resourceOwnerAccount = $map['ResourceOwnerAccount'];
-        }
-        if (isset($map['ResourceOwnerId'])) {
-            $model->resourceOwnerId = $map['ResourceOwnerId'];
-        }
-        if (isset($map['PhoneNumber'])) {
-            $model->phoneNumber = $map['PhoneNumber'];
-        }
         if (isset($map['BizId'])) {
             $model->bizId = $map['BizId'];
         }
-        if (isset($map['SendDate'])) {
-            $model->sendDate = $map['SendDate'];
+
+        if (isset($map['CurrentPage'])) {
+            $model->currentPage = $map['CurrentPage'];
         }
+
+        if (isset($map['OwnerId'])) {
+            $model->ownerId = $map['OwnerId'];
+        }
+
         if (isset($map['PageSize'])) {
             $model->pageSize = $map['PageSize'];
         }
-        if (isset($map['CurrentPage'])) {
-            $model->currentPage = $map['CurrentPage'];
+
+        if (isset($map['PhoneNumber'])) {
+            $model->phoneNumber = $map['PhoneNumber'];
+        }
+
+        if (isset($map['ResourceOwnerAccount'])) {
+            $model->resourceOwnerAccount = $map['ResourceOwnerAccount'];
+        }
+
+        if (isset($map['ResourceOwnerId'])) {
+            $model->resourceOwnerId = $map['ResourceOwnerId'];
+        }
+
+        if (isset($map['SendDate'])) {
+            $model->sendDate = $map['SendDate'];
         }
 
         return $model;

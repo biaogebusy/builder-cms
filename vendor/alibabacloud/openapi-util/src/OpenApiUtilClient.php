@@ -21,17 +21,37 @@ class OpenApiUtilClient
      */
     public static function convert($body, $content)
     {
-        $class = new \ReflectionClass($body);
+        $map = $body->toMap();
+        $map = self::exceptStream($map);
+        $newContent = $content::fromMap($map);
+        $class = new \ReflectionClass($newContent);
         foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
             $name = $property->getName();
             if (!$property->isStatic()) {
-                $value = $property->getValue($body);
-                if ($value instanceof StreamInterface) {
-                    continue;
-                }
-                $content->{$name} = $value;
+                $content->{$name} = $property->getValue($newContent);
             }
         }
+    }
+
+    private static function exceptStream($map)
+    {
+        if ($map instanceof StreamInterface) {
+            return null;
+        } elseif (\is_array($map)) {
+            $data = [];
+            foreach ($map as $k => $v) {
+                if (null !== $v) {
+                    $item = self::exceptStream($v);
+                    if (null !== $item) {
+                        $data[$k] = $item;
+                    }
+                } else {
+                    $data[$k] = $v;
+                }
+            }
+            return $data;
+        }
+        return $map;
     }
 
     /**

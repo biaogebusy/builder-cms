@@ -3,18 +3,15 @@
 namespace AlibabaCloud\Credentials\Request;
 
 use AlibabaCloud\Credentials\Credentials;
-use AlibabaCloud\Credentials\EcsRamRoleCredential;
-use AlibabaCloud\Credentials\Helper;
-use AlibabaCloud\Credentials\RamRoleArnCredential;
-use AlibabaCloud\Credentials\Signature\ShaHmac1Signature;
-use AlibabaCloud\Credentials\Signature\ShaHmac256WithRsaSignature;
-use Exception;
+use AlibabaCloud\Credentials\Utils\Helper;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
-use GuzzleHttp\Psr7\Uri;
 use AlibabaCloud\Tea\Response;
 use Psr\Http\Message\ResponseInterface;
+
+use Exception;
+use InvalidArgumentException;
 
 /**
  * RESTful RPC Request.
@@ -28,67 +25,33 @@ class Request
     const CONNECT_TIMEOUT = 5;
 
     /**
-     * Request Timeout
+     * Request Read Timeout
      */
-    const TIMEOUT = 10;
+    const READ_TIMEOUT = 5;
 
     /**
      * @var array
      */
     private static $config = [];
 
-    /**
-     * @var array
-     */
-    public $options = [];
 
     /**
-     * @var Uri
+     *
+     * @return array
      */
-    public $uri;
-
-    /**
-     * @var EcsRamRoleCredential|RamRoleArnCredential
-     */
-    protected $credential;
-
-    /**
-     * @var ShaHmac256WithRsaSignature|ShaHmac1Signature
-     */
-    protected $signature;
-
-    /**
-     * Request constructor.
-     */
-    public function __construct()
+    public static function commonOptions()
     {
-        $this->uri                        = (new Uri())->withScheme('https');
-        $this->options['http_errors']     = false;
-        $this->options['connect_timeout'] = self::CONNECT_TIMEOUT;
-        $this->options['timeout']         = self::TIMEOUT;
+        $options = [];
+        $options['http_errors'] = false;
+        $options['connect_timeout'] = self::CONNECT_TIMEOUT;
+        $options['read_timeout'] = self::READ_TIMEOUT;
+        $options['headers']['User-Agent'] = Helper::getUserAgent();
 
         // Turn on debug mode based on environment variable.
         if (strtolower(Helper::env('DEBUG')) === 'sdk') {
-            $this->options['debug'] = true;
+            $options['debug'] = true;
         }
-    }
-
-    /**
-     * @return ResponseInterface
-     * @throws Exception
-     */
-    public function request()
-    {
-        $this->options['query']['Format']           = 'JSON';
-        $this->options['query']['SignatureMethod']  = $this->signature->getMethod();
-        $this->options['query']['SignatureVersion'] = $this->signature->getVersion();
-        $this->options['query']['SignatureNonce']   = self::uuid(json_encode($this->options['query']));
-        $this->options['query']['Timestamp']        = gmdate('Y-m-d\TH:i:s\Z');
-        $this->options['query']['Signature']        = $this->signature->sign(
-            self::signString('GET', $this->options['query']),
-            $this->credential->getOriginalAccessKeySecret() . '&'
-        );
-        return self::createClient()->request('GET', (string)$this->uri, $this->options);
+        return $options;
     }
 
     /**
@@ -120,6 +83,53 @@ class Request
 
     /**
      * @param string $string
+     * @param string $accessKeySecret
+     *
+     * @return string
+     */
+    public static function shaHmac1sign($string, $accessKeySecret)
+    {
+        return base64_encode(hash_hmac('sha1', $string, $accessKeySecret, true));
+    }
+
+    /**
+     * @param string $string
+     * @param string $accessKeySecret
+     *
+     * @return string
+     */
+    public static function shaHmac256sign($string, $accessKeySecret)
+    {
+        return base64_encode(hash_hmac('sha256', $string, $accessKeySecret, true));
+    }
+
+    /**
+     * @param string $string
+     * @param string $privateKey
+     *
+     * @return string
+     */
+    public static function shaHmac256WithRsasign($string, $privateKey)
+    {
+        $binarySignature = '';
+        try {
+            openssl_sign(
+                $string,
+                $binarySignature,
+                $privateKey,
+                \OPENSSL_ALGO_SHA256
+            );
+        } catch (Exception $exception) {
+            throw new InvalidArgumentException(
+                $exception->getMessage()
+            );
+        }
+
+        return base64_encode($binarySignature);
+    }
+
+    /**
+     * @param string $string
      *
      * @return null|string|string[]
      */
@@ -140,6 +150,8 @@ class Request
     {
         if (Credentials::hasMock()) {
             $stack = HandlerStack::create(Credentials::getMock());
+            $history = Credentials::getHandlerHistory();
+            $stack->push($history);
         } else {
             $stack = HandlerStack::create();
         }

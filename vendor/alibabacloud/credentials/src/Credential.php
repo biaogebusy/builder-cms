@@ -3,154 +3,188 @@
 namespace AlibabaCloud\Credentials;
 
 use AlibabaCloud\Credentials\Credential\Config;
+use AlibabaCloud\Credentials\Credential\CredentialModel;
+use AlibabaCloud\Credentials\Providers\DefaultCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\EcsRamRoleCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\OIDCRoleArnCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\RamRoleArnCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\RsaKeyPairCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\StaticAKCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\StaticSTSCredentialsProvider;
+use AlibabaCloud\Credentials\Providers\URLCredentialsProvider;
+use AlibabaCloud\Credentials\Utils\Helper;
+use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
-use ReflectionClass;
-use ReflectionException;
-use ReflectionParameter;
+use RuntimeException;
 
 /**
  * Class Credential
  *
  * @package AlibabaCloud\Credentials
  *
- * @mixin AccessKeyCredential
- * @mixin BearerTokenCredential
- * @mixin EcsRamRoleCredential
- * @mixin RamRoleArnCredential
- * @mixin RsaKeyPairCredential
  */
 class Credential
 {
-    /**
-     * @var array
-     */
-    protected $config = [];
 
     /**
-     * @var array
+     * Version of the Client
      */
-    protected $types = [
-        'access_key'   => AccessKeyCredential::class,
-        'sts'          => StsCredential::class,
-        'ecs_ram_role' => EcsRamRoleCredential::class,
-        'ram_role_arn' => RamRoleArnCredential::class,
-        'rsa_key_pair' => RsaKeyPairCredential::class,
-        'bearer' => BearerTokenCredential::class,
-    ];
+    const VERSION = '1.1.5';
 
     /**
-     * @var AccessKeyCredential|BearerTokenCredential|EcsRamRoleCredential|RamRoleArnCredential|RsaKeyPairCredential
+     * @var Config
+     */
+    protected $config;
+
+    /**
+     * @var CredentialsInterface
      */
     protected $credential;
-
-    /**
-     * @var string
-     */
-    protected $type;
 
     /**
      * Credential constructor.
      *
      * @param array|Config $config
-     *
-     * @throws ReflectionException
      */
     public function __construct($config = [])
     {
-        if ($config instanceof Config) {
-            $config = $this->parse($config);
-        }
-        if ($config !== []) {
-            $this->config = array_change_key_case($config);
-            $this->parseConfig();
+        if (\is_array($config)) {
+            if (empty($config)) {
+                $this->config = null;
+            } else {
+                $this->config = new Config($this->parseConfig($config));
+            }
         } else {
-            $this->credential = Credentials::get()->getCredential();
+            $this->config = $config;
         }
+        $this->credential = $this->getCredentials($this->config);
     }
 
     /**
-     * @param Config $config
+     * @param array $config
      *
      * @return array
      */
-    private function parse($config)
+    private function parseConfig($config)
     {
-        $config = get_object_vars($config);
-        $res    = [];
-        foreach ($config as $key => $value) {
-            $res[$this->toUnderScore($key)] = $value;
+        $res = [];
+        foreach (\array_change_key_case($config) as $key => $value) {
+            $res[Helper::snakeToCamelCase($key)] = $value;
         }
         return $res;
     }
 
-    private function toUnderScore($str)
-    {
-        $dstr = preg_replace_callback('/([A-Z]+)/', function ($matchs) {
-            return '_' . strtolower($matchs[0]);
-        }, $str);
-        return trim(preg_replace('/_{2,}/', '_', $dstr), '_');
-    }
+
 
     /**
-     * @throws ReflectionException
-     */
-    private function parseConfig()
-    {
-        if (!isset($this->config['type'])) {
-            throw  new InvalidArgumentException('Missing required type option');
-        }
-
-        $this->type = $this->config['type'];
-        if (!isset($this->types[$this->type])) {
-            throw  new InvalidArgumentException(
-                'Invalid type option, support: ' .
-                implode(', ', array_keys($this->types))
-            );
-        }
-
-        $class      = new ReflectionClass($this->types[$this->type]);
-        $parameters = [];
-        /**
-         * @var $parameter ReflectionParameter
-         */
-        foreach ($class->getConstructor()->getParameters() as $parameter) {
-            $parameters[] = $this->getValue($parameter);
-        }
-
-        $this->credential = $class->newInstance(...$parameters);
-    }
-
-    /**
-     * @param ReflectionParameter $parameter
+     * Credentials getter.
      *
-     * @return string|array
-     * @throws ReflectionException
+     * @param Config $config
+     * @return CredentialsInterface
+     *
      */
-    protected function getValue(ReflectionParameter $parameter)
+    private function getCredentials($config)
     {
-        if ($parameter->name === 'config' || $parameter->name === 'credential') {
-            return $this->config;
+        if (is_null($config)) {
+            return new CredentialsProviderWrap('default', new DefaultCredentialsProvider());
         }
-
-        foreach ($this->config as $key => $value) {
-            if (strtolower($parameter->name) === $key) {
-                return $value;
-            }
+        switch ($config->type) {
+            case 'access_key':
+                $provider = new StaticAKCredentialsProvider([
+                    'accessKeyId' => $config->accessKeyId,
+                    'accessKeySecret' => $config->accessKeySecret,
+                ]);
+                return new CredentialsProviderWrap('access_key', $provider);
+            case 'sts':
+                $provider = new StaticSTSCredentialsProvider([
+                    'accessKeyId' => $config->accessKeyId,
+                    'accessKeySecret' => $config->accessKeySecret,
+                    'securityToken' => $config->securityToken,
+                ]);
+                return new CredentialsProviderWrap('sts', $provider);
+            case 'bearer':
+                return new BearerTokenCredential($config->bearerToken);
+            case 'ram_role_arn':
+                if (!is_null($config->securityToken) && $config->securityToken !== '') {
+                    $innerProvider = new StaticSTSCredentialsProvider([
+                        'accessKeyId' => $config->accessKeyId,
+                        'accessKeySecret' => $config->accessKeySecret,
+                        'securityToken' => $config->securityToken,
+                    ]);
+                } else {
+                    $innerProvider = new StaticAKCredentialsProvider([
+                        'accessKeyId' => $config->accessKeyId,
+                        'accessKeySecret' => $config->accessKeySecret,
+                    ]);
+                }
+                $provider = new RamRoleArnCredentialsProvider([
+                    'credentialsProvider' => $innerProvider,
+                    'roleArn' => $config->roleArn,
+                    'roleSessionName' => $config->roleSessionName,
+                    'policy' => $config->policy,
+                    'durationSeconds' => $config->roleSessionExpiration,
+                    'externalId' => $config->externalId,
+                    'stsEndpoint' => $config->STSEndpoint,
+                ], [
+                    'connectTimeout' => $config->connectTimeout,
+                    'readTimeout' => $config->readTimeout,
+                ]);
+                return new CredentialsProviderWrap('ram_role_arn', $provider);
+            case 'rsa_key_pair':
+                $provider = new RsaKeyPairCredentialsProvider([
+                    'publicKeyId' => $config->publicKeyId,
+                    'privateKeyFile' => $config->privateKeyFile,
+                    'durationSeconds' => $config->roleSessionExpiration,
+                    'stsEndpoint' => $config->STSEndpoint,
+                ], [
+                    'connectTimeout' => $config->connectTimeout,
+                    'readTimeout' => $config->readTimeout,
+                ]);
+                return new CredentialsProviderWrap('rsa_key_pair', $provider);
+            case 'ecs_ram_role':
+                $provider = new EcsRamRoleCredentialsProvider([
+                    'roleName' => $config->roleName,
+                    'disableIMDSv1' => $config->disableIMDSv1,
+                ], [
+                    'connectTimeout' => $config->connectTimeout,
+                    'readTimeout' => $config->readTimeout,
+                ]);
+                return new CredentialsProviderWrap('ecs_ram_role', $provider);
+            case 'oidc_role_arn':
+                $provider = new OIDCRoleArnCredentialsProvider([
+                    'roleArn' => $config->roleArn,
+                    'oidcProviderArn' => $config->oidcProviderArn,
+                    'oidcTokenFilePath' => $config->oidcTokenFilePath,
+                    'roleSessionName' => $config->roleSessionName,
+                    'policy' => $config->policy,
+                    'durationSeconds' => $config->roleSessionExpiration,
+                    'stsEndpoint' => $config->STSEndpoint,
+                ], [
+                    'connectTimeout' => $config->connectTimeout,
+                    'readTimeout' => $config->readTimeout,
+                ]);
+                return new CredentialsProviderWrap('oidc_role_arn', $provider);
+            case "credentials_uri":
+                $provider = new URLCredentialsProvider([
+                    'credentialsURI' => $config->credentialsURI,
+                ], [
+                    'connectTimeout' => $config->connectTimeout,
+                    'readTimeout' => $config->readTimeout,
+                ]);
+                return new CredentialsProviderWrap('credentials_uri', $provider);
+            default:
+                throw new InvalidArgumentException('Unsupported credential type option: ' . $config->type . ', support: access_key, sts, bearer, ecs_ram_role, ram_role_arn, rsa_key_pair, oidc_role_arn, credentials_uri');
         }
-
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
-
-        throw new InvalidArgumentException("Missing required {$parameter->name} option in config for {$this->type}");
     }
 
     /**
-     * @return AccessKeyCredential|BearerTokenCredential|EcsRamRoleCredential|RamRoleArnCredential|RsaKeyPairCredential
+     * @return CredentialModel
+     * @throws RuntimeException
+     * @throws GuzzleException
      */
     public function getCredential()
     {
-        return $this->credential;
+        return $this->credential->getCredential();
     }
 
     /**
@@ -158,17 +192,68 @@ class Credential
      */
     public function getConfig()
     {
-        return $this->config;
+        return $this->config->toMap();
     }
 
     /**
+     * @deprecated use getCredential() instead
+     *
      * @return string
+     * @throws RuntimeException
+     * @throws GuzzleException
      */
     public function getType()
     {
-        return $this->type;
+        return $this->credential->getCredential()->getType();
     }
 
+    /**
+     * @deprecated use getCredential() instead
+     * 
+     * @return string
+     * @throws RuntimeException
+     * @throws GuzzleException
+     */
+    public function getAccessKeyId()
+    {
+        return $this->credential->getCredential()->getAccessKeyId();
+    }
+
+    /**
+     * @deprecated use getCredential() instead
+     * 
+     * @return string
+     * @throws RuntimeException
+     * @throws GuzzleException
+     */
+    public function getAccessKeySecret()
+    {
+        return $this->credential->getCredential()->getAccessKeySecret();
+    }
+
+    /**
+     * @deprecated use getCredential() instead
+     * 
+     * @return string
+     * @throws RuntimeException
+     * @throws GuzzleException
+     */
+    public function getSecurityToken()
+    {
+        return $this->credential->getCredential()->getSecurityToken();
+    }
+
+    /**
+     * @deprecated use getCredential() instead
+     * 
+     * @return string
+     * @throws RuntimeException
+     * @throws GuzzleException
+     */
+    public function getBearerToken()
+    {
+        return $this->credential->getCredential()->getBearerToken();
+    }
 
     /**
      * @param string $name

@@ -4,7 +4,7 @@
 
 namespace AlibabaCloud\SDK\Dysmsapi\V20170525\Models;
 
-use AlibabaCloud\Tea\Model;
+use AlibabaCloud\Dara\Model;
 
 class AddSmsTemplateRequest extends Model
 {
@@ -12,6 +12,11 @@ class AddSmsTemplateRequest extends Model
      * @var int
      */
     public $ownerId;
+
+    /**
+     * @var string
+     */
+    public $remark;
 
     /**
      * @var string
@@ -24,16 +29,6 @@ class AddSmsTemplateRequest extends Model
     public $resourceOwnerId;
 
     /**
-     * @var int
-     */
-    public $templateType;
-
-    /**
-     * @var string
-     */
-    public $templateName;
-
-    /**
      * @var string
      */
     public $templateContent;
@@ -41,77 +36,95 @@ class AddSmsTemplateRequest extends Model
     /**
      * @var string
      */
-    public $remark;
+    public $templateName;
+
+    /**
+     * @var int
+     */
+    public $templateType;
     protected $_name = [
-        'ownerId'              => 'OwnerId',
+        'ownerId' => 'OwnerId',
+        'remark' => 'Remark',
         'resourceOwnerAccount' => 'ResourceOwnerAccount',
-        'resourceOwnerId'      => 'ResourceOwnerId',
-        'templateType'         => 'TemplateType',
-        'templateName'         => 'TemplateName',
-        'templateContent'      => 'TemplateContent',
-        'remark'               => 'Remark',
+        'resourceOwnerId' => 'ResourceOwnerId',
+        'templateContent' => 'TemplateContent',
+        'templateName' => 'TemplateName',
+        'templateType' => 'TemplateType',
     ];
 
     public function validate()
     {
+        parent::validate();
     }
 
-    public function toMap()
+    public function toArray($noStream = false)
     {
         $res = [];
         if (null !== $this->ownerId) {
             $res['OwnerId'] = $this->ownerId;
         }
+
+        if (null !== $this->remark) {
+            $res['Remark'] = $this->remark;
+        }
+
         if (null !== $this->resourceOwnerAccount) {
             $res['ResourceOwnerAccount'] = $this->resourceOwnerAccount;
         }
+
         if (null !== $this->resourceOwnerId) {
             $res['ResourceOwnerId'] = $this->resourceOwnerId;
         }
-        if (null !== $this->templateType) {
-            $res['TemplateType'] = $this->templateType;
-        }
-        if (null !== $this->templateName) {
-            $res['TemplateName'] = $this->templateName;
-        }
+
         if (null !== $this->templateContent) {
             $res['TemplateContent'] = $this->templateContent;
         }
-        if (null !== $this->remark) {
-            $res['Remark'] = $this->remark;
+
+        if (null !== $this->templateName) {
+            $res['TemplateName'] = $this->templateName;
+        }
+
+        if (null !== $this->templateType) {
+            $res['TemplateType'] = $this->templateType;
         }
 
         return $res;
     }
 
-    /**
-     * @param array $map
-     *
-     * @return AddSmsTemplateRequest
-     */
+    public function toMap($noStream = false)
+    {
+        return $this->toArray($noStream);
+    }
+
     public static function fromMap($map = [])
     {
         $model = new self();
         if (isset($map['OwnerId'])) {
             $model->ownerId = $map['OwnerId'];
         }
+
+        if (isset($map['Remark'])) {
+            $model->remark = $map['Remark'];
+        }
+
         if (isset($map['ResourceOwnerAccount'])) {
             $model->resourceOwnerAccount = $map['ResourceOwnerAccount'];
         }
+
         if (isset($map['ResourceOwnerId'])) {
             $model->resourceOwnerId = $map['ResourceOwnerId'];
         }
-        if (isset($map['TemplateType'])) {
-            $model->templateType = $map['TemplateType'];
-        }
-        if (isset($map['TemplateName'])) {
-            $model->templateName = $map['TemplateName'];
-        }
+
         if (isset($map['TemplateContent'])) {
             $model->templateContent = $map['TemplateContent'];
         }
-        if (isset($map['Remark'])) {
-            $model->remark = $map['Remark'];
+
+        if (isset($map['TemplateName'])) {
+            $model->templateName = $map['TemplateName'];
+        }
+
+        if (isset($map['TemplateType'])) {
+            $model->templateType = $map['TemplateType'];
         }
 
         return $model;

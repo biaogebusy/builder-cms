@@ -3,12 +3,13 @@
 namespace AlibabaCloud\Credentials\Providers;
 
 use AlibabaCloud\Credentials\Credentials;
-use AlibabaCloud\Credentials\Helper;
+use AlibabaCloud\Credentials\Utils\Helper;
 use Closure;
 use InvalidArgumentException;
 use RuntimeException;
 
 /**
+ * @deprecated
  * Class ChainProvider
  *
  * @package AlibabaCloud\Credentials\Providers

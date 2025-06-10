@@ -86,6 +86,9 @@ class RuntimeOptions extends Model {
         if (null !== $this->keepAlive) {
             $res['keepAlive'] = $this->keepAlive;
         }
+        if (null !== $this->extendsParameters) {
+            $res['extendsParameters'] = null !== $this->extendsParameters ? $this->extendsParameters->toMap() : null;
+        }
         return $res;
     }
     /**
@@ -147,6 +150,9 @@ class RuntimeOptions extends Model {
         }
         if(isset($map['keepAlive'])){
             $model->keepAlive = $map['keepAlive'];
+        }
+        if(isset($map['extendsParameters'])){
+            $model->extendsParameters = ExtendsParameters::fromMap($map['extendsParameters']);
         }
         return $model;
     }
@@ -257,5 +263,11 @@ class RuntimeOptions extends Model {
      * @var bool
      */
     public $keepAlive;
+
+    /**
+     * @description Extends Parameters
+     * @var ExtendsParameters
+     */
+    public $extendsParameters;
 
 }

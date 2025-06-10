@@ -3,10 +3,14 @@
 namespace AlibabaCloud\OpenApiUtil\Tests;
 
 use AlibabaCloud\OpenApiUtil\OpenApiUtilClient;
+use AlibabaCloud\OpenApiUtil\Tests\Models\SourceModel;
+use AlibabaCloud\OpenApiUtil\Tests\Models\urlListObject;
+use AlibabaCloud\OpenApiUtil\Tests\Models\TargetModel;
 use AlibabaCloud\Tea\Model;
 use AlibabaCloud\Tea\Request;
 use AlibabaCloud\Tea\Utils\Utils;
 use PHPUnit\Framework\TestCase;
+use GuzzleHttp\Psr7\Stream;
 
 /**
  * @internal
@@ -22,6 +26,32 @@ class OpenApiUtilClientTest extends TestCase
         $output = new MockModel();
         OpenApiUtilClient::convert($model, $output);
         $this->assertEquals($model->a, $output->a);
+
+        if (\function_exists('\GuzzleHttp\Psr7\stream_for')) {
+            // @deprecated stream_for will be removed in guzzlehttp/psr7:2.0
+            $stream = \GuzzleHttp\Psr7\stream_for('test');
+        } else {
+            $stream = \GuzzleHttp\Psr7\Utils::streamFor('test');
+        }
+        $source = new SourceModel();
+        $source->test = 'test';
+        $source->bodyObject = $stream;
+        $source->listObject = [
+            $stream
+        ];
+        $urlListObject = new urlListObject();
+        $urlListObject->urlObject = $stream;
+        $source->urlListObject = [
+            $urlListObject
+        ];
+        $target = new TargetModel();
+        OpenApiUtilClient::convert($source, $target);
+        $this->assertEquals('test', $target->test);
+        $this->assertNull($target->empty);
+        $this->assertNull($target->body);
+        $this->assertTrue(empty($target->list));
+        $this->assertNotNull($target->urlList[0]);
+        $this->assertNull($target->urlList[0]->url);
     }
 
     public function testGetStringToSign()
@@ -417,11 +447,49 @@ class MockModel extends Model
 
     public $c = '';
 
+    public $r;
+
     public function __construct()
     {
         $this->_name['a']     = 'A';
         $this->_required['c'] = true;
         parent::__construct([]);
+    }
+
+    public function toMap()
+    {
+        $res = [];
+        if (null !== $this->a) {
+            $res['A'] = $this->a;
+        }
+        if (null !== $this->b) {
+            $res['b'] = $this->b;
+        }
+        if (null !== $this->c) {
+            $res['c'] = $this->c;
+        }
+        if (null !== $this->r) {
+            $res['r'] = $this->r;
+        }
+        return $res;
+    }
+
+    public static function fromMap($map = [])
+    {
+        $model = new self();
+        if (isset($map['A'])) {
+            $model->a = $map['A'];
+        }
+        if (isset($map['b'])) {
+            $model->b = $map['b'];
+        }
+        if (isset($map['c'])) {
+            $model->c = $map['c'];
+        }
+        if (isset($map['r'])) {
+            $model->r = $map['r'];
+        }
+        return $model;
     }
 }
 

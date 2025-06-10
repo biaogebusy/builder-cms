@@ -2,15 +2,18 @@
 
 namespace AlibabaCloud\Credentials;
 
-use AlibabaCloud\Credentials\Providers\EcsRamRoleProvider;
-use AlibabaCloud\Credentials\Request\Request;
+use AlibabaCloud\Credentials\Providers\EcsRamRoleCredentialsProvider;
+use AlibabaCloud\Credentials\Credential\CredentialModel;
 use AlibabaCloud\Credentials\Signature\ShaHmac1Signature;
+use AlibabaCloud\Credentials\Request\Request;
+use AlibabaCloud\Credentials\Utils\Filter;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use InvalidArgumentException;
 use RuntimeException;
 
 /**
+ * @deprecated
  * Use the RAM role of an ECS instance to complete the authentication.
  */
 class EcsRamRoleCredential implements CredentialsInterface
@@ -22,15 +25,32 @@ class EcsRamRoleCredential implements CredentialsInterface
     private $roleName;
 
     /**
+     * @var boolean
+     */
+    private $disableIMDSv1;
+
+    /**
+     * @var int
+     */
+    private $metadataTokenDuration;
+
+
+    /**
      * EcsRamRoleCredential constructor.
      *
      * @param $role_name
      */
-    public function __construct($role_name = null)
+    public function __construct($role_name = null, $disable_imdsv1 = false, $metadata_token_duration = 21600)
     {
         Filter::roleName($role_name);
 
         $this->roleName = $role_name;
+
+        Filter::disableIMDSv1($disable_imdsv1);
+
+        $this->disableIMDSv1 = $disable_imdsv1;
+
+        $this->metadataTokenDuration = $metadata_token_duration;
     }
 
     /**
@@ -56,8 +76,8 @@ class EcsRamRoleCredential implements CredentialsInterface
     public function getRoleNameFromMeta()
     {
         $options = [
-            'http_errors'     => false,
-            'timeout'         => 1,
+            'http_errors' => false,
+            'timeout' => 1,
             'connect_timeout' => 1,
         ];
 
@@ -75,7 +95,7 @@ class EcsRamRoleCredential implements CredentialsInterface
             throw new RuntimeException('Error retrieving credentials from result: ' . $result->getBody());
         }
 
-        $role_name = (string)$result;
+        $role_name = (string) $result;
         if (!$role_name) {
             throw new RuntimeException('Error retrieving credentials from result is empty');
         }
@@ -110,13 +130,18 @@ class EcsRamRoleCredential implements CredentialsInterface
     }
 
     /**
-     * @return StsCredential
+     * @return AlibabaCloud\Credentials\Providers\Credentials
      * @throws Exception
      * @throws GuzzleException
      */
     protected function getSessionCredential()
     {
-        return (new EcsRamRoleProvider($this))->get();
+        $params = [
+            "roleName" => $this->roleName,
+            'disableIMDSv1' => $this->disableIMDSv1,
+            'metadataTokenDuration' => $this->metadataTokenDuration,
+        ];
+        return (new EcsRamRoleCredentialsProvider($params))->getCredentials();
     }
 
     /**
@@ -148,4 +173,27 @@ class EcsRamRoleCredential implements CredentialsInterface
     {
         return $this->getSessionCredential()->getExpiration();
     }
+
+    /**
+     * @return bool
+     */
+    public function isDisableIMDSv1()
+    {
+        return $this->disableIMDSv1;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCredential()
+    {
+        $credentials = $this->getSessionCredential();
+        return new CredentialModel([
+            'accessKeyId' => $credentials->getAccessKeyId(),
+            'accessKeySecret' => $credentials->getAccessKeySecret(),
+            'securityToken' => $credentials->getSecurityToken(),
+            'type' => 'ecs_ram_role',
+        ]);
+    }
+
 }

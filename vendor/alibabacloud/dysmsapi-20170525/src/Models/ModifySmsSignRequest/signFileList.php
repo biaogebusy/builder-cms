@@ -4,7 +4,7 @@
 
 namespace AlibabaCloud\SDK\Dysmsapi\V20170525\Models\ModifySmsSignRequest;
 
-use AlibabaCloud\Tea\Model;
+use AlibabaCloud\Dara\Model;
 
 class signFileList extends Model
 {
@@ -19,19 +19,21 @@ class signFileList extends Model
     public $fileSuffix;
     protected $_name = [
         'fileContents' => 'FileContents',
-        'fileSuffix'   => 'FileSuffix',
+        'fileSuffix' => 'FileSuffix',
     ];
 
     public function validate()
     {
+        parent::validate();
     }
 
-    public function toMap()
+    public function toArray($noStream = false)
     {
         $res = [];
         if (null !== $this->fileContents) {
             $res['FileContents'] = $this->fileContents;
         }
+
         if (null !== $this->fileSuffix) {
             $res['FileSuffix'] = $this->fileSuffix;
         }
@@ -39,17 +41,18 @@ class signFileList extends Model
         return $res;
     }
 
-    /**
-     * @param array $map
-     *
-     * @return signFileList
-     */
+    public function toMap($noStream = false)
+    {
+        return $this->toArray($noStream);
+    }
+
     public static function fromMap($map = [])
     {
         $model = new self();
         if (isset($map['FileContents'])) {
             $model->fileContents = $map['FileContents'];
         }
+
         if (isset($map['FileSuffix'])) {
             $model->fileSuffix = $map['FileSuffix'];
         }

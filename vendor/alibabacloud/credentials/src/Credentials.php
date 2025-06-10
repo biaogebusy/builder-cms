@@ -3,6 +3,8 @@
 namespace AlibabaCloud\Credentials;
 
 use AlibabaCloud\Credentials\Providers\ChainProvider;
+use AlibabaCloud\Credentials\Utils\Filter;
+use AlibabaCloud\Credentials\Utils\MockTrait;
 use ReflectionException;
 use RuntimeException;
 

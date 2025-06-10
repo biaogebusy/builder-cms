@@ -173,6 +173,7 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         'M' => 
         array (
             'MyCLabs\\Enum\\' => 13,
+            'Monolog\\' => 8,
             'Matrix\\' => 7,
             'Masterminds\\' => 12,
             'MakinaCorpus\\Lucene\\' => 20,
@@ -238,6 +239,7 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
             'Dflydev\\DotAccessData\\' => 22,
             'DeepCopy\\' => 9,
             'Darabonba\\OpenApi\\' => 18,
+            'Darabonba\\GatewaySpi\\' => 21,
         ),
         'C' => 
         array (
@@ -265,12 +267,15 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
             'Asm89\\Stack\\' => 12,
             'Alipay\\OpenAPISDK\\' => 18,
             'Alipay\\EasySDK\\' => 15,
+            'AlibabaCloud\\Tea\\XML\\' => 21,
             'AlibabaCloud\\Tea\\Utils\\' => 23,
             'AlibabaCloud\\Tea\\FileForm\\' => 26,
             'AlibabaCloud\\Tea\\' => 17,
             'AlibabaCloud\\SDK\\Dysmsapi\\V20170525\\' => 36,
+            'AlibabaCloud\\SDK\\Dypnsapi\\V20170525\\' => 36,
             'AlibabaCloud\\OpenApiUtil\\' => 25,
             'AlibabaCloud\\Endpoint\\' => 22,
+            'AlibabaCloud\\Dara\\' => 18,
             'AlibabaCloud\\Credentials\\' => 25,
             'Adbar\\' => 6,
         ),
@@ -584,6 +589,10 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         array (
             0 => __DIR__ . '/..' . '/myclabs/php-enum/src',
         ),
+        'Monolog\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
+        ),
         'Matrix\\' => 
         array (
             0 => __DIR__ . '/..' . '/markbaker/matrix/classes/src',
@@ -762,7 +771,12 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         ),
         'Darabonba\\OpenApi\\' => 
         array (
-            0 => __DIR__ . '/..' . '/alibabacloud/darabonba-openapi/src',
+            0 => __DIR__ . '/..' . '/alibabacloud/openapi-core/src',
+            1 => __DIR__ . '/..' . '/alibabacloud/darabonba-openapi/src',
+        ),
+        'Darabonba\\GatewaySpi\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/alibabacloud/gateway-spi/src',
         ),
         'Consolidation\\SiteProcess\\' => 
         array (
@@ -848,6 +862,10 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         array (
             0 => __DIR__ . '/..' . '/alipaysdk/easysdk/php/src',
         ),
+        'AlibabaCloud\\Tea\\XML\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/alibabacloud/tea-xml/src',
+        ),
         'AlibabaCloud\\Tea\\Utils\\' => 
         array (
             0 => __DIR__ . '/..' . '/alibabacloud/tea-utils/src',
@@ -864,6 +882,10 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         array (
             0 => __DIR__ . '/..' . '/alibabacloud/dysmsapi-20170525/src',
         ),
+        'AlibabaCloud\\SDK\\Dypnsapi\\V20170525\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/alibabacloud/dypnsapi-20170525/src',
+        ),
         'AlibabaCloud\\OpenApiUtil\\' => 
         array (
             0 => __DIR__ . '/..' . '/alibabacloud/openapi-util/src',
@@ -871,6 +893,10 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         'AlibabaCloud\\Endpoint\\' => 
         array (
             0 => __DIR__ . '/..' . '/alibabacloud/endpoint-util/src',
+        ),
+        'AlibabaCloud\\Dara\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/alibabacloud/darabonba/src',
         ),
         'AlibabaCloud\\Credentials\\' => 
         array (

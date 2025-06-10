@@ -4,6 +4,7 @@ namespace AlibabaCloud\Tea\Utils\Tests;
 
 use AlibabaCloud\Tea\Model;
 use AlibabaCloud\Tea\Utils\Utils;
+use AlibabaCloud\Tea\Utils\Utils\ExtendsParameters;
 use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 use GuzzleHttp\Psr7\Stream;
 use PHPUnit\Framework\TestCase;
@@ -416,6 +417,10 @@ final class UtilsTest extends TestCase
             "noProxy" => "noProxy",
             "maxIdleConns" => 300,
             "keepAlive" => true,
+            "extendsParameters" => new ExtendsParameters([
+                "headers" => ['key' => 'value'],
+                "queries" => ['key' => 'value'],
+            ]),
         ]);
         $this->assertEquals(false, $opts->autoretry);
         $this->assertEquals(false, $opts->ignoreSSL);
@@ -432,6 +437,8 @@ final class UtilsTest extends TestCase
         $this->assertEquals("noProxy", $opts->noProxy);
         $this->assertEquals(300, $opts->maxIdleConns);
         $this->assertEquals(true, $opts->keepAlive);
+        $this->assertEquals('value', $opts->extendsParameters->headers['key']);
+        $this->assertEquals('value', $opts->extendsParameters->queries['key']);
     }
 
     private function convert($body, &$content)
