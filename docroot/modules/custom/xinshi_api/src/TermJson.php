@@ -29,16 +29,22 @@ class TermJson extends EntityJsonBase {
               'rows' => $content['content']['view_build']['#rows'] ? $content['content']['view_build']['#rows'][0]['#rows'] : [],
               'title' => $content['#configuration']['views_label'] ? $content['#configuration']['views_label'] : $content['content']['#title']['#markup'] ?? '',
             ];
-            $this->addCacheTags($content['content']['#cache']['tags']);
+            if (isset($content['content']['#cache']['tags'])) {
+              $this->addCacheTags($content['content']['#cache']['tags']);
+            }
             break;
         }
       }
     }
     \Drupal::service('entity_theme_engine.entity_widget_service')->entityViewAlter($build, $this->entity, $this->mode);
-    foreach ($panels as $key => $panel) {
-      $build['content']['#context'][$key] = $panel;
+    if (isset($build['content'])) {
+      foreach ($panels as $key => $panel) {
+        $build['content']['#context'][$key] = $panel;
+      }
+      if (isset($build['content']['#cache']['tags'])) {
+        $this->addCacheTags($build['content']['#cache']['tags']);
+      }
     }
-    $this->addCacheTags($build['content']['#cache']['tags']);
     unset($build['#prefix']);
     unset($build['#suffix']);
     $content = \Drupal::service('renderer')->render($build);
