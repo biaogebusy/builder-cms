@@ -23,14 +23,21 @@ class XinshibResourceBase extends ResourceBase {
    */
   protected $config;
 
+    /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->config = $container->get('config.factory')->get('xinshi_api.settings');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
     return $instance;
   }
+
 
   /**
    * Return cache tags.
