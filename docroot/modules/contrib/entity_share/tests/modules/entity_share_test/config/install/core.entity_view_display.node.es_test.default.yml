@@ -1,0 +1,448 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_display.comment.es_test.default
+    - field.field.node.es_test.field_es_test_block
+    - field.field.node.es_test.field_es_test_body
+    - field.field.node.es_test.field_es_test_boolean
+    - field.field.node.es_test.field_es_test_comments
+    - field.field.node.es_test.field_es_test_content_reference
+    - field.field.node.es_test.field_es_test_date
+    - field.field.node.es_test.field_es_test_date_all_day_range
+    - field.field.node.es_test.field_es_test_date_only
+    - field.field.node.es_test.field_es_test_date_only_range
+    - field.field.node.es_test.field_es_test_date_range
+    - field.field.node.es_test.field_es_test_dynamic_reference
+    - field.field.node.es_test.field_es_test_email
+    - field.field.node.es_test.field_es_test_file
+    - field.field.node.es_test.field_es_test_image
+    - field.field.node.es_test.field_es_test_link
+    - field.field.node.es_test.field_es_test_list_float
+    - field.field.node.es_test.field_es_test_list_integer
+    - field.field.node.es_test.field_es_test_list_text
+    - field.field.node.es_test.field_es_test_media
+    - field.field.node.es_test.field_es_test_metatag
+    - field.field.node.es_test.field_es_test_number_decimal
+    - field.field.node.es_test.field_es_test_number_float
+    - field.field.node.es_test.field_es_test_number_integer
+    - field.field.node.es_test.field_es_test_paragraphs
+    - field.field.node.es_test.field_es_test_taxonomy
+    - field.field.node.es_test.field_es_test_telephone
+    - field.field.node.es_test.field_es_test_text_formatted
+    - field.field.node.es_test.field_es_test_text_formatted_lon
+    - field.field.node.es_test.field_es_test_text_plain
+    - field.field.node.es_test.field_es_test_text_plain_long
+    - field.field.node.es_test.field_es_test_timestamp
+    - node.type.es_test
+  module:
+    - block_field
+    - comment
+    - datetime
+    - datetime_range
+    - dynamic_entity_reference
+    - entity_reference_revisions
+    - field_group
+    - file
+    - image
+    - link
+    - options
+    - telephone
+    - text
+    - user
+third_party_settings:
+  field_group:
+    group_dates:
+      children:
+        - field_es_test_timestamp
+        - field_es_test_date_only
+        - field_es_test_date
+        - field_es_test_date_only_range
+        - field_es_test_date_range
+        - field_es_test_date_all_day_range
+      label: Dates
+      parent_name: ''
+      region: content
+      weight: 4
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+    group_texts:
+      children:
+        - field_es_test_text_plain
+        - field_es_test_text_plain_long
+        - field_es_test_text_formatted
+        - field_es_test_text_formatted_lon
+        - field_es_test_body
+      label: Texts
+      parent_name: ''
+      region: content
+      weight: 10
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+    group_medias:
+      children:
+        - field_es_test_file
+        - field_es_test_image
+        - field_es_test_media
+      label: Medias
+      parent_name: ''
+      region: content
+      weight: 8
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+    group_lists:
+      children:
+        - field_es_test_list_text
+        - field_es_test_list_integer
+        - field_es_test_list_float
+      label: Lists
+      parent_name: ''
+      region: content
+      weight: 6
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+    group_references:
+      children:
+        - field_es_test_block
+        - field_es_test_content_reference
+        - field_es_test_dynamic_reference
+        - field_es_test_paragraphs
+        - field_es_test_taxonomy
+      label: References
+      parent_name: ''
+      region: content
+      weight: 9
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+    group_numbers:
+      children:
+        - field_es_test_number_integer
+        - field_es_test_number_decimal
+        - field_es_test_number_float
+        - field_es_test_telephone
+      label: Numbers
+      parent_name: ''
+      region: content
+      weight: 7
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+    group_general:
+      children:
+        - field_es_test_boolean
+        - field_es_test_email
+        - field_es_test_link
+      label: General
+      parent_name: ''
+      region: content
+      weight: 5
+      format_type: details
+      format_settings:
+        classes: ''
+        id: ''
+        open: true
+        description: ''
+id: node.es_test.default
+targetEntityType: node
+bundle: es_test
+mode: default
+content:
+  field_es_test_block:
+    type: block_field
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 16
+    region: content
+  field_es_test_body:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 28
+    region: content
+  field_es_test_boolean:
+    type: boolean
+    label: above
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_es_test_comments:
+    type: comment_default
+    label: above
+    settings:
+      view_mode: default
+      pager_id: 0
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  field_es_test_content_reference:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 17
+    region: content
+  field_es_test_date:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 13
+    region: content
+  field_es_test_date_all_day_range:
+    type: daterange_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+      separator: '-'
+    third_party_settings: {  }
+    weight: 16
+    region: content
+  field_es_test_date_only:
+    type: datetime_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+    third_party_settings: {  }
+    weight: 12
+    region: content
+  field_es_test_date_only_range:
+    type: daterange_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+      separator: '-'
+    third_party_settings: {  }
+    weight: 14
+    region: content
+  field_es_test_date_range:
+    type: daterange_default
+    label: above
+    settings:
+      timezone_override: ''
+      format_type: medium
+      separator: '-'
+    third_party_settings: {  }
+    weight: 15
+    region: content
+  field_es_test_dynamic_reference:
+    type: dynamic_entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 18
+    region: content
+  field_es_test_email:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_es_test_file:
+    type: file_default
+    label: above
+    settings:
+      use_description_as_link_text: true
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_es_test_image:
+    type: image
+    label: above
+    settings:
+      image_link: ''
+      image_style: ''
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_es_test_link:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_es_test_list_float:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 26
+    region: content
+  field_es_test_list_integer:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 25
+    region: content
+  field_es_test_list_text:
+    type: list_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 24
+    region: content
+  field_es_test_media:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: false
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_es_test_number_decimal:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 22
+    region: content
+  field_es_test_number_float:
+    type: number_decimal
+    label: above
+    settings:
+      thousand_separator: ''
+      decimal_separator: .
+      scale: 2
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 23
+    region: content
+  field_es_test_number_integer:
+    type: number_integer
+    label: above
+    settings:
+      thousand_separator: ''
+      prefix_suffix: true
+    third_party_settings: {  }
+    weight: 21
+    region: content
+  field_es_test_paragraphs:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 19
+    region: content
+  field_es_test_taxonomy:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 20
+    region: content
+  field_es_test_telephone:
+    type: telephone_link
+    label: above
+    settings:
+      title: ''
+    third_party_settings: {  }
+    weight: 24
+    region: content
+  field_es_test_text_formatted:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 26
+    region: content
+  field_es_test_text_formatted_lon:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 27
+    region: content
+  field_es_test_text_plain:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 24
+    region: content
+  field_es_test_text_plain_long:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 25
+    region: content
+  field_es_test_timestamp:
+    type: timestamp
+    label: above
+    settings:
+      date_format: medium
+      custom_date_format: ''
+      timezone: ''
+    third_party_settings: {  }
+    weight: 11
+    region: content
+  langcode:
+    type: language
+    label: above
+    settings:
+      link_to_entity: false
+      native_language: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 12
+    region: content
+hidden:
+  field_es_test_metatag: true

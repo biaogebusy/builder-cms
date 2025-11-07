@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - block_content.type.es_test
+    - field.field.block_content.es_test.body
+  module:
+    - text
+id: block_content.es_test.default
+targetEntityType: block_content
+bundle: es_test
+mode: default
+content:
+  body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  langcode: true

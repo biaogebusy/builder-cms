@@ -1,0 +1,19 @@
+entity_share_client.admin_content_page:
+  path: '/admin/content/entity_share'
+  defaults:
+    _form: '\Drupal\entity_share_client\Form\PullForm'
+    _title: 'Pull entities'
+  requirements:
+    _permission: 'entity_share_client_pull_content'
+  options:
+    _admin_route: TRUE
+
+entity_share_client.admin_content_pull_form:
+  path: '/admin/content/entity_share/pull'
+  defaults:
+    _form: '\Drupal\entity_share_client\Form\PullForm'
+    _title: 'Pull entities'
+  requirements:
+    _permission: 'entity_share_client_pull_content'
+  options:
+    _admin_route: TRUE

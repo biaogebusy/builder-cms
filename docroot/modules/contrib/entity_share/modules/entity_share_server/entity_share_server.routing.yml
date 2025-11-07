@@ -1,0 +1,90 @@
+# Filters.
+entity_share_server.filter_add_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/filters/add'
+  defaults:
+    _entity_form: 'channel.filter_add'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.filter_edit_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/filters/{filter}/edit'
+  defaults:
+    _entity_form: 'channel.filter_edit'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.filter_delete_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/filters/{filter}/delete'
+  defaults:
+    _entity_form: 'channel.filter_delete'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+# Sorts.
+entity_share_server.sort_add_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/sorts/add'
+  defaults:
+    _entity_form: 'channel.sort_add'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.sort_edit_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/sorts/{sort}/edit'
+  defaults:
+    _entity_form: 'channel.sort_edit'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.sort_delete_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/sorts/{sort}/delete'
+  defaults:
+    _entity_form: 'channel.sort_delete'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+# Searched.
+entity_share_server.search_add_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/searches/add'
+  defaults:
+    _entity_form: 'channel.search_add'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.search_edit_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/searches/{search}/edit'
+  defaults:
+    _entity_form: 'channel.search_edit'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.search_delete_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/searches/{search}/delete'
+  defaults:
+    _entity_form: 'channel.search_delete'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+# Groups.
+entity_share_server.group_add_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/groups/add'
+  defaults:
+    _entity_form: 'channel.group_add'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.group_edit_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/groups/{group}/edit'
+  defaults:
+    _entity_form: 'channel.group_edit'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+entity_share_server.group_delete_form:
+  path: '/admin/config/services/entity_share/channel/{channel}/groups/{group}/delete'
+  defaults:
+    _entity_form: 'channel.group_delete'
+  requirements:
+    _permission: 'administer_channel_entity'
+
+route_callbacks:
+  - '\Drupal\entity_share_server\Routing\Routes::entryPoint'

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - comment.type.es_test
+id: comment.es_test.created
+field_name: created
+entity_type: comment
+bundle: es_test
+label: Created
+description: 'The time that the comment was created.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: created

@@ -1,0 +1,27 @@
+{
+    "name": "drupal/entity_share",
+    "description": "Provides an UI to share entities.",
+    "license": "GPL-2.0-or-later",
+    "type": "drupal-module",
+    "require": {
+        "league/oauth2-client": "^2.4"
+    },
+    "require-dev": {
+        "drupal/block_field": "~1.0",
+        "drupal/dynamic_entity_reference": "~3.0 || ~4.0",
+        "drupal/field_group": "~3.0",
+        "drupal/json_api_book": "~1.0",
+        "drupal/jsonapi_extras": "~3.14",
+        "drupal/key": "~1.14",
+        "drupal/metatag": "~1.0",
+        "drupal/paragraphs": "~1.0",
+        "drupal/pathauto": "~1.0"
+    },
+    "conflict": {
+        "drupal/jsonapi": "1.*"
+    },
+    "suggest": {
+        "drupal/key": "Provides ability to manage keys for Authentication plugins.",
+        "drupal/simple_oauth": "Allows to setup server for OAuth plugin."
+    }
+}

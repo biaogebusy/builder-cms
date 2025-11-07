@@ -1,0 +1,3 @@
+views_bulk_operations.action_config.entity_share_client_update_policy:
+  type: views_bulk_operations_action_config
+  label: 'Update policy'

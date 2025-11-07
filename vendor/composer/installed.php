@@ -3,7 +3,7 @@
         'name' => 'drupal/recommended-project',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '8a49e6f9fabdcf1d90911fc47e45660bacdc7eec',
+        'reference' => '675865cb671f409febf0090a89d8d9fa5bb2824f',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -1150,6 +1150,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'drupal/entity_share' => array(
+            'pretty_version' => '3.0.0',
+            'version' => '3.0.0.0',
+            'reference' => '8.x-3.0',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/entity_share',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'drupal/field_group' => array(
             'pretty_version' => '3.4.0',
             'version' => '3.4.0.0',
@@ -1767,7 +1776,7 @@
         'drupal/recommended-project' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '8a49e6f9fabdcf1d90911fc47e45660bacdc7eec',
+            'reference' => '675865cb671f409febf0090a89d8d9fa5bb2824f',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -2307,6 +2316,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'league/oauth2-client' => array(
+            'pretty_version' => '2.8.1',
+            'version' => '2.8.1.0',
+            'reference' => '9df2924ca644736c835fc60466a3a60390d334f9',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../league/oauth2-client',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'lizhichao/one-sm' => array(
             'pretty_version' => '1.10',
             'version' => '1.10.0.0',
@@ -2797,8 +2815,8 @@
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0|2.0',
-                1 => '1.0.0 || 2.0.0 || 3.0.0',
+                0 => '1.0.0 || 2.0.0 || 3.0.0',
+                1 => '1.0|2.0',
             ),
         ),
         'psr/simple-cache' => array(

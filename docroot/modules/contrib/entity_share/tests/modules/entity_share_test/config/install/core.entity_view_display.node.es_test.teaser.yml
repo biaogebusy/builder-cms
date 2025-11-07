@@ -1,0 +1,82 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.es_test.field_es_test_block
+    - field.field.node.es_test.field_es_test_body
+    - field.field.node.es_test.field_es_test_boolean
+    - field.field.node.es_test.field_es_test_comments
+    - field.field.node.es_test.field_es_test_content_reference
+    - field.field.node.es_test.field_es_test_date
+    - field.field.node.es_test.field_es_test_date_all_day_range
+    - field.field.node.es_test.field_es_test_date_only
+    - field.field.node.es_test.field_es_test_date_only_range
+    - field.field.node.es_test.field_es_test_date_range
+    - field.field.node.es_test.field_es_test_dynamic_reference
+    - field.field.node.es_test.field_es_test_email
+    - field.field.node.es_test.field_es_test_file
+    - field.field.node.es_test.field_es_test_image
+    - field.field.node.es_test.field_es_test_link
+    - field.field.node.es_test.field_es_test_list_float
+    - field.field.node.es_test.field_es_test_list_integer
+    - field.field.node.es_test.field_es_test_list_text
+    - field.field.node.es_test.field_es_test_media
+    - field.field.node.es_test.field_es_test_metatag
+    - field.field.node.es_test.field_es_test_number_decimal
+    - field.field.node.es_test.field_es_test_number_float
+    - field.field.node.es_test.field_es_test_number_integer
+    - field.field.node.es_test.field_es_test_paragraphs
+    - field.field.node.es_test.field_es_test_taxonomy
+    - field.field.node.es_test.field_es_test_telephone
+    - field.field.node.es_test.field_es_test_text_formatted
+    - field.field.node.es_test.field_es_test_text_formatted_lon
+    - field.field.node.es_test.field_es_test_text_plain
+    - field.field.node.es_test.field_es_test_text_plain_long
+    - field.field.node.es_test.field_es_test_timestamp
+    - node.type.es_test
+  module:
+    - user
+id: node.es_test.teaser
+targetEntityType: node
+bundle: es_test
+mode: teaser
+content:
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_es_test_block: true
+  field_es_test_body: true
+  field_es_test_boolean: true
+  field_es_test_comments: true
+  field_es_test_content_reference: true
+  field_es_test_date: true
+  field_es_test_date_all_day_range: true
+  field_es_test_date_only: true
+  field_es_test_date_only_range: true
+  field_es_test_date_range: true
+  field_es_test_dynamic_reference: true
+  field_es_test_email: true
+  field_es_test_file: true
+  field_es_test_image: true
+  field_es_test_link: true
+  field_es_test_list_float: true
+  field_es_test_list_integer: true
+  field_es_test_list_text: true
+  field_es_test_media: true
+  field_es_test_metatag: true
+  field_es_test_number_decimal: true
+  field_es_test_number_float: true
+  field_es_test_number_integer: true
+  field_es_test_paragraphs: true
+  field_es_test_taxonomy: true
+  field_es_test_telephone: true
+  field_es_test_text_formatted: true
+  field_es_test_text_formatted_lon: true
+  field_es_test_text_plain: true
+  field_es_test_text_plain_long: true
+  field_es_test_timestamp: true
+  langcode: true

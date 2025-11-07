@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.es_test_audio.field_es_test_audio_file
+    - media.type.es_test_audio
+  module:
+    - file
+id: media.es_test_audio.default
+targetEntityType: media
+bundle: es_test_audio
+mode: default
+content:
+  field_es_test_audio_file:
+    type: file_audio
+    label: visually_hidden
+    settings:
+      controls: true
+      autoplay: false
+      loop: false
+      multiple_file_display_type: tags
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  created: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

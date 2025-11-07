@@ -1,0 +1,90 @@
+parameters:
+  entity_share_client.batch_size: 10
+
+services:
+  logger.channel.entity_share_client:
+    parent: logger.channel_base
+    arguments: ['entity_share_client']
+
+  plugin.manager.entity_share_client_import_processor:
+    class: Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginManager
+    parent: default_plugin_manager
+
+  plugin.manager.entity_share_client_authorization:
+    class: Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationPluginManager
+    parent: default_plugin_manager
+
+  plugin.manager.entity_share_client_policy:
+    class: Drupal\entity_share_client\ImportPolicy\ImportPolicyPluginManager
+    arguments:
+      - '@module_handler'
+      - '@cache.discovery'
+
+  entity_share_client.import_config_manipulator:
+    class: Drupal\entity_share_client\Service\ImportConfigManipulator
+    arguments:
+      - '@plugin.manager.entity_share_client_import_processor'
+
+  entity_share_client.remote_manager:
+    class: Drupal\entity_share_client\Service\RemoteManager
+    arguments:
+      - '@logger.channel.entity_share_client'
+
+  entity_share_client.import_service:
+    class: Drupal\entity_share_client\Service\ImportService
+    arguments:
+      - '@entity_type.manager'
+      - '@logger.channel.entity_share_client'
+      - '@messenger'
+      - '@entity_share_client.remote_manager'
+      - '@entity_share_client.import_config_manipulator'
+      - '@entity_share_client.jsonapi_helper'
+
+  entity_share_client.jsonapi_helper:
+    class: Drupal\entity_share_client\Service\JsonapiHelper
+    arguments:
+      - '@jsonapi.serializer'
+      - '@serializer.normalizer.jsonapi_document_toplevel.jsonapi'
+      - '@jsonapi.resource_type.repository'
+
+  entity_share_client.form_helper:
+    class: Drupal\entity_share_client\Service\FormHelper
+    arguments:
+      - '@jsonapi.resource_type.repository'
+      - '@entity_type.bundle.info'
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@entity_share_client.state_information'
+      - '@module_handler'
+
+  entity_share_client.entity_reference_helper:
+    class: Drupal\entity_share_client\Service\EntityReferenceHelper
+    arguments:
+      - '@entity_type.manager'
+
+  entity_share_client.state_information:
+    class: Drupal\entity_share_client\Service\StateInformation
+    arguments:
+      - '@entity_type.manager'
+      - '@jsonapi.resource_type.repository'
+      - '@datetime.time'
+      - '@plugin.manager.entity_share_client_policy'
+
+  entity_share_client.entity_reference_revisions_relationship_subscriber:
+    class: Drupal\entity_share_client\EventSubscriber\EntityReferenceRevisionsRelationshipSubscriber
+    arguments:
+      - '@entity_type.manager'
+    tags:
+      - { name: event_subscriber }
+
+  entity_share_client.cli:
+    class: Drupal\entity_share_client\Service\EntityShareClientCliService
+    arguments:
+      - '@string_translation'
+      - '@entity_share_client.import_service'
+
+  entity_share_client.key_provider:
+    class: Drupal\entity_share_client\Service\KeyProvider
+    arguments: ['@keyvalue']
+    calls:
+      - [setKeyRepository, ['@?key.repository']]

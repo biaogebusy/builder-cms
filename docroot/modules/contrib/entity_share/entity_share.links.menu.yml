@@ -1,0 +1,4 @@
+entity_share.admin_config_page:
+  title: 'Entity Share'
+  route_name: entity_share.admin_config_page
+  parent: system.admin_config_services

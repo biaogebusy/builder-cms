@@ -1,0 +1,35 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_media
+    - media.type.es_test_audio
+    - media.type.es_test_document
+    - media.type.es_test_image
+    - media.type.es_test_remote_video
+    - media.type.es_test_video
+    - node.type.es_test
+id: node.es_test.field_es_test_media
+field_name: field_es_test_media
+entity_type: node
+bundle: es_test
+label: 'Media reference'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      es_test_audio: es_test_audio
+      es_test_document: es_test_document
+      es_test_image: es_test_image
+      es_test_remote_video: es_test_remote_video
+      es_test_video: es_test_video
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: audio
+field_type: entity_reference

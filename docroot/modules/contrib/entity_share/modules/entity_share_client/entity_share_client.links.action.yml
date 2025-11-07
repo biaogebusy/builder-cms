@@ -1,0 +1,11 @@
+entity.remote.add_form:
+  route_name: 'entity.remote.add_form'
+  title: 'Add remote website'
+  appears_on:
+    - entity.remote.collection
+
+entity.import_config.add_form:
+  route_name: 'entity.import_config.add_form'
+  title: 'Add Import config'
+  appears_on:
+    - entity.import_config.collection

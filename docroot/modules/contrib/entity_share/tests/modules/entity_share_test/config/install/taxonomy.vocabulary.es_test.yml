@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Entity share test'
+vid: es_test
+description: ''
+weight: 0

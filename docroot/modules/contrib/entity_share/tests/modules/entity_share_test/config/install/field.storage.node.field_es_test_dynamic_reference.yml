@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - dynamic_entity_reference
+    - node
+    - taxonomy
+    - user
+id: node.field_es_test_dynamic_reference
+field_name: field_es_test_dynamic_reference
+entity_type: node
+type: dynamic_entity_reference
+settings:
+  exclude_entity_types: false
+  entity_type_ids:
+    node: node
+    taxonomy_term: taxonomy_term
+    user: user
+module: dynamic_entity_reference
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_link
+    - node.type.es_test
+  module:
+    - link
+id: node.es_test.field_es_test_link
+field_name: field_es_test_link
+entity_type: node
+bundle: es_test
+label: Link
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 1
+field_type: link

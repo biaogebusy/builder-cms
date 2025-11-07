@@ -1,0 +1,8 @@
+administer_channel_entity:
+  title: 'Administer channel entity'
+  description: 'Allows to administer the channels.'
+  restrict access: true
+
+entity_share_server_access_channels:
+  title: 'Access channels list'
+  description: 'Allows to access the channels list.'

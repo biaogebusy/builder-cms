@@ -1,0 +1,16 @@
+# Schema for the configuration files of the Entity share diff module.
+
+entity_share_diff.settings:
+  type: config_object
+  label: 'Entity share diff settings'
+  mapping:
+    context:
+      type: mapping
+      label: 'Context'
+      mapping:
+        lines_leading:
+          type: integer
+          label: 'Number of leading lines in a diff'
+        lines_trailing:
+          type: integer
+          label: 'Number of trailing lines in a diff'

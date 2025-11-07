@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_es_test_text_plain
+    - paragraphs.paragraphs_type.es_test
+id: paragraph.es_test.field_es_test_text_plain
+field_name: field_es_test_text_plain
+entity_type: paragraph
+bundle: es_test
+label: 'Text plain'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,9 @@
+services:
+  entity_share_client.commands:
+    class: Drupal\entity_share_client\Commands\EntityShareClientCommands
+    arguments:
+      - '@entity_share_client.cli'
+      - '@entity_type.manager'
+      - '@entity_share_client.remote_manager'
+    tags:
+      - { name: drush.command }

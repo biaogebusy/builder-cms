@@ -1,0 +1,17 @@
+entity_share_diff.comparison:
+  path: '/admin/content/entity_share/pull/diff/{left_revision_id}/{remote}/{channel_id}/{uuid}'
+  defaults:
+    _controller: '\Drupal\entity_share_diff\Controller\DiffController::compareEntities'
+    _title: 'Entity comparison'
+  requirements:
+    _permission: 'entity_share_client_pull_content'
+  options:
+    _admin_route: TRUE
+
+entity_share_diff.admin_settings:
+  path: '/admin/config/services/entity_share/diff'
+  defaults:
+    _form: '\Drupal\entity_share_diff\Form\AdminSettingsForm'
+    _title: 'Entity Share Diff settings'
+  requirements:
+    _permission: 'administer_import_config_entity'

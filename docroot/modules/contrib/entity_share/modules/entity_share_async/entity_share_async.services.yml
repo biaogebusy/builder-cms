@@ -1,0 +1,10 @@
+services:
+  logger.channel.entity_share_async:
+    parent: logger.channel_base
+    arguments: ['entity_share_async']
+
+  entity_share_async.queue_helper:
+    class: Drupal\entity_share_async\Service\QueueHelper
+    arguments:
+      - '@queue'
+      - '@state'

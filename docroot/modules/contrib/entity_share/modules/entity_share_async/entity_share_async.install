@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Entity Share Async module.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\entity_share_async\Service\QueueHelperInterface;
+
+/**
+ * Implements hook_uninstall().
+ */
+function entity_share_async_uninstall() {
+  \Drupal::state()->delete(QueueHelperInterface::STATE_ID);
+
+  $queue = \Drupal::queue(QueueHelperInterface::QUEUE_NAME);
+  $queue->deleteQueue();
+}
+
+/**
+ * Delete the state and the queue.
+ */
+function entity_share_async_update_8301() {
+  \Drupal::state()->delete(QueueHelperInterface::STATE_ID);
+
+  $queue = \Drupal::queue(QueueHelperInterface::QUEUE_NAME);
+  $queue->deleteQueue();
+
+  \Drupal::messenger()->addStatus(t('Entities will need to be remarked for asynchronous import.'));
+}

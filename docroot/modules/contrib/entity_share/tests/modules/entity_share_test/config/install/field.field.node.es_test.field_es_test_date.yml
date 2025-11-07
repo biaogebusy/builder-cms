@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_date
+    - node.type.es_test
+  module:
+    - datetime
+id: node.es_test.field_es_test_date
+field_name: field_es_test_date
+entity_type: node
+bundle: es_test
+label: Date
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    default_date_type: now
+    default_date: now
+default_value_callback: ''
+settings: {  }
+field_type: datetime

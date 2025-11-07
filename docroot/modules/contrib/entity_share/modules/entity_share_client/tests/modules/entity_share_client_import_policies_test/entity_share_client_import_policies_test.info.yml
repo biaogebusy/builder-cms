@@ -1,0 +1,11 @@
+name: 'Entity Share Client Import Policies Test'
+description: 'Provides a policy for tests.'
+type: module
+package: 'Testing'
+dependencies:
+  - entity_share:entity_share_client
+
+# Information added by Drupal.org packaging script on 2023-04-11
+version: '8.x-3.0'
+project: 'entity_share'
+datestamp: 1681198396

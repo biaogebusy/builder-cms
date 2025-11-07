@@ -1,0 +1,100 @@
+entity_share_client.import_config.*:
+  type: config_entity
+  label: 'Import config config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    import_maxsize:
+      type: integer
+      label: 'Import max size'
+    import_processor_settings:
+      type: sequence
+      label: 'Import processor settings'
+      orderby: key
+      sequence:
+        type: entity_share_client.plugin.import_processor_configuration.[%key]
+        label: 'The configuration for a single processor'
+
+entity_share_client.plugin.import_processor_configuration:
+  type: mapping
+  label: 'Default import processor configuration'
+  mapping:
+    weights:
+      type: sequence
+      label: 'The import processor''s weights for the different processing stages'
+      orderby: key
+      sequence:
+        type: integer
+        label: 'The import processor''s weight for this stage'
+
+entity_share_client.plugin.import_processor_configuration.*:
+  type: entity_share_client.plugin.import_processor_configuration
+
+entity_share_client.plugin.import_processor_configuration.block_field_block_content_importer:
+  type: entity_share_client.plugin.import_processor_configuration.entity_reference
+
+entity_share_client.plugin.import_processor_configuration.changed_time:
+  type: entity_share_client.plugin.import_processor_configuration
+
+entity_share_client.plugin.import_processor_configuration.default_data_processor:
+  type: entity_share_client.plugin.import_processor_configuration
+  mapping:
+    policy:
+      type: string
+      label: 'The import policy'
+    update_policy:
+      type: boolean
+      label: 'If the import policy should be updated'
+
+entity_share_client.plugin.import_processor_configuration.embedded_entity_importer:
+  type: entity_share_client.plugin.import_processor_configuration.entity_reference
+
+entity_share_client.plugin.import_processor_configuration.entity_reference:
+  type: entity_share_client.plugin.import_processor_configuration
+  mapping:
+    max_recursion_depth:
+      type: integer
+      label: 'The maximum recursion depth'
+
+entity_share_client.plugin.import_processor_configuration.language_fallback:
+  type: entity_share_client.plugin.import_processor_configuration
+  mapping:
+    fallback_language:
+      type: string
+      label: 'The fallback language'
+    force_language:
+      type: boolean
+      label: 'If the selected language should be applied, nevertheless of existing language'
+
+entity_share_client.plugin.import_processor_configuration.link_internal_content_importer:
+  type: entity_share_client.plugin.import_processor_configuration.entity_reference
+
+entity_share_client.plugin.import_processor_configuration.path_alias_processor:
+  type: entity_share_client.plugin.import_processor_configuration
+
+entity_share_client.plugin.import_processor_configuration.physical_file:
+  type: entity_share_client.plugin.import_processor_configuration
+  mapping:
+    rename:
+      type: boolean
+      label: 'Rename imported files with the same name, instead of overwriting'
+
+entity_share_client.plugin.import_processor_configuration.revision:
+  type: entity_share_client.plugin.import_processor_configuration
+  mapping:
+    enforce_new_revision:
+      type: boolean
+      label: 'Enforce new revision'
+    translation_affected:
+      type: boolean
+      label: 'Enforce translation affected'
+
+entity_share_client.plugin.import_processor_configuration.skip_imported:
+  type: entity_share_client.plugin.import_processor_configuration
+
+entity_share_client.plugin.import_processor_configuration.book_structure_importer:
+  type: entity_share_client.plugin.import_processor_configuration.entity_reference

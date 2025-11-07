@@ -1,0 +1,9 @@
+entity_share.admin_config_page:
+  path: '/admin/config/services/entity_share'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Entity Share'
+  requirements:
+    _permission: 'entity_share_access_config_pages'
+  options:
+    _admin_route: TRUE

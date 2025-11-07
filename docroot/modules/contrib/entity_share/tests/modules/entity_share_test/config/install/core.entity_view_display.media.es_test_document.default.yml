@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.es_test_document.field_es_test_document
+    - media.type.es_test_document
+  module:
+    - file
+id: media.es_test_document.default
+targetEntityType: media
+bundle: es_test_document
+mode: default
+content:
+  field_es_test_document:
+    type: file_default
+    label: visually_hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  created: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

@@ -1,0 +1,5 @@
+entity.channel.add_form:
+  route_name: 'entity.channel.add_form'
+  title: 'Add Channel'
+  appears_on:
+    - entity.channel.collection

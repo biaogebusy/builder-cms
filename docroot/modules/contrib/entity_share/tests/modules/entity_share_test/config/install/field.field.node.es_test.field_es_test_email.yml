@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_email
+    - node.type.es_test
+id: node.es_test.field_es_test_email
+field_name: field_es_test_email
+entity_type: node
+bundle: es_test
+label: Email
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: email

@@ -1,0 +1,22 @@
+administer_remote_entity:
+  title: 'Administer remote website entity'
+  description: 'Allows to administer the remote websites.'
+  restrict access: true
+
+administer_import_config_entity:
+  title: 'Administer import config entity'
+  description: 'Allows to administer the import configurations.'
+  restrict access: true
+
+administer_import_status_entities:
+  title: 'Administer import status entities'
+  description: 'Allows to administer the import status entities.'
+  restrict access: true
+
+entity_share_client_pull_content:
+  title: 'Pull remote entities'
+  description: 'Access the Entity Share pull form.'
+
+entity_share_client_display_errors:
+  title: 'Display technical errors'
+  description: 'Display Guzzle requests errors on pull form.'

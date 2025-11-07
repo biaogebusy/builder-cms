@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.es_test.field_es_test_paragraphs
+    - field.field.paragraph.es_test.field_es_test_text_plain
+    - paragraphs.paragraphs_type.es_test
+  module:
+    - entity_reference_revisions
+id: paragraph.es_test.default
+targetEntityType: paragraph
+bundle: es_test
+mode: default
+content:
+  field_es_test_paragraphs:
+    type: entity_reference_revisions_entity_view
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_es_test_text_plain:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden: {  }

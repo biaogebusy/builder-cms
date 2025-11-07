@@ -1,0 +1,6 @@
+# Menu items definition.
+entity_share_diff.settings:
+  title: 'Diff settings'
+  route_name: entity_share_diff.admin_settings
+  description: 'Settings related to Entity Share Diff'
+  parent: entity_share.admin_config_page

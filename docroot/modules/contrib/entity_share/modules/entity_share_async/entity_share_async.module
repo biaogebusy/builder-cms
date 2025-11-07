@@ -1,0 +1,84 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Entity Share Async module.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function entity_share_async_form_entity_share_client_pull_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $async_button = [
+    '#type' => 'submit',
+    '#value' => t('Import asynchronously'),
+    '#button_type' => 'primary',
+    '#validate' => ['::validateSelectedEntities'],
+    '#submit' => [
+      '::submitForm',
+      '_entity_share_async_form_submit',
+    ],
+  ];
+
+  // Add buttons.
+  if (isset($form['channel_wrapper']['entities_wrapper']['actions_top'])) {
+    $form['channel_wrapper']['entities_wrapper']['actions_top']['async'] = $async_button;
+  }
+  if (isset($form['channel_wrapper']['entities_wrapper']['actions_bottom'])) {
+    $form['channel_wrapper']['entities_wrapper']['actions_bottom']['async'] = $async_button;
+  }
+
+  // Alter the entities table select.
+  if (isset($form['channel_wrapper']['entities_wrapper']['entities'])) {
+    $state_storage = \Drupal::state();
+    $request = \Drupal::request();
+    $async_states = $state_storage->get('entity_share_async.states', []);
+
+    $remote_id = $form_state->getValue('remote', $request->get('remote'));
+    $channel_id = $form_state->getValue('channel', $request->get('channel'));
+    $import_configs = \Drupal::entityTypeManager()
+      ->getStorage('import_config')
+      ->loadMultiple();
+
+    foreach (array_keys($form['channel_wrapper']['entities_wrapper']['entities']['#options']) as $uuid) {
+      if (isset($async_states[$remote_id][$channel_id][$uuid])) {
+        $import_config_label = t('Undefined');
+        $import_config_id = $async_states[$remote_id][$channel_id][$uuid];
+        if (isset($import_configs[$import_config_id])) {
+          $import_config_label = $import_configs[$import_config_id]->label();
+        }
+
+        $form['channel_wrapper']['entities_wrapper']['entities']['#options'][$uuid]['#attributes']['class'] = [
+          'entity-share-waiting-sync',
+        ];
+        $form['channel_wrapper']['entities_wrapper']['entities']['#options'][$uuid]['status'] = t('Waiting for synchronization (import config %import_config)', [
+          '%import_config' => $import_config_label,
+        ]);
+      }
+    }
+  }
+}
+
+/**
+ * Submit handler for asynchronous import.
+ *
+ * @param array $form
+ *   The form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ */
+function _entity_share_async_form_submit(array &$form, FormStateInterface $form_state) {
+  $selected_entities = $form_state->getValue('entities');
+  $selected_entities = array_filter($selected_entities);
+  $remote_id = $form_state->getValue('remote');
+  $channel_id = $form_state->getValue('channel');
+  $import_config_id = $form_state->getValue('import_config');
+
+  /** @var \Drupal\entity_share_async\Service\QueueHelperInterface $queue_helper */
+  $queue_helper = \Drupal::service('entity_share_async.queue_helper');
+  $queue_helper->enqueue($remote_id, $channel_id, $import_config_id, $selected_entities);
+}

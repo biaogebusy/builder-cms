@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - comment.type.es_test
+id: comment.es_test.homepage
+field_name: homepage
+entity_type: comment
+bundle: es_test
+label: Homepage
+description: 'The comment author''s home page address.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: uri

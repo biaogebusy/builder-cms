@@ -1,0 +1,125 @@
+entity_share_server.channel.*:
+  type: config_entity
+  label: 'Channel config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    channel_entity_type:
+      type: string
+      label: 'Channel entity type'
+    channel_bundle:
+      type: string
+      label: 'Channel bundle'
+    channel_langcode:
+      type: string
+      label: 'Channel langcode'
+    channel_filters:
+      type: sequence
+      label: 'Channel filters'
+      nullable: true
+      sequence:
+        type: entity_share_server.filter
+        label: 'Filters'
+    channel_groups:
+      type: sequence
+      label: 'Channel groups'
+      nullable: true
+      sequence:
+        type: entity_share_server.group
+        label: 'Groups'
+    channel_sorts:
+      type: sequence
+      label: 'Channel sorts'
+      nullable: true
+      sequence:
+        type: entity_share_server.sort
+        label: 'Sorts'
+    channel_searches:
+      type: sequence
+      label: 'Channel searches'
+      nullable: true
+      sequence:
+        type: entity_share_server.search
+        label: 'Searches'
+    channel_maxsize:
+      type: integer
+      label: 'Channel max size'
+    access_by_permission:
+      type: boolean
+      label: 'Authorize users with permission'
+    authorized_roles:
+      type: sequence
+      label: 'Authorized roles'
+      nullable: true
+      sequence:
+        type: string
+        label: 'Role'
+    authorized_users:
+      type: sequence
+      label: 'Authorized users UUID'
+      nullable: true
+      sequence:
+        type: string
+        label: 'UUID'
+
+entity_share_server.filter:
+  type: mapping
+  label: 'Filter'
+  mapping:
+    path:
+      type: string
+      label: 'Path'
+    operator:
+      type: string
+      label: 'Operator'
+    memberof:
+      type: string
+      label: 'Member of'
+      nullable: true
+    value:
+      type: sequence
+      label: 'Values'
+      nullable: true
+      sequence:
+        type: string
+        label: 'Value'
+
+entity_share_server.sort:
+  type: mapping
+  label: 'Sort'
+  mapping:
+    path:
+      type: string
+      label: 'Path'
+    direction:
+      type: string
+      label: 'Direction'
+    weight:
+      type: integer
+      label: 'Weight'
+
+entity_share_server.search:
+  type: mapping
+  label: 'Search'
+  mapping:
+    path:
+      type: string
+      label: 'Path'
+    label:
+      type: label
+      label: 'Label'
+
+entity_share_server.group:
+  type: mapping
+  label: 'Group'
+  mapping:
+    conjunction:
+      type: string
+      label: 'Conjunction'
+    memberof:
+      type: string
+      label: 'Member of'

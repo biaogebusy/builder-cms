@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_text_formatted_lon
+    - node.type.es_test
+  module:
+    - text
+id: node.es_test.field_es_test_text_formatted_lon
+field_name: field_es_test_text_formatted_lon
+entity_type: node
+bundle: es_test
+label: 'Text (formatted, long)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

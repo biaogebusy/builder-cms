@@ -1,0 +1,77 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_dynamic_reference
+    - node.type.es_test
+    - taxonomy.vocabulary.es_test
+  module:
+    - dynamic_entity_reference
+id: node.es_test.field_es_test_dynamic_reference
+field_name: field_es_test_dynamic_reference
+entity_type: node
+bundle: es_test
+label: 'Dynamic reference'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  node:
+    handler: 'default:node'
+    handler_settings:
+      target_bundles:
+        es_test: es_test
+      sort:
+        field: _none
+      auto_create: false
+      auto_create_bundle: ''
+  taxonomy_term:
+    handler: 'default:taxonomy_term'
+    handler_settings:
+      target_bundles:
+        es_test: es_test
+      sort:
+        field: name
+        direction: asc
+      auto_create: false
+      auto_create_bundle: ''
+  user:
+    handler: 'default:user'
+    handler_settings:
+      target_bundles: null
+      sort:
+        field: _none
+      auto_create: false
+      filter:
+        type: _none
+      include_anonymous: false
+  block_content:
+    handler: 'default:block_content'
+    handler_settings: {  }
+  comment:
+    handler: 'default:comment'
+    handler_settings: {  }
+  contact_message:
+    handler: 'default:contact_message'
+    handler_settings: {  }
+  file:
+    handler: 'default:file'
+    handler_settings: {  }
+  menu_link_content:
+    handler: 'default:menu_link_content'
+    handler_settings: {  }
+  paragraph:
+    handler: 'default:paragraph'
+    handler_settings: {  }
+  path_alias:
+    handler: 'default:path_alias'
+    handler_settings: {  }
+  media:
+    handler: 'default:media'
+    handler_settings: {  }
+  entity_import_status:
+    handler: 'default:entity_import_status'
+    handler_settings: {  }
+field_type: dynamic_entity_reference

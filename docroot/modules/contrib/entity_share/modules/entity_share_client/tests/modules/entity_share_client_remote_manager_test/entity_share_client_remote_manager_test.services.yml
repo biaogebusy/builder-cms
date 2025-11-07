@@ -1,0 +1,6 @@
+services:
+  entity_share_client_remote_manager_test.remote_manager:
+    class: Drupal\entity_share_client_remote_manager_test\Service\TestRemoteManager
+    public: false
+    decorates: entity_share_client.remote_manager
+    parent: entity_share_client.remote_manager

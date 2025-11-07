@@ -1,0 +1,19 @@
+jsonapi_extras.enhancer_plugin.entity_share_metatag:
+  type: mapping
+  mapping:
+    expose_default_tags:
+      type: boolean
+      label: 'Expose default tags'
+    replace_tokens:
+      type: boolean
+      label: 'Replace tokens'
+    clear_tokens:
+      type: boolean
+      label: 'Clear tokens'
+
+jsonapi_extras.enhancer_plugin.entity_share_pathauto:
+  type: mapping
+  mapping:
+    behavior:
+      type: string
+      label: 'Behavior on exposing pathauto'

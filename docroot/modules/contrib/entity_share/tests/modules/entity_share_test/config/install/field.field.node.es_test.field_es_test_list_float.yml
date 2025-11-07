@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_list_float
+    - node.type.es_test
+  module:
+    - options
+id: node.es_test.field_es_test_list_float
+field_name: field_es_test_list_float
+entity_type: node
+bundle: es_test
+label: 'List (float)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_float

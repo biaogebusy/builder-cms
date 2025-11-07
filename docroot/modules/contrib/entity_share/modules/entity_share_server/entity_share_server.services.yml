@@ -1,0 +1,6 @@
+services:
+  entity_share_server.channel_manipulator:
+    class: Drupal\entity_share_server\Service\ChannelManipulator
+    arguments:
+      - '@entity_type.manager'
+      - '@jsonapi.resource_type.repository'

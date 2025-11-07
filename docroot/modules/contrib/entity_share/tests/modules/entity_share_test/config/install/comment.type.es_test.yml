@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+id: es_test
+label: 'Entity share test'
+target_entity_type_id: node
+description: ''

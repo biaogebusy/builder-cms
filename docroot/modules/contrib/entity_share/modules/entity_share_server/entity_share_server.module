@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Entity Share Server module.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\entity_share_server\HookHandler\EntityDeleteHookHandler;
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Remove user from channels if needed.
+ */
+function entity_share_server_entity_delete(EntityInterface $entity) {
+  $entity_type_id = $entity->getEntityTypeId();
+  if ($entity_type_id == 'user') {
+    \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(EntityDeleteHookHandler::class)
+      ->userDelete($entity);
+  }
+  elseif ($entity_type_id == 'user_role') {
+    \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(EntityDeleteHookHandler::class)
+      ->roleDelete($entity);
+  }
+}

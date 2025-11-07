@@ -1,0 +1,33 @@
+# This is the DrupalCI testbot build file for Entity Share.
+# Learn to make one for your own drupal.org project:
+# https://www.drupal.org/drupalorg/docs/drupal-ci/customizing-drupalci-testing
+build:
+  assessment:
+    validate_codebase:
+      phplint:
+        halt-on-fail: false
+      csslint:
+        halt-on-fail: false
+      eslint:
+        halt-on-fail: false
+      phpcs:
+        # phpcs will use core's specified version of Coder.
+        sniff-all-files: true
+        halt-on-fail: false
+      phpstan:
+        halt-on-fail: false
+    testing:
+      # run_tests task is executed several times in order of performance speeds.
+      # halt-on-fail can be set on the run_tests tasks in order to fail fast.
+      # suppress-deprecations is false in order to be alerted to usages of
+      # deprecated code.
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
+        testgroups: 'entity_share'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: 'entity_share'
+        suppress-deprecations: true
+        halt-on-fail: false

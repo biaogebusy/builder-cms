@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs_test
+id: es_test
+label: 'Entity share test'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins:
+  test_bold_text:
+    enabled: true

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - media.type.es_test_document
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+    bundle_settings:
+      untranslatable_fields_hide: '0'
+id: media.es_test_document
+target_entity_type_id: media
+target_bundle: es_test_document
+default_langcode: current_interface
+language_alterable: true

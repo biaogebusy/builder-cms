@@ -1,0 +1,5 @@
+default:
+  label: 'Default'
+
+create_only:
+  label: 'Create only'

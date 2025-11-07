@@ -180,6 +180,7 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         ),
         'L' => 
         array (
+            'League\\OAuth2\\Client\\' => 21,
             'League\\Csv\\' => 11,
             'League\\Container\\' => 17,
             'Laminas\\Stdlib\\' => 15,
@@ -605,6 +606,10 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         array (
             0 => __DIR__ . '/..' . '/makinacorpus/php-lucene/src',
         ),
+        'League\\OAuth2\\Client\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/oauth2-client/src',
+        ),
         'League\\Csv\\' => 
         array (
             0 => __DIR__ . '/..' . '/league/csv/src',
@@ -771,8 +776,8 @@ class ComposerStaticInit73cbcc18c7ade12b47b0cb4c4b2b2ff8
         ),
         'Darabonba\\OpenApi\\' => 
         array (
-            0 => __DIR__ . '/..' . '/alibabacloud/openapi-core/src',
-            1 => __DIR__ . '/..' . '/alibabacloud/darabonba-openapi/src',
+            0 => __DIR__ . '/..' . '/alibabacloud/darabonba-openapi/src',
+            1 => __DIR__ . '/..' . '/alibabacloud/openapi-core/src',
         ),
         'Darabonba\\GatewaySpi\\' => 
         array (

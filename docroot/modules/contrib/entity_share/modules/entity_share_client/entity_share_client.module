@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Entity Share Client module.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface;
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Delete "Entity import status" when its entity is deleted.
+ */
+function entity_share_client_entity_delete(EntityInterface $entity) {
+  /** @var \Drupal\entity_share_client\Service\StateInformationInterface $state_information_service */
+  $state_information_service = \Drupal::service('entity_share_client.state_information');
+  // This will delete "Entity import status" for all languages.
+  $state_information_service->deleteImportStatusOfEntity($entity);
+}
+
+/**
+ * Implements hook_entity_translation_delete().
+ *
+ * Delete "Entity import status" when translation of an entity is deleted.
+ */
+function entity_share_client_entity_translation_delete(EntityInterface $translation) {
+  /** @var \Drupal\entity_share_client\Service\StateInformationInterface $state_information_service */
+  $state_information_service = \Drupal::service('entity_share_client.state_information');
+  // This deletes "Entity import status" only for translation being deleted.
+  $state_information_service->deleteImportStatusOfEntity($translation, $translation->language()->getId());
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for 'remote'.
+ */
+function entity_share_client_remote_delete(EntityInterface $entity) {
+  // Clean key value store.
+  $key_value_store = \Drupal::keyValue(ClientAuthorizationInterface::LOCAL_STORAGE_KEY_VALUE_COLLECTION);
+  $auth = $entity->get('auth');
+  $key_value_store->delete($auth['uuid']);
+  // In case the plugin has plugin specific storage.
+  $key_value_store->delete($auth['uuid'] . '-' . $auth['pid']);
+}
+
+/**
+ * Implements hook_action_info_alter().
+ */
+function entity_share_client_action_info_alter(array &$definitions): void {
+  if (!\Drupal::moduleHandler()->moduleExists('views_bulk_operations')) {
+    unset($definitions['entity_share_client_update_policy']);
+  }
+}

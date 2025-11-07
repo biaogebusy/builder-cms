@@ -1,0 +1,31 @@
+# Remote menu items definition.
+entity.remote.collection:
+  title: 'Remote websites'
+  route_name: entity.remote.collection
+  description: 'List remote websites'
+  parent: entity_share.admin_config_page
+
+# Import config menu items definition.
+entity.import_config.collection:
+  title: 'Import config'
+  route_name: entity.import_config.collection
+  description: 'List Import config'
+  parent: entity_share.admin_config_page
+
+entity_share_client.admin_content_page:
+  title: 'Entity Share'
+  route_name: entity_share_client.admin_content_page
+  parent: system.admin_content
+
+entity_share_client.admin_content_pull_form:
+  title: 'Pull entities'
+  route_name: entity_share_client.admin_content_pull_form
+  parent: entity_share_client.admin_content_page
+  weight: 0
+
+entity_share_client.entity_import_statuses:
+  title: 'Import statuses'
+  route_name: entity.entity_import_status.collection
+  description: 'List of Import statuses'
+  parent: entity_share_client.admin_content_page
+  weight: 10

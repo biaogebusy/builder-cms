@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Entity Share Lock module.
+ */
+
+declare(strict_types = 1);
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\entity_share_lock\HookHandler\FormAlterHookHandler;
+
+/**
+ * Implements hook_form_alter().
+ */
+function entity_share_lock_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  return \Drupal::service('class_resolver')
+    ->getInstanceFromDefinition(FormAlterHookHandler::class)
+    ->formAlter($form, $form_state, $form_id);
+}

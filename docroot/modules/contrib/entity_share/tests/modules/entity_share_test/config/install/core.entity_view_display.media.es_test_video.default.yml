@@ -1,0 +1,33 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.es_test_video.field_es_test_video_file
+    - media.type.es_test_video
+  module:
+    - file
+id: media.es_test_video.default
+targetEntityType: media
+bundle: es_test_video
+mode: default
+content:
+  field_es_test_video_file:
+    type: file_video
+    label: visually_hidden
+    settings:
+      controls: true
+      autoplay: false
+      loop: false
+      multiple_file_display_type: tags
+      muted: false
+      width: 640
+      height: 480
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  created: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

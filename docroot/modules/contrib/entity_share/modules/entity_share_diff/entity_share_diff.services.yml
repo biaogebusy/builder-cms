@@ -1,0 +1,20 @@
+services:
+  plugin.manager.entity_share_diff_generator_manager:
+    class: Drupal\entity_share_diff\DiffGenerator\DiffGeneratorPluginManager
+    parent: default_plugin_manager
+
+  entity_share_diff.formatter:
+    class: Drupal\entity_share_diff\Diff\DiffFormatter
+    public: false
+    decorates: diff.formatter
+    parent: diff.formatter
+
+  entity_share_diff.entity_parser:
+    class: Drupal\entity_share_diff\Service\EntityParser
+    arguments:
+      - '@plugin.manager.entity_share_diff_generator_manager'
+      - '@language_manager'
+      - '@entity_share_client.remote_manager'
+      - '@entity_share_client.jsonapi_helper'
+      - '@jsonapi.resource_type.repository'
+      - '@entity_share_client.entity_reference_helper'

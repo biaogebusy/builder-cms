@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_es_test_timestamp
+    - node.type.es_test
+id: node.es_test.field_es_test_timestamp
+field_name: field_es_test_timestamp
+entity_type: node
+bundle: es_test
+label: Timestamp
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 1558351146
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

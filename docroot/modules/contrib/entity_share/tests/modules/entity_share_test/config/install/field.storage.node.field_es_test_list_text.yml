@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_es_test_list_text
+field_name: field_es_test_list_text
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: choice_1
+      label: 'Choice 1'
+    -
+      value: choice_2
+      label: 'Choice 2'
+    -
+      value: choice_3
+      label: 'Choice 3'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
