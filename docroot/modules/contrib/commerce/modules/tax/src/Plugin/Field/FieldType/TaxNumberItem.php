@@ -2,9 +2,8 @@
 
 namespace Drupal\commerce_tax\Plugin\Field\FieldType;
 
-use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\SupportsVerificationInterface;
-use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -12,19 +11,27 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\MapDataDefinition;
+use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\SupportsVerificationInterface;
+use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 
 /**
  * Plugin implementation of the 'commerce_tax_number' field type.
  *
- * @FieldType(
- *   id = "commerce_tax_number",
- *   label = @Translation("Tax number"),
- *   category = @Translation("Commerce"),
- *   default_formatter = "commerce_tax_number_default",
- *   default_widget = "commerce_tax_number_default",
- *   cardinality = 1,
- * )
+ * @property string $type
+ * @property string|null $value
+ * @property string|null $verification_state
+ * @property integer|null $verification_timestamp
+ * @property array $verification_result
  */
+#[FieldType(
+  id: "commerce_tax_number",
+  label: new TranslatableMarkup("Tax number"),
+  description: new TranslatableMarkup("Stores a tax number"),
+  category: "commerce",
+  default_widget: "commerce_tax_number_default",
+  default_formatter: "commerce_tax_number_default",
+  cardinality: 1,
+)]
 class TaxNumberItem extends FieldItemBase implements TaxNumberItemInterface {
 
   /**
@@ -169,7 +176,7 @@ class TaxNumberItem extends FieldItemBase implements TaxNumberItemInterface {
             VerificationResult::STATE_FAILURE,
             VerificationResult::STATE_UNKNOWN,
           ],
-          'message' => $this->t('Invalid verification_state specified.'),
+          'message' => $this->t('Invalid verification state specified.'),
         ],
       ],
     ]);
@@ -319,6 +326,8 @@ class TaxNumberItem extends FieldItemBase implements TaxNumberItemInterface {
       $tax_number_type_manager = $this->getTaxNumberTypeManager();
       return $tax_number_type_manager->createInstance($this->type);
     }
+
+    return NULL;
   }
 
   /**

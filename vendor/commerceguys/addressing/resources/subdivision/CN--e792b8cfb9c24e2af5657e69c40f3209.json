@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Shangluo Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Danfeng Xian": {
+			"local_name": "丹凤县"
+		},
+		"Luonan Xian": {
+			"local_name": "洛南县"
+		},
+		"Shanyang Xian": {
+			"local_name": "山阳县"
+		},
+		"Shangnan Xian": {
+			"local_name": "商南县"
+		},
+		"Shangzhou Qu": {
+			"local_name": "商州区"
+		},
+		"Zhashui Xian": {
+			"local_name": "柞水县"
+		},
+		"Zhen'an Xian": {
+			"local_name": "镇安县"
+		}
+	}
+}

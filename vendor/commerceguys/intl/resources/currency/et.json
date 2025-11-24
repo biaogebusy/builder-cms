@@ -76,6 +76,10 @@
 	"CVE": {
 		"name": "Cabo Verde eskuudo"
 	},
+	"XCG": {
+		"name": "Caribbean guilder",
+		"symbol": "Cg."
+	},
 	"XPF": {
 		"name": "CFP frank",
 		"symbol": "CFPF"
@@ -144,9 +148,6 @@
 	"CNY": {
 		"name": "Hiina jüaan",
 		"symbol": "CN¥"
-	},
-	"ANG": {
-		"name": "Hollandi Antillide kulden"
 	},
 	"HNL": {
 		"name": "Hondurase lempiira"
@@ -220,9 +221,6 @@
 	},
 	"CDF": {
 		"name": "Kongo frank"
-	},
-	"CUC": {
-		"name": "Kuuba konverteeritav peeso"
 	},
 	"CUP": {
 		"name": "Kuuba peeso"
@@ -380,9 +378,6 @@
 	"SLE": {
 		"name": "Sierra Leone leoone"
 	},
-	"SLL": {
-		"name": "Sierra Leone leoone (1964–2022)"
-	},
 	"SGD": {
 		"name": "Singapuri dollar"
 	},
@@ -410,9 +405,6 @@
 	},
 	"CHF": {
 		"name": "Šveitsi frank"
-	},
-	"ZWL": {
-		"name": "Zimbabwe dollar (2009)"
 	},
 	"DKK": {
 		"name": "Taani kroon"

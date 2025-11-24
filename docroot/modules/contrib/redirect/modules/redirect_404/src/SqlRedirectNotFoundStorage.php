@@ -2,6 +2,7 @@
 
 namespace Drupal\redirect_404;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
@@ -35,16 +36,31 @@ class SqlRedirectNotFoundStorage implements RedirectNotFoundStorageInterface {
   protected $configFactory;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected TimeInterface $time;
+
+  /**
    * Constructs a new SqlRedirectNotFoundStorage.
    *
    * @param \Drupal\Core\Database\Connection $database
    *   A Database connection to use for reading and writing database data.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   The time service.
    */
-  public function __construct(Connection $database, ConfigFactoryInterface $config_factory) {
+  public function __construct(Connection $database, ConfigFactoryInterface $config_factory, ?TimeInterface $time = NULL) {
     $this->database = $database;
     $this->configFactory = $config_factory;
+    if (!$time) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $time argument is deprecated in redirect:1.11.0 and it will be required in redirect:2.0.0. See https://www.drupal.org/project/redirect/issues/3451531', E_USER_DEPRECATED);
+      // @phpstan-ignore globalDrupalDependencyInjection.useDependencyInjection
+      $time = \Drupal::time();
+    }
+    $this->time = $time;
   }
 
   /**
@@ -69,7 +85,7 @@ class SqlRedirectNotFoundStorage implements RedirectNotFoundStorageInterface {
       ->expression('count', 'count + 1')
       ->expression('daily_count', 'daily_count + 1')
       ->fields([
-        'timestamp' => \Drupal::time()->getRequestTime(),
+        'timestamp' => $this->time->getRequestTime(),
         'count' => 1,
         'daily_count' => 1,
         'resolved' => 0,

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\Core\Database\Database;
@@ -9,6 +11,8 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\media_test_oembed\Controller\ResourceController;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\media\Traits\OEmbedTestTrait;
+
+// cspell:ignore Drupalin Hustlin Schipulcon
 
 /**
  * Basic tests for Media configuration in the standard profile.
@@ -44,7 +48,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
    * This prevents installing the standard profile for every test case and
    * increases the performance of this test.
    */
-  public function testMediaSources() {
+  public function testMediaSources(): void {
     // This test currently frequently causes the SQLite database to lock, so
     // skip the test on SQLite until the issue can be resolved.
     // @todo https://www.drupal.org/project/drupal/issues/3273626
@@ -158,7 +162,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
     $audio_element = $assert_session->elementExists('css', 'div.media--type-audio .field--name-field-media-audio-file audio > source');
     /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
     $file_url_generator = \Drupal::service('file_url_generator');
-    $expected_audio_src = $file_url_generator->generateString(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename));
+    $expected_audio_src = $file_url_generator->generate(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename))->toString();
     $this->assertSame($expected_audio_src, $audio_element->getAttribute('src'));
 
     // Assert the media name is updated through the field mapping when changing
@@ -185,7 +189,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
     // Assert the audio file is present inside the media element and that its
     // src attribute matches the updated audio file.
     $audio_element = $assert_session->elementExists('css', 'div.media--type-audio .field--name-field-media-audio-file audio > source');
-    $expected_audio_src = $file_url_generator->generateString(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename_updated));
+    $expected_audio_src = $file_url_generator->generate(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename_updated))->toString();
     $this->assertSame($expected_audio_src, $audio_element->getAttribute('src'));
   }
 
@@ -247,7 +251,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
     $image_element = $assert_session->elementExists('css', 'div.media--type-image img');
     /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
     $file_url_generator = \Drupal::service('file_url_generator');
-    $expected_image_src = $file_url_generator->generateString(\Drupal::token()->replace('public://styles/large/public/[date:custom:Y]-[date:custom:m]/' . $image_media_name));
+    $expected_image_src = $file_url_generator->generate(\Drupal::token()->replace('public://styles/large/public/[date:custom:Y]-[date:custom:m]/' . $image_media_name))->toString();
 
     $this->assertStringContainsString($expected_image_src, $image_element->getAttribute('src'));
     $assert_session->elementExists('css', '.field--name-field-media-image .field__label.visually-hidden');
@@ -280,7 +284,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
     // src attribute uses the large image style, the label is visually hidden,
     // and there is no link to the image file.
     $image_element = $assert_session->elementExists('css', 'div.media--type-image img');
-    $expected_image_src = $file_url_generator->generateString(\Drupal::token()->replace('public://styles/large/public/[date:custom:Y]-[date:custom:m]/' . $image_media_name_updated));
+    $expected_image_src = $file_url_generator->generate(\Drupal::token()->replace('public://styles/large/public/[date:custom:Y]-[date:custom:m]/' . $image_media_name_updated))->toString();
     $this->assertStringContainsString($expected_image_src, $image_element->getAttribute('src'));
     $assert_session->elementExists('css', '.field--name-field-media-image .field__label.visually-hidden');
     $assert_session->elementNotExists('css', '.field--name-field-media-image a');
@@ -534,7 +538,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
     $video_element = $assert_session->elementExists('css', 'div.media--type-video .field--name-field-media-video-file video > source');
     /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
     $file_url_generator = \Drupal::service('file_url_generator');
-    $expected_video_src = $file_url_generator->generateString(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename));
+    $expected_video_src = $file_url_generator->generate(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename))->toString();
     $this->assertSame($expected_video_src, $video_element->getAttribute('src'));
 
     // Assert the media name is updated through the field mapping when changing
@@ -561,7 +565,7 @@ class MediaStandardProfileTest extends MediaJavascriptTestBase {
     // Assert the video element is present inside the media element and that its
     // src attribute matches the updated video file.
     $video_element = $assert_session->elementExists('css', 'div.media--type-video .field--name-field-media-video-file video > source');
-    $expected_video_src = $file_url_generator->generateString(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename_updated));
+    $expected_video_src = $file_url_generator->generate(\Drupal::token()->replace('public://[date:custom:Y]-[date:custom:m]/' . $test_filename_updated))->toString();
     $this->assertSame($expected_video_src, $video_element->getAttribute('src'));
   }
 

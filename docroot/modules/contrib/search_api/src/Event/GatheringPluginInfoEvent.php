@@ -12,14 +12,14 @@ final class GatheringPluginInfoEvent extends Event {
   /**
    * The plugin definitions.
    *
-   * @var array[]
+   * @var array<string, mixed>
    */
   protected $definitions;
 
   /**
    * Constructs a new class instance.
    *
-   * @param array[] $definitions
+   * @param array<string, mixed> $definitions
    *   The plugin definitions collected so far, keyed by plugin ID.
    */
   public function __construct(array &$definitions) {
@@ -29,7 +29,7 @@ final class GatheringPluginInfoEvent extends Event {
   /**
    * Retrieves the plugin definitions collected so far.
    *
-   * @return array[]
+   * @return array<string, mixed>
    *   The plugin definitions collected so far, keyed by plugin ID.
    */
   public function &getDefinitions(): array {

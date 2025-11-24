@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Database;
@@ -9,6 +11,7 @@ use Drupal\Core\Database\Database;
 /**
  * Tests Drupal's extended prepared statement syntax..
  *
+ * @coversDefaultClass \Drupal\Core\Database\Connection
  * @group Database
  */
 class QueryTest extends DatabaseTestBase {
@@ -16,7 +19,7 @@ class QueryTest extends DatabaseTestBase {
   /**
    * Tests that we can pass an array of values directly in the query.
    */
-  public function testArraySubstitution() {
+  public function testArraySubstitution(): void {
     $names = $this->connection->query('SELECT [name] FROM {test} WHERE [age] IN ( :ages[] ) ORDER BY [age]', [':ages[]' => [25, 26, 27]])->fetchAll();
     $this->assertCount(3, $names, 'Correct number of names returned');
 
@@ -27,7 +30,7 @@ class QueryTest extends DatabaseTestBase {
   /**
    * Tests that we can not pass a scalar value when an array is expected.
    */
-  public function testScalarSubstitution() {
+  public function testScalarSubstitution(): void {
     try {
       $names = $this->connection->query('SELECT [name] FROM {test} WHERE [age] IN ( :ages[] ) ORDER BY [age]', [':ages[]' => 25])->fetchAll();
       $this->fail('Array placeholder with scalar argument should result in an exception.');
@@ -41,7 +44,7 @@ class QueryTest extends DatabaseTestBase {
   /**
    * Tests SQL injection via database query array arguments.
    */
-  public function testArrayArgumentsSQLInjection() {
+  public function testArrayArgumentsSQLInjection(): void {
     // Attempt SQL injection and verify that it does not work.
     $condition = [
       "1 ;INSERT INTO {test} (name) VALUES ('test12345678'); -- " => '',
@@ -68,7 +71,7 @@ class QueryTest extends DatabaseTestBase {
   /**
    * Tests SQL injection via condition operator.
    */
-  public function testConditionOperatorArgumentsSQLInjection() {
+  public function testConditionOperatorArgumentsSQLInjection(): void {
     $injection = "IS NOT NULL) ;INSERT INTO {test} (name) VALUES ('test12345678'); -- ";
 
     $previous_error_handler = set_error_handler(function ($severity, $message, $filename, $lineno) use (&$previous_error_handler) {
@@ -145,7 +148,7 @@ class QueryTest extends DatabaseTestBase {
    * @see \Drupal\sqlite\Driver\Database\sqlite\Statement::getStatement()
    * @see http://bugs.php.net/bug.php?id=45259
    */
-  public function testNumericExpressionSubstitution() {
+  public function testNumericExpressionSubstitution(): void {
     $count_expected = $this->connection->query('SELECT COUNT(*) + 3 FROM {test}')->fetchField();
 
     $count = $this->connection->query('SELECT COUNT(*) + :count FROM {test}', [
@@ -157,7 +160,7 @@ class QueryTest extends DatabaseTestBase {
   /**
    * Tests quoting identifiers in queries.
    */
-  public function testQuotingIdentifiers() {
+  public function testQuotingIdentifiers(): void {
     // Use the table named an ANSI SQL reserved word with a column that is as
     // well.
     $result = $this->connection->query('SELECT [update] FROM {select}')->fetchObject();
@@ -172,7 +175,7 @@ class QueryTest extends DatabaseTestBase {
    *
    * @group legacy
    */
-  public function testReturnOptionDeprecation() {
+  public function testReturnOptionDeprecation(): void {
     $this->expectDeprecation('Passing "return" option to %Aquery() is deprecated in drupal:9.4.0 and is removed in drupal:11.0.0. For data manipulation operations, use dynamic queries instead. See https://www.drupal.org/node/3185520');
     $this->expectDeprecation('Passing "return" option to %AprepareStatement() is deprecated in drupal:9.4.0 and is removed in drupal:11.0.0. For data manipulation operations, use dynamic queries instead. See https://www.drupal.org/node/3185520');
     $this->assertIsInt((int) $this->connection->query('INSERT INTO {test} ([name], [age], [job]) VALUES (:name, :age, :job)', [

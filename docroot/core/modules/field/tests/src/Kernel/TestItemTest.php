@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -17,9 +19,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 class TestItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_test'];
 
@@ -52,7 +52,7 @@ class TestItemTest extends FieldKernelTestBase {
   /**
    * Tests using entity fields of the test field type.
    */
-  public function testTestItem() {
+  public function testTestItem(): void {
     // Verify entity creation.
     $entity = EntityTest::create();
     $value = rand(1, 10);

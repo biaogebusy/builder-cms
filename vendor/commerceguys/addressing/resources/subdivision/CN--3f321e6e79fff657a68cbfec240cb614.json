@@ -1,0 +1,39 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Mianyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"An Xian": {
+			"local_name": "安县"
+		},
+		"Beichuan Xian": {
+			"local_code": "北川羌族自治县",
+			"local_name": "北川县"
+		},
+		"Fucheng Qu": {
+			"local_name": "涪城区"
+		},
+		"Jiangyou Shi": {
+			"local_name": "江油市"
+		},
+		"Pingwu Xian": {
+			"local_name": "平武县"
+		},
+		"Santai Xian": {
+			"local_name": "三台县"
+		},
+		"Yanting Xian": {
+			"local_name": "盐亭县"
+		},
+		"Youxian Qu": {
+			"local_name": "游仙区"
+		},
+		"Zitong Xian": {
+			"local_name": "梓潼县"
+		}
+	}
+}

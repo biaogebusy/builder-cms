@@ -2,17 +2,17 @@
 
 namespace Drupal\commerce_product\Entity;
 
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityPublishedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\commerce\Entity\CommerceContentEntityBase;
 use Drupal\commerce\EntityOwnerTrait;
 use Drupal\commerce_product\Event\ProductDefaultVariationEvent;
 use Drupal\commerce_product\Event\ProductEvents;
 use Drupal\commerce_product\Plugin\Field\ComputedDefaultVariation;
-use Drupal\Core\Cache\Cache;
-use Drupal\Core\Entity\EntityPublishedTrait;
-use Drupal\Core\Entity\EntityChangedTrait;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * Defines the product entity class.
@@ -112,7 +112,7 @@ class Product extends CommerceContentEntityBase implements ProductInterface {
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    return (int) $this->get('created')->value;
   }
 
   /**
@@ -239,7 +239,7 @@ class Product extends CommerceContentEntityBase implements ProductInterface {
       $default_variation = NULL;
       foreach ($this->getVariations() as $variation) {
         // Return the first active variation.
-        if ($variation->isPublished() && $variation->access('view')) {
+        if ($variation->access('view')) {
           $default_variation = $variation;
           break;
         }
@@ -298,6 +298,8 @@ class Product extends CommerceContentEntityBase implements ProductInterface {
    * {@inheritdoc}
    */
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
     // Delete the product variations of a deleted product.
     $variations = [];
     foreach ($entities as $entity) {
@@ -305,7 +307,9 @@ class Product extends CommerceContentEntityBase implements ProductInterface {
         continue;
       }
       foreach ($entity->variations as $item) {
-        $variations[$item->target_id] = $item->entity;
+        if ($item->entity) {
+          $variations[$item->target_id] = $item->entity;
+        }
       }
     }
     $variation_storage = \Drupal::service('entity_type.manager')->getStorage('commerce_product_variation');

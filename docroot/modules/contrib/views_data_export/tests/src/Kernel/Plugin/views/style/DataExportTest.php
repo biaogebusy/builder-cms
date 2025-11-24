@@ -30,7 +30,6 @@ class DataExportTest extends ViewsKernelTestBase {
     'serialization',
     'rest',
     'views_data_export_test',
-    'xls_serialization',
   ];
 
   /**

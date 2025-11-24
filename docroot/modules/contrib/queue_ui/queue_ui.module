@@ -5,15 +5,29 @@
  * Queue ui module file.
  */
 
+declare(strict_types=1);
+
 /**
  * Hook_queue_info_alter()
  */
 function queue_ui_queue_info_alter(&$queues) {
+  $state = \Drupal::state();
   foreach ($queues as $queueName => $definition) {
     // Check if a time limit override exists for this queue.
-    if ($time_limit = \Drupal::state()->get('queue_ui_cron_' . $queueName)) {
+    $time_limit = $state->get('queue_ui_cron_' . $queueName);
+    if ($time_limit === NULL) {
+      // Queue UI didn't managed this queue yet.
+      continue;
+    }
+    $time_limit = (string) $state->get('queue_ui_cron_' . $queueName);
+    // Check for the value including 0.
+    if ($time_limit !== '') {
       // Override the original definition.
-      $queues[$queueName]['cron']['time'] = $time_limit;
+      $queues[$queueName]['cron']['time'] = (int) $time_limit;
+    }
+    else {
+      // Disable cron.
+      unset($queues[$queueName]['cron']);
     }
   }
 }

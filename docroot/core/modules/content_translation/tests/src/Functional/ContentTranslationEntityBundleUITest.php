@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -11,6 +13,9 @@ use Drupal\Tests\BrowserTestBase;
  */
 class ContentTranslationEntityBundleUITest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'language',
     'content_translation',
@@ -41,13 +46,13 @@ class ContentTranslationEntityBundleUITest extends BrowserTestBase {
   /**
    * Tests content types default translation behavior.
    */
-  public function testContentTypeUI() {
+  public function testContentTypeUI(): void {
     // Create first content type.
     $this->drupalCreateContentType(['type' => 'article']);
     // Enable content translation.
     $edit = ['language_configuration[content_translation]' => TRUE];
     $this->drupalGet('admin/structure/types/manage/article');
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
 
     // Make sure add page does not inherit translation configuration from first
     // content type.

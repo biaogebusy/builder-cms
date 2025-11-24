@@ -14,7 +14,7 @@ abstract class EntityProviderBase extends PluginBase implements EntityProviderIn
    * {@inheritdoc}
    */
   public function label() {
-    $this->pluginDefinition['label'];
+    return $this->pluginDefinition['label'];
   }
 
   /**

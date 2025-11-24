@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.operation.promoter.relation.create request
  *
  * @author auto create
- * @since 1.0, 2023-08-21 01:47:31
+ * @since 1.0, 2025-08-13 15:07:42
  */
 class AlipayCommerceOperationPromoterRelationCreateRequest
 {

@@ -28,6 +28,7 @@ class FlaggingForm extends ContentEntityForm {
     $actions = parent::actions($form, $form_state);
     /** @var \Drupal\flag\FlaggingInterface $flagging */
     $flagging = $this->getEntity();
+    /** @var \Drupal\flag\FlagInterface $flag */
     $flag = $flagging->getFlag();
     $action_link = $flag->getLinkTypePlugin();
 
@@ -61,9 +62,11 @@ class FlaggingForm extends ContentEntityForm {
       // otherwise Drupal will try to build the flagging entity's delete-form
       // link. Since that route doesn't use the flagging ID, Drupal can't build
       // the link for us.
+      /** @var \Drupal\flag\FlaggingInterface $flagging */
+      $flagging = $this->entity;
       $route_params = [
-        'flag' => $this->entity->getFlagId(),
-        'entity_id' => $this->entity->getFlaggableId(),
+        'flag' => $flagging->getFlagId(),
+        'entity_id' => $flagging->getFlaggableId(),
         'destination' => $this->getRequest()->query->get('destination'),
       ];
       $url = Url::fromRoute('flag.field_entry.delete', $route_params);
@@ -78,8 +81,7 @@ class FlaggingForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity = $this->entity;
-    $entity->save();
+    return $this->entity->save();
   }
 
 }

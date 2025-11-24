@@ -1,0 +1,11 @@
+parameters:
+	ignoreErrors:
+		# This error comes from code copied directly from search_api_opensearch, and
+		# seems to be related to something that either was planned but never built,
+		# or used to exist, but was partly removed. It's unclear if removing this
+		# code will have an adverse effect on how search queries are built: let us
+		# leave this until we have better query test coverage.
+		-
+			message: "#^Variable \\$body in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 1
+			path: src/SearchAPI/Query/QueryParamBuilder.php

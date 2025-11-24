@@ -18,7 +18,7 @@ class ZoneItemList extends FieldItemList {
   public function applyDefaultValue($notify = TRUE) {
     if ($default_value = $this->getFieldDefinition()->getDefaultValue($this->getEntity())) {
       foreach ($default_value as $index => $value) {
-        $default_value[$index] = unserialize($value);
+        $default_value[$index] = unserialize($value, ['allowed_classes' => FALSE]);
       }
       $this->setValue($default_value, $notify);
     }

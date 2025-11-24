@@ -2,8 +2,6 @@
 
 namespace Drupal\xls_serialization\Plugin\views\display;
 
-use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rest\Plugin\views\display\RestExport;
 
@@ -32,33 +30,6 @@ class ExcelExport extends RestExport {
    * @var string
    */
   protected $contentType = 'xlsx';
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function buildResponse($view_id, $display_id, array $args = []) {
-    // Do not call the parent method, as it makes the response harder to alter.
-    // @see https://www.drupal.org/node/2779807
-    $build = static::buildBasicRenderable($view_id, $display_id, $args);
-
-    // Setup an empty response, so for example, the Content-Disposition header
-    // can be set.
-    $response = new CacheableResponse('', 200);
-    $build['#response'] = $response;
-
-    /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = \Drupal::service('renderer');
-
-    $output = (string) $renderer->renderRoot($build);
-
-    $response->setContent($output);
-    $cache_metadata = CacheableMetadata::createFromRenderArray($build);
-    $response->addCacheableDependency($cache_metadata);
-
-    $response->headers->set('Content-type', $build['#content_type']);
-
-    return $response;
-  }
 
   /**
    * {@inheritdoc}
@@ -323,7 +294,10 @@ class ExcelExport extends RestExport {
     }
 
     // Uppercase the background color RGB values.
-    $form_state->setValue('header_background_color', strtoupper($form_state->getValue('header_background_color')));
+    $header_background_color = $form_state->getValue('header_background_color');
+    if ($header_background_color !== NULL && $header_background_color !== '') {
+      $form_state->setValue('header_background_color', strtoupper($header_background_color));
+    }
   }
 
   /**

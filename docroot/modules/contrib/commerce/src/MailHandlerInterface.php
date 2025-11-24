@@ -9,7 +9,7 @@ namespace Drupal\commerce;
  * message body.
  *
  * Since Drupal core doesn't support HTML emails out of the box, Commerce
- * assumes that Swiftmailer (or an appropriate alternative) is used.
+ * assumes that Drupal Symfony Mailer (or an appropriate alternative) is used.
  */
 interface MailHandlerInterface {
 

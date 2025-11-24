@@ -29,3 +29,11 @@ div.block-help-block {
 .webform-message .messages.messages--webform .messages__content {
   margin-left: 3.5rem;
 }
+
+/**
+ * Issue #3384432: Tooltip incompatibility with Gin Admin Theme
+ * @see https://www.drupal.org/project/webform/issues/3384432s
+ */
+.webform-element-help-container--title label:not(.visually-hidden) {
+  position: static !important;
+}

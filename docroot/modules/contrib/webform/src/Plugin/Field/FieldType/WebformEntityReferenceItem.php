@@ -18,7 +18,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "webform",
  *   label = @Translation("Webform"),
  *   description = @Translation("A webform containing default submission values."),
- *   category = @Translation("Reference"),
+ *   category = "reference",
  *   default_widget = "webform_entity_reference_select",
  *   default_formatter = "webform_entity_reference_entity_view",
  *   list_class = "\Drupal\webform\Plugin\Field\FieldType\WebformEntityReferenceFieldItemList",

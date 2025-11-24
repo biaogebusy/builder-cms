@@ -57,6 +57,9 @@ class UploadWidgetTest extends EntityBrowserWebDriverTestBase {
     $widget->setConfiguration($config);
     $browser->save();
 
+    // Cache clearing doesn't happen reliably within the test.
+    $this->rebuildAll();
+
     $this->drupalGet($browser->getDisplay()->path());
     $page->attachFileToField('edit-upload-upload', \Drupal::root() . '/core/misc/druplicon.png');
     $this->waitForAjaxToFinish();

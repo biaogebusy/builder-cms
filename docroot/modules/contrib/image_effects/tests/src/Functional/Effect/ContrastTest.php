@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -14,7 +16,7 @@ class ContrastTest extends ImageEffectsTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     $toolkits = parent::providerToolkits();
     // @todo This effect does not work on GraphicsMagick.
     unset($toolkits['ImageMagick-graphicsmagick']);
@@ -33,7 +35,7 @@ class ContrastTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testContrastEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testContrastEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Test on the PNG test image.
@@ -120,7 +122,7 @@ class ContrastTest extends ImageEffectsTestBase {
       $this->assertColorsAreClose($entry['colors'][3], $this->getPixelColor($image, 39, 19), $entry['tolerance']);
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 

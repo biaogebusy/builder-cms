@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Utils;
 
 use Drush\Drush;
@@ -8,23 +10,20 @@ use finfo;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
-class FsUtils
+final class FsUtils
 {
     // @var null|string[] List of directories to delete
-    private static $deletionList = null;
+    private static $deletionList;
 
     /**
-     * Decide where our backup directory should go
+     * Return path to the backup directory.
      *
      * @param string $subdir
      *   The name of the desired subdirectory(s) under drush-backups.
      *   Usually a database name.
-     *
-     * @return
-     *   A path to the backup directory.
      * @throws \Exception
      */
-    public static function getBackupDir($subdir = null): string
+    public static function getBackupDir(?string $subdir = null): string
     {
         $parent = self::getBackupDirParent();
 
@@ -43,18 +42,11 @@ class FsUtils
 
         // Save the date to be used in the backup directory's path name.
         $date = gmdate('YmdHis', $_SERVER['REQUEST_TIME']);
-        return Path::join(
-            $parent,
-            $date
-        );
+        return Path::join($parent, $date);
     }
 
     /**
      * Get the base dir where our backup directories will be stored. Also stores CLI history file.
-     *
-     * @return
-     *   A path to the backup directory parent
-     * @throws \Exception
      */
     public static function getBackupDirParent()
     {
@@ -164,7 +156,7 @@ class FsUtils
         foreach (static::$deletionList as $dir) {
             try {
                 $fs->remove($dir);
-            } catch (IOException $e) {
+            } catch (\Exception $e) {
               // No action taken if someone already deleted the directory
             }
         }
@@ -207,7 +199,6 @@ class FsUtils
     /**
      * Check whether a file is a supported tarball.
      *
-     * @param string $path
      *
      * @return string|bool
      *   The file content type if it's a tarball. FALSE otherwise.
@@ -236,7 +227,6 @@ class FsUtils
      * has either mime_content_type() or finfo installed -- if not, only tar,
      * gz, zip and bzip2 types can be detected.
      *
-     * @param string $path
      *
      * @return string|bool|null
      *   The MIME content type of the file.
@@ -308,7 +298,7 @@ class FsUtils
                 '.sql'     => 'application/octet-stream',
             ];
             foreach ($extension_mimetype as $extension => $ct) {
-                if (substr($path, -strlen($extension)) === $extension) {
+                if (str_ends_with($path, $extension)) {
                     $content_type = $ct;
                     break;
                 }

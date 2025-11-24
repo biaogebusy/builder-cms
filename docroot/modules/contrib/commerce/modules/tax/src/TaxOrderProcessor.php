@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_tax;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\OrderProcessorInterface;
 use Drupal\commerce_price\RounderInterface;
 use Drupal\commerce_tax\Entity\TaxType;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
  * Applies taxes to orders during the order refresh process.
@@ -14,40 +14,20 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 class TaxOrderProcessor implements OrderProcessorInterface {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The rounder.
-   *
-   * @var \Drupal\commerce_price\RounderInterface
-   */
-  protected $rounder;
-
-  /**
-   * The store tax.
-   *
-   * @var \Drupal\commerce_tax\StoreTaxInterface
-   */
-  protected $storeTax;
-
-  /**
    * Constructs a new TaxOrderProcessor object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\commerce_price\RounderInterface $rounder
    *   The rounder.
-   * @param \Drupal\commerce_tax\StoreTaxInterface $store_tax
+   * @param \Drupal\commerce_tax\StoreTaxInterface $storeTax
    *   The store tax.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RounderInterface $rounder, StoreTaxInterface $store_tax) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->rounder = $rounder;
-    $this->storeTax = $store_tax;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected RounderInterface $rounder,
+    protected StoreTaxInterface $storeTax,
+  ) {
   }
 
   /**

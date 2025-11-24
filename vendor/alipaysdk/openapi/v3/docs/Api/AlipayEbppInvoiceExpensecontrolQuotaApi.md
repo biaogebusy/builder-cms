@@ -17,7 +17,7 @@ create($alipayEbppInvoiceExpensecontrolQuotaCreateModel): \Alipay\OpenAPISDK\Mod
 
 创建余额/点券
 
-创建余额或者点券
+创建余额或者点券，可支持批量创建点券
 
 ### Example
 
@@ -87,7 +87,7 @@ modify($alipayEbppInvoiceExpensecontrolQuotaModifyModel): \Alipay\OpenAPISDK\Mod
 
 修改余额/点券
 
-修改余额或点券
+修改余额或点券对应的额度，可用于增加额度、减少额度、删除额度等操作。
 
 ### Example
 

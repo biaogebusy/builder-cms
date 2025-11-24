@@ -3,13 +3,14 @@
 namespace Drupal\message;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Language\Language;
 use Drupal\user\EntityOwnerInterface;
 
 /**
  * Provides an interface defining a Message entity.
  */
-interface MessageInterface extends ContentEntityInterface, EntityOwnerInterface {
+interface MessageInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
   /**
    * Set the message template.

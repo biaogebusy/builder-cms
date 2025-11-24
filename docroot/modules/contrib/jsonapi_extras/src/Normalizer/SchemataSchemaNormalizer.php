@@ -32,7 +32,7 @@ class SchemataSchemaNormalizer extends SchemataJsonSchemaSchemataSchemaNormalize
   /**
    * {@inheritdoc}
    */
-  public function normalize($entity, $format = NULL, array $context = []) {
+  public function normalize($entity, $format = NULL, array $context = []): array|bool|string|int|float|null|\ArrayObject {
     $normalized = parent::normalize($entity, $format, $context);
 
     // Load the resource type for this entity type and bundle.

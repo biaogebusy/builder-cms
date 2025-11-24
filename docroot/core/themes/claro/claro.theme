@@ -40,6 +40,28 @@ function claro_theme_suggestions_details_alter(&$suggestions, $variables) {
 }
 
 /**
+ * Implements hook_page_attachments_alter().
+ */
+function claro_page_attachments_alter(array &$attachments) {
+  $theme_path = \Drupal::request()->getBasePath() . '/' . \Drupal::service('extension.list.theme')->getPath('claro');
+  $query_string = \Drupal::service('asset.query_string')->get();
+
+  // Attach non-JavaScript specific CSS via a noscript tag to prevent unwanted
+  // layout shifts.
+  $attachments['#attached']['html_head'][] = [
+    [
+      '#tag' => 'link',
+      '#noscript' => TRUE,
+      '#attributes' => [
+        'rel' => 'stylesheet',
+        'href' => $theme_path . '/css/components/dropbutton-noscript.css?' . $query_string,
+      ],
+    ],
+    'dropbutton_noscript',
+  ];
+}
+
+/**
  * Implements hook_preprocess_HOOK() for menu-local-tasks templates.
  *
  * Use preprocess hook to set #attached to child elements because they will be
@@ -255,6 +277,9 @@ function claro_element_info_alter(&$type) {
     array_unshift($operations_pre_renders, [ClaroPreRender::class, 'operations']);
 
     $type['operations']['#pre_render'] = $operations_pre_renders;
+
+    // @todo Remove when https://www.drupal.org/node/1945262 is fixed.
+    $type['operations']['#attached']['library'][] = 'core/drupal.dialog.ajax';
   }
 
   if (isset($type['vertical_tabs'])) {
@@ -270,16 +295,6 @@ function claro_element_info_alter(&$type) {
   if (isset($type['status_messages'])) {
     $type['status_messages']['#pre_render'][] = [ClaroPreRender::class, 'messagePlaceholder'];
   }
-}
-
-/**
- * Implements template_preprocess_filter_guidelines().
- */
-function claro_preprocess_filter_guidelines(&$variables) {
-  // Fix filter guidelines selector issue of 'filter/drupal.filter'.
-  // @todo Remove when https://www.drupal.org/node/2881212 is fixed.
-  $variables['attributes']['class'][] = 'filter-guidelines-item';
-  $variables['attributes']['class'][] = 'filter-guidelines-' . $variables['format']->id();
 }
 
 /**
@@ -372,9 +387,8 @@ function claro_preprocess_details(&$variables) {
     $variables['required'] = $element[0]['#required'] ?? !empty($element['#required']);
 
     // If the error is the same as the one in the multiple field widget element,
-    // we have to avoid displaying it twice. Seven and Stark have this issue
-    // as well.
-    // @todo revisit when https://www.drupal.org/node/3084906 is fixed.
+    // we have to avoid displaying it twice. Stark has this issue as well.
+    // @todo Revisit when https://www.drupal.org/node/3084906 is fixed.
     if (isset($element['#errors']) && isset($variables['errors']) && $element['#errors'] === $variables['errors']) {
       unset($variables['errors']);
     }
@@ -395,28 +409,103 @@ function claro_form_alter(array &$form, FormStateInterface $form_state, $form_id
     $form['actions']['delete'] = _claro_convert_link_to_action_link($form['actions']['delete'], 'trash', 'default', 'danger');
   }
 
+  if (isset($form['actions']['delete_translation']['#type']) && $form['actions']['delete_translation']['#type'] === 'link' && !empty($build_info['callback_object']) && $build_info['callback_object'] instanceof EntityForm) {
+    $form['actions']['delete_translation'] = _claro_convert_link_to_action_link($form['actions']['delete_translation'], 'trash', 'default', 'danger');
+  }
+
   if (($form_object instanceof ViewsForm || $form_object instanceof ViewsFormInterface) && isset($form['override']['#prefix'])) {
     // Replace form--inline class so positioning of override form elements don't
     // have to depend on floats.
     $form['override']['#prefix'] = str_replace('form--inline', 'form--flex', $form['override']['#prefix']);
   }
 
-  if ($form_object instanceof ViewsForm && strpos($form_object->getBaseFormId(), 'views_form_media_library') === 0) {
+  if ($form_object instanceof ViewsForm && str_starts_with($form_object->getBaseFormId(), 'views_form_media_library')) {
     if (isset($form['header'])) {
       $form['header']['#attributes']['class'][] = 'media-library-views-form__header';
       $form['header']['media_bulk_form']['#attributes']['class'][] = 'media-library-views-form__bulk_form';
     }
     $form['actions']['submit']['#attributes']['class'] = ['media-library-select'];
+    $form['#attributes']['class'][] = 'media-library-views-form';
+  }
 
-    // The conditional below exists because the media-library-views-form class is
-    // is currently added by Classy, but Claro will eventually not use Classy as
-    // a base theme.
-    // @todo remove conditional, keep class addition in
-    //   https://drupal.org/node/3110137
-    // @see https://www.drupal.org/node/3109287
-    // @see classy_form_alter()
-    if (!isset($form['#attributes']['class']) || !in_array('media-library-views-form', $form['#attributes']['class'])) {
-      $form['#attributes']['class'][] = 'media-library-views-form';
+  if ($form_object instanceof ViewsForm && !empty($form['header'])) {
+    $view = $form_state->getBuildInfo()['args'][0];
+    $view_title = $view->getTitle();
+
+    // Determine if the Views form includes a bulk operations form. If it does,
+    // move it to the bottom and remove the second bulk operations submit.
+    foreach (Element::children($form['header']) as $key) {
+      if (str_contains($key, '_bulk_form')) {
+        // Move the bulk actions form from the header to its own container.
+        $form['bulk_actions_container'] = $form['header'][$key];
+        unset($form['header'][$key]);
+
+        // Remove the supplementary bulk operations submit button as it appears
+        // in the same location the form was moved to.
+        unset($form['actions']);
+
+        $form['bulk_actions_container']['#attributes']['data-drupal-views-bulk-actions'] = '';
+        $form['bulk_actions_container']['#attributes']['class'][] = 'views-bulk-actions';
+        $form['bulk_actions_container']['actions']['submit']['#button_type'] = 'primary';
+        $form['bulk_actions_container']['actions']['submit']['#attributes']['class'][] = 'button--small';
+        $label = t('Perform actions on the selected items in the %view_title view', ['%view_title' => $view_title]);
+        $label_id = $key . '_group_label';
+
+        // Group the bulk actions select and submit elements, and add a label
+        // that makes the purpose of these elements more clear to
+        // screen readers.
+        $form['bulk_actions_container']['#attributes']['role'] = 'group';
+        $form['bulk_actions_container']['#attributes']['aria-labelledby'] = $label_id;
+        $form['bulk_actions_container']['group_label'] = [
+          '#type' => 'container',
+          '#markup' => $label,
+          '#attributes' => [
+            'id' => $label_id,
+            'class' => ['visually-hidden'],
+          ],
+          '#weight' => -1,
+        ];
+
+        // Add a status label for counting the number of items selected.
+        $form['bulk_actions_container']['status'] = [
+          '#type' => 'container',
+          '#markup' => t('No items selected'),
+          '#weight' => -1,
+          '#attributes' => [
+            'class' => [
+              'js-views-bulk-actions-status',
+              'views-bulk-actions__item',
+              'views-bulk-actions__item--status',
+              'js-show',
+            ],
+            'data-drupal-views-bulk-actions-status' => '',
+          ],
+        ];
+
+        // Loop through bulk actions items and add the needed CSS classes.
+        $bulk_action_item_keys = Element::children($form['bulk_actions_container'], TRUE);
+        $bulk_last_key = NULL;
+        $bulk_child_before_actions_key = NULL;
+        foreach ($bulk_action_item_keys as $bulk_action_item_key) {
+          if (!empty($form['bulk_actions_container'][$bulk_action_item_key]['#type'])) {
+            if ($form['bulk_actions_container'][$bulk_action_item_key]['#type'] === 'actions') {
+              // We need the key of the element that precedes the actions
+              // element.
+              $bulk_child_before_actions_key = $bulk_last_key;
+              $form['bulk_actions_container'][$bulk_action_item_key]['#attributes']['class'][] = 'views-bulk-actions__item';
+            }
+
+            if (!in_array($form['bulk_actions_container'][$bulk_action_item_key]['#type'], ['hidden', 'actions'])) {
+              $form['bulk_actions_container'][$bulk_action_item_key]['#wrapper_attributes']['class'][] = 'views-bulk-actions__item';
+              $bulk_last_key = $bulk_action_item_key;
+            }
+          }
+        }
+
+        if ($bulk_child_before_actions_key) {
+          $form['bulk_actions_container'][$bulk_child_before_actions_key]['#wrapper_attributes']['class'][] = 'views-bulk-actions__item--preceding-actions';
+        }
+      }
     }
   }
 }
@@ -438,9 +527,13 @@ function claro_preprocess_links(&$variables) {
             break;
 
           case 'system.theme_set_default':
-          case 'system.theme_install':
             $links_item['link'] = _claro_convert_link_to_action_link($links_item['link'], 'checkmark', 'small');
             break;
+
+          case 'system.theme_install':
+            $links_item['link'] = _claro_convert_link_to_action_link($links_item['link'], 'plus', 'small');
+            break;
+
         }
       }
     }
@@ -449,7 +542,7 @@ function claro_preprocess_links(&$variables) {
   // This makes it so array keys of #links items are added as a class. This
   // functionality was removed in Drupal 8.1, but still necessary in some
   // instances.
-  // @todo remove in https://drupal.org/node/3120962
+  // @todo Remove in https://drupal.org/node/3120962
   if (!empty($variables['links'])) {
     foreach ($variables['links'] as $key => $value) {
       if (!is_numeric($key)) {
@@ -566,7 +659,7 @@ function _claro_convert_link_to_action_link(array $link, $icon_name = NULL, $siz
  */
 function claro_form_node_form_alter(&$form, FormStateInterface $form_state) {
   $form['#theme'] = ['node_edit_form'];
-  $form['#attached']['library'][] = 'claro/node-form';
+  $form['#attached']['library'][] = 'claro/form-two-columns';
 
   $form['advanced']['#type'] = 'container';
   $form['advanced']['#accordion'] = TRUE;
@@ -579,6 +672,66 @@ function claro_form_node_form_alter(&$form, FormStateInterface $form_state) {
 }
 
 /**
+ * Implements hook_form_BASE_FORM_ID_alter() for MenuLinkContentForm.
+ *
+ * Alters the menu_link_content_form by organizing form elements into different
+ * 'details' sections.
+ */
+function claro_form_menu_link_content_form_alter(&$form, FormStateInterface $form_state) {
+  $form['#theme'] = ['menu_link_form'];
+  $form['#attached']['library'][] = 'claro/form-two-columns';
+  $form['advanced'] = [
+    '#type' => 'container',
+    '#weight' => 10,
+    '#accordion' => TRUE,
+  ];
+  $form['menu_parent']['#wrapper_attributes'] = ['class' => ['accordion__item', 'entity-meta__header']];
+  $form['menu_parent']['#prefix'] = '<div class="accordion">';
+  $form['menu_parent']['#suffix'] = '</div>';
+  $form['menu_parent']['#group'] = 'advanced';
+
+  $form['menu_link_display_settings'] = [
+    '#type' => 'details',
+    '#group' => 'advanced',
+    '#title' => t('Display settings'),
+    '#attributes' => ['class' => ['entity-meta__options']],
+    '#tree' => FALSE,
+    '#accordion' => TRUE,
+  ];
+  if (!empty($form['weight'])) {
+    $form['menu_link_display_settings']['weight'] = $form['weight'];
+    unset($form['weight'], $form['menu_link_display_settings']['weight']['#weight']);
+  }
+  if (!empty($form['expanded'])) {
+    $form['menu_link_display_settings']['expanded'] = $form['expanded'];
+    unset($form['expanded']);
+  }
+
+  if (isset($form['description'])) {
+    $form['menu_link_description'] = [
+      '#type' => 'details',
+      '#group' => 'advanced',
+      '#title' => t('Description'),
+      '#attributes' => ['class' => ['entity-meta__description']],
+      '#tree' => FALSE,
+      '#accordion' => TRUE,
+      'description' => $form['description'],
+    ];
+    unset($form['description']);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for MenuLinkEditForm.
+ *
+ * Alters the menu_link_edit form by organizing form elements into different
+ * 'details' sections.
+ */
+function claro_form_menu_link_edit_alter(&$form, FormStateInterface $form_state) {
+  claro_form_menu_link_content_form_alter($form, $form_state);
+}
+
+/**
  * Implements hook_form_BASE_FORM_ID_alter() for \Drupal\media\MediaForm.
  */
 function claro_form_media_form_alter(&$form, FormStateInterface $form_state) {
@@ -586,9 +739,9 @@ function claro_form_media_form_alter(&$form, FormStateInterface $form_state) {
   // the contrib Media Entity 1.x branch.
   if (\Drupal::moduleHandler()->moduleExists('media') && $form_state->getFormObject() instanceof MediaForm) {
     // @todo Revisit after https://www.drupal.org/node/2892304 is in. It
-    // introduces a footer region to these forms which will allow for us to
-    // display a top border over the published checkbox by defining a
-    // media-edit-form.html.twig template the same way node does.
+    //   introduces a footer region to these forms which will allow for us to
+    //   display a top border over the published checkbox by defining a
+    //   media-edit-form.html.twig template the same way node does.
     $form['#attached']['library'][] = 'claro/media-form';
   }
 }
@@ -597,7 +750,7 @@ function claro_form_media_form_alter(&$form, FormStateInterface $form_state) {
  * Implements hook_views_ui_display_top_alter().
  */
 function claro_views_ui_display_top_alter(&$element) {
-  // @todo remove this after https://www.drupal.org/node/3051605 has been
+  // @todo Remove this after https://www.drupal.org/node/3051605 has been
   //   solved.
   $element['tabs']['#prefix'] = preg_replace('/(class="(.+\s)?)tabs(\s.+"|")/', '$1views-tabs$3', $element['tabs']['#prefix']);
   $element['tabs']['#prefix'] = preg_replace('/(class="(.+\s)?)secondary(\s.+"|")/', '$1views-tabs--secondary$3', $element['tabs']['#prefix']);
@@ -651,7 +804,7 @@ function claro_views_ui_display_tab_alter(&$element) {
   // the Dropbutton type, we just have to set it's '#dropbutton_type' to
   // 'extrasmall'.
   //
-  // @todo: revisit after https://www.drupal.org/node/3057577 is fixed.
+  // @todo Revisit after https://www.drupal.org/node/3057577 is fixed.
   $dummy_dropbutton = &$element['details']['top']['actions'];
 
   if ($dummy_dropbutton) {
@@ -737,7 +890,7 @@ function claro_form_views_exposed_form_alter(&$form, FormStateInterface $form_st
   $view = $form_state->getStorage()['view'];
   $view_title = $view->getTitle();
 
-  // Add a label so screenreaders can identify the purpose of the exposed form
+  // Add a label so screen readers can identify the purpose of the exposed form
   // without having to scan content that appears further down the page.
   $form['#attributes']['aria-label'] = t('Filter the contents of the %view_title view', ['%view_title' => $view_title]);
 }
@@ -899,7 +1052,7 @@ function claro_preprocess_fieldset(&$variables) {
 
   // Remove 'container-inline' class from the main attributes and add a flag
   // instead.
-  // @todo remove this after https://www.drupal.org/node/3059593 has been
+  // @todo Remove this after https://www.drupal.org/node/3059593 has been
   //   resolved.
   if (!empty($variables['attributes']['class'])) {
     $container_inline_key = array_search('container-inline', $variables['attributes']['class']);
@@ -919,27 +1072,13 @@ function claro_preprocess_field_multiple_value_form(&$variables) {
   $variables['disabled'] = !empty($variables['element']['#disabled']);
 
   if ($variables['multiple']) {
-    // Add an additional CSS class for the field label table cell.
-    // This repeats the logic of template_preprocess_field_multiple_value_form()
-    // without using '#prefix' and '#suffix' for the wrapper element.
-    //
-    // If the field is multiple, we don't have to check the existence of the
-    // table header cell.
-    //
+    // Add an additional CSS class to the field label table cell. The table
+    // header cell should always exist unless removed by contrib.
     // @see template_preprocess_field_multiple_value_form().
-    $header_attributes = ['class' => ['form-item__label', 'form-item__label--multiple-value-form']];
-    if (!empty($variables['element']['#required'])) {
-      $header_attributes['class'][] = 'js-form-required';
-      $header_attributes['class'][] = 'form-required';
+    if (isset($variables['table']['#header'][0]['data']['#attributes'])) {
+      $variables['table']['#header'][0]['data']['#attributes']->removeClass('label');
+      $variables['table']['#header'][0]['data']['#attributes']->addClass('form-item__label', 'form-item__label--multiple-value-form');
     }
-    // Using array_key_first() for addressing the first header cell would be
-    // more elegant here, but we can rely on the related theme.inc preprocess.
-    $variables['table']['#header'][0]['data'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'h4',
-      '#value' => $variables['element']['#title'],
-      '#attributes' => $header_attributes,
-    ];
 
     if ($variables['disabled']) {
       $variables['table']['#attributes']['class'][] = 'tabledrag-disabled';
@@ -1009,7 +1148,7 @@ function claro_preprocess_filter_tips(&$variables) {
 function claro_preprocess_table(&$variables) {
   // Adding table sort indicator CSS class for inactive sort link.
   // @todo Revisit after https://www.drupal.org/node/3025726 or
-  // https://www.drupal.org/node/1973418 is in.
+  //   https://www.drupal.org/node/1973418 is in.
   if (!empty($variables['header'])) {
     foreach ($variables['header'] as &$header_cell) {
       if ($header_cell['content'] instanceof Link) {
@@ -1032,9 +1171,7 @@ function claro_preprocess_table(&$variables) {
           $variables['attributes']['class'][] = 'draggable-table';
           $draggable_row_found = TRUE;
         }
-
-        reset($row['cells']);
-        $first_cell_key = key($row['cells']);
+        $first_cell_key = array_key_first($row['cells']);
         // The 'attributes' key is always here and it is an
         // \Drupal\Core\Template\Attribute.
         // @see template_preprocess_table();
@@ -1060,7 +1197,7 @@ function claro_preprocess_field_ui_table(&$variables) {
  * Implements template_preprocess_HOOK() for views_view_table.
  *
  * @todo Revisit after https://www.drupal.org/node/3025726 or
- * https://www.drupal.org/node/1973418 is in.
+ *   https://www.drupal.org/node/1973418 is in.
  */
 function claro_preprocess_views_view_table(&$variables) {
   if (!empty($variables['header'])) {
@@ -1250,8 +1387,8 @@ function claro_preprocess_file_widget_multiple(&$variables) {
 function claro_preprocess_image_widget(&$variables) {
   // This prevents image widget templates from rendering preview container HTML
   // to users that do not have permission to access these previews.
-  // @todo revisit in https://drupal.org/node/953034
-  // @todo revisit in https://drupal.org/node/3114318
+  // @todo Revisit in https://drupal.org/node/953034
+  // @todo Revisit in https://drupal.org/node/3114318
   if (isset($variables['data']['preview']['#access']) && $variables['data']['preview']['#access'] === FALSE) {
     unset($variables['data']['preview']);
   }
@@ -1297,6 +1434,11 @@ function _claro_preprocess_file_and_image_widget(array &$variables) {
   $variables['has_value'] = $has_value;
   $variables['has_meta'] = $alt_is_visible || $title_is_visible || $display_is_visible || $description_is_visible;
   $variables['display'] = $display_is_visible;
+
+  // Handle the default checkbox display after the file is uploaded.
+  if (array_key_exists('display', $element)) {
+    $variables['data']['display']['#checked'] = $element['display']['#value'];
+  }
 
   // Render file upload input and upload button (or file name and remove button,
   // if the field is not empty) in an emphasized div.
@@ -1432,7 +1574,7 @@ function claro_preprocess_media_library_item__small(array &$variables) {
 
 /**
  * @todo Remove this when https://www.drupal.org/project/drupal/issues/2999549
- * lands.
+ *   lands.
  *
  * @see \Drupal\media_library\Plugin\Field\FieldWidget\MediaLibraryWidget::formElement()
  */
@@ -1483,7 +1625,7 @@ function claro_views_pre_render(ViewExecutable $view) {
         $add_classes($view->field['delete_media']->options['alter']['link_class'], ['icon-link']);
       }
     }
-    elseif (strpos($view->current_display, 'widget') === 0) {
+    elseif (str_starts_with($view->current_display, 'widget')) {
       if (array_key_exists('rendered_entity', $view->field)) {
         $add_classes($view->field['rendered_entity']->options['element_class'], ['media-library-item__content']);
       }
@@ -1514,16 +1656,7 @@ function claro_preprocess_links__media_library_menu(array &$variables) {
   foreach ($variables['links'] as &$link) {
     // Add a class to the Media Library menu items.
     $link['attributes']->addClass('media-library-menu__item');
-
-    // This conditional exists because the media-library-menu__link class is
-    // currently added by Classy, but Claro will eventually not use Classy as a
-    // base theme.
-    // @todo remove conditional, keep class addition in
-    //   https://drupal.org/node/3110137
-    // @see classy_preprocess_links__media_library_menu()
-    if (!isset($link['link']['#options']['attributes']['class']) || !in_array('media-library-menu__link', $link['link']['#options']['attributes']['class'])) {
-      $link['link']['#options']['attributes']['class'][] = 'media-library-menu__link';
-    }
+    $link['link']['#options']['attributes']['class'][] = 'media-library-menu__link';
   }
 }
 
@@ -1550,7 +1683,7 @@ function claro_form_views_ui_config_item_form_alter(array &$form, FormStateInter
     // whitespace and are no longer needed because uses of `float:` in this form
     // have been removed.
     // @todo Many of the changes to classes within this conditional may not be
-    // needed or require refactoring in https://drupal.org/node/3164890
+    //   needed or require refactoring in https://drupal.org/node/3164890
     unset($form['options']['clear_markup_start']);
     unset($form['options']['clear_markup_end']);
     if (isset($form['options']['expose_button']['#prefix'])) {
@@ -1565,9 +1698,9 @@ function claro_form_views_ui_config_item_form_alter(array &$form, FormStateInter
     // wrapper.
     if (isset($form['options']['operator']['#prefix'])) {
       foreach (['views-left-30', 'views-left-40'] as $left_class) {
-        if (strpos($form['options']['operator']['#prefix'], $left_class) !== FALSE) {
+        if (str_contains($form['options']['operator']['#prefix'], $left_class)) {
           $form['options']['operator']['#prefix'] = '<div class="views-config-group-region">' . str_replace($left_class, 'views-group-box--operator', $form['options']['operator']['#prefix']);
-          $form['options']['value']['#suffix'] = $form['options']['value']['#suffix'] . '</div>';
+          $form['options']['value']['#suffix'] = ($form['options']['value']['#suffix'] ?? '') . '</div>';
         }
       }
     }
@@ -1576,14 +1709,14 @@ function claro_form_views_ui_config_item_form_alter(array &$form, FormStateInter
     // removed in order to style these forms consistently.
     // @see \Drupal\views\Plugin\views\filter\InOperator::valueForm
     $wrapper_div_to_remove = '<div id="edit-options-value-wrapper">';
-    if (isset($form['options']['value']['#prefix']) && strpos($form['options']['value']['#prefix'], $wrapper_div_to_remove) !== FALSE) {
+    if (isset($form['options']['value']['#prefix']) && str_contains($form['options']['value']['#prefix'], $wrapper_div_to_remove)) {
       $form['options']['value']['#prefix'] = str_replace($wrapper_div_to_remove, '', $form['options']['value']['#prefix']);
       $form['options']['value']['#suffix'] = preg_replace('/<\/div>/', '', $form['options']['value']['#suffix'], 1);
     }
 
     if (isset($form['options']['value']['#prefix'])) {
       foreach (['views-right-70', 'views-right-60'] as $right_class) {
-        if (strpos($form['options']['value']['#prefix'], $right_class) !== FALSE) {
+        if (str_contains($form['options']['value']['#prefix'], $right_class)) {
           $form['options']['value']['#prefix'] = str_replace($right_class, 'views-group-box--value', $form['options']['value']['#prefix']);
         }
       }
@@ -1592,7 +1725,7 @@ function claro_form_views_ui_config_item_form_alter(array &$form, FormStateInter
     // If the form includes a `value` field, the `.views-group-box--value` and
     // `.views-group-box` classes must be present in a wrapper div. Add them
     // here if it they are not yet present.
-    if (!isset($form['options']['value']['#prefix']) || strpos($form['options']['value']['#prefix'], 'views-group-box--value') === FALSE) {
+    if (!isset($form['options']['value']['#prefix']) || !str_contains($form['options']['value']['#prefix'], 'views-group-box--value')) {
       $prefix = $form['options']['value']['#prefix'] ?? '';
       $suffix = $form['options']['value']['#suffix'] ?? '';
       $form['options']['value']['#prefix'] = '<div class="views-group-box views-group-box--value">' . $prefix;
@@ -1693,5 +1826,28 @@ function claro_system_module_invoked_theme_registry_alter(array &$theme_registry
     if (isset($theme_registry[$registry_item])) {
       $theme_registry[$registry_item]['path'] = 'core/themes/claro/templates/navigation';
     }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the user_admin_permissions form.
+ */
+function claro_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state) {
+  if (isset($form['filters'])) {
+    $form['filters']['#attributes']['class'][] = 'permissions-table-filter';
+    if (isset($form['filters']['text'])) {
+      unset($form['filters']['text']['#title_display']);
+      $form['filters']['text']['#title'] = t('Filter');
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function claro_form_node_preview_form_select_alter(array &$form, FormStateInterface $form_state) {
+  if (isset($form['backlink'])) {
+    $form['backlink']['#options']['attributes']['class'][] = 'action-link';
+    $form['backlink']['#options']['attributes']['class'][] = 'action-link--icon-chevron-left';
   }
 }

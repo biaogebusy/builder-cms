@@ -36,7 +36,7 @@ class WebformSubmissionSubmittedToLabel extends FieldPluginBase {
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_manager;
     $this->languageManager = $language_manager;
   }
 
@@ -96,7 +96,7 @@ class WebformSubmissionSubmittedToLabel extends FieldPluginBase {
       return $build;
     }
 
-    $source_entity = $this->getEntityTranslation($source_entity, $values);
+    $source_entity = $this->getEntityTranslationByRelationship($source_entity, $values);
 
     if (isset($source_entity)) {
       $access = $source_entity->access('view', NULL, TRUE);

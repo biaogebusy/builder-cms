@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\redirect\Plugin\migrate\source\d7\PathRedirect.
- */
-
 namespace Drupal\redirect\Plugin\migrate\source\d7;
 
 use Drupal\migrate\Row;
@@ -62,6 +57,7 @@ class PathRedirect extends DrupalSqlBase {
       'redirect' => $this->t('Redirect'),
       'redirect_options' => $this->t('Redirect Options'),
       'language' => $this->t('Language'),
+      'status' => $this->t('Enabled'),
       'status_code' => $this->t('Status Code'),
       'count' => $this->t('Count'),
       'access' => $this->t('Access'),

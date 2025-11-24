@@ -15,12 +15,14 @@ trait BetterExposedFiltersTrait {
    *
    * @param \Drupal\views\ViewExecutable $view
    *   The view object.
+   * @param string $display_id
+   *   The display ID.
    *
    * @return array
    *   Array of BEF options.
    */
-  protected function &getBetterExposedOptions(ViewExecutable $view) {
-    return $view->storage->getDisplay('default')['display_options']['exposed_form']['options']['bef'];
+  protected function &getBetterExposedOptions(ViewExecutable $view, string $display_id): array {
+    return $view->storage->getDisplay($display_id)['display_options']['exposed_form']['options']['bef'];
   }
 
   /**
@@ -30,12 +32,14 @@ trait BetterExposedFiltersTrait {
    *   The view object.
    * @param array $options
    *   The list of options (e.g. ['sort' => ['plugin_id' => 'default']]).
+   * @param string $display_id
+   *   Display ID to use.
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    *   In case of failures an exception is thrown.
    */
-  protected function setBetterExposedOptions(ViewExecutable $view, array $options) {
-    $bef_options = &$this->getBetterExposedOptions($view);
+  protected function setBetterExposedOptions(ViewExecutable $view, array $options, string $display_id = 'default'): void {
+    $bef_options = &$this->getBetterExposedOptions($view, $display_id);
     $bef_options = NestedArray::mergeDeep($bef_options, $options);
 
     $view->storage->save();

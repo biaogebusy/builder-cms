@@ -96,8 +96,9 @@
       margin-right: -11px;
     }
 
-    // Fix alignment of form-actions.
-    .form-actions {
+    // Fix alignment of field-actions / form-actions.
+    .form-actions,
+    .field-actions {
       align-items: center;
 
       // Fix alignment to content.
@@ -120,7 +121,7 @@
       padding: 0;
 
       .dropbutton-multiple {
-        margin: 0;
+        margin: 0 .5rem 0 0;
       }
     }
 
@@ -152,6 +153,7 @@
       margin-top: 3px;
       padding-right: .25em;
       width: 23px;
+      vertical-align: baseline;
 
       // Fix active focus.
       &:focus {
@@ -165,6 +167,7 @@
       &::after {
         margin-left: 0;
         padding: .5rem;
+        margin-top: 0.9375rem;
       }
 
       // Scale the icon on hover.

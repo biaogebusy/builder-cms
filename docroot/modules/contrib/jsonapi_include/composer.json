@@ -7,8 +7,7 @@
   "homepage": "https://www.drupal.org/project/jsonapi_include",
   "minimum-stability": "dev",
   "support": {
-    "issues": "https://www.drupal.org/project/issues/jsonapi_include",
-    "source": "http://cgit.drupalcode.org/jsonapi_include"
+    "issues": "https://www.drupal.org/project/issues/jsonapi_include"
   },
   "require": { }
 }

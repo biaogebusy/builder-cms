@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\metatag\Functional;
 
+use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\token\Functional\TokenTestTrait;
@@ -137,6 +138,30 @@ class MetatagTokenTest extends BrowserTestBase {
     ];
 
     $this->assertPageTokens($user->toUrl(), $tokens, ['user' => $user]);
+  }
+
+  /**
+   * Test the status report does not contain warnings about types.
+   *
+   * @see token_get_token_problems
+   */
+  public function testStatusReportTypesWarning() {
+    $this->drupalLogin($this->rootUser);
+    $this->drupalGet(Url::fromRoute('system.status'));
+
+    $this->assertSession()->pageTextNotContains('$info[\'types\'][\'metatag');
+  }
+
+  /**
+   * Test the status report does not contain warnings about tokens.
+   *
+   * @see token_get_token_problems
+   */
+  public function testStatusReportTokensWarning() {
+    $this->drupalLogin($this->rootUser);
+    $this->drupalGet(Url::fromRoute('system.status'));
+
+    $this->assertSession()->pageTextNotContains('$info[\'tokens\'][\'metatag');
   }
 
 }

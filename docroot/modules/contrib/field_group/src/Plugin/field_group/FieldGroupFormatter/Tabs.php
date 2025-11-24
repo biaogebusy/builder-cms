@@ -3,8 +3,10 @@
 namespace Drupal\field_group\Plugin\field_group\FieldGroupFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Render\Element\VerticalTabs;
+use Drupal\Core\Render\Markup;
 use Drupal\field_group\Element\HorizontalTabs;
 use Drupal\field_group\FieldGroupFormatterBase;
 
@@ -32,7 +34,7 @@ class Tabs extends FieldGroupFormatterBase {
     parent::preRender($element, $processed_object);
 
     $element += [
-      '#prefix' => '<div class=" ' . implode(' ', $this->getClasses()) . '">',
+      '#prefix' => '<div class="' . implode(' ', $this->getClasses()) . '">',
       '#suffix' => '</div>',
       '#tree' => TRUE,
       '#parents' => [$this->group->group_name],
@@ -45,7 +47,7 @@ class Tabs extends FieldGroupFormatterBase {
 
     // By default tabs don't have titles but you can override it in the theme.
     if ($this->getLabel()) {
-      $element['#title'] = $this->getLabel();
+      $element['#title'] = $this->getSetting('label_as_html') ? Markup::create(Xss::filterAdmin($this->getLabel())) : Markup::create(Html::escape($this->getLabel()));
     }
 
     $element += [
@@ -57,6 +59,9 @@ class Tabs extends FieldGroupFormatterBase {
     if ($width_breakpoint = $this->getSetting('width_breakpoint')) {
       $element['#attached']['drupalSettings']['widthBreakpoint'] = $width_breakpoint;
     }
+
+    // Add tabs validation behavior.
+    $element['#attached']['library'][] = 'field_group/tabs_validation';
   }
 
   /**

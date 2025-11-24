@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 /**
@@ -25,7 +27,7 @@ class FilterBooleanWebTest extends UITestBase {
   /**
    * Tests the filter boolean UI.
    */
-  public function testFilterBooleanUI() {
+  public function testFilterBooleanUI(): void {
     $this->drupalGet('admin/structure/views/nojs/add-handler/test_view/default/filter');
     $this->submitForm(['name[views_test_data.status]' => TRUE], 'Add and configure filter criteria');
 

@@ -22,9 +22,9 @@ function contact_help($route_name, RouteMatchInterface $route_match) {
       $block_page = \Drupal::moduleHandler()->moduleExists('block') ? Url::fromRoute('block.admin_display')->toString() : '#';
       $contact_page = Url::fromRoute('entity.contact_form.collection')->toString();
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Contact module allows visitors to contact registered users on your site, using the personal contact form, and also allows you to set up site-wide contact forms. For more information, see the <a href=":contact">online documentation for the Contact module</a>.', [':contact' => 'https://www.drupal.org/documentation/modules/contact']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Using the personal contact form') . '</dt>';
       $output .= '<dd>' . t("Site visitors can email registered users on your site by using the personal contact form, without knowing or learning the email address of the recipient. When a site visitor is viewing a user profile, the viewer will see a <em>Contact</em> tab or link, which leads to the personal contact form. The personal contact link is not shown when you are viewing your own profile, and users must have both <em>View user information</em> (to see user profiles) and <em>Use users' personal contact forms</em> permission to see the link. The user whose profile is being viewed must also have their personal contact form enabled (this is a user account setting); viewers with <em>Administer users</em> permission can bypass this setting.") . '</dd>';
@@ -98,7 +98,7 @@ function contact_entity_extra_field_info() {
  * email address configured.
  */
 function contact_menu_local_tasks_alter(&$data, $route_name) {
-  if ($route_name == 'entity.user.canonical') {
+  if ($route_name == 'entity.user.canonical' && isset($data['tabs'][0])) {
     foreach ($data['tabs'][0] as $href => $tab_data) {
       if ($href == 'entity.user.contact_form') {
         $link_params = $tab_data['#link']['url']->getRouteParameters();
@@ -144,7 +144,7 @@ function contact_mail($key, &$message, $params) {
       $build = \Drupal::entityTypeManager()
         ->getViewBuilder('contact_message')
         ->view($contact_message, 'mail');
-      $message['body'][] = \Drupal::service('renderer')->renderPlain($build);
+      $message['body'][] = \Drupal::service('renderer')->renderInIsolation($build);
       break;
 
     case 'page_autoreply':
@@ -161,11 +161,17 @@ function contact_mail($key, &$message, $params) {
       $message['subject'] .= t('[@site-name] @subject', $variables, $options);
       $message['body'][] = t('Hello @recipient-name,', $variables, $options);
       $message['body'][] = t("@sender-name (@sender-url) has sent you a message via your contact form at @site-name.", $variables, $options);
-      $message['body'][] = t("If you don't want to receive such emails, you can change your settings at @recipient-edit-url.", $variables, $options);
+      // Only include the opt-out line in the original email and not in the
+      // copy to the sender. Also exclude this if the email was sent from a
+      // user administrator because they can always send emails even if the
+      // contacted user has disabled their contact form.
+      if ($key === 'user_mail' && !$params['sender']->hasPermission('administer users')) {
+        $message['body'][] = t("If you don't want to receive such messages, you can change your settings at @recipient-edit-url.", $variables, $options);
+      }
       $build = \Drupal::entityTypeManager()
         ->getViewBuilder('contact_message')
         ->view($contact_message, 'mail');
-      $message['body'][] = \Drupal::service('renderer')->renderPlain($build);
+      $message['body'][] = \Drupal::service('renderer')->renderInIsolation($build);
       break;
   }
 }

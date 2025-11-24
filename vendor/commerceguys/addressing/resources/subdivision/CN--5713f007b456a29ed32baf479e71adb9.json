@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Nantou County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Puli Township": {
+			"local_name": "埔里鎮"
+		},
+		"Caotun Township": {
+			"local_name": "草屯鎮"
+		},
+		"Guoxing Township": {
+			"local_name": "國姓鄉"
+		},
+		"Jiji Township": {
+			"local_name": "集集鎮"
+		},
+		"Lugu Township": {
+			"local_name": "鹿谷鄉"
+		},
+		"Mingjian Township": {
+			"local_name": "名間鄉"
+		},
+		"Nantou City": {
+			"local_name": "南投市"
+		},
+		"Ren'ai Township": {
+			"local_name": "仁愛鄉"
+		},
+		"Shuili Township": {
+			"local_name": "水里鄉"
+		},
+		"Xinyi Township": {
+			"local_name": "信義鄉"
+		},
+		"Yuchi Township": {
+			"local_name": "魚池鄉"
+		},
+		"Zhongliao Township": {
+			"local_name": "中寮鄉"
+		},
+		"Zhushan Township": {
+			"local_name": "竹山鎮"
+		}
+	}
+}

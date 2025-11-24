@@ -82,6 +82,9 @@ views.style.data_export:
         use_serializer_encode_only:
           type: boolean
           label: 'Only use serializer->encode method'
+        output_header:
+          type: boolean
+          label: 'Show header row'
     xls_settings:
       type: mapping
       label: 'XLS settings'
@@ -120,3 +123,19 @@ views.style.data_export:
             company:
               type: string
               label: 'Company'
+    xml_settings:
+      type: mapping
+      label: 'XML settings'
+      mapping:
+        encoding:
+          type: string
+          label: 'Encoding'
+        root_node_name:
+          type: string
+          label: 'Root node name'
+        item_node_name:
+          type: string
+          label: 'Item node name'
+        format_output:
+          type: boolean
+          label: 'Format output'

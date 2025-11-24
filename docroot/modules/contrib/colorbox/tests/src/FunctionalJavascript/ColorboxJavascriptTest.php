@@ -29,7 +29,7 @@ class ColorboxJavascriptTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'colorbox',
     'colorbox_library_test',
     'node',
@@ -113,7 +113,7 @@ class ColorboxJavascriptTest extends WebDriverTestBase {
     ]));
     $this->drupalGet('admin/config/media/colorbox');
     $this->assertFalse($this->getSession()->getPage()->find('css', '.form-item-colorbox-transition-speed')->isVisible());
-    $this->assertSession()->fieldExists('colorbox_custom_settings_activate')->setValue(TRUE);
+    $this->assertSession()->fieldExists('colorbox_custom_settings_activate')->setValue('1');
     $this->assertTrue($this->getSession()->getPage()->find('css', '.form-item-colorbox-transition-speed')->isVisible());
     $this->assertSession()->fieldExists('colorbox_overlayclose')->setValue(FALSE);
     $this->getSession()->getPage()->find('css', '.form-submit')->click();
@@ -138,7 +138,7 @@ class ColorboxJavascriptTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->createContentType(['type' => 'page']);
     FieldStorageConfig::create([

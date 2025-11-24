@@ -3,18 +3,19 @@
 namespace Drupal\system\Plugin\ImageToolkit\Operation\gd;
 
 use Drupal\Component\Utility\Color;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines GD2 create_new image operation.
- *
- * @ImageToolkitOperation(
- *   id = "gd_create_new",
- *   toolkit = "gd",
- *   operation = "create_new",
- *   label = @Translation("Set a new image"),
- *   description = @Translation("Creates a new transparent resource and sets it for the image.")
- * )
  */
+#[ImageToolkitOperation(
+  id: "gd_create_new",
+  toolkit: "gd",
+  operation: "create_new",
+  label: new TranslatableMarkup("Set a new image"),
+  description: new TranslatableMarkup("Creates a new transparent object and sets it for the image.")
+)]
 class CreateNew extends GDImageToolkitOperationBase {
 
   /**
@@ -39,7 +40,7 @@ class CreateNew extends GDImageToolkitOperationBase {
         'default' => '#ffffff',
       ],
       'is_temp' => [
-        'description' => 'If TRUE, this operation is being used to create a temporary image by another GD operation. After performing its function, the caller is responsible for destroying the original GD resource.',
+        'description' => 'If TRUE, this operation is being used to create a temporary image by another GD operation. After performing its function, the original GD object will be destroyed automatically.',
         'required' => FALSE,
         'default' => FALSE,
       ],
@@ -82,52 +83,44 @@ class CreateNew extends GDImageToolkitOperationBase {
     // Get the image type.
     $type = $this->getToolkit()->extensionToImageType($arguments['extension']);
 
-    // Store the original GD resource.
-    $original_res = $this->getToolkit()->getResource();
-
-    // Create the resource.
-    if (!$res = imagecreatetruecolor($arguments['width'], $arguments['height'])) {
+    // Create the image.
+    if (!$image = imagecreatetruecolor($arguments['width'], $arguments['height'])) {
       return FALSE;
     }
 
-    // Fill the resource with transparency as possible.
+    // Fill the image with transparency as possible.
     switch ($type) {
       case IMAGETYPE_PNG:
       case IMAGETYPE_WEBP:
-        imagealphablending($res, FALSE);
-        $transparency = imagecolorallocatealpha($res, 0, 0, 0, 127);
-        imagefill($res, 0, 0, $transparency);
-        imagealphablending($res, TRUE);
-        imagesavealpha($res, TRUE);
+        imagealphablending($image, FALSE);
+        $transparency = imagecolorallocatealpha($image, 0, 0, 0, 127);
+        imagefill($image, 0, 0, $transparency);
+        imagealphablending($image, TRUE);
+        imagesavealpha($image, TRUE);
         break;
 
       case IMAGETYPE_GIF:
         if (empty($arguments['transparent_color'])) {
           // No transparency color specified, fill white transparent.
-          $fill_color = imagecolorallocatealpha($res, 255, 255, 255, 127);
+          $fill_color = imagecolorallocatealpha($image, 255, 255, 255, 127);
         }
         else {
           $fill_rgb = Color::hexToRgb($arguments['transparent_color']);
-          $fill_color = imagecolorallocatealpha($res, $fill_rgb['red'], $fill_rgb['green'], $fill_rgb['blue'], 127);
-          imagecolortransparent($res, $fill_color);
+          $fill_color = imagecolorallocatealpha($image, $fill_rgb['red'], $fill_rgb['green'], $fill_rgb['blue'], 127);
+          imagecolortransparent($image, $fill_color);
         }
-        imagefill($res, 0, 0, $fill_color);
+        imagefill($image, 0, 0, $fill_color);
         break;
 
       case IMAGETYPE_JPEG:
-        imagefill($res, 0, 0, imagecolorallocate($res, 255, 255, 255));
+        imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
         break;
 
     }
 
     // Update the toolkit properties.
     $this->getToolkit()->setType($type);
-    $this->getToolkit()->setResource($res);
-
-    // Destroy the original resource if it is not needed by other operations.
-    if (!$arguments['is_temp'] && is_resource($original_res)) {
-      imagedestroy($original_res);
-    }
+    $this->getToolkit()->setImage($image);
 
     return TRUE;
   }

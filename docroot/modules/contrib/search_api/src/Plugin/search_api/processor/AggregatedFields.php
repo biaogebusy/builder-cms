@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\search_api\processor\Property\AggregatedFieldProperty;
@@ -12,24 +14,23 @@ use Drupal\search_api\Utility\Utility;
  * Adds customized aggregations of existing fields to the index.
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\Property\AggregatedFieldProperty
- *
- * @SearchApiProcessor(
- *   id = "aggregated_field",
- *   label = @Translation("Aggregated fields"),
- *   description = @Translation("Add customized aggregations of existing fields to the index."),
- *   stages = {
- *     "add_properties" = 20,
- *   },
- *   locked = true,
- *   hidden = true,
- * )
  */
+#[SearchApiProcessor(
+  id: 'aggregated_field',
+  label: new TranslatableMarkup('Aggregated fields'),
+  description: new TranslatableMarkup('Add customized aggregations of existing fields to the index.'),
+  stages: [
+    'add_properties' => 20,
+  ],
+  locked: TRUE,
+  hidden: TRUE,
+)]
 class AggregatedFields extends ProcessorPluginBase {
 
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
+  public function getPropertyDefinitions(?DatasourceInterface $datasource = NULL) {
     $properties = [];
 
     if (!$datasource) {
@@ -58,7 +59,7 @@ class AggregatedFields extends ProcessorPluginBase {
     ];
     foreach ($aggregated_fields as $field) {
       foreach ($field->getConfiguration()['fields'] as $combined_id) {
-        list($datasource_id, $property_path) = Utility::splitCombinedId($combined_id);
+        [$datasource_id, $property_path] = Utility::splitCombinedId($combined_id);
         $required_properties_by_datasource[$datasource_id][$property_path] = $combined_id;
       }
     }

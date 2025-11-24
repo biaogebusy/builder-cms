@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
@@ -13,12 +15,15 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
  */
 class TaxonomyTermDeriverTest extends MigrateDrupal7TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['taxonomy', 'text'];
 
   /**
    * Tests fields exist in  process pipeline for term migrations.
    */
-  public function testBuilder() {
+  public function testBuilder(): void {
     // Test a field on the vocabfixed term.
     $process = $this->getMigration('d7_taxonomy_term:vocabfixed')->getProcess();
     $this->assertSame('field_training', $process['field_training'][0]['source']);

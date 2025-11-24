@@ -2,8 +2,8 @@
 
 namespace Drupal\flag\Permissions;
 
-use Drupal\flag\FlagServiceInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\flag\FlagServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -41,7 +41,7 @@ class FlagPermissions implements ContainerInjectionInterface {
    * @return array
    *   An array of permissions.
    *
-   * @see Drupal\flag\FlagInterface::getPermissions().
+   * @see Drupal\flag\FlagInterface::getPermissions()
    */
   public function permissions() {
     $permissions = [];
@@ -50,7 +50,7 @@ class FlagPermissions implements ContainerInjectionInterface {
     $flags = $this->flagService->getAllFlags();
 
     // Provide flag and unflag permissions for each flag.
-    foreach ($flags as $flag_name => $flag) {
+    foreach ($flags as $flag) {
       $permissions += $flag->actionPermissions();
     }
 

@@ -66,7 +66,7 @@ class EasyBreadcrumbStructuredDataJsonLd implements ContainerInjectionInterface 
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
+    return new self(
       $container->get('easy_breadcrumb.breadcrumb'),
       $container->get('config.factory'),
       $container->get('current_route_match'),
@@ -96,51 +96,42 @@ class EasyBreadcrumbStructuredDataJsonLd implements ContainerInjectionInterface 
       // Only fire if at least one link present.
       if (count($links) > 0) {
 
-        // Open JSON.
-        $value = '{
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [';
+        $value = [
+          '@context' => 'https://schema.org',
+          '@type' => 'BreadcrumbList',
+          'itemListElement' => [],
+        ];
 
         $position = 1;
         /** @var \Drupal\Core\Link $link */
-        foreach ($links as $link) {
+        foreach ($links as $key => $link) {
           $name = $link->getText();
           $item = $link->getUrl()->setAbsolute(TRUE)->toString();
 
-          // Escape " to produce valid json for titles with "" in them.
-          $name = str_replace('"', '\"', $name);
-          $item = str_replace('"', '\"', $item);
+          // Only allow an empty item for the last link.
+          if (!empty($item && !empty($name)) || ($key === count($links) - 1) && !empty($name)) {
+            if (!empty($item)) {
+              $value['itemListElement'][] = [
+                '@type' => 'ListItem',
+                'position' => $position,
+                'name' => $name,
+                'item' => $item,
+              ];
+            }
+            else {
+              $value['itemListElement'][] = [
+                '@type' => 'ListItem',
+                'position' => $position,
+                'name' => $name,
+              ];
+            }
 
-          // Add a comma before each item except the first.
-          if ($position > 1) {
-            $value .= ',';
+            // Increment position for next run.
+            $position++;
           }
-
-          // Only add item if link's not empty.
-          if (!empty($item)) {
-            $value .= '{
-            "@type": "ListItem",
-            "position": "' . $position . '",
-            "name": "' . $name . '",
-            "item": "' . $item . '"
-          }';
-          }
-          else {
-            $value .= '{
-              "@type": "ListItem",
-              "position": "' . $position . '",
-              "name": "' . $name . '"
-            }';
-          }
-
-          // Increment position for next run.
-          $position++;
-
         }
 
-        // Close JSON.
-        $value .= ']}';
+        $value = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
       }
     }
 

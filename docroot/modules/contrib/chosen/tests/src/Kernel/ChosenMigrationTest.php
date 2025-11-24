@@ -75,6 +75,7 @@ class ChosenMigrationTest extends MigrateDrupal7TestBase {
         'seven' => '0',
       ],
       'chosen_include' => 2,
+      'langcode' => 'en',
     ];
     // Checks the configuration are migrated.
     $this->assertEquals($expected_config, $this->config('chosen.settings')->getRawData());

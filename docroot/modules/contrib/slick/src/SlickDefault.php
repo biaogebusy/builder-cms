@@ -111,10 +111,7 @@ class SlickDefault extends BlazyDefault {
    */
   public static function htmlSettings() {
     return [
-      // @todo remove post 2.17:
-      // 'slicks' => \blazy()->settings(self::values()),
       // @todo remove after migrations.
-      'item_id'   => 'slide',
       'namespace' => 'slick',
       // @todo remove `+ self::slicks()`.
     ] + self::slicks()

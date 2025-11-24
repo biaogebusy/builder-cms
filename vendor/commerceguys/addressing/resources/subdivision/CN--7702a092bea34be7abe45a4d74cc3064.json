@@ -1,0 +1,59 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Taitung County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beinan Township": {
+			"local_name": "卑南鄉"
+		},
+		"Chenggong Township": {
+			"local_name": "成功鎮"
+		},
+		"Chishang Township": {
+			"local_name": "池上鄉"
+		},
+		"Daren Township": {
+			"local_name": "達仁鄉"
+		},
+		"Dawu Township": {
+			"local_name": "大武鄉"
+		},
+		"Donghe Township": {
+			"local_name": "東河鄉"
+		},
+		"Guanshan Township": {
+			"local_name": "關山鎮"
+		},
+		"Haiduan Township": {
+			"local_name": "海端鄉"
+		},
+		"Jinfeng Township": {
+			"local_name": "金峰鄉"
+		},
+		"Lanyu Township": {
+			"local_name": "蘭嶼鄉"
+		},
+		"Luye Township": {
+			"local_name": "鹿野鄉"
+		},
+		"Lüdao Township": {
+			"local_name": "綠島鄉"
+		},
+		"Taitung City": {
+			"local_name": "台東市"
+		},
+		"Taimali Township": {
+			"local_name": "太麻里鄉"
+		},
+		"Yanping Township": {
+			"local_name": "延平鄉"
+		},
+		"Changbin Township": {
+			"local_name": "長濱鄉"
+		}
+	}
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Unit\Menu;
 
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTestBase;
@@ -24,7 +26,7 @@ class TaxonomyLocalTasksTest extends LocalTaskIntegrationTestBase {
    *
    * @dataProvider getTaxonomyPageRoutes
    */
-  public function testTaxonomyPageLocalTasks($route, $subtask = []) {
+  public function testTaxonomyPageLocalTasks($route, $subtask = []): void {
     $tasks = [
       0 => ['entity.taxonomy_term.canonical', 'entity.taxonomy_term.edit_form', 'entity.taxonomy_term.delete_form'],
     ];
@@ -37,7 +39,7 @@ class TaxonomyLocalTasksTest extends LocalTaskIntegrationTestBase {
   /**
    * Provides a list of routes to test.
    */
-  public function getTaxonomyPageRoutes() {
+  public static function getTaxonomyPageRoutes() {
     return [
       ['entity.taxonomy_term.canonical'],
       ['entity.taxonomy_term.edit_form'],

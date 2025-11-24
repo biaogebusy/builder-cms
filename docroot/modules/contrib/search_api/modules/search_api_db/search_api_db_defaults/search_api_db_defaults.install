@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the DB Search Defaults module.
  */
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\search_api\IndexListBuilder;
 
 /**
@@ -22,10 +24,16 @@ function search_api_db_defaults_requirements($phase) {
       require_once $search_api_path . '/src/IndexListBuilder.php';
     }
 
+    $severity_error = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.2',
+      fn () => RequirementSeverity::Error,
+      fn () => REQUIREMENT_ERROR,
+    );
     $errors = IndexListBuilder::checkDefaultsModuleCanBeInstalled();
     foreach ($errors as $type => $error) {
       $requirements["search_api_db_defaults:$type"] = [
-        'severity' => REQUIREMENT_ERROR,
+        'severity' => $severity_error,
         'description' => $error,
       ];
     }

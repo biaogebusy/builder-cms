@@ -5,10 +5,12 @@
  * Install, update and uninstall functions for the image_effects module.
  */
 
+declare(strict_types=1);
+
 /**
  * Implements hook_requirements().
  */
-function image_effects_requirements($phase) {
+function image_effects_requirements(string $phase): array {
   $requirements = [];
 
   // Check PHP GD2 FreeType support.
@@ -41,6 +43,6 @@ function image_effects_requirements($phase) {
 /**
  * Minimum 2.x schema version to allow upgrading from.
  */
-function image_effects_update_last_removed() {
+function image_effects_update_last_removed(): int {
   return 8203;
 }

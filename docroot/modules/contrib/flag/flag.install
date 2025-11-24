@@ -5,8 +5,8 @@
  * Flag module install/schema/update hooks.
  */
 
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Implements hook_schema().
@@ -59,52 +59,13 @@ function flag_schema() {
 }
 
 /**
- * Implements hook_requirements().
- */
-function flag_requirements($phase) {
-
-  $requirements = [];
-  /*
-  if ($phase == 'runtime') {
-    if (\Drupal::moduleHandler()->moduleExists('translation') && !\Drupal::moduleHandler()->moduleExists('translation_helpers')) {
-      $requirements['flag_translation'] = array(
-        'title' => t('Flag'),
-        'severity' => REQUIREMENT_ERROR,
-        'description' => t('To have the flag module work with translations, you need to install and enable the <a href="http://drupal.org/project/translation_helpers">Translation helpers</a> module.'),
-        'value' => t('Translation helpers module not found.'),
-      );
-    }
-    if (\Drupal::moduleHandler()->moduleExists('session_api')) {
-      if (file_exists('./robots.txt')) {
-        $flag_path = url('flag') . '/';
-        // We don't use url() because this may return an absolute URL when
-        // language negotiation is set to 'domain'.
-        $flag_path = parse_url($flag_path, PHP_URL_PATH);
-        $robots_string = 'Disallow: ' . $flag_path;
-        $contents = file_get_contents('./robots.txt');
-        if (strpos($contents, $robots_string) === FALSE) {
-          $requirements['flag_robots'] = array(
-            'title' => t('Flag robots.txt problem'),
-            'severity' => REQUIREMENT_WARNING,
-            'description' => t('Flag module may currently be used with anonymous users, however the robots.txt file does not exclude the "@flag-path" path, which may cause search engines to randomly flag and unflag content when they index the site. It is highly recommended to add "@robots-string" to your robots.txt file (located in the root of your Drupal installation).', array('@flag-path' => $flag_path, '@robots-string' => $robots_string)),
-            'value' => t('Search engines flagging content'),
-          );
-        }
-      }
-    }
-  }
-  */
-  return $requirements;
-}
-
-/**
  * Fix schema changes in 4.0-alpha2.
  */
 function flag_update_8401() {
   $bundle_schema = [
     'description' => 'The Flag ID.',
     'type' => 'varchar_ascii',
-    'length' => \Drupal\Core\Entity\EntityTypeInterface::BUNDLE_MAX_LENGTH,
+    'length' => EntityTypeInterface::BUNDLE_MAX_LENGTH,
     // 'binary' => FALSE,
     'not null' => TRUE,
   ];
@@ -129,7 +90,7 @@ function flag_update_8401() {
   $repo->setLastInstalledFieldStorageDefinition($storage_definition);
 
   // Update the stored field schema.
-  // @todo: There has to be a better way to do this.
+  // @todo There has to be a better way to do this.
   $kv_collection = 'entity.storage_schema.sql';
   $kv_name = 'flagging.field_schema_data.flag_id';
   $field_schema = $kv->get($kv_collection)->get($kv_name);

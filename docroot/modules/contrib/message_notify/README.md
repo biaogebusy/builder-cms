@@ -1,12 +1,56 @@
-[![Build Status](https://travis-ci.org/Gizra/message_notify.svg?branch=7.x-2.x)](https://travis-ci.org/Gizra/message_notify)
+# Message Notify
 
-Message notify allows sending Messages (entities created with the Message
-module).
-Delivery can be done by email, or any other delivery method provided by
-an implementing module.
-Message notify uses "View modes", which allows you to customize which
-message-text fields will be rendered and delivered.
+This module provides a method for sending a message via a notifier plugin.
+Message Notify comes with plugins for email and SMS and may be extended
+to other transport mechanisms as required.
 
-To see it in action:
-- Enable the Message-notify example module
-- Add a comment to a node, and an email will be sent to the node author
+For a full description of the module, visit the
+[project page](https://www.drupal.org/project/message_notify).
+
+Submit bug reports and feature suggestions, or track changes in the
+[issue queue](https://www.drupal.org/project/issues/message_notify).
+
+
+## Table of contents
+
+- Features
+- Requirements
+- Installation
+- Configuration
+- Maintainers
+
+
+## Features
+- Support for Email and SMS Notifications
+- Multilingual Support
+- Token Support
+- Rules Support
+- Extensible Plugin System
+
+
+## Requirements
+
+This module requires the following modules:
+
+- [Message](https://www.drupal.org/project/message)
+
+
+## Installation
+
+Install as you would normally install a contributed Drupal module. For further
+information, see
+[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
+
+
+## Configuration
+1. Go to Administration > Configuration > Message settings.
+2. Configure the message settings according to your preferences.
+
+
+## Maintainers
+
+- Jonathan Hedstrom - [jhedstrom](https://www.drupal.org/u/jhedstrom)
+- Amitai Burstein - [amitaibu](https://www.drupal.org/u/amitaibu)
+- Roy Segall - [RoySegall](https://www.drupal.org/u/roysegall)
+- [bluegeek9](https://www.drupal.org/u/bluegeek9)
+- Simon Shutter - [eft](https://www.drupal.org/u/eft)

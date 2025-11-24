@@ -1,28 +1,36 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Service;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements service:uninstall-validator command.
- */
-final class UninstallValidator extends ModuleGenerator {
-
-  protected string $name = 'service:uninstall-validator';
-  protected string $description = 'Generates a uninstall validator service';
-  protected string $alias = 'uninstall-validator';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/service/uninstall-validator';
+#[Generator(
+  name: 'service:uninstall-validator',
+  description: 'Generates a uninstall validator service',
+  aliases: ['uninstall-validator'],
+  templatePath: Application::TEMPLATE_PATH . '/Service/_uninstall-validator',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class UninstallValidator extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['class'] = $this->ask('Class', '{name|camelize}UninstallValidator');
-    $this->addFile('src/{class}.php', 'uninstall-validator');
-    $this->addServicesFile()->template('services');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
+    $vars['class'] = $ir->askClass(default: '{name|camelize}UninstallValidator');
+    $vars['services'] = $ir->askServices();
+
+    $assets->addFile('src/{class}.php', 'uninstall-validator.twig');
+    $assets->addServicesFile()->template('services.twig');
   }
 
 }

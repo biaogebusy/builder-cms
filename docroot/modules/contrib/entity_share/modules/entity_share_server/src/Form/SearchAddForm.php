@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to add a search on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SearchAddForm extends SearchBaseForm {
 
@@ -52,7 +50,7 @@ class SearchAddForm extends SearchBaseForm {
     $channel = $this->entity;
     $channel_searches = $channel->get('channel_searches');
 
-    if (is_null($channel_searches)) {
+    if ($channel_searches === NULL) {
       $channel_searches = [];
     }
 

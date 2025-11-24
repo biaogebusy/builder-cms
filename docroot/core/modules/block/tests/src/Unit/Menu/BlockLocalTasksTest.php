@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Unit\Menu;
 
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTestBase;
@@ -65,7 +67,7 @@ class BlockLocalTasksTest extends LocalTaskIntegrationTestBase {
   /**
    * Tests the admin edit local task.
    */
-  public function testBlockAdminLocalTasks() {
+  public function testBlockAdminLocalTasks(): void {
     $this->assertLocalTasks('entity.block.edit_form', [['entity.block.edit_form']]);
   }
 
@@ -74,14 +76,14 @@ class BlockLocalTasksTest extends LocalTaskIntegrationTestBase {
    *
    * @dataProvider providerTestBlockAdminDisplay
    */
-  public function testBlockAdminDisplay($route, $expected) {
+  public function testBlockAdminDisplay($route, $expected): void {
     $this->assertLocalTasks($route, $expected);
   }
 
   /**
    * Provides a list of routes to test.
    */
-  public function providerTestBlockAdminDisplay() {
+  public static function providerTestBlockAdminDisplay() {
     return [
       ['block.admin_display', [['block.admin_display'], ['block.admin_display_theme:test_b', 'block.admin_display_theme:test_c']]],
       ['block.admin_display_theme', [['block.admin_display'], ['block.admin_display_theme:test_b', 'block.admin_display_theme:test_c']]],

@@ -31,7 +31,6 @@ class LockFactory {
    *   Return lock backend instance.
    */
   public function get($persistent = FALSE) {
-    $class_name = $this->clientFactory->getClass($persistent ? ClientFactory::REDIS_IMPL_PERSISTENT_LOCK : ClientFactory::REDIS_IMPL_LOCK);
-    return new $class_name($this->clientFactory);
+    return new RedisLock($this->clientFactory, $persistent);
   }
 }

@@ -2,15 +2,19 @@
 
 namespace Drupal\Core\Config;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Schema\ConfigSchemaAlterException;
 use Drupal\Core\Config\Schema\ConfigSchemaDiscovery;
+use Drupal\Core\Config\Schema\TypeResolver;
+use Drupal\Core\Config\Schema\SequenceDataDefinition;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Config\Schema\Undefined;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\TypedData\MapDataDefinition;
+use Drupal\Core\TypedData\TraversableTypedDataInterface;
 use Drupal\Core\TypedData\TypedDataManager;
+use Drupal\Core\Validation\Plugin\Validation\Constraint\FullyValidatableConstraint;
 
 /**
  * Manages config schema type plugins.
@@ -52,7 +56,7 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   (optional) The class resolver.
    */
-  public function __construct(StorageInterface $configStorage, StorageInterface $schemaStorage, CacheBackendInterface $cache, ModuleHandlerInterface $module_handler, ClassResolverInterface $class_resolver = NULL) {
+  public function __construct(StorageInterface $configStorage, StorageInterface $schemaStorage, CacheBackendInterface $cache, ModuleHandlerInterface $module_handler, ?ClassResolverInterface $class_resolver = NULL) {
     $this->configStorage = $configStorage;
     $this->schemaStorage = $schemaStorage;
     $this->setCacheBackend($cache, 'typed_config_definitions');
@@ -78,10 +82,7 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
     $data = $this->configStorage->read($name);
     if ($data === FALSE) {
       // For a typed config the data MUST exist.
-      $data = [];
-      trigger_error(new FormattableMarkup('Missing required data for typed configuration: @config', [
-        '@config' => $name,
-      ]), E_USER_ERROR);
+      throw new \InvalidArgumentException("Missing required data for typed configuration: $name");
     }
     return $this->createFromNameAndData($name, $data);
   }
@@ -104,7 +105,7 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
       if (isset($name)) {
         $replace['%key'] = $name;
       }
-      $type = $this->replaceName($type, $replace);
+      $type = TypeResolver::resolveDynamicTypeName($type, $replace);
       // Remove the type from the definition so that it is replaced with the
       // concrete type from schema definitions.
       unset($definition['type']);
@@ -120,7 +121,114 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
         $data_definition[$key] = $value;
       }
     }
+
+    // All values are optional by default (meaning they can be NULL), except for
+    // mappings and sequences. A sequence can only be NULL when `nullable: true`
+    // is set on the config schema type definition. This is unintuitive and
+    // contradicts Drupal core's documentation.
+    // @see https://www.drupal.org/node/2264179
+    // @see https://www.drupal.org/node/1978714
+    // To gradually evolve configuration schemas in the Drupal ecosystem to be
+    // validatable, this needs to be clarified in a non-disruptive way. Any
+    // config schema type definition — that is, a top-level entry in a
+    // *.schema.yml file — can opt into stricter behavior, whereby a property
+    // cannot be NULL unless it specifies `nullable: true`, by adding
+    // `FullyValidatable` as a top-level validation constraint.
+    // @see https://www.drupal.org/node/3364108
+    // @see https://www.drupal.org/node/3364109
+    // @see \Drupal\Core\TypedData\TypedDataManager::getDefaultConstraints()
+    if ($parent) {
+      $root_type = $parent->getRoot()->getDataDefinition()->getDataType();
+      $root_type_has_opted_in = FALSE;
+      foreach ($parent->getRoot()->getConstraints() as $constraint) {
+        if ($constraint instanceof FullyValidatableConstraint) {
+          $root_type_has_opted_in = TRUE;
+          break;
+        }
+      }
+      // If this is a dynamically typed property path, then not only must the
+      // (absolute) root type be considered, but also the (relative) static root
+      // type: the resolved type.
+      // For example, `block.block.*:settings` has a dynamic type defined:
+      // `block.settings.[%parent.plugin]`, but `block.block.*:plugin` does not.
+      // Consequently, the value at the `plugin` property path depends only on
+      // the `block.block.*` config schema type and hence only that config
+      // schema type must have the `FullyValidatable` constraint, because it
+      // defines which value are required.
+      // In contrast, the `block.block.*:settings` property path depends on
+      // whichever dynamic type `block.settings.[%parent.plugin]` resolved to,
+      // to be able to know which values are required. Therefore that resolved
+      // type determines which values are required and whether it is fully
+      // validatable.
+      // So for example the `block.settings.system_branding_block` config schema
+      // type would also need to have the `FullyValidatable` constraint to
+      // consider its schema-defined keys to require values:
+      // - use_site_logo
+      // - use_site_name
+      // - use_site_slogan
+      $static_type_root = TypedConfigManager::getStaticTypeRoot($parent);
+      $static_type_root_type = $static_type_root->getDataDefinition()->getDataType();
+      if ($root_type !== $static_type_root_type) {
+        $root_type_has_opted_in = FALSE;
+        foreach ($static_type_root->getConstraints() as $c) {
+          if ($c instanceof FullyValidatableConstraint) {
+            $root_type_has_opted_in = TRUE;
+            break;
+          }
+        }
+      }
+      if ($root_type_has_opted_in) {
+        $data_definition->setRequired(!isset($data_definition['nullable']) || $data_definition['nullable'] === FALSE);
+      }
+    }
+
     return $data_definition;
+  }
+
+  /**
+   * Gets the static type root for a config schema object.
+   *
+   * @param \Drupal\Core\TypedData\TraversableTypedDataInterface $object
+   *   A config schema object to get the static type root for.
+   *
+   * @return \Drupal\Core\TypedData\TraversableTypedDataInterface
+   *   The ancestral config schema object at which the static type root lies:
+   *   either the first ancestor with a dynamic type (for example:
+   *   `block.block.*:settings`, which has the `block.settings.[%parent.plugin]`
+   *   type) or the (absolute) root of the config object (in this example:
+   *   `block.block.*`).
+   */
+  public static function getStaticTypeRoot(TraversableTypedDataInterface $object): TraversableTypedDataInterface {
+    $root = $object->getRoot();
+    $static_type_root = NULL;
+
+    while ($static_type_root === NULL && $object !== $root) {
+      // Use the parent data definition to determine the type of this mapping
+      // (including the dynamic placeholders). For example:
+      // - `editor.settings.[%parent.editor]`
+      // - `editor.image_upload_settings.[status]`.
+      $parent_data_def = $object->getParent()->getDataDefinition();
+      $original_mapping_type = match (TRUE) {
+        $parent_data_def instanceof MapDataDefinition => $parent_data_def->toArray()['mapping'][$object->getName()]['type'],
+        $parent_data_def instanceof SequenceDataDefinition => $parent_data_def->toArray()['sequence']['type'] ?? $parent_data_def->toArray()['sequence'][0]['type'],
+        default => throw new \LogicException('Invalid config schema detected.'),
+      };
+
+      // If this mapping's type was dynamically defined, then this is the static
+      // type root inside which all types are statically defined.
+      if (str_contains($original_mapping_type, ']')) {
+        $static_type_root = $object;
+        break;
+      }
+
+      $object = $object->getParent();
+    }
+
+    // Either the discovered static type root is not the actual root, or no
+    // static type root was found and it is the root config object.
+    assert(($static_type_root !== NULL && $static_type_root !== $root) || ($static_type_root === NULL && $object->getParent() === NULL));
+
+    return $static_type_root ?? $root;
   }
 
   /**
@@ -150,7 +258,7 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
   }
 
   /**
-   * Gets a schema definition with replacements for dynamic names.
+   * Gets a schema definition with replacements for dynamic type names.
    *
    * @param string $base_plugin_id
    *   A plugin ID.
@@ -177,7 +285,7 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
 
       // Replace dynamic portions of the definition type.
       if (!empty($replacements) && strpos($definition['type'], ']')) {
-        $sub_type = $this->determineType($this->replaceName($definition['type'], $replacements), $definitions);
+        $sub_type = $this->determineType(TypeResolver::resolveDynamicTypeName($definition['type'], $replacements), $definitions);
         $sub_definition = $definitions[$sub_type];
         if (isset($definitions[$sub_type]['type'])) {
           $sub_merge = $this->getDefinition($definitions[$sub_type]['type'], $exception_on_invalid);
@@ -217,7 +325,7 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
   }
 
   /**
-   * Gets fallback configuration schema name.
+   * Finds fallback configuration schema name.
    *
    * @param string $name
    *   Configuration name or key.
@@ -243,6 +351,21 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
    *     block.*.*:*
    *     block.*
    */
+  public function findFallback(string $name): ?string {
+    $fallback = $this->getFallbackName($name);
+    assert($fallback === NULL || str_ends_with($fallback, '.*'));
+    return $fallback;
+  }
+
+  /**
+   * Gets fallback configuration schema name.
+   *
+   * @param string $name
+   *   Configuration name or key.
+   *
+   * @return null|string
+   *   The resolved schema name for the given configuration name or key.
+   */
   protected function getFallbackName($name) {
     // Check for definition of $name with filesystem marker.
     $replaced = preg_replace('/([^\.:]+)([\.:\*]*)$/', '*\2', $name);
@@ -267,99 +390,48 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
   }
 
   /**
-   * Replaces variables in configuration name.
-   *
-   * The configuration name may contain one or more variables to be replaced,
-   * enclosed in square brackets like '[name]' and will follow the replacement
-   * rules defined by the replaceVariable() method.
+   * Replaces dynamic type expressions in configuration type.
    *
    * @param string $name
-   *   Configuration name with variables in square brackets.
-   * @param mixed $data
+   *   Configuration type, potentially with expressions in square brackets.f
+   * @param array $data
    *   Configuration data for the element.
    *
    * @return string
-   *   Configuration name with variables replaced.
+   *   Configuration type name with all expressions resolved.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\Core\Config\Schema\TypeResolver::resolveDynamicTypeName::resolveDynamicTypeName()
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3408266
    */
   protected function replaceName($name, $data) {
-    if (preg_match_all("/\[(.*)\]/U", $name, $matches)) {
-      // Build our list of '[value]' => replacement.
-      $replace = [];
-      foreach (array_combine($matches[0], $matches[1]) as $key => $value) {
-        $replace[$key] = $this->replaceVariable($value, $data);
-      }
-      return strtr($name, $replace);
-    }
-    else {
-      return $name;
-    }
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Config\Schema\TypeResolver::resolveDynamicTypeName() instead. See https://www.drupal.org/node/3408266', E_USER_DEPRECATED);
+    return TypeResolver::resolveDynamicTypeName($name, $data);
   }
 
   /**
-   * Replaces variable values in included names with configuration data.
-   *
-   * Variable values are nested configuration keys that will be replaced by
-   * their value or some of these special strings:
-   * - '%key', will be replaced by the element's key.
-   * - '%parent', to reference the parent element.
-   * - '%type', to reference the schema definition type. Can only be used in
-   *   combination with %parent.
-   *
-   * There may be nested configuration keys separated by dots or more complex
-   * patterns like '%parent.name' which references the 'name' value of the
-   * parent element.
-   *
-   * Example patterns:
-   * - 'name.subkey', indicates a nested value of the current element.
-   * - '%parent.name', will be replaced by the 'name' value of the parent.
-   * - '%parent.%key', will be replaced by the parent element's key.
-   * - '%parent.%type', will be replaced by the schema type of the parent.
-   * - '%parent.%parent.%type', will be replaced by the schema type of the
-   *   parent's parent.
+   * Resolves a dynamic type expression using configuration data.
    *
    * @param string $value
-   *   Variable value to be replaced.
-   * @param mixed $data
+   *   Expression to be resolved.
+   * @param array $data
    *   Configuration data for the element.
    *
    * @return string
-   *   The replaced value if a replacement found or the original value if not.
+   *   The value the expression resolves to, or the given expression if it
+   *   cannot be resolved.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\Core\Config\Schema\TypeResolver::resolveDynamicTypeName::resolveExpression()
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3408266
    */
   protected function replaceVariable($value, $data) {
-    $parts = explode('.', $value);
-    // Process each value part, one at a time.
-    while ($name = array_shift($parts)) {
-      if (!is_array($data) || !isset($data[$name])) {
-        // Key not found, return original value
-        return $value;
-      }
-      elseif (!$parts) {
-        $value = $data[$name];
-        if (is_bool($value)) {
-          $value = (int) $value;
-        }
-        // If no more parts left, this is the final property.
-        return (string) $value;
-      }
-      else {
-        // Get nested value and continue processing.
-        if ($name == '%parent') {
-          /** @var \Drupal\Core\Config\Schema\ArrayElement $parent */
-          // Switch replacement values with values from the parent.
-          $parent = $data['%parent'];
-          $data = $parent->getValue();
-          $data['%type'] = $parent->getDataDefinition()->getDataType();
-          // The special %parent and %key values now need to point one level up.
-          if ($new_parent = $parent->getParent()) {
-            $data['%parent'] = $new_parent;
-            $data['%key'] = $new_parent->getName();
-          }
-        }
-        else {
-          $data = $data[$name];
-        }
-      }
-    }
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Config\Schema\TypeResolver::resolveExpression() instead. See https://www.drupal.org/node/3408266', E_USER_DEPRECATED);
+    return TypeResolver::resolveExpression($value, $data);
   }
 
   /**
@@ -400,7 +472,51 @@ class TypedConfigManager extends TypedDataManager implements TypedConfigManagerI
   public function createFromNameAndData($config_name, array $config_data) {
     $definition = $this->getDefinition($config_name);
     $data_definition = $this->buildDataDefinition($definition, $config_data);
-    return $this->create($data_definition, $config_data);
+    return $this->create($data_definition, $config_data, $config_name);
+  }
+
+  /**
+   * Resolves a dynamic type name.
+   *
+   * @param string $type
+   *   Configuration type, potentially with expressions in square brackets.
+   * @param array $data
+   *   Configuration data for the element.
+   *
+   * @return string
+   *   Configuration type name with all expressions resolved.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\Core\Config\Schema\TypeResolver::resolveDynamicTypeName()
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3413264
+   */
+  protected function resolveDynamicTypeName(string $type, array $data): string {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Config\Schema\TypeResolver::' . __FUNCTION__ . '() instead. See https://www.drupal.org/node/3413264', E_USER_DEPRECATED);
+    return TypeResolver::resolveDynamicTypeName($type, $data);
+  }
+
+  /**
+   * Resolves a dynamic expression.
+   *
+   * @param string $expression
+   *   Expression to be resolved.
+   * @param array|\Drupal\Core\TypedData\TypedDataInterface $data
+   *   Configuration data for the element.
+   *
+   * @return string
+   *   The value the expression resolves to, or the given expression if it
+   *   cannot be resolved.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\Core\Config\Schema\TypeResolver::resolveExpression() instead.
+   *
+   * @see https://www.drupal.org/node/3413264
+   */
+  protected function resolveExpression(string $expression, array $data): string {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Config\Schema\TypeResolver::' . __FUNCTION__ . '() instead. See https://www.drupal.org/node/3413264', E_USER_DEPRECATED);
+    return TypeResolver::resolveExpression($expression, $data);
   }
 
 }

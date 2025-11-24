@@ -2,24 +2,18 @@
 
 namespace Drupal\node\Plugin\views\argument;
 
-use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\views\Plugin\views\argument\NumericArgument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\node\NodeStorageInterface;
 
 /**
  * Argument handler to accept a node revision id.
- *
- * @ViewsArgument("node_vid")
  */
+#[ViewsArgument(
+  id: 'node_vid',
+)]
 class Vid extends NumericArgument {
-
-  use DeprecatedServicePropertyTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $deprecatedProperties = ['database' => 'database'];
 
   /**
    * The node storage.
@@ -34,22 +28,14 @@ class Vid extends NumericArgument {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\node\NodeStorageInterface $node_storage
    *   The node storage.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, $node_storage) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, NodeStorageInterface $node_storage) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    if (!$node_storage instanceof NodeStorageInterface) {
-      @trigger_error('Passing the database service to ' . __METHOD__ . '() is deprecated in drupal:9.2.0 and will be removed before drupal:10.0.0. See https://www.drupal.org/node/3178412', E_USER_DEPRECATED);
-      $node_storage = func_get_arg(4);
-    }
-    if (!$node_storage instanceof NodeStorageInterface) {
-      throw new \InvalidArgumentException('The fourth argument must implement \Drupal\node\NodeStorageInterface.');
-    }
     $this->nodeStorage = $node_storage;
   }
 

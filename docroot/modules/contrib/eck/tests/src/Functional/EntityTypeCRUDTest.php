@@ -29,8 +29,8 @@ class EntityTypeCRUDTest extends FunctionalTestBase {
     $routeArguments = ['eck_entity_type' => 'testtype'];
     $route = 'entity.eck_entity_type.edit_form';
     $edit = ['created' => FALSE];
-    $submitButton = $this->t('Update @type', ['@type' => 'TestType']);
-    $this->drupalPostForm(Url::fromRoute($route, $routeArguments), $edit, $submitButton);
+    $this->drupalGet(Url::fromRoute($route, $routeArguments));
+    $this->submitForm($edit, 'Update TestType');
 
     $this->assertNoMismatchedFieldDefinitions();
   }
@@ -56,7 +56,8 @@ class EntityTypeCRUDTest extends FunctionalTestBase {
       'id' => $id = strtolower($label),
     ];
 
-    $this->drupalPostForm(Url::fromRoute('eck.entity_type.add'), $edit, $this->t('Create entity type'));
+    $this->drupalGet(Url::fromRoute('eck.entity_type.add'));
+    $this->submitForm($edit, 'Create entity type');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->responseContains("Machine name cannot be longer than <em class=\"placeholder\">27</em> characters but is currently <em class=\"placeholder\">28</em> characters long.");
   }

@@ -2,10 +2,10 @@
 
 namespace Drupal\blazy\Media;
 
-use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Utility\Sanitize;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Utility\Sanitize;
+use Drupal\blazy\internals\Internals;
 use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\media\MediaInterface;
 
@@ -305,12 +305,18 @@ class BlazyImage {
 
   /**
    * Checks if we have image item.
-   *
-   * Both ImageItem and fake stdClass are valid, no problem.
    */
   public static function isValidItem($item): bool {
     $item = is_array($item) ? Internals::toHashtag($item, 'item', NULL) : $item;
-    return is_object($item) && (isset($item->uri) || isset($item->target_id));
+    if ($item instanceof ImageItem) {
+      return TRUE;
+    }
+
+    if (is_object($item)) {
+      // Fake image item has URI, the real one has alt and target_id.
+      return isset($item->uri) || (isset($item->target_id) && isset($item->alt));
+    }
+    return FALSE;
   }
 
   /**
@@ -441,7 +447,9 @@ class BlazyImage {
     $dim = ['width' => $width, 'height' => $height];
 
     // Funnily $uri is ignored at all core image effects.
-    $style->transformDimensions($dim, $uri);
+    if ($style) {
+      $style->transformDimensions($dim, $uri);
+    }
 
     // Sometimes they are string, cast them integer to reduce JS logic.
     self::toInt($dim, 'width', 'height');

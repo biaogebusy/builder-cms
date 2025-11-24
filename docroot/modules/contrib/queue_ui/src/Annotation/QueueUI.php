@@ -15,16 +15,12 @@ class QueueUI extends Plugin {
 
   /**
    * The plugin ID.
-   *
-   * @var string
    */
-  public $id;
+  public string $id;
 
   /**
    * The class name.
-   *
-   * @var string
    */
-  public $class_name;
+  public string $class_name;
 
 }

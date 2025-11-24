@@ -68,7 +68,7 @@ class BlazyEntityTest extends BlazyKernelTestBase {
    * @return array
    *   An array of tested data.
    */
-  public function providerTestGetEntityView() {
+  public static function providerTestGetEntityView() {
     return [
       'Node' => [
         'node',

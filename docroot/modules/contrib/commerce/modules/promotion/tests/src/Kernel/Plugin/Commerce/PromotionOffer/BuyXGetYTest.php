@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel\Plugin\Commerce\PromotionOffer;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_price\Calculator;
@@ -10,7 +11,6 @@ use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductType;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the "Buy X Get Y" offer.
@@ -64,7 +64,7 @@ class BuyXGetYTest extends OrderKernelTestBase {
     $product_type = ProductType::create([
       'id' => 'test',
       'label' => 'Test',
-      'variationType' => 'default',
+      'variationTypes' => ['default'],
     ]);
     $product_type->save();
 
@@ -109,7 +109,7 @@ class BuyXGetYTest extends OrderKernelTestBase {
     ]);
     $fourth_product->save();
 
-    $this->order = Order::create([
+    $order = Order::create([
       'type' => 'default',
       'state' => 'completed',
       'mail' => 'test@example.com',
@@ -119,6 +119,8 @@ class BuyXGetYTest extends OrderKernelTestBase {
       'store_id' => $this->store,
       'order_items' => [],
     ]);
+    $order->save();
+    $this->order = $this->reloadEntity($order);
 
     // Buy 6 "test" products, get 4 hats.
     $promotion = Promotion::create([
@@ -963,6 +965,7 @@ class BuyXGetYTest extends OrderKernelTestBase {
         ],
       ],
     ];
+    $offer->setConfiguration($offer_configuration);
     $another_promotion->setOffer($offer);
     $another_promotion->save();
 

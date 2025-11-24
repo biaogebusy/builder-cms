@@ -3,21 +3,22 @@
 namespace Drupal\search_api\Plugin\search_api\data_type;
 
 use Drupal\Component\Datetime\DateTimePlus;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\search_api\Attribute\SearchApiDataType;
 use Drupal\search_api\DataType\DataTypePluginBase;
 use Drupal\search_api\LoggerTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a date data type.
- *
- * @SearchApiDataType(
- *   id = "date",
- *   label = @Translation("Date"),
- *   description = @Translation("Represents points in time."),
- *   default = "true"
- * )
  */
+#[SearchApiDataType(
+  id: 'date',
+  label: new TranslatableMarkup('Date'),
+  description: new TranslatableMarkup('Represents points in time.'),
+  default: TRUE,
+)]
 class DateDataType extends DataTypePluginBase {
 
   use LoggerTrait;
@@ -58,7 +59,7 @@ class DateDataType extends DataTypePluginBase {
       return NULL;
     }
     // Add in time component if this is a date-only field.
-    if (strpos($value, ':') === FALSE) {
+    if (!str_contains($value, ':')) {
       $date->setDefaultDateTime();
     }
     return $date->getTimestamp();

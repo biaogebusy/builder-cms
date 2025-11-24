@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\tracker\Kernel\Migrate\d7;
 
 use Drupal\Core\Database\Database;
@@ -8,6 +10,7 @@ use Drupal\Core\Database\Database;
  * Tests migration of tracker_node.
  *
  * @group tracker
+ * @group legacy
  */
 class MigrateTrackerNodeTest extends MigrateDrupalTestBase {
 
@@ -43,7 +46,7 @@ class MigrateTrackerNodeTest extends MigrateDrupalTestBase {
   /**
    * Tests migration of tracker node table.
    */
-  public function testMigrateTrackerNode() {
+  public function testMigrateTrackerNode(): void {
     $connection = Database::getConnection('default', 'migrate');
     $num_rows = $connection
       ->select('tracker_node', 'tn')

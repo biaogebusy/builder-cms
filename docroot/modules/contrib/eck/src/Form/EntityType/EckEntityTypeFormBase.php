@@ -91,7 +91,7 @@ class EckEntityTypeFormBase extends EntityForm {
     ];
 
     $config = \Drupal::config('eck.eck_entity_type.' . $eck_entity_type->id());
-    foreach (['created', 'changed', 'uid', 'title'] as $field) {
+    foreach (['created', 'changed', 'uid', 'title', 'status'] as $field) {
       $title = $field === 'uid' ? 'author' : $field;
 
       $form['base_fields'][$field] = [
@@ -119,7 +119,7 @@ class EckEntityTypeFormBase extends EntityForm {
    */
   public function exists($entity_id, array $element, FormStateInterface $form_state) {
     // Use the query factory to build a new event entity query.
-    $query = $this->eckEntityTypeStorage->getQuery();
+    $query = $this->eckEntityTypeStorage->getQuery()->accessCheck(FALSE);
 
     // Query the entity ID to see if its in use.
     $result = $query->condition('id', $element['#field_prefix'] . $entity_id)

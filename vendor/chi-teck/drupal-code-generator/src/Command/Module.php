@@ -1,82 +1,115 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Extension\Exception\UnknownExtensionException;
+use Drupal\Core\Extension\ModuleExtensionList;
 use DrupalCodeGenerator\Application;
+use DrupalCodeGenerator\Asset\AssetCollection;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\GeneratorType;
+use DrupalCodeGenerator\Validator\Required;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- * Implements module command.
- */
-final class Module extends ModuleGenerator {
-
-  protected string $name = 'module';
-  protected string $description = 'Generates Drupal module';
-  protected bool $isNewExtension = TRUE;
-  protected string $templatePath = Application::TEMPLATE_PATH . '/module';
+#[Generator(
+  name: 'module',
+  description: 'Generates Drupal module',
+  templatePath: Application::TEMPLATE_PATH . '/_module',
+  type: GeneratorType::MODULE,
+)]
+final class Module extends BaseGenerator implements ContainerInjectionInterface {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
+  public function __construct(
+    private readonly ModuleExtensionList $moduleList,
+  ) {
+    parent::__construct();
+  }
 
-    $vars['description'] = $this->ask('Module description', 'Provides additional functionality for the site.', '::validateRequired');
-    $vars['package'] = $this->ask('Package', 'Custom');
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): self {
+    return new self($container->get('extension.list.module'));
+  }
 
-    $dependencies = $this->ask('Dependencies (comma separated)');
-    $vars['dependencies'] = $dependencies ?
-      \array_map('trim', \explode(',', \strtolower($dependencies))) : [];
+  /**
+   * {@inheritdoc}
+   */
+  protected function generate(array &$vars, AssetCollection $assets): void {
+    $ir = $this->createInterviewer($vars);
 
-    $vars['class_prefix'] = '{machine_name|camelize}';
+    $vars['name'] = $ir->askName();
+    $vars['machine_name'] = $ir->askMachineName();
 
-    $this->addFile('{machine_name}/{machine_name}.info.yml', 'model.info.yml');
+    $vars['description'] = $ir->ask('Module description', validator: new Required());
+    $vars['package'] = $ir->ask('Package', 'Custom');
 
-    if ($this->confirm('Would you like to create module file?', FALSE)) {
-      $this->addFile('{machine_name}/{machine_name}.module', 'model.module');
+    $dependencies = $ir->ask('Dependencies (comma separated)');
+    $vars['dependencies'] = $this->buildDependencies($dependencies);
+
+    $assets->addFile('{machine_name}/{machine_name}.info.yml', 'model.info.yml.twig');
+
+    if ($ir->confirm('Would you like to create module file?', FALSE)) {
+      $assets->addFile('{machine_name}/{machine_name}.module', 'model.module.twig');
     }
 
-    if ($this->confirm('Would you like to create install file?', FALSE)) {
-      $this->addFile('{machine_name}/{machine_name}.install', 'model.install');
+    if ($ir->confirm('Would you like to create install file?', FALSE)) {
+      $assets->addFile('{machine_name}/{machine_name}.install', 'model.install.twig');
     }
 
-    if ($this->confirm('Would you like to create libraries.yml file?', FALSE)) {
-      $this->addFile('{machine_name}/{machine_name}.libraries.yml', 'model.libraries.yml');
+    if ($ir->confirm('Would you like to create README.md file?', FALSE)) {
+      $assets->addFile('{machine_name}/README.md', 'README.md.twig');
+    }
+  }
+
+  /**
+   * Builds array of dependencies from comma-separated string.
+   */
+  private function buildDependencies(?string $dependencies_encoded): array {
+
+    $dependencies = $dependencies_encoded ? \explode(',', $dependencies_encoded) : [];
+
+    foreach ($dependencies as &$dependency) {
+      $dependency = \str_replace(' ', '_', \trim(\strtolower($dependency)));
+      // Check if the module name is already prefixed.
+      if (\str_contains($dependency, ':')) {
+        continue;
+      }
+      // Dependencies should be namespaced in the format {project}:{name}.
+      $project = $dependency;
+      try {
+        // The extension list is internal for extending not for instantiating.
+        // @see \Drupal\Core\Extension\ExtensionList
+        /** @psalm-suppress InternalMethod */
+        $package = $this->moduleList->getExtensionInfo($dependency)['package'] ?? NULL;
+        if ($package === 'Core') {
+          $project = 'drupal';
+        }
+      }
+      catch (UnknownExtensionException) {
+
+      }
+      $dependency = $project . ':' . $dependency;
     }
 
-    if ($this->confirm('Would you like to create permissions.yml file?', FALSE)) {
-      $this->addFile('{machine_name}/{machine_name}.permissions.yml', 'model.permissions.yml');
-    }
+    $dependency_sorter = static function (string $a, string $b): int {
+      // Core dependencies go first.
+      $a_is_drupal = \str_starts_with($a, 'drupal:');
+      $b_is_drupal = \str_starts_with($b, 'drupal:');
+      if ($a_is_drupal xor $b_is_drupal) {
+        return $a_is_drupal ? -1 : 1;
+      }
+      return $a <=> $b;
+    };
+    \uasort($dependencies, $dependency_sorter);
 
-    if ($this->confirm('Would you like to create event subscriber?', FALSE)) {
-      $this->addFile("{machine_name}/src/EventSubscriber/{class_prefix}Subscriber.php")
-        ->template('src/EventSubscriber/ExampleSubscriber.php');
-      $this->addFile('{machine_name}/{machine_name}.services.yml', 'model.services.yml');
-    }
-
-    if ($this->confirm('Would you like to create block plugin?', FALSE)) {
-      $this->addFile('{machine_name}/src/Plugin/Block/ExampleBlock.php')
-        ->template('src/Plugin/Block/ExampleBlock.php');
-    }
-
-    if ($vars['controller'] = $this->confirm('Would you like to create a controller?', FALSE)) {
-      $this->addFile("{machine_name}/src/Controller/{class_prefix}Controller.php")
-        ->template('src/Controller/ExampleController.php');
-    }
-
-    if ($vars['form'] = $this->confirm('Would you like to create settings form?', FALSE)) {
-      $this->addFile('{machine_name}/src/Form/SettingsForm.php')
-        ->template('src/Form/SettingsForm.php');
-      $this->addFile('{machine_name}/config/schema/{machine_name}.schema.yml')
-        ->template('config/schema/model.schema.yml');
-      $this->addFile('{machine_name}/{machine_name}.links.menu.yml')
-        ->template('model.links.menu');
-    }
-
-    if ($vars['controller'] || $vars['form']) {
-      $this->addFile('{machine_name}/{machine_name}.routing.yml')
-        ->template('model.routing.yml');
-    }
-
+    return $dependencies;
   }
 
 }

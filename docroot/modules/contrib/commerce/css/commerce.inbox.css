@@ -1,0 +1,158 @@
+/**
+ * @file
+ * Commerce inbox styling.
+ */
+
+.commerce-dashboard--inbox {
+  min-width: 0;
+}
+
+.commerce-dashboard--inbox .inbox-header {
+  display: -webkit-box;
+  display: flex;
+  -ms-flex-pack: justify;
+  align-items: baseline;
+  justify-content: space-between;
+  -webkit-column-gap: 1rem;
+  -moz-column-gap: 1rem;
+  column-gap: 1rem;
+  -webkit-box-align: baseline;
+  -ms-flex-align: baseline;
+  -webkit-box-pack: justify;
+}
+
+.commerce-dashboard--inbox .inbox-header__unread-text {
+  margin: 0;
+  color: var(--commerce-color--warning);
+  font-size: 0.875rem;
+  font-weight: normal;
+}
+
+.commerce-dashboard--inbox .inbox-message--wrapper {
+  border: 1px solid var(--commerce-color--border);
+  background-color: white;
+}
+
+.commerce-dashboard--inbox .inbox-message {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--commerce-color--border);
+}
+
+.commerce-dashboard--inbox .inbox-message:hover {
+  background-color: var(--commerce-color--light);
+}
+
+.commerce-dashboard--inbox .inbox-message:last-child {
+  padding-bottom: 2rem;
+  border-bottom: 0;
+}
+
+.commerce-dashboard--inbox .inbox-message:first-child {
+  padding-top: 2rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__empty {
+  padding: 2rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__status {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  -webkit-column-gap: 0.5rem;
+  -moz-column-gap: 0.5rem;
+  column-gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__time {
+  font-size: 0.75rem;
+}
+
+.commerce-dashboard--inbox .inbox-message .close {
+  width: 1em;
+  height: 1em;
+  padding: 0.25em 0.25em;
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 1em;
+  mask-size: 1em;
+  -webkit-mask-image: var(--commerce-icon--x-lg);
+  mask-image: var(--commerce-icon--x-lg);
+}
+
+.commerce-dashboard--inbox .inbox-message .close:hover {
+  color: var(--commerce-color--dark);
+}
+
+.commerce-dashboard--inbox .inbox-message__message {
+  display: block;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__subject {
+  margin-block: 0.375rem 0.25rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__actions {
+  margin-top: 0.5rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__actions .message-dismiss {
+  font-size: 0.875rem;
+}
+
+.commerce-dashboard--inbox .inbox-message__actions .button + .message-dismiss {
+  margin-inline-start: 0.5rem;
+}
+
+/* Unread */
+.commerce-dashboard--inbox .read .inbox-message__subject {
+  font-weight: normal;
+}
+
+/* Opened */
+.commerce-dashboard--inbox .inbox-message:not(.opened) {
+  cursor: pointer;
+}
+
+.commerce-dashboard--inbox .inbox-message:not(.opened) .close,
+.commerce-dashboard--inbox .inbox-message:not(.opened) .inbox-message__actions {
+  display: none;
+}
+
+.commerce-dashboard--inbox .inbox-message:not(.opened) .inbox-message__message {
+  overflow: hidden;
+  white-space: nowrap;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
+
+.commerce-dashboard--inbox .unread:not(.opened) .inbox-message__status::after {
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  content: "";
+  border-radius: 0.375rem;
+  background-color: var(--commerce-color--warning);
+}
+
+.commerce-dashboard--inbox .inbox-footer--wrapper {
+  margin-top: 2rem;
+  padding: 2rem;
+  border: 1px solid var(--commerce-color--border);
+  background-color: var(--commerce-color--light);
+}
+
+.commerce-dashboard--inbox .inbox-footer__subject {
+  margin-top: 0;
+}

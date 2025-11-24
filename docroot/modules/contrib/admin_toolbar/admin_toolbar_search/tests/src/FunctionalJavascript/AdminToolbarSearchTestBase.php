@@ -21,7 +21,7 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'admin_toolbar_search',
     'node',
     'media',
@@ -47,7 +47,7 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $baby_names = [
@@ -109,6 +109,9 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
    *   The string to search for.
    * @param string $contains
    *   Some HTML that is expected to be within the suggestions element.
+   *
+   * @return void
+   *   Nothing to return.
    */
   protected function assertSuggestionContains($search, $contains) {
     $this->resetSearch();
@@ -119,7 +122,7 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
       return ($page->find('css', 'ul.ui-autocomplete')->isVisible() === TRUE);
     });
     $suggestions_markup = $page->find('css', 'ul.ui-autocomplete')->getHtml();
-    $this->assertContains($contains, $suggestions_markup);
+    $this->assertStringContainsString($contains, $suggestions_markup);
   }
 
   /**
@@ -132,6 +135,9 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
    *   The string to search for.
    * @param string $contains
    *   Some HTML that is not expected to be within the suggestions element.
+   *
+   * @return void
+   *   Nothing to return.
    */
   protected function assertSuggestionNotContains($search, $contains) {
     $this->resetSearch();
@@ -146,12 +152,15 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
     }
     else {
       $suggestions_markup = $page->find('css', 'ul.ui-autocomplete')->getHtml();
-      $this->assertNotContains($contains, $suggestions_markup);
+      $this->assertStringNotContainsString($contains, $suggestions_markup);
     }
   }
 
   /**
    * Search for an empty string to clear out the autocomplete suggestions.
+   *
+   * @return void
+   *   Nothing to return.
    */
   protected function resetSearch() {
     $page = $this->getSession()->getPage();
@@ -169,6 +178,9 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
    * @param string $url
    *   The url to assert exists in the admin menu.
    *
+   * @return void
+   *   Nothing to return.
+   *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    */
   protected function assertMenuHasHref($url) {
@@ -181,6 +193,9 @@ abstract class AdminToolbarSearchTestBase extends WebDriverTestBase {
    *
    * @param string $url
    *   The url to assert exists in the admin menu.
+   *
+   * @return void
+   *   Nothing to return.
    *
    * @throws \Behat\Mink\Exception\ExpectationException
    */

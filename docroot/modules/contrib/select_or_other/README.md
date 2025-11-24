@@ -19,7 +19,6 @@ To submit bug reports and feature suggestions, or to track changes
 - Usage example
     - Field widget
     - Forms API element
-- Maintainers
 
 
 ## Requirements
@@ -110,14 +109,3 @@ following before `return $form;`:
 
 The menu should now appear in the block settings. For more information visit
 [Select (or other)](https://www.drupal.org/node/1158654).
-
-
-## Maintainers
-
-- Chris Jansen [legolasbo](https://www.drupal.org/u/legolasbo)
-- Henrique Mendes [hmendes](https://www.drupal.org/u/hmendes)
-- [danielb](https://www.drupal.org/u/danielb)
-- [Jon Heaton](https://www.drupal.org/u/haydeniv)
-- [Dieter Blomme](https://www.drupal.org/u/daften)
-- [Vlad Bondarchuk](https://www.drupal.org/u/vladbo)
-- [Anton Kuzmenko](https://www.drupal.org/u/qzmenko)

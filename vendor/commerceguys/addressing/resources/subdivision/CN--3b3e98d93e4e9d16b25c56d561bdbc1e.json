@@ -1,0 +1,41 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Ankang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baihe Xian": {
+			"local_name": "白河县"
+		},
+		"Hanbin Qu": {
+			"local_name": "汉滨区"
+		},
+		"Hanyin Xian": {
+			"local_name": "汉阴县"
+		},
+		"Langao Xian": {
+			"local_name": "岚皋县"
+		},
+		"Ningshan Xian": {
+			"local_name": "宁陕县"
+		},
+		"Pingli Xian": {
+			"local_name": "平利县"
+		},
+		"Shiquan Xian": {
+			"local_name": "石泉县"
+		},
+		"Xunyang Xian": {
+			"local_name": "旬阳县"
+		},
+		"Zhenping Xian": {
+			"local_name": "镇坪县"
+		},
+		"Ziyang Xian": {
+			"local_name": "紫阳县"
+		}
+	}
+}

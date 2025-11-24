@@ -1,0 +1,33 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"LN",
+		"Chaoyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beipiao Shi": {
+			"local_name": "北票市"
+		},
+		"Chaoyang Xian": {
+			"local_name": "朝阳县"
+		},
+		"Jianping Xian": {
+			"local_name": "建平县"
+		},
+		"Harqin Zuoyi Xian": {
+			"local_code": "喀喇沁左翼蒙古族自治县",
+			"local_name": "喀喇沁左翼县"
+		},
+		"Lingyuan Shi": {
+			"local_name": "凌源市"
+		},
+		"Longcheng Qu": {
+			"local_name": "龙城区"
+		},
+		"Shuangta Qu": {
+			"local_name": "双塔区"
+		}
+	}
+}

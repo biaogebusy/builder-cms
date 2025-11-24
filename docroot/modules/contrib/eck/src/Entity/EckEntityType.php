@@ -37,7 +37,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  *     "created",
  *     "changed",
  *     "uid",
- *     "title"
+ *     "title",
+ *     "status"
  *   }
  * )
  *
@@ -76,13 +77,20 @@ class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
   protected $changed;
 
   /**
+   * If this entity type has a "Status" base field.
+   *
+   * @var bool
+   */
+  protected $status;
+
+  /**
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
     // Entity ids are limited to 32 characters, but since eck adds '_type' to
     // the id of it's bundle storage, that id would be too long. we therefore
     // limit the id to 27 characters.
-    if (strlen($this->id()) > ECK_ENTITY_ID_MAX_LENGTH) {
+    if (\strlen($this->id()) > ECK_ENTITY_ID_MAX_LENGTH) {
       throw new \RuntimeException("Entity id has more than " . ECK_ENTITY_ID_MAX_LENGTH . " characters.");
     }
 
@@ -174,6 +182,19 @@ class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+
+    $entity_update_manager = \Drupal::entityDefinitionUpdateManager();
+    foreach ($entities as $entity) {
+      $entity_type = $entity_update_manager->getEntityType($entity->id());
+      $entity_update_manager->uninstallEntityType($entity_type);
+    }
+  }
+
+  /**
    * Gets the logger for a specific channel.
    *
    * @param string $channel
@@ -212,6 +233,13 @@ class EckEntityType extends ConfigEntityBase implements EckEntityTypeInterface {
    */
   public function hasTitleField() {
     return isset($this->title) && $this->title;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasStatusField() {
+    return isset($this->status) && $this->status;
   }
 
 }

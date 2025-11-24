@@ -5,48 +5,197 @@
  * The installation file for elasticsearch_connector module.
  */
 
+use Drupal\user\Entity\Role;
+
 /**
  * Implements hook_requirements().
  *
  * Checks for Elasticsearch client library installation.
  */
 function elasticsearch_connector_requirements($phase) {
-  // TODO: This should be rewritten in order to get the correct library.
   if ($phase === 'install') {
-    if (version_compare(phpversion(), '5.4', '<')) {
-      return array(
-        'elasticsearch_connector' => array(
+    if (version_compare(phpversion(), '8.0', '<')) {
+      return [
+        'elasticsearch_connector' => [
           'title' => t('The PHP version is not compatible with this module.'),
-          'description' => t('The module requires PHP version bigger than or equal to version 5.3.9.'),
+          'description' => t('The module requires PHP version bigger than or equal to version 8.0.'),
           'severity' => REQUIREMENT_ERROR,
           'value' => t('PHP version not compatible.'),
-        ),
-      );
+        ],
+      ];
     }
   }
 
-  if ($phase == 'runtime') {
-    if (!interface_exists('\nodespark\DESConnector\ClientInterface')) {
-      return array(
-        'elasticsearch_connector' => array(
-          'title' => t('The Elasticsearch client library is missing.'),
+  if ($phase === 'runtime') {
+    if (!class_exists('\Elastic\Elasticsearch\Client')) {
+      return [
+        'elasticsearch_connector' => [
+          'title' => t('The Elasticsearch client library elasticsearch/elasticsearch is missing.'),
           'description' => t('The client library for Elasticsearch connection is missing.'),
           'severity' => REQUIREMENT_ERROR,
           'value' => t('Elasticsearch library missing.'),
-        ),
-      );
+        ],
+      ];
     }
     else {
-      return array(
-        'elasticsearch_connector' => array(
+      return [
+        'elasticsearch_connector' => [
           'title' => t('Elasticsearch PHP client library'),
           'description' => t('The client library for Elasticsearch was correctly installed.'),
           'severity' => REQUIREMENT_OK,
           'value' => t('OK'),
-        ),
-      );
+        ],
+      ];
     }
   }
 
-  return array();
+  return [];
+}
+
+/**
+ * Transform elasticsearch_connector-8.x-7.x SERVER config to 8.0.x config.
+ */
+function elasticsearch_connector_update_9800(&$sandbox) {
+  $configFactory = \Drupal::configFactory();
+
+  // First run: get a list of Search API servers to process.
+  if (!isset($sandbox['started'])) {
+    $searchApiServerConfigNames = $configFactory->listAll('search_api.server.');
+    foreach ($searchApiServerConfigNames as $serverConfigName) {
+      $serverConfig = $configFactory->getEditable($serverConfigName);
+      // We only want to process servers whose backend is 'elasticsearch'.
+      if ($serverConfig->get('backend') === 'elasticsearch') {
+        $sandbox['servers_to_process'][] = $serverConfigName;
+      }
+    }
+
+    $numberOfServersToProcess = \count($sandbox['servers_to_process']);
+    if ($numberOfServersToProcess > 0) {
+      $sandbox['started'] = 1;
+      $sandbox['#finished'] = 0;
+      return t('Preparing to process @count Search API Server(s) that use ElasticSearch.', [
+        '@count' => $numberOfServersToProcess,
+      ]);
+    }
+
+    // If we get here on the first run, then there were no servers using
+    // ElasticSearch.
+    $sandbox['#finished'] = 1;
+    return t('No Search API servers that use ElasticSearch.');
+  }
+
+  // Subsequent runs: process a server and calculate whether we're done.
+  $serverNameToProcess = \array_shift($sandbox['servers_to_process']);
+  if (!is_null($serverNameToProcess)) {
+    // Load the server, find the cluster config, and load the cluster config.
+    $serverToProcess = $configFactory->getEditable($serverNameToProcess);
+    $clusterConfigName = $serverToProcess->get('backend_config.cluster_settings.cluster');
+    $clusterConfig = $configFactory->getEditable('elasticsearch_connector.cluster.' . $clusterConfigName);
+    $serverToProcess->clear('backend_config.cluster_settings.cluster');
+
+    // If the cluster has a username and password set, we should use the
+    // 'basicauth' connector. Otherwise, we should use the 'standard' connector.
+    $useAuth = (bool) $clusterConfig->get('options.use_authentication');
+    if ($useAuth && $clusterConfig->get('options.authentication_type') === 'Basic') {
+      // See \Drupal\elasticsearch_connector\Plugin\ElasticSearch\Connector\BasicAuthConnector.
+      $serverToProcess->set('backend_config.connector', 'basicauth');
+      $serverToProcess->set('backend_config.connector_config.username', $clusterConfig->get('options.username') ?? '');
+      $serverToProcess->set('backend_config.connector_config.password', $clusterConfig->get('options.password') ?? '');
+    }
+    else {
+      // See \Drupal\elasticsearch_connector\Plugin\ElasticSearch\Connector\StandardConnector.
+      $serverToProcess->set('backend_config.connector', 'standard');
+    }
+
+    // Migrate the cluster URL from the cluster options.
+    $serverToProcess->set('backend_config.connector_config.url', $clusterConfig->get('url') ?? '');
+
+    // Set a value for enable_debug_logging in the new server config.
+    $serverToProcess->set('backend_config.connector_config.enable_debug_logging', FALSE);
+
+    // Migrate the cluster prefix from the cluster options.
+    $indexPrefix = '';
+    if ($clusterConfig->get('options.rewrite.index.prefix')) {
+      $indexPrefix = $clusterConfig->get('options.rewrite.index.prefix') . '_';
+    }
+    $serverToProcess->set('backend_config.advanced.prefix', $indexPrefix);
+
+    // Migrate the cluster suffix from the cluster options.
+    $indexSuffix = '';
+    if ($clusterConfig->get('options.rewrite.index.suffix')) {
+      $indexSuffix = '_' . $clusterConfig->get('options.rewrite.index.suffix');
+    }
+    $serverToProcess->set('backend_config.advanced.suffix', $indexSuffix);
+
+    // Migrate the fuzziness value from its old path.
+    $serverToProcess->set('backend_config.advanced.fuzziness', $serverToProcess->get('backend_config.fuzziness') ?? 'auto');
+
+    // Delete old keys.
+    $serverToProcess->clear('backend_config.fuzziness');
+    $serverToProcess->clear('backend_config.cluster_settings');
+
+    // Save changes to the server to process.
+    $serverToProcess->save(TRUE);
+  }
+
+  // Now figure out if we are done.
+  $sandbox['#finished'] = 0;
+  $numberOfServersToProcess = \count($sandbox['servers_to_process']);
+  if ($numberOfServersToProcess <= 0) {
+    $sandbox['#finished'] = 1;
+  }
+
+  return t('Processed Search API server with machine name @machineName. @count Search API Server(s) remaining', [
+    '@machineName' => $serverNameToProcess,
+    '@count' => $numberOfServersToProcess,
+  ]);
+}
+
+/**
+ * Delete old elasticsearch_connector.indexes: use search_api indexes instead.
+ */
+function elasticsearch_connector_update_9801(&$sandbox) {
+  $configFactory = \Drupal::configFactory();
+  $indexConfigNames = $configFactory->listAll('elasticsearch_connector.index.');
+  foreach ($indexConfigNames as $indexConfigName) {
+    $config = $configFactory->getEditable($indexConfigName);
+    $config->delete();
+  }
+}
+
+/**
+ * Delete old elasticsearch_connector.cluster configs: they have been migrated.
+ */
+function elasticsearch_connector_update_9802(&$sandbox) {
+  $configFactory = \Drupal::configFactory();
+  $clusterConfigNames = $configFactory->listAll('elasticsearch_connector.cluster.');
+  foreach ($clusterConfigNames as $clusterConfigName) {
+    $config = $configFactory->getEditable($clusterConfigName);
+    $config->delete();
+  }
+}
+
+/**
+ * Delete old elasticsearch_connector permissions that no longer exist.
+ */
+function elasticsearch_connector_update_9803(&$sandbox) {
+  $permissions = [
+    'administer elasticsearch connector',
+    'administer elasticsearch cluster',
+    'administer elasticsearch index',
+  ];
+
+  foreach (Role::loadMultiple() as $role) {
+    $changed = FALSE;
+    foreach ($permissions as $permission) {
+      if ($role->hasPermission($permission)) {
+        $role->revokePermission($permission);
+        $changed = TRUE;
+      }
+    }
+
+    if ($changed) {
+      $role->save();
+    }
+  }
 }

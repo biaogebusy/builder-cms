@@ -14,7 +14,7 @@ field.widget.settings.autocomplete_deluxe:
     selection_handler:
       type: string
       label: "Selection Handler"
-    limit:
+    match_limit:
       type: integer
       label: "Limit"
     min_length:

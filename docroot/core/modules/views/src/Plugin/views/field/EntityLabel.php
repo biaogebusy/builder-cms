@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -13,9 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Field handler to display entity label optionally linked to entity page.
- *
- * @ViewsField("entity_label")
  */
+#[ViewsField("entity_label")]
 class EntityLabel extends FieldPluginBase {
 
   /**
@@ -38,7 +38,7 @@ class EntityLabel extends FieldPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -65,7 +65,7 @@ class EntityLabel extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
     $this->additional_fields[$this->definition['entity type field']] = $this->definition['entity type field'];
   }

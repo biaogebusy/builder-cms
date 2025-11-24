@@ -2,17 +2,17 @@
 
 namespace Drupal\views_bulk_operations\Controller;
 
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\views_bulk_operations\Form\ViewsBulkOperationsFormTrait;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface;
-use Drupal\Core\Render\RendererInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Ajax\AjaxResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Defines VBO controller class.
@@ -20,27 +20,6 @@ use Drupal\Core\Ajax\AjaxResponse;
 class ViewsBulkOperationsController extends ControllerBase implements ContainerInjectionInterface {
 
   use ViewsBulkOperationsFormTrait;
-
-  /**
-   * The tempstore service.
-   *
-   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
-   */
-  protected $tempStoreFactory;
-
-  /**
-   * Views Bulk Operations action processor.
-   *
-   * @var \Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface
-   */
-  protected $actionProcessor;
-
-  /**
-   * The Renderer service object.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
 
   /**
    * Constructs a new controller object.
@@ -53,14 +32,10 @@ class ViewsBulkOperationsController extends ControllerBase implements ContainerI
    *   The Renderer service object.
    */
   public function __construct(
-    PrivateTempStoreFactory $tempStoreFactory,
-    ViewsBulkOperationsActionProcessorInterface $actionProcessor,
-    RendererInterface $renderer
-  ) {
-    $this->tempStoreFactory = $tempStoreFactory;
-    $this->actionProcessor = $actionProcessor;
-    $this->renderer = $renderer;
-  }
+    protected readonly PrivateTempStoreFactory $tempStoreFactory,
+    protected readonly ViewsBulkOperationsActionProcessorInterface $actionProcessor,
+    protected readonly RendererInterface $renderer
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -81,20 +56,14 @@ class ViewsBulkOperationsController extends ControllerBase implements ContainerI
    * @param string $display_id
    *   The display ID of the current view.
    */
-  public function execute($view_id, $display_id) {
+  public function execute($view_id, $display_id): RedirectResponse {
     $view_data = $this->getTempstoreData($view_id, $display_id);
     if (empty($view_data)) {
       throw new NotFoundHttpException();
     }
     $this->deleteTempstoreData();
 
-    $this->actionProcessor->executeProcessing($view_data);
-    if ($view_data['batch']) {
-      return batch_process($view_data['redirect_url']);
-    }
-    else {
-      return new RedirectResponse($view_data['redirect_url']->setAbsolute()->toString());
-    }
+    return $this->actionProcessor->executeProcessing($view_data);
   }
 
   /**
@@ -107,57 +76,44 @@ class ViewsBulkOperationsController extends ControllerBase implements ContainerI
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request object.
    */
-  public function updateSelection($view_id, $display_id, Request $request) {
+  public function updateSelection($view_id, $display_id, Request $request): AjaxResponse {
     $response = [];
     $tempstore_data = $this->getTempstoreData($view_id, $display_id);
     if (empty($tempstore_data)) {
       throw new NotFoundHttpException();
     }
 
-    $list = $request->request->get('list');
+    $parameters = $request->request->all();
 
-    $op = $request->request->get('op', 'check');
-    // Reverse operation when in exclude mode.
-    if (!empty($tempstore_data['exclude_mode'])) {
-      if ($op === 'add') {
-        $op = 'remove';
-      }
-      elseif ($op === 'remove') {
-        $op = 'add';
-      }
+    if ($parameters['op'] === 'method_include') {
+      unset($tempstore_data['exclude_mode']);
+      $tempstore_data['list'] = [];
     }
-
-    switch ($op) {
-      case 'add':
-        foreach ($list as $bulkFormKey) {
-          if (!isset($tempstore_data['list'][$bulkFormKey])) {
-            $tempstore_data['list'][$bulkFormKey] = $this->getListItem($bulkFormKey);
+    elseif ($parameters['op'] === 'method_exclude') {
+      $tempstore_data['exclude_mode'] = TRUE;
+      $tempstore_data['list'] = [];
+    }
+    elseif ($parameters['op'] === 'update') {
+      $exclude_mode = \array_key_exists('exclude_mode', $tempstore_data) && $tempstore_data['exclude_mode'] === TRUE;
+      foreach ($parameters['list'] as $bulkFormKey => $state) {
+        if ($exclude_mode) {
+          $state = $state === 'true' ? 'false' : 'true';
+        }
+        if ($state === 'true') {
+          $list_item = $this->getListItem($bulkFormKey);
+          if ($list_item !== NULL) {
+            $tempstore_data['list'][$bulkFormKey] = $list_item;
           }
         }
-        break;
-
-      case 'remove':
-        foreach ($list as $bulkFormKey) {
-          if (isset($tempstore_data['list'][$bulkFormKey])) {
-            unset($tempstore_data['list'][$bulkFormKey]);
-          }
+        else {
+          unset($tempstore_data['list'][$bulkFormKey]);
         }
-        break;
-
-      case 'method_include':
-        unset($tempstore_data['exclude_mode']);
-        $tempstore_data['list'] = [];
-        break;
-
-      case 'method_exclude':
-        $tempstore_data['exclude_mode'] = TRUE;
-        $tempstore_data['list'] = [];
-        break;
+      }
     }
 
     $this->setTempstoreData($tempstore_data);
 
-    $count = empty($tempstore_data['exclude_mode']) ? count($tempstore_data['list']) : $tempstore_data['total_results'] - count($tempstore_data['list']);
+    $count = empty($tempstore_data['exclude_mode']) ? \count($tempstore_data['list']) : $tempstore_data['total_results'] - \count($tempstore_data['list']);
 
     $selection_info_renderable = $this->getMultipageList($tempstore_data);
     $response_data = [

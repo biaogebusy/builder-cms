@@ -8,8 +8,11 @@ core.entity_view_mode.*.*:
       type: string
       label: 'ID'
     label:
-      type: label
+      type: required_label
       label: 'The human-readable name of the view mode'
+    description:
+      type: text
+      label: 'Description'
     targetEntityType:
       type: string
       label: 'Target entity type'
@@ -25,8 +28,11 @@ core.entity_form_mode.*.*:
       type: string
       label: 'ID'
     label:
-      type: label
+      type: required_label
       label: 'Label'
+    description:
+      type: text
+      label: 'Description'
     targetEntityType:
       type: string
       label: 'Target entity type'
@@ -48,6 +54,8 @@ core.entity_view_display.*.*.*:
     bundle:
       type: string
       label: 'Bundle'
+      constraints:
+        EntityBundleExists: '%parent.targetEntityType'
     mode:
       type: string
       label: 'View or form mode machine name'
@@ -70,6 +78,10 @@ field_formatter:
     type:
       type: string
       label: 'Format type machine name'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.field.formatter
+          interface: 'Drupal\Core\Field\FormatterInterface'
     label:
       type: string
       label: 'Label setting machine name'
@@ -77,6 +89,9 @@ field_formatter:
       type: field.formatter.settings.[%parent.type]
       label: 'Settings'
     third_party_settings:
+      # Third party settings are always optional: they're an optional extension
+      # point.
+      requiredKey: false
       type: sequence
       label: 'Third party settings'
       sequence:
@@ -86,7 +101,7 @@ field_formatter.entity_view_display:
   type: field_formatter
   mapping:
     weight:
-      type: integer
+      type: weight
       label: 'Weight'
     region:
       type: string
@@ -106,6 +121,8 @@ core.entity_form_display.*.*.*:
     bundle:
       type: string
       label: 'Bundle'
+      constraints:
+        EntityBundleExists: '%parent.targetEntityType'
     mode:
       type: string
       label: 'View or form mode machine name'
@@ -122,8 +139,12 @@ core.entity_form_display.*.*.*:
           type:
             type: string
             label: 'Widget type machine name'
+            constraints:
+              PluginExists:
+                manager: plugin.manager.field.widget
+                interface: '\Drupal\Core\Field\WidgetInterface'
           weight:
-            type: integer
+            type: weight
             label: 'Weight'
           region:
             type: string
@@ -132,6 +153,9 @@ core.entity_form_display.*.*.*:
             type: field.widget.settings.[%parent.type]
             label: 'Settings'
           third_party_settings:
+            # Third party settings are always optional: they're an optional extension
+            # point.
+            requiredKey: false
             type: sequence
             label: 'Third party settings'
             sequence:
@@ -226,6 +250,14 @@ field.widget.settings.checkbox:
     display_label:
       type: boolean
       label: 'Use field label instead of the "On value" as label'
+
+field.widget.settings.language_select:
+  type: mapping
+  label: 'Language format settings'
+  mapping:
+    include_locked:
+      type: boolean
+      label: 'Include locked languages'
 
 field.widget.settings.entity_reference_autocomplete_tags:
   type: mapping
@@ -337,16 +369,45 @@ field.formatter.settings.timestamp:
     timezone:
       type: string
       label: 'Time zone'
+    tooltip:
+      type: mapping
+      label: Tooltip
+      mapping:
+        date_format:
+          type: string
+          label: 'Tooltip date format'
+        custom_date_format:
+          type: string
+          label: 'Tooltip custom date format'
+    time_diff:
+      type: mapping
+      label: 'Time difference'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Show as time difference'
+        future_format:
+          type: string
+          label: 'Future format'
+        past_format:
+          type: string
+          label: 'Past format'
+        granularity:
+          type: integer
+          label: 'Time units'
+        refresh:
+          type: integer
+          label: 'Refresh interval in seconds'
 
 field.formatter.settings.timestamp_ago:
   type: mapping
   label: 'Timestamp ago display format settings'
   mapping:
     future_format:
-      type: label
+      type: required_label
       label: 'Future format'
     past_format:
-      type: label
+      type: required_label
       label: 'Past format'
     granularity:
       type: integer

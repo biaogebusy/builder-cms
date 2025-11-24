@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Action;
 
 use Drupal\Core\Action\ActionInterface;
@@ -34,13 +36,13 @@ class ActionTest extends KernelTestBase {
 
     $this->actionManager = $this->container->get('plugin.manager.action');
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences']);
+    $this->installConfig('user');
   }
 
   /**
    * Tests the functionality of test actions.
    */
-  public function testOperations() {
+  public function testOperations(): void {
     // Test that actions can be discovered.
     $definitions = $this->actionManager->getDefinitions();
     // Verify that the action definitions are found.
@@ -75,7 +77,7 @@ class ActionTest extends KernelTestBase {
   /**
    * Tests the dependency calculation of actions.
    */
-  public function testDependencies() {
+  public function testDependencies(): void {
     // Create a new action that depends on a user role.
     $action = Action::create([
       'id' => 'user_add_role_action.' . RoleInterface::ANONYMOUS_ID,

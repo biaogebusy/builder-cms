@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GX",
+		"Wuzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cangwu Xian": {
+			"local_name": "苍梧县"
+		},
+		"Cenxi Shi": {
+			"local_name": "岑溪市"
+		},
+		"Dieshan Qu": {
+			"local_name": "蝶山区"
+		},
+		"Mengshan Xian": {
+			"local_name": "蒙山县"
+		},
+		"Teng Xian": {
+			"local_name": "藤县"
+		},
+		"Wanxiu Qu": {
+			"local_name": "万秀区"
+		},
+		"Changzhou Qu": {
+			"local_name": "长洲区"
+		}
+	}
+}

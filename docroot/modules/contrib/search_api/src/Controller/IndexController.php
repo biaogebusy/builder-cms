@@ -192,7 +192,7 @@ class IndexController extends ControllerBase {
         $search_api_index->save();
         $success = TRUE;
       }
-      catch (SearchApiException $e) {
+      catch (SearchApiException) {
         $args['%field'] = $fields[$field_id]->getLabel();
         $this->getMessenger()->addError($this->t('The field %field is locked and cannot be removed.', $args));
       }

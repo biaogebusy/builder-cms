@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -16,14 +18,14 @@ class FieldUiTableTest extends UnitTestCase {
    *
    * @dataProvider providerTestReduceOrder
    */
-  public function testReduceOrder($array, $expected) {
+  public function testReduceOrder($array, $expected): void {
     $this->assertSame($expected, array_reduce($array, ['Drupal\field_ui\Element\FieldUiTable', 'reduceOrder']));
   }
 
   /**
    * Provides test data for testReduceOrder().
    */
-  public function providerTestReduceOrder() {
+  public static function providerTestReduceOrder() {
     return [
       'Flat' => [
         'array' => [

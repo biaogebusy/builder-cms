@@ -86,7 +86,8 @@ class Token extends TokenBase implements TokenInterface {
   protected function prepareMultisort($token_info) {
     $by_name = [];
     foreach ($token_info as $key => $token_info_element) {
-      $by_name[$key] = $token_info_element['name'];
+      // Check if the "name" key exists before accessing it.
+      $by_name[$key] = $token_info_element['name'] ?? NULL;
     }
     return $by_name;
   }

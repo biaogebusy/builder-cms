@@ -66,6 +66,7 @@ class VoteStorage extends SqlContentEntityStorage implements VoteStorageInterfac
       ->groupBy('entity_type')
       ->groupBy('entity_id')
       ->groupBy('type')
+      ->accessCheck(TRUE)
       ->execute();
   }
 

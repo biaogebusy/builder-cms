@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 
 /**
  * Renders variation fields.

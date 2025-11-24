@@ -2,26 +2,28 @@
 
 namespace Drupal\comment\Plugin\views\sort;
 
+use Drupal\views\Attribute\ViewsSort;
 use Drupal\views\Plugin\views\sort\SortPluginBase;
 
 /**
  * Sort handler, sorts by last comment name which can be in 2 different fields.
  *
  * @ingroup views_sort_handlers
- *
- * @ViewsSort("comment_ces_last_comment_name")
  */
+#[ViewsSort("comment_ces_last_comment_name")]
 class StatisticsLastCommentName extends SortPluginBase {
 
   /**
    * The users table.
    */
-  protected $user_table;
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  protected ?string $user_table;
 
   /**
    * The user name field.
    */
-  protected $user_field;
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  protected string $user_field;
 
   public function query() {
     $this->ensureMyTable();

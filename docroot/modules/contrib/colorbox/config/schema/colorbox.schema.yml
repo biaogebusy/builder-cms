@@ -1,13 +1,6 @@
-field.formatter.settings.colorbox:
+colorbox.formatter_base:
   type: mapping
-  label: 'Entity reference field formatter settings.'
   mapping:
-    colorbox_node_style:
-      type: string
-      label: 'Node Style'
-    colorbox_node_style_first:
-      type: string
-      label: 'Node style first'
     colorbox_image_style:
       type: string
       label: 'Image style'
@@ -24,10 +17,35 @@ field.formatter.settings.colorbox:
       type: string
       label: 'Caption custom'
 
+field.formatter.settings.colorbox:
+  type: colorbox.formatter_base
+  label: 'Entity reference field formatter settings.'
+  mapping:
+    colorbox_node_style:
+      type: string
+      label: 'Node Style'
+    colorbox_node_style_first:
+      type: string
+      label: 'Node style first'
+
+field.formatter.settings.colorbox_responsive:
+  type: colorbox.formatter_base
+  label: 'Entity reference field formatter settings.'
+  mapping:
+    colorbox_responsive_node_style:
+      type: string
+      label: 'Node responsive image style'
+    colorbox_responsive_image_style:
+      type: string
+      label: 'Responsive image style'
+
 colorbox.settings:
   type: config_object
   label: 'Colorbox settings'
   mapping:
+    dompurify_hide_warning:
+      type: boolean
+      label: Don't show warning on status report
     custom:
       type: mapping
       label: Custom Settings

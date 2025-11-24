@@ -1,5 +1,39 @@
 # Changelog
 
+### 5.1.1 11/14/2025
+
+* PHP 8.5
+
+### 5.1.0 10/22/2024
+
+* PHP 8.4 compatibility by Andy Postnikov (#1165)
+* Don't require exact event-dispatcher version (typo fix) by Pierre Rudloff (#1169)
+
+### 5.0.0 4/17/2024
+
+* Support Symfony 7
+* Minimum version of PHP supported is now 8.2
+* BREAKING: Remove consolidation/self-update as a required dependency
+
+### 4.0.4, 4.0.5, 4.0.6 4/30/2023
+
+* Move register command out of runner and into Robo class. (#1143)
+* More PHP 8.2 and 8.1 Fixes (#1131, #1133, #1135, #1141)
+* docs: update getting-started.md (#1139)
+
+### 4.0.2, 4.0.3 12/6/2022
+
+* PHP 8.2 support
+
+### 4.0.0 9/20/2022
+
+* Minimum version of PHP supported is now 8.0
+* BREAKING: Removed support for Symfony 4 and 5; Symfony 6 required.
+* BREAKING: Removed support for league/container 1; version 2 or 3 required.
+* BREAKING: Use \Robo\Robo::version() instead of \Robo\Robo::VERSION
+* BREAKING: Use RoboLogLevel::SUCCESS instead of ConsoleLogLevel::SUCCESS
+* BREAKING: Cannot pass `null` to \Robo\Config\Config constructor any longer
+
 ### 3.0.10 2/21/2022
 
 * symfony/process ^6

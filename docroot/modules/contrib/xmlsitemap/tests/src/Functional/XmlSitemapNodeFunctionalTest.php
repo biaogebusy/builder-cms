@@ -39,6 +39,14 @@ class XmlSitemapNodeFunctionalTest extends XmlSitemapTestBase {
    */
   protected $entityTypeManager;
 
+
+  /**
+   * The normal user account.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $overrideUser;
+
   /**
    * {@inheritdoc}
    */
@@ -60,7 +68,7 @@ class XmlSitemapNodeFunctionalTest extends XmlSitemapTestBase {
       'access content',
       'view own unpublished content',
     ]);
-    $this->override_user = $this->drupalCreateUser([
+    $this->overrideUser = $this->drupalCreateUser([
       'create page content',
       'edit any page content',
       'access content',
@@ -211,7 +219,7 @@ class XmlSitemapNodeFunctionalTest extends XmlSitemapTestBase {
       'changefreq' => XMLSITEMAP_FREQUENCY_WEEKLY,
     ]);
 
-    $this->drupalLogin($this->override_user);
+    $this->drupalLogin($this->overrideUser);
 
     // Test fields are visible on the node add form.
     $this->drupalGet('node/add/page');

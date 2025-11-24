@@ -2,9 +2,10 @@
 
 namespace Drupal\xmlsitemap\Form;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
-use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\StateInterface;
@@ -52,6 +53,8 @@ class XmlSitemapSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state service.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date
@@ -61,8 +64,8 @@ class XmlSitemapSettingsForm extends ConfigFormBase {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, StateInterface $state, DateFormatterInterface $date, XmlSitemapLinkStorageInterface $link_storage, ModuleHandlerInterface $module_handler) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, StateInterface $state, DateFormatterInterface $date, XmlSitemapLinkStorageInterface $link_storage, ModuleHandlerInterface $module_handler) {
+    parent::__construct($config_factory, $typedConfigManager);
 
     $this->state = $state;
     $this->date = $date;
@@ -76,6 +79,7 @@ class XmlSitemapSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('state'),
       $container->get('date.formatter'),
       $container->get('xmlsitemap.link_storage'),

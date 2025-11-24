@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\drupal_system_listing_compatible_test\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -26,8 +28,6 @@ class SystemListingCrossProfileCompatibleTest extends KernelTestBase {
    *
    * This test needs to use a different installation profile than the test which
    * asserts that this test is found.
-   *
-   * @see \Drupal\simpletest\Tests\InstallationProfileModuleTestsTest
    *
    * @var string
    */

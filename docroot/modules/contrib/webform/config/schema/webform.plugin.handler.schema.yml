@@ -58,25 +58,25 @@ webform.handler.email:
         label: State
     to_mail:
       label: 'Email to address'
-      type: email
+      type: string
     to_options:
       label: 'Email to address options'
       type: ignore
     bcc_mail:
       label: 'Email BCC address'
-      type: email
+      type: string
     bcc_options:
       label: 'Email BCC address options'
       type: ignore
     cc_mail:
       label: 'Email CC address'
-      type: email
+      type: string
     cc_options:
       label: 'Email CC address options'
       type: ignore
     from_mail:
       label: 'Email from address'
-      type: email
+      type: string
     from_options:
       label: 'Email from address options'
       type: ignore
@@ -90,7 +90,7 @@ webform.handler.email:
       type: label
       label: 'Return path email'
     sender_mail:
-      type: email
+      type: string
       label: 'Sender email'
     sender_name:
       type: label

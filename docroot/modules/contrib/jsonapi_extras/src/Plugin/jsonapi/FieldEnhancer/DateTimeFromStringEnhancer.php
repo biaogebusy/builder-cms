@@ -2,20 +2,21 @@
 
 namespace Drupal\jsonapi_extras\Plugin\jsonapi\FieldEnhancer;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer;
 use Drupal\jsonapi_extras\Plugin\DateTimeEnhancerBase;
 use Shaper\Util\Context;
 
 /**
  * Perform additional manipulations to datetime fields.
- *
- * @ResourceFieldEnhancer(
- *   id = "date_time_from_string",
- *   label = @Translation("Date Time (Date Time field)"),
- *   description = @Translation("Formats a date based the configured date format for date fields."),
- *   dependencies = {"datetime"}
- * )
  */
+#[ResourceFieldEnhancer(
+  id: 'date_time_from_string',
+  label: new TranslatableMarkup('Date Time (Date Time field)'),
+  description: new TranslatableMarkup('Formats a date based the configured date format for date fields.'),
+  dependencies: ['datetime'],
+)]
 class DateTimeFromStringEnhancer extends DateTimeEnhancerBase {
 
   /**

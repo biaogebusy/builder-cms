@@ -3,3 +3,11 @@ range.field-widget:
   css:
     theme:
       css/range.field-widget.css : {}
+
+range.range-icon:
+  version: VERSION
+  css:
+    theme:
+      css/range.icon.theme.css: {}
+  dependencies:
+    - field_ui/drupal.field_ui.manage_fields

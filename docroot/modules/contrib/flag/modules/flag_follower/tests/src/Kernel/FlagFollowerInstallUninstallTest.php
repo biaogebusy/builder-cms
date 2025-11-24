@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag_follower\Kernel;
 
-use Drupal\flag\Entity\Flag;
 use Drupal\Tests\flag\Kernel\FlagKernelTestBase;
+use Drupal\flag\Entity\Flag;
 use Drupal\views\Entity\View;
 
 /**
@@ -13,10 +15,16 @@ use Drupal\views\Entity\View;
  */
 class FlagFollowerInstallUninstallTest extends FlagKernelTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['field', 'text'];
 
+  /**
+   * Test Install Uninstall.
+   */
   public function testInstallUninstall() {
-    // Provides configuraiton depended on by the view.
+    // Provides configuration depended on by the view.
     $this->installConfig(['node']);
     // Tables necessary for uninstall.
     $this->installSchema('user', ['users_data']);
@@ -35,6 +43,9 @@ class FlagFollowerInstallUninstallTest extends FlagKernelTestBase {
     $this->doTestsOnInstall();
   }
 
+  /**
+   * Do Tests On Install.
+   */
   protected function doTestsOnInstall() {
     $this->assertEquals(['user', 'flag_follower'], Flag::load('following')->getDependencies()['module']);
     $this->assertEquals(['flag.flag.following'], View::load('flag_followers')->getDependencies()['config']);

@@ -1,0 +1,36 @@
+<div class="commerce-dashboard--inbox">
+  <div class="inbox-header">
+    <h2 class="inbox-header__title">{{ 'Inbox'|t }}</h2>
+    {% if unread_text %}
+      <h4 class="inbox-header__unread-text">{{ unread_text }}</h4>
+    {% endif %}
+  </div>
+  <div class="inbox-message--wrapper card">
+  {% for id, message in messages %}
+    <div class="inbox-message {{ message.state|clean_class }}" data-message-id="{{ message.id }}">
+      <div class="inbox-message__status">{{ message.time_ago }}<button type="button" class="close" aria-label="Close"></button></div>
+      <h6 class="inbox-message__subject">{{ message.subject }}</h6>
+      <div class="inbox-message__message">{{ message.message }}</div>
+      <div class="inbox-message__actions">
+        {% if message.link is not empty %}
+          {{ message.link }}
+        {% endif %}
+        <a class="use-ajax message-dismiss action-link--danger" href=" {{ path('commerce.inbox_message.dismiss', {'message_id': message.id}) }}">{{ 'Dismiss'|t }} </a>
+      </div>
+    </div>
+  {% endfor %}
+  {% if not messages %}
+    <div class="inbox-message__empty">
+      {{ 'No messages at the moment.'|t }}
+    </div>
+  {% endif %}
+  </div>
+  <div class="inbox-footer--wrapper">
+    <div class="inbox-footer">
+      <h5 class="inbox-footer__subject">{{ 'Get the most out of Drupal Commerce.'|t }}</h5>
+      <div class="inbox-footer__message">
+        {{ 'Learn how in the <a href="@docs" target="_blank">project documentation</a> and community support channels, or <a href="@support" target="_blank">hire the maintainers</a> for professional support or development.'|t({'@docs': 'https://docs.drupalcommerce.org', '@support': 'https://www.centarro.io/drupal-commerce/development-services'}) }}
+      </div>
+    </div>
+  </div>
+</div>

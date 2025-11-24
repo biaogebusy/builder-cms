@@ -2,14 +2,14 @@
 
 namespace Drupal\commerce_order\Entity;
 
-use Drupal\commerce\Entity\CommerceContentEntityBase;
-use Drupal\commerce_order\Adjustment;
-use Drupal\commerce_price\Calculator;
-use Drupal\commerce_price\Price;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\commerce\Entity\CommerceContentEntityBase;
+use Drupal\commerce_order\Adjustment;
+use Drupal\commerce_price\Calculator;
+use Drupal\commerce_price\Price;
 
 /**
  * Defines the order item entity class.
@@ -50,6 +50,15 @@ use Drupal\Core\Field\BaseFieldDefinition;
 class OrderItem extends CommerceContentEntityBase implements OrderItemInterface {
 
   use EntityChangedTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function urlRouteParameters($rel) {
+    $uri_route_parameters = parent::urlRouteParameters($rel);
+    $uri_route_parameters['commerce_order'] = $this->getOrderId();
+    return $uri_route_parameters;
+  }
 
   /**
    * {@inheritdoc}
@@ -96,9 +105,17 @@ class OrderItem extends CommerceContentEntityBase implements OrderItemInterface 
   /**
    * {@inheritdoc}
    */
-  public function setTitle($title) {
+  public function setTitle($title, $override = FALSE) {
     $this->set('title', $title);
+    $this->set('overridden_title', $override);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isTitleOverridden(): bool {
+    return (bool) $this->get('overridden_title')->value;
   }
 
   /**
@@ -184,8 +201,10 @@ class OrderItem extends CommerceContentEntityBase implements OrderItemInterface 
    */
   public function addAdjustment(Adjustment $adjustment) {
     $this->get('adjustments')->appendItem($adjustment);
-    if ($this->getOrder()) {
-      $this->getOrder()->recalculateTotalPrice();
+    // Skip the order total recalculation when adding an included adjustment
+    // since the order total isn't affected by included adjustments.
+    if (!$adjustment->isIncluded()) {
+      $this->getOrder()?->recalculateTotalPrice();
     }
     return $this;
   }
@@ -195,8 +214,10 @@ class OrderItem extends CommerceContentEntityBase implements OrderItemInterface 
    */
   public function removeAdjustment(Adjustment $adjustment) {
     $this->get('adjustments')->removeAdjustment($adjustment);
-    if ($this->getOrder()) {
-      $this->getOrder()->recalculateTotalPrice();
+    // Skip the order total recalculation when removing an included adjustment
+    // since the order total isn't affected by included adjustments.
+    if (!$adjustment->isIncluded()) {
+      $this->getOrder()?->recalculateTotalPrice();
     }
     return $this;
   }
@@ -334,7 +355,7 @@ class OrderItem extends CommerceContentEntityBase implements OrderItemInterface 
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    return (int) $this->get('created')->value;
   }
 
   /**
@@ -411,6 +432,11 @@ class OrderItem extends CommerceContentEntityBase implements OrderItemInterface 
         'default_value' => '',
         'max_length' => 512,
       ]);
+
+    $fields['overridden_title'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Overridden title'))
+      ->setDescription(t('Whether the title is overridden.'))
+      ->setDefaultValue(FALSE);
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))

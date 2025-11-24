@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 /**
@@ -47,7 +49,7 @@ class ViewsThemeIntegrationTest extends ViewTestBase {
   /**
    * Tests pre_render and post_render hooks in a theme and sub-theme.
    */
-  public function testThemedViewPage() {
+  public function testThemedViewPage(): void {
 
     \Drupal::service('theme_installer')->install(['test_basetheme', 'test_subtheme']);
 

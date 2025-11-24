@@ -2,8 +2,8 @@
 
 namespace Drupal\range\Plugin\migrate\field\d6;
 
-use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 
 /**
  * MigrateField Plugin for Drupal 6 range fields.

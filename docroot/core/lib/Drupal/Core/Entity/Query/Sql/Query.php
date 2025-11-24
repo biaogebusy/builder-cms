@@ -77,6 +77,7 @@ class Query extends QueryBase implements QueryInterface {
    */
   public function execute() {
     return $this
+      ->alter()
       ->prepare()
       ->compile()
       ->addSort()
@@ -130,16 +131,31 @@ class Query extends QueryBase implements QueryInterface {
       $this->sqlFields["base_table.$id_field"] = ['base_table', $id_field];
     }
 
-    // Add a self-join to the base revision table if we're querying only the
-    // latest revisions.
+    // Use a subquery with MAX() to only return the latest revision in the most
+    // optimal way. Note that this query is extremely performance-sensitive and
+    // changes here need to be tested on a database where there are many
+    // revisions and many entities.
     if ($this->latestRevision && $revision_field) {
-      $this->sqlQuery->leftJoin($base_table, 'base_table_2', "[base_table].[$id_field] = [base_table_2].[$id_field] AND [base_table].[$revision_field] < [base_table_2].[$revision_field]");
-      $this->sqlQuery->isNull("base_table_2.$id_field");
+      // Fetch all latest revision ids in a sub-query.
+      $revision_subquery = $this->connection->select($base_table, 'subquery_base_table');
+      $revision_subquery->fields('subquery_base_table', [$id_field]);
+      $revision_subquery->addExpression("MAX(subquery_base_table.$revision_field)", 'maximum_revision_id');
+      $revision_subquery->groupBy("subquery_base_table.$id_field");
+
+      // Optimize the query if the query is only looking for a single entity.
+      // This improves the performance of
+      // \Drupal\Core\Entity\ContentEntityStorageBase::getLatestRevisionId().
+      $conditions = $this->condition->conditions();
+      if (count($conditions) === 1 && isset($conditions[0]['field']) && $conditions[0]['field'] === $id_field) {
+        $revision_subquery->condition($id_field, $conditions[0]['value'], $conditions[0]['operator']);
+      }
+
+      // Restrict results only to latest ids.
+      $this->sqlQuery->innerJoin($revision_subquery, 'sq_base_table', "base_table.$id_field = sq_base_table.$id_field AND base_table.$revision_field = sq_base_table.maximum_revision_id");
     }
 
     if (is_null($this->accessCheck)) {
-      $this->accessCheck = TRUE;
-      @trigger_error('Relying on entity queries to check access by default is deprecated in drupal:9.2.0 and an error will be thrown from drupal:10.0.0. Call \Drupal\Core\Entity\Query\QueryInterface::accessCheck() with TRUE or FALSE to specify whether access should be checked. See https://www.drupal.org/node/3201242', E_USER_DEPRECATED);
+      throw new QueryException('Entity queries must explicitly set whether the query should be access checked or not. See Drupal\Core\Entity\Query\QueryInterface::accessCheck().');
     }
     if ($this->accessCheck) {
       $this->sqlQuery->addTag($this->entityTypeId . '_access');

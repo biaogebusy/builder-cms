@@ -14,8 +14,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Entity form of the remote entity.
- *
- * @package Drupal\entity_share_client\Form
  */
 class RemoteForm extends EntityForm {
 
@@ -53,7 +51,7 @@ class RemoteForm extends EntityForm {
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
-      '#maxlength' => 255,
+      '#maxlength' => (int) 255,
       '#default_value' => $remote->label(),
       '#description' => $this->t('Label for the remote website.'),
       '#required' => TRUE,
@@ -72,9 +70,20 @@ class RemoteForm extends EntityForm {
     $form['url'] = [
       '#type' => 'url',
       '#title' => $this->t('URL'),
-      '#maxlength' => 255,
+      '#maxlength' => (int) 255,
       '#description' => $this->t('The remote URL. Example: http://example.com'),
       '#default_value' => $remote->get('url'),
+      '#required' => TRUE,
+    ];
+
+    $form['login_path'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Login form path'),
+      '#maxlength' => (int) 255,
+      '#description' => $this->t('The remote login form path. Default to user/login. Change it if by example the <a href=":rename_admin_path_url">Rename Admin Paths</a> module is used on the remote website.', [
+        ':rename_admin_path_url' => 'https://www.drupal.org/project/rename_admin_paths',
+      ]),
+      '#default_value' => $remote->isNew() ? 'user/login' : $remote->get('login_path'),
       '#required' => TRUE,
     ];
 
@@ -180,7 +189,7 @@ class RemoteForm extends EntityForm {
     }
     else {
       // Fallback: take the first option.
-      $selectedPlugin = reset($plugins);
+      $selectedPlugin = \reset($plugins);
     }
     $form['auth'] = [
       '#type' => 'container',
@@ -192,7 +201,7 @@ class RemoteForm extends EntityForm {
         '#default_value' => $selectedPlugin->getPluginId(),
         '#ajax' => [
           'wrapper' => 'plugin-form-ajax-container',
-          'callback' => [get_class($this), 'ajaxPluginForm'],
+          'callback' => [static::class, 'ajaxPluginForm'],
         ],
       ],
       'data' => [],
@@ -222,10 +231,10 @@ class RemoteForm extends EntityForm {
   /**
    * Helper method to instantiate plugin from this entity.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *
    * @return bool
    *   True if the remote entity has a plugin.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   protected function hasAuthPlugin() {
     /** @var \Drupal\entity_share_client\Entity\RemoteInterface $remote */
@@ -251,7 +260,8 @@ class RemoteForm extends EntityForm {
    */
   protected function getSelectedPlugin(
     array &$form,
-    FormStateInterface $form_state) {
+    FormStateInterface $form_state
+  ) {
     $authPluginId = $form_state->getValue('pid');
     $plugins = $form['auth']['#plugins'];
     /** @var \Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface $selectedPlugin */

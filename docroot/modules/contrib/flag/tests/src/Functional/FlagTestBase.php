@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
-use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\flag\Entity\Flag;
-use Drupal\Tests\flag\Traits\FlagPermissionsTrait;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\flag\Traits\FlagCreateTrait;
+use Drupal\Tests\flag\Traits\FlagPermissionsTrait;
+use Drupal\flag\Entity\Flag;
 
 /**
  * Provides common methods for Flag tests.
@@ -15,7 +16,6 @@ abstract class FlagTestBase extends BrowserTestBase {
 
   use FlagCreateTrait;
   use FlagPermissionsTrait;
-  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -32,7 +32,7 @@ abstract class FlagTestBase extends BrowserTestBase {
   /**
    * A user with Flag admin rights.
    *
-   * @var AccountInterface
+   * @var \Drupal\Core\Session\AccountInterface
    */
   protected $adminUser;
 

@@ -43,6 +43,14 @@ elements: |
     '#type': textfield
     '#title': decimal
     '#input_mask': '''alias'': ''decimal'''
+  decimal_negative:
+    '#type': textfield
+    '#title': decimal_negative
+    '#input_mask': '''alias'': ''decimal_negative'''
+  decimal_positive_negative:
+    '#type': textfield
+    '#title': decimal_positive_negative
+    '#input_mask': '''alias'': ''decimal_positive_negative'''
   email:
     '#type': textfield
     '#title': email

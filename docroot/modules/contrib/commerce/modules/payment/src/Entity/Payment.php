@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_payment\Entity;
 
-use Drupal\commerce_price\Price;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\commerce_price\Price;
 
 /**
  * Defines the payment entity class.
@@ -151,7 +151,11 @@ class Payment extends ContentEntityBase implements PaymentInterface {
    * {@inheritdoc}
    */
   public function getRemoteState() {
-    return $this->get('remote_state')->value;
+    if (!$this->get('remote_state')->isEmpty()) {
+      return $this->get('remote_state')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -166,7 +170,11 @@ class Payment extends ContentEntityBase implements PaymentInterface {
    * {@inheritdoc}
    */
   public function getAvsResponseCode() {
-    return $this->get('avs_response_code')->value;
+    if (!$this->get('avs_response_code')->isEmpty()) {
+      return $this->get('avs_response_code')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -181,7 +189,11 @@ class Payment extends ContentEntityBase implements PaymentInterface {
    * {@inheritdoc}
    */
   public function getAvsResponseCodeLabel() {
-    return $this->get('avs_response_code_label')->value;
+    if (!$this->get('avs_response_code_label')->isEmpty()) {
+      return $this->get('avs_response_code_label')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -203,6 +215,8 @@ class Payment extends ContentEntityBase implements PaymentInterface {
       }
       return $balance;
     }
+
+    return NULL;
   }
 
   /**
@@ -212,6 +226,8 @@ class Payment extends ContentEntityBase implements PaymentInterface {
     if (!$this->get('amount')->isEmpty()) {
       return $this->get('amount')->first()->toPrice();
     }
+
+    return NULL;
   }
 
   /**
@@ -229,6 +245,8 @@ class Payment extends ContentEntityBase implements PaymentInterface {
     if (!$this->get('refunded_amount')->isEmpty()) {
       return $this->get('refunded_amount')->first()->toPrice();
     }
+
+    return NULL;
   }
 
   /**
@@ -258,7 +276,11 @@ class Payment extends ContentEntityBase implements PaymentInterface {
    * {@inheritdoc}
    */
   public function getAuthorizedTime() {
-    return $this->get('authorized')->value;
+    if (!$this->get('authorized')->isEmpty()) {
+      return (int) $this->get('authorized')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -281,7 +303,7 @@ class Payment extends ContentEntityBase implements PaymentInterface {
    * {@inheritdoc}
    */
   public function getExpiresTime() {
-    return $this->get('expires')->value;
+    return (int) $this->get('expires')->value;
   }
 
   /**
@@ -303,7 +325,11 @@ class Payment extends ContentEntityBase implements PaymentInterface {
    * {@inheritdoc}
    */
   public function getCompletedTime() {
-    return $this->get('completed')->value;
+    if (!$this->get('completed')->isEmpty()) {
+      return (int) $this->get('completed')->value;
+    }
+
+    return NULL;
   }
 
   /**

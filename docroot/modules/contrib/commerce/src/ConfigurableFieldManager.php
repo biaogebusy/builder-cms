@@ -3,28 +3,19 @@
 namespace Drupal\commerce;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\entity\BundleFieldDefinition as EntityBundleFieldDefinition;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\entity\BundleFieldDefinition as EntityBundleFieldDefinition;
 
 class ConfigurableFieldManager implements ConfigurableFieldManagerInterface {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  public $entityTypeManager;
-
-  /**
    * Constructs a new ConfigurableFieldManager object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity query factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-  }
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager) {}
 
   /**
    * {@inheritdoc}
@@ -63,6 +54,7 @@ class ConfigurableFieldManager implements ConfigurableFieldManagerInterface {
       'field_storage' => $field_storage,
       'bundle' => $bundle,
       'label' => $field_definition->getLabel(),
+      'description' => $field_definition->getDescription() ?? '',
       'required' => $field_definition->isRequired(),
       'settings' => $field_definition->getSettings(),
       'translatable' => $field_definition->isTranslatable(),
@@ -136,8 +128,8 @@ class ConfigurableFieldManager implements ConfigurableFieldManagerInterface {
     $storage = $this->entityTypeManager->getStorage($entity_type_id);
     $bundle_key = $storage->getEntityType()->getKey('bundle');
     $query = $storage->getQuery();
+    $query->accessCheck(FALSE);
     $query
-      ->accessCheck(FALSE)
       ->condition($bundle_key, $bundle)
       ->exists($field_name . '.' . $property)
       ->range(0, 1);

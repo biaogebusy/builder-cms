@@ -2,11 +2,13 @@
 
 namespace Drupal\Tests\search_api\Kernel\Processor;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Utility\Utility;
+use Drupal\Tests\search_api\Kernel\TestLogger;
 
 /**
  * Provides a base class for Drupal unit tests for processors.
@@ -25,7 +27,6 @@ abstract class ProcessorTestBase extends KernelTestBase {
     'search_api_test',
     'comment',
     'text',
-    'action',
     'system',
   ];
 
@@ -49,6 +50,11 @@ abstract class ProcessorTestBase extends KernelTestBase {
    * @var \Drupal\search_api\ServerInterface
    */
   protected $server;
+
+  /**
+   * The test logger.
+   */
+  protected TestLogger $logger;
 
   /**
    * Performs setup tasks before each individual test method is run.
@@ -129,6 +135,19 @@ abstract class ProcessorTestBase extends KernelTestBase {
       $this->index->addProcessor($this->processor);
     }
     $this->index->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function register(ContainerBuilder $container): void {
+    parent::register($container);
+
+    // Set a logger that will throw exceptions when warnings/errors are logged.
+    $this->logger = new TestLogger('');
+    $container->set('logger.factory', $this->logger);
+    $container->set('logger.channel.search_api', $this->logger);
+    $container->set('logger.channel.search_api_db', $this->logger);
   }
 
   /**

@@ -27,11 +27,32 @@ charts.settings.library_plugin.highcharts:
         shadow:
           label: 'Enable legend shadow'
           type: boolean
+    3d_library:
+      label: 'Enable 3D library'
+      type: boolean
+    accessibility_library:
+      label: 'Enable accessibility library'
+      type: boolean
+    annotations_library:
+      label: 'Enable annotations library'
+      type: boolean
+    boost_library:
+      label: 'Enable boost library'
+      type: boolean
+    data_library:
+      label: 'Enable data library'
+      type: boolean
     exporting_library:
       label: 'Enable exporting library'
       type: boolean
+    no_data_library:
+      label: 'Enable no data library'
+      type: boolean
     texture_library:
       label: 'Enable texture library'
+      type: boolean
+    solidgauge_library:
+      label: 'Enable solidgauge library'
       type: boolean
     global_options:
       label: 'Global options'
@@ -147,3 +168,57 @@ charts.settings.library_plugin.highcharts:
               sequence:
                 type: label
                 label: 'Numeric symbol'
+
+charts.library_plugin.highcharts.options.solidgauge:
+  type: mapping
+  mapping:
+    max:
+      label: 'Solid gauge maximum value'
+      type: string
+    min:
+      label: 'Solid gauge minimum value'
+      type: string
+    stops:
+      label: 'Stops'
+      type: sequence
+      sequence:
+        type: mapping
+        mapping:
+          position:
+            label: 'Position'
+            type: string
+          color:
+            label: 'Color'
+            type: string
+
+charts_highcharts_coloraxis:
+  type: mapping
+  mapping:
+    coloraxis:
+      label: 'Enable colorAxis'
+      type: boolean
+    max_color:
+      label: 'Maximum color'
+      type: string
+    min_color:
+      label: 'Minimum color'
+      type: string
+
+charts.library_plugin.highcharts.options.donut:
+  type: charts_highcharts_coloraxis
+
+charts.library_plugin.highcharts.options.pie:
+  type: charts_highcharts_coloraxis
+
+charts_highcharts_bar_column:
+  type: mapping
+  mapping:
+    enable_stacklabels:
+      label: 'Enable stackLabels'
+      type: boolean
+
+charts.library_plugin.highcharts.options.bar:
+  type: charts_highcharts_bar_column
+
+charts.library_plugin.highcharts.options.column:
+  type: charts_highcharts_bar_column

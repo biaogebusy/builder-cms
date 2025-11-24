@@ -75,7 +75,7 @@ class MetatagDefaults extends ConfigEntityBase implements MetatagDefaultsInterfa
    * @return bool
    *   TRUE if the tag exists.
    */
-  public function hasTag($tag_id) {
+  public function hasTag($tag_id): bool {
     return array_key_exists($tag_id, $this->tags);
   }
 
@@ -88,7 +88,7 @@ class MetatagDefaults extends ConfigEntityBase implements MetatagDefaultsInterfa
    * @return array|null
    *   Array containing the tag values or NULL if not found.
    */
-  public function getTag($tag_id) {
+  public function getTag($tag_id): array|string|NULL {
     if (!$this->hasTag($tag_id)) {
       return NULL;
     }
@@ -98,7 +98,7 @@ class MetatagDefaults extends ConfigEntityBase implements MetatagDefaultsInterfa
   /**
    * Reverts an entity to its default values.
    */
-  public function revert() {
+  public function revert(): void {
     $default_install_path = \Drupal::service('extension.list.module')->getPath('metatag') . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
     $storage = new FileStorage($default_install_path, StorageInterface::DEFAULT_COLLECTION);
     $default_config_data = $storage->read('metatag.metatag_defaults.' . $this->id());
@@ -111,7 +111,7 @@ class MetatagDefaults extends ConfigEntityBase implements MetatagDefaultsInterfa
   /**
    * Overwrite the current tags with new values.
    */
-  public function overwriteTags(array $new_tags = []) {
+  public function overwriteTags(array $new_tags = []): void {
     if (!empty($new_tags)) {
       // Get the existing tags.
       $combined_tags = $this->get('tags');

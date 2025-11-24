@@ -4,7 +4,6 @@
  */
 
 (function ($, Drupal, once) {
-
   /**
    * Behaviors for tabs in the node edit form.
    *
@@ -20,24 +19,26 @@
       }
 
       $.each(drupalSettings.content_lock, function (form_id, settings) {
-        once('content-lock', 'form.' + form_id, context).forEach(function (elem) {
-          new Drupal.content_lock(elem, settings);
-        });
-      })
-    }
+        once('content-lock', `form.${form_id}`, context).forEach(
+          function (elem) {
+            new Drupal.content_lock(elem, settings);
+          },
+        );
+      });
+    },
   };
 
   Drupal.content_lock = function (form, settings) {
-    var that = this;
+    const that = this;
 
-    var ajaxCall = Drupal.ajax({
+    const ajaxCall = Drupal.ajax({
       url: settings.lockUrl,
-      element: form
+      element: form,
     });
 
     ajaxCall.commands.insert = function () {
       if (arguments[1].selector === '') {
-        arguments[1].selector = '#' + form.id;
+        arguments[1].selector = `#${form.id}`;
       }
       Drupal.AjaxCommands.prototype.insert.apply(this, arguments);
     };
@@ -51,11 +52,26 @@
     ajaxCall.execute();
 
     this.lock = function () {
-      var $form = $(form);
+      const $form = $(form);
       $form.prop('disabled', true).addClass('is-disabled');
-      $form.find('input, textarea, select').prop('disabled', true).addClass('is-disabled');
-      $form.find('.content-lock-actions input').attr('title', Drupal.t('Action not available because content is locked.'));
+      $form
+        .find(':input')
+        .prop('disabled', true)
+        .addClass('is-disabled');
+      $form
+        .find('.content-lock-actions :input')
+        .prop('disabled', true)
+        .addClass('is-disabled')
+        .attr(
+          'title',
+          Drupal.t('Action not available because content is locked.'),
+        );
+
+      if (Drupal.CKEditor5Instances instanceof Map) {
+        Drupal.CKEditor5Instances.forEach(function (instance) {
+          instance.enableReadOnlyMode('content_lock');
+        });
+      }
     };
   };
-
-}(jQuery, Drupal, once));
+})(jQuery, Drupal, once);

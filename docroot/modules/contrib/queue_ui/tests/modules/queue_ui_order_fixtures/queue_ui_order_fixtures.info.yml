@@ -11,7 +11,7 @@ dependencies:
 test_dependencies:
   - queue_order:queue_order
 
-# Information added by Drupal.org packaging script on 2024-02-18
-version: '3.1.4'
+# Information added by Drupal.org packaging script on 2025-08-06
+version: '3.2.2'
 project: 'queue_ui'
-datestamp: 1708276958
+datestamp: 1754517518

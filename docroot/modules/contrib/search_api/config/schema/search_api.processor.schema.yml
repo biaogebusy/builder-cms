@@ -93,7 +93,7 @@ plugin.plugin_configuration.search_api_processor.html_filter:
       label: 'Tag boosts'
       orderby: key
       sequence:
-        type: integer
+        type: float
         label: Boost
 
 plugin.plugin_configuration.search_api_processor.ignorecase:

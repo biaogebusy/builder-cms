@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HB",
+		"Xiaogan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anlu Shi": {
+			"local_name": "安陆市"
+		},
+		"Dawu Xian": {
+			"local_name": "大悟县"
+		},
+		"Hanchuan Shi": {
+			"local_name": "汉川市"
+		},
+		"Xiaochang Xian": {
+			"local_name": "孝昌县"
+		},
+		"Xiaonan Qu": {
+			"local_name": "孝南区"
+		},
+		"Yingcheng Shi": {
+			"local_name": "应城市"
+		},
+		"Yunmeng Xian": {
+			"local_name": "云梦县"
+		}
+	}
+}

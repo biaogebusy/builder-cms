@@ -2,13 +2,22 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\InlineForm;
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceInlineForm;
 use Drupal\commerce\Plugin\Commerce\InlineForm\EntityInlineFormBase;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Entity\EntityWithPaymentGatewayInterface;
+use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
+use Drupal\commerce_payment\Entity\PaymentInterface;
+use Drupal\commerce_payment\Entity\PaymentMethodInterface;
+use Drupal\commerce_payment\Event\FailedPaymentEvent;
+use Drupal\commerce_payment\Event\PaymentEvents;
 use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use Drupal\commerce_payment\PluginForm\PaymentGatewayFormInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\PluginFormFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides a form element for embedding payment gateway forms.
@@ -21,12 +30,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * This inline form takes a payment or a payment method entity, initializes
  * the appropriate plugin form, then lets it do its thing, while ensuring
  * that any thrown exception is correctly handled.
- *
- * @CommerceInlineForm(
- *   id = "payment_gateway_form",
- *   label = @Translation("Payment gateway form"),
- * )
  */
+#[CommerceInlineForm(
+  id: "payment_gateway_form",
+  label: new TranslatableMarkup("Payment gateway form"),
+)]
 class PaymentGatewayForm extends EntityInlineFormBase {
 
   /**
@@ -44,33 +52,28 @@ class PaymentGatewayForm extends EntityInlineFormBase {
   protected $pluginForm;
 
   /**
-   * Constructs a new PaymentGatewayForm object.
+   * The route match.
    *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_factory
-   *   The plugin form factory.
+   * @var \Drupal\Core\Routing\RouteMatchInterface
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PluginFormFactoryInterface $plugin_form_factory) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  protected RouteMatchInterface $routeMatch;
 
-    $this->pluginFormFactory = $plugin_form_factory;
-  }
+  /**
+   * The event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('plugin_form.factory')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->pluginFormFactory = $container->get('plugin_form.factory');
+    $instance->routeMatch = $container->get('current_route_match');
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    return $instance;
   }
 
   /**
@@ -154,6 +157,7 @@ class PaymentGatewayForm extends EntityInlineFormBase {
       $this->entity = $this->pluginForm->getEntity();
     }
     catch (PaymentGatewayException $e) {
+      $this->dispatchFailedPaymentEvent($e);
       $error_element = $this->pluginForm->getErrorElement($inline_form, $form_state);
       $form_state->setError($error_element, $e->getMessage());
     }
@@ -170,8 +174,32 @@ class PaymentGatewayForm extends EntityInlineFormBase {
       $this->entity = $this->pluginForm->getEntity();
     }
     catch (PaymentGatewayException $e) {
+      $this->dispatchFailedPaymentEvent($e);
       $error_element = $this->pluginForm->getErrorElement($inline_form, $form_state);
       $form_state->setError($error_element, $e->getMessage());
+    }
+  }
+
+  /**
+   * Dispatches a FailedPaymentEvent.
+   *
+   * @param \Drupal\commerce_payment\Exception\PaymentGatewayException $e
+   *   The payment gateway exception.
+   */
+  private function dispatchFailedPaymentEvent(PaymentGatewayException $e): void {
+    $payment_gateway = $this->entity->getPaymentGateway();
+    $order = $this->routeMatch->getParameter('commerce_order');
+    $payment = $this->entity instanceof PaymentInterface ? $this->entity : NULL;
+    $payment_method = $this->entity instanceof PaymentMethodInterface ? $this->entity : NULL;
+    if (
+      $order instanceof OrderInterface &&
+      $payment_gateway instanceof PaymentGatewayInterface
+    ) {
+      $event = new FailedPaymentEvent($order, $payment_gateway, $e, $payment);
+      if ($payment_method) {
+        $event->setPaymentMethod($payment_method);
+      }
+      $this->eventDispatcher->dispatch($event, PaymentEvents::PAYMENT_FAILURE);
     }
   }
 

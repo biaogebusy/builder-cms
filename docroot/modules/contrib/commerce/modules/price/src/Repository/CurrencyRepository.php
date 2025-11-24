@@ -5,8 +5,8 @@ namespace Drupal\commerce_price\Repository;
 use CommerceGuys\Intl\Currency\Currency;
 use CommerceGuys\Intl\Currency\CurrencyRepository as ExternalCurrencyRepository;
 use CommerceGuys\Intl\Exception\UnknownCurrencyException;
-use Drupal\commerce_price\Entity\CurrencyInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_price\Entity\CurrencyInterface;
 
 /**
  * Defines the currency repository.

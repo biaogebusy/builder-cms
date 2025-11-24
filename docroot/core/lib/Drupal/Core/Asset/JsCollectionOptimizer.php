@@ -2,11 +2,18 @@
 
 namespace Drupal\Core\Asset;
 
+@trigger_error('The ' . __NAMESPACE__ . '\JsCollectionOptimizer is deprecated in drupal:10.0.0 and is removed from drupal:11.0.0. Instead, use ' . __NAMESPACE__ . '\JsCollectionOptimizerLazy. See https://www.drupal.org/node/2888767', E_USER_DEPRECATED);
+
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\State\StateInterface;
 
 /**
  * Optimizes JavaScript assets.
+ *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Instead use
+ *   \Drupal\Core\Asset\JsCollectionOptimizerLazy.
+ *
+ * @see https://www.drupal.org/node/2888767
  */
 class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
 
@@ -81,7 +88,7 @@ class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
    * configurable period (@code system.performance.stale_file_threshold @endcode)
    * to ensure that files referenced by a cached page will still be available.
    */
-  public function optimize(array $js_assets) {
+  public function optimize(array $js_assets, array $libraries) {
     // Group the assets.
     $js_groups = $this->grouper->group($js_assets);
 
@@ -117,7 +124,14 @@ class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
             if (empty($uri) || !file_exists($uri)) {
               // Concatenate each asset within the group.
               $data = '';
+              $current_license = FALSE;
               foreach ($js_group['items'] as $js_asset) {
+                // Ensure license information is available as a comment after
+                // optimization.
+                if ($js_asset['license'] !== $current_license) {
+                  $data .= "/* @license " . $js_asset['license']['name'] . " " . $js_asset['license']['url'] . " */\n";
+                }
+                $current_license = $js_asset['license'];
                 // Optimize this JS file, but only if it's not yet minified.
                 if (isset($js_asset['minified']) && $js_asset['minified']) {
                   $data .= file_get_contents($js_asset['data']);
@@ -190,12 +204,12 @@ class JsCollectionOptimizer implements AssetCollectionOptimizerInterface {
     $this->state->delete('system.js_cache_files');
     $delete_stale = function ($uri) {
       // Default stale file threshold is 30 days.
-      if (REQUEST_TIME - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
+      if (\Drupal::time()->getRequestTime() - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
         $this->fileSystem->delete($uri);
       }
     };
-    if (is_dir('public://js')) {
-      $this->fileSystem->scanDirectory('public://js', '/.*/', ['callback' => $delete_stale]);
+    if (is_dir('assets://js')) {
+      $this->fileSystem->scanDirectory('assets://js', '/.*/', ['callback' => $delete_stale]);
     }
   }
 

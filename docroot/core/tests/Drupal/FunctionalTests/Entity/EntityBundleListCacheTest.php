@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Entity;
 
 use Drupal\Core\Url;
@@ -18,16 +20,14 @@ class EntityBundleListCacheTest extends BrowserTestBase {
   use AssertPageCacheContextsAndTagsTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['cache_test', 'entity_test'];
 
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'starterkit_theme';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -47,7 +47,7 @@ class EntityBundleListCacheTest extends BrowserTestBase {
   /**
    * Tests that tags are invalidated when an entity with that bundle changes.
    */
-  public function testBundleListingCache() {
+  public function testBundleListingCache(): void {
     // Access to lists of test entities with each bundle.
     $bundle_a_url = Url::fromRoute('cache_test_list.bundle_tags', ['entity_type_id' => 'entity_test_with_bundle', 'bundle' => 'bundle_a']);
     $bundle_b_url = Url::fromRoute('cache_test_list.bundle_tags', ['entity_type_id' => 'entity_test_with_bundle', 'bundle' => 'bundle_b']);

@@ -5,12 +5,14 @@ namespace Drupal\Tests\search_api\Kernel\Index;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\search_api\IndexInterface;
 use Drupal\KernelTests\KernelTestBase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether the storage of search indexes works correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class IndexStorageTest extends KernelTestBase {
 
   /**

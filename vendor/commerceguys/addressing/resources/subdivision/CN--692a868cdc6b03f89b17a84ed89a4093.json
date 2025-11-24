@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"QH",
+		"Haixi Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Delhi Shi": {
+			"local_name": "德令哈市"
+		},
+		"Dulan Xian": {
+			"local_name": "都兰县"
+		},
+		"Golmud Shi": {
+			"local_name": "格尔木市"
+		},
+		"Tianjun Xian": {
+			"local_name": "天峻县"
+		},
+		"Ulan Xian": {
+			"local_name": "乌兰县"
+		}
+	}
+}

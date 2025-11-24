@@ -2,25 +2,26 @@
 
 namespace Drupal\commerce_product\Plugin\Commerce\Condition;
 
-use Drupal\commerce\EntityUuidMapperInterface;
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\EntityUuidMapperInterface;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the product category condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_product_category",
- *   label = @Translation("Product category"),
- *   display_label = @Translation("Order contains product categories"),
- *   category = @Translation("Products"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommerceCondition(
+  id: "order_product_category",
+  label: new TranslatableMarkup("Product category"),
+  entity_type: "commerce_order",
+  display_label: new TranslatableMarkup("Order contains product categories"),
+  category: new TranslatableMarkup("Products"),
+)]
 class OrderProductCategory extends ConditionBase implements ContainerFactoryPluginInterface {
 
   use ProductCategoryTrait;

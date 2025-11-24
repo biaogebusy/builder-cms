@@ -12,12 +12,12 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['devel', 'block', 'layout_discovery'];
+  protected static $modules = ['devel', 'block', 'layout_discovery'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('page_title_block');
     $this->drupalLogin($this->develUser);
@@ -26,7 +26,7 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
   /**
    * Tests layout info menu link.
    */
-  public function testLayoutsInfoMenuLink() {
+  public function testLayoutsInfoMenuLink(): void {
     $this->drupalPlaceBlock('system_menu_block:devel');
     // Ensures that the layout info link is present on the devel menu and that
     // it points to the correct page.
@@ -40,7 +40,7 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
   /**
    * Tests layout info page.
    */
-  public function testLayoutList() {
+  public function testLayoutList(): void {
     $this->drupalGet('/devel/layouts');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Layouts');
@@ -52,7 +52,6 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
     $this->assertNotNull($table);
 
     // Ensures that the expected table headers are found.
-    /** @var \Behat\Mink\Element\NodeElement[] $headers */
     $headers = $table->findAll('css', 'thead th');
     $this->assertEquals(6, count($headers));
 
@@ -64,13 +63,12 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
       'Regions',
       'Provider',
     ];
-    $actual_headers = array_map(function ($element) {
-      return $element->getText();
-    }, $headers);
+    $actual_headers = array_map(static fn($element) => $element->getText(), $headers);
     $this->assertSame($expected_headers, $actual_headers);
 
     // Ensures that all the layouts are listed in the table.
-    $layout_manager = \Drupal::service('plugin.manager.core.layout');
+    /** @var \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager */
+    $layout_manager = $this->container->get('plugin.manager.core.layout');
     $layouts = $layout_manager->getDefinitions();
     $table_rows = $table->findAll('css', 'tbody tr');
     $this->assertEquals(count($layouts), count($table_rows));
@@ -81,11 +79,13 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
       $this->assertEquals(6, count($cells));
 
       $cell_layout_icon = $cells[0];
-      if (empty($layout->getIconPath())) {
+      $icon_path = $layout->getIconPath();
+      if ($icon_path === NULL || $icon_path === '') {
         // @todo test that the icon path image is set correctly
       }
       else {
-        $this->assertNull($cell_layout_icon->getText());
+        $cell_layout_icon_text = $cell_layout_icon->getText();
+        $this->assertTrue($cell_layout_icon_text === '');
       }
 
       $cell_layout_label = $cells[1];
@@ -103,7 +103,7 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
       $cell_layout_provider = $cells[5];
       $this->assertEquals($cell_layout_provider->getText(), $layout->getProvider());
 
-      $index++;
+      ++$index;
     }
 
     // Ensures that the page is accessible only to the users with the adequate
@@ -116,7 +116,7 @@ class DevelLayoutInfoTest extends DevelBrowserTestBase {
   /**
    * Tests the dependency with layout_discovery module.
    */
-  public function testLayoutDiscoveryDependency() {
+  public function testLayoutDiscoveryDependency(): void {
     $this->container->get('module_installer')->uninstall(['layout_discovery']);
     $this->drupalPlaceBlock('system_menu_block:devel');
 

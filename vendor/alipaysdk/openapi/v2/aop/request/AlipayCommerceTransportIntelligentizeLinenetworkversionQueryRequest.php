@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.transport.intelligentize.linenetworkversion.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-09 17:16:39
+ * @since 1.0, 2024-08-09 13:30:03
  */
 class AlipayCommerceTransportIntelligentizeLinenetworkversionQueryRequest
 {

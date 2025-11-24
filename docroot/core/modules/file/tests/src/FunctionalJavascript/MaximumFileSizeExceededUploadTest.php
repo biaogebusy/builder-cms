@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\FunctionalJavascript;
 
 use Drupal\Component\Utility\Bytes;
@@ -63,7 +65,7 @@ class MaximumFileSizeExceededUploadTest extends WebDriverTestBase {
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
     // Attach a file field to the node type.
-    $field_settings = ['file_extensions' => 'txt'];
+    $field_settings = ['file_extensions' => 'bin txt'];
     $this->createFileField('field_file', 'node', 'article', [], $field_settings);
 
     // Log in as a content author who can create Articles.
@@ -95,12 +97,16 @@ class MaximumFileSizeExceededUploadTest extends WebDriverTestBase {
   /**
    * Tests that uploading files exceeding maximum size are handled correctly.
    */
-  public function testUploadFileExceedingMaximumFileSize() {
+  public function testUploadFileExceedingMaximumFileSize(): void {
     $session = $this->getSession();
 
     // Create a test file that exceeds the maximum POST size with 1 kilobyte.
-    $post_max_size = Bytes::toNumber(ini_get('post_max_size'));
-    $invalid_file = $this->generateFile('exceeding_post_max_size', ceil(($post_max_size + 1024) / 1024), 1024);
+    $post_max_size = (int) Bytes::toNumber(ini_get('post_max_size'));
+    $invalid_file = 'public://exceeding_post_max_size.bin';
+    $file = fopen($invalid_file, 'wb');
+    fseek($file, $post_max_size + 1024);
+    fwrite($file, '0');
+    fclose($file);
 
     // Go to the node creation form and try to upload the test file.
     $this->drupalGet('node/add/article');

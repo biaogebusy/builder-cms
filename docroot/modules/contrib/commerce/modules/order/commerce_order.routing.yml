@@ -32,7 +32,7 @@ entity.commerce_order.reassign_form:
       commerce_order:
         type: 'entity:commerce_order'
   requirements:
-    _permission: 'administer commerce_order'
+    _permission: 'administer commerce_order+reassign commerce_order'
 
 entity.commerce_order.unlock_form:
   path: '/admin/commerce/orders/{commerce_order}/unlock'

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Drupal\Migrate;
 
 use Drupal\migrate\MigrateMessageInterface;
@@ -16,8 +18,6 @@ class MigrateMessage implements MigrateMessageInterface, LoggerAwareInterface
 
     /**
      * Constructs a migrate message class.
-     *
-     * @param LoggerInterface $logger
      */
     public function __construct(LoggerInterface $logger)
     {

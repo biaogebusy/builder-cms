@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\serialization\Normalizer\ContentEntityNormalizer;
+use Drupal\Tests\Core\Entity\ContentEntityBaseMockableClass;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\Argument;
+use Symfony\Component\Serializer\Serializer;
 
 /**
  * @coversDefaultClass \Drupal\serialization\Normalizer\ContentEntityNormalizer
@@ -20,7 +26,7 @@ class ContentEntityNormalizerTest extends UnitTestCase {
   /**
    * The mock serializer.
    *
-   * @var \Symfony\Component\Serializer\SerializerInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Symfony\Component\Serializer\Serializer|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $serializer;
 
@@ -35,23 +41,22 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $entity_field_manager = $this->createMock(EntityFieldManagerInterface::class);
     $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
     $entity_type_repository = $this->createMock(EntityTypeRepositoryInterface::class);
 
     $this->contentEntityNormalizer = new ContentEntityNormalizer($entity_type_manager, $entity_type_repository, $entity_field_manager);
 
-    $this->serializer = $this->getMockBuilder('Symfony\Component\Serializer\Serializer')
-      ->disableOriginalConstructor()
-      ->onlyMethods(['normalize'])
-      ->getMock();
-    $this->contentEntityNormalizer->setSerializer($this->serializer);
+    $this->serializer = $this->prophesize(Serializer::class);
+    $this->contentEntityNormalizer->setSerializer($this->serializer->reveal());
   }
 
   /**
    * @covers ::supportsNormalization
    */
-  public function testSupportsNormalization() {
+  public function testSupportsNormalization(): void {
     $content_mock = $this->createMock('Drupal\Core\Entity\ContentEntityInterface');
     $config_mock = $this->createMock('Drupal\Core\Config\Entity\ConfigEntityInterface');
     $this->assertTrue($this->contentEntityNormalizer->supportsNormalization($content_mock));
@@ -63,11 +68,9 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    *
    * @covers ::normalize
    */
-  public function testNormalize() {
-    $this->serializer->expects($this->any())
-      ->method('normalize')
-      ->with($this->containsOnlyInstancesOf('Drupal\Core\Field\FieldItemListInterface'), 'test_format', ['account' => NULL])
-      ->willReturn('test');
+  public function testNormalize(): void {
+    $this->serializer->normalize(Argument::type(FieldItemListInterface::class),
+      'test_format', ['account' => NULL])->willReturn('test');
 
     $definitions = [
       'field_accessible_external' => $this->createMockFieldListItem(TRUE, FALSE),
@@ -91,17 +94,15 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    *
    * @covers ::normalize
    */
-  public function testNormalizeWithAccountContext() {
+  public function testNormalizeWithAccountContext(): void {
     $mock_account = $this->createMock('Drupal\Core\Session\AccountInterface');
 
     $context = [
       'account' => $mock_account,
     ];
 
-    $this->serializer->expects($this->any())
-      ->method('normalize')
-      ->with($this->containsOnlyInstancesOf('Drupal\Core\Field\FieldItemListInterface'), 'test_format', $context)
-      ->willReturn('test');
+    $this->serializer->normalize(Argument::type(FieldItemListInterface::class),
+      'test_format', $context)->willReturn('test');
 
     // The mock account should get passed directly into the access() method on
     // field items from $context['account'].
@@ -127,10 +128,10 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    * @return \PHPUnit\Framework\MockObject\MockObject
    */
   public function createMockForContentEntity($definitions) {
-    $content_entity_mock = $this->getMockBuilder('Drupal\Core\Entity\ContentEntityBase')
+    $content_entity_mock = $this->getMockBuilder(ContentEntityBaseMockableClass::class)
       ->disableOriginalConstructor()
       ->onlyMethods(['getTypedData'])
-      ->getMockForAbstractClass();
+      ->getMock();
     $typed_data = $this->prophesize(ComplexDataInterface::class);
     $typed_data->getProperties(TRUE)
       ->willReturn($definitions)
@@ -154,7 +155,7 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    *
    * @return \Drupal\Core\Field\FieldItemListInterface|\PHPUnit\Framework\MockObject\MockObject
    */
-  protected function createMockFieldListItem($access, $internal, AccountInterface $user_context = NULL) {
+  protected function createMockFieldListItem($access, $internal, ?AccountInterface $user_context = NULL) {
     $data_definition = $this->prophesize(DataDefinitionInterface::class);
     $mock = $this->createMock('Drupal\Core\Field\FieldItemListInterface');
     $mock->expects($this->once())

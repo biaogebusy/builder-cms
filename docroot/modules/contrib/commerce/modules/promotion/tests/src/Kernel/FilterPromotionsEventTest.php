@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\commerce_promotion\PromotionStorageInterface;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the FilterPromotionsEvent.

@@ -31,10 +31,10 @@ build:
         suppress-deprecations: true
         halt-on-fail: false
       run_tests.simpletest:
-         types: 'Simpletest'
-         testgroups: '--all'
-         suppress-deprecations: true
-         halt-on-fail: false
+        types: 'Simpletest'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
       run_tests.build:
         types: 'PHPUnit-Build'
         testgroups: '--all'

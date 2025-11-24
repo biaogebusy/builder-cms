@@ -66,9 +66,6 @@ class MetatagViewsBasicsTest extends BrowserTestBase {
     $this->drupalGet('<front>');
     $this->assertSession()->statusCodeEquals(200);
 
-    // With nothing else configured the front page just has a login form.
-    $this->assertSession()->pageTextContains('Enter your Drupal username.');
-
     // Log in as user 1.
     $this->loginUser1();
 

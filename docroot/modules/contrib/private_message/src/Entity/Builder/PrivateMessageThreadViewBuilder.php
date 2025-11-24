@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Entity\Builder;
 
 use Drupal\Core\Cache\Cache;
@@ -12,52 +14,29 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Theme\Registry;
 use Drupal\Core\Url;
+use Drupal\private_message\Entity\PrivateMessageThreadInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Build handler for rpivate message threads.
+ * Build handler for private message threads.
  */
 class PrivateMessageThreadViewBuilder extends EntityViewBuilder {
 
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected AccountProxyInterface $currentUser;
-
-  /**
-   * Constructs a PrivateMessageThreadViewBuilder object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
-   *   The entity repository service.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager service.
-   * @param \Drupal\Core\Theme\Registry $theme_registry
-   *   The theme register.
-   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
-   *   The entity display repository.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
-   *   The current user.
-   */
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityRepositoryInterface $entity_repository,
     LanguageManagerInterface $language_manager,
     Registry $theme_registry,
     EntityDisplayRepositoryInterface $entity_display_repository,
-    AccountProxyInterface $current_user
+    protected readonly AccountProxyInterface $currentUser,
   ) {
     parent::__construct($entity_type, $entity_repository, $language_manager, $theme_registry, $entity_display_repository);
-    $this->currentUser = $current_user;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): PrivateMessageThreadViewBuilder {
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type): self {
     return new static(
       $entity_type,
       $container->get('entity.repository'),
@@ -72,6 +51,8 @@ class PrivateMessageThreadViewBuilder extends EntityViewBuilder {
    * {@inheritdoc}
    */
   public function view(EntityInterface $entity, $view_mode = 'full', $langcode = NULL): array {
+    assert($entity instanceof PrivateMessageThreadInterface);
+
     $build = parent::view($entity, $view_mode, $langcode);
 
     $classes = ['private-message-thread'];
@@ -102,6 +83,7 @@ class PrivateMessageThreadViewBuilder extends EntityViewBuilder {
       $tags[] = 'private_message_thread:' . $entity->id() . ':view:uid:' . $this->currentUser->id();
       $tags[] = 'private_message_inbox_block:uid:' . $this->currentUser->id();
       $tags[] = 'private_message_notification_block:uid:' . $this->currentUser->id();
+      $tags[] = 'private_message:status:uid:' . $this->currentUser->id();
 
       Cache::invalidateTags($tags);
 
@@ -111,7 +93,7 @@ class PrivateMessageThreadViewBuilder extends EntityViewBuilder {
       $build['#suffix'] = '</div></div>';
     }
     else {
-      $build['#prefix'] = '<div id="private-message-thread-' . $entity->id() . '" class="' . implode(' ', $classes) . '" data-thread-id="' . $entity->id() . '" data-last-update="' . $entity->get('updated')->value . '">';
+      $build['#prefix'] = '<div class="' . implode(' ', $classes) . '" data-thread-id="' . $entity->id() . '" data-last-update="' . $entity->get('updated')->value . '">';
       $build['#suffix'] = '</div>';
     }
 

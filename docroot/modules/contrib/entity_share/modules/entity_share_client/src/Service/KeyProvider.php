@@ -5,14 +5,12 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_client\Service;
 
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
-use Drupal\key\Entity\Key;
 use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface;
+use Drupal\key\Entity\Key;
 use Drupal\key\KeyRepositoryInterface;
 
 /**
  * Abstraction layer to support local storage and Key module.
- *
- * @package Drupal\entity_share_client\Service
  */
 class KeyProvider {
 

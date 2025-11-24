@@ -4,7 +4,7 @@ namespace Drupal\Core\Cache;
 
 use Drupal\Core\Installer\InstallerKernel;
 use Drupal\Core\Site\Settings;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Psr\Container\ContainerInterface;
 
 /**
  * Defines the chained fast cache backend factory.
@@ -12,8 +12,6 @@ use Symfony\Component\DependencyInjection\ContainerAwareTrait;
  * @see \Drupal\Core\Cache\ChainedFastBackend
  */
 class ChainedFastBackendFactory implements CacheFactoryInterface {
-
-  use ContainerAwareTrait;
 
   /**
    * The service name of the consistent backend factory.
@@ -30,6 +28,18 @@ class ChainedFastBackendFactory implements CacheFactoryInterface {
   protected $fastServiceName;
 
   /**
+   * The service container.
+   */
+  protected ContainerInterface $container;
+
+  /**
+   * Sets the service container.
+   */
+  public function setContainer(ContainerInterface $container): void {
+    $this->container = $container;
+  }
+
+  /**
    * Constructs ChainedFastBackendFactory object.
    *
    * @param \Drupal\Core\Site\Settings|null $settings
@@ -44,7 +54,7 @@ class ChainedFastBackendFactory implements CacheFactoryInterface {
    *   - 'cache.backend.apcu' (if the PHP process has APCu enabled)
    *   - NULL (if the PHP process doesn't have APCu enabled)
    */
-  public function __construct(Settings $settings = NULL, $consistent_service_name = NULL, $fast_service_name = NULL) {
+  public function __construct(?Settings $settings = NULL, $consistent_service_name = NULL, $fast_service_name = NULL) {
     // Default the consistent backend to the site's default backend.
     if (!isset($consistent_service_name)) {
       $cache_settings = isset($settings) ? $settings->get('cache') : [];
@@ -76,9 +86,14 @@ class ChainedFastBackendFactory implements CacheFactoryInterface {
    *   The cache backend object associated with the specified bin.
    */
   public function get($bin) {
-    // Use the chained backend only if there is a fast backend available;
-    // otherwise, just return the consistent backend directly.
-    if (isset($this->fastServiceName)) {
+    // Use the chained backend only if there is a fast backend available and it
+    // is not the same as the consistent backend; otherwise, just return the
+    // consistent backend directly.
+    if (
+      isset($this->fastServiceName)
+      &&
+      $this->fastServiceName !== $this->consistentServiceName
+    ) {
       return new ChainedFastBackend(
         $this->container->get($this->consistentServiceName)->get($bin),
         $this->container->get($this->fastServiceName)->get($bin),

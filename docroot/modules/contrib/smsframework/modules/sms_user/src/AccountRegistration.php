@@ -5,7 +5,9 @@ declare(strict_types = 1);
 namespace Drupal\sms_user;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Utility\Token;
+use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 use Drupal\sms\Provider\SmsProviderInterface;
 use Drupal\sms\Provider\PhoneNumberVerificationInterface;
 use Drupal\sms\Message\SmsMessageInterface;
@@ -14,6 +16,7 @@ use Drupal\user\Entity\User;
 use Drupal\Component\Utility\Random;
 use Drupal\sms\Entity\SmsMessage;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
+use Drupal\user\UserNameValidator;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Drupal\user\UserInterface;
 
@@ -23,57 +26,21 @@ use Drupal\user\UserInterface;
 class AccountRegistration implements AccountRegistrationInterface {
 
   /**
-   * The configuration factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * The token service.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected $token;
-
-  /**
-   * The SMS provider.
-   *
-   * @var \Drupal\sms\Provider\SmsProviderInterface
-   */
-  protected $smsProvider;
-
-  /**
-   * Phone number verification provider.
-   *
-   * @var \Drupal\sms\Provider\PhoneNumberVerificationInterface
-   */
-  protected $phoneNumberVerificationProvider;
-
-  /**
    * Phone number settings for user.user bundle.
-   *
-   * @var \Drupal\sms\Entity\PhoneNumberSettingsInterface
    */
-  protected $userPhoneNumberSettings;
+  protected ?PhoneNumberSettingsInterface $userPhoneNumberSettings;
 
   /**
    * Constructs a AccountRegistration object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The configuration factory.
-   * @param \Drupal\Core\Utility\Token $token
-   *   The token replacement system.
-   * @param \Drupal\sms\Provider\SmsProviderInterface $sms_provider
-   *   The SMS provider.
-   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification_provider
-   *   The phone number verification provider.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, Token $token, SmsProviderInterface $sms_provider, PhoneNumberVerificationInterface $phone_number_verification_provider) {
-    $this->configFactory = $config_factory;
-    $this->token = $token;
-    $this->smsProvider = $sms_provider;
-    $this->phoneNumberVerificationProvider = $phone_number_verification_provider;
+  final public function __construct(
+    protected ConfigFactoryInterface $configFactory,
+    protected Token $token,
+    protected SmsProviderInterface $smsProvider,
+    protected PhoneNumberVerificationInterface $phoneNumberVerificationProvider,
+    protected UserNameValidator $userNameValidator,
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
   }
 
   /**
@@ -349,9 +316,18 @@ class AccountRegistration implements AccountRegistrationInterface {
   protected function generateUniqueUsername() {
     $random = new Random();
     do {
-      $username = $random->name(8, TRUE);
-    } while (user_validate_name($username) || user_load_by_name($username));
-    return $username;
+      $userName = $random->name(8, TRUE);
+    } while (
+      count($this->userNameValidator->validateName($userName)) > 0 ||
+      $this->userNameExists($userName)
+    );
+    return $userName;
+  }
+
+  private function userNameExists(string $userName): bool {
+    return $this->entityTypeManager
+      ->getStorage('user')
+      ->loadByProperties(['name' => $userName]) !== [];
   }
 
   /**

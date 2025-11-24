@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\commerce_cart\FunctionalJavascript;
 
-use Drupal\commerce_order\Entity\Order;
+use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
 
@@ -115,10 +115,77 @@ class AddToCartMultiAttributeTest extends CartWebDriverTestBase {
     $this->assertAttributeDoesNotExist('purchased_entity[0][attributes][attribute_size]', $size_attributes['large']->id());
     $this->getSession()->getPage()->pressButton('Add to cart');
 
-    $this->cart = Order::load($this->cart->id());
+    $this->cart = $this->reloadEntity($this->cart);
     $order_items = $this->cart->getItems();
     $this->assertOrderItemInOrder($variations[0], $order_items[0]);
     $this->assertOrderItemInOrder($variations[5], $order_items[1]);
+  }
+
+  /**
+   * Tests adding a product to the cart when there are multiple variations.
+   */
+  public function testMultipleVariationsRadios() {
+    /** @var \Drupal\commerce_product\Entity\ProductVariationTypeInterface $variation_type */
+    $variation_type = ProductVariationType::load($this->variation->bundle());
+
+    $color_attributes = $this->createAttributeSet($variation_type, 'color', [
+      'red' => 'Red',
+      'blue' => 'Blue',
+    ]);
+    $size_attributes = $this->createAttributeSet($variation_type, 'size', [
+      'small' => 'Small',
+      'medium' => 'Medium',
+      'large' => 'Large',
+      'xxl' => 'XXL',
+    ]);
+    // Change select to radios.
+    $color_attributes_entity = ProductAttribute::load('color');
+    $color_attributes_entity->set('elementType', 'radios');
+    $color_attributes_entity->save();
+    $size_attributes_entity = ProductAttribute::load('size');
+    $size_attributes_entity->set('elementType', 'radios');
+    $size_attributes_entity->save();
+
+    // Reload the variation since we have new fields.
+    $this->variation = ProductVariation::load($this->variation->id());
+    $product = $this->variation->getProduct();
+
+    // Update first variation to have the attribute's value.
+    $this->variation->attribute_color = $color_attributes['red']->id();
+    $this->variation->attribute_size = $size_attributes['small']->id();
+    $this->variation->save();
+
+    // The matrix is intentionally uneven.
+    $attribute_values_matrix = [
+      ['red', 'small'],
+      ['red', 'medium'],
+      ['red', 'large'],
+      ['blue', 'xxl'],
+    ];
+    // Generate variations off of the attributes values matrix.
+    foreach ($attribute_values_matrix as $value) {
+      $variation = $this->createEntity('commerce_product_variation', [
+        'type' => $variation_type->id(),
+        'sku' => $this->randomMachineName(),
+        'price' => [
+          'number' => 999,
+          'currency_code' => 'USD',
+        ],
+        'attribute_color' => $color_attributes[$value[0]],
+        'attribute_size' => $size_attributes[$value[1]],
+      ]);
+      $product->variations->appendItem($variation);
+    }
+    $product->save();
+
+    $this->drupalGet($product->toUrl());
+
+    // Use AJAX to change the color to Blue.
+    $this->getSession()->getPage()->selectFieldOption('purchased_entity[0][attributes][attribute_color]', '2');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+
+    // Assert size radio is checked.
+    $this->assertSession()->fieldValueEquals('purchased_entity[0][attributes][attribute_size]', 6);
   }
 
   /**

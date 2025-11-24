@@ -19,7 +19,9 @@ class LockFormCommand implements CommandInterface {
    * LockFormCommand constructor.
    *
    * @param bool $lockable
+   *   Whether the form is lockable.
    * @param bool $lock
+   *   Whether to lock the form.
    */
   public function __construct($lockable = FALSE, $lock = FALSE) {
     $this->lockable = $lockable;

@@ -128,15 +128,10 @@ class FieldResolver {
    *   The resource type repository.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
-   * @param \Drupal\Core\Session\AccountInterface|null $current_user
+   * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user account.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, ResourceTypeRepositoryInterface $resource_type_repository, ModuleHandlerInterface $module_handler, AccountInterface $current_user = NULL) {
-    if (is_null($current_user)) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $current_user argument is deprecated in drupal:9.3.0 and will be required in drupal:10.0.0.', E_USER_DEPRECATED);
-      $current_user = \Drupal::currentUser();
-    }
-
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, ResourceTypeRepositoryInterface $resource_type_repository, ModuleHandlerInterface $module_handler, AccountInterface $current_user) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
     $this->fieldManager = $field_manager;
@@ -549,7 +544,8 @@ class FieldResolver {
    */
   protected function isMemberFilterable($external_name, array $resource_types) {
     return array_reduce($resource_types, function ($carry, ResourceType $resource_type) use ($external_name) {
-      // @todo: remove the next line and uncomment the following one in https://www.drupal.org/project/drupal/issues/3017047.
+      // @todo Remove the next line and uncomment the following one in
+      //   https://www.drupal.org/project/drupal/issues/3017047.
       return $carry ?: $external_name === 'id' || $resource_type->isFieldEnabled($resource_type->getInternalName($external_name));
       /*return $carry ?: in_array($external_name, ['id', 'type']) || $resource_type->isFieldEnabled($resource_type->getInternalName($external_name));*/
     }, FALSE);
@@ -741,7 +737,7 @@ class FieldResolver {
    *   The property name from a path part.
    */
   protected static function getPathPartPropertyName($part) {
-    return strpos($part, ':') !== FALSE ? explode(':', $part)[0] : $part;
+    return str_contains($part, ':') ? explode(':', $part)[0] : $part;
   }
 
   /**

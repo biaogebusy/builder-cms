@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api\Plugin\search_api\data_type;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiDataType;
 use Drupal\search_api\DataType\DataTypePluginBase;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
 
@@ -16,14 +18,13 @@ use Drupal\search_api\Plugin\search_api\data_type\value\TextValue;
  * fallback.
  *
  * @see \Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface
- *
- * @SearchApiDataType(
- *   id = "text",
- *   label = @Translation("Fulltext"),
- *   description = @Translation("Fulltext fields are analyzed fields which are made available for fulltext search. This data type should be used for any fields (usually with free text input by users) which you want to search for individual words."),
- *   default = "true"
- * )
  */
+#[SearchApiDataType(
+  id: 'text',
+  label: new TranslatableMarkup('Fulltext'),
+  description: new TranslatableMarkup('Fulltext fields are analyzed fields which are made available for fulltext search. This data type should be used for any fields (usually with free text input by users) which you want to search for individual words.'),
+  default: TRUE,
+)]
 class TextDataType extends DataTypePluginBase {
 
   /**

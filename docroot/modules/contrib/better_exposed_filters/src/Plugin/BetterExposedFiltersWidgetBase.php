@@ -9,7 +9,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\views\Plugin\views\ViewsHandlerInterface;
 use Drupal\views\ViewExecutable;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Base class for Better exposed filters widget plugins.
@@ -23,14 +22,14 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
    *
    * @var \Drupal\views\ViewExecutable
    */
-  protected $view;
+  protected ViewExecutable $view;
 
   /**
    * The views plugin this configuration will affect when exposed.
    *
    * @var \Drupal\views\Plugin\views\ViewsHandlerInterface
    */
-  protected $handler;
+  protected ViewsHandlerInterface $handler;
 
   /**
    * {@inheritdoc}
@@ -53,28 +52,28 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
   /**
    * {@inheritdoc}
    */
-  public function getConfiguration() {
+  public function getConfiguration(): array {
     return $this->configuration;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setConfiguration(array $configuration) {
+  public function setConfiguration(array $configuration): void {
     $this->configuration = $configuration;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setView(ViewExecutable $view) {
+  public function setView(ViewExecutable $view): void {
     $this->view = $view;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setViewsHandler(ViewsHandlerInterface $handler) {
+  public function setViewsHandler(ViewsHandlerInterface $handler): void {
     $this->handler = $handler;
   }
 
@@ -88,7 +87,7 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     // Apply submitted form state to configuration.
     $values = $form_state->getValues();
     foreach ($values as $key => $value) {
@@ -114,7 +113,7 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
    *
    * @see ://www.drupal.org/project/drupal/issues/2511548
    */
-  protected function addContext(array &$element) {
+  protected function addContext(array &$element): void {
     $element['#context'] = [
       '#plugin_type' => 'bef',
       '#plugin_id' => $this->pluginId,
@@ -134,11 +133,8 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
    *   The key of the form element.
    * @param string $group
    *   The name of the group element.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *   If the instance cannot be created, such as if the ID is invalid.
    */
-  protected function addElementToGroup(array &$form, FormStateInterface $form_state, $element, $group) {
+  protected function addElementToGroup(array &$form, FormStateInterface $form_state, string $element, string $group): void {
     // Ensure group is enabled.
     $form[$group]['#access'] = TRUE;
 
@@ -161,7 +157,14 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
         return $carry || ($value === $default_value ? '' : ($value || $default_value === 0));
       }, FALSE);
 
-      if ($has_values) {
+      $collapsible_disable_automatic_open = FALSE;
+      if (isset($form[$element]['#collapsible_disable_automatic_open'])) {
+        $collapsible_disable_automatic_open = $form[$element]['#collapsible_disable_automatic_open'];
+      }
+      elseif (isset($form[$group]['#collapsible_disable_automatic_open'])) {
+        $collapsible_disable_automatic_open = $form[$group]['#collapsible_disable_automatic_open'];
+      }
+      if ($has_values && !$collapsible_disable_automatic_open) {
         $form[$group]['#open'] = TRUE;
       }
     }
@@ -176,38 +179,8 @@ abstract class BetterExposedFiltersWidgetBase extends PluginBase implements Bett
    * @return \Drupal\Core\Url
    *   Url object.
    */
-  protected function getExposedFormActionUrl(FormStateInterface $form_state) {
-    /** @var \Drupal\views\ViewExecutable $view */
-    $view = $form_state->get('view');
-    $display = $form_state->get('display');
+  protected function getExposedFormActionUrl(FormStateInterface $form_state): Url {
     $request = \Drupal::request();
-    if (isset($display['display_options']['path'])) {
-      $args = [];
-      if (\Drupal::routeMatch()->getRouteName() == 'views.ajax') {
-        $previousUrl = $request->server->get('HTTP_REFERER');
-        $url_request = Request::create($previousUrl);
-        $url_object = \Drupal::service('path.validator')->getUrlIfValid($url_request->getRequestUri());
-        if ($url_object) {
-          $args = $url_object->getRouteParameters();
-        }
-      }
-      else {
-        $route = $request->attributes->get('_route_object');
-        /** @var \Symfony\Component\HttpFoundation\ParameterBag $raw_params */
-        $raw_params = $request->attributes->get('_raw_variables');
-        $route_params = $request->attributes->get('_route_params');
-        $map = $route->hasOption('_view_argument_map') ? $route->getOption('_view_argument_map') : [];
-
-        foreach ($map as $attribute => $parameter_name) {
-          $arg = $raw_params->get($parameter_name) ?? $route_params[$parameter_name];
-
-          if (isset($arg)) {
-            $args[$attribute] = $arg;
-          }
-        }
-      }
-    }
-
     $url = Url::createFromRequest(clone $request);
     $url->setAbsolute();
 

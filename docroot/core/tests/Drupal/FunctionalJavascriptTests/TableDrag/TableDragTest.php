@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\TableDrag;
 
 use Behat\Mink\Element\NodeElement;
@@ -61,7 +63,7 @@ class TableDragTest extends WebDriverTestBase {
   /**
    * Tests row weight switch.
    */
-  public function testRowWeightSwitch() {
+  public function testRowWeightSwitch(): void {
     $this->state->set('tabledrag_test_table', array_flip(range(1, 3)));
 
     $this->drupalGet('tabledrag_test');
@@ -98,13 +100,15 @@ class TableDragTest extends WebDriverTestBase {
   /**
    * Tests draggable table drag'n'drop.
    */
-  public function testDragAndDrop() {
+  public function testDragAndDrop(): void {
     $this->state->set('tabledrag_test_table', array_flip(range(1, 3)));
     $this->drupalGet('tabledrag_test');
 
     $session = $this->getSession();
     $page = $session->getPage();
 
+    // Confirm touchevents detection is loaded with Tabledrag
+    $this->assertNotNull($this->assertSession()->waitForElement('css', 'html.no-touchevents'));
     $weight_select1 = $page->findField("table[1][weight]");
     $weight_select2 = $page->findField("table[2][weight]");
     $weight_select3 = $page->findField("table[3][weight]");
@@ -143,7 +147,7 @@ class TableDragTest extends WebDriverTestBase {
   /**
    * Tests accessibility through keyboard of the tabledrag functionality.
    */
-  public function testKeyboardAccessibility() {
+  public function testKeyboardAccessibility(): void {
     $this->assertKeyboardAccessibility();
   }
 
@@ -161,11 +165,11 @@ class TableDragTest extends WebDriverTestBase {
    */
   protected function assertKeyboardAccessibility(string $drupal_path = 'tabledrag_test', ?array $structure = NULL): void {
     $expected_table = $structure ?: [
-      ['id' => 1, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
-      ['id' => 2, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
-      ['id' => 3, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
-      ['id' => 4, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
-      ['id' => 5, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '1', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '2', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '3', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '4', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '5', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
     ];
     if (!empty($drupal_path)) {
       $this->state->set('tabledrag_test_table', array_flip(range(1, 5)));
@@ -175,45 +179,45 @@ class TableDragTest extends WebDriverTestBase {
 
     // Nest the row with id 2 as child of row 1.
     $this->moveRowWithKeyboard($this->findRowById(2), 'right');
-    $expected_table[1] = ['id' => 2, 'weight' => -10, 'parent' => 1, 'indentation' => 1, 'changed' => TRUE];
+    $expected_table[1] = ['id' => '2', 'weight' => -10, 'parent' => '1', 'indentation' => 1, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // Nest the row with id 3 as child of row 1.
     $this->moveRowWithKeyboard($this->findRowById(3), 'right');
-    $expected_table[2] = ['id' => 3, 'weight' => -9, 'parent' => 1, 'indentation' => 1, 'changed' => TRUE];
+    $expected_table[2] = ['id' => '3', 'weight' => -9, 'parent' => '1', 'indentation' => 1, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // Nest the row with id 3 as child of row 2.
     $this->moveRowWithKeyboard($this->findRowById(3), 'right');
-    $expected_table[2] = ['id' => 3, 'weight' => -10, 'parent' => 2, 'indentation' => 2, 'changed' => TRUE];
+    $expected_table[2] = ['id' => '3', 'weight' => -10, 'parent' => '2', 'indentation' => 2, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // Nesting should be allowed to maximum level 2.
     $this->moveRowWithKeyboard($this->findRowById(4), 'right', 4);
-    $expected_table[3] = ['id' => 4, 'weight' => -9, 'parent' => 2, 'indentation' => 2, 'changed' => TRUE];
+    $expected_table[3] = ['id' => '4', 'weight' => -9, 'parent' => '2', 'indentation' => 2, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // Re-order children of row 1.
     $this->moveRowWithKeyboard($this->findRowById(4), 'up');
-    $expected_table[2] = ['id' => 4, 'weight' => -10, 'parent' => 2, 'indentation' => 2, 'changed' => TRUE];
-    $expected_table[3] = ['id' => 3, 'weight' => -9, 'parent' => 2, 'indentation' => 2, 'changed' => TRUE];
+    $expected_table[2] = ['id' => '4', 'weight' => -10, 'parent' => '2', 'indentation' => 2, 'changed' => TRUE];
+    $expected_table[3] = ['id' => '3', 'weight' => -9, 'parent' => '2', 'indentation' => 2, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // Move back the row 3 to the 1st level.
     $this->moveRowWithKeyboard($this->findRowById(3), 'left');
-    $expected_table[3] = ['id' => 3, 'weight' => -9, 'parent' => 1, 'indentation' => 1, 'changed' => TRUE];
+    $expected_table[3] = ['id' => '3', 'weight' => -9, 'parent' => '1', 'indentation' => 1, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     $this->moveRowWithKeyboard($this->findRowById(3), 'left');
-    $expected_table[0] = ['id' => 1, 'weight' => -10, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
-    $expected_table[3] = ['id' => 3, 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
-    $expected_table[4] = ['id' => 5, 'weight' => -8, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
+    $expected_table[0] = ['id' => '1', 'weight' => -10, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
+    $expected_table[3] = ['id' => '3', 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
+    $expected_table[4] = ['id' => '5', 'weight' => -8, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
     $this->assertDraggableTable($expected_table);
 
     // Move row 3 to the last position.
     $this->moveRowWithKeyboard($this->findRowById(3), 'down');
-    $expected_table[3] = ['id' => 5, 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
-    $expected_table[4] = ['id' => 3, 'weight' => -8, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
+    $expected_table[3] = ['id' => '5', 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
+    $expected_table[4] = ['id' => '3', 'weight' => -8, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // Nothing happens when trying to move the last row further down.
@@ -222,7 +226,7 @@ class TableDragTest extends WebDriverTestBase {
 
     // Nest row 3 under 5. The max depth allowed should be 1.
     $this->moveRowWithKeyboard($this->findRowById(3), 'right', 3);
-    $expected_table[4] = ['id' => 3, 'weight' => -10, 'parent' => 5, 'indentation' => 1, 'changed' => TRUE];
+    $expected_table[4] = ['id' => '3', 'weight' => -10, 'parent' => '5', 'indentation' => 1, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
 
     // The first row of the table cannot be nested.
@@ -233,18 +237,18 @@ class TableDragTest extends WebDriverTestBase {
     // with nesting preserved. Swap the order of the top-level rows by moving
     // row 1 to after row 3.
     $this->moveRowWithKeyboard($this->findRowById(1), 'down', 2);
-    $expected_table[0] = ['id' => 5, 'weight' => -10, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
+    $expected_table[0] = ['id' => '5', 'weight' => -10, 'parent' => '', 'indentation' => 0, 'changed' => FALSE];
     $expected_table[3] = $expected_table[1];
     $expected_table[1] = $expected_table[4];
     $expected_table[4] = $expected_table[2];
-    $expected_table[2] = ['id' => 1, 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
+    $expected_table[2] = ['id' => '1', 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
   }
 
   /**
    * Tests the root and leaf behaviors for rows.
    */
-  public function testRootLeafDraggableRowsWithKeyboard() {
+  public function testRootLeafDraggableRowsWithKeyboard(): void {
     $this->state->set('tabledrag_test_table', [
       1 => [],
       2 => ['parent' => 1, 'depth' => 1, 'classes' => ['tabledrag-leaf']],
@@ -255,11 +259,11 @@ class TableDragTest extends WebDriverTestBase {
 
     $this->drupalGet('tabledrag_test');
     $expected_table = [
-      ['id' => 1, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
-      ['id' => 2, 'weight' => 0, 'parent' => 1, 'indentation' => 1, 'changed' => FALSE],
-      ['id' => 3, 'weight' => 0, 'parent' => 1, 'indentation' => 1, 'changed' => FALSE],
-      ['id' => 4, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
-      ['id' => 5, 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '1', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '2', 'weight' => 0, 'parent' => '1', 'indentation' => 1, 'changed' => FALSE],
+      ['id' => '3', 'weight' => 0, 'parent' => '1', 'indentation' => 1, 'changed' => FALSE],
+      ['id' => '4', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
+      ['id' => '5', 'weight' => 0, 'parent' => '', 'indentation' => 0, 'changed' => FALSE],
     ];
     $this->assertDraggableTable($expected_table);
 
@@ -276,9 +280,9 @@ class TableDragTest extends WebDriverTestBase {
     $this->moveRowWithKeyboard($this->findRowById(2), 'down');
     $this->moveRowWithKeyboard($this->findRowById(2), 'left');
     $expected_table[0]['weight'] = -10;
-    $expected_table[1]['id'] = 3;
+    $expected_table[1]['id'] = '3';
     $expected_table[1]['weight'] = -10;
-    $expected_table[2] = ['id' => 2, 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
+    $expected_table[2] = ['id' => '2', 'weight' => -9, 'parent' => '', 'indentation' => 0, 'changed' => TRUE];
     $expected_table[3]['weight'] = -8;
     $expected_table[4]['weight'] = -7;
     $this->assertDraggableTable($expected_table);
@@ -286,15 +290,15 @@ class TableDragTest extends WebDriverTestBase {
     // Root rows can have children.
     $this->moveRowWithKeyboard($this->findRowById(4), 'down');
     $this->moveRowWithKeyboard($this->findRowById(4), 'right');
-    $expected_table[3]['id'] = 5;
-    $expected_table[4] = ['id' => 4, 'weight' => -10, 'parent' => 5, 'indentation' => 1, 'changed' => TRUE];
+    $expected_table[3]['id'] = '5';
+    $expected_table[4] = ['id' => '4', 'weight' => -10, 'parent' => '5', 'indentation' => 1, 'changed' => TRUE];
     $this->assertDraggableTable($expected_table);
   }
 
   /**
    * Tests the warning that appears upon making changes to a tabledrag table.
    */
-  public function testTableDragChangedWarning() {
+  public function testTableDragChangedWarning(): void {
     $this->drupalGet('tabledrag_test');
 
     // By default no text is visible.
@@ -343,7 +347,7 @@ class TableDragTest extends WebDriverTestBase {
   /**
    * Tests nested draggable tables through keyboard.
    */
-  public function testNestedDraggableTables() {
+  public function testNestedDraggableTables(): void {
     $this->state->set('tabledrag_test_table', array_flip(range(1, 5)));
     $this->drupalGet('tabledrag_test_nested');
     $this->assertKeyboardAccessibility('');
@@ -435,37 +439,37 @@ class TableDragTest extends WebDriverTestBase {
     // Re-test the nested draggable table.
     $expected_child_table_structure = [
       [
-        'id' => 5,
+        'id' => '5',
         'weight' => -10,
         'parent' => '',
         'indentation' => 0,
         'changed' => FALSE,
       ],
       [
-        'id' => 3,
+        'id' => '3',
         'weight' => -10,
-        'parent' => 5,
+        'parent' => '5',
         'indentation' => 1,
         'changed' => TRUE,
       ],
       [
-        'id' => 1,
+        'id' => '1',
         'weight' => -9,
         'parent' => '',
         'indentation' => 0,
         'changed' => TRUE,
       ],
       [
-        'id' => 2,
+        'id' => '2',
         'weight' => -10,
-        'parent' => 1,
+        'parent' => '1',
         'indentation' => 1,
         'changed' => TRUE,
       ],
       [
-        'id' => 4,
+        'id' => '4',
         'weight' => -10,
-        'parent' => 2,
+        'parent' => '2',
         'indentation' => 2,
         'changed' => TRUE,
       ],

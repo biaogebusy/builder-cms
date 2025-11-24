@@ -108,7 +108,7 @@ abstract class ContentEntityAutosaveFormTestBase extends AutosaveFormTestBase {
    */
   protected function doTestAutosaveFormNewEntity() {
     $this->drupalGet($this->getCreateNewEntityURL());
-    $this->assertAutosaveFormLibraryLoaded(FALSE);
+    $this->assertAutosaveFormLibraryLoaded(TRUE);
   }
 
   /**
@@ -614,7 +614,7 @@ abstract class ContentEntityAutosaveFormTestBase extends AutosaveFormTestBase {
    *   (optional) If specified, only the autosaved states with the given
    *   timestamps will be deleted.
    */
-  protected function deleteAutosavedStates(array $timestamps = NULL) {
+  protected function deleteAutosavedStates(?array $timestamps = NULL) {
     $query = \Drupal::database()
       ->delete(AutosaveEntityFormStorageInterface::AUTOSAVE_ENTITY_FORM_TABLE);
     if (isset($timestamps)) {

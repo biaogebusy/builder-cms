@@ -21,7 +21,8 @@ Then this module is what you are looking for.
 
 REQUIREMENTS
 ------------
-You will need the `config_filter` module to be enabled.
+You will need Drupal 8.8 or higher for this module to work. If you want to
+import and export config with Drush, you need Drush 10+.
 
 INSTALLATION
 ------------
@@ -33,7 +34,7 @@ CONFIGURATION
 If you go to `admin/config/development/configuration/ignore`
 you will see a fairly simple interface.
 
-Add the name of the configuration that you want to ignore upon import.
+Add the name of the configuration that you want to ignore.
 (e.g. `system.site` to ignore site name, slogan and email site email address.)
 Click the "Save configuration" button and you are good to go.
 
@@ -47,6 +48,13 @@ by using the "Single import" feature found at
 
 To deactivate `config_ignore`, include
 `$settings['config_ignore_deactivate'] = TRUE;` in your settings.php file.
+
+To change the priority of the config ignore event subscriber use:
+`$settings['config_ignore_import_priority'] = -100;`
+`$settings['config_ignore_export_priority'] = 100;`
+The default is 0, a higher priority means that ignoring happens earlier.
+On import the ignoring should probably happen rather later so that
+changes from other event subscribers will be ignored.
 
 MAINTAINERS
 -----------

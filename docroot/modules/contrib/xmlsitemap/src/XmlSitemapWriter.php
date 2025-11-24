@@ -71,19 +71,12 @@ class XmlSitemapWriter extends \XMLWriter {
   }
 
   /**
-   * Opens and uri.
-   *
-   * @param string $uri
-   *   Uri to be opened.
-   *
-   * @return bool
-   *   Returns TRUE when uri was successfully opened.
+   * {@inheritdoc}
    *
    * @throws XmlSitemapGenerationException
    *   If the file URI cannot be opened.
    */
-  #[\ReturnTypeWillChange]
-  public function openUri($uri) {
+  public function openUri(string $uri): bool {
     $return = parent::openUri($uri);
     if (!$return) {
       throw new XmlSitemapGenerationException("Could not open file $uri for writing.");
@@ -92,23 +85,12 @@ class XmlSitemapWriter extends \XMLWriter {
   }
 
   /**
-   * Starts an XML document.
-   *
-   * @param string $version
-   *   The version number of the document.
-   * @param string $encoding
-   *   The encoding of the document.
-   * @param string $standalone
-   *   Yes or No.
+   * {@inheritdoc}
    *
    * @throws XmlSitemapGenerationException
    *   Throws exception when document cannot be started.
-   *
-   * @return bool
-   *   Returns TRUE on success.
    */
-  #[\ReturnTypeWillChange]
-  public function startDocument($version = '1.0', $encoding = 'UTF-8', $standalone = NULL) {
+  public function startDocument(?string $version = '1.0', ?string $encoding = 'UTF-8', ?string $standalone = NULL): bool {
     $this->setIndent(FALSE);
     $result = parent::startDocument($version, $encoding);
     if (!$result) {
@@ -168,18 +150,12 @@ class XmlSitemapWriter extends \XMLWriter {
   }
 
   /**
-   * Creates start element tag.
+   * {@inheritdoc}
    *
-   * @param string $name
-   *   Element name.
    * @param bool $root
    *   Specify if it is root element or not.
-   *
-   * @return bool
-   *   Returns TRUE on success or FALSE on failure.
    */
-  #[\ReturnTypeWillChange]
-  public function startElement($name, $root = FALSE) {
+  public function startElement(string $name, $root = FALSE): bool{
     $return = parent::startElement($name);
 
     if ($return && $root) {
@@ -192,32 +168,12 @@ class XmlSitemapWriter extends \XMLWriter {
   }
 
   /**
-   * Writes an full XML Sitemap element tag.
+   * {@inheritdoc}
    *
-   * @param string $name
-   *   The element name.
-   * @param array $element
-   *   An array of the elements properties and values.
-   *
-   * @deprecated Use \Drupal\xmlsitemap\XmlSitemapWriter::writeElement().
-   */
-  public function writeSitemapElement($name, array $element) {
-    $this->writeElement($name, $element);
-  }
-
-  /**
-   * Writes full element tag including support for nested elements.
-   *
-   * @param string $name
-   *   The element name.
    * @param string|array $content
    *   The element contents or an array of the elements' sub-elements.
-   *
-   * @return bool
-   *   Returns TRUE on success or FALSE on failure.
    */
-  #[\ReturnTypeWillChange]
-  public function writeElement($name, $content = NULL) {
+  public function writeElement(string $name, string|array|null $content = NULL): bool {
     if (is_array($content)) {
       $return = $this->startElement($name);
       $return &= $this->writeRaw($this->formatXmlElements($content));
@@ -258,15 +214,11 @@ class XmlSitemapWriter extends \XMLWriter {
   }
 
   /**
-   * Ends an XML document.
+   * {@inheritdoc}
    *
    * @throws XmlSitemapGenerationException
-   *
-   * @return bool
-   *   Returns TRUE on success.
    */
-  #[\ReturnTypeWillChange]
-  public function endDocument() {
+  public function endDocument(): bool {
     $return = parent::endDocument();
 
     if (!$return) {

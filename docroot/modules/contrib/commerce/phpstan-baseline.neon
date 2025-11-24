@@ -1,0 +1,46 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: modules/checkout/src/CheckoutPaneManager.php
+
+		-
+			message: "#^@covers value \\\\Drupal\\\\commerce_log\\\\Plugin\\\\LogTemplate\\\\LogTemplate\\:\\:getGroup references an invalid method\\.$#"
+			count: 1
+			path: modules/log/tests/src/Unit/LogTemplateTest.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: modules/order/src/Adjustment.php
+
+		-
+			message: "#^Method Drupal\\\\commerce_payment\\\\Form\\\\PaymentMethodEditForm\\:\\:save\\(\\) should return int but return statement is missing\\.$#"
+			count: 1
+			path: modules/payment/src/Form/PaymentMethodEditForm.php
+
+		-
+			message: "#^Class Drupal\\\\commerce_payment\\\\PaymentMethodPermissionProvider extends @internal class Drupal\\\\entity\\\\EntityPermissionProviderBase\\.$#"
+			count: 1
+			path: modules/payment/src/PaymentMethodPermissionProvider.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 3
+			path: modules/product/src/Form/ProductAttributeForm.php
+
+		-
+			message: "#^Class Drupal\\\\commerce_product\\\\Form\\\\ProductAttributeTranslationAddForm extends @internal class Drupal\\\\config_translation\\\\Form\\\\ConfigTranslationAddForm\\.$#"
+			count: 1
+			path: modules/product/src/Form/ProductAttributeTranslationAddForm.php
+
+		-
+			message: "#^Class Drupal\\\\commerce_product\\\\Form\\\\ProductAttributeTranslationEditForm extends @internal class Drupal\\\\config_translation\\\\Form\\\\ConfigTranslationEditForm\\.$#"
+			count: 1
+			path: modules/product/src/Form/ProductAttributeTranslationEditForm.php
+
+		-
+			message: "#^Class Drupal\\\\commerce_product\\\\Plugin\\\\Block\\\\VariationFieldBlock extends @internal class Drupal\\\\layout_builder\\\\Plugin\\\\Block\\\\FieldBlock\\.$#"
+			count: 1
+			path: modules/product/src/Plugin/Block/VariationFieldBlock.php

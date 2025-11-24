@@ -5,12 +5,13 @@ namespace Drupal\Core\FileTransfer;
 /**
  * Defines the base class for FTP implementations.
  */
+// phpcs:ignore Drupal.NamingConventions.ValidClassName.NoUpperAcronyms
 abstract class FTP extends FileTransfer {
 
   /**
    * {@inheritdoc}
    */
-  public function __construct($jail, $username, $password, $hostname, $port) {
+  public function __construct($jail, $username, #[\SensitiveParameter] $password, $hostname, $port) {
     $this->username = $username;
     $this->password = $password;
     $this->hostname = $hostname;

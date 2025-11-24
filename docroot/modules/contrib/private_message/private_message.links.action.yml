@@ -1,0 +1,5 @@
+entity.private_message_ban.add_form:
+  route_name: entity.private_message_ban.add_form
+  title: 'Add Private Message Ban'
+  appears_on:
+    - entity.private_message_ban.collection

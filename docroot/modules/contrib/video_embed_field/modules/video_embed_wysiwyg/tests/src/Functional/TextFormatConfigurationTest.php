@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\video_embed_wysiwyg\Functional;
 
+use Drupal\editor\Entity\Editor;
+use Drupal\filter\Entity\FilterFormat;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\video_embed_field\Functional\AdminUserTrait;
 
@@ -26,7 +28,7 @@ class TextFormatConfigurationTest extends BrowserTestBase {
     'video_embed_field',
     'video_embed_wysiwyg',
     'editor',
-    'ckeditor',
+    'ckeditor5',
     'field_ui',
     'node',
     'image',
@@ -37,7 +39,14 @@ class TextFormatConfigurationTest extends BrowserTestBase {
    *
    * @var string
    */
-  protected $formatUrl = 'admin/config/content/formats/manage/plain_text';
+  protected $formatUrl = '/admin/config/content/formats/manage/filtered_html';
+
+  /**
+   * The name of filter format.
+   *
+   * @var string
+   */
+  protected $formatName = 'filtered_html';
 
   /**
    * {@inheritdoc}
@@ -46,125 +55,107 @@ class TextFormatConfigurationTest extends BrowserTestBase {
     parent::setUp();
 
     $this->drupalLogin($this->createAdminUser());
-    $this->drupalGet($this->formatUrl);
+
+    // CKE5 does not work plain text hence create new format.
+    FilterFormat::create([
+      'format' => $this->formatName,
+      'name' => $this->formatName,
+    ])->save();
+    Editor::create([
+      'format' => $this->formatName,
+      'editor' => 'ckeditor5',
+    ])->setImageUploadSettings(['status' => FALSE])->save();
 
     // Setup the filter to have an editor.
-    $this->getSession()->getPage()->find('css', '[name="editor[editor]"]')->setValue('ckeditor');
-    $this->getSession()->getPage()->find('css', 'input[name="editor_configure"]')->click();
-    $this->submitForm([], t('Save configuration'));
+    $this->drupalGet($this->formatUrl);
+    $page = $this->getSession()->getPage();
+    $page->checkField('roles[authenticated]');
+    $this->submitForm([], 'Save configuration');
   }
 
   /**
    * Test both the input filter and button need to be enabled together.
    */
   public function testFormatConfiguration() {
-    // Save the settings with the filter enabled, but with no button.
+    // Save the settings with the filter enabled, with button.
     $this->drupalGet($this->formatUrl);
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][status]' => TRUE,
-      'editor[settings][toolbar][button_groups]' => '[]',
-    ], t('Save configuration'));
-    $this->assertSession()->pageTextContains('To embed videos, make sure you have enabled the "Video Embed WYSIWYG" filter and dragged the video icon into the WYSIWYG toolbar.');
-
-    $this->drupalGet($this->formatUrl);
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][status]' => FALSE,
-      'editor[settings][toolbar][button_groups]' => '[[{"name":"Group","items":["video_embed"]}]]',
-    ], t('Save configuration'));
-    $this->assertSession()->pageTextContains('To embed videos, make sure you have enabled the "Video Embed WYSIWYG" filter and dragged the video icon into the WYSIWYG toolbar.');
-
-    $this->drupalGet($this->formatUrl);
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][status]' => TRUE,
-      'editor[settings][toolbar][button_groups]' => '[[{"name":"Group","items":["video_embed"]}]]',
-    ], t('Save configuration'));
-    $this->assertSession()->pageTextContains('The text format Plain text has been updated.');
-
-    // Test the messages aren't triggered if they are in the second row.
-    $this->drupalGet($this->formatUrl);
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][status]' => TRUE,
-      'editor[settings][toolbar][button_groups]' => '[[{"name":"Foo","items":["NumberedList"]}],[{"name":"Bar","items":["video_embed"]}]]',
-    ], t('Save configuration'));
-    $this->assertSession()->pageTextContains('The text format Plain text has been updated.');
+    $page = $this->getSession()->getPage();
+    $page->fillField('Video Embed WYSIWYG', TRUE);
+    $page->pressButton('Save configuration');
+    $this->assertSession()->pageTextContains("The text format {$this->formatName} has been updated.");
   }
 
   /**
-   * Test the URL filter weight is in the correct order.
+   * Test the URL filter weight not in correct order.
    */
   public function testUrlWeightOrder() {
+    $editor = Editor::load($this->formatName);
+    $settings = $editor->getSettings();
+    $settings['toolbar']['items'][] = '|';
+    $settings['toolbar']['items'][] = 'videoEmbed';
+    $editor->setSettings($settings)->save();
+    $format = FilterFormat::load($this->formatName);
+    $format->setFilterConfig('video_embed_wysiwyg', ['weight' => 10]);
+    $format->setFilterConfig('filter_url', ['weight' => -10]);
+    $format->save();
     $this->drupalGet($this->formatUrl);
-    $this->submitForm([
-      // Enable the URL filter and the WYSIWYG embed.
-      'filters[filter_url][status]' => TRUE,
-      'filters[filter_html][status]' => FALSE,
-      'filters[video_embed_wysiwyg][status]' => TRUE,
-      'editor[settings][toolbar][button_groups]' => '[[{"name":"Group","items":["video_embed"]}]]',
-      // Setup the weights so the URL filter runs first.
-      'filters[video_embed_wysiwyg][weight]' => '10',
-      'filters[filter_url][weight]' => '-10',
-    ], 'Save configuration');
+    $page = $this->getSession()->getPage();
+    $page->fillField('Video Embed WYSIWYG', TRUE);
+    $page->fillField('Convert URLs into links', TRUE);
+    $page->fillField('Limit allowed HTML tags and correct faulty HTML', TRUE);
+    $page->pressButton('Save configuration');
     $this->assertSession()->pageTextContains('The "Video Embed WYSIWYG" filter must run before the "Convert URLs into links" filter to function correctly.');
-
-    // Submit the form with the weights reversed.
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][weight]' => '-10',
-      'filters[filter_url][weight]' => '10',
-    ], 'Save configuration');
-    $this->assertSession()->pageTextContains('The text format Plain text has been updated.');
   }
 
   /**
    * Test the URL filter weight is in the correct order.
    */
   public function testHtmlFilterWeightOrder() {
+    $editor = Editor::load($this->formatName);
+    $settings = $editor->getSettings();
+    $settings['toolbar']['items'][] = '|';
+    $settings['toolbar']['items'][] = 'videoEmbed';
+    $editor->setSettings($settings)->save();
+    $format = FilterFormat::load($this->formatName);
+    $format->setFilterConfig('video_embed_wysiwyg', ['weight' => -10]);
+    $format->setFilterConfig('filter_url', ['weight' => 10]);
+    $format->save();
     $this->drupalGet($this->formatUrl);
-    $this->submitForm([
-      // Enable the URL filter and the WYSIWYG embed.
-      'filters[filter_html][status]' => TRUE,
-      'filters[filter_url][status]' => FALSE,
-      'filters[video_embed_wysiwyg][status]' => TRUE,
-      'editor[settings][toolbar][button_groups]' => '[[{"name":"Group","items":["video_embed"]}]]',
-      // Run WYSWIYG first then the HTML filter.
-      'filters[video_embed_wysiwyg][weight]' => '-10',
-      'filters[filter_html][weight]' => '10',
-    ], 'Save configuration');
-    $this->assertSession()->pageTextContains('The "Video Embed WYSIWYG" filter must run after the "Limit allowed HTML tags" filter to function correctly.');
-
-    // Submit the form with the weights reversed.
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][weight]' => '10',
-      'filters[filter_html][weight]' => '-10',
-    ], 'Save configuration');
-    $this->assertSession()->pageTextContains('The text format Plain text has been updated.');
+    $page = $this->getSession()->getPage();
+    $page->fillField('Video Embed WYSIWYG', TRUE);
+    $page->fillField('Convert URLs into links', TRUE);
+    $page->fillField('Limit allowed HTML tags and correct faulty HTML', TRUE);
+    $page->pressButton('Save configuration');
+    $this->assertSession()->pageTextContains("The text format {$this->formatName} has been updated.");
   }
 
   /**
    * Test the dialog defaults can be set and work correctly.
    */
   public function testDialogDefaultValues() {
-    $this->drupalGet($this->formatUrl);
+    $editor = Editor::load($this->formatName);
+    $settings = $editor->getSettings();
+    $settings['toolbar']['items'][] = '|';
+    $settings['toolbar']['items'][] = 'videoEmbed';
+    $settings['toolbar']['items'][] = 'sourceEditing';
+    $settings['plugins']['video_embed_wysiwyg_video_embed']['defaults']['children']['autoplay'] = FALSE;
+    $settings['plugins']['video_embed_wysiwyg_video_embed']['defaults']['children']['responsive'] = FALSE;
+    $settings['plugins']['video_embed_wysiwyg_video_embed']['defaults']['children']['width'] = '123';
+    $settings['plugins']['video_embed_wysiwyg_video_embed']['defaults']['children']['height'] = '456';
+    $settings['plugins']['video_embed_wysiwyg_video_embed']['defaults']['children']['title_format'] = '@title';
+    $settings['plugins']['video_embed_wysiwyg_video_embed']['defaults']['children']['title_fallback'] = TRUE;
 
-    // Assert all the form fields that appear on the modal, appear as
-    // configurable defaults.
-    $this->assertSession()->pageTextContains('Autoplay');
-    $this->assertSession()->pageTextContains('Responsive Video');
-    $this->assertSession()->pageTextContains('Width');
-    $this->assertSession()->pageTextContains('Height');
-
-    $this->submitForm([
-      'filters[video_embed_wysiwyg][status]' => TRUE,
-      'editor[settings][toolbar][button_groups]' => '[[{"name":"Group","items":["video_embed"]}]]',
-      'editor[settings][plugins][video_embed][defaults][children][width]' => '123',
-      'editor[settings][plugins][video_embed][defaults][children][height]' => '456',
-      'editor[settings][plugins][video_embed][defaults][children][responsive]' => FALSE,
-      'editor[settings][plugins][video_embed][defaults][children][autoplay]' => FALSE,
-    ], t('Save configuration'));
+    $editor->setSettings($settings)->save();
+    $format = FilterFormat::load($this->formatName);
+    $format->setFilterConfig('video_embed_wysiwyg', ['status' => 1]);
+    $format->save();
 
     // Ensure the configured defaults show up on the modal window.
-    $this->drupalGet('video-embed-wysiwyg/dialog/plain_text');
+    $this->drupalGet('/video-embed-wysiwyg/dialog/' . $this->formatName);
     $this->assertSession()->fieldValueEquals('width', '123');
     $this->assertSession()->fieldValueEquals('height', '456');
+    $this->assertSession()->fieldValueEquals('title_format', '@title');
+    $this->assertSession()->fieldValueEquals('title_fallback', TRUE);
     $this->assertSession()->fieldValueEquals('autoplay', FALSE);
     $this->assertSession()->fieldValueEquals('responsive', FALSE);
   }

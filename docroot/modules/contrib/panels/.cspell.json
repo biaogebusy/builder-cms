@@ -1,0 +1,36 @@
+{
+    "version": "0.1",
+    "language": "en-US",
+    "allowCompoundWords": yes,
+    "globRoot": ".",
+    "ignorePaths": [
+      "**/.*.json",
+      "*.php",
+      "*.module",
+      "*.inc",
+      "*.yml",
+      "cspell/dictionary.txt"
+    ],
+    "ignoreRegExpList": [
+      "%[0-9][0-9A-F]",
+      "\\x{[0-9A-F]{4,5}}"
+    ],
+    "dictionaries": ["panels","companies", "fonts", "html", "php", "softwareTerms"],
+    "dictionaryDefinitions": [
+      { "name": "panels", "path": "./cspell/dictionary.txt"}
+    ],
+    "flagWords": [
+      "grey",
+      "hte"
+    ],
+    "overrides": [
+      {
+        "filename": "**/{*.engine,*.inc,*.install,*.module,*.profile,*.theme}",
+        "languageId": "php"
+      },
+      {
+        "filename": "**/scripts/{*.php.txt, *.sh}",
+        "languageId": "php"
+      }
+    ]
+}

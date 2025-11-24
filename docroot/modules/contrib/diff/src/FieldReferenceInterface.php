@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
@@ -26,6 +28,6 @@ interface FieldReferenceInterface extends PluginFormInterface, ConfigurableInter
    *   means that a field is either empty or no properties need to be compared
    *   for that field.
    */
-  public function getEntitiesToDiff(FieldItemListInterface $field_items);
+  public function getEntitiesToDiff(FieldItemListInterface $field_items): array;
 
 }

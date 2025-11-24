@@ -1,36 +1,50 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Service;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 use DrupalCodeGenerator\Utils;
+use DrupalCodeGenerator\Validator\RequiredServiceName;
 
-/**
- * Implements service:custom command.
- */
-final class Custom extends ModuleGenerator {
-
-  protected string $name = 'service:custom';
-  protected string $description = 'Generates a custom Drupal service';
-  protected string $alias = 'custom-service';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/service/custom';
-  protected string $label = 'Custom service';
+#[Generator(
+  name: 'service:custom',
+  description: 'Generates a custom Drupal service',
+  aliases: ['custom-service'],
+  templatePath: Application::TEMPLATE_PATH . '/Service/_custom',
+  type: GeneratorType::MODULE_COMPONENT,
+  label: 'Custom service',
+)]
+final class Custom extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['service_name'] = $this->ask('Service name', '{machine_name}.example', '::validateRequiredServiceName');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
 
-    $service = \preg_replace('/^' . $vars['machine_name'] . '/', '', $vars['service_name']);
-    $vars['class'] = $this->ask('Class', Utils::camelize($service), '::validateRequiredClassName');
+    $vars['service_name'] = $ir->ask('Service name', '{machine_name}.example', new RequiredServiceName());
 
-    $this->collectServices($vars);
+    $default_class = Utils::camelize(
+      Utils::removePrefix($vars['service_name'], $vars['machine_name']) ?: $vars['machine_name'],
+    );
+    $vars['class'] = $ir->askClass(default: $default_class);
+    $vars['interface'] = $ir->confirm('Would like to create an interface for this class?', FALSE) ?
+      '{class}Interface' : NULL;
 
-    $this->addFile('src/{class}.php', 'custom');
-    $this->addServicesFile()->template('services');
+    $vars['services'] = $ir->askServices();
+
+    $assets->addServicesFile()->template('services.twig');
+    $assets->addFile('src/{class}.php', 'custom.twig');
+    if ($vars['interface']) {
+      $assets->addFile('src/{interface}.php', 'interface.twig');
+    }
   }
 
 }

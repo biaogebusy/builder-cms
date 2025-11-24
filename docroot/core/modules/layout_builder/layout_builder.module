@@ -9,6 +9,7 @@ use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\TimestampFormatter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
@@ -17,6 +18,7 @@ use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplayStorage;
+use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 use Drupal\layout_builder\Form\DefaultsEntityForm;
 use Drupal\layout_builder\Form\LayoutBuilderEntityViewDisplayForm;
 use Drupal\layout_builder\Form\OverridesEntityForm;
@@ -46,10 +48,10 @@ function layout_builder_help($route_name, RouteMatchInterface $route_match) {
 
   switch ($route_name) {
     case 'help.page.layout_builder':
-      $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Layout Builder allows you to use layouts to customize how content, custom blocks, and other <a href=":field_help" title="Field module help, with background on content entities">content entities</a> are displayed.', [':field_help' => Url::fromRoute('help.page', ['name' => 'field'])->toString()]) . '</p>';
+      $output = '<h2>' . t('About') . '</h2>';
+      $output .= '<p>' . t('Layout Builder allows you to use layouts to customize how content, content blocks, and other <a href=":field_help" title="Field module help, with background on content entities">content entities</a> are displayed.', [':field_help' => Url::fromRoute('help.page', ['name' => 'field'])->toString()]) . '</p>';
       $output .= '<p>' . t('For more information, see the <a href=":layout-builder-documentation">online documentation for the Layout Builder module</a>.', [':layout-builder-documentation' => 'https://www.drupal.org/docs/8/core/modules/layout-builder']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Default layouts') . '</dt>';
       $output .= '<dd>' . t('Layout Builder can be selectively enabled on the "Manage Display" page in the <a href=":field_ui">Field UI</a>. This allows you to control the output of each type of display individually. For example, a "Basic page" might have view modes such as Full and Teaser, with each view mode having different layouts selected.', [':field_ui' => Url::fromRoute('help.page', ['name' => 'field_ui'])->toString()]) . '</dd>';
@@ -158,7 +160,7 @@ function layout_builder_entity_view_alter(array &$build, EntityInterface $entity
   // If the entity is displayed within a Layout Builder block and the current
   // route is in the Layout Builder UI, then remove all contextual link
   // placeholders.
-  if ($route_name && $display instanceof LayoutBuilderEntityViewDisplay && strpos($route_name, 'layout_builder.') === 0) {
+  if ($route_name && $display instanceof LayoutBuilderEntityViewDisplay && str_starts_with($route_name, 'layout_builder.')) {
     unset($build['#contextual_links']);
   }
 }
@@ -226,6 +228,13 @@ function layout_builder_cron() {
  * Implements hook_plugin_filter_TYPE__CONSUMER_alter().
  */
 function layout_builder_plugin_filter_block__layout_builder_alter(array &$definitions, array $extra) {
+  // Remove blocks that are not useful within Layout Builder.
+  unset($definitions['system_messages_block']);
+  unset($definitions['help_block']);
+  unset($definitions['local_tasks_block']);
+  unset($definitions['local_actions_block']);
+
+  // Remove blocks that are non-functional within Layout Builder.
   unset($definitions['system_main_block']);
   // @todo Restore the page title block in https://www.drupal.org/node/2938129.
   unset($definitions['page_title_block']);
@@ -404,4 +413,45 @@ function layout_builder_theme_suggestions_field_alter(&$suggestions, array $vari
     $suggestions[] = 'field__' . $element['#entity_type'] . '__' . $element['#field_name'] . '__' . $element['#bundle'] . '__' . $element['#third_party_settings']['layout_builder']['view_mode'];
   }
   return $suggestions;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for entity_view_display entities.
+ *
+ * Provides a BC layer for modules providing old configurations.
+ *
+ * @see https://www.drupal.org/node/2993639
+ *
+ * @todo Remove this BC layer in drupal:11.0.0.
+ */
+function layout_builder_entity_view_display_presave(EntityViewDisplayInterface $entity_view_display): void {
+  if (!$entity_view_display instanceof LayoutEntityDisplayInterface || !$entity_view_display->isLayoutBuilderEnabled()) {
+    return;
+  }
+
+  /** @var \Drupal\Core\Field\FormatterPluginManager $field_formatter_manager */
+  $field_formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+
+  foreach ($entity_view_display->getSections() as $section) {
+    foreach ($section->getComponents() as $component) {
+      if (str_starts_with($component->getPluginId(), 'field_block:')) {
+        $configuration = $component->get('configuration');
+        $formatter =& $configuration['formatter'];
+        if ($formatter && isset($formatter['type'])) {
+          $plugin_definition = $field_formatter_manager->getDefinition($formatter['type'], FALSE);
+          // Check also potential plugins extending TimestampFormatter.
+          if (!$plugin_definition || !is_a($plugin_definition['class'], TimestampFormatter::class, TRUE)) {
+            continue;
+          }
+          if (!isset($formatter['settings']['tooltip']) || !isset($formatter['settings']['time_diff'])) {
+            @trigger_error("Using the 'timestamp' formatter plugin  without the 'tooltip' and 'time_diff' settings is deprecated in drupal:10.1.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/2993639", E_USER_DEPRECATED);
+            $formatter['settings'] += $plugin_definition['class']::defaultSettings();
+            // Existing timestamp formatters don't have tooltip.
+            $formatter['settings']['tooltip']['date_format'] = '';
+            $component->set('configuration', $configuration);
+          }
+        }
+      }
+    }
+  }
 }

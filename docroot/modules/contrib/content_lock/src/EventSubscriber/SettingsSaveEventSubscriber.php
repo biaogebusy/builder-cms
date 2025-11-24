@@ -5,6 +5,8 @@ namespace Drupal\content_lock\EventSubscriber;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\views\Views;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -14,14 +16,19 @@ class SettingsSaveEventSubscriber implements EventSubscriberInterface {
 
   protected $entityTypeManager;
 
+  protected ModuleHandlerInterface $moduleHandler;
+
   /**
    * SettingsSaveEventSubscriber constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -32,7 +39,7 @@ class SettingsSaveEventSubscriber implements EventSubscriberInterface {
    */
   public function onSave(ConfigCrudEvent $event) {
 
-    if ($event->getConfig()->getName() == 'content_lock.settings') {
+    if ($event->getConfig()->getName() == 'content_lock.settings' && $event->isChanged('types')) {
 
       foreach (array_filter($event->getConfig()->get('types')) as $type => $value) {
         // Skip if the entity type does not exist.
@@ -53,6 +60,9 @@ class SettingsSaveEventSubscriber implements EventSubscriberInterface {
           ]);
           $action->save();
         }
+      }
+      if ($this->moduleHandler->moduleExists('views')) {
+        Views::viewsData()->clear();
       }
     }
   }

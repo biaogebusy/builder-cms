@@ -3,7 +3,7 @@
  * ALIPAY API: anttech.blockchain.defin.assetmanage.penetrate.submit request
  *
  * @author auto create
- * @since 1.0, 2023-11-20 11:27:41
+ * @since 1.0, 2025-07-29 18:05:45
  */
 class AnttechBlockchainDefinAssetmanagePenetrateSubmitRequest
 {

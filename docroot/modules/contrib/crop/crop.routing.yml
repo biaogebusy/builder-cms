@@ -29,3 +29,11 @@ entity.crop_type.delete_form:
     _title: 'Delete'
   requirements:
     _entity_access: 'crop_type.delete'
+
+entity.crop_type.flush_form:
+  path: '/admin/config/media/crop/manage/{crop_type}/flush'
+  defaults:
+    _entity_form: 'crop_type.flush'
+    _title: 'Flush'
+  requirements:
+    _permission: 'administer crop types'

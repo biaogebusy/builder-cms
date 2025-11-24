@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Tests;
 
 use Behat\Mink\Element\NodeElement;
@@ -29,7 +31,7 @@ class JSWebAssertTest extends WebDriverTestBase {
   /**
    * Tests that JSWebAssert assertions work correctly.
    */
-  public function testJsWebAssert() {
+  public function testJsWebAssert(): void {
     $this->drupalGet('js_webassert_test_form');
 
     $session = $this->getSession();

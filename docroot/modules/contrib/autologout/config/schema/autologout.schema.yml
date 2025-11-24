@@ -28,6 +28,9 @@ autologout.settings:
     redirect_url:
       type: string
       label: 'Redirect url'
+    include_destination:
+      type: boolean
+      label: 'Include destination'
     no_dialog:
       type: boolean
       label: 'Integer label'

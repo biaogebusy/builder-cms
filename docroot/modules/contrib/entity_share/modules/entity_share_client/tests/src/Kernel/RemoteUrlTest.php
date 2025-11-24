@@ -33,8 +33,9 @@ class RemoteUrlTest extends EntityKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'serialization',
+    'file',
     'jsonapi',
+    'serialization',
     'entity_share_client',
   ];
 
@@ -59,6 +60,7 @@ class RemoteUrlTest extends EntityKernelTestBase {
       'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
       'url' => 'http://example.com',
+      'login_path' => 'user/login',
     ]);
     $credentials = [];
     $credentials['username'] = 'test';
@@ -74,10 +76,13 @@ class RemoteUrlTest extends EntityKernelTestBase {
     $remote->save();
 
     $this->assertEquals('http://example.com', $remote->get('url'));
+    $this->assertEquals('user/login', $remote->get('login_path'));
 
     $remote->set('url', 'http://example.com/');
+    $remote->set('login_path', '/user/login');
     $remote->save();
     $this->assertEquals('http://example.com', $remote->get('url'));
+    $this->assertEquals('user/login', $remote->get('login_path'));
 
     $remote->set('url', 'http://example.com/subdirectory');
     $remote->save();

@@ -1,0 +1,43 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GX",
+		"Liuzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chengzhong Qu": {
+			"local_name": "城中区"
+		},
+		"Liubei Qu": {
+			"local_name": "柳北区"
+		},
+		"Liucheng Xian": {
+			"local_name": "柳城县"
+		},
+		"Liujiang Xian": {
+			"local_name": "柳江县"
+		},
+		"Liunan Qu": {
+			"local_name": "柳南区"
+		},
+		"Luzhai Xian": {
+			"local_name": "鹿寨县"
+		},
+		"Rong'an Xian": {
+			"local_name": "融安县"
+		},
+		"Rongshui Xian": {
+			"local_code": "融水苗族自治县",
+			"local_name": "融水县"
+		},
+		"Sanjiang Xian": {
+			"local_code": "三江侗族自治县",
+			"local_name": "三江县"
+		},
+		"Yufeng Qu": {
+			"local_name": "鱼峰区"
+		}
+	}
+}

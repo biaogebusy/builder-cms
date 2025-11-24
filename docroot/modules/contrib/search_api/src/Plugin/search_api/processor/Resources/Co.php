@@ -12,9 +12,11 @@ class Co implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{E000}\x{F8FF}\x{F0000}\x{FFFFD}\x{100000}\x{10FFFD}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

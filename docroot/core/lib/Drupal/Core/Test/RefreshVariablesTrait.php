@@ -30,9 +30,14 @@ trait RefreshVariablesTrait {
         $backend->reset();
       }
     }
+    foreach (Cache::getMemoryBins() as $backend) {
+      if (is_callable([$backend, 'reset'])) {
+        $backend->reset();
+      }
+    }
 
     \Drupal::service('config.factory')->reset();
-    \Drupal::service('state')->resetCache();
+    \Drupal::service('state')->reset();
   }
 
 }

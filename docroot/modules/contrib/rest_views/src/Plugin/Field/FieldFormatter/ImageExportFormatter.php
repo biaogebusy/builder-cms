@@ -36,8 +36,8 @@ class ImageExportFormatter extends ImageFormatter {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state): array {
-    $form = parent::settingsForm($form, $form_state);
+  public function settingsForm(array $form, FormStateInterface $formState): array {
+    $form = parent::settingsForm($form, $formState);
     unset($form['image_link']);
 
     $alt = $this->getFieldSetting('alt_field');
@@ -116,7 +116,7 @@ class ImageExportFormatter extends ImageFormatter {
         $uri = $style->buildUrl($uri);
       }
       else {
-        $uri = file_create_url($uri);
+        $uri = $this->fileUrlGenerator->generateAbsoluteString($uri);
       }
 
       if ($alt || $title) {
@@ -133,7 +133,10 @@ class ImageExportFormatter extends ImageFormatter {
         ];
       }
       else {
-        $elements[$delta] = ['#markup' => $uri];
+        $elements[$delta] = [
+          '#type' => 'data',
+          '#data' => SerializedData::create($uri),
+        ];
       }
     }
 

@@ -29,6 +29,9 @@ address:
     address_line2:
       type: string
       label: 'Second line of the address block'
+    address_line3:
+      type: string
+      label: 'Third line of the address block'
     organization:
       type: string
       label: 'Organization'
@@ -53,7 +56,7 @@ address_zone:
       type: sequence
       label: 'Territories'
       sequence:
-        - type: address_zone_territory
+        type: address_zone_territory
 
 address_zone_territory:
   type: mapping
@@ -101,7 +104,7 @@ field.field_settings.address:
       type: sequence
       label: 'Available countries'
       sequence:
-        - type: string
+        type: string
     langcode_override:
       type: string
       label: 'Language override'
@@ -119,7 +122,7 @@ field.field_settings.address:
       type: sequence
       label: 'Used fields'
       sequence:
-        - type: string
+        type: string
 
 field.field_settings.address_country:
   type: mapping
@@ -129,7 +132,7 @@ field.field_settings.address_country:
       type: sequence
       label: 'Available countries'
       sequence:
-        - type: string
+        type: string
 
 field.field_settings.address_zone:
   type: mapping
@@ -139,11 +142,15 @@ field.field_settings.address_zone:
       type: sequence
       label: 'Available countries'
       sequence:
-        - type: string
+        type: string
 
 field.widget.settings.address_default:
   type: mapping
   label: 'Default address widget settings'
+  mapping:
+    wrapper_type:
+      type: string
+      label: Wrapper type
 
 field.widget.settings.address_zone_default:
   type: mapping

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Block;
 
 use Drupal\block_test\PluginForm\EmptyBlockForm;
@@ -20,7 +22,7 @@ class MultipleBlockFormTest extends KernelTestBase {
   /**
    * Tests that blocks can have multiple forms.
    */
-  public function testMultipleForms() {
+  public function testMultipleForms(): void {
     $configuration = ['label' => 'A very cool block'];
     $block = \Drupal::service('plugin.manager.block')->createInstance('test_multiple_forms_block', $configuration);
 

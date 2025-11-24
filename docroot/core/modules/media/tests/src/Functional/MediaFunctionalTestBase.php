@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -14,9 +16,7 @@ abstract class MediaFunctionalTestBase extends BrowserTestBase {
   use MediaTypeCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',

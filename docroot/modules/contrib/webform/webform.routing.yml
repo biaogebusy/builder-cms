@@ -64,6 +64,14 @@ webform.config.advanced:
   requirements:
     _permission: 'administer webform'
 
+webform.config.repair:
+  path: '/admin/structure/webform/config/repair'
+  defaults:
+    _form: '\Drupal\webform\Form\AdminConfig\WebformAdminConfigRepairForm'
+    _title: 'Webforms: Repair webform configuration'
+  requirements:
+    _permission: 'administer webform'
+
 # Add-ons
 
 webform.addons:
@@ -134,14 +142,14 @@ entity.webform.access_denied:
     _access: 'TRUE'
 
 entity.webform.assets.javascript:
-  path: '/webform/javascript/{webform}'
+  path: '/webform/javascript/{webform}/custom.js'
   defaults:
     _controller: '\Drupal\webform\Controller\WebformEntityController::javascript'
   requirements:
     _entity_access: 'webform.view'
 
 entity.webform.assets.css:
-  path: '/webform/css/{webform}'
+  path: '/webform/css/{webform}/custom.css'
   defaults:
     _controller: '\Drupal\webform\Controller\WebformEntityController::css'
   requirements:

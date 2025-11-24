@@ -34,8 +34,7 @@ services:
     class: Drupal\menu_item_extras\Utility\Utility
   cache_context.menu_item_extras_link_item_content_active_trails:
     class: Drupal\menu_item_extras\Cache\LinkItemContentActiveTrailsCacheContext
-    calls:
-      - [setContainer, ['@service_container']]
+    arguments: ['@menu.active_trail']
     tags:
       - { name: cache.context }
   menu_item_extras.config_subscriber:

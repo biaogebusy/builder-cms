@@ -1,29 +1,26 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Asset;
 
-/**
- * Simple data structure to represent a file being generated.
- */
-final class File extends Asset {
+use DrupalCodeGenerator\Asset\Resolver\AppendResolver;
+use DrupalCodeGenerator\Asset\Resolver\PrependResolver;
+use DrupalCodeGenerator\Asset\Resolver\ResolverDefinition;
+use DrupalCodeGenerator\Helper\Renderer\RendererInterface;
 
-  public const ACTION_REPLACE = 0x01;
-  public const ACTION_PREPEND = 0x02;
-  public const ACTION_APPEND = 0x03;
-  public const ACTION_SKIP = 0x04;
+/**
+ * A data structure to represent a file being generated.
+ */
+final class File extends Asset implements RenderableInterface {
 
   /**
    * Asset content.
    */
-  private ?string $content = NULL;
+  private string $content = '';
 
   /**
-   * Twig template to render header.
-   */
-  private ?string $headerTemplate = NULL;
-
-  /**
-   * Twig template to render main content.
+   * Template to render main content.
    */
   private ?string $template = NULL;
 
@@ -31,25 +28,6 @@ final class File extends Asset {
    * The template string to render.
    */
   private ?string $inlineTemplate = NULL;
-
-  /**
-   * Action.
-   *
-   * An action to take if specified file already exists.
-   */
-  private int $action = self::ACTION_REPLACE;
-
-  /**
-   * Header size.
-   */
-  private int $headerSize = 0;
-
-  /**
-   * Content resolver.
-   *
-   * @var callable|null
-   */
-  private $resolver = NULL;
 
   /**
    * {@inheritdoc}
@@ -60,158 +38,94 @@ final class File extends Asset {
   }
 
   /**
+   * Named constructor.
+   */
+  public static function create(string $path): self {
+    return new self($path);
+  }
+
+  /**
    * Returns the asset content.
    */
-  public function getContent(): ?string {
+  public function getContent(): string {
     return $this->content;
-  }
-
-  /**
-   * Returns the header template.
-   */
-  public function getHeaderTemplate(): ?string {
-    return $this->headerTemplate ? $this->replaceTokens($this->headerTemplate) : $this->headerTemplate;
-  }
-
-  /**
-   * Returns the asset template.
-   */
-  public function getTemplate(): ?string {
-    return $this->template ? $this->replaceTokens($this->template) : $this->template;
-  }
-
-  /**
-   * Returns the asset inline template.
-   */
-  public function getInlineTemplate(): ?string {
-    return $this->inlineTemplate;
-  }
-
-  /**
-   * Returns the asset action.
-   */
-  public function getAction(): int {
-    return $this->action;
-  }
-
-  /**
-   * Returns the asset header size (number of lines).
-   */
-  public function getHeaderSize(): int {
-    return $this->headerSize;
-  }
-
-  /**
-   * Returns the asset resolver.
-   */
-  public function getResolver(): ?callable {
-    return $this->resolver;
   }
 
   /**
    * Sets the asset content.
    */
-  public function content(?string $content): self {
+  public function content(string $content): self {
     $this->content = $content;
     return $this;
   }
 
   /**
-   * Sets the asset header template.
+   * Sets the asset template.
+   *
+   * Templates with 'twig' extension are processed with Twig template engine.
    */
-  public function headerTemplate(?string $header_template): self {
-    $this->headerTemplate = self::addTwigFileExtension($header_template);
-    return $this;
-  }
-
-  /**
-   * Returns the asset template.
-   */
-  public function template(?string $template): self {
-    if ($template !== NULL) {
-      $this->template = self::addTwigFileExtension($template);
+  public function template(string $template): self {
+    if ($this->inlineTemplate) {
+      throw new \LogicException('A file cannot have both inline and regular templates.');
     }
+    $this->template = $template;
     return $this;
   }
 
   /**
    * Returns the asset inline template.
    */
-  public function inlineTemplate(?string $inline_template): self {
+  public function inlineTemplate(string $inline_template): self {
+    if ($this->template) {
+      throw new \LogicException('A file cannot have both inline and regular templates.');
+    }
     $this->inlineTemplate = $inline_template;
     return $this;
   }
 
   /**
-   * Sets the "replace" action.
-   */
-  public function replaceIfExists(): self {
-    $this->action = self::ACTION_REPLACE;
-    return $this;
-  }
-
-  /**
-   * Sets the "prepend" action.
+   * Sets the "prepend" resolver.
    */
   public function prependIfExists(): self {
-    $this->action = self::ACTION_PREPEND;
+    $this->resolverDefinition = new ResolverDefinition(PrependResolver::class);
     return $this;
   }
 
   /**
-   * Sets the "append" action.
-   */
-  public function appendIfExists(): self {
-    $this->action = self::ACTION_APPEND;
-    return $this;
-  }
-
-  /**
-   * Sets the "skip" action.
-   */
-  public function skipIfExists(): self {
-    $this->action = self::ACTION_SKIP;
-    return $this;
-  }
-
-  /**
-   * Set the asset header size.
-   */
-  public function headerSize(int $header_size): self {
-    if ($header_size <= 0) {
-      throw new \InvalidArgumentException('Header size must be greater than or equal to 0.');
-    }
-    $this->headerSize = $header_size;
-    return $this;
-  }
-
-  /**
-   * Setter for asset resolver.
+   * Sets the "append" resolver.
    *
-   * @param callable|null $resolver
-   *   A callable responsible for resolving content.
-   *   @code
-   *     $resolver = static function (?string $existing_content, ?string $generated_content): ?string {
-   *       if ($existing_content !== NULL) {
-   *         return $generated_content . "\n" . $existing_content;
-   *       }
-   *       return $generated_content;
-   *     }
-   *   @endcode
+   * @psalm-param int<0, max> $header_size
    */
-  public function resolver(?callable $resolver): self {
-    $this->resolver = $resolver;
+  public function appendIfExists(int $header_size = 0): self {
+    $this->resolverDefinition = new ResolverDefinition(AppendResolver::class, $header_size);
     return $this;
   }
 
   /**
-   * Adds the Twig file extension if needed.
+   * {@inheritdoc}
    */
-  private static function addTwigFileExtension(string $template): string {
-    if ($template && \pathinfo($template, \PATHINFO_EXTENSION) != 'twig') {
-      $template .= '.twig';
+  public function render(RendererInterface $renderer): void {
+    if ($this->inlineTemplate) {
+      $content = $renderer->renderInline($this->inlineTemplate, $this->getVars());
+      $this->content($content);
     }
-    return $template;
+    elseif ($this->template) {
+      $template = $this->replaceTokens($this->template);
+      $content = $renderer->render($template, $this->getVars());
+      $this->content($content);
+    }
+    // It's OK that the file has no templates as consumers may set rendered
+    // content directly through `content()` method.
+  }
+
+  /**
+   * Checks if the asset is a PHP script.
+   */
+  public function isPhp(): bool {
+    return \in_array(
+      \pathinfo($this->getPath(), \PATHINFO_EXTENSION),
+      ['php', 'module', 'install', 'inc', 'theme'],
+    );
   }
 
 }

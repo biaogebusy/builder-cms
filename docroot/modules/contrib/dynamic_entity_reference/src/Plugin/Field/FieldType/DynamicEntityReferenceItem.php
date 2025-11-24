@@ -2,6 +2,7 @@
 
 namespace Drupal\dynamic_entity_reference\Plugin\Field\FieldType;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -11,6 +12,7 @@ use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\SubformState;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataReferenceTargetDefinition;
@@ -31,7 +33,7 @@ use Drupal\dynamic_entity_reference\DataDynamicReferenceDefinition;
  *   id = "dynamic_entity_reference",
  *   label = @Translation("Dynamic entity reference"),
  *   description = @Translation("An entity field containing a dynamic entity reference."),
- *   category = @Translation("Dynamic Reference"),
+ *   category = "reference",
  *   no_ui = FALSE,
  *   list_class = "\Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceFieldItemList",
  *   default_widget = "dynamic_entity_reference_default",
@@ -74,7 +76,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties['target_id'] = DataReferenceTargetDefinition::create('integer')
-      ->setLabel(t('Entity ID'))
+      ->setLabel(new TranslatableMarkup('Entity ID'))
       ->setSetting('unsigned', TRUE)
       ->setRequired(TRUE);
 
@@ -109,14 +111,12 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
       ],
     ];
 
-    $schema = [
+    return [
       'columns' => $columns,
       'indexes' => [
         'target_id' => ['target_id', 'target_type'],
       ],
     ];
-
-    return $schema;
   }
 
   /**
@@ -150,7 +150,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
    *
    * @see \Drupal\dynamic_entity_reference\Plugin\Field\FieldWidget\DynamicEntityReferenceOptionsTrait::massageFormValues()
    */
-  public function getSettableOptions(AccountInterface $account = NULL) {
+  public function getSettableOptions(?AccountInterface $account = NULL) {
     $field_definition = $this->getFieldDefinition();
     $entity_type_manager = \Drupal::entityTypeManager();
     $entity_type_bundles_info = \Drupal::service('entity_type.bundle.info');
@@ -199,7 +199,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
   public function storageSettingsForm(array &$form, FormStateInterface $form_state, $has_data) {
     // @todo inject this.
     $labels = \Drupal::service('entity_type.repository')->getEntityTypeLabels(TRUE);
-    $options = $labels[(string) t('Content', [], ['context' => 'Entity type group'])];
+    $options = $labels[(string) $this->t('Content', [], ['context' => 'Entity type group'])];
     foreach (array_keys($options) as $entity_type_id) {
       if (!static::entityHasIntegerId($entity_type_id)) {
         unset($options[$entity_type_id]);
@@ -207,14 +207,14 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
     }
     $element['exclude_entity_types'] = [
       '#type' => 'checkbox',
-      '#title' => t('Exclude the selected items'),
+      '#title' => $this->t('Exclude the selected items'),
       '#default_value' => $this->getSetting('exclude_entity_types'),
       '#disabled' => $has_data,
     ];
 
     $element['entity_type_ids'] = [
       '#type' => 'select',
-      '#title' => t('Select items'),
+      '#title' => $this->t('Select items'),
       '#options' => $options,
       '#default_value' => $this->getSetting('entity_type_ids'),
       '#disabled' => $has_data,
@@ -242,11 +242,21 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
     $options = array_filter(array_keys($labels[(string) t('Content', [], ['context' => 'Entity type group'])]), function ($entity_type_id) {
       return static::entityHasIntegerId($entity_type_id);
     });
-    $exclude_entity_types = $form_state->getValue([
+    // 10.2 combined the field storage form into the field config form. To get
+    // the field values we want, we need to either use the passed form state
+    // for 10.1 and below, or create a subform state for 10.2 and above.
+    // @see \Drupal\field_ui\Form\FieldConfigEditForm::validateForm
+    $subform_state = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      10.2,
+      fn() => SubformState::createForSubform($form['field_storage']['subform'], $form, $form_state),
+      fn() => $form_state
+    );
+    $exclude_entity_types = $subform_state->getValue([
       'settings',
       'exclude_entity_types',
     ], 0);
-    $entity_type_ids = $form_state->getValue([
+    $entity_type_ids = $subform_state->getValue([
       'settings',
       'entity_type_ids',
     ], []);
@@ -266,7 +276,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
     foreach (static::getTargetTypes($settings) as $target_type) {
       $entity_type = \Drupal::entityTypeManager()->getDefinition($target_type);
       $settings_form[$target_type] = $this->targetTypeFieldSettingsForm($form, $form_state, $target_type);
-      $settings_form[$target_type]['handler']['#title'] = t('Reference type for @target_type', ['@target_type' => $entity_type->getLabel()]);
+      $settings_form[$target_type]['handler']['#title'] = $this->t('Reference type for @target_type', ['@target_type' => $entity_type->getLabel()]);
     }
     return $settings_form;
   }
@@ -322,7 +332,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
     ];
     $form['handler'] = [
       '#type' => 'details',
-      '#title' => t('Reference type'),
+      '#title' => $this->t('Reference type'),
       '#open' => TRUE,
       '#tree' => TRUE,
       '#process' => [[EntityReferenceItem::class, 'formProcessMergeParent']],
@@ -330,7 +340,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
 
     $form['handler']['handler'] = [
       '#type' => 'select',
-      '#title' => t('Reference method'),
+      '#title' => $this->t('Reference method'),
       '#options' => $handlers_options,
       '#default_value' => $field_settings[$target_type]['handler'],
       '#required' => TRUE,
@@ -339,7 +349,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
     ];
     $form['handler']['handler_submit'] = [
       '#type' => 'submit',
-      '#value' => t('Change handler'),
+      '#value' => $this->t('Change handler'),
       '#limit_validation_errors' => [],
       '#attributes' => [
         'class' => ['js-hide'],
@@ -524,6 +534,7 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
         return $values;
       }
     }
+    return [];
   }
 
   /**
@@ -706,29 +717,45 @@ class DynamicEntityReferenceItem extends EntityReferenceItem {
    * {@inheritdoc}
    */
   public static function getPreconfiguredOptions() {
-    $options = [];
+    // Override the default parent implementation, do not provide any
+    // preconfigured options, dynamic references commonly have multiple
+    // target types.
+    return [];
+  }
 
-    // Add all the commonly referenced entity types as distinct pre-configured
-    // options.
-    $entity_types = \Drupal::entityTypeManager()->getDefinitions();
-    $common_references = array_filter($entity_types, function (EntityTypeInterface $entity_type) {
-      return $entity_type->isCommonReferenceTarget();
-    });
+  /**
+   * {@inheritdoc}
+   */
+  public static function storageSettingsSummary(FieldStorageDefinitionInterface $storage_definition): array {
+    $summary = [];
+    $types = [];
+    $entity_manager = \Drupal::entityTypeManager();
+    foreach (static::getTargetTypes($storage_definition->getSettings()) as $entity_type_id) {
+      if ($entity_manager->hasDefinition($entity_type_id) && $target_entity_type = $entity_manager->getDefinition($entity_type_id)) {
+        $types[] = $target_entity_type->getLabel();
+      }
+    }
+    $summary[] = new TranslatableMarkup('Reference types: @entity_types', [
+      '@entity_types' => implode(', ', $types),
+    ]);
+    return $summary;
+  }
 
-    /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
-    foreach ($common_references as $entity_type) {
-      $options[$entity_type->id()] = [
-        'label' => $entity_type->getLabel(),
-        'field_storage_config' => [
-          'settings' => [
-            'exclude_entity_types' => FALSE,
-            'entity_type_ids' => [$entity_type->id()],
-          ],
-        ],
-      ];
+  /**
+   * {@inheritdoc}
+   */
+  public static function getReferenceableBundles(FieldDefinitionInterface $field_definition):array {
+    $settings = $field_definition->getSettings();
+    $referenceable_bundles = [];
+    foreach (static::getTargetTypes($settings) as $target_type_id) {
+      $handler_settings = $settings[$target_type_id]['handler_settings'] ?? [];
+      $has_target_bundles = isset($handler_settings['target_bundles']) && !empty($handler_settings['target_bundles']);
+      $target_bundles = $has_target_bundles ? $handler_settings['target_bundles']
+        : array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo($target_type_id));
+      $referenceable_bundles[$target_type_id] = $target_bundles;
     }
 
-    return $options;
+    return $referenceable_bundles;
   }
 
 }

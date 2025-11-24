@@ -22,6 +22,8 @@ class EntityWidgetService {
    */
   public $serializer;
 
+  public $logger;
+
   /**
    * Constructs.
    *
@@ -29,6 +31,7 @@ class EntityWidgetService {
    */
   public function __construct(SerializerInterface $serializer) {
     $this->serializer = $serializer;
+    $this->logger = \Drupal::logger('entity_theme_engine');
   }
 
   /**
@@ -38,9 +41,6 @@ class EntityWidgetService {
    * @param string $display
    */
   public function entityViewAlter(array &$build, EntityInterface $entity, string $display = 'default') {
-    if($display == 'full'){
-      $display = 'default';
-    }
     if($widget = $this->getWidget($entity, $display)) {
       $build = $this->renderEntity($build, $widget, $entity, $display);
     }
@@ -69,6 +69,7 @@ class EntityWidgetService {
     $render = [
       '#prefix' => "<div class=\"entity-widget-{$widget->id()} entity-widget-entity-type-{$entity->getEntityTypeId()}\">",
       '#suffix' => "</div>",
+      "#entity_type" => $entity->getEntityTypeId(),
       "#{$entity->getEntityTypeId()}" => $entity,
       '#view_mode' => $display,
       '#attached' => isset($build['#attached'])?$build['#attached']:[],
@@ -90,15 +91,16 @@ class EntityWidgetService {
    * Get widget.
    * @param EntityInterface $entity
    * @param string $display
-   * @return EntityWidget|NULL
+   * @param booleam $render
+   * @return array
    */
-  public function getRenderVariables(array $build, EntityWidget $widget, EntityInterface $entity) {
+  public function getRenderVariables(array $build, EntityWidget $widget, EntityInterface $entity, array $context = []) {
     $context = [
       'entity_widget' => $widget,
       'entity' => $entity,
       'attach_mode' => FALSE,
       'level' => 1,
-    ];
+    ] + $context;
     $variables = $this->serializer->normalize($entity, 'twig_variable', $context);
     $variables['base_path'] = base_path();
     foreach ($variables as $key => $value) {
@@ -240,5 +242,37 @@ class EntityWidgetService {
     $cache['tags'] = Cache::mergeTags($a['tags']?:[],$b['tags']?:[]);
     $cache['max-age'] = Cache::mergeMaxAges($a['max-age'],$b['max-age']);
     return $cache;
+  }
+
+  /**
+   * Get entity twig content without render.
+   *
+   * @param EntityInterface $entity
+   * @param string $display
+   * @return string
+   */
+  public function getEntityRawContent(EntityInterface $entity, $display, array $context = []) {
+    $widget = $this->getWidget($entity, $display);
+    if (!$widget) {
+      $this->logger->notice("widget not fount, key: {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display}");
+      return NULL;
+    }
+    $context = [
+      '#no_render' => true
+    ] + $context;
+    $variables = $this->getRenderVariables([], $widget, $entity, $context);
+    /** @var \Drupal\Core\Template\TwigEnvironment $environment */
+    $environment = \Drupal::service('twig');
+    $content = $widget->getTemplate();
+    if (!$content) {
+      $this->logger->notice("content is empty, key: {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display}");
+    }
+    try {
+      $result = $environment->renderInline($content, $variables);
+    } catch(\Exception $e) {
+      $this->logger->error("widget error, key: {$entity->id()}:{$entity->getEntityTypeId()}:{$entity->bundle()}:{$display}");
+      throw $e;
+    }
+    return $result;
   }
 }

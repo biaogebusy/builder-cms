@@ -12,7 +12,7 @@ class ConfigEntityDenormalizer extends JsonApiNormalizerDecoratorBase {
   /**
    * {@inheritdoc}
    */
-  public function denormalize($data, $class, $format = NULL, array $context = []) {
+  public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     return parent::denormalize($this->prepareInput($data, $context['resource_type']), $class, $format, $context);
   }
 

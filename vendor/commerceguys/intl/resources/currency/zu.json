@@ -1,4 +1,8 @@
 {
+	"XCG": {
+		"name": "Caribbean guilder",
+		"symbol": "Cg."
+	},
 	"AFN": {
 		"name": "i-Afghan Afghani"
 	},
@@ -116,9 +120,6 @@
 	},
 	"CRC": {
 		"name": "i-Costa Rican Colón"
-	},
-	"CUC": {
-		"name": "i-Cuban Convertable Peso"
 	},
 	"CUP": {
 		"name": "i-Cuban Peso"
@@ -301,9 +302,6 @@
 	"NPR": {
 		"name": "i-Nepalese Rupee"
 	},
-	"ANG": {
-		"name": "i-Netherlands Antillean Guilder"
-	},
 	"TWD": {
 		"name": "i-New Taiwan Dollar",
 		"symbol": "NT$"
@@ -380,9 +378,6 @@
 	},
 	"SLE": {
 		"name": "i-Sierra Leonean Leone"
-	},
-	"SLL": {
-		"name": "i-Sierra Leonean Leone (1964—2022)"
 	},
 	"SGD": {
 		"name": "i-Singapore Dollar"

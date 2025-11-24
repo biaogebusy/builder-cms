@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\join;
 
+use Drupal\views\Attribute\ViewsJoin;
 use Drupal\views\Plugin\views\join\JoinPluginBase;
 
 /**
@@ -12,9 +13,8 @@ use Drupal\views\Plugin\views\join\JoinPluginBase;
  * Views data tables in Search API views.
  *
  * @ingroup views_join_handlers
- *
- * @ViewsJoin("search_api")
  */
+#[ViewsJoin('search_api')]
 class SearchApiJoin extends JoinPluginBase {
 
   /**

@@ -1,0 +1,49 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"TAO"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Bade District": {
+			"local_name": "八德區"
+		},
+		"Dayuan District": {
+			"local_name": "大園區"
+		},
+		"Daxi District": {
+			"local_name": "大溪區"
+		},
+		"Zhongli District": {
+			"local_name": "中壢區"
+		},
+		"Pingzhen District": {
+			"local_name": "平鎮區"
+		},
+		"Taoyuan District": {
+			"local_name": "桃園區"
+		},
+		"Fuxing District": {
+			"local_name": "復興區"
+		},
+		"Xinwu District": {
+			"local_name": "新屋區"
+		},
+		"Yangmei District": {
+			"local_name": "楊梅區"
+		},
+		"Longtan District": {
+			"local_name": "龍潭區"
+		},
+		"Guishan District": {
+			"local_name": "龜山區"
+		},
+		"Luzhu District": {
+			"local_name": "蘆竹區"
+		},
+		"Guanyin District": {
+			"local_name": "觀音區"
+		}
+	}
+}

@@ -10,6 +10,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\webform\Element\WebformElementStates;
+use Drupal\webform\Element\WebformHtmlEditor;
 use Drupal\webform\Form\WebformEntityAjaxFormTrait;
 use Drupal\webform\Plugin\WebformElement\WebformElement;
 use Drupal\webform\Plugin\WebformElement\WebformTable;
@@ -66,11 +67,11 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
   protected $elementsValidator;
 
   /**
-   * The webform token manager.
+   * The webform libraries manager.
    *
-   * @var \Drupal\webform\WebformTokenManagerInterface
+   * @var \Drupal\webform\WebformLibrariesManagerInterface
    */
-  protected $tokenManager;
+  protected $librariesManager;
 
   /**
    * {@inheritdoc}
@@ -81,6 +82,7 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
     $instance->elementInfo = $container->get('plugin.manager.element_info');
     $instance->elementManager = $container->get('plugin.manager.webform.element');
     $instance->elementsValidator = $container->get('webform.elements_validator');
+    $instance->librariesManager = $container->get('webform.libraries_manager');
     return $instance;
   }
 
@@ -509,12 +511,19 @@ class WebformUiEntityElementsForm extends BundleEntityFormBase {
       ],
     ];
     if (!empty($element['#admin_notes'])) {
-      $row['title']['notes'] = [
-        '#type' => 'webform_help',
-        '#help_title' => $element['#admin_title'] ?: $element['#title'],
-        '#help' => $element['#admin_notes'],
-        '#weight' => 100,
-      ];
+      if ($this->librariesManager->isIncluded('tippyjs')) {
+        $row['title']['notes'] = [
+          '#type' => 'webform_help',
+          '#help_title' => $element['#admin_title'] ?: $element['#title'],
+          '#help' => $element['#admin_notes'],
+          '#weight' => 100,
+        ];
+      }
+      else {
+        $row['title']['notes'] = WebformHtmlEditor::checkMarkup($element['#admin_notes']) + [
+          '#prefix' => '<br/>',
+        ];
+      }
     }
 
     if ($webform->hasContainer()) {

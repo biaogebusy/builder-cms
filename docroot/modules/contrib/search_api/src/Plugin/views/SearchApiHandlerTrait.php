@@ -16,8 +16,7 @@ trait SearchApiHandlerTrait {
    * necessary nor possible, but we still want to stay as compatible as possible
    * to the default SQL query plugin.
    */
-  public function ensureMyTable() {
-  }
+  public function ensureMyTable() {}
 
   /**
    * Determines the entity type used by this handler.
@@ -27,6 +26,9 @@ trait SearchApiHandlerTrait {
    *
    * @return string
    *   The machine name of the entity type.
+   *
+   * @throws \Exception
+   *   Thrown if no entity type could be determined.
    *
    * @see \Drupal\views\Plugin\views\HandlerBase::getEntityType()
    */

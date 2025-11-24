@@ -29,7 +29,7 @@ class WorkflowTransitionEventSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       'entity_test_with_bundle.create.pre_transition' => 'onPreTransition',
       'entity_test_with_bundle.create.post_transition' => 'onPostTransition',

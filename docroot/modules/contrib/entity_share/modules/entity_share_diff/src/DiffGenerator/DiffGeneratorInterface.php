@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_diff\DiffGenerator;
 
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
  * Builds a diff from field item list.
@@ -22,11 +22,13 @@ interface DiffGeneratorInterface extends PluginInspectionInterface {
    * represents the difference between two entity fields.
    *
    * Example of FieldItemListInterface built into an array of strings:
+   *
    * @code
-   * array(
+   * [
    *   0 => "This is an example string",
    *   1 => "Field values or properties",
-   * )
+   * ]
+   *
    * @endcode
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $field_items

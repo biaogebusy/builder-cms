@@ -15,6 +15,9 @@ use Drupal\embed\EmbedCKEditorPluginBase;
  *   label = @Translation("Entity"),
  *   embed_type_id = "entity"
  * )
+ *
+ * @deprecated in entity_embed:8.x-1.7 and is removed from entity_embed:2.0.0.
+ * Use \Drupal\entity_embed\Plugin\CKEditor5Plugin\DrupalEntity instead.
  */
 class DrupalEntity extends EmbedCKEditorPluginBase implements CKEditorPluginCssInterface {
 

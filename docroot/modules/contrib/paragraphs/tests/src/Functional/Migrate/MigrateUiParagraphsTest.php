@@ -13,6 +13,11 @@ use Drupal\Tests\paragraphs\Traits\ParagraphsNodeMigrationAssertionsTrait;
  */
 class MigrateUiParagraphsTest extends MigrateUiParagraphsTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
   use ParagraphsNodeMigrationAssertionsTrait;
 
   /**
@@ -35,7 +40,7 @@ class MigrateUiParagraphsTest extends MigrateUiParagraphsTestBase {
    * @return bool[][]
    *   Classic node migration type.
    */
-  public function providerParagraphsMigrate() {
+  public static function providerParagraphsMigrate() {
     return [
       ['node_migrate_type_classic' => TRUE],
       ['node_migrate_type_classic' => FALSE],

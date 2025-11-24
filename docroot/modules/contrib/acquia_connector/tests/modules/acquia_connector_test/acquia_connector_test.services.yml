@@ -1,0 +1,6 @@
+services:
+  acquia_connector_test.client_middleware:
+    class: Drupal\acquia_connector_test\AcquiaConnectorMiddleware
+    arguments: ['@state']
+    tags:
+      - { name: http_client_middleware }

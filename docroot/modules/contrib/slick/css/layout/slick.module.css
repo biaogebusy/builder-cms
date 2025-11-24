@@ -8,7 +8,6 @@
  * to apply for Desktop up. Adjust mobile version accordingly.
  */
 @media (min-width: 64em) {
-
   /* Fixed FireFox draggable issue, avoid asNavFor thumbnails. */
   .slick--main .slick__slide img {
     pointer-events: none;

@@ -6,24 +6,16 @@ use Consolidation\AnnotatedCommand\AnnotationData;
 use Consolidation\AnnotatedCommand\CommandData;
 use Consolidation\AnnotatedCommand\Events\CustomEventAwareInterface;
 use Consolidation\AnnotatedCommand\Events\CustomEventAwareTrait;
+use Consolidation\AnnotatedCommand\Hooks\HookManager;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
+use Drush\Attributes as CLI;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Drush\Style\DrushStyle;
-use Drush\Utils\StringUtils;
 
 /**
  * Run these commands using the --include option - e.g. `drush --include=/path/to/drush/examples art sandwich`
  *
- * For an example of a Drupal module implementing commands, see
- * - http://cgit.drupalcode.org/devel/tree/devel_generate/src/Commands
- * - http://cgit.drupalcode.org/devel/tree/devel_generate/drush.services.yml
- *
- * This file is a good example of the first of those bullets (a commandfile) but
- * since it isn't part of a module, it does not implement drush.services.yml.
- *
- * See [Drush Test Traits](https://github.com/drush-ops/drush/blob/11.x/docs/contribute/unish.md#about-the-test-suites) for info on testing Drush commands.
+ * See [Drush Test Traits](https://github.com/drush-ops/drush/blob/13.x/docs/contribute/unish.md#about-the-test-suites) for info on testing Drush commands.
  */
 
 class ArtCommands extends DrushCommands implements CustomEventAwareInterface
@@ -31,17 +23,14 @@ class ArtCommands extends DrushCommands implements CustomEventAwareInterface
     use CustomEventAwareTrait;
 
     /** @var string[] */
-    protected $arts;
+    protected ?array $arts;
 
     /**
      * Show a fabulous picture.
-     *
-     * @command artwork:show
-     * @aliases arts
-     * @param $art The name of the art to display
-     * @usage drush art sandwich
-     *   Show a marvelous picture of a sandwich with pickles.
      */
+    #[CLI\Command(name: 'artwork:show', aliases: ['arts'])]
+    #[CLI\Argument(name: 'art', description: 'The name of the art to display')]
+    #[CLI\Usage(name: 'drush art sandwich', description: 'Show a marvelous picture of a sandwich with pickles.')]
     public function art($art = '')
     {
         $data = $this->getArt();
@@ -58,19 +47,12 @@ class ArtCommands extends DrushCommands implements CustomEventAwareInterface
 
     /**
      * Show a table of information about available art.
-     *
-     * @command artwork:list
-     * @aliases artls
-     * @field-labels
-     *   name: Name
-     *   description: Description
-     *   path: Path
-     * @default-fields name,description
-     *
-     * @filter-default-field name
-     * @return \Consolidation\OutputFormatters\StructuredData\RowsOfFields
      */
-    public function listArt($options = ['format' => 'table'])
+    #[CLI\Command(name: 'artwork:list', aliases: ['artls'])]
+    #[CLI\FieldLabels(labels: ['name' => 'Name', 'description' => 'Description', 'path' => 'Path'])]
+    #[CLI\DefaultTableFields(fields: ['name', 'description'])]
+    #[CLI\FilterDefaultField(field: 'name')]
+    public function listArt($options = ['format' => 'table']): RowsOfFields
     {
         $data = $this->getArt();
         return new RowsOfFields($data);
@@ -84,23 +66,21 @@ class ArtCommands extends DrushCommands implements CustomEventAwareInterface
 
     /**
      * Ruminations on the true meaning and philosophy of artwork.
-     *
-     * @command artwork:explain
-     * @hidden
-     * @topic
      */
-    public function ruminate()
+    #[CLI\Command(name: 'artwork:explain')]
+    #[CLI\Topics(isTopic: true, path: __DIR__ . '/art-topic.md')]
+    #[CLI\Help(hidden: true)]
+    public function ruminate(): void
     {
-        self::printFile(__DIR__ . '/art-topic.md');
+        self::printFile($this->commandData);
     }
 
     /**
      * Return the available built-in art. Any Drush commandfile may provide
      * more art by implementing a 'drush-art' on-event hook. This on-event
-     * hook is defined in the 'findArt' method beolw.
-     *
-     * @hook on-event drush-art
+     * hook is defined in the 'findArt' method below.
      */
+    #[CLI\Hook(type: HookManager::ON_EVENT, target: 'drush-art')]
     public function builtInArt()
     {
         return [
@@ -117,26 +97,20 @@ class ArtCommands extends DrushCommands implements CustomEventAwareInterface
         ];
     }
 
-    /**
-     * @hook interact artwork:show
-     */
+    #[CLI\Hook(type: HookManager::INTERACT, target: 'artwork:show')]
     public function interact(InputInterface $input, OutputInterface $output, AnnotationData $annotationData)
     {
-        $io = new DrushStyle($input, $output);
-
         // If the user did not specify any artwork, then prompt for one.
         $art = $input->getArgument('art');
         if (empty($art)) {
             $data = $this->getArt();
             $selections = $this->convertArtListToKeyValue($data);
-            $selection = $io->choice('Select art to display', $selections);
+            $selection = $this->io()->select('Select art to display', $selections);
             $input->setArgument('art', $selection);
         }
     }
 
-    /**
-     * @hook validate artwork:show
-     */
+    #[CLI\Hook(type: HookManager::ARGUMENT_VALIDATOR, target: 'artwork:show')]
     public function artValidate(CommandData $commandData)
     {
         $art = $commandData->input()->getArgument('art');
@@ -149,7 +123,7 @@ class ArtCommands extends DrushCommands implements CustomEventAwareInterface
     /**
      * Get a list of available artwork. Cache result for future fast access.
      */
-    protected function getArt()
+    protected function getArt(): array
     {
         if (!isset($this->arts)) {
             $this->arts = $this->findArt();
@@ -172,11 +146,9 @@ class ArtCommands extends DrushCommands implements CustomEventAwareInterface
     }
 
     /**
-     * Given a list of artwork, converte to a 'key' => 'Name: Description' array.
-     * @param array $data
-     * @return array
+     * Given a list of artwork, convert to a 'key' => 'Name: Description' array.
      */
-    protected function convertArtListToKeyValue($data)
+    protected function convertArtListToKeyValue(array $data): array
     {
         $result = [];
         foreach ($data as $key => $item) {

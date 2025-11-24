@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Lock;
 
 use Drupal\Tests\UnitTestCase;
@@ -21,13 +23,15 @@ class LockBackendAbstractTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->lock = $this->getMockForAbstractClass('Drupal\Core\Lock\LockBackendAbstract');
   }
 
   /**
    * Tests the wait() method when lockMayBeAvailable() returns TRUE.
    */
-  public function testWaitFalse() {
+  public function testWaitFalse(): void {
     $this->lock->expects($this->any())
       ->method('lockMayBeAvailable')
       ->with($this->equalTo('test_name'))
@@ -42,7 +46,7 @@ class LockBackendAbstractTest extends UnitTestCase {
    * Waiting could take 1 second so we need to extend the possible runtime.
    * @medium
    */
-  public function testWaitTrue() {
+  public function testWaitTrue(): void {
     $this->lock->expects($this->any())
       ->method('lockMayBeAvailable')
       ->with($this->equalTo('test_name'))
@@ -54,7 +58,7 @@ class LockBackendAbstractTest extends UnitTestCase {
   /**
    * Tests the getLockId() method.
    */
-  public function testGetLockId() {
+  public function testGetLockId(): void {
     $lock_id = $this->lock->getLockId();
     $this->assertIsString($lock_id);
     // Example lock ID would be '7213141505232b6ee2cb967.27683891'.

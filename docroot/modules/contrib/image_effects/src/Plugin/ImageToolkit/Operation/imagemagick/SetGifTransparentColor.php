@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\SetGifTransparentColorTrait;
 use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines ImageMagick set_gif_transparent_color image operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_set_gif_transparent_color",
- *   toolkit = "imagemagick",
- *   operation = "set_gif_transparent_color",
- *   label = @Translation("Set the image transparent color"),
- *   description = @Translation("Set the image transparent color for GIF images.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_set_gif_transparent_color',
+  toolkit: 'imagemagick',
+  operation: 'set_gif_transparent_color',
+  label: new TranslatableMarkup('Set the image transparent color'),
+  description: new TranslatableMarkup('Set the image transparent color for GIF images.'),
+)]
 class SetGifTransparentColor extends ImagemagickImageToolkitOperationBase {
 
   use ImagemagickOperationTrait;
@@ -34,8 +37,16 @@ class SetGifTransparentColor extends ImagemagickImageToolkitOperationBase {
         reset($find);
         $toolkit_arguments->remove(key($find));
       }
-      $this->addArgument('-alpha off -transparent-color ' . $this->escapeArgument($arguments['transparent_color']) . ' -transparent ' . $this->escapeArgument($arguments['transparent_color']));
+      $this->addArguments([
+        '-alpha',
+        'off',
+        '-transparent-color',
+        $arguments['transparent_color'],
+        '-transparent',
+        $arguments['transparent_color'],
+      ]);
     }
+    return TRUE;
   }
 
 }

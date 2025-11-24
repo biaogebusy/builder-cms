@@ -74,7 +74,7 @@ class WebformElementTest extends WebformElementBrowserTestBase {
 
     // Check submission access denied message is displayed.
     $this->drupalGet('/webform_test_element', ['query' => ['sid' => $sid]]);
-    $assert_session->responseContains("Please login to access this form.");
+    $assert_session->responseContains("Please log in to access this form.");
 
     // Login as root.
     $this->drupalLogin($this->rootUser);

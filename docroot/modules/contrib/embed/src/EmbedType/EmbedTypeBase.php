@@ -5,28 +5,40 @@ namespace Drupal\embed\EmbedType;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a base implementation that most embed type plugins will extend.
  *
  * @ingroup embed_api
  */
-abstract class EmbedTypeBase extends PluginBase implements EmbedTypeInterface {
-
-  /**
-   * The module list service.
-   *
-   * @var \Drupal\Core\Extension\ModuleExtensionList
-   */
-  protected $moduleList;
+abstract class EmbedTypeBase extends PluginBase implements EmbedTypeInterface, ContainerFactoryPluginInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, protected ?ModuleExtensionList $moduleList = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    if (!$this->moduleList) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $moduleList argument is deprecated in embed:8.x-1.9 and it will be required in embed:2.0.0. See https://www.drupal.org/node/3467748', E_USER_DEPRECATED);
+      // @phpstan-ignore-next-line
+      $this->moduleList = \Drupal::service('extension.list.module');
+    }
     $this->configuration = NestedArray::mergeDeep($this->defaultConfiguration(), $this->configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('extension.list.module'),
+    );
   }
 
   /**
@@ -110,11 +122,13 @@ abstract class EmbedTypeBase extends PluginBase implements EmbedTypeInterface {
    *
    * @return \Drupal\Core\Extension\ModuleExtensionList
    *   The module extension list service.
+   *
+   * @deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. Use
+   *   $this->moduleList instead.
+   *
+   * @see https://www.drupal.org/node/3467748
    */
   protected function getModuleList(): ModuleExtensionList {
-    if (!$this->moduleList) {
-      $this->moduleList = \Drupal::service('extension.list.module');
-    }
     return $this->moduleList;
   }
 
@@ -133,7 +147,7 @@ abstract class EmbedTypeBase extends PluginBase implements EmbedTypeInterface {
    * @see \Drupal\Core\Extension\ExtensionList::getPath()
    */
   protected function getModulePath(string $module_name): string {
-    return $this->getModuleList()->getPath($module_name);
+    return $this->moduleList->getPath($module_name);
   }
 
 }

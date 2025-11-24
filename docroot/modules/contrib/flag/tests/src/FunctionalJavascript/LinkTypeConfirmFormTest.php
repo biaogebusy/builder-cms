@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
 /**
@@ -14,6 +16,7 @@ class LinkTypeConfirmFormTest extends FlagJsTestBase {
    */
   public function testCreateConfirmFlag() {
     $this->drupalLogin($this->adminUser);
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
     $this->drupalGet('/admin/structure/flags/add');

@@ -14,17 +14,17 @@ interface EntityReferenceHelperInterface {
   /**
    * Denotes the relationship which is not entity reference.
    */
-  const RELATIONSHIP_NOT_ENTITY_REFERENCE = -1;
+  public const RELATIONSHIP_NOT_ENTITY_REFERENCE = -1;
 
   /**
    * Denotes the entity reference relationship which is not handleable.
    */
-  const RELATIONSHIP_NOT_HANDLEABLE = 0;
+  public const RELATIONSHIP_NOT_HANDLEABLE = 0;
 
   /**
    * Denotes the entity reference relationship which is handleable.
    */
-  const RELATIONSHIP_HANDLEABLE = 1;
+  public const RELATIONSHIP_HANDLEABLE = 1;
 
   /**
    * Check if a relationship is handleable.

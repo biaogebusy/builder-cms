@@ -9,7 +9,6 @@ use Drupal\Core\Url;
 use Drupal\webform\Element\WebformMessage;
 use Drupal\webform\Element\WebformOtherBase;
 use Drupal\webform\Plugin\WebformHandler\EmailWebformHandler;
-use Drupal\webform\Utility\WebformDateHelper;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform_scheduled_email\WebformScheduledEmailManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -37,7 +36,7 @@ class ScheduleEmailWebformHandler extends EmailWebformHandler {
   protected $request;
 
   /**
-   * The webform scheculed email manager.
+   * The webform scheduled email manager.
    *
    * @var \Drupal\webform_scheduled_email\WebformScheduledEmailManagerInterface
    */
@@ -187,13 +186,15 @@ class ScheduleEmailWebformHandler extends EmailWebformHandler {
     $t_args = [
       '@format' => $this->scheduledEmailManager->getDateFormatLabel(),
       '@type' => $this->scheduledEmailManager->getDateTypeLabel(),
+      ':href' => 'https://www.php.net/manual/en/function.strtotime.php',
+      '@site_default_tz' => $this->configFactory->get('system.date')->get('timezone.default'),
     ];
     $form['scheduled']['send'] = [
       '#type' => 'webform_select_other',
       '#title' => $this->t('Send email on'),
       '#options' => $send_options,
       '#other__placeholder' => $this->scheduledEmailManager->getDateFormatLabel(),
-      '#other__description' => $this->t('Enter a valid ISO @type (@format) or token which returns a valid ISO @type.', $t_args),
+      '#other__description' => $this->t('Enter a @type or token which returns in a @type in a format compatible with <a href=":href" target="_blank">PHP\'s strtotime function</a> (eg. @format). If timezone information is not provided, the @type will be interpreted in the site\'s default timezone (@site_default_tz).', $t_args),
       '#default_value' => $this->configuration['send'],
     ];
 
@@ -309,17 +310,17 @@ class ScheduleEmailWebformHandler extends EmailWebformHandler {
     // Cast days string to int.
     $values['days'] = (int) $values['days'];
 
-    // If token skip validation.
+    // If token, skip 'send on' validation.
     if (!preg_match('/^\[[^]]+\]$/', $values['send'])) {
-      $date_format = $this->scheduledEmailManager->getDateFormat();
-      // Validate custom 'send on' date.
-      if (WebformDateHelper::createFromFormat($date_format, $values['send']) === FALSE) {
+      // Validate that strtotime() can create a date from the 'send on' value.
+      if (strtotime($values['send']) === FALSE) {
         $t_args = [
-          '%field' => $this->t('Send on'),
-          '%format' => $this->scheduledEmailManager->getDateFormatLabel(),
+          '%field' => $this->t('Send email on'),
+          '@format' => $this->scheduledEmailManager->getDateFormatLabel(),
           '@type' => $this->scheduledEmailManager->getDateTypeLabel(),
+          ':href' => 'https://www.php.net/manual/en/function.strtotime.php',
         ];
-        $form_state->setError($form['settings']['scheduled']['send'], $this->t('The %field date is required. Please enter a @type in the format %format.', $t_args));
+        $form_state->setError($form['settings']['scheduled']['send'], $this->t('The %field @type field is required. Please enter a @type or token which returns in a @type in a format compatible with <a href=":href" target="_blank">PHP\'s strtotime function</a> (eg. @format).', $t_args));
       }
     }
 

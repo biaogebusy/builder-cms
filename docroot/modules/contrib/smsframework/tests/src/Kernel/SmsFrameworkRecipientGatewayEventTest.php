@@ -64,11 +64,11 @@ final class SmsFrameworkRecipientGatewayEventTest extends SmsFrameworkKernelBase
       ->addRecipients($this->randomPhoneNumbers());
 
     $sms_messages = $this->smsProvider->queue($sms_message);
-    $this->assertCount(1, $sms_messages, 'One message dispatched.');
-    $this->assertEquals('test_gateway_400', $sms_messages[0]->getGateway()->id());
+    static::assertCount(1, $sms_messages, 'One message dispatched.');
+    static::assertEquals('test_gateway_400', $sms_messages[0]->getGateway()->id());
 
-    $this->assertCount(0, $this->getTestMessages($gateway_200), 'Message not sent through gateway_200');
-    $this->assertCount(1, $this->getTestMessages($gateway_400), 'Message sent through gateway_400');
+    static::assertCount(0, $this->getTestMessages($gateway_200), 'Message not sent through gateway_200');
+    static::assertCount(1, $this->getTestMessages($gateway_400), 'Message sent through gateway_400');
   }
 
 }

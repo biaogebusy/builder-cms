@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
@@ -71,7 +73,7 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal7TestBase {
    *
    * @internal
    */
-  protected function assertEntity(int $id, string $expected_language, string $expected_label, string $expected_vid, string $expected_description = '', string $expected_format = NULL, int $expected_weight = 0, array $expected_parents = [], int $expected_field_integer_value = NULL, int $expected_term_reference_tid = NULL): void {
+  protected function assertEntity(int $id, string $expected_language, string $expected_label, string $expected_vid, string $expected_description = '', ?string $expected_format = NULL, int $expected_weight = 0, array $expected_parents = [], ?int $expected_field_integer_value = NULL, ?int $expected_term_reference_tid = NULL): void {
     /** @var \Drupal\taxonomy\TermInterface $entity */
     $entity = Term::load($id);
     $this->assertInstanceOf(TermInterface::class, $entity);
@@ -113,7 +115,7 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal7TestBase {
   /**
    * Tests the Drupal 6 i18n localized taxonomy term to Drupal 8 migration.
    */
-  public function testTranslatedLocalizedTaxonomyTerms() {
+  public function testTranslatedLocalizedTaxonomyTerms(): void {
     $this->assertEntity(19, 'en', 'Jupiter Station', 'vocablocalized', 'Holographic research.', 'filtered_html', 0, []);
     $this->assertEntity(20, 'en', 'DS9', 'vocablocalized', 'Terok Nor', 'filtered_html', 0, []);
     $this->assertEntity(25, 'en', 'Emissary', 'vocablocalized2', 'Pilot episode', 'filtered_html', 0, []);

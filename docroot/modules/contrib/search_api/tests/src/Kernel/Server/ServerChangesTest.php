@@ -6,12 +6,14 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether changes for the server are processed correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ServerChangesTest extends KernelTestBase {
 
   use PluginTestTrait;

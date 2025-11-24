@@ -1,0 +1,30 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JL",
+		"Siping Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Gongzhuling Shi": {
+			"local_name": "公主岭市"
+		},
+		"Lishu Xian": {
+			"local_name": "梨树县"
+		},
+		"Shuangliao Shi": {
+			"local_name": "双辽市"
+		},
+		"Tiedong Qu": {
+			"local_name": "铁东区"
+		},
+		"Tiexi Qu": {
+			"local_name": "铁西区"
+		},
+		"Yitong Xian": {
+			"local_code": "伊通满族自治县",
+			"local_name": "伊通县"
+		}
+	}
+}

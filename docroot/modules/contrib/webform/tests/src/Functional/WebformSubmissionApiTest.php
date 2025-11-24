@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Utility\WebformElementHelper;
 use Drupal\webform\WebformSubmissionForm;
@@ -48,6 +49,12 @@ class WebformSubmissionApiTest extends WebformBrowserTestBase {
     $this->assertEquals($webform_submission->id(), $this->getLastSubmissionId($contact_webform));
 
     // Check validating a simple webform.
+    $email_validation_error = DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => 'The email address <em class="placeholder">invalid</em> is not valid. Use the format user@example.com.',
+      deprecatedCallable: fn() => 'The email address <em class="placeholder">invalid</em> is not valid.',
+    );
     $values = [
       'webform_id' => 'contact',
       'data' => [
@@ -58,7 +65,7 @@ class WebformSubmissionApiTest extends WebformBrowserTestBase {
     WebformElementHelper::convertRenderMarkupToStrings($errors);
     $this->assertEquals($errors, [
       'name' => 'Your Name field is required.',
-      'email' => 'The email address <em class="placeholder">invalid</em> is not valid.',
+      'email' => $email_validation_error,
       'subject' => 'Subject field is required.',
       'message' => 'Message field is required.',
     ]);
@@ -121,7 +128,7 @@ class WebformSubmissionApiTest extends WebformBrowserTestBase {
     WebformElementHelper::convertRenderMarkupToStrings($errors);
     // $this->debug($errors);
     $this->assertEquals($errors, [
-      'email' => 'The email address <em class="placeholder">invalid</em> is not valid.',
+      'email' => $email_validation_error,
     ]);
 
     // Check validating a multi-step form with invalid #options.

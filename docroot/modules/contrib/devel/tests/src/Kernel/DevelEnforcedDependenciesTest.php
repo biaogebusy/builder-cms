@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\devel\Kernel;
 
-use Drupal\block\Entity\Block;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\block\Entity\Block;
 use Drupal\system\Entity\Menu;
 
 /**
@@ -16,14 +16,14 @@ class DevelEnforcedDependenciesTest extends KernelTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
-  public static $modules = ['devel', 'block', 'user', 'system'];
+  protected static $modules = ['devel', 'block', 'user', 'system'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installEntitySchema('user');
@@ -35,7 +35,7 @@ class DevelEnforcedDependenciesTest extends KernelTestBase {
   /**
    * Tests devel menu enforced dependencies.
    */
-  public function testMenuEnforcedDependencies() {
+  public function testMenuEnforcedDependencies(): void {
     /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
     $config_manager = $this->container->get('config.manager');
 
@@ -60,7 +60,7 @@ class DevelEnforcedDependenciesTest extends KernelTestBase {
     $block->save();
 
     // Ensure that the menu and block instance depend on devel module.
-    $dependents = $config_manager->findConfigEntityDependents('module', ['devel']);
+    $dependents = $config_manager->findConfigEntityDependencies('module', ['devel']);
     $this->assertArrayHasKey('system.menu.devel', $dependents);
     $this->assertArrayHasKey('block.block.' . $block_id, $dependents);
 
@@ -72,7 +72,7 @@ class DevelEnforcedDependenciesTest extends KernelTestBase {
     $this->assertNull(Block::load($block_id));
 
     // Ensure that no config entities depend on devel once uninstalled.
-    $dependents = $config_manager->findConfigEntityDependents('module', ['devel']);
+    $dependents = $config_manager->findConfigEntityDependencies('module', ['devel']);
     $this->assertArrayNotHasKey('system.menu.devel', $dependents);
     $this->assertArrayNotHasKey('block.block.' . $block_id, $dependents);
   }

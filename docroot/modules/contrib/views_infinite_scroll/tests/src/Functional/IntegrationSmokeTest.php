@@ -21,12 +21,12 @@ class IntegrationSmokeTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['views', 'views_ui', 'views_infinite_scroll'];
+  protected static $modules = ['views', 'views_ui', 'views_infinite_scroll'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->drupalLogin($this->createUser(['administer views']));
   }

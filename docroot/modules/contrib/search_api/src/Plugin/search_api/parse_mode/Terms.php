@@ -3,17 +3,18 @@
 namespace Drupal\search_api\Plugin\search_api\parse_mode;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiParseMode;
 use Drupal\search_api\ParseMode\ParseModePluginBase;
 
 /**
  * Represents a parse mode that parses the input into multiple words.
- *
- * @SearchApiParseMode(
- *   id = "terms",
- *   label = @Translation("Multiple words"),
- *   description = @Translation("The query is interpreted as multiple keywords separated by spaces. Keywords containing spaces may be ""quoted"". Quoted keywords must still be separated by spaces. Keywords can be negated by prepending a minus sign (-) to them."),
- * )
  */
+#[SearchApiParseMode(
+  id: 'terms',
+  label: new TranslatableMarkup('Multiple words'),
+  description: new TranslatableMarkup('The query is interpreted as multiple keywords separated by spaces. Keywords containing spaces may be "quoted". Quoted keywords must still be separated by spaces. Keywords can be negated by prepending a minus sign (-) to them.'),
+)]
 class Terms extends ParseModePluginBase {
 
   /**
@@ -54,7 +55,7 @@ class Terms extends ParseModePluginBase {
       // Depending on whether we are currently in a quoted phrase, or maybe just
       // starting one, act accordingly.
       if ($quoted) {
-        if (substr($token, -1) === '"') {
+        if (str_ends_with($token, '"')) {
           $token = substr($token, 0, -1);
           $phrase_contents[] = trim($token);
           $phrase_contents = array_filter($phrase_contents, 'strlen');

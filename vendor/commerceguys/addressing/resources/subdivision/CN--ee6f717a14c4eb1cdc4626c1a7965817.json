@@ -1,0 +1,68 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HE",
+		"Handan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cheng'an Xian": {
+			"local_name": "成安县"
+		},
+		"Ci Xian": {
+			"local_name": "磁县"
+		},
+		"Congtai Qu": {
+			"local_name": "丛台区"
+		},
+		"Daming Xian": {
+			"local_name": "大名县"
+		},
+		"Feixiang Xian": {
+			"local_name": "肥乡县"
+		},
+		"Fengfeng Kuangqu": {
+			"local_name": "峰峰矿区"
+		},
+		"Fuxing Qu": {
+			"local_name": "复兴区"
+		},
+		"Guantao Xian": {
+			"local_name": "馆陶县"
+		},
+		"Guangping Xian": {
+			"local_name": "广平县"
+		},
+		"Handan Xian": {
+			"local_name": "邯郸县"
+		},
+		"Hanshan Qu": {
+			"local_name": "邯山区"
+		},
+		"Jize Xian": {
+			"local_name": "鸡泽县"
+		},
+		"Linzhang Xian": {
+			"local_name": "临漳县"
+		},
+		"Qiu Xian": {
+			"local_name": "邱县"
+		},
+		"Quzhou Xian": {
+			"local_name": "曲周县"
+		},
+		"She Xian": {
+			"local_name": "涉县"
+		},
+		"Wei Xian": {
+			"local_name": "魏县"
+		},
+		"Wu'an Shi": {
+			"local_name": "武安市"
+		},
+		"Yongnian Xian": {
+			"local_name": "永年县"
+		}
+	}
+}

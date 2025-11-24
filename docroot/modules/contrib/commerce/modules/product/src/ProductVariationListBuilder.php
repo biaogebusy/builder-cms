@@ -2,18 +2,18 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\commerce\EntityHelper;
-use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
+use Drupal\commerce\EntityHelper;
+use Drupal\commerce_product\Entity\ProductInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -127,15 +127,22 @@ class ProductVariationListBuilder extends EntityListBuilder implements FormInter
     if ($this->hasTableDrag) {
       $header['weight'] = $this->t('Weight');
     }
-    return $header + parent::buildHeader();
+    $header = $header + parent::buildHeader();
+    $header['copy_link'] = '';
+
+    return $header;
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    $variation_type_storage = $this->entityTypeManager->getStorage('commerce_product_variation_type');
+    /** @var \Drupal\commerce_product\Entity\ProductVariationTypeInterface $variation_type */
+    $variation_type = $variation_type_storage->load($entity->bundle());
     /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $entity */
-    if ($attribute_values = $entity->getAttributeValues()) {
+    if ($variation_type->shouldGenerateTitle() &&
+      $attribute_values = $entity->getAttributeValues()) {
       // The generated variation title includes the product title, which isn't
       // relevant in this context, the user only needs to see the attributes.
       $attribute_labels = EntityHelper::extractLabels($attribute_values);
@@ -151,8 +158,6 @@ class ProductVariationListBuilder extends EntityListBuilder implements FormInter
     $row['title'] = $title;
     $row['price'] = $entity->getPrice();
     $row['status'] = $entity->isPublished() ? $this->t('Published') : $this->t('Unpublished');
-    $variation_type_storage = $this->entityTypeManager->getStorage('commerce_product_variation_type');
-    $variation_type = $variation_type_storage->load($entity->bundle());
     $row['type'] = $variation_type->label();
     if ($this->hasTableDrag) {
       $row['weight'] = [
@@ -164,7 +169,16 @@ class ProductVariationListBuilder extends EntityListBuilder implements FormInter
       ];
     }
 
-    return $row + parent::buildRow($entity);
+    $row = $row + parent::buildRow($entity);
+
+    // Add the "Copy variation link" button.
+    $row['copy_link'] = [
+      '#theme' => 'commerce_copy_link',
+      '#link' => $entity->toUrl()->setAbsolute()->toString(),
+      '#title' => $this->t('Copy variation link to clipboard'),
+    ];
+
+    return $row;
   }
 
   /**

@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_payment\Functional;
 
-use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
+use Drupal\commerce_payment\Entity\PaymentGateway;
 
 /**
  * Tests the payment gateway UI.
@@ -71,7 +71,7 @@ class PaymentGatewayTest extends CommerceBrowserTestBase {
       'id' => 'edit_example',
       'label' => 'Edit example',
       'plugin' => 'example_offsite_redirect',
-      'status' => 0,
+      'status' => '0',
     ];
     $payment_gateway = $this->createEntity('commerce_payment_gateway', $values);
 
@@ -110,7 +110,7 @@ class PaymentGatewayTest extends CommerceBrowserTestBase {
         'redirect_method' => 'get',
         'mode' => 'live',
       ],
-      'status' => 0,
+      'status' => '0',
     ];
     $payment_gateway = $this->createEntity('commerce_payment_gateway', $values);
 
@@ -123,7 +123,7 @@ class PaymentGatewayTest extends CommerceBrowserTestBase {
     $edit = [
       'id' => 'foo2',
       'label' => 'Foo2',
-      'status' => 1,
+      'status' => '1',
       'configuration[example_offsite_redirect][mode]' => 'test',
     ];
     $this->submitForm($edit, 'Save');

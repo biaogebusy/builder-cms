@@ -4,7 +4,6 @@
   "type": "drupal-module",
   "homepage": "https://www.drupal.org/project/csv_serialization",
   "license": "GPL-2.0-or-later",
-  "minimum-stability": "dev",
   "authors": [
     {
       "name": "Matthew Grasmick"
@@ -21,7 +20,7 @@
     }
   },
   "require": {
-    "league/csv": "^9.7"
+    "league/csv": "^9.16"
   },
   "require-dev": {
     "drupal/coder": "^8.3"

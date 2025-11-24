@@ -3,17 +3,18 @@
 namespace Drupal\user\Plugin\Action;
 
 use Drupal\Core\Action\ActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Blocks a user.
- *
- * @Action(
- *   id = "user_block_user_action",
- *   label = @Translation("Block the selected users"),
- *   type = "user"
- * )
  */
+#[Action(
+  id: 'user_block_user_action',
+  label: new TranslatableMarkup('Block the selected users'),
+  type: 'user'
+)]
 class BlockUser extends ActionBase {
 
   /**
@@ -33,7 +34,7 @@ class BlockUser extends ActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     /** @var \Drupal\user\UserInterface $object */
     $access = $object->status->access('edit', $account, TRUE)
       ->andIf($object->access('update', $account, TRUE));

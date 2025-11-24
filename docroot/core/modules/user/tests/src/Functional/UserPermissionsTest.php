@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
+use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\user\RoleInterface;
 use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 
 /**
  * Verifies role permissions can be added and removed via the permissions page.
@@ -12,6 +15,8 @@ use Drupal\user\Entity\Role;
  * @group user
  */
 class UserPermissionsTest extends BrowserTestBase {
+
+  use CommentTestTrait;
 
   /**
    * User with admin privileges.
@@ -31,6 +36,13 @@ class UserPermissionsTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'user_config_override_test',
+  ];
 
   /**
    * {@inheritdoc}
@@ -55,7 +67,7 @@ class UserPermissionsTest extends BrowserTestBase {
   /**
    * Tests changing user permissions through the permissions pages.
    */
-  public function testUserPermissionChanges() {
+  public function testUserPermissionChanges(): void {
     $permissions_hash_generator = $this->container->get('user_permissions_hash_generator');
 
     $storage = $this->container->get('entity_type.manager')->getStorage('user_role');
@@ -121,7 +133,7 @@ class UserPermissionsTest extends BrowserTestBase {
   /**
    * Tests assigning of permissions for the administrator role.
    */
-  public function testAdministratorRole() {
+  public function testAdministratorRole(): void {
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('admin/people/role-settings');
 
@@ -135,6 +147,9 @@ class UserPermissionsTest extends BrowserTestBase {
     $edit['user_admin_role'] = $this->rid;
     $this->drupalGet('admin/people/role-settings');
     $this->submitForm($edit, 'Save configuration');
+
+    // Check that the success message appears.
+    $this->assertSession()->pageTextContains('The role settings have been updated.');
 
     \Drupal::entityTypeManager()->getStorage('user_role')->resetCache();
     $this->assertTrue(Role::load($this->rid)->isAdmin());
@@ -151,6 +166,9 @@ class UserPermissionsTest extends BrowserTestBase {
     $this->drupalGet('admin/people/role-settings');
     $this->submitForm($edit, 'Save configuration');
 
+    // Check that the success message appears.
+    $this->assertSession()->pageTextContains('The role settings have been updated.');
+
     \Drupal::entityTypeManager()->getStorage('user_role')->resetCache();
     \Drupal::configFactory()->reset();
     $this->assertFalse(Role::load($this->rid)->isAdmin());
@@ -166,7 +184,7 @@ class UserPermissionsTest extends BrowserTestBase {
   /**
    * Verify proper permission changes by user_role_change_permissions().
    */
-  public function testUserRoleChangePermissions() {
+  public function testUserRoleChangePermissions(): void {
     $permissions_hash_generator = $this->container->get('user_permissions_hash_generator');
 
     $rid = $this->rid;
@@ -198,7 +216,7 @@ class UserPermissionsTest extends BrowserTestBase {
   /**
    * Verify 'access content' is listed in the correct location.
    */
-  public function testAccessContentPermission() {
+  public function testAccessContentPermission(): void {
     $this->drupalLogin($this->adminUser);
 
     // When Node is not installed the 'access content' permission is listed next
@@ -218,7 +236,7 @@ class UserPermissionsTest extends BrowserTestBase {
   /**
    * Verify that module-specific pages have correct access.
    */
-  public function testAccessModulePermission() {
+  public function testAccessModulePermission(): void {
     $this->drupalLogin($this->adminUser);
 
     // When Node is not installed, the node-permissions page is not available.
@@ -252,19 +270,21 @@ class UserPermissionsTest extends BrowserTestBase {
   /**
    * Verify that bundle-specific pages work properly.
    */
-  public function testAccessBundlePermission() {
+  public function testAccessBundlePermission(): void {
     $this->drupalLogin($this->adminUser);
 
-    \Drupal::service('module_installer')->install(['block_content', 'taxonomy']);
-    $this->grantPermissions(Role::load($this->rid), ['administer blocks', 'administer taxonomy']);
+    \Drupal::service('module_installer')->install(['contact', 'taxonomy']);
+    $this->grantPermissions(Role::load($this->rid), ['administer contact forms', 'administer taxonomy']);
 
     // Bundles that do not have permissions have no permissions pages.
     $edit = [];
-    $edit['label'] = 'Test block type';
-    $edit['id'] = 'test_block_type';
-    $this->drupalGet('admin/structure/block/block-content/types/add');
+    $edit['label'] = 'Test contact type';
+    $edit['id'] = 'test_contact_type';
+    $edit['recipients'] = 'webmaster@example.com';
+    $this->drupalGet('admin/structure/contact/add');
     $this->submitForm($edit, 'Save');
-    $this->drupalGet('admin/structure/block/block-content/manage/test_block_type/permissions');
+    $this->assertSession()->pageTextContains('Contact form ' . $edit['label'] . ' has been added.');
+    $this->drupalGet('admin/structure/contact/manage/test_contact_type/permissions');
     $this->assertSession()->statusCodeEquals(403);
 
     // Permissions can be changed using the bundle-specific pages.
@@ -289,8 +309,51 @@ class UserPermissionsTest extends BrowserTestBase {
     $this->drupalLogout();
     $this->drupalGet('admin/structure/taxonomy/manage/test_vocabulary/overview/permissions');
     $this->assertSession()->statusCodeEquals(403);
-    $this->drupalGet('admin/structure/block/block-content/manage/test_block_type/permissions');
+    $this->drupalGet('admin/structure/contact/manage/test_contact_type/permissions');
     $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Tests that access check does not trigger warnings.
+   *
+   * The access check for /admin/structure/comment/manage/comment/permissions is
+   * \Drupal\user\Form\EntityPermissionsForm::EntityPermissionsForm::access().
+   */
+  public function testBundlePermissionError(): void {
+    \Drupal::service('module_installer')->install(['comment', 'dblog', 'field_ui', 'node']);
+    // Set up the node and comment field. Use the 'default' view mode since
+    // 'full' is not defined, so it will not be added to the config entity.
+    $this->drupalCreateContentType(['type' => 'article']);
+    $this->addDefaultCommentField('node', 'article', comment_view_mode: 'default');
+
+    $this->drupalLogin($this->adminUser);
+    $this->grantPermissions(Role::load($this->rid), ['access site reports', 'administer comment display']);
+
+    // Access both the Manage display and permission page, which is not
+    // accessible currently.
+    $assert_session = $this->assertSession();
+    $this->drupalGet('/admin/structure/comment/manage/comment/display');
+    $assert_session->statusCodeEquals(200);
+    $this->drupalGet('/admin/structure/comment/manage/comment/permissions');
+    $assert_session->statusCodeEquals(403);
+
+    // Ensure there are no warnings in the log.
+    $this->drupalGet('/admin/reports/dblog');
+    $assert_session->statusCodeEquals(200);
+    $assert_session->pageTextContains('access denied');
+    $assert_session->pageTextNotContains("Entity view display 'node.article.default': Component");
+  }
+
+  /**
+   * Verify that the permission form does not use overridden config.
+   *
+   * @see \Drupal\user_config_override_test\ConfigOverrider
+   */
+  public function testOverriddenPermission(): void {
+    $this->drupalLogin($this->adminUser);
+
+    $this->drupalGet('admin/people/permissions');
+    $this->assertSession()->checkboxNotChecked('anonymous[access content]');
   }
 
 }

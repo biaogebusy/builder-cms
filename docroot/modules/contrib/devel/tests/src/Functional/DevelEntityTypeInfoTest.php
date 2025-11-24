@@ -3,6 +3,8 @@
 namespace Drupal\Tests\devel\Functional;
 
 use Behat\Mink\Element\NodeElement;
+use Drupal\Core\Datetime\Entity\DateFormat;
+use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Url;
 
 /**
@@ -15,7 +17,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('system_menu_block:devel');
     $this->drupalPlaceBlock('page_title_block');
@@ -25,7 +27,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
   /**
    * Tests entity info menu link.
    */
-  public function testEntityInfoMenuLink() {
+  public function testEntityInfoMenuLink(): void {
     $this->drupalPlaceBlock('system_menu_block:devel');
     // Ensures that the entity type info link is present on the devel menu and
     // that it points to the correct page.
@@ -39,7 +41,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
   /**
    * Tests entity type list page.
    */
-  public function testEntityTypeList() {
+  public function testEntityTypeList(): void {
     $this->drupalGet('/devel/entity/info');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Entity Info');
@@ -55,9 +57,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
     $this->assertEquals(5, count($headers));
 
     $expected_headers = ['ID', 'Name', 'Provider', 'Class', 'Operations'];
-    $actual_headers = array_map(function (NodeElement $element) {
-      return $element->getText();
-    }, $headers);
+    $actual_headers = array_map(static fn(NodeElement $element) => $element->getText(), $headers);
     $this->assertSame($expected_headers, $actual_headers);
 
     // Tests the presence of some (arbitrarily chosen) entity types in the
@@ -65,7 +65,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
     $expected_types = [
       'date_format' => [
         'name' => 'Date format',
-        'class' => 'Drupal\Core\Datetime\Entity\DateFormat',
+        'class' => DateFormat::class,
         'provider' => 'core',
       ],
       'block' => [
@@ -75,7 +75,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
       ],
       'entity_view_mode' => [
         'name' => 'View mode',
-        'class' => 'Drupal\Core\Entity\Entity\EntityViewMode',
+        'class' => EntityViewMode::class,
         'provider' => 'core',
       ],
     ];
@@ -84,7 +84,6 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
       $row = $table->find('css', sprintf('tbody tr:contains("%s")', $entity_type_id));
       $this->assertNotNull($row);
 
-      /** @var \Behat\Mink\Element\NodeElement[] $cells */
       $cells = $row->findAll('css', 'td');
       $this->assertEquals(5, count($cells));
 
@@ -124,13 +123,13 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
   /**
    * Tests entity type detail page.
    */
-  public function testEntityTypeDetail() {
+  public function testEntityTypeDetail(): void {
     $entity_type_id = 'date_format';
 
     // Ensures that the page works as expected.
-    $this->drupalGet("/devel/entity/info/$entity_type_id");
+    $this->drupalGet('/devel/entity/info/' . $entity_type_id);
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains("Entity type $entity_type_id");
+    $this->assertSession()->pageTextContains('Entity type ' . $entity_type_id);
 
     // Ensures that the page returns a 404 error if the requested entity type is
     // not defined.
@@ -140,20 +139,20 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
     // Ensures that the page is accessible ony to users with the adequate
     // permissions.
     $this->drupalLogout();
-    $this->drupalGet("/devel/entity/info/$entity_type_id");
+    $this->drupalGet('/devel/entity/info/' . $entity_type_id);
     $this->assertSession()->statusCodeEquals(403);
   }
 
   /**
    * Tests entity type fields page.
    */
-  public function testEntityTypeFields() {
+  public function testEntityTypeFields(): void {
     $entity_type_id = 'date_format';
 
     // Ensures that the page works as expected.
-    $this->drupalGet("/devel/entity/fields/$entity_type_id");
+    $this->drupalGet('/devel/entity/fields/' . $entity_type_id);
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains("Entity fields $entity_type_id");
+    $this->assertSession()->pageTextContains('Entity fields ' . $entity_type_id);
 
     // Ensures that the page returns a 404 error if the requested entity type is
     // not defined.
@@ -163,7 +162,7 @@ class DevelEntityTypeInfoTest extends DevelBrowserTestBase {
     // Ensures that the page is accessible ony to users with the adequate
     // permissions.
     $this->drupalLogout();
-    $this->drupalGet("/devel/entity/fields/$entity_type_id");
+    $this->drupalGet('/devel/entity/fields/' . $entity_type_id);
     $this->assertSession()->statusCodeEquals(403);
   }
 

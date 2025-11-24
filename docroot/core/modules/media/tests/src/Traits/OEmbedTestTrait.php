@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Traits;
 
 use Drupal\Component\Serialization\Json;
@@ -16,7 +18,7 @@ trait OEmbedTestTrait {
    *
    * @return string
    */
-  protected function getFixturesDirectory() {
+  protected function getFixturesDirectory(): string {
     return \Drupal::service('extension.list.module')->getPath('media') . '/tests/fixtures/oembed';
   }
 
@@ -25,7 +27,7 @@ trait OEmbedTestTrait {
    *
    * @return string
    */
-  protected function getFixturesUrl() {
+  protected function getFixturesUrl(): string {
     return $this->baseUrl . '/' . $this->getFixturesDirectory();
   }
 

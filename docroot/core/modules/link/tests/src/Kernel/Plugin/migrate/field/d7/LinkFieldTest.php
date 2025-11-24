@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\link\Kernel\Plugin\migrate\field\d7;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -53,7 +55,7 @@ class LinkFieldTest extends KernelTestBase {
   /**
    * @covers ::alterFieldInstanceMigration
    */
-  public function testAlterFieldInstanceMigration($method = 'alterFieldInstanceMigration') {
+  public function testAlterFieldInstanceMigration($method = 'alterFieldInstanceMigration'): void {
     $this->plugin->$method($this->migration);
 
     $expected = [

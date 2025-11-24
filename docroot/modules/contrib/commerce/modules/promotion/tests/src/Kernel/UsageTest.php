@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItem;
@@ -11,7 +12,6 @@ use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\CouponInterface;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\commerce_promotion\Entity\PromotionInterface;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the usage tracking of promotions.
@@ -163,7 +163,7 @@ class UsageTest extends OrderKernelTestBase {
    * @covers ::loadMultiple
    */
   public function testCustomerAccountIntegration() {
-    $user = $this->createUser(['mail' => 'admin@example.com']);
+    $user = $this->createUser([], NULL, FALSE, ['mail' => 'admin@example.com']);
     $this->assertEquals('admin@example.com', $user->getEmail());
 
     $promotion = $this->prophesize(PromotionInterface::class);
@@ -324,6 +324,59 @@ class UsageTest extends OrderKernelTestBase {
     $order_type = OrderType::load($this->order->bundle());
     $valid_promotions = $this->promotionStorage->loadAvailable($this->order);
     $this->assertEmpty($valid_promotions);
+  }
+
+  /**
+   * Tests the Promotions module cron job.
+   */
+  public function testPromotionCron() {
+    $this->order->save();
+    $order_type = $this->order->bundle();
+
+    // Date restricted promotions.
+    $valid_promotion = Promotion::create([
+      'name' => 'Valid Promotion',
+      'order_types' => [$order_type],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'start_date' => '2017-01-01',
+    ]);
+    $this->assertEquals(SAVED_NEW, $valid_promotion->save());
+
+    $expired_promotion = Promotion::create([
+      'name' => 'Expired Promotion',
+      'order_types' => [$order_type],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'start_date' => '2017-01-01',
+      'end_date' => '2019-01-01',
+    ]);
+    $this->assertEquals(SAVED_NEW, $expired_promotion->save());
+
+    // Usage restricted promotions.
+    $promotion1 = Promotion::create([
+      'name' => 'Promotion 1',
+      'order_types' => [$order_type],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'usage_limit' => 1,
+    ]);
+    $this->assertEquals(SAVED_NEW, $promotion1->save());
+    $this->usage->register($this->order, $promotion1);
+
+    $promotion2 = Promotion::create([
+      'name' => 'Promotion 2',
+      'order_types' => [$order_type],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+      'usage_limit' => 2,
+    ]);
+    $this->assertEquals(SAVED_NEW, $promotion2->save());
+    $this->usage->register($this->order, $promotion2);
+
+    $this->assertCount(4, $this->promotionStorage->loadByProperties(['status' => TRUE]));
+    \Drupal::service('commerce_promotion.cron')->run();
+    $this->assertCount(2, $this->promotionStorage->loadByProperties(['status' => TRUE]));
   }
 
 }

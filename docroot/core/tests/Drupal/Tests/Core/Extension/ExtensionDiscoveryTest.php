@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Extension;
 
 use Drupal\Component\FileCache\FileCacheFactory;
+use Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Tests\UnitTestCase;
@@ -22,7 +25,7 @@ class ExtensionDiscoveryTest extends UnitTestCase {
    *
    * @covers ::scan
    */
-  public function testExtensionDiscoveryVfs() {
+  public function testExtensionDiscoveryVfs(): void {
 
     // Set up the file system.
     $filesystem = [];
@@ -70,7 +73,7 @@ class ExtensionDiscoveryTest extends UnitTestCase {
    * @covers ::scan
    * @runInSeparateProcess
    */
-  public function testExtensionDiscoveryCache() {
+  public function testExtensionDiscoveryCache(): void {
     // Set up an extension object in the cache to mimic site prior to changing
     // \Drupal\Core\Extension\ExtensionDiscovery::scanDirectory() to cache an
     // array instead of an object. Note we cannot use the VFS file system
@@ -201,6 +204,18 @@ class ExtensionDiscoveryTest extends UnitTestCase {
     else {
       $filesystem_structure[$piece] = $content;
     }
+  }
+
+  /**
+   * Tests deprecated iterator.
+   *
+   * @covers \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator
+   * @group legacy
+   */
+  public function testDeprecatedIterator(): void {
+    $this->expectDeprecation('The Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterCallback instead. See https://www.drupal.org/node/3343023');
+    $recursive_extension_filter_iterator = new RecursiveExtensionFilterIterator(new \RecursiveDirectoryIterator('.'));
+    $this->assertInstanceOf(RecursiveExtensionFilterIterator::class, $recursive_extension_filter_iterator);
   }
 
 }

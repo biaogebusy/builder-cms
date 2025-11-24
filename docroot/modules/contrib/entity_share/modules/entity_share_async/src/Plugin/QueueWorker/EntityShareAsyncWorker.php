@@ -4,14 +4,14 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_async\Plugin\QueueWorker;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\State\StateInterface;
 use Drupal\entity_share_async\Service\QueueHelperInterface;
 use Drupal\entity_share_client\ImportContext;
 use Drupal\entity_share_client\Service\ImportServiceInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Queue\QueueWorkerBase;
 
 /**
  * Asynchronous import queue worker.
@@ -88,7 +88,7 @@ class EntityShareAsyncWorker extends QueueWorkerBase implements ContainerFactory
 
     if (empty($ids)) {
       $this->logger->warning(
-        "Cannot synchronize item @uuid from channel @channel_id of remote @remote_id with the import config @import_config_id",
+        'Cannot synchronize item @uuid from channel @channel_id of remote @remote_id with the import config @import_config_id',
         [
           '@uuid' => $item['uuid'],
           '@channel_id' => $item['channel_id'],

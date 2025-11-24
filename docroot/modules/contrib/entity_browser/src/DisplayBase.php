@@ -169,6 +169,7 @@ abstract class DisplayBase extends PluginBase implements DisplayInterface, Conta
       $persistent_data,
       Settings::get('entity_browser_expire', 21600)
     );
+    return [];
   }
 
   /**

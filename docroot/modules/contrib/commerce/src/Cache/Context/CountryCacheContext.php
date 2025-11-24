@@ -2,7 +2,7 @@
 
 namespace Drupal\commerce\Cache\Context;
 
-use Drupal\commerce\CurrentCountry;
+use Drupal\commerce\CurrentCountryInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CacheContextInterface;
 
@@ -14,21 +14,12 @@ use Drupal\Core\Cache\Context\CacheContextInterface;
 class CountryCacheContext implements CacheContextInterface {
 
   /**
-   * The current country.
-   *
-   * @var \Drupal\commerce\CurrentCountry
-   */
-  protected $currentCountry;
-
-  /**
    * Constructs a new CountryCacheContext object.
    *
-   * @param \Drupal\commerce\CurrentCountry $country
+   * @param \Drupal\commerce\CurrentCountryInterface $currentCountry
    *   The current country.
    */
-  public function __construct(CurrentCountry $country) {
-    $this->currentCountry = $country;
-  }
+  public function __construct(protected CurrentCountryInterface $currentCountry) {}
 
   /**
    * {@inheritdoc}
@@ -41,7 +32,9 @@ class CountryCacheContext implements CacheContextInterface {
    * {@inheritdoc}
    */
   public function getContext() {
-    return $this->currentCountry->getCountry()->getCountryCode();
+    // In case the current country cannot be determined, return "none" as the
+    // cache context.
+    return $this->currentCountry->getCountry()?->getCountryCode() ?? 'none';
   }
 
   /**

@@ -26,17 +26,17 @@ class EntitySharePathautoEnhancer extends ResourceFieldEnhancerBase implements C
   /**
    * Configuration value when exposing current state.
    */
-  const EXPOSE_CURRENT_PATHAUTO = 'expose_current_pathauto';
+  public const EXPOSE_CURRENT_PATHAUTO = 'expose_current_pathauto';
 
   /**
    * Configuration value when the remote will use its pathauto.
    */
-  const FORCE_ENABLE_PATHAUTO = 'force_enable_pathauto';
+  public const FORCE_ENABLE_PATHAUTO = 'force_enable_pathauto';
 
   /**
    * Configuration value when the remote will not use its pathauto.
    */
-  const FORCE_DISABLE_PATHAUTO = 'force_disable_pathauto';
+  public const FORCE_DISABLE_PATHAUTO = 'force_disable_pathauto';
 
   /**
    * The key value service.
@@ -84,10 +84,10 @@ class EntitySharePathautoEnhancer extends ResourceFieldEnhancerBase implements C
 
         $entity_type_id = $entity->getEntityTypeId();
         $key = PathautoState::getPathautoStateKey($entity->id());
-        $state = $this->keyValue->get("pathauto_state.$entity_type_id")
+        $state = $this->keyValue->get("pathauto_state.{$entity_type_id}")
           ->get($key);
 
-        if (!is_null($state)) {
+        if ($state !== NULL) {
           $data['pathauto'] = $state;
         }
         else {

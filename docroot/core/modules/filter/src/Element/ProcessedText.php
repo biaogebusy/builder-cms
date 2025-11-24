@@ -5,17 +5,17 @@ namespace Drupal\filter\Element;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Attribute\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\filter\Plugin\FilterInterface;
 use Drupal\filter\Render\FilteredMarkup;
 
 /**
  * Provides a processed text render element.
- *
- * @RenderElement("processed_text")
  */
-class ProcessedText extends RenderElement {
+#[RenderElement('processed_text')]
+class ProcessedText extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -85,6 +85,11 @@ class ProcessedText extends RenderElement {
       $message = !$format ? 'Missing text format: %format.' : 'Disabled text format: %format.';
       static::logger('filter')->alert($message, ['%format' => $format_id]);
       $element['#markup'] = '';
+      // Associate the disabled text format's cache tag, to ensure re-enabling
+      // the text format invalidates the appropriate render cache items.
+      if ($format !== NULL) {
+        $element['#cache']['tags'] = Cache::mergeTags($element['#cache']['tags'] ?? [], $format->getCacheTags());
+      }
       return $element;
     }
 

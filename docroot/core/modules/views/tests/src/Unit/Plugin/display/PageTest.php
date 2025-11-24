@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\display;
 
 use Drupal\Tests\UnitTestCase;
@@ -15,7 +17,7 @@ class PageTest extends UnitTestCase {
   /**
    * @covers ::buildBasicRenderable
    */
-  public function testBuildBasicRenderable() {
+  public function testBuildBasicRenderable(): void {
     $route = new Route('/test-view');
     $route->setDefault('view_id', 'test_view');
     $route->setOption('_view_display_plugin_id', 'page');
@@ -31,7 +33,7 @@ class PageTest extends UnitTestCase {
   /**
    * @covers ::buildBasicRenderable
    */
-  public function testBuildBasicRenderableWithMissingRoute() {
+  public function testBuildBasicRenderableWithMissingRoute(): void {
     $this->expectException(\BadFunctionCallException::class);
     Page::buildBasicRenderable('test_view', 'page_1', []);
   }

@@ -15,7 +15,7 @@ class VideoEmbedIFrameTest extends KernelTestBase {
    * @return array
    *   Video iframe test cases.
    */
-  public function videoEmbedIframeTestCases() {
+  public static function videoEmbedIframeTestCases() {
     return [
       'Default' => [
         [
@@ -70,10 +70,11 @@ class VideoEmbedIFrameTest extends KernelTestBase {
         [
           '#type' => 'video_embed_iframe',
           '#attributes' => [
+            'title' => 'test',
             'width' => '100',
           ],
         ],
-        '<iframe width="100"></iframe>',
+        '<iframe title="test" width="100"></iframe>',
       ],
       'Fragment' => [
         [

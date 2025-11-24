@@ -64,9 +64,9 @@
       }
 
       // Dialog based conflict resolution.
-      var $conflict_overview_form = $('#conflict-overview-form', context);
-      if ($conflict_overview_form.length !== 0) {
-        $conflict_overview_form.find('[name="conflict-reset-changes"]').click(function (e) {
+      var $conflictOverviewForm = $('#conflict-overview-form', context);
+      if ($conflictOverviewForm.length !== 0) {
+        $conflictOverviewForm.find('[name="conflict-reset-changes"]').click(function (e) {
           e.preventDefault();
           $('form').each(function () {
             $(this).trigger('reset');
@@ -81,7 +81,7 @@
           open: function () {
             $(this).siblings('.ui-dialog-titlebar .ui-dialog-titlebar-close').remove();
           },
-          title: $conflict_overview_form.attr('title'),
+          title: $conflictOverviewForm.attr('title'),
           modal: true,
           zIndex: 10000,
           position: {my: 'top', at: 'top+25%'},
@@ -91,7 +91,7 @@
           draggable: true,
           closeOnEscape: false
         };
-        $conflict_overview_form.dialog(dialogOptions);
+        $conflictOverviewForm.dialog(dialogOptions);
       }
 
       $('.conflict-resolution-dialog .ui-dialog-titlebar-close').remove();

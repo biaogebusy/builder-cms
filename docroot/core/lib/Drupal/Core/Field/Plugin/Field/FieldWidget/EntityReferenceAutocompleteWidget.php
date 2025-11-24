@@ -2,24 +2,23 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
  * Plugin implementation of the 'entity_reference_autocomplete' widget.
- *
- * @FieldWidget(
- *   id = "entity_reference_autocomplete",
- *   label = @Translation("Autocomplete"),
- *   description = @Translation("An autocomplete text field."),
- *   field_types = {
- *     "entity_reference"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'entity_reference_autocomplete',
+  label: new TranslatableMarkup('Autocomplete'),
+  description: new TranslatableMarkup('An autocomplete text field.'),
+  field_types: ['entity_reference'],
+)]
 class EntityReferenceAutocompleteWidget extends WidgetBase {
 
   /**
@@ -97,11 +96,20 @@ class EntityReferenceAutocompleteWidget extends WidgetBase {
     $entity = $items->getEntity();
     $referenced_entities = $items->referencedEntities();
 
+    $selection_settings = [];
     // Append the match operation to the selection settings.
-    $selection_settings = $this->getFieldSetting('handler_settings') + [
+    if ($this->getFieldSetting('handler_settings') !== NULL) {
+      $selection_settings = $this->getFieldSetting('handler_settings');
+    }
+    $selection_settings += [
       'match_operator' => $this->getSetting('match_operator'),
       'match_limit' => $this->getSetting('match_limit'),
     ];
+
+    // Append the entity if it is already created.
+    if (!$entity->isNew()) {
+      $selection_settings['entity'] = $entity;
+    }
 
     $element += [
       '#type' => 'entity_autocomplete',

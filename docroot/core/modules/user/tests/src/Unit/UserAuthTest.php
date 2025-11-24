@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -12,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * @coversDefaultClass \Drupal\user\UserAuth
@@ -65,6 +68,8 @@ class UserAuthTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->userStorage = $this->createMock('Drupal\Core\Entity\EntityStorageInterface');
 
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit\Framework\MockObject\MockObject $entity_type_manager */
@@ -91,7 +96,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @dataProvider providerTestAuthenticateWithMissingCredentials
    */
-  public function testAuthenticateWithMissingCredentials($username, $password) {
+  public function testAuthenticateWithMissingCredentials($username, $password): void {
     $this->userStorage->expects($this->never())
       ->method('loadByProperties');
 
@@ -103,7 +108,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerTestAuthenticateWithMissingCredentials() {
+  public static function providerTestAuthenticateWithMissingCredentials() {
     return [
       [NULL, NULL],
       [NULL, ''],
@@ -117,7 +122,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @covers ::authenticate
    */
-  public function testAuthenticateWithNoAccountReturned() {
+  public function testAuthenticateWithNoAccountReturned(): void {
     $this->userStorage->expects($this->once())
       ->method('loadByProperties')
       ->with(['name' => $this->username])
@@ -131,7 +136,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @covers ::authenticate
    */
-  public function testAuthenticateWithIncorrectPassword() {
+  public function testAuthenticateWithIncorrectPassword(): void {
     $this->userStorage->expects($this->once())
       ->method('loadByProperties')
       ->with(['name' => $this->username])
@@ -150,7 +155,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @covers ::authenticate
    */
-  public function testAuthenticateWithCorrectPassword() {
+  public function testAuthenticateWithCorrectPassword(): void {
     $this->testUser->expects($this->once())
       ->method('id')
       ->willReturn(1);
@@ -177,7 +182,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @covers ::authenticate
    */
-  public function testAuthenticateWithZeroPassword() {
+  public function testAuthenticateWithZeroPassword(): void {
     $this->testUser->expects($this->once())
       ->method('id')
       ->willReturn(2);
@@ -200,7 +205,7 @@ class UserAuthTest extends UnitTestCase {
    *
    * @covers ::authenticate
    */
-  public function testAuthenticateWithCorrectPasswordAndNewPasswordHash() {
+  public function testAuthenticateWithCorrectPasswordAndNewPasswordHash(): void {
     $this->testUser->expects($this->once())
       ->method('id')
       ->willReturn(1);
@@ -257,15 +262,12 @@ class UserAuthTest extends UnitTestCase {
       ->method('remove')
       ->with('check_logged_in');
 
-    $event_mock = $this->createMock(ResponseEvent::class);
-    $event_mock
-      ->expects($this->once())
-      ->method('getResponse')
-      ->willReturn($response);
-    $event_mock
-      ->expects($this->exactly(3))
-      ->method('getRequest')
-      ->willReturn($request);
+    $event = new ResponseEvent(
+      $this->createMock(HttpKernelInterface::class),
+      $request,
+      HttpKernelInterface::MAIN_REQUEST,
+      $response
+    );
 
     $request
       ->setSession($session_mock);
@@ -275,7 +277,7 @@ class UserAuthTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->onlyMethods([])
       ->getMock()
-      ->addCheckToUrl($event_mock);
+      ->addCheckToUrl($event);
 
     $this->assertSame("$frontend_url?check_logged_in=1", $response->getTargetUrl());
   }
@@ -310,15 +312,12 @@ class UserAuthTest extends UnitTestCase {
       ->method('remove')
       ->with('check_logged_in');
 
-    $event_mock = $this->createMock(ResponseEvent::class);
-    $event_mock
-      ->expects($this->once())
-      ->method('getResponse')
-      ->willReturn($response);
-    $event_mock
-      ->expects($this->exactly(3))
-      ->method('getRequest')
-      ->willReturn($request);
+    $event = new ResponseEvent(
+      $this->createMock(HttpKernelInterface::class),
+      $request,
+      HttpKernelInterface::MAIN_REQUEST,
+      $response
+    );
 
     $request
       ->setSession($session_mock);
@@ -328,7 +327,7 @@ class UserAuthTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->onlyMethods([])
       ->getMock()
-      ->addCheckToUrl($event_mock);
+      ->addCheckToUrl($event);
 
     $this->assertSame("$frontend_url?check_logged_in=1#a_fragment", $response->getTargetUrl());
   }

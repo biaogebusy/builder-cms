@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\redirect\Kernel\Migrate\d7\PathRedirectTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\redirect\Kernel\Migrate\d7;
 

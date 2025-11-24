@@ -16,7 +16,7 @@ class TestTimeService extends Time {
    *
    * @see \Drupal\Tests\search_api\Kernel\TestTimeService::getRequestTime()
    */
-  protected $requestTime;
+  protected int $requestTime;
 
   /**
    * Constructs a TestTimeService object.
@@ -30,6 +30,19 @@ class TestTimeService extends Time {
    */
   public function getRequestTime() {
     return $this->requestTime;
+  }
+
+  /**
+   * Sets the reported request time.
+   *
+   * @param int $request_time
+   *   The new request time to report.
+   *
+   * @return $this
+   */
+  public function setRequestTime(int $request_time): static {
+    $this->requestTime = $request_time;
+    return $this;
   }
 
   /**

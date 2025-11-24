@@ -1,0 +1,58 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NM"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Alxa Meng": {
+			"local_name": "阿拉善盟",
+			"has_children": true
+		},
+		"Bayannur Shi": {
+			"local_name": "巴彦淖尔市",
+			"has_children": true
+		},
+		"Baotou Shi": {
+			"local_name": "包头市",
+			"has_children": true
+		},
+		"Chifeng Shi": {
+			"local_name": "赤峰市",
+			"has_children": true
+		},
+		"Ordos Shi": {
+			"local_name": "鄂尔多斯市",
+			"has_children": true
+		},
+		"Hohhot Shi": {
+			"local_name": "呼和浩特市",
+			"has_children": true
+		},
+		"Hulun Buir Shi": {
+			"local_name": "呼伦贝尔市",
+			"has_children": true
+		},
+		"Tongliao Shi": {
+			"local_name": "通辽市",
+			"has_children": true
+		},
+		"Wuhai Shi": {
+			"local_name": "乌海市",
+			"has_children": true
+		},
+		"Ulanqab Shi": {
+			"local_name": "乌兰察布市",
+			"has_children": true
+		},
+		"Xilin Gol Meng": {
+			"local_name": "锡林郭勒盟",
+			"has_children": true
+		},
+		"Hinggan Meng": {
+			"local_name": "兴安盟",
+			"has_children": true
+		}
+	}
+}

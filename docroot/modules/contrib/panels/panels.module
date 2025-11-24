@@ -27,7 +27,7 @@ define('PANELS_TITLE_PANE', 2);
 /**
  * Implements hook_ENTITY_TYPE_create().
  *
- * We need to set the storage information on Panels displays being storaged
+ * We need to set the storage information on Panels displays being stored
  * in Page Manager as early as possible, to signal to Panels that features
  * requiring Panels storage (like the IPE) are supported.
  *
@@ -55,10 +55,12 @@ function panels_layout_alter(&$definitions) {
     if (!($definitions[$layout_name] instanceof LayoutDefinition)) {
       continue;
     }
-    if (in_array($layout_name, $core_layouts) && empty($definitions[$layout_name]->getIcon())) {
+    $layout_definition = $layout;
+    $icon = $layout_definition->getIcon();
+    if (in_array($layout_name, $core_layouts) && $icon && empty($icon['#uri'])) {
       $definitions[$layout_name]->setIconPath($panels_path . '/layouts/' . $layout_name . '/' . $layout_name . '.png');
     }
-    if (empty($definitions[$layout_name]->getIcon())) {
+    if (empty($icon)) {
       $definitions[$layout_name]->setIconPath($panels_path . '/layouts/no-layout-preview.png');
     }
   }
@@ -110,4 +112,27 @@ function panels_form_page_manager_add_variant_form_submit(array &$form, FormStat
   if ($plugin instanceof PanelsDisplayVariant) {
     $plugin->setStorage('page_manager', $page_variant->id());
   }
+}
+
+/**
+ * Implements hook_config_schema_info_alter().
+ */
+function panels_config_schema_info_alter(&$definitions) {
+  $definitions['ctools.block_plugin.*']['mapping'] += [
+    'css_classes' => [
+      'type' => 'sequence',
+      'label' => 'The list of the display variant CSS classes',
+      'sequence' => [
+        'type' => 'string',
+      ],
+    ],
+    'html_id' => [
+      'type' => 'string',
+      'label' => 'The HTML Id. of the display variant',
+    ],
+    'css_styles' => [
+      'type' => 'string',
+      'label' => 'The inline CSS styles of the display variant',
+    ],
+  ];
 }

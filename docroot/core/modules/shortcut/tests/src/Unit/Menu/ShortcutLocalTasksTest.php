@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\shortcut\Unit\Menu;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -36,7 +38,7 @@ class ShortcutLocalTasksTest extends LocalTaskIntegrationTestBase {
    *
    * @dataProvider getShortcutPageRoutes
    */
-  public function testShortcutPageLocalTasks($route) {
+  public function testShortcutPageLocalTasks($route): void {
     $tasks = [
       0 => ['shortcut.set_switch', 'entity.user.canonical', 'entity.user.edit_form'],
     ];
@@ -46,7 +48,7 @@ class ShortcutLocalTasksTest extends LocalTaskIntegrationTestBase {
   /**
    * Provides a list of routes to test.
    */
-  public function getShortcutPageRoutes() {
+  public static function getShortcutPageRoutes() {
     return [
       ['entity.user.canonical'],
       ['entity.user.edit_form'],

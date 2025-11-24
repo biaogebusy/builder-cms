@@ -54,7 +54,7 @@ class EntityViewsData extends CoreEntityViewsData {
     // Add missing reverse relationships. Workaround for core issue #2706431.
     $base_fields = $this->getEntityFieldManager()->getBaseFieldDefinitions($entity_type_id);
     $entity_reference_fields = array_filter($base_fields, function (BaseFieldDefinition $field) {
-      return $field->getType() == 'entity_reference';
+      return !$field->hasCustomStorage() && $field->getType() == 'entity_reference';
     });
     $this->addReverseRelationships($data, $entity_reference_fields);
     // Add views integration for bundle plugin fields.

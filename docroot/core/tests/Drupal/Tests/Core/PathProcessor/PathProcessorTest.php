@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\PathProcessor;
 
 use Drupal\Core\Language\Language;
@@ -39,6 +41,7 @@ class PathProcessorTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
 
     // Set up some languages to be used by the language-based path processor.
     $languages = [];
@@ -75,7 +78,7 @@ class PathProcessorTest extends UnitTestCase {
   /**
    * Tests resolving the inbound path to the system path.
    */
-  public function testProcessInbound() {
+  public function testProcessInbound(): void {
 
     // Create an alias manager stub.
     $alias_manager = $this->getMockBuilder(AliasManager::class)

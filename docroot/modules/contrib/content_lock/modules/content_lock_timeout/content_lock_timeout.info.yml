@@ -5,9 +5,9 @@ type: module
 package: Content
 configure: content_lock_timeout.settings
 dependencies:
- - content_lock:content_lock
+  - content_lock:content_lock
 
-# Information added by Drupal.org packaging script on 2022-11-14
-version: '8.x-2.3'
+# Information added by Drupal.org packaging script on 2024-05-15
+version: '8.x-2.4'
 project: 'content_lock'
-datestamp: 1668427345
+datestamp: 1715783061

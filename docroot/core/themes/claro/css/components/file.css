@@ -11,18 +11,18 @@
  */
 
 .file {
-  min-height: 1.0625rem;
-  padding-left: 1.5rem; /* LTR */
-  background-position: left 0.0625rem;
-  background-size: 1rem 1rem;
-  font-size: 0.889rem;
-  line-height: 1.125rem;
-}
+  --file-offset: 0.0625rem;
+  --file-font-size: var(--font-size-s);
+  --file-size-color: var(--color-gray-800);
 
-[dir="rtl"] .file {
-  padding-right: 1.5rem;
+  min-block-size: calc(var(--space-m) + var(--file-offset));
+  padding-inline-start: var(--space-l);
+  background-position: left var(--file-offset);
+  background-size: var(--space-m) var(--space-m);
+  font-size: var(--file-font-size);
+  line-height: calc(18rem / 16);
 }
 
 .file__size {
-  color: #55565b;
+  color: var(--file-size-color);
 }

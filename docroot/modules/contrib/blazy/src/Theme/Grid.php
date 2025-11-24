@@ -2,10 +2,11 @@
 
 namespace Drupal\blazy\Theme;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Utility\Arrays;
 use Drupal\blazy\Utility\Check;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides grid utilities.
@@ -45,23 +46,45 @@ class Grid {
       $attachments = $refresh ? $manager->attach($settings) : [];
     }
 
+    // @todo separate grid item attributes from contents.
     $contents = self::content($items, $settings);
     self::attributes($attrs, $settings);
 
-    $wrappers = ['item-list--blazy'];
-    if ($style = $settings['style'] ?? NULL) {
-      $wrappers[] = 'item-list--blazy-' . str_replace('_', '-', $style);
+    // Without theme_item_list if so required.
+    // Expecting grid item attributes with divities, not UL list.
+    if ($blazies->get('grid.unlist')) {
+      // Provides indexed children.
+      if ($blazies->get('grid.indexed')) {
+        $output = $contents;
+      }
+      // Or grouped children.
+      else {
+        $output['items'] = $contents;
+      }
+      $output['#settings'] = $settings;
+    }
+    // With theme_item_list.
+    else {
+      $wrappers = ['item-list--blazy'];
+      if ($style = $settings['style'] ?? NULL) {
+        $wrappers[] = 'item-list--blazy-' . str_replace('_', '-', $style);
+      }
+
+      $output['#theme'] = 'item_list';
+      $output['#items'] = $contents;
+      $output['#context'] = ['settings' => $settings];
+      $output['#wrapper_attributes'] = [
+        'class' => array_merge(['item-list'], $wrappers),
+      ];
     }
 
-    return [
-      '#theme'              => 'item_list',
-      '#items'              => $contents,
-      '#context'            => ['settings' => $settings],
-      '#attributes'         => $attrs,
-      '#wrapper_attributes' => ['class' => array_merge(['item-list'], $wrappers)],
-      '#title'              => self::label($blazies),
-      '#attached'           => $attachments,
-    ];
+    $output['#title'] = self::label($blazies);
+    $output['#attributes'] = $attrs;
+    if ($attachments) {
+      $output['#attached'] = $attachments;
+    }
+
+    return $output;
   }
 
   /**
@@ -72,6 +95,11 @@ class Grid {
     $gallery_id = $blazies->get('lightbox.gallery_id');
     $is_gallery = $blazies->is('gallery');
     $namespace  = $blazies->get('namespace');
+
+    // Limit to grid only, so to be usable for plain list.
+    if ($blazies->is('grid')) {
+      self::containerAttributes($attrs, $settings);
+    }
 
     // Provides data-attributes to avoid conflict with original implementations.
     Attributes::container($attrs, $settings);
@@ -86,11 +114,6 @@ class Grid {
         $id = $id . Internals::getHtmlId('-');
       }
       $attrs['id'] = $id;
-    }
-
-    // Limit to grid only, so to be usable for plain list.
-    if ($blazies->is('grid')) {
-      self::containerAttributes($attrs, $settings, $blazies);
     }
 
     // Listens to hook_blazy_settings_alter for minor alters.
@@ -108,7 +131,7 @@ class Grid {
     array &$attrs,
     array &$content_attrs,
     $blazies,
-    $root = FALSE
+    $root = FALSE,
   ): void {
     if ($root) {
       if ($attrs_alter = ($blazies->get('grid.attributes') ?: [])) {
@@ -139,8 +162,7 @@ class Grid {
     $blazies = $options['blazies'] ?? Internals::settings();
 
     $blazies->set('count', $count)
-      ->set('is.grid', TRUE)
-      ->set('ui.deprecated_class', TRUE);
+      ->set('is.grid', TRUE);
 
     $sets = [
       'grid'        => $options['grid'] ?? '6x1',
@@ -150,10 +172,7 @@ class Grid {
       'blazies'     => $blazies,
     ];
 
-    if ($style == 'nativegrid') {
-      self::toNativeGrid($sets);
-    }
-
+    self::toNativeGrid($sets);
     self::attributes($attrs, $sets);
 
     if (!$classes) {
@@ -165,13 +184,36 @@ class Grid {
       }
     }
 
-    if ($style == 'nativegrid') {
-      if ($gapless) {
-        $classes[] = 'is-b-gapless';
+    if ($gapless) {
+      $classes[] = 'is-b-gapless';
+    }
+
+    if ($is_form && $style == 'nativegrid') {
+      $attrs['class'][] = 'b-nativegrid--form';
+    }
+
+    // Provides item attributes if any grid.items, dummy array to hold data:
+    // #settings, #attributes, #content_attributes, and anything else.
+    $i = 0;
+    if ($items = $blazies->get('grid.items', [])) {
+      foreach ($items as &$item) {
+        Internals::hashtag($item, 'settings', TRUE);
+
+        $subsets = $sets;
+        $blazy = $subsets['blazies']->reset($subsets);
+        $subsets['delta'] = $i;
+        $blazy->set('delta', $i);
+        $subattrs = [];
+        $content_attrs = [];
+
+        self::itemAttributes($subattrs, $content_attrs, $subsets);
+        $item['#attributes'] = $subattrs;
+        $item['#content_attributes'] = $content_attrs;
+
+        $i++;
       }
-      if ($is_form) {
-        $attrs['class'][] = 'b-nativegrid--form';
-      }
+
+      $blazies->set('grid.items', $items);
     }
 
     $classes = array_merge($attrs['class'], $classes);
@@ -186,7 +228,7 @@ class Grid {
   public static function itemAttributes(
     array &$attrs,
     array &$content_attrs,
-    array $settings
+    array $settings,
   ): void {
     $blazies = $settings['blazies'];
     $item_class = $blazies->get('grid.item_class', 'grid');
@@ -198,19 +240,34 @@ class Grid {
     $classes = (array) ($content_attrs['class'] ?? []);
     $content_attrs['class'] = array_merge(['grid__content'], $classes);
 
+    // Convert grid value to attributes.
+    self::toItemAttributes($attrs, $settings);
+
+    // Checks for hook alters.
+    self::checkAttributes($attrs, $content_attrs, $blazies, FALSE);
+  }
+
+  /**
+   * Convert grid value to attributes.
+   */
+  public static function toItemAttributes(array &$attrs, array $settings): void {
+    $blazies = $settings['blazies'];
+
     // Count may be set as 2 even if it is 100 by sliders for their magic trick.
     // However total, the new preserved count key, may not be set somewhere.
     // @todo use just total after sub-modules provides it to avoid this check.
     $total = Internals::count($blazies);
     $grid_count = $blazies->get('grid.count', 0);
+    $bw = 'data-b-w';
+    $bh = 'data-b-h';
 
-    if ($dim = $blazies->get('grid.dimensions')) {
+    if ($dim = $blazies->get('grid.dimensions.lg', NULL)) {
       $dim = (array) $dim;
-      $delta = $settings['delta'] ?? $blazies->get('delta');
+      $delta = $blazies->get('delta', $settings['delta'] ?? 0);
       if (isset($dim[$delta])) {
-        $attrs['data-b-w'] = $dim[$delta]['width'];
+        $attrs[$bw] = $dim[$delta]['width'];
         if ($height = $dim[$delta]['height'] ?? NULL) {
-          $attrs['data-b-h'] = $height;
+          $attrs[$bh] = $height;
         }
       }
       else {
@@ -225,50 +282,63 @@ class Grid {
         $width = $dim[$key]['width'] ?? $dim[0]['width'] ?? NULL;
 
         if ($width && $total > $grid_count) {
-          $attrs['data-b-w'] = $width;
+          $attrs[$bw] = $width;
           if ($height) {
-            $attrs['data-b-h'] = $height;
+            $attrs[$bh] = $height;
           }
         }
       }
     }
+  }
 
-    self::checkAttributes($attrs, $content_attrs, $blazies, FALSE);
+  /**
+   * Checks if a grid expects a flexbox layout, not flex masonry.
+   */
+  public static function isFlexbox(array $settings, $key = 'grid'): bool {
+    return self::isPair($settings, 'flexbox', $key);
   }
 
   /**
    * Checks if a grid expects a two-dimensional grid.
    */
-  public static function isNativeGrid($grid): bool {
-    return !empty($grid) && !is_numeric($grid);
+  public static function isNativeGrid(array $settings, $key = 'grid'): bool {
+    return self::isPair($settings, 'nativegrid', $key);
   }
 
   /**
    * Checks if a grid uses a native grid, but expecting a masonry.
    */
-  public static function isNativeGridAsMasonry(array $settings): bool {
-    return !self::isNativeGrid($settings['grid'])
-      && $settings['style'] == 'nativegrid';
+  public static function isNativeGridAsMasonry(array $settings, $key = 'grid'): bool {
+    return self::isPair($settings, 'nativegrid', $key, TRUE);
   }
 
   /**
    * Extracts grid like: 4x4 4x3 2x2 2x4 2x2 2x3 2x3 4x2 4x2, or single 4x4.
    */
-  public static function toDimensions($grid): array {
+  public static function toDimensions(array $settings, $key = 'grid'): array {
     $dimensions = [];
-    if (self::isNativeGrid($grid)) {
-      $values = array_map('trim', explode(" ", $grid));
+    $nativegrid = self::isNativeGrid($settings, $key);
 
-      foreach ($values as $value) {
-        $width = $value;
-        $height = 0;
+    if ($nativegrid || self::isFlexbox($settings, $key)) {
+      if ($grid = $settings[$key] ?? NULL) {
+        $grid = preg_replace("/[\r\n]+/", " ", $grid);
+        $grid = preg_replace('/\s+/', ' ', $grid);
+        $values = array_map('trim', explode(" ", $grid));
 
-        // If multidimensional layout.
-        if (Blazy::has($value, 'x')) {
-          [$width, $height] = array_pad(array_map('trim', explode("x", $value, 2)), 2, NULL);
+        foreach ($values as $value) {
+          $width = $value;
+          $height = 0;
+
+          // If multidimensional layout.
+          if (Blazy::has($value, '-')) {
+            [$width, $height] = array_pad(array_map('trim', explode("-", $value, 2)), 2, NULL);
+          }
+          elseif (Blazy::has($value, 'x')) {
+            [$width, $height] = array_pad(array_map('trim', explode("x", $value, 2)), 2, NULL);
+          }
+
+          $dimensions[] = ['width' => $width, 'height' => $height];
         }
-
-        $dimensions[] = ['width' => (int) $width, 'height' => (int) $height];
       }
     }
 
@@ -284,28 +354,19 @@ class Grid {
     }
 
     $blazies = $settings['blazies'];
-    $grid = $settings['grid_large'] = $settings['grid'];
     if (self::isNativeGridAsMasonry($settings)) {
       $blazies->set('libs.nativegrid__masonry', TRUE);
     }
 
     // If Native Grid style with numeric grid, assumed non-two-dimensional.
-    // @todo add supports for multiple grid_medium and grid_small.
-    if ($dimensions = self::toDimensions($grid)) {
-      // Prevents NestedArray from screwing up.
-      // @todo remove at 3.x grid.large_dimensions for grid.dimensions.
-      $blazies->set('grid.large_dimensions', $dimensions)
-        ->set('grid.dimensions', (object) $dimensions)
-        ->set('grid.large', $grid)
-        ->set('grid.count', count($dimensions));
-    }
+    self::toPair($settings);
   }
 
   /**
    * Limit to grid only, so to be usable for plain list.
    */
-  private static function containerAttributes(array &$attrs, array $settings, $blazies): void {
-    $remove  = $blazies->ui('deprecated_class', FALSE);
+  private static function containerAttributes(array &$attrs, array $settings): void {
+    $blazies = $settings['blazies'];
     $style   = $settings['style'] ?: 'grid';
     $count   = Internals::count($blazies);
     $format1 = 'b-%s';
@@ -320,19 +381,12 @@ class Grid {
       $attrs['class'][] = 'b-odd';
     }
 
-    // Deprecated since 2.17, use the latest instead.
-    if (!$remove) {
-      $format3 = 'block-%s';
-      $attrs['class'][] = sprintf($format3, $style);
-    }
-
     // Adds common grid attributes for CSS3 column, Foundation, etc.
     // Only if using the plain grid column numbers (1 - 12).
     if ($settings['grid_large'] = $settings['grid']) {
       foreach (['small', 'medium', 'large'] as $key) {
         $value = $settings['grid_' . $key] ?? NULL;
         if ($value && is_numeric($value)) {
-          $value = (int) $value;
           if ($key == 'small') {
             $nick = 'sm';
           }
@@ -343,21 +397,41 @@ class Grid {
             $nick = 'lg';
           }
 
-          // Deprecated since 2.17, use the latest instead.
-          if (!$remove) {
-            $attrs['class'][] = $key . '-block-' . $style . '-' . $value;
-          }
-
-          $format3 = 'b-%s--%s-%d';
+          $format3 = 'b-%s--%s-%s';
           $attrs['class'][] = sprintf($format3, $style, $nick, $value);
         }
       }
     }
 
+    // Layouts which might have a min-height region.
+    // Exclude nativegrid and Foundation grid which have fixed heights.
+    $dimensions = $blazies->get('grid.dimensions', []);
+    if ($dimensions) {
+      $styles = ['column', 'flex', 'flexbox'];
+      if (in_array($style, $styles)) {
+        $attrs['class'][] = 'b-mh';
+      }
+    }
+
     // If Native Grid style with numeric grid, assumed non-two-dimensional.
     if ($style == 'nativegrid') {
-      $attrs['class'][] = self::isNativeGridAsMasonry($settings)
-        ? 'is-b-masonry' : 'is-b-native';
+      $masonry = self::isNativeGridAsMasonry($settings);
+      $attrs['class'][] = $masonry ? 'is-b-masonry' : 'is-b-nativegrid';
+    }
+
+    // Since 3.0.7, supports dynamic multi-breakpoint grids.
+    if ($dimensions && $lgs = $dimensions['lg'] ?? NULL) {
+      // Only support dynamic grids if grid_medium is non-numeric.
+      if ($mds = $dimensions['md'] ?? NULL) {
+        $data = [
+          'lg' => self::toValues((array) $lgs),
+          'md' => self::toValues((array) $mds),
+        ];
+
+        $json = Json::encode($data);
+        $attrs['data-b-' . $style] = base64_encode($json);
+        $attrs['class'][] = 'is-b-dygrid';
+      }
     }
   }
 
@@ -387,7 +461,13 @@ class Grid {
 
     $blazies->set('grid.item_class', $item_class);
 
+    $names = [];
+    if ($regions = $blazies->get('grid.items', [])) {
+      $names = array_keys($regions);
+    }
+
     foreach ($items as $key => $item) {
+
       // @todo recheck if D9 Views outputs strings like D7, and adjust this.
       // Nobody report issues since 1.x, likely no more strings since D8+.
       if (!is_array($item)) {
@@ -420,6 +500,8 @@ class Grid {
         $item['content_attributes'],
         $item['item_attributes']
       );
+
+      // Remove useless image item, if any.
       if (is_object($image)) {
         unset($item['#item'], $item['item']);
       }
@@ -430,8 +512,18 @@ class Grid {
         '#attributes' => $content_attrs,
       ] : $item;
 
-      $content['#wrapper_attributes'] = $wrapper_attrs;
-      $contents[] = $content;
+      // With any container-like themes.
+      if ($names) {
+        $delta = $names[$key];
+        $content['#attributes'] = $wrapper_attrs;
+      }
+      // With theme_item_list.
+      else {
+        $delta = $key;
+        $content['#wrapper_attributes'] = $wrapper_attrs;
+      }
+
+      $contents[$delta] = $content;
     }
     return $contents;
   }
@@ -445,6 +537,62 @@ class Grid {
       return $blazies->get('field.label') ?: '';
     }
     return '';
+  }
+
+  /**
+   * Checks if a grid has a pair or non-numeric value: 4x2, 50-md, etc.
+   */
+  private static function isPair(
+    array $settings,
+    $value,
+    $key = 'grid',
+    $numeric = FALSE,
+  ): bool {
+    if ($grid = $settings[$key] ?? NULL) {
+      $style = $settings['style'] ?? 'x';
+      $check = $numeric ? is_numeric($grid) : !is_numeric($grid);
+      return $check && $style === $value;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Passes grid like: 4x4, 50-md, etc.
+   */
+  private static function toPair(array &$settings): void {
+    $blazies = $settings['blazies'];
+    $grid = $settings['grid_large'] = $settings['grid'] ?? NULL;
+
+    if (!$grid) {
+      return;
+    }
+
+    // If Native Grid style with numeric grid, assumed non-two-dimensional.
+    // Since 3.0.7, supports for multiple grid_medium, not grid_small.
+    if ($dimensions = self::toDimensions($settings)) {
+      // Prevents NestedArray from screwing up by making this an object.
+      $blazies->set('grid.dimensions.lg', (object) $dimensions)
+        ->set('grid.large', $grid)
+        ->set('grid.count', count($dimensions));
+
+      // The grid_medium dimensions, see css/components/blazy.style.css.
+      if ($mediums = self::toDimensions($settings, 'grid_medium')) {
+        $blazies->set('grid.dimensions.md', (object) $mediums);
+      }
+    }
+  }
+
+  /**
+   * Converts array to array values.
+   */
+  private static function toValues(array $array): array {
+    $values = [];
+    array_walk($array, function ($val) use (&$values) {
+      if (is_array($val)) {
+        array_push($values, array_values($val));
+      }
+    });
+    return $values;
   }
 
 }

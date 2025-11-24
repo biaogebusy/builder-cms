@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\File;
 
 use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
@@ -19,7 +21,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
    * @covers ::setFilename
    * @covers ::getFilename
    */
-  public function testSetFilename() {
+  public function testSetFilename(): void {
     $event = new FileUploadSanitizeNameEvent('foo.txt', '');
     $this->assertSame('foo.txt', $event->getFilename());
     $event->setFilename('foo.html');
@@ -29,7 +31,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
   /**
    * @covers ::setFilename
    */
-  public function testSetFilenameException() {
+  public function testSetFilenameException(): void {
     $event = new FileUploadSanitizeNameEvent('foo.txt', '');
     $this->assertSame('foo.txt', $event->getFilename());
     $this->expectException(\InvalidArgumentException::class);
@@ -41,7 +43,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
    * @covers ::__construct
    * @covers ::setFilename
    */
-  public function testConstructorException() {
+  public function testConstructorException(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('$filename must be a filename with no path information, "bar/foo.txt" provided');
     new FileUploadSanitizeNameEvent('bar/foo.txt', '');
@@ -50,7 +52,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
   /**
    * @covers ::getAllowedExtensions
    */
-  public function testAllowedExtensions() {
+  public function testAllowedExtensions(): void {
     $event = new FileUploadSanitizeNameEvent('foo.txt', '');
     $this->assertSame([], $event->getAllowedExtensions());
 
@@ -68,7 +70,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
    * @param string $filename
    *   The filename to test
    */
-  public function testEventFilenameFunctions(string $filename) {
+  public function testEventFilenameFunctions(string $filename): void {
     $event = new FileUploadSanitizeNameEvent($filename, '');
     $this->assertSame($filename, $event->getFilename());
   }
@@ -79,7 +81,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
    * @return array
    *   Arrays with original file name.
    */
-  public function provideFilenames() {
+  public static function provideFilenames() {
     return [
       'ASCII filename with extension' => [
         'example.txt',
@@ -102,7 +104,7 @@ class FileUploadSanitizeNameEventTest extends UnitTestCase {
   /**
    * @covers ::stopPropagation
    */
-  public function testStopPropagation() {
+  public function testStopPropagation(): void {
     $this->expectException(\RuntimeException::class);
     $event = new FileUploadSanitizeNameEvent('test.txt', '');
     $event->stopPropagation();

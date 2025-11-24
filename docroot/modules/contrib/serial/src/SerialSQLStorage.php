@@ -2,12 +2,15 @@
 
 namespace Drupal\serial;
 
+use Drupal\Core\Utility\Error;
+use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Database\Database;
 
 /**
  * Serial storage service definition.
@@ -26,19 +29,33 @@ class SerialSQLStorage implements ContainerInjectionInterface, SerialStorageInte
   protected $entityTypeManager;
 
   /**
+   * Drupal\Core\Entity\EntityTypeManager definition.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
+  protected $entityFieldManager;
+
+  /**
+   * The Drupal Logger Factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $loggerFactory;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, EntityFieldManager $entityFieldManager, LoggerChannelFactoryInterface $loggerFactory) {
     $this->entityTypeManager = $entityTypeManager;
+    $this->entityFieldManager = $entityFieldManager;
+    $this->loggerFactory = $loggerFactory;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.manager')
-    );
+    return new static($container->get('entity_type.manager'), $container->get('entity_field.manager'));
   }
 
   /**
@@ -79,7 +96,7 @@ class SerialSQLStorage implements ContainerInjectionInterface, SerialStorageInte
         ->execute();
 
       // If there's a reason why it's come back undefined, reset it.
-      $sid = isset($sid) ? $sid : 0;
+      $sid = $sid ?? 0;
 
       // Delete the temporary record.
       if ($delete && $sid && ($sid % 10) == 0) {
@@ -95,7 +112,7 @@ class SerialSQLStorage implements ContainerInjectionInterface, SerialStorageInte
     // https://www.drupal.org/node/608166
     catch (\Exception $e) {
       $transaction->rollback();
-      watchdog_exception('serial', $e);
+      Error::logException($this->loggerFactory->get('serial'), $e);
       throw $e;
     }
   }
@@ -147,7 +164,7 @@ class SerialSQLStorage implements ContainerInjectionInterface, SerialStorageInte
    * {@inheritdoc}
    */
   public function getAllFields() {
-    return \Drupal::getContainer()->get('entity_field.manager')->getFieldMapByFieldType(SerialStorageInterface::SERIAL_FIELD_TYPE);
+    return $this->entityFieldManager->getFieldMapByFieldType(SerialStorageInterface::SERIAL_FIELD_TYPE);
   }
 
   /**

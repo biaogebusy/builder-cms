@@ -1,0 +1,38 @@
+{
+    "name": "drupal/webform_rest",
+    "description": "Retrieve and submit webforms via REST.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "drupal/webform": "^6.1"
+    },
+    "authors": [
+        {
+            "name": "DÃ©bora Antunes (dgaspara)",
+            "homepage": "https://www.drupal.org/u/dgaspara"
+        },
+        {
+            "name": "Ian McLean (imclean),",
+            "homepage": "https://www.drupal.org/u/imclean"
+        },
+        {
+            "name": "JoÃ£o Marques (joaomarques736)",
+            "homepage": "https://www.drupal.org/u/joaomarques736"
+        },
+        {
+            "name": "Nelson Alves (nsalves)",
+            "homepage": "https://www.drupal.org/u/nsalves"
+        }
+    ],
+    "homepage": "https://www.drupal.org/project/webform_rest",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/webform_rest",
+        "source": "https://git.drupalcode.org/project/webform_rest"
+    },
+    "repositories": {
+        "drupal": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    }
+}

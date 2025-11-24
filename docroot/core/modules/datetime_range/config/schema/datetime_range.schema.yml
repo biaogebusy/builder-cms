@@ -1,13 +1,10 @@
 # Schema for the configuration files of the Datetime Range module.
 
 # Daterange field type.
-
+# This field type has no field instance settings, so no specific config schema type.
+# @see `type: field.field_settings.*`
 field.storage_settings.daterange:
   type: field.storage_settings.datetime
-  label: 'Date range settings'
-
-field.field_settings.daterange:
-  type: field.field_settings.datetime
   label: 'Date range settings'
 
 field.value.daterange:
@@ -31,6 +28,14 @@ field.formatter.settings.daterange_default:
   type: field.formatter.settings.datetime_default
   label: 'Date range default display format settings'
   mapping:
+    from_to:
+      type: string
+      label: 'Display'
+      constraints:
+        Choice:
+          - both
+          - start_date
+          - end_date
     separator:
       type: label
       label: 'Separator'
@@ -40,6 +45,14 @@ field.formatter.settings.daterange_plain:
   type: field.formatter.settings.datetime_plain
   label: 'Date range plain display format settings'
   mapping:
+    from_to:
+      type: string
+      label: 'Display'
+      constraints:
+        Choice:
+          - both
+          - start_date
+          - end_date
     separator:
       type: label
       label: 'Separator'
@@ -49,6 +62,14 @@ field.formatter.settings.daterange_custom:
   type: field.formatter.settings.datetime_custom
   label: 'Date range custom display format settings'
   mapping:
+    from_to:
+      type: string
+      label: 'Display'
+      constraints:
+        Choice:
+          - both
+          - start_date
+          - end_date
     separator:
       type: label
       label: 'Separator'

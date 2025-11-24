@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
@@ -15,7 +17,7 @@ class ProfileFieldCheckRequirementsTest extends MigrateDrupal6TestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
     $this->sourceDatabase->schema()->dropTable('profile_fields');
   }
@@ -23,7 +25,7 @@ class ProfileFieldCheckRequirementsTest extends MigrateDrupal6TestBase {
   /**
    * Tests exception is thrown when profile_fields tables do not exist.
    */
-  public function testCheckRequirements() {
+  public function testCheckRequirements(): void {
     $this->expectException(RequirementsException::class);
     $this->expectExceptionMessage('Profile module not enabled on source site');
     $this->getMigration('user_profile_field')

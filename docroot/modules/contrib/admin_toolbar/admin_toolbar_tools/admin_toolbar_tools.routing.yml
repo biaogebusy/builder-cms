@@ -11,7 +11,7 @@ admin_toolbar_tools.cssjs:
   path: '/admin/flush/cssjs'
   defaults:
     _controller: '\Drupal\admin_toolbar_tools\Controller\ToolbarController::flushJsCss'
-    _title: 'Flush Css and Javascript'
+    _title: 'Flush CSS and JavaScript'
   requirements:
     _permission: 'administer site configuration'
     _csrf_token: 'TRUE'
@@ -87,3 +87,11 @@ admin_toolbar.run.cron:
   requirements:
     _permission: 'administer site configuration'
     _csrf_token: 'TRUE'
+
+admin_toolbar_tools.settings:
+  path: '/admin/config/user-interface/admin-toolbar-tools'
+  defaults:
+    _form: '\Drupal\admin_toolbar_tools\Form\AdminToolbarToolsSettingsForm'
+    _title: 'Admin Toolbar Tools settings'
+  requirements:
+    _permission: 'administer site configuration'

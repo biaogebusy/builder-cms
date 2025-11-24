@@ -2,12 +2,17 @@
   "name": "drupal/views_data_export",
   "description": "Plugin to export views data into various file formats.",
   "type": "drupal-module",
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "require": {
-    "drupal/csv_serialization": "~1.4 || ~2.0 || ~3 || ~4"
+    "drupal/csv_serialization": "~1.4 || ~2.0 || ~3 || ~4",
+    "php": ">=8.1"
   },
   "require-dev": {
+    "drupal/facets": "~3.0",
     "drupal/search_api": "~1.12",
     "drupal/xls_serialization": "~1.0"
+  },
+  "conflict": {
+    "phpoffice/phpspreadsheet": "<1.23.0"
   }
 }

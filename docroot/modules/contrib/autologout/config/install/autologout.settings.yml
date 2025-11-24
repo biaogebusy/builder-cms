@@ -7,8 +7,9 @@ no_individual_logout_threshold: false
 role_logout: false
 role_logout_max: false
 redirect_url: /user/login
+include_destination: true
 no_dialog: false
-message: 'Your session is about to expire. Do you want to reset it?'
+message: 'We are about to log you out for inactivity. If we do, you will lose any unsaved work. Do you need more time?'
 inactivity_message: 'You have been logged out due to inactivity.'
 inactivity_message_type: status
 modal_width: 450

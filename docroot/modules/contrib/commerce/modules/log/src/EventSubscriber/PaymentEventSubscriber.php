@@ -2,11 +2,13 @@
 
 namespace Drupal\commerce_log\EventSubscriber;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_log\LogStorageInterface;
+use Drupal\commerce_payment\Event\FailedPaymentEvent;
 use Drupal\commerce_payment\Event\PaymentEvent;
 use Drupal\commerce_payment\Event\PaymentEvents;
+use Drupal\commerce_payment\FailedPaymentDetailsInterface;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\ManualPaymentGatewayInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -37,6 +39,7 @@ class PaymentEventSubscriber implements EventSubscriberInterface {
       PaymentEvents::PAYMENT_INSERT => ['onPaymentInsert', -100],
       PaymentEvents::PAYMENT_UPDATE => ['onPaymentUpdate', -100],
       PaymentEvents::PAYMENT_DELETE => ['onPaymentDelete', -100],
+      PaymentEvents::PAYMENT_FAILURE => ['onPaymentFailure', -100],
     ];
   }
 
@@ -143,6 +146,35 @@ class PaymentEventSubscriber implements EventSubscriberInterface {
       'amount' => $payment->getBalance(),
       'method' => $payment->getPaymentMethod()?->label(),
     ])->save();
+  }
+
+  /**
+   * Creates a log when payment failed.
+   *
+   * @param \Drupal\commerce_payment\Event\FailedPaymentEvent $event
+   *   The failed payment event.
+   */
+  public function onPaymentFailure(FailedPaymentEvent $event): void {
+    $payment = $event->getPayment();
+    $payment_method = $event->getPaymentMethod();
+
+    // Allow payment methods to add additional information to the commerce log.
+    // These value will not be used by the log template but can allow contrib
+    // and custom code to provide additional reports based on failed payment
+    // data.
+    if ($payment_method?->getType() instanceof FailedPaymentDetailsInterface) {
+      $params = $payment_method->getType()->failedPaymentDetails($payment_method);
+    }
+    else {
+      $params = [];
+    }
+    $this->logStorage->generate($event->getOrder(), 'payment_failed', [
+      'remote_id' => $payment?->getRemoteId(),
+      'method' => $payment_method?->label(),
+      'error_message' => $event->getGatewayException()->getMessage(),
+      'gateway' => $event->getPaymentGateway()->label(),
+      'amount' => $payment?->getBalance(),
+    ] + $params)->save();
   }
 
 }

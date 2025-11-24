@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\commerce_product\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Tests\TestFileCreationTrait;
 use Drupal\commerce\EntityHelper;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\TestFileCreationTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 
@@ -98,7 +98,6 @@ class ProductAdminTest extends ProductBrowserTestBase {
     $this->assertNotNull($product, 'The new product has been created.');
     $this->assertSession()->pageTextContains($this->t('The product @title has been successfully saved', ['@title' => $title]));
     $this->assertSession()->pageTextContains($title);
-    $this->assertFieldValues($product->getStores(), $this->stores, 'Created product has the correct associated stores.');
     $this->assertFieldValues($product->getStoreIds(), $store_ids, 'Created product has the correct associated store ids.');
     $this->drupalGet($product->toUrl('canonical'));
     $this->assertSession()->statusCodeEquals(200);
@@ -132,7 +131,6 @@ class ProductAdminTest extends ProductBrowserTestBase {
     $this->container->get('entity_type.manager')->getStorage('commerce_product')->resetCache([$product->id()]);
     $product = Product::load($product->id());
     $this->assertEquals($product->getTitle(), $title, 'The product title successfully updated.');
-    $this->assertFieldValues($product->getStores(), $this->stores, 'Updated product has the correct associated stores.');
     $this->assertFieldValues($product->getStoreIds(), $store_ids, 'Updated product has the correct associated store ids.');
   }
 
@@ -174,7 +172,7 @@ class ProductAdminTest extends ProductBrowserTestBase {
       'id' => 'random',
       'label' => 'Random',
       'description' => 'My random product type',
-      'variationType' => 'default',
+      'variationTypes' => ['default'],
     ];
     $product_type = $this->createEntity('commerce_product_type', $values);
 

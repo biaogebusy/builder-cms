@@ -29,7 +29,7 @@ class StringLoader implements LoaderInterface {
    * {@inheritdoc}
    */
   public function exists($name) {
-    if (strpos($name, '{# inline_template_start #}') === 0) {
+    if (str_starts_with($name, '{# inline_template_start #}')) {
       return TRUE;
     }
     else {
@@ -40,21 +40,21 @@ class StringLoader implements LoaderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCacheKey($name) {
+  public function getCacheKey(string $name): string {
     return $name;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isFresh($name, $time) {
+  public function isFresh(string $name, int $time): bool {
     return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSourceContext($name) {
+  public function getSourceContext(string $name): Source {
     $name = (string) $name;
     return new Source($name, $name);
   }

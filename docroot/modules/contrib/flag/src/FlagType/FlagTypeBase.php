@@ -2,17 +2,17 @@
 
 namespace Drupal\flag\FlagType;
 
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
-use Drupal\Component\Plugin\PluginBase;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\flag\FlagInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 
 /**
  * Provides a base class for flag type plugins.
@@ -170,7 +170,7 @@ abstract class FlagTypeBase extends PluginBase implements FlagTypePluginInterfac
   /**
    * {@inheritdoc}
    */
-  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, EntityInterface $flaggable = NULL) {
+  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL) {
     // Collect access results from objects.
     $results = $this->moduleHandler->invokeAll('flag_action_access', [
       $action,

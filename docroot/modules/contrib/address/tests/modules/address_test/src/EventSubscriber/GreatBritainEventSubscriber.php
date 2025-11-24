@@ -45,7 +45,7 @@ class GreatBritainEventSubscriber implements EventSubscriberInterface {
    * Provides the subdivisions for Great Britain.
    *
    * Note: Provides just the Welsh counties. A real subscriber would include
-   * the full list, sourced from the CLDR "Territory Subdivisions" listing.
+   * the full list, taken from https://www.iso.org/obp/ui/#iso:code:3166:GB.
    *
    * @param \Drupal\address\Event\SubdivisionsEvent $event
    *   The subdivisions event.
@@ -63,16 +63,12 @@ class GreatBritainEventSubscriber implements EventSubscriberInterface {
       'country_code' => $parents[0],
       'parents' => $parents,
       'subdivisions' => [
-        // Key by the subdivision code, which is the value that's displayed on
-        // the formatted address. Could be an abbreviation (e.g 'CA' for
-        // California) or a full name like below.
-        // If it's an abbreviation, define a 'name' in the subarray, to be used
-        // in the address widget dropdown.
+        // Subdivisions can be keyed by name, or by an ISO code such as "CRF".
+        // If the subdivision code (displayed on the formatted address) or the
+        // subdivision name (displayed in dropdowns) do not match the key
+        // (e.g. "Cardiff"), they should be explicitly set in the array.
         'Anglesey' => [],
-        // You can optionally define an ISO 3166-2 code for each subdivision.
-        'Blaenau Gwent' => [
-          'iso_code' => 'GB-BGW',
-        ],
+        'Blaenau Gwent' => [],
         'Bridgend' => [],
         'Caerphilly' => [],
         'Cardiff' => [],

@@ -1,13 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Core\Image\ImageFactory;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\image_effects\Component\GdImageAnalysis;
+use Drupal\user\UserInterface;
 
 /**
  * Base test class for image_effects tests.
@@ -15,9 +22,7 @@ use Drupal\image_effects\Component\GdImageAnalysis;
 abstract class ImageEffectsTestBase extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'image',
@@ -32,68 +37,56 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
 
   /**
    * Test image style.
-   *
-   * @var \Drupal\image\Entity\ImageStyle
    */
-  protected $testImageStyle;
+  protected ImageStyle $testImageStyle;
 
   /**
    * Test image style name.
-   *
-   * @var string
    */
-  protected $testImageStyleName = 'image_effects_test';
+  protected string $testImageStyleName = 'image_effects_test';
 
   /**
    * Test image style label.
-   *
-   * @var string
    */
-  protected $testImageStyleLabel = 'Image Effects Test';
+  protected string $testImageStyleLabel = 'Image Effects Test';
 
   /**
    * Image factory.
-   *
-   * @var \Drupal\Core\Image\ImageFactory
    */
-  protected $imageFactory;
+  protected ImageFactory $imageFactory;
 
   /**
    * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
    */
-  protected $fileSystem;
+  protected FileSystemInterface $fileSystem;
 
   /**
-   * @var \Drupal\Core\Extension\ModuleExtensionList
+   * The module extension list service.
    */
-  protected $moduleList;
+  protected ModuleExtensionList $moduleList;
 
   /**
-   * @var \Drupal\Core\File\FileUrlGeneratorInterface
+   * The file Url generator service.
    */
-  protected $fileUrlGenerator;
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
 
   /**
    * Admin user.
-   *
-   * @var \Drupal\user\UserInterface
    */
-  protected $adminUser;
+  protected UserInterface $adminUser;
 
   // Colors that are used in testing.
   // @codingStandardsIgnoreStart
-  protected $black       = [  0,   0,   0,   0];
-  protected $red         = [255,   0,   0,   0];
-  protected $green       = [  0, 255,   0,   0];
-  protected $blue        = [  0,   0, 255,   0];
-  protected $yellow      = [255, 255,   0,   0];
-  protected $fuchsia     = [255,   0, 255,   0];
-  protected $cyan        = [  0, 255, 255,   0];
-  protected $white       = [255, 255, 255,   0];
-  protected $grey        = [128, 128, 128,   0];
-  protected $transparent = [  0,   0,   0, 127];
+  protected array $black       = [  0,   0,   0,   0];
+  protected array $red         = [255,   0,   0,   0];
+  protected array $green       = [  0, 255,   0,   0];
+  protected array $blue        = [  0,   0, 255,   0];
+  protected array $yellow      = [255, 255,   0,   0];
+  protected array $fuchsia     = [255,   0, 255,   0];
+  protected array $cyan        = [  0, 255, 255,   0];
+  protected array $white       = [255, 255, 255,   0];
+  protected array $grey        = [128, 128, 128,   0];
+  protected array $transparent = [  0,   0,   0, 127];
   // @codingStandardsIgnoreEnd
 
   /**
@@ -141,10 +134,10 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    *   - data: an array of fields for the image effect edit form, with
    *     their values.
    *
-   * @return string
+   * @return string|null
    *   The UUID of the newly added effect.
    */
-  protected function addEffectToTestStyle(array $effect) {
+  protected function addEffectToTestStyle(array $effect): ?string {
     // Get image style prior to adding the new effect.
     $image_style_pre = ImageStyle::load($this->testImageStyleName);
 
@@ -175,7 +168,7 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * @param string $uuid
    *   The UUID of the effect to remove.
    */
-  protected function removeEffectFromTestStyle($uuid) {
+  protected function removeEffectFromTestStyle(string $uuid): void {
     $effect = $this->testImageStyle->getEffect($uuid);
     $this->testImageStyle->deleteImageEffect($effect);
     $this->assertEquals(SAVED_UPDATED, $this->testImageStyle->save());
@@ -190,8 +183,8 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * fresh array so that $variables won't get altered and the element is
    * re-rendered each time.
    */
-  protected function getImageTag($variables) {
-    return str_replace("\n", '', \Drupal::service('renderer')->renderRoot($variables));
+  protected function getImageTag(array $variables): string {
+    return str_replace("\n", '', (string) \Drupal::service('renderer')->renderRoot($variables));
   }
 
   /**
@@ -204,7 +197,7 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    *   - 'toolkit_config': the config object of the toolkit.
    *   - 'toolkit_settings': an associative array of toolkit settings.
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     return [
       'GD' => [
         'toolkit_id' => 'gd',
@@ -213,11 +206,22 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
           'jpeg_quality' => 100,
         ],
       ],
-      'ImageMagick-imagemagick' => [
+      'ImageMagick-imagemagick-v6' => [
         'toolkit_id' => 'imagemagick',
         'toolkit_config' => 'imagemagick.settings',
         'toolkit_settings' => [
           'binaries' => 'imagemagick',
+          'imagemagick_version' => 'v6',
+          'quality' => 100,
+          'debug' => TRUE,
+        ],
+      ],
+      'ImageMagick-imagemagick-v7' => [
+        'toolkit_id' => 'imagemagick',
+        'toolkit_config' => 'imagemagick.settings',
+        'toolkit_settings' => [
+          'binaries' => 'imagemagick',
+          'imagemagick_version' => 'v7',
           'quality' => 100,
           'debug' => TRUE,
         ],
@@ -244,7 +248,7 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * @param array $toolkit_settings
    *   The settings of the toolkit to set up.
    */
-  protected function changeToolkit($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  protected function changeToolkit(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     \Drupal::configFactory()->getEditable('system.image')
       ->set('toolkit', $toolkit_id)
       ->save();
@@ -272,17 +276,17 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    *
    * @param string $path
    *   The path to the test image file.
-   * @param string $name
+   * @param string|null $name
    *   (optional) The name of the item for which the path is requested. If null,
    *   $path is returned. Defaults to null.
    */
-  protected function getTestImageCopyUri($path, $name = NULL) {
+  protected function getTestImageCopyUri(string $path, ?string $name = NULL): string {
     $test_directory = 'public://test-images/';
     $this->fileSystem->prepareDirectory($test_directory, FileSystemInterface::CREATE_DIRECTORY);
     $source_uri = $name ? $this->moduleList->getPath($name) : '';
     $source_uri .= $path;
     $target_uri = $test_directory . \Drupal::service('file_system')->basename($source_uri);
-    return $this->fileSystem->copy($source_uri, $target_uri, FileSystemInterface::EXISTS_REPLACE);
+    return $this->fileSystem->copy($source_uri, $target_uri, FileExists::Replace);
   }
 
   /**
@@ -319,7 +323,7 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * @param string $message
    *   (Optional) A message presented on assertion failure.
    */
-  public function assertColorsAreClose(array $actual, array $expected, $tolerance, string $message = ''): void {
+  public function assertColorsAreClose(array $actual, array $expected, int $tolerance, string $message = ''): void {
     // Fully transparent colors are equal, regardless of RGB.
     if ($actual[3] == 127 && $expected[3] == 127) {
       return;
@@ -343,7 +347,7 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * @param string $message
    *   (Optional) A message presented on assertion failure.
    */
-  public function assertColorsAreNotClose(array $actual, array $expected, $tolerance, string $message = ''): void {
+  public function assertColorsAreNotClose(array $actual, array $expected, int $tolerance, string $message = ''): void {
     $distance = pow(($actual[0] - $expected[0]), 2) + pow(($actual[1] - $expected[1]), 2) + pow(($actual[2] - $expected[2]), 2) + pow(($actual[3] - $expected[3]), 2);
     $this->assertGreaterThan($tolerance, $distance, $message . " Actual: {" . implode(',', $actual) . "}, Expected: {" . implode(',', $expected) . "}, Distance: " . $distance . ", Tolerance: " . $tolerance);
   }
@@ -351,16 +355,17 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
   /**
    * Function for finding a pixel's RGBa values.
    */
-  protected function getPixelColor(ImageInterface $image, $x, $y) {
+  protected function getPixelColor(ImageInterface $image, int $x, int $y): array {
+    /** @var \Drupal\system\Plugin\ImageToolkit\GDToolkit $toolkit */
     $toolkit = $image->getToolkit();
-    $color_index = imagecolorat($toolkit->getResource(), $x, $y);
+    $color_index = imagecolorat($toolkit->getImage(), $x, $y);
 
-    $transparent_index = imagecolortransparent($toolkit->getResource());
+    $transparent_index = imagecolortransparent($toolkit->getImage());
     if ($color_index == $transparent_index) {
       return [0, 0, 0, 127];
     }
 
-    return array_values(imagecolorsforindex($toolkit->getResource(), $color_index));
+    return array_values(imagecolorsforindex($toolkit->getImage(), $color_index));
   }
 
   /**
@@ -372,17 +377,17 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * @return int
    *   The invalidations value.
    */
-  protected function getImageStyleCacheTagInvalidations($image_style_name) {
+  protected function getImageStyleCacheTagInvalidations(string $image_style_name): int {
     $query = Database::getConnection()->select('cachetags', 'a');
     $query->addField('a', 'invalidations');
     $query->condition('tag', 'config:image.style.' . $image_style_name);
-    return (int) $query->execute()->fetchColumn();
+    return (int) $query->execute()->fetchField();
   }
 
   /**
    * Asserts a Text overlay image.
    */
-  protected function assertTextOverlay($image, $width, $height): void {
+  protected function assertTextOverlay(ImageInterface $image, int $width, int $height): void {
     $w_error = abs($image->getWidth() - $width);
     $h_error = abs($image->getHeight() - $height);
     $tolerance = 0.1;
@@ -395,28 +400,31 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * Some difference can be allowed to account for e.g. compression artifacts.
    *
    * @param \Drupal\Core\Image\ImageInterface $expected_image
-   *   A GD image resource for the expected image.
+   *   The expected image.
    * @param \Drupal\Core\Image\ImageInterface $actual_image
-   *   A GD image resource for the actual image.
+   *   The actual image.
    * @param int $max_diff
    *   (optional) The maximum allowed difference, range from 0 to 255. Defaults
    *   to 1.
    * @param string $message
    *   (optional) The message to display along with the assertion.
    */
-  protected function assertImagesAreEqual(ImageInterface $expected_image, ImageInterface $actual_image, $max_diff = 1, $message = ''): void {
+  protected function assertImagesAreEqual(ImageInterface $expected_image, ImageInterface $actual_image, int $max_diff = 1, string $message = ''): void {
     // Only works with GD.
     $this->assertSame('gd', $expected_image->getToolkitId());
     $this->assertSame('gd', $actual_image->getToolkitId());
+    /** @var \Drupal\system\Plugin\ImageToolkit\GDToolkit $expected_image_toolkit */
+    $expected_image_toolkit = $expected_image->getToolkit();
+    /** @var \Drupal\system\Plugin\ImageToolkit\GDToolkit $actual_image_toolkit */
+    $actual_image_toolkit = $actual_image->getToolkit();
 
     // Check dimensions.
     $this->assertSame($expected_image->getWidth(), $actual_image->getWidth());
     $this->assertSame($expected_image->getHeight(), $actual_image->getHeight());
 
     // Image difference.
-    $difference = GdImageAnalysis::difference($expected_image->getToolkit()->getResource(), $actual_image->getToolkit()->getResource());
+    $difference = GdImageAnalysis::difference($expected_image_toolkit->getImage(), $actual_image_toolkit->getImage());
     $mean = GdImageAnalysis::mean($difference);
-    imagedestroy($difference);
     $this->assertTrue($mean < $max_diff, $message);
   }
 
@@ -426,19 +434,23 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
    * Some difference can be allowed to account for e.g. compression artifacts.
    *
    * @param \Drupal\Core\Image\ImageInterface $expected_image
-   *   A GD image resource for the expected image.
+   *   The expected image.
    * @param \Drupal\Core\Image\ImageInterface $actual_image
-   *   A GD image resource for the actual image.
+   *   The actual image.
    * @param int $max_diff
    *   (optional) The maximum allowed difference, range from 0 to 255. Defaults
    *   to 1.
    * @param string $message
    *   (optional) The message to display along with the assertion.
    */
-  protected function assertImagesAreNotEqual(ImageInterface $expected_image, ImageInterface $actual_image, $max_diff = 1, $message = ''): void {
+  protected function assertImagesAreNotEqual(ImageInterface $expected_image, ImageInterface $actual_image, int $max_diff = 1, string $message = ''): void {
     // Only works with GD.
     $this->assertSame('gd', $expected_image->getToolkitId());
     $this->assertSame('gd', $actual_image->getToolkitId());
+    /** @var \Drupal\system\Plugin\ImageToolkit\GDToolkit $expected_image_toolkit */
+    $expected_image_toolkit = $expected_image->getToolkit();
+    /** @var \Drupal\system\Plugin\ImageToolkit\GDToolkit $actual_image_toolkit */
+    $actual_image_toolkit = $actual_image->getToolkit();
 
     // Check dimensions.
     if ($expected_image->getWidth() !== $actual_image->getWidth()) {
@@ -449,9 +461,8 @@ abstract class ImageEffectsTestBase extends BrowserTestBase {
     }
 
     // Image difference.
-    $difference = GdImageAnalysis::difference($expected_image->getToolkit()->getResource(), $actual_image->getToolkit()->getResource());
+    $difference = GdImageAnalysis::difference($expected_image_toolkit->getImage(), $actual_image_toolkit->getImage());
     $mean = GdImageAnalysis::mean($difference);
-    imagedestroy($difference);
     $this->assertGreaterThan($max_diff, $mean, $message);
   }
 

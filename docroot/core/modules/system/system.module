@@ -13,8 +13,13 @@ use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Datetime\TimeZoneFormHelper;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Entity\EntityViewModeInterface;
+use Drupal\Core\Entity\EntityFormModeInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Extension\Extension;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\TimestampFormatter;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\Exception\InvalidStreamWrapperException;
 use Drupal\Core\File\FileSystemInterface;
@@ -22,7 +27,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueDatabaseExpirableFactory;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\PageCache\RequestPolicyInterface;
 use Drupal\Core\Queue\QueueGarbageCollectionInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -31,8 +35,9 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\StreamWrapper\LocalStream;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\Url;
-use GuzzleHttp\Exception\TransferException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
  * Disabled option on forms and settings.
@@ -70,9 +75,9 @@ function system_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.system':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The System module is integral to the site: it provides user interfaces for many core systems and settings, as well as the basic administrative menu structure. For more information, see the <a href=":system">online documentation for the System module</a>.', [':system' => 'https://www.drupal.org/documentation/modules/system']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Managing modules') . '</dt>';
       $output .= '<dd>' . t('Users with appropriate permission can install and uninstall modules from the <a href=":modules">Extend page</a>. Depending on which distribution or installation profile you choose when you install your site, several modules are installed and others are provided but not installed. Each module provides a discrete set of features; modules may be installed or uninstalled depending on the needs of the site. Many additional modules contributed by members of the Drupal community are available for download from the <a href=":drupal-modules">Drupal.org module page</a>. Note that uninstalling a module is a destructive action: when you uninstall a module, you will permanently lose all data connected to the module.', [':modules' => Url::fromRoute('system.modules_list')->toString(), ':drupal-modules' => 'https://www.drupal.org/project/modules']) . '</dd>';
@@ -123,7 +128,7 @@ function system_help($route_name, RouteMatchInterface $route_match) {
     case 'system.modules_list':
       $output = '<p>' . t('Add <a href=":modules">contributed modules</a> to extend your site\'s functionality.', [':modules' => 'https://www.drupal.org/project/modules']) . '</p>';
       if (!\Drupal::moduleHandler()->moduleExists('update')) {
-        $output .= '<p>' . t('Regularly review available updates to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated. Enable the <a href=":update-manager">Update Manager module</a> to update and install modules and themes.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':update-manager' => Url::fromRoute('system.modules_list', [], ['fragment' => 'module-update'])->toString()]) . '</p>';
+        $output .= '<p>' . t('Regularly review available updates and update as required to maintain a secure and current site. Always run the <a href=":update-php">update script</a> each time a module is updated. Install the <a href=":update-manager">Update Manager module</a> to update modules and themes.', [':update-php' => Url::fromRoute('system.db_update')->toString(), ':update-manager' => Url::fromRoute('system.modules_list', [], ['fragment' => 'module-update'])->toString()]) . '</p>';
       }
       return $output;
 
@@ -302,15 +307,11 @@ function system_theme_suggestions_page(array $variables) {
   $path_args = explode('/', trim(\Drupal::service('path.current')->getPath(), '/'));
   $suggestions = theme_get_suggestions($path_args, 'page');
 
-  $http_error_suggestions = [
-    'system.401' => 'page__401',
-    'system.403' => 'page__403',
-    'system.404' => 'page__404',
-  ];
-  $route_name = \Drupal::routeMatch()->getRouteName();
-  if (isset($http_error_suggestions[$route_name])) {
+  $supported_http_error_codes = [401, 403, 404];
+  $exception = \Drupal::requestStack()->getCurrentRequest()->attributes->get('exception');
+  if ($exception instanceof HttpExceptionInterface && in_array($exception->getStatusCode(), $supported_http_error_codes, TRUE)) {
     $suggestions[] = 'page__4xx';
-    $suggestions[] = $http_error_suggestions[$route_name];
+    $suggestions[] = 'page__' . $exception->getStatusCode();
   }
 
   return $suggestions;
@@ -441,11 +442,11 @@ function template_preprocess_entity_add_list(&$variables) {
  *   system_authorized_init($callback, $file, $arguments, $page_title);
  *   return new RedirectResponse(system_authorized_get_url()->toString());
  * @endcode
- * Example (update_manager_install_form_submit()):
+ * Example (Drupal\update\Form\UpdateReady::submitForm()):
  * @code
- *  system_authorized_init('update_authorize_run_install',
- *    \Drupal::service('extension.list.module')->getPath('update') . '/update.authorize.inc',
- *    $arguments, t('Update manager'));
+ *  system_authorized_init('update_authorize_run_update',
+ *    __DIR__ . '/../../update.authorize.inc',
+ *    [$updates], $this->t('Update manager'));
  *  $form_state->setRedirectUrl(system_authorized_get_url());
  * @endcode
  *
@@ -671,6 +672,7 @@ function system_page_attachments(array &$page) {
   // @see \Drupal\Core\Utility\LinkGenerator::generate()
   // @see template_preprocess_links()
   // @see \Drupal\Core\EventSubscriber\ActiveLinkResponseFilter
+  $page['#cache']['contexts'][] = 'user.roles:authenticated';
   if (\Drupal::currentUser()->isAuthenticated()) {
     $page['#attached']['library'][] = 'core/drupal.active-link';
   }
@@ -899,19 +901,6 @@ function system_region_list($theme, $show = REGIONS_ALL) {
 }
 
 /**
- * Array sorting callback; sorts modules by their name.
- *
- * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
- *   \Drupal\Core\Extension\ExtensionList::sortByName() instead.
- *
- * @see https://www.drupal.org/node/3225999
- */
-function system_sort_modules_by_info_name($a, $b) {
-  @trigger_error('system_sort_modules_by_info_name() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Extension\ExtensionList::sortByName() instead. See https://www.drupal.org/node/3225999', E_USER_DEPRECATED);
-  return strcasecmp($a->info['name'], $b->info['name']);
-}
-
-/**
  * Sorts themes by their names, with the default theme listed first.
  *
  * Callback for uasort() within
@@ -983,68 +972,28 @@ function system_admin_compact_mode() {
  *
  * @param string $module
  *   Module name.
- * @param array $info
- *   The module's information, as provided by
- *   \Drupal::service('extension.list.module')->getExtensionInfo().
+ * @param string|array $module_name
+ *   The module's display name. Passing information, as provided by
+ *   \Drupal::service('extension.list.module')->getExtensionInfo() is
+ *   deprecated in drupal:10.2.0. Pass only $info["name"] instead.
  *
  * @return array
  *   An array of task links.
+ *
+ * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use the
+ *   'system.module_admin_links_helper' service with the getModuleAdminLinks() method
+ *   and 'user.module_permissions_link_helper' service with the
+ *   ::getModulePermissionsLink() method instead.
+ *
+ * @see https://www.drupal.org/node/3038972
  */
-function system_get_module_admin_tasks($module, array $info) {
-  $tree = &drupal_static(__FUNCTION__);
-
-  $menu_tree = \Drupal::menuTree();
-
-  if (!isset($tree)) {
-    $parameters = new MenuTreeParameters();
-    $parameters->setRoot('system.admin')->excludeRoot()->onlyEnabledLinks();
-    $tree = $menu_tree->load('system.admin', $parameters);
-    $manipulators = [
-      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
-      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
-      ['callable' => 'menu.default_tree_manipulators:flatten'],
-    ];
-    $tree = $menu_tree->transform($tree, $manipulators);
+function system_get_module_admin_tasks($module, string|array $module_name) {
+  @trigger_error("system_get_module_admin_tasks() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use the 'system.module_admin_links_helper' service with the getModuleAdminLinks() method and 'user.module_permissions_link_helper' service with the ::getModulePermissionsLink() method instead. See https://www.drupal.org/node/3038972", E_USER_DEPRECATED);
+  $module_admin_links = \Drupal::service('system.module_admin_links_helper')->getModuleAdminLinks($module);
+  if ($module_permissions_link = \Drupal::service('user.module_permissions_link_helper')->getModulePermissionsLink($module, $module_name)) {
+    $module_admin_links["user.admin_permissions.{$module}"] = $module_permissions_link;
   }
-
-  $admin_tasks = [];
-  foreach ($tree as $element) {
-    if (!$element->access->isAllowed()) {
-      // @todo Bubble cacheability metadata of both accessible and inaccessible
-      //   links. Currently made impossible by the way admin tasks are rendered.
-      continue;
-    }
-
-    $link = $element->link;
-    if ($link->getProvider() != $module) {
-      continue;
-    }
-    $admin_tasks[] = [
-      'title' => $link->getTitle(),
-      'description' => $link->getDescription(),
-      'url' => $link->getUrlObject(),
-    ];
-  }
-
-  // Append link for permissions.
-  /** @var \Drupal\user\PermissionHandlerInterface $permission_handler */
-  $permission_handler = \Drupal::service('user.permissions');
-
-  if ($permission_handler->moduleProvidesPermissions($module)) {
-    /** @var \Drupal\Core\Access\AccessManagerInterface $access_manager */
-    $access_manager = \Drupal::service('access_manager');
-    if ($access_manager->checkNamedRoute('user.admin_permissions.module', ['modules' => $module], \Drupal::currentUser())) {
-      /** @var \Drupal\Core\Url $url */
-      $url = new Url('user.admin_permissions.module', ['modules' => $module]);
-      $admin_tasks["user.admin_permissions.$module"] = [
-        'title' => t('Configure @module permissions', ['@module' => $info['name']]),
-        'description' => '',
-        'url' => $url,
-      ];
-    }
-  }
-
-  return $admin_tasks;
+  return $module_admin_links;
 }
 
 /**
@@ -1116,42 +1065,17 @@ function system_mail($key, &$message, $params) {
  *
  * @return array
  *   An array or nested array containing time zones, keyed by the system name.
+ *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. This function
+ *   is no longer used in Drupal core. Use
+ *   \Drupal\Core\Datetime\TimeZoneFormHelper::getOptionsList() or
+ *   \DateTimeZone::listIdentifiers() instead.
+ *
+ * @see https://www.drupal.org/node/3023528
  */
 function system_time_zones($blank = NULL, $grouped = FALSE) {
-  $zonelist = timezone_identifiers_list();
-  $zones = $blank ? ['' => t('- None selected -')] : [];
-  foreach ($zonelist as $zone) {
-    // Because many time zones exist in PHP only for backward compatibility
-    // reasons and should not be used, the list is filtered by a regular
-    // expression.
-    if (preg_match('!^((Africa|America|Antarctica|Arctic|Asia|Atlantic|Australia|Europe|Indian|Pacific)/|UTC$)!', $zone)) {
-      $zones[$zone] = t('@zone', ['@zone' => t(str_replace('_', ' ', $zone))]);
-    }
-  }
-  // Sort the translated time zones alphabetically.
-  asort($zones);
-  if ($grouped) {
-    $grouped_zones = [];
-    foreach ($zones as $key => $value) {
-      $split = explode('/', $value);
-      $city = array_pop($split);
-      $region = array_shift($split);
-      if (!empty($region)) {
-        $grouped_zones[$region][$key] = empty($split) ? $city : $city . ' (' . implode('/', $split) . ')';
-      }
-      else {
-        $grouped_zones[$key] = $value;
-      }
-    }
-    foreach ($grouped_zones as $key => $value) {
-      if (is_array($grouped_zones[$key])) {
-        asort($grouped_zones[$key]);
-      }
-    }
-    $zones = $grouped_zones;
-  }
-
-  return $zones;
+  @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. This function is no longer used in Drupal core. Use \Drupal\Core\Datetime\TimeZoneFormHelper::getOptionsList(), \Drupal\Core\Datetime\TimeZoneFormHelper::getOptionsListByRegion() or \DateTimeZone::listIdentifiers() instead. See https://www.drupal.org/node/3023528', E_USER_DEPRECATED);
+  return $grouped ? TimeZoneFormHelper::getOptionsListByRegion((bool) $blank) : TimeZoneFormHelper::getOptionsList((bool) $blank);
 }
 
 /**
@@ -1183,8 +1107,14 @@ function system_time_zones($blank = NULL, $grouped = FALSE) {
  *   - If it succeeds and $managed is TRUE, a \Drupal\file\FileInterface
  *     object which describes the file.
  *   - If it fails, FALSE.
+ *
+ * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3223362
  */
 function system_retrieve_file($url, $destination = NULL, $managed = FALSE, $replace = FileSystemInterface::EXISTS_RENAME) {
+  @trigger_error('system_retrieve_file is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3223362', E_USER_DEPRECATED);
   $parsed_url = parse_url($url);
   /** @var \Drupal\Core\File\FileSystemInterface $file_system */
   $file_system = \Drupal::service('file_system');
@@ -1215,7 +1145,7 @@ function system_retrieve_file($url, $destination = NULL, $managed = FALSE, $repl
       $local = $file_system->saveData($data, $path, $replace);
     }
   }
-  catch (TransferException $exception) {
+  catch (ClientExceptionInterface $exception) {
     \Drupal::messenger()->addError(t('Failed to fetch file due to error "%error"', ['%error' => $exception->getMessage()]));
     return FALSE;
   }
@@ -1421,5 +1351,74 @@ function system_file_download($uri) {
         'Cache-Control' => 'public',
       ];
     }
+  }
+}
+
+/**
+ * Implements hook_archiver_info_alter().
+ */
+function system_archiver_info_alter(&$info) {
+  if (!class_exists(\ZipArchive::class)) {
+    // PHP Zip extension is missing.
+    unset($info['Zip']);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for entity_view_display entities.
+ *
+ * Provides a BC layer for modules providing old configurations.
+ *
+ * @see https://www.drupal.org/node/2993639
+ *
+ * @todo Remove this BC layer in drupal:11.0.0.
+ */
+function system_entity_view_display_presave(EntityViewDisplayInterface $entity_view_display): void {
+  /** @var \Drupal\Core\Field\FormatterPluginManager $field_formatter_manager */
+  $field_formatter_manager = \Drupal::service('plugin.manager.field.formatter');
+
+  foreach ($entity_view_display->getComponents() as $name => $component) {
+    if (empty($component['type'])) {
+      continue;
+    }
+    if (!$plugin_definition = $field_formatter_manager->getDefinition($component['type'], FALSE)) {
+      continue;
+    }
+
+    // Check also potential plugins that extends TimestampFormatter.
+    if (!is_a($plugin_definition['class'], TimestampFormatter::class, TRUE)) {
+      continue;
+    }
+
+    if (!isset($component['settings']['tooltip']) || !isset($component['settings']['time_diff'])) {
+      @trigger_error("Using the 'timestamp' formatter plugin  without the 'tooltip' and 'time_diff' settings is deprecated in drupal:10.1.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/2993639", E_USER_DEPRECATED);
+      $entity_view_display->setComponent($name, $component);
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for view mode entities.
+ *
+ * Sets the description property to an empty string.
+ *
+ * @todo Remove this BC layer in drupal:11.0.0.
+ */
+function system_entity_view_mode_presave(EntityViewModeInterface $entity_view_mode) {
+  if ($entity_view_mode->get('description') === NULL) {
+    $entity_view_mode->set('description', '');
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for form mode entities.
+ *
+ * Sets the description property to an empty string.
+ *
+ * @todo Remove this BC layer in drupal:11.0.0.
+ */
+function system_entity_form_mode_presave(EntityFormModeInterface $entity_form_mode) {
+  if ($entity_form_mode->get('description') === NULL) {
+    $entity_form_mode->set('description', '');
   }
 }

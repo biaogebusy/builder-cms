@@ -11,6 +11,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\entity_embed\EntityEmbedBuilderInterface;
 use Drupal\entity_embed\Exception\EntityNotFoundException;
 use Drupal\filter\FilterProcessResult;
@@ -175,7 +176,7 @@ class EntityEmbedFilter extends FilterBase implements ContainerFactoryPluginInte
           }
         }
         catch (EntityNotFoundException $e) {
-          watchdog_exception('entity_embed', $e);
+          Error::logException($this->loggerFactory->get('entity_embed'), $e);
         }
 
         if ($entity instanceof EntityInterface) {

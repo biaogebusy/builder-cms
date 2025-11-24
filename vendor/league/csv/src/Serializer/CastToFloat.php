@@ -25,33 +25,44 @@ final class CastToFloat implements TypeCasting
 {
     private readonly bool $isNullable;
     private ?float $default = null;
+    private readonly TypeCastingInfo $info;
 
     public function __construct(ReflectionProperty|ReflectionParameter $reflectionProperty)
     {
         $this->isNullable = $this->init($reflectionProperty);
+        $this->info = TypeCastingInfo::fromAccessor($reflectionProperty);
     }
 
-    public function setOptions(int|float|null $default = null): void
+    public function info(): TypeCastingInfo
     {
+        return $this->info;
+    }
+
+    public function setOptions(
+        int|float|null $default = null,
+        bool $emptyStringAsNull = false,
+    ): void {
         $this->default = $default;
     }
 
     /**
      * @throws TypeCastingFailed
      */
-    public function toVariable(?string $value): ?float
+    public function toVariable(mixed $value): ?float
     {
         if (null === $value) {
             return match ($this->isNullable) {
                 true => $this->default,
-                false => throw TypeCastingFailed::dueToNotNullableType('float'),
+                false => throw TypeCastingFailed::dueToNotNullableType('float', info: $this->info),
             };
         }
+
+        is_scalar($value) || throw TypeCastingFailed::dueToInvalidValue($value, Type::Int->value, info: $this->info);
 
         $float = filter_var($value, Type::Float->filterFlag());
 
         return match ($float) {
-            false => throw TypeCastingFailed::dueToInvalidValue($value, Type::Float->value),
+            false => throw TypeCastingFailed::dueToInvalidValue($value, Type::Float->value, info: $this->info),
             default => $float,
         };
     }
@@ -74,9 +85,7 @@ final class CastToFloat implements TypeCasting
             }
         }
 
-        if (null === $type) {
-            throw throw MappingFailed::dueToTypeCastingUnsupportedType($reflectionProperty, $this, 'float', 'null', 'mixed');
-        }
+        null !== $type || throw throw MappingFailed::dueToTypeCastingUnsupportedType($reflectionProperty, $this, 'float', 'null', 'mixed');
 
         return $isNullable;
     }

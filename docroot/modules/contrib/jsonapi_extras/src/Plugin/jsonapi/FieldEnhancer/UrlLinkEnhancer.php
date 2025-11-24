@@ -2,23 +2,26 @@
 
 namespace Drupal\jsonapi_extras\Plugin\jsonapi\FieldEnhancer;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer;
 use Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerBase;
+use Drupal\serialization\Normalizer\CacheableNormalizerInterface;
 use Shaper\Util\Context;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Add URL aliases to links.
- *
- * @ResourceFieldEnhancer(
- *   id = "url_link",
- *   label = @Translation("URL for link (link field only)"),
- *   description = @Translation("Use Url for link fields.")
- * )
  */
+#[ResourceFieldEnhancer(
+  id: 'url_link',
+  label: new TranslatableMarkup('URL for link (link field only)'),
+  description: new TranslatableMarkup('Use Url for link fields.'),
+)]
 class UrlLinkEnhancer extends ResourceFieldEnhancerBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -54,7 +57,7 @@ class UrlLinkEnhancer extends ResourceFieldEnhancerBase implements ContainerFact
     $plugin_id,
     array $plugin_definition,
     LanguageManagerInterface $language_manager,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->languageManager = $language_manager;
@@ -106,7 +109,7 @@ class UrlLinkEnhancer extends ResourceFieldEnhancerBase implements ContainerFact
   protected function doUndoTransform($data, Context $context) {
     if (isset($data['uri'])) {
       try {
-        $url = Url::fromUri($data['uri'], ['language' => $this->languageManager->getCurrentLanguage()]);
+        $url = Url::fromUri($data['uri'], ['language' => $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)]);
 
         // Use absolute urls if configured.
         $configuration = $this->getConfiguration();
@@ -114,7 +117,12 @@ class UrlLinkEnhancer extends ResourceFieldEnhancerBase implements ContainerFact
           $url->setAbsolute(TRUE);
         }
 
-        $data['url'] = $url->toString();
+        $generatedUrl = $url->toString(TRUE);
+        $context
+          ->offsetGet(CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY)
+          ->addCacheableDependency($url);
+
+        $data['url'] = $generatedUrl->getGeneratedUrl();
       }
       catch (\Exception $e) {
         $this->logger->error('Failed to create a URL from uri @uri. Error: @error', [

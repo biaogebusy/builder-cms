@@ -124,29 +124,17 @@ class ParagraphsConfigTest extends ParagraphsTestBase {
     $this->assertSession()->responseContains('<div class="messages messages--error');
 
     // Check a not paragraphs translatable field does not display the message.
-    if ($this->coreVersion('10.2')) {
-      $this->drupalGet('admin/structure/types/manage/paragraphed_test/fields/add-field');
-      $selected_group = [
-        'new_storage_type' => 'reference',
-      ];
-      $this->submitForm($selected_group, 'Change field group');
-      $edit = [
-        'group_field_options_wrapper' => 'field_ui:entity_reference:node',
-        'label' => 'new_no_field_paragraphs',
-        'field_name' => 'new_no_field_paragraphs',
-      ];
-      $this->submitForm($edit, 'Continue');
-    }
-    else {
-      $this->drupalGet('admin/structure/types/manage/paragraphed_test/fields/add-field');
-      $edit = [
-        'new_storage_type' => 'field_ui:entity_reference:node',
-        'label' => 'new_no_field_paragraphs',
-        'field_name' => 'new_no_field_paragraphs',
-      ];
-      $this->submitForm($edit, 'Save and continue');
-      $this->submitForm([], 'Save field settings');
-    }
+    $this->drupalGet('admin/structure/types/manage/paragraphed_test/fields/add-field');
+    $selected_group = [
+      'new_storage_type' => 'reference',
+    ];
+    $this->submitForm($selected_group, $this->coreVersion('10.3') ? 'Continue' : 'Change field group');
+    $edit = [
+      'group_field_options_wrapper' => 'field_ui:entity_reference:node',
+      'label' => 'new_no_field_paragraphs',
+      'field_name' => 'new_no_field_paragraphs',
+    ];
+    $this->submitForm($edit, 'Continue');
     $this->assertSession()->pageTextNotContains('Paragraphs fields do not support translation.');
     $this->assertSession()->responseNotContains('<div class="messages messages--warning');
   }

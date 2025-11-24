@@ -48,7 +48,7 @@ use Drupal\Core\Access\AccessResult;
  *   of defining a block.
  * - \Drupal\user\Plugin\Condition\UserRole is a straightforward example of a
  *   block placement condition plugin.
- * - \Drupal\book\Plugin\Block\BookNavigationBlock is an example of a block with
+ * - \Drupal\system\Plugin\Block\SystemMenuBlock is an example of a block with
  *   a custom configuration form.
  * - For a more in-depth discussion of the Block API, see
  *   https://www.drupal.org/developing/api/8/block_api.
@@ -227,7 +227,7 @@ function hook_block_access(\Drupal\block\Entity\Block $block, $operation, \Drupa
  */
 function hook_block_alter(&$definitions) {
   foreach ($definitions as $id => $definition) {
-    if (strpos($id, 'system_menu_block:') === 0) {
+    if (str_starts_with($id, 'system_menu_block:')) {
       // Replace $definition properties: id, deriver, class, provider to ones
       // provided by this custom module.
     }

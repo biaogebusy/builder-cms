@@ -1,0 +1,9 @@
+name: JavaScript Cookie Library
+type: module
+description: Provides the js-cookie library as a dependency.
+core_version_requirement: ^9 || ^10 || ^11
+
+# Information added by Drupal.org packaging script on 2025-11-03
+version: '1.0.2'
+project: 'js_cookie'
+datestamp: 1762168965

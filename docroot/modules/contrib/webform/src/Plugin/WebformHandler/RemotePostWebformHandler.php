@@ -378,6 +378,7 @@ class RemotePostWebformHandler extends WebformHandlerBase {
             '401' => $this->t('401 Unauthorized'),
             '403' => $this->t('403 Forbidden'),
             '404' => $this->t('404 Not Found'),
+            '444' => $this->t('444 No Response'),
             '500' => $this->t('500 Internal Server Error'),
             '502' => $this->t('502 Bad Gateway'),
             '503' => $this->t('503 Service Unavailable'),
@@ -542,7 +543,8 @@ class RemotePostWebformHandler extends WebformHandlerBase {
 
     // Display submission exception if response code is not 2xx.
     if ($this->responseHasError($response)) {
-      $message = $this->t('Remote post request return @status_code status code.', ['@status_code' => $response->getStatusCode()]);
+      $t_args = ['@status_code' => $this->getStatusCode($response)];
+      $message = $this->t('Remote post request return @status_code status code.', $t_args);
       $this->handleError($state, $message, $request_url, $request_method, $request_type, $request_options, $response);
       return;
     }
@@ -1119,8 +1121,8 @@ class RemotePostWebformHandler extends WebformHandlerBase {
    *   A custom response message.
    */
   protected function getCustomResponseMessage($response, $default = TRUE) {
-    if (!empty($this->configuration['messages']) && $response instanceof ResponseInterface) {
-      $status_code = $response->getStatusCode();
+    if (!empty($this->configuration['messages'])) {
+      $status_code = $this->getStatusCode($response);
       foreach ($this->configuration['messages'] as $message_item) {
         if ((int) $message_item['code'] === (int) $status_code) {
           return $this->replaceTokens($message_item['message'], $this->getWebformSubmission());
@@ -1149,11 +1151,16 @@ class RemotePostWebformHandler extends WebformHandlerBase {
       return FALSE;
     }
 
-    $token_data = [
-      'webform_handler' => [
-        $this->getHandlerId() => $this->getResponseData($response),
-      ],
-    ];
+    $token_data = [];
+
+    if ($response instanceof ResponseInterface) {
+      $token_data = [
+        'webform_handler' => [
+          $this->getHandlerId() => $this->getResponseData($response),
+        ],
+      ];
+    }
+
     $build_message = [
       '#markup' => $this->replaceTokens($custom_response_message, $this->getWebform(), $token_data),
     ];
@@ -1173,8 +1180,23 @@ class RemotePostWebformHandler extends WebformHandlerBase {
    *   TRUE if response status code reflects an unsuccessful value.
    */
   protected function responseHasError($response) {
-    $status_code = $response->getStatusCode();
+    $status_code = $this->getStatusCode($response);
     return $status_code < 200 || $status_code >= 300;
+  }
+
+  /**
+   * Gets the response status code.
+   *
+   * @param \Psr\Http\Message\ResponseInterface|null $response
+   *   The response returned by the remote server.
+   *
+   * @return int
+   *   The response status code. Defaults to 444 if there is no response.
+   */
+  protected function getStatusCode($response) {
+    return ($response instanceof ResponseInterface)
+      ? $response->getStatusCode()
+      : 444;
   }
 
   /**

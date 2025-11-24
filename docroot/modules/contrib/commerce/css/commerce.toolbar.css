@@ -1,0 +1,124 @@
+/**
+ * @file
+ * Commerce toolbar icon styling.
+ */
+
+.toolbar .toolbar-icon.toolbar-icon-commerce-inbox::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-commerce-admin-commerce::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-order-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-product-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-promotion-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-license-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-pricelist-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-shipping-method-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-subscription-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-wishlist-collection::before,
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-invoice-collection::before {
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-commerce-admin-commerce::before {
+  -webkit-mask-image: var(--commerce-icon--drupal-cart);
+  mask-image: var(--commerce-icon--drupal-cart);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-order-collection::before {
+  -webkit-mask-image: var(--commerce-icon--clipboard-check-fill);
+  mask-image: var(--commerce-icon--clipboard-check-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-product-collection::before {
+  -webkit-mask-image: var(--commerce-icon--box-seam-fill);
+  mask-image: var(--commerce-icon--box-seam-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-promotion-collection::before {
+  -webkit-mask-image: var(--commerce-icon--bookmark-star-fill);
+  mask-image: var(--commerce-icon--bookmark-star-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-license-collection::before {
+  -webkit-mask-image: var(--commerce-icon--person-vcard-fill);
+  mask-image: var(--commerce-icon--person-vcard-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-pricelist-collection::before {
+  -webkit-mask-image: var(--commerce-icon--tags-fill);
+  mask-image: var(--commerce-icon--tags-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-shipping-method-collection::before {
+  -webkit-mask-image: var(--commerce-icon--truck-front-fill);
+  mask-image: var(--commerce-icon--truck-front-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-subscription-collection::before {
+  -webkit-mask-image: var(--commerce-icon--envelope-plus-fill);
+  mask-image: var(--commerce-icon--envelope-plus-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-wishlist-collection::before {
+  -webkit-mask-image: var(--commerce-icon--bag-heart-fill);
+  mask-image: var(--commerce-icon--bag-heart-fill);
+}
+
+.toolbar-tray .toolbar-icon.toolbar-icon-entity-commerce-invoice-collection::before {
+  -webkit-mask-image: var(--commerce-icon--file-earmark-ruled-fill);
+  mask-image: var(--commerce-icon--file-earmark-ruled-fill);
+}
+
+.toolbar .toolbar-icon.toolbar-icon-commerce-inbox span {
+  position: absolute;
+  top: 0.5rem;
+  left: 1.375rem;
+  display: block;
+  display: -webkit-inline-box;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-pack: center;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  text-indent: 0;
+  color: black;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: white;
+  font-size: 0.5rem;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  -webkit-box-pack: center;
+}
+
+.toolbar .toolbar-icon.toolbar-icon-commerce-inbox::before {
+  -webkit-mask-image: var(--commerce-icon--bell-fill);
+  mask-image: var(--commerce-icon--bell-fill);
+}
+
+/* Pushes the tab to the opposite side of the page. */
+.toolbar .toolbar-bar .commerce-inbox-toolbar-tab.toolbar-tab {
+  float: right; /* LTR */
+}
+
+[dir="rtl"] .toolbar .toolbar-bar .commerce-inbox-toolbar-tab.toolbar-tab {
+  float: left;
+}
+
+[dir="rtl"] .toolbar .toolbar-icon.toolbar-icon-commerce-inbox span {
+  right: 1.375rem;
+  left: auto;
+}
+
+@media only screen and (min-width: 36em) {
+  .toolbar .toolbar-bar .toolbar-tab > .toolbar-icon-commerce-inbox {
+    padding-left: 3.25em;
+  }
+  [dir="rtl"] .toolbar .toolbar-bar .toolbar-tab > .toolbar-icon-commerce-inbox {
+    padding-right: 3.25em;
+  }
+}

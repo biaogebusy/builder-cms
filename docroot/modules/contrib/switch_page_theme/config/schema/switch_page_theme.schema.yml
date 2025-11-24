@@ -1,0 +1,38 @@
+switch_page_theme.settings:
+  type: config_object
+  label: Switch Page Theme settings
+  mapping:
+    spt_table:
+      type: sequence
+      label: Rules
+      sequence:
+        type: mapping
+        label: Rule
+        mapping:
+          status:
+            type: string
+            label: Status
+          pages:
+            type: string
+            label: Pages
+          theme_key:
+            type: string
+            label: Theme_key  
+          theme:
+            type: string
+            label: Theme
+          weight:
+            type: string
+            label: Weight
+          roles:
+            type: sequence
+            label: Roles
+            sequence:
+              type: string
+              label: Role enabled
+          language:
+            type: sequence
+            label: Languages
+            sequence:
+              type: integer
+              label: Language enabled

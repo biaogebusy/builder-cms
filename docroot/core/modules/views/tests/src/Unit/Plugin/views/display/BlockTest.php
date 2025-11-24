@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\views\display;
 
 use Drupal\Tests\UnitTestCase;
@@ -61,7 +63,7 @@ class BlockTest extends UnitTestCase {
   /**
    * Tests the build method with no overriding.
    */
-  public function testBuildNoOverride() {
+  public function testBuildNoOverride(): void {
     $this->executable->expects($this->never())
       ->method('setItemsPerPage');
 
@@ -75,7 +77,7 @@ class BlockTest extends UnitTestCase {
   /**
    * Tests the build method with overriding items per page.
    */
-  public function testBuildOverride() {
+  public function testBuildOverride(): void {
     $this->executable->expects($this->once())
       ->method('setItemsPerPage')
       ->with(5);

@@ -6,6 +6,20 @@ commerce_order.settings:
       type: boolean
       label: 'Log order version mismatch'
 
+commerce.commerce_condition.plugin.current_user_role:
+  type: commerce_condition_configuration
+  mapping:
+    matching_strategy:
+      type: string
+      label: 'Matching strategy'
+    roles:
+      type: sequence
+      label: 'Roles'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Role'
+
 commerce.commerce_condition.plugin.order_billing_address:
   type: commerce_condition_configuration
   mapping:
@@ -116,7 +130,7 @@ commerce_order.commerce_order_type.*:
       type: string
       label: 'The receipt BCC email'
     receiptSubject:
-      type: string
+      type: label
       label: 'The receipt subject'
 
 commerce_order.commerce_order_item_type.*:
@@ -149,6 +163,23 @@ field.widget.settings.commerce_unit_price:
       type: boolean
       label: 'Require confirmation before overriding the unit price'
 
+field.widget.settings.commerce_order_items:
+  type: mapping
+  label: 'Order item widget settings'
+  mapping:
+    allow_new:
+      type: boolean
+      label: 'Allow new'
+    collapsible:
+      type: boolean
+      label: 'Collapsible'
+    collapsed:
+      type: boolean
+      label: 'Collapsed by default'
+    allow_duplicate:
+      type: boolean
+      label: 'Allow duplicate'
+
 profile.type.*.third_party.commerce_order:
   type: mapping
   label: 'Commerce settings'
@@ -163,3 +194,15 @@ field.formatter.settings.commerce_order_item_table:
     view:
       type: string
       label: 'Order item table view'
+
+field.formatter.settings.commerce_order_reference_label_user:
+  type: mapping
+  label: 'Entity reference label display format settings'
+  mapping:
+    link:
+      type: boolean
+      label: 'Link label to the referenced entity'
+
+action.configuration.commerce_order_unlock:
+  type: action_configuration_default
+  label: 'Unlock'

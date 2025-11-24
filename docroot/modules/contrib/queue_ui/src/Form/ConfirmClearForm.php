@@ -4,7 +4,7 @@ namespace Drupal\queue_ui\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Messenger\Messenger;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueWorkerManagerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -21,39 +21,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfirmClearForm extends ConfirmFormBase {
 
   /**
-   * The tempstore factory.
-   *
-   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
-   */
-  private $tempStoreFactory;
-
-  /**
-   * Renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * Queue worker manager service.
-   *
-   * @var \Drupal\Core\Queue\QueueWorkerManagerInterface
-   */
-  protected $queueWorkerManager;
-
-  /**
-   * Queue factory instance.
-   *
-   * @var \Drupal\Core\Queue\QueueFactory
-   */
-  protected $queueFactory;
-
-  /**
    * ConfirmClearForm constructor.
    *
-   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $tempStoreFactory
    *   The tempstore factory.
-   * @param \Drupal\Core\Messenger\Messenger $messenger
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   Renderer service.
@@ -62,12 +34,14 @@ class ConfirmClearForm extends ConfirmFormBase {
    * @param \Drupal\Core\Queue\QueueFactory $queueFactory
    *   Queue factory instance.
    */
-  public function __construct(PrivateTempStoreFactory $temp_store_factory, Messenger $messenger, RendererInterface $renderer, QueueWorkerManagerInterface $queueWorkerManager, QueueFactory $queueFactory) {
-    $this->tempStoreFactory = $temp_store_factory;
+  public function __construct(
+    private PrivateTempStoreFactory $tempStoreFactory,
+    MessengerInterface $messenger,
+    protected RendererInterface $renderer,
+    protected QueueWorkerManagerInterface $queueWorkerManager,
+    protected QueueFactory $queueFactory,
+  ) {
     $this->messenger = $messenger;
-    $this->renderer = $renderer;
-    $this->queueWorkerManager = $queueWorkerManager;
-    $this->queueFactory = $queueFactory;
   }
 
   /**

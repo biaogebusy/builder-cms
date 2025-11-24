@@ -67,7 +67,7 @@ class MetatagFieldUserTest extends MetatagFieldTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $entityFieldAdminPath = 'admin/config/people/accounts/fields';
+  protected $entityFieldAdminPath = 'admin/config/people/accounts';
 
   /**
    * {@inheritdoc}
@@ -82,7 +82,7 @@ class MetatagFieldUserTest extends MetatagFieldTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function entityDefaultValues($title = 'Barfoo') {
+  protected function entityDefaultValues($title = 'Barfoo'): array {
     $password = $this->randomString(16);
     return [
       'mail' => 'test' . $this->adminUser->getEmail(),

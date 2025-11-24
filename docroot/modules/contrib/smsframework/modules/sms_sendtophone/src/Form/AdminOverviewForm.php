@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\sms_sendtophone\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -21,11 +22,17 @@ class AdminOverviewForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, MessengerInterface $messenger) {
-    parent::__construct($config_factory);
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    TypedConfigManagerInterface $typedConfigManager,
+    MessengerInterface $messenger,
+  ) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->setMessenger($messenger);
   }
 
@@ -35,6 +42,7 @@ class AdminOverviewForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('messenger'),
     );
   }

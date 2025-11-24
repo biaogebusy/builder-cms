@@ -22,8 +22,8 @@
  */
  .admin-toolbar__displace-placeholder {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset-block-start: 0;
+  inset-inline-start: 0;
   width: var(--sidebar-width);
 }
 
@@ -54,7 +54,10 @@
     // Gin Custom start ---------------------
     @include mq(medium) {
       margin-inline-start: var(--drupal-displace-offset-left, var(--sidebar-width));
-      transition: margin-inline-start 0.2s linear;
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: margin-inline-start 0.2s linear;
+      }
     }
     // Gin Custom end ------------------------
   }
@@ -127,9 +130,9 @@
   background-color: white;
   margin-block-start: auto;
   position: sticky;
-  bottom: 0;
+  inset-block-end: 0;
   z-index: 40;
-  margin-inline: -8px;
+  margin-inline: calc(var(--gin-spacing-xs) * -1);
   width: calc(100% + var(--space-m));
   border-block-start: 1px solid transparent;
   box-sizing: inherit;

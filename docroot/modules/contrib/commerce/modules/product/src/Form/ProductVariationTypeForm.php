@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_product\Form;
 
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce\EntityHelper;
 use Drupal\commerce\EntityTraitManagerInterface;
 use Drupal\commerce\Form\CommerceBundleEntityFormBase;
 use Drupal\commerce_product\ProductAttributeFieldManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -124,6 +124,9 @@ class ProductVariationTypeForm extends CommerceBundleEntityFormBase {
     if (!$variation_type->isNew()) {
       // Disable options which cannot be unset because of existing data.
       foreach ($used_attributes as $attribute_id) {
+        if (!isset($attributes[$attribute_id])) {
+          continue;
+        }
         if (!$this->attributeFieldManager->canDeleteField($attributes[$attribute_id], $variation_type->id())) {
           $form['attributes'][$attribute_id] = [
             '#disabled' => TRUE,
@@ -168,7 +171,7 @@ class ProductVariationTypeForm extends CommerceBundleEntityFormBase {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $save_return = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->submitTraitForm($form, $form_state);
 
@@ -193,9 +196,10 @@ class ProductVariationTypeForm extends CommerceBundleEntityFormBase {
         $this->attributeFieldManager->deleteField($attribute, $this->entity->id());
       }
     }
-
     $this->messenger()->addMessage($this->t('Saved the %label product variation type.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.commerce_product_variation_type.collection');
+
+    return $save_return;
   }
 
 }

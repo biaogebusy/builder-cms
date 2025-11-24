@@ -62,14 +62,14 @@ class FileFieldDiffParser extends DiffGeneratorPluginBase {
       $data = [];
       $detailed_response = $this->remoteManager->jsonApiRequest($this->getRemote(), 'GET', $remote_field_data['links']['related']['href']);
 
-      if (!is_null($detailed_response)) {
+      if ($detailed_response !== NULL) {
         $entities_json = Json::decode((string) $detailed_response->getBody());
         if (!empty($entities_json['data'])) {
           $data = EntityShareUtility::prepareData($entities_json['data']);
         }
       }
 
-      foreach (array_keys($remote_field_data['data']) as $field_key) {
+      foreach (\array_keys($remote_field_data['data']) as $field_key) {
         if ($data[$field_key]['attributes']['filename']) {
           $label = (string) $this->t('File name');
           $result[$field_key][$label] = $data[$field_key]['attributes']['filename'];

@@ -14,7 +14,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\media\Entity\MediaType;
 
 /**
- * Class VemMigrate.
+ * Migration from video_embed_media to core media helper class.
  */
 class VemMigrate {
 
@@ -106,13 +106,15 @@ class VemMigrate {
         continue;
       }
 
-      $this->database->schema()->changeField("media__$field_name", "${field_name}_value", "${field_name}_value", ['type' => 'varchar', 'length' => 255]);
-      $this->database->schema()->changeField("media_revision__$field_name", "${field_name}_value", "${field_name}_value", ['type' => 'varchar', 'length' => 255]);
+      $this->database->schema()->changeField("media__$field_name", "{$field_name}_value", "{$field_name}_value",
+        ['type' => 'varchar', 'length' => 255]);
+      $this->database->schema()->changeField("media_revision__$field_name", "{$field_name}_value", "{$field_name}_value",
+        ['type' => 'varchar', 'length' => 255]);
 
       $store = $this->keyValue->get("entity.storage_schema.sql");
       $data = $store->get("media.field_schema_data.$field_name");
-      $data["media__$field_name"]['fields']["${field_name}_value"]['length'] = 255;
-      $data["media_revision__$field_name"]['fields']["${field_name}_value"]['length'] = 255;
+      $data["media__$field_name"]['fields']["{$field_name}_value"]['length'] = 255;
+      $data["media_revision__$field_name"]['fields']["{$field_name}_value"]['length'] = 255;
       $store->set("media.field_schema_data.$field_name", $data);
 
       $media_definition[$field_name]->set('type', 'string');

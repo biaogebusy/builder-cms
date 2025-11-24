@@ -3,6 +3,8 @@
 namespace Drupal\Component\DependencyInjection\Dumper;
 
 use Drupal\Component\Utility\Crypt;
+use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Parameter;
@@ -56,7 +58,7 @@ class OptimizedPhpArrayDumper extends Dumper {
   /**
    * {@inheritdoc}
    */
-  public function dump(array $options = []) {
+  public function dump(array $options = []): string|array {
     return serialize($this->getArray());
   }
 
@@ -155,9 +157,6 @@ class OptimizedPhpArrayDumper extends Dumper {
     foreach ($parameters as $key => $value) {
       if (is_array($value)) {
         $value = $this->prepareParameters($value, $escape);
-      }
-      elseif ($value instanceof Reference) {
-        $value = $this->dumpValue($value);
       }
 
       $filtered[$key] = $value;
@@ -330,7 +329,6 @@ class OptimizedPhpArrayDumper extends Dumper {
     return (object) [
       'type' => 'collection',
       'value' => $code,
-      'resolve' => $resolve,
     ];
   }
 
@@ -355,7 +353,7 @@ class OptimizedPhpArrayDumper extends Dumper {
   /**
    * Gets a private service definition in a suitable format.
    *
-   * @param string $id
+   * @param string|null $id
    *   The ID of the service to get a private definition for.
    * @param \Symfony\Component\DependencyInjection\Definition $definition
    *   The definition to process.
@@ -410,7 +408,7 @@ class OptimizedPhpArrayDumper extends Dumper {
     elseif ($value instanceof Parameter) {
       return $this->getParameterCall((string) $value);
     }
-    elseif (is_string($value) && FALSE !== strpos($value, '%')) {
+    elseif (is_string($value) && str_contains($value, '%')) {
       if (preg_match('/^%([^%]+)%$/', $value, $matches)) {
         return $this->getParameterCall($matches[1]);
       }
@@ -429,6 +427,16 @@ class OptimizedPhpArrayDumper extends Dumper {
     }
     elseif ($value instanceof Expression) {
       throw new RuntimeException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
+    }
+    elseif ($value instanceof ServiceClosureArgument) {
+      $reference = $value->getValues();
+      /** @var \Symfony\Component\DependencyInjection\Reference $reference */
+      $reference = reset($reference);
+
+      return $this->getServiceClosureCall((string) $reference, $reference->getInvalidBehavior());
+    }
+    elseif ($value instanceof IteratorArgument) {
+      return $this->getIterator($value);
     }
     elseif (is_object($value)) {
       // Drupal specific: Instantiated objects have a _serviceId parameter.
@@ -461,7 +469,7 @@ class OptimizedPhpArrayDumper extends Dumper {
    * @return string|object
    *   A suitable representation of the service reference.
    */
-  protected function getReferenceCall($id, Reference $reference = NULL) {
+  protected function getReferenceCall($id, ?Reference $reference = NULL) {
     $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE;
 
     if ($reference !== NULL) {
@@ -526,6 +534,41 @@ class OptimizedPhpArrayDumper extends Dumper {
    */
   protected function supportsMachineFormat() {
     return TRUE;
+  }
+
+  /**
+   * Gets a service closure reference in a suitable PHP array format.
+   *
+   * @param string $id
+   *   The ID of the service to get a reference for.
+   * @param int $invalid_behavior
+   *   (optional) The invalid behavior of the service.
+   *
+   * @return string|object
+   *   A suitable representation of the service closure reference.
+   */
+  protected function getServiceClosureCall(string $id, int $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
+    return (object) [
+      'type' => 'service_closure',
+      'id' => $id,
+      'invalidBehavior' => $invalid_behavior,
+    ];
+  }
+
+  /**
+   * Gets a service iterator in a suitable PHP array format.
+   *
+   * @param \Symfony\Component\DependencyInjection\Argument\IteratorArgument $iterator
+   *   The iterator.
+   *
+   * @return object
+   *   The PHP array representation of the iterator.
+   */
+  protected function getIterator(IteratorArgument $iterator) {
+    return (object) [
+      'type' => 'iterator',
+      'value' => array_map($this->dumpValue(...), $iterator->getValues()),
+    ];
   }
 
 }

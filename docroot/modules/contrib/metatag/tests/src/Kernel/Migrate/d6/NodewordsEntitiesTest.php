@@ -2,15 +2,16 @@
 
 namespace Drupal\Tests\metatag\Kernel\Migrate\d6;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\TermInterface;
+use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
-use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
 /**
  * Tests migration of per-entity data from Nodewords-D6.
@@ -50,7 +51,7 @@ class NodewordsEntitiesTest extends MigrateDrupal6TestBase {
    * Copied from FileMigrationSetupTrait from 8.4 so that this doesn't have to
    * then also extend getFileMigrationInfo().
    */
-  protected function fileMigrationSetup() {
+  protected function fileMigrationSetup(): void {
     $this->installSchema('file', ['file_usage']);
     $this->installEntitySchema('file');
     $this->container->get('stream_wrapper_manager')
@@ -90,19 +91,19 @@ class NodewordsEntitiesTest extends MigrateDrupal6TestBase {
     $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('metatag_defaults');
 
-    $this->executeMigrations([
-      'd6_nodewords_field',
-      'd6_node_type',
-      'd6_taxonomy_vocabulary',
-      'd6_nodewords_field',
-      'd6_nodewords_field_instance',
-      'd6_filter_format',
-      'd6_user_role',
-      'd6_user',
-      'd6_comment_type',
-      'd6_field',
-      'd6_field_instance',
-    ]);
+    // Run each migration to avoid problems. No, it's not clear why.
+    $this->executeMigrations(['d6_nodewords_field']);
+    $this->executeMigrations(['d6_node_type']);
+    $this->executeMigrations(['d6_taxonomy_vocabulary']);
+    $this->executeMigrations(['d6_nodewords_field']);
+    $this->executeMigrations(['d6_nodewords_field_instance']);
+    $this->executeMigrations(['d6_filter_format']);
+    $this->executeMigrations(['d6_user_role']);
+    $this->executeMigrations(['d6_user']);
+    $this->executeMigrations(['d6_comment_type']);
+    $this->executeMigrations(['d6_field']);
+    $this->executeMigrations(['d6_field_instance']);
+
     $this->fileMigrationSetup();
     $this->executeMigrations([
       'd6_node_settings',
@@ -133,9 +134,11 @@ class NodewordsEntitiesTest extends MigrateDrupal6TestBase {
       'robots' => 'nofollow, nosnippet',
       'title' => 'Test title',
     ];
-    $this->assertSame(serialize($expected), $node->field_metatag->value);
+    $this->assertSame(Json::encode($expected), $node->field_metatag->value);
 
-    $node = node_revision_load(2004);
+    $node_storage_manager = \Drupal::entityTypeManager()
+      ->getStorage('node');
+    $node = $node_storage_manager->loadRevision(2004);
     $this->assertInstanceOf(NodeInterface::class, $node);
     $this->assertTrue($node->hasField('field_metatag'));
     // This should have the "old revision" keywords value, indicating it is
@@ -148,7 +151,7 @@ class NodewordsEntitiesTest extends MigrateDrupal6TestBase {
       'robots' => 'nofollow, nosnippet',
       'title' => 'Test title',
     ];
-    $this->assertSame(serialize($expected), $node->field_metatag->value);
+    $this->assertSame(Json::encode($expected), $node->field_metatag->value);
 
     /** @var \Drupal\user\Entity\User $user */
     $user = User::load(2);
@@ -158,7 +161,7 @@ class NodewordsEntitiesTest extends MigrateDrupal6TestBase {
       'revisit_after' => '1',
       'robots' => '',
     ];
-    $this->assertSame(serialize($expected), $user->field_metatag->value);
+    $this->assertSame(Json::encode($expected), $user->field_metatag->value);
 
     /** @var \Drupal\taxonomy\Entity\Term $term */
     $term = Term::load(16);
@@ -168,7 +171,7 @@ class NodewordsEntitiesTest extends MigrateDrupal6TestBase {
       'canonical_url' => 'the-term',
       'keywords' => 'a taxonomy, term',
     ];
-    $this->assertSame(serialize($expected), $term->field_metatag->value);
+    $this->assertSame(Json::encode($expected), $term->field_metatag->value);
   }
 
 }

@@ -52,7 +52,10 @@ function pathauto_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dd>' . t('Pathauto is accessed from the tabs it adds to the list of <a href=":aliases">URL aliases</a>.', [':aliases' => Url::fromRoute('entity.path_alias.collection')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Creating Pathauto Patterns') . '</dt>';
-      $output .= '<dd>' . t('The <a href=":pathauto_pattern">"Patterns"</a> page is used to configure automatic path aliasing.  New patterns are created here using the <a href=":add_form">Add Pathauto pattern</a> button which presents a form to simplify pattern creation thru the use of <a href="token">available tokens</a>. The patterns page provides a list of all patterns on the site and allows you to edit and reorder them. An alias is generated for the first pattern that applies.', [':pathauto_pattern' => Url::fromRoute('entity.pathauto_pattern.collection')->toString(), ':add_form' => Url::fromRoute('entity.pathauto_pattern.add_form')->toString()]) . '</dd>';
+      $output .= '<dd>' . t('The <a href=":pathauto_pattern">"Patterns"</a> page is used to configure automatic path aliasing.  New patterns are created here using the <a href=":add_form">Add Pathauto pattern</a> button which presents a form to simplify pattern creation thru the use of <a href="token">available tokens</a>. The patterns page provides a list of all patterns on the site and allows you to edit and reorder them. An alias is generated for the first pattern that applies.', [
+        ':pathauto_pattern' => Url::fromRoute('entity.pathauto_pattern.collection')->toString(),
+        ':add_form' => Url::fromRoute('entity.pathauto_pattern.add_form')->toString(),
+      ]) . '</dd>';
       $output .= '<dt>' . t('Pathauto Settings') . '</dt>';
       $output .= '<dd>' . t('The <a href=":settings">"Settings"</a> page is used to customize global Pathauto settings for automated pattern creation.', [':settings' => Url::fromRoute('pathauto.settings.form')->toString()]) . '</dd>';
       $output .= '<dd>' . t('The <strong>maximum alias length</strong> and <strong>maximum component length</strong> values default to 100 and have a limit of @max from Pathauto. You should enter a value that is the length of the "alias" column of the path_alias database table minus the length of any strings that might get added to the end of the URL. The recommended and default value is 100.', ['@max' => \Drupal::service('pathauto.alias_storage_helper')->getAliasSchemaMaxlength()]) . '</dd>';
@@ -161,11 +164,14 @@ function pathauto_pattern_validate($element, FormStateInterface $form_state) {
     }
 
     if (!empty($invalid_characters_used)) {
-      $form_state->setError($element, t('The %element-title is using the following invalid characters: @invalid-characters.', ['%element-title' => $title, '@invalid-characters' => implode(', ', $invalid_characters_used)]));
+      $form_state->setError($element, t('The %element-title is using the following invalid characters: @invalid-characters.', [
+        '%element-title' => $title,
+        '@invalid-characters' => implode(', ', $invalid_characters_used),
+      ]));
     }
 
     if (preg_match('/(\s$)+/', $element['#value'])) {
-      $form_state->setError($element, t('The %element-title doesn\'t allow the patterns ending with whitespace.', ['%element-title' => $title]));
+      $form_state->setError($element, t("The %element-title doesn't allow the patterns ending with whitespace.", ['%element-title' => $title]));
     }
   }
 

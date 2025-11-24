@@ -5,6 +5,7 @@ namespace Drupal\Tests\rest_views\Unit;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
@@ -23,6 +24,7 @@ use Drupal\Tests\UnitTestCase;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Test the EntityFieldExport views field plugin.
@@ -34,16 +36,16 @@ class EntityFieldExportTest extends UnitTestCase {
   /**
    * The EntityFieldExport plugin.
    *
-   * @var \Drupal\rest_views\Plugin\views\field\EntityFieldExport|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\rest_views\Plugin\views\field\EntityFieldExport
    */
-  private $handler;
+  private EntityFieldExport $handler;
 
   /**
    * The mocked serializer service.
    *
    * @var \Symfony\Component\Serializer\SerializerInterface
    */
-  private $serializer;
+  private SerializerInterface $serializer;
 
   /**
    * {@inheritdoc}
@@ -55,12 +57,10 @@ class EntityFieldExportTest extends UnitTestCase {
     $entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
     $entityRepository = $this->createMock(EntityRepositoryInterface::class);
-    $formatterPluginManager = $this
-      ->getMockBuilder(FormatterPluginManager::class)
-      ->disableOriginalConstructor()
-      ->getMock();
+    $formatterPluginManager = $this->createMock(FormatterPluginManager::class);
     $fieldTypePluginManager = $this->createMock(FieldTypePluginManagerInterface::class);
     $languageManager = $this->createMock(LanguageManagerInterface::class);
+    $entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->createMock(RendererInterface::class);
     // For the t() function to work, mock the translation service.
@@ -74,7 +74,8 @@ class EntityFieldExportTest extends UnitTestCase {
     $container->set('string_translation', $translation);
     \Drupal::setContainer($container);
 
-    $this->handler = $this->getMockBuilder(EntityFieldExport::class)
+    /** @var \Drupal\rest_views\Plugin\views\field\EntityFieldExport|\PHPUnit\Framework\MockObject\MockObject $handler */
+    $handler = $this->getMockBuilder(EntityFieldExport::class)
       ->setConstructorArgs([
         [],
         NULL,
@@ -89,9 +90,11 @@ class EntityFieldExportTest extends UnitTestCase {
         $renderer,
         $entityRepository,
         $entityFieldManager,
+        $entityTypeBundleInfo,
       ])
-      ->setMethods(['getFieldDefinition'])
+      ->onlyMethods(['getFieldDefinition'])
       ->getMock();
+    $this->handler = $handler;
 
     // Mock the field definition.
     $fieldDefinition = $this->createMock(BaseFieldDefinition::class);
@@ -113,12 +116,9 @@ class EntityFieldExportTest extends UnitTestCase {
 
     // Initialize the handler, using a mocked view and display plugin.
     /** @var \Drupal\views\ViewExecutable $view */
-    $view = $this->getMockBuilder(ViewExecutable::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-    $view->display_handler = $this->getMockBuilder(DisplayPluginBase::class)
-      ->disableOriginalConstructor()
-      ->getMock();
+    $view = $this->createMock(ViewExecutable::class);
+    $view->display_handler = $this->createMock(DisplayPluginBase::class);
+
     $this->handler->init($view, $view->display_handler);
 
     $this->serializer = new Serializer([
@@ -173,7 +173,7 @@ class EntityFieldExportTest extends UnitTestCase {
    * @return array
    *   Test case data.
    */
-  public function providerItems(): array {
+  public static function providerItems(): array {
     $data[] = [
       'items' => ['Lorem', 'ipsum', 'dolor', 'sit', 'amet'],
       'expected' => ['Lorem', 'ipsum', 'dolor', 'sit', 'amet'],

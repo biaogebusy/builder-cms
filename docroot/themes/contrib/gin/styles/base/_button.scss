@@ -1,4 +1,5 @@
 .button,
+.project__action_button,
 .dropbutton__item:first-of-type > *,
 .dropbutton__toggle {
   font-size: var(--gin-font-size-s);
@@ -6,7 +7,10 @@
   color: var(--gin-color-primary);
   background-color: transparent;
   box-shadow: none;
-  transition: var(--gin-transition);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: var(--gin-transition);
+  }
 
   @include mq(wide) {
     font-size: var(--gin-font-size);
@@ -28,13 +32,18 @@
 .button,
 .button:not(:focus),
 .form-actions .button,
+.project__action_button,
 .action-link--icon-trash.action-link {
   font-size: var(--gin-font-size-s);
-  padding: calc(var(--gin-spacing-s) - 2px) var(--gin-spacing-m);
+  padding-block: calc(var(--gin-spacing-s) - 2px);
+  padding-inline: var(--gin-spacing-m);
   border: 2px solid var(--gin-color-primary) !important;
   border-radius: var(--gin-border-m);
   box-shadow: 0 1px 2px var(--gin-color-primary-light);
-  transition: var(--gin-transition);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: var(--gin-transition);
+  }
 
   &:hover {
     background-color: var(--gin-color-primary-hover);
@@ -51,19 +60,24 @@
 }
 
 .form-actions .button {
-  margin-right: var(--gin-spacing-xs);
+  margin-inline-end: var(--gin-spacing-xs);
 }
 
 .button.button--small {
-  padding: calc(var(--gin-spacing-xxs) + 2px) var(--gin-spacing-m);
+  font-size: var(--gin-font-size-xxs);
+  padding-block: calc(var(--gin-spacing-xxs) + 2px);
+  padding-inline: var(--gin-spacing-s);
   border-radius: var(--gin-border-s);
 }
 
 .button.button--extrasmall {
-  padding: var(--gin-spacing-xxs) var(--gin-spacing-s);
+  font-size: var(--gin-font-size-xxs);
+  padding-block: var(--gin-spacing-xxs);
+  padding-inline: var(--gin-spacing-s);
   border-radius: var(--gin-border-s);
 }
 
+#edit-submit.form-submit,
 .button--primary,
 .button--primary:not(:focus),
 .ief-entity-submit {

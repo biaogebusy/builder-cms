@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
-use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\ImagemagickArgumentsTrait;
+use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD 'Imagemagick arguments' operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_imagemagick_arguments",
- *   toolkit = "gd",
- *   operation = "imagemagick_arguments",
- *   label = @Translation("ImageMagick arguments"),
- *   description = @Translation("Directly execute ImageMagick command line arguments.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_imagemagick_arguments',
+  toolkit: 'gd',
+  operation: 'imagemagick_arguments',
+  label: new TranslatableMarkup('ImageMagick arguments'),
+  description: new TranslatableMarkup('Directly execute ImageMagick command line arguments.'),
+)]
 class ImagemagickArguments extends GDImageToolkitOperationBase {
 
   use ImagemagickArgumentsTrait;

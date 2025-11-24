@@ -56,25 +56,27 @@ class SubdivisionRepository extends ExternalSubdivisionRepository {
       return $this->definitions[$group];
     }
 
-    // If there are predefined subdivisions at this level, try to load them.
     $this->definitions[$group] = [];
-    if ($this->hasData($parents)) {
-      $cache_key = 'address.subdivisions.' . $group;
-      $filename = $this->definitionPath . $group . '.json';
-      // Loading priority: event -> cache -> filesystem.
-      $event = new SubdivisionsEvent($parents);
-      $this->eventDispatcher->dispatch($event, AddressEvents::SUBDIVISIONS);
-      if ($definitions = $event->getDefinitions()) {
-        $this->definitions[$group] = $this->processDefinitions($definitions);
-      }
-      elseif ($cached = $this->cache->get($cache_key)) {
-        $this->definitions[$group] = $cached->data;
-      }
-      elseif ($raw_definition = @file_get_contents($filename)) {
+    if (!$this->hasData($parents)) {
+      // There are no predefined subdivisions on this level.
+      return $this->definitions[$group];
+    }
+    $cache_key = 'address.subdivisions.' . $group;
+    if ($cached = $this->cache->get($cache_key)) {
+      $this->definitions[$group] = $cached->data;
+    }
+    else {
+      if ($raw_definition = @file_get_contents($this->definitionPath . $group . '.json')) {
         $this->definitions[$group] = json_decode($raw_definition, TRUE);
-        $this->definitions[$group] = $this->processDefinitions($this->definitions[$group]);
-        $this->cache->set($cache_key, $this->definitions[$group], CacheBackendInterface::CACHE_PERMANENT, ['subdivisions']);
       }
+      // Allow definitions to be provided/altered by event subscribers.
+      $event = new SubdivisionsEvent($parents);
+      $event->setDefinitions($this->definitions[$group]);
+      $this->eventDispatcher->dispatch($event, AddressEvents::SUBDIVISIONS);
+      $this->definitions[$group] = $event->getDefinitions();
+
+      $this->definitions[$group] = $this->processDefinitions($this->definitions[$group]);
+      $this->cache->set($cache_key, $this->definitions[$group], CacheBackendInterface::CACHE_PERMANENT, ['subdivisions']);
     }
 
     return $this->definitions[$group];

@@ -1,16 +1,64 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Sql;
 
+use Drush\Drush;
+use Drush\Exec\ExecTrait;
 use PDO;
 
 class SqlMysql extends SqlBase
 {
-    public $queryExtra = '-A';
+    use ExecTrait;
+
+    protected string $version;
+
+    public string $queryExtra = '-A';
+
+    /**
+     * A factory method which creates a mysql or mariadb instance as needed.
+     */
+    public static function make(array $dbSpec, array $options)
+    {
+        // If the mysql version reports that it is MariaDB, use MariaDB as client.
+        $process = Drush::shell('mysql --version');
+        $process->setSimulated(false);
+        $process->run();
+        if ((!$process->isSuccessful() || str_contains($process->getOutput(), 'MariaDB')) && self::programExists('mariadb') && self::programExists('mariadb-dump')) {
+            $instance = new SqlMariaDB($dbSpec, $options);
+        } else {
+            $instance = new self($dbSpec, $options);
+        }
+
+        $sql = 'SELECT VERSION();"';
+        $instance->alwaysQuery($sql);
+        $out = trim($instance->getProcess()->getOutput());
+        $instance->setVersion($out);
+        return $instance;
+    }
 
     public function command(): string
     {
         return 'mysql';
+    }
+
+    public function dumpProgram(): string
+    {
+        return 'mysqldump';
+    }
+
+    /**
+     * The server version.
+     */
+    public function getVersion(): string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(string $version): void
+    {
+        $this->version = $version;
     }
 
     public function creds($hide_password = true): string
@@ -158,7 +206,7 @@ EOT;
         // The ordered-dump option is only supported by MySQL for now.
         $ordered_dump = $this->getOption('ordered-dump');
 
-        $exec = 'mysqldump ';
+        $exec = $this->dumpProgram() . ' ';
         // mysqldump wants 'databasename' instead of 'database=databasename' for no good reason.
         $only_db_name = str_replace('--database=', ' ', $this->creds());
         $exec .= $only_db_name;
@@ -189,7 +237,7 @@ EOT;
 
             // Run mysqldump again and append output if we need some structure only tables.
             if (!empty($structure_tables)) {
-                $exec .= " && mysqldump " . $only_db_name . " --no-data $extra " . implode(' ', $structure_tables);
+                $exec .= " && " . $this->dumpProgram() . " " . $only_db_name . " --no-data $extra " . implode(' ', $structure_tables);
                 $parens = true;
             }
         }

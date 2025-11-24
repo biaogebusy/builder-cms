@@ -2,8 +2,11 @@
 
 namespace Drupal\slick;
 
+// @todo use Drupal\blazy\Skin\SkinManagerBaseInterface;
 /**
  * Provides an interface defining Slick skins, and asset managements.
+ *
+ * @todo extends SkinManagerBaseInterface
  */
 interface SlickSkinManagerInterface {
 

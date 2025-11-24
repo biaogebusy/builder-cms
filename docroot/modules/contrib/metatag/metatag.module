@@ -5,16 +5,21 @@
  * Contains metatag.module.
  */
 
+use Drupal\commerce_migrate_commerce\Plugin\migrate\source\commerce1\ProductDisplay;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\Factory\DefaultFactory;
 use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
@@ -27,8 +32,6 @@ use Drupal\taxonomy\Plugin\migrate\source\d7\Term as Term7;
 use Drupal\taxonomy\TermInterface;
 use Drupal\user\Plugin\migrate\source\d6\User as User6;
 use Drupal\user\Plugin\migrate\source\d7\User as User7;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\commerce_migrate_commerce\Plugin\migrate\source\commerce1\ProductDisplay;
 
 /**
  * Implements hook_help().
@@ -94,6 +97,10 @@ function metatag_form_field_config_edit_form_alter(&$form, FormStateInterface $f
     $form['default_value']['#access'] = FALSE;
     $form['default_value']['#disabled'] = TRUE;
 
+    // Hide the cardinality field.
+    $form['cardinality_container']['#access'] = FALSE;
+    $form['cardinality_container']['#disabled'] = TRUE;
+
     // Step through the default value structure and erase any '#default_value'
     // items that are found.
     foreach ($form['default_value']['widget'][0] as &$outer) {
@@ -146,6 +153,9 @@ function metatag_page_attachments(array &$attachments) {
       $attachments['#attached']['html_head'] = [];
     }
 
+    // Work out what separator should be used in the string processing.
+    $separator = \Drupal::service('metatag.manager')->getSeparator();
+
     foreach ($metatag_attachments['#attached']['html_head'] as $item) {
       // Do not attach a title meta tag as this unnecessarily duplicates the
       // title tag.
@@ -154,6 +164,11 @@ function metatag_page_attachments(array &$attachments) {
         continue;
       }
 
+      // Replace multiple value delimiter with commas if the delimiter hasn't
+      // already been replaced by some other module.
+      if (isset($item['#attributes']['content']) && is_string($item['#attributes']['content'])) {
+        $item['#attributes']['content'] = str_replace($separator, ', ', $item['#attributes']['content']);
+      }
       $attachments['#attached']['html_head'][] = $item;
     }
   }
@@ -206,17 +221,6 @@ function metatag_entity_view_alter(array &$build, EntityInterface $entity, Entit
     return;
   }
 
-  // Panelized entities still use the original entity's controller, but with
-  // custom built entities. In those cases hook_entity_view_alter might be
-  // called too early, where meta links are not yet set.
-  // @see \Drupal\node\Controller\NodeController::view
-  if ($display->getThirdPartySetting('panelizer', 'enable', FALSE)) {
-    $build['#pre_render'][] = function (array $element) {
-      return _metatag_panelizer_pre_render($element);
-    };
-    return;
-  }
-
   _metatag_remove_duplicate_entity_tags($build);
 }
 
@@ -241,24 +245,6 @@ function _metatag_is_entity_route_entity(EntityInterface $entity): bool {
     }
   }
   return ($cached_entity_uuid === $entity->uuid());
-}
-
-/**
- * Pre render callback for entities processed by Panelizer.
- *
- * @param array $element
- *   The render array being processed.
- *
- * @return array
- *   The filtered render array.
- *
- * @deprecated in metatag:8.x-1.22 and is removed from metatag:2.0.0. No replacement is provided.
- *
- * @see https://www.drupal.org/project/metatag/issues/3305580
- */
-function _metatag_panelizer_pre_render(array $element) {
-  _metatag_remove_duplicate_entity_tags($element);
-  return $element;
 }
 
 /**
@@ -608,45 +594,17 @@ function metatag_entity_base_field_info(EntityTypeInterface $entity_type) {
   // If the entity type doesn't have a base table, has no link template then
   // there's no point in supporting it.
   if (!empty($base_table) && $canonical_template_exists && !in_array($original_class, $classes_to_skip)) {
-    $fields['metatag'] = BaseFieldDefinition::create('map')
+    $fields['metatag'] = BaseFieldDefinition::create('metatag_computed')
       ->setLabel(t('Metatags (Hidden field for JSON support)'))
-      ->setDescription(t('The meta tags for the entity.'))
-      ->setClass('\Drupal\metatag\Plugin\Field\MetatagEntityFieldItemList')
+      ->setDescription(t('The computed meta tags for the entity.'))
       ->setComputed(TRUE)
       ->setTranslatable(TRUE)
-      ->setTargetEntityTypeId($entity_type->id());
+      ->setReadOnly(TRUE)
+      ->setTargetEntityTypeId($entity_type->id())
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
   }
 
   return $fields;
-}
-
-/**
- * Turn the meta tags for an entity into a human readable structure.
- *
- * @param object|null $entity
- *   The entity object. May be skipped by passing NULL as the argument, which
- *   defers to loading the current route's entity; this is an unintended
- *   consequence of the function's poor definition.
- *
- * @return array
- *   All of the meta tags in a nested structure.
- *
- * @deprecated in metatag:8.x-1.23 and is removed from metatag:2.0.0. Use metatag_generate_entity_all_tags() instead; note that callers should always pass the entity to metatag_generate_entity_all_tags(), which is different from the behavior of metatag_generate_entity_metatags().
- *
- * @see https://www.drupal.org/node/3332350
- */
-function metatag_generate_entity_metatags($entity) {
-  // For backwards compatibility.
-  if (empty($entity)) {
-    $entity = metatag_get_route_entity();
-  }
-  // This is tecnnical a backwards compatibility break, but the "spirit" of this
-  // function was that it was always intended to be used on content entities.
-  if (!($entity instanceof ContentEntityInterface)) {
-    return [];
-  }
-  // Defer to the replacement function.
-  return metatag_generate_entity_all_tags($entity);
 }
 
 /**
@@ -978,7 +936,6 @@ function _metatag_is_migration_plugin_supported(array $definition) {
       'entity:block',
       'entity:block_content',
       'entity:block_content_type',
-      'entity:comment',
       'entity:comment_type',
       'entity:contact_form',
       'entity:date_format',
@@ -998,6 +955,20 @@ function _metatag_is_migration_plugin_supported(array $definition) {
       'shortcut_set_users',
       'url_alias',
       'user_data',
+      // Various contrib modules.
+      'entity:commerce_order',
+      'entity:commerce_payment',
+      'entity:commerce_payment_method',
+      'entity:commerce_promotion',
+      'entity:commerce_promotion_coupon',
+      'entity:commerce_shipment',
+      'entity:commerce_shipping_method',
+      'entity:commerce_stock_location',
+      'entity:linkcheckerlink',
+      'entity:path_alias',
+      'entity:redirect',
+      'entity:salesforce_mapped_object',
+      'entity:webform_submission',
     ];
     if (in_array($definition['destination']['plugin'], $destinations_to_ignore)) {
       return FALSE;
@@ -1071,5 +1042,235 @@ function metatag_data_decode($string): array {
  *   The meta tag data encoded as a JSON string.
  */
 function metatag_data_encode(array $data = []): string {
-  return serialize($data);
+  return Json::encode($data);
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function metatag_token_info() {
+  $info = [];
+
+  $group_manager = \Drupal::service('plugin.manager.metatag.group');
+  $tag_manager = \Drupal::service('plugin.manager.metatag.tag');
+  $tag_definitions = $tag_manager->getDefinitions();
+
+  $info['types']['metatag'] = [
+    'name' => new TranslatableMarkup('Metatags'),
+    'description' => new TranslatableMarkup('Tokens related to Metatags.'),
+    'needs-data' => 'metatag',
+  ];
+
+  foreach ($tag_definitions as $tag_id => $tag_definition) {
+    $label = $tag_definition['label'];
+    $description = $tag_definition['description'] ?? '';
+    $multiple = $tag_definition['multiple'];
+    $metatag_token_name = 'metatag-' . $tag_id;
+
+    $group = $group_manager->getDefinition($tag_definition['group']);
+    if ($group) {
+      $label = $group['label'] . ': ' . $label;
+    }
+
+    $info['tokens']['current-page']['metatag'] = [
+      'name' => new TranslatableMarkup('Metatags'),
+      'description' => new TranslatableMarkup('Metatag values for the current page.'),
+      'type' => 'metatag',
+    ];
+    $info['tokens']['metatag'][$tag_id] = [
+      'name' => Html::escape($label),
+      'description' => $description,
+      'type' => $multiple ? "list<$metatag_token_name>" : $metatag_token_name,
+    ];
+
+    $info['types'][$metatag_token_name] = [
+      'name' => Html::escape($label),
+      'description' => new TranslatableMarkup('@label tokens.', ['@label' => Html::escape($label)]),
+      'needs-data' => $metatag_token_name,
+      'nested' => TRUE,
+    ];
+
+    $info['tokens'][$metatag_token_name]['value'] = [
+      'name' => Html::escape($label),
+      'module' => 'metatag',
+      'description' => $description,
+    ];
+
+    // Tag list token type.
+    if ($multiple) {
+      $info['types']["list<$metatag_token_name>"] = [
+        'name' => new TranslatableMarkup('List of @type values', ['@type' => Html::escape($label)]),
+        'description' => new TranslatableMarkup('Tokens for lists of @type values.', ['@type' => Html::escape($label)]),
+        'needs-data' => "list<$metatag_token_name>",
+        'nested' => TRUE,
+      ];
+
+      // Show a different token for each tag delta.
+      // Since we don't know how many there will be, we will just show 3.
+      for ($delta = 0; $delta < 3; $delta++) {
+        $info['tokens']["list<$metatag_token_name>"][$delta] = [
+          'name' => new TranslatableMarkup('@type type with delta @delta', [
+            '@type' => Html::escape($label),
+            '@delta' => $delta,
+          ]),
+          'module' => 'token',
+          'type' => $metatag_token_name,
+        ];
+      }
+    }
+  }
+
+  return $info;
+}
+
+/**
+ * Implements hook_token_info_alter().
+ */
+function metatag_token_info_alter(&$info) {
+  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
+    if (!$entity_type->entityClassImplements(ContentEntityInterface::class)) {
+      continue;
+    }
+
+    // Make sure a token type exists for this entity.
+    $token_type = \Drupal::service('token.entity_mapper')->getTokenTypeForEntityType($entity_type_id);
+    if (empty($token_type) || !isset($info['types'][$token_type])) {
+      continue;
+    }
+
+    $fields = \Drupal::entityTypeManager()->getStorage('field_storage_config')->loadByProperties([
+      'entity_type' => $entity_type_id,
+      'type' => 'metatag',
+    ]);
+    foreach ($fields as $field) {
+      $field_token_name = $token_type . '-' . $field->getName();
+      $info['types'][$field_token_name] = [
+        'name' => Html::escape($field->getName()),
+        'description' => new TranslatableMarkup('@label tokens.', ['@label' => Html::escape($field->getName())]),
+        'needs-data' => $field_token_name,
+        'nested' => TRUE,
+        'type' => 'metatag',
+        'module' => 'metatag',
+      ];
+    }
+  }
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function metatag_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
+  $replacements = [];
+
+  switch ($type) {
+    case 'current-page':
+      /** @var \Drupal\Core\Utility\Token $token_service */
+      $token_service = \Drupal::token();
+      $metatag_tokens = $token_service->findWithPrefix($tokens, 'metatag');
+      if (!empty($metatag_tokens) && metatag_is_current_route_supported()) {
+        // Add cache contexts to ensure this token functions on a per-path
+        // basis.
+        $bubbleable_metadata->addCacheContexts(['url.site']);
+        $replacements += $token_service->generate('metatag', $metatag_tokens, [], $options, $bubbleable_metadata);
+      }
+      break;
+
+    case 'entity':
+      if (!empty($data['entity_type']) && !empty($data['entity']) && !empty($data['token_type'])) {
+        /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+        $entity = $data['entity'];
+        if (!($entity instanceof ContentEntityInterface)) {
+          return $replacements;
+        }
+
+        $metatag_fields = [];
+        foreach ($tokens as $name => $original) {
+          $field_name = explode(':', $name)[0];
+
+          if ($entity->hasField($field_name) && $entity->get($field_name)->getFieldDefinition()->getType() === 'metatag') {
+            $metatag_fields[] = $field_name;
+          }
+        }
+
+        if (!empty($metatag_fields)) {
+          /** @var \Drupal\Core\Utility\Token $token_service */
+          $token_service = \Drupal::token();
+          $metatag_tokens = [];
+          foreach ($metatag_fields as $metatag_field) {
+            $metatag_tokens += $token_service->findWithPrefix($tokens, $metatag_field);
+          }
+          $replacements += $token_service->generate('metatag', $metatag_tokens, ['entity' => $entity], $options, $bubbleable_metadata);
+        }
+      }
+      break;
+
+    case 'metatag':
+      $metatag_manager = \Drupal::service('metatag.manager');
+
+      $entity = $options['entity'] ?? metatag_get_route_entity();
+      $tags = [];
+      if ($entity instanceof ContentEntityInterface) {
+        // If content entity does not have an ID the page is likely an "Add"
+        // page, so skip processing for entity which has not been created yet.
+        if (!$entity->id()) {
+          return NULL;
+        }
+
+        $tags = $metatag_manager->tagsFromEntity($entity);
+      }
+      $tags += metatag_get_default_tags($entity);
+
+      // Trigger hook_metatags_alter().
+      // Allow modules to override tags or the entity used for token
+      // replacements.
+      $context = [
+        'entity' => &$entity,
+      ];
+      \Drupal::service('module_handler')->alter('metatags', $tags, $context);
+
+      // If the entity was changed above, use that for generating the meta tags.
+      if (isset($context['entity'])) {
+        $entity = $context['entity'];
+      }
+
+      $processed_tags = $metatag_manager->generateTokenValues($tags, $entity);
+
+      foreach ($tokens as $name => $original) {
+        // For the [metatag:tag_name] token.
+        if (strpos($name, ':') === FALSE) {
+          $tag_name = $name;
+        }
+        // For [metatag:tag_name:0], [metatag:tag_name:0:value] and
+        // [metatag:tag_name:value] tokens.
+        else {
+          [$tag_name, $delta] = explode(':', $name, 2);
+          if (!is_numeric($delta)) {
+            unset($delta);
+          }
+        }
+
+        // Replace dashes (-) with underscores (_) for e.g. canonical-url.
+        $tag_name = str_replace('-', '_', $tag_name);
+
+        if (empty($processed_tags[$tag_name])) {
+          continue;
+        }
+
+        // Render only one delta.
+        if (isset($delta)) {
+          $replacements[$original] = $processed_tags[$tag_name][$delta] ?? NULL;
+        }
+        else {
+          if (is_array($processed_tags[$tag_name])) {
+            $replacements[$original] = implode(',', array_filter($processed_tags[$tag_name]));
+          }
+          else {
+            $replacements[$original] = $processed_tags[$tag_name];
+          }
+        }
+      }
+      break;
+  }
+
+  return $replacements;
 }

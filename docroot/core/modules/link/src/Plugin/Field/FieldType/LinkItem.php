@@ -3,28 +3,33 @@
 namespace Drupal\link\Plugin\Field\FieldType;
 
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\MapDataDefinition;
 use Drupal\Core\Url;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\link\LinkItemInterface;
 
 /**
  * Plugin implementation of the 'link' field type.
- *
- * @FieldType(
- *   id = "link",
- *   label = @Translation("Link"),
- *   description = @Translation("Stores a URL string, optional varchar link text, and optional blob of attributes to assemble a link."),
- *   default_widget = "link_default",
- *   default_formatter = "link",
- *   constraints = {"LinkType" = {}, "LinkAccess" = {}, "LinkExternalProtocols" = {}, "LinkNotExistingInternal" = {}}
- * )
  */
+#[FieldType(
+  id: "link",
+  label: new TranslatableMarkup("Link"),
+  description: new TranslatableMarkup("Stores a URL string, optional varchar link text, and optional blob of attributes to assemble a link."),
+  default_widget: "link_default",
+  default_formatter: "link",
+  constraints: [
+    "LinkType" => [],
+    "LinkAccess" => [],
+    "LinkExternalProtocols" => [],
+    "LinkNotExistingInternal" => [],
+  ]
+)]
 class LinkItem extends FieldItemBase implements LinkItemInterface {
 
   /**
@@ -138,7 +143,7 @@ class LinkItem extends FieldItemBase implements LinkItemInterface {
           $values['title'] = mt_rand(0, 1) ? $random->sentences(4) : '';
           break;
       }
-      $values['uri'] = 'http://www.' . $random->word($domain_length) . '.' . $tlds[mt_rand(0, (count($tlds) - 1))];
+      $values['uri'] = 'https://www.' . $random->word($domain_length) . '.' . $tlds[mt_rand(0, (count($tlds) - 1))];
     }
     else {
       $values['uri'] = 'base:' . $random->name(mt_rand(1, 64));
@@ -173,6 +178,13 @@ class LinkItem extends FieldItemBase implements LinkItemInterface {
    */
   public function getUrl() {
     return Url::fromUri($this->uri, (array) $this->options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitle(): ?string {
+    return $this->title ?: NULL;
   }
 
   /**

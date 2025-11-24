@@ -13,14 +13,14 @@ class ModuleFilterSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'module_filter_settings_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('module_filter.settings');
     $form = parent::buildForm($form, $form_state);
 
@@ -35,6 +35,12 @@ class ModuleFilterSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Enhance the Extend page with tabs'),
       '#description' => $this->t('Provides many enhancements to the Extend page including the use of tabs for packages.'),
       '#default_value' => $config->get('tabs'),
+    ];
+    $form['modules']['descriptions_show'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Always show the description details'),
+      '#description' => $this->t('By default descriptions are hidden, this will always show them.'),
+      '#default_value' => $config->get('descriptions_show'),
     ];
 
     $form['modules']['path'] = [
@@ -64,12 +70,13 @@ class ModuleFilterSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $values = $form_state->getValues();
     $this->config('module_filter.settings')
       ->set('tabs', $values['tabs'])
       ->set('enabled_filters.permissions', $values['permissions'])
       ->set('path', $values['path'])
+      ->set('descriptions_show', $values['descriptions_show'])
       ->save();
 
     parent::submitForm($form, $form_state);
@@ -78,7 +85,7 @@ class ModuleFilterSettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return ['module_filter.settings'];
   }
 

@@ -74,6 +74,8 @@ class PagerTestWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareEntities(array $form, FormStateInterface $form_state) {}
+  protected function prepareEntities(array $form, FormStateInterface $form_state) {
+    return [];
+  }
 
 }

@@ -2,52 +2,84 @@
 
 namespace Drupal\jsonapi_defaults\Controller;
 
-use Drupal\Component\Serialization\Json;
-use Drupal\jsonapi\Controller\EntityResource as JsonApiEntityResourse;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\jsonapi\Controller\EntityResource as JsonApiEntityResource;
 use Drupal\jsonapi\Query\OffsetPage;
 use Drupal\jsonapi\Query\Sort;
 use Drupal\jsonapi\ResourceType\ResourceType;
-use Drupal\jsonapi\Routing\Routes;
+use Drupal\jsonapi_defaults\JsonapiDefaultsInterface;
 use Drupal\jsonapi_extras\Entity\JsonapiResourceConfig;
-use Drupal\jsonapi_extras\ResourceType\ConfigurableResourceType;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Overrides jsonapi module EntityResource controller.
  */
-class EntityResource extends JsonApiEntityResourse {
+class EntityResource extends JsonApiEntityResource {
+
+  /**
+   * The jsonapi defaults service.
+   *
+   * @var \Drupal\jsonapi_defaults\JsonapiDefaultsInterface
+   */
+  protected JsonapiDefaultsInterface $jsonapiDefaults;
+
+  /**
+   * The logger service.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected LoggerChannelInterface $logger;
+
+  /**
+   * Sets the jsonapi defaults service.
+   *
+   * @param \Drupal\jsonapi_defaults\JsonapiDefaultsInterface $jsonapiDefaults
+   *   The JsonapiDefaults object.
+   *
+   * @return $this
+   */
+  public function setJsonapiDefaults(JsonapiDefaultsInterface $jsonapiDefaults): static {
+    $this->jsonapiDefaults = $jsonapiDefaults;
+    return $this;
+  }
+
+  /**
+   * Sets the logger.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory.
+   *
+   * @return $this
+   */
+  public function setLogger(LoggerChannelFactoryInterface $loggerFactory): static {
+    $this->logger = $loggerFactory->get('jsonapi_defaults');
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
    */
   protected function getJsonApiParams(Request $request, ResourceType $resource_type) {
-    // If this is a related resource, then we need to swap to the new resource
-    // type.
-    $related_field = $request->attributes->get('_on_relationship')
-      ? NULL
-      : $request->attributes->get('related');
     try {
-      $resource_type = static::correctResourceTypeOnRelated($related_field, $resource_type);
+      $resourceConfig = $this->jsonapiDefaults->getResourceConfigFromRequest($request);
     }
     catch (\LengthException $e) {
-      watchdog_exception('jsonapi_defaults', $e);
-      $resource_type = NULL;
+      $this->logger->error($e);
+      $resourceConfig = NULL;
     }
 
-    if (!$resource_type instanceof ConfigurableResourceType) {
+    if (!$resourceConfig instanceof JsonapiResourceConfig) {
       return parent::getJsonApiParams($request, $resource_type);
     }
-    $resource_config = $resource_type->getJsonapiResourceConfig();
-    if (!$resource_config instanceof JsonapiResourceConfig) {
-      return parent::getJsonApiParams($request, $resource_type);
-    }
-    $default_filter_input = $resource_config->getThirdPartySetting(
+
+    $default_filter_input = $resourceConfig->getThirdPartySetting(
       'jsonapi_defaults',
       'default_filter',
       []
     );
 
-    $default_sorting_input = $resource_config->getThirdPartySetting(
+    $default_sorting_input = $resourceConfig->getThirdPartySetting(
       'jsonapi_defaults',
       'default_sorting',
       []
@@ -93,7 +125,7 @@ class EntityResource extends JsonApiEntityResourse {
 
     // Implements overridden page limits.
     $params = parent::getJsonApiParams($request, $resource_type);
-    $this->setPageLimit($request, $resource_config, $params);
+    $this->setPageLimit($request, $resourceConfig, $params);
     return $params;
   }
 
@@ -101,77 +133,32 @@ class EntityResource extends JsonApiEntityResourse {
    * {@inheritdoc}
    */
   public function getIncludes(Request $request, $data) {
-    if (
-      ($resource_type = $request->get(Routes::RESOURCE_TYPE_KEY))
-      && $resource_type instanceof ConfigurableResourceType
-      && !$request->get('_on_relationship')
-    ) {
+    if (!$request->get('_on_relationship')) {
       try {
-        $resource_type = static::correctResourceTypeOnRelated($request->get('related'), $resource_type);
+        $resourceConfig = $this->jsonapiDefaults->getResourceConfigFromRequest($request);
       }
       catch (\LengthException $e) {
-        watchdog_exception('jsonapi_defaults', $e);
+        $this->logger->error($e);
+        $resourceConfig = NULL;
+      }
+
+      if (!$resourceConfig) {
         return parent::getIncludes($request, $data);
       }
-      if (!$resource_type instanceof ConfigurableResourceType) {
-        return parent::getIncludes($request, $data);
-      }
-      $resource_config = $resource_type->getJsonapiResourceConfig();
-      if (!$resource_config instanceof JsonapiResourceConfig) {
-        return parent::getIncludes($request, $data);
-      }
-      $default_includes = $resource_config->getThirdPartySetting(
+
+      $defaultIncludes = $resourceConfig->getThirdPartySetting(
         'jsonapi_defaults',
         'default_include',
         []
       );
-      if (!empty($default_includes) && $request->query->get('include') === NULL) {
-        $includes = array_unique(array_filter(array_merge(
-          $default_includes,
-          explode(',', $request->query->get('include', ''))
-        )));
+
+      if (!empty($defaultIncludes) && $request->query->get('include') === NULL) {
+        $includes = array_unique(array_filter(array_merge($defaultIncludes)));
         $request->query->set('include', implode(',', $includes));
       }
     }
 
     return parent::getIncludes($request, $data);
-  }
-
-  /**
-   * Returns the correct resource type when operating on related fields.
-   *
-   * @param string $related_field
-   *   The name of the related field to use. NULL if not using a related field.
-   * @param \Drupal\jsonapi\ResourceType\ResourceType $resource_type
-   *   The resource type straight from the request.
-   *
-   * @return \Drupal\jsonapi\ResourceType\ResourceType
-   *   The resource type to use to load the includes.
-   *
-   * @throws \LengthException
-   *   If there is more than one relatable resource type.
-   */
-  public static function correctResourceTypeOnRelated($related_field, ResourceType $resource_type) {
-    if (!$related_field) {
-      return $resource_type;
-    }
-    $relatable_resource_types = $resource_type
-      ->getRelatableResourceTypesByField($related_field);
-    if (count($relatable_resource_types) > 1) {
-      $message = sprintf(
-        '%s -- %s',
-        'Impossible to apply defaults on a related resource with heterogeneous resource types.',
-        Json::encode([
-          'related_field' => $related_field,
-          'host_resource_type' => $resource_type->getPath(),
-          'target_resource_types' => array_map(function (ResourceType $resource_type) {
-            return $resource_type->getPath();
-          }, $relatable_resource_types),
-        ])
-      );
-      throw new \LengthException($message);
-    }
-    return $relatable_resource_types[0] ?? NULL;
   }
 
   /**

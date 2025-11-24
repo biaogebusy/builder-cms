@@ -2,6 +2,7 @@
 
 namespace Drupal\video_embed_field_mock_provider\Plugin\video_embed_field\Provider;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\video_embed_field\ProviderPluginInterface;
 
 /**
@@ -33,7 +34,7 @@ class MockProvider implements ProviderPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function renderEmbedCode($width, $height, $autoplay) {
+  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
     return [
       '#markup' => 'Mock provider embed code.',
     ];
@@ -70,8 +71,11 @@ class MockProvider implements ProviderPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
-    return 'Video Name';
+  public function getName($title_format = NULL, $use_title_fallback = TRUE) {
+    return $title_format ? new FormattableMarkup($title_format, [
+      '@provider' => $this->getPluginDefinition()['title'],
+      '@title' => 'Video Name',
+    ]) : '';
   }
 
   /**

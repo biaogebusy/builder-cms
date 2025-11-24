@@ -2,11 +2,12 @@
 
 namespace Drupal\commerce;
 
-use Drupal\commerce\Plugin\Commerce\EntityTrait\EntityTraitInterface;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce\Attribute\CommerceEntityTrait;
+use Drupal\commerce\Plugin\Commerce\EntityTrait\EntityTraitInterface;
 
 /**
  * Manages discovery and instantiation of entity trait plugins.
@@ -37,7 +38,14 @@ class EntityTraitManager extends DefaultPluginManager implements EntityTraitMana
    *   The configurable field manager.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, ConfigurableFieldManagerInterface $configurable_field_manager) {
-    parent::__construct('Plugin/Commerce/EntityTrait', $namespaces, $module_handler, 'Drupal\commerce\Plugin\Commerce\EntityTrait\EntityTraitInterface', 'Drupal\commerce\Annotation\CommerceEntityTrait');
+    parent::__construct(
+      'Plugin/Commerce/EntityTrait',
+      $namespaces,
+      $module_handler,
+      EntityTraitInterface::class,
+      CommerceEntityTrait::class,
+      'Drupal\commerce\Annotation\CommerceEntityTrait',
+    );
 
     $this->alterInfo('commerce_entity_trait_info');
     $this->setCacheBackend($cache_backend, 'commerce_entity_trait_plugins');

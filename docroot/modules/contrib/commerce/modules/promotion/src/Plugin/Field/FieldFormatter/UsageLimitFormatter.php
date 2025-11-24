@@ -2,22 +2,21 @@
 
 namespace Drupal\commerce_promotion\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_usage_limit' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_usage_limit",
- *   label = @Translation("Usage limit"),
- *   field_types = {
- *     "integer",
- *   },
- * )
  */
+#[FieldFormatter(
+  id: "commerce_usage_limit",
+  label: new TranslatableMarkup("Usage limit"),
+  field_types: ["integer"],
+)]
 class UsageLimitFormatter extends FormatterBase {
 
   /**

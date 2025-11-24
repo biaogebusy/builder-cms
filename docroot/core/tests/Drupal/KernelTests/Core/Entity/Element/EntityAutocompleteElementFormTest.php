@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity\Element;
 
 use Drupal\Core\Entity\Element\EntityAutocomplete;
@@ -92,6 +94,12 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
       $entity->save();
       $this->referencedEntities[] = $entity;
     }
+
+    $entity = EntityTest::create([
+      'name' => '0',
+    ]);
+    $entity->save();
+    $this->referencedEntities[] = $entity;
   }
 
   /**
@@ -184,6 +192,11 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
       '#tags' => TRUE,
     ];
 
+    $form['single_name_0'] = [
+      '#type' => 'entity_autocomplete',
+      '#target_type' => 'entity_test',
+    ];
+
     return $form;
   }
 
@@ -200,7 +213,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
   /**
    * Tests valid entries in the EntityAutocomplete Form API element.
    */
-  public function testValidEntityAutocompleteElement() {
+  public function testValidEntityAutocompleteElement(): void {
     $form_state = (new FormState())
       ->setValues([
         'single' => $this->getAutocompleteInput($this->referencedEntities[0]),
@@ -211,6 +224,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
         'tags_autocreate_specific_uid' => $this->getAutocompleteInput($this->referencedEntities[0]) . ', tags - autocreated entity label with specific uid, ' . $this->getAutocompleteInput($this->referencedEntities[1]),
         'single_string_id' => $this->getAutocompleteInput($this->referencedEntities[2]),
         'tags_string_id' => $this->getAutocompleteInput($this->referencedEntities[2]) . ', ' . $this->getAutocompleteInput($this->referencedEntities[3]),
+        'single_name_0' => $this->referencedEntities[4]->label(),
       ]);
     $form_builder = $this->container->get('form_builder');
     $form_builder->submitForm($this, $form_state);
@@ -271,12 +285,15 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
       ['target_id' => $this->referencedEntities[3]->id()],
     ];
     $this->assertEquals($expected, $form_state->getValue('tags_string_id'));
+
+    // Test the 'single_name_0' element.
+    $this->assertEquals($this->referencedEntities[4]->id(), $form_state->getValue('single_name_0'));
   }
 
   /**
    * Tests invalid entries in the EntityAutocomplete Form API element.
    */
-  public function testInvalidEntityAutocompleteElement() {
+  public function testInvalidEntityAutocompleteElement(): void {
     $form_builder = $this->container->get('form_builder');
 
     // Test 'single' with an entity label that doesn't exist
@@ -286,7 +303,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
       ]);
     $form_builder->submitForm($this, $form_state);
     $this->assertCount(1, $form_state->getErrors());
-    $this->assertEquals(t('There are no test entity entities matching "%value".', ['%value' => 'single - non-existent label']), $form_state->getErrors()['single']);
+    $this->assertEquals('There are no test entity entities matching "single - non-existent label".', $form_state->getErrors()['single']);
 
     // Test 'single' with an entity ID that doesn't exist.
     $form_state = (new FormState())
@@ -295,7 +312,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
       ]);
     $form_builder->submitForm($this, $form_state);
     $this->assertCount(1, $form_state->getErrors());
-    $this->assertEquals(t('The referenced entity (%type: %id) does not exist.', ['%type' => 'entity_test', '%id' => 42]), $form_state->getErrors()['single']);
+    $this->assertEquals('The referenced entity (entity_test: 42) does not exist.', $form_state->getErrors()['single']);
 
     // Do the same tests as above but on an element with '#validate_reference'
     // set to FALSE.
@@ -309,7 +326,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
     // The element without 'autocreate' support still has to emit a warning when
     // the input doesn't end with an entity ID enclosed in parentheses.
     $this->assertCount(1, $form_state->getErrors());
-    $this->assertEquals(t('There are no test entity entities matching "%value".', ['%value' => 'single - non-existent label']), $form_state->getErrors()['single_no_validate']);
+    $this->assertEquals('There are no test entity entities matching "single - non-existent label".', $form_state->getErrors()['single_no_validate']);
 
     $form_state = (new FormState())
       ->setValues([
@@ -326,7 +343,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
   /**
    * Tests that access is properly checked by the EntityAutocomplete element.
    */
-  public function testEntityAutocompleteAccess() {
+  public function testEntityAutocompleteAccess(): void {
     $form_builder = $this->container->get('form_builder');
     $form = $form_builder->getForm($this);
 
@@ -338,7 +355,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
     $this->assertEquals($expected, $form['tags_access']['#value']);
 
     // Set up a non-admin user that is *not* allowed to view test entities.
-    \Drupal::currentUser()->setAccount($this->createUser([], []));
+    \Drupal::currentUser()->setAccount($this->createUser());
 
     // Rebuild the form.
     $form = $form_builder->getForm($this);
@@ -355,7 +372,7 @@ class EntityAutocompleteElementFormTest extends EntityKernelTestBase implements 
    *
    * E.g. This can happen with GET form parameters.
    */
-  public function testEntityAutocompleteIdInput() {
+  public function testEntityAutocompleteIdInput(): void {
     /** @var \Drupal\Core\Form\FormBuilderInterface $form_builder */
     $form_builder = $this->container->get('form_builder');
     // $form = $form_builder->getForm($this);

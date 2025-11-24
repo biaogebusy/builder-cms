@@ -4,8 +4,8 @@ namespace Drupal\Tests\devel\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Messenger\MessengerTrait;
-use Drupal\devel\Twig\Extension\Debug;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\devel\Twig\Extension\Debug;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 
@@ -29,14 +29,14 @@ class DevelTwigExtensionTest extends KernelTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
-  public static $modules = ['devel', 'user', 'system'];
+  protected static $modules = ['devel', 'user', 'system'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installEntitySchema('user');
@@ -59,7 +59,7 @@ class DevelTwigExtensionTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function register(ContainerBuilder $container) {
+  public function register(ContainerBuilder $container): void {
     parent::register($container);
 
     $parameters = $container->getParameter('twig.config');
@@ -70,26 +70,26 @@ class DevelTwigExtensionTest extends KernelTestBase {
   /**
    * Tests that Twig extension loads appropriately.
    */
-  public function testTwigExtensionLoaded() {
+  public function testTwigExtensionLoaded(): void {
     $twig_service = \Drupal::service('twig');
     $extension = $twig_service->getExtension(Debug::class);
-    $this->assertEquals(get_class($extension), Debug::class, 'Debug Extension loaded successfully.');
+    $this->assertEquals($extension::class, Debug::class, 'Debug Extension loaded successfully.');
   }
 
   /**
    * Tests that the Twig dump functions are registered properly.
    */
-  public function testDumpFunctionsRegistered() {
-    /** @var \Twig_SimpleFunction[] $functions */
-    $functions = \Drupal::service('twig')->getFunctions();
+  public function testDumpFunctionsRegistered(): void {
+    /** @var \Drupal\Core\Template\TwigEnvironment $environment */
+    $environment = $this->container->get('twig');
+    $functions = $environment->getFunctions();
 
-    $dump_functions = ['devel_dump', 'kpr'];
+    $dump_functions = ['devel_dump'];
     $message_functions = ['devel_message', 'dpm', 'dsm'];
     $registered_functions = $dump_functions + $message_functions;
-
     foreach ($registered_functions as $name) {
+      $this->assertArrayHasKey($name, $functions);
       $function = $functions[$name];
-      $this->assertTrue($function instanceof \Twig_SimpleFunction);
       $this->assertEquals($function->getName(), $name);
       $this->assertTrue($function->needsContext());
       $this->assertTrue($function->needsEnvironment());
@@ -97,10 +97,10 @@ class DevelTwigExtensionTest extends KernelTestBase {
 
       is_callable($function->getCallable(), TRUE, $callable);
       if (in_array($name, $dump_functions)) {
-        $this->assertEquals($callable, 'Drupal\devel\Twig\Extension\Debug::dump');
+        $this->assertEquals($callable, Debug::class . '::dump');
       }
       else {
-        $this->assertEquals($callable, 'Drupal\devel\Twig\Extension\Debug::message');
+        $this->assertEquals($callable, Debug::class . '::message');
       }
     }
   }
@@ -108,22 +108,22 @@ class DevelTwigExtensionTest extends KernelTestBase {
   /**
    * Tests that the Twig function for XDebug integration is registered properly.
    */
-  public function testXdebugIntegrationFunctionsRegistered() {
-    /** @var \Twig_SimpleFunction $function */
-    $function = \Drupal::service('twig')->getFunction('devel_breakpoint');
-    $this->assertTrue($function instanceof \Twig_SimpleFunction);
-    $this->assertEquals($function->getName(), 'devel_breakpoint');
+  public function testXdebugIntegrationFunctionsRegistered(): void {
+    /** @var \Drupal\Core\Template\TwigEnvironment $environment */
+    $environment = $this->container->get('twig');
+    $function = $environment->getFunction('devel_breakpoint');
+    $this->assertNotNull($function);
     $this->assertTrue($function->needsContext());
     $this->assertTrue($function->needsEnvironment());
     $this->assertTrue($function->isVariadic());
     is_callable($function->getCallable(), TRUE, $callable);
-    $this->assertEquals($callable, 'Drupal\devel\Twig\Extension\Debug::breakpoint');
+    $this->assertEquals($callable, Debug::class . '::breakpoint');
   }
 
   /**
    * Tests that the Twig extension's dump functions produce the expected output.
    */
-  public function testDumpFunctions() {
+  public function testDumpFunctions(): void {
     $template = 'test-with-context {{ twig_string }} {{ twig_array.first }} {{ twig_array.second }}{{ devel_dump() }}';
     $expected_template_output = 'test-with-context context! first value second value';
 
@@ -171,9 +171,7 @@ class DevelTwigExtensionTest extends KernelTestBase {
     // Clear messages.
     $this->messenger()->deleteAll();
 
-    $retrieve_message = function ($messages, $index) {
-      return isset($messages['status'][$index]) ? (string) $messages['status'][$index] : NULL;
-    };
+    $retrieve_message = static fn($messages, $index): ?string => isset($messages['status'][$index]) ? (string) $messages['status'][$index] : NULL;
 
     // Ensures that if no argument is passed to the function the twig context is
     // dumped.

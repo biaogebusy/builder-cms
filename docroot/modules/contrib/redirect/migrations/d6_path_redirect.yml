@@ -11,8 +11,8 @@ process:
   redirect_redirect:
     plugin: d6_path_redirect
     source:
-        - redirect
-        - query
+      - redirect
+      - query
   language:
     plugin: default_value
     source: language

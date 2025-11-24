@@ -30,6 +30,13 @@ function charts_views_data() {
       'id' => 'field_charts_fields_bubble',
     ],
   ];
+  $data['charts_fields']['field_charts_numeric_array'] = [
+    'title' => t('Numeric Array'),
+    'help' => t('Use this field for your data field in a chart of 1-10 array items.'),
+    'field' => [
+      'id' => 'field_charts_numeric_array',
+    ],
+  ];
   $data['charts_fields']['field_exposed_chart_type'] = [
     'title' => t('Exposed Chart Type'),
     'help' => t('Use this field for exposing chart type.'),

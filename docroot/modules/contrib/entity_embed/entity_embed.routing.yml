@@ -13,5 +13,5 @@ entity_embed.edit_embedded_entity:
     _title: 'Edit entity'
   requirements:
     # This controller returns a redirect. We set access to TRUE and let the
-    # redirected-to destination determin access control.
+    # target destination determine final access level.
     _access: 'TRUE'

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Menu;
 
 use Drupal\Core\Config\Entity\Exception\ConfigEntityIdLengthException;
@@ -24,7 +26,7 @@ class MenuStorageTest extends KernelTestBase {
   /**
    * Tests MenuStorage::MAX_ID_LENGTH is enforced.
    */
-  public function testMaxIdLengthException() {
+  public function testMaxIdLengthException(): void {
     $id = $this->randomMachineName(MenuStorage::MAX_ID_LENGTH + 1);
     $this->expectException(ConfigEntityIdLengthException::class);
     $this->expectExceptionMessage(

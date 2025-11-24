@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect_domain\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -32,7 +34,7 @@ class RedirectDomainUITest extends WebDriverTestBase {
     $user = $this->drupalCreateUser([
       'administer site configuration',
       'access administration pages',
-      'administer redirects'
+      'administer redirects',
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('/admin/config/search/redirect/domain');
@@ -66,4 +68,5 @@ class RedirectDomainUITest extends WebDriverTestBase {
     $this->assertSession()->fieldValueEquals('redirects[0][sub_path]', '/sub-path');
     $this->assertSession()->fieldValueEquals('redirects[1][sub_path]', '/');
   }
+
 }

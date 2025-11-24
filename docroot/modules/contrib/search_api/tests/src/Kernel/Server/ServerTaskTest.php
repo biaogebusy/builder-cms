@@ -3,17 +3,20 @@
 namespace Drupal\Tests\search_api\Kernel\Server;
 
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether the server task system works correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ServerTaskTest extends KernelTestBase {
 
   use PluginTestTrait;
@@ -436,6 +439,53 @@ class ServerTaskTest extends KernelTestBase {
     $this->taskManager->addTask('updateIndex', $this->server, $this->index);
     $this->taskManager->addTask('deleteItems', $this->server, $this->index, []);
     $this->taskManager->addTask('deleteAllIndexItems', $this->server, $this->index);
+  }
+
+  /**
+   * Tests that an "updateIndex" task will never cause an infinite loop.
+   *
+   * @see https://www.drupal.org/node/3543230
+   */
+  public function testUpdateIndexInfiniteLoopProtection(): void {
+    // At first, make the updateIndex() method throw an exception so a task will
+    // be created.
+    $this->setError('backend', 'updateIndex', TRUE);
+    $this->index->save();
+
+    // Make sure this created a task, as expected.
+    $tasks = $this->getServerTasks();
+    $this->assertCount(1, $tasks);
+    $this->assertEquals('updateIndex', $tasks[0]->type);
+
+    // Switch to an implementation that does not throw an error but just calls
+    // $index->clear(). (It will also throw an exception in case it detects an
+    // infinite loop.
+    $this->setError('backend', 'updateIndex', TRUE);
+    $this->setMethodOverride('backend', 'updateIndex', [static::class, 'updateIndex']);
+
+    // Execute all tasks an make sure this worked correctly.
+    $this->assertTrue($this->serverTaskManager->execute());
+    $this->assertEquals([], $this->getServerTasks());
+  }
+
+  /**
+   * Notifies the server that an index attached to it has been changed.
+   *
+   * @param \Drupal\search_api\Backend\BackendInterface $backend
+   *   The test backend on which the method was called.
+   * @param \Drupal\search_api\IndexInterface $index
+   *   The updated index.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown if an error occurred while reacting to the change.
+   */
+  public static function updateIndex(BackendInterface $backend, IndexInterface $index): void {
+    static $nested_calls = 0;
+    if (++$nested_calls >= 2) {
+      throw new \RuntimeException("$nested_calls nested calls made to updateIndex(), seems like an infinite loop.");
+    }
+    $index->clear();
+    --$nested_calls;
   }
 
   /**

@@ -2,7 +2,9 @@
 
 namespace Drupal\system\Controller;
 
+use Drupal\Core\Batch\BatchStorageInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,21 +15,16 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class BatchController implements ContainerInjectionInterface {
 
-  /**
-   * The app root.
-   *
-   * @var string
-   */
-  protected $root;
+  use StringTranslationTrait;
 
   /**
    * Constructs a new BatchController.
-   *
-   * @param string $root
-   *   The app root.
    */
-  public function __construct($root) {
-    $this->root = $root;
+  public function __construct(
+    protected string $root,
+    protected BatchStorageInterface $batchStorage,
+  ) {
+    require_once $this->root . '/core/includes/batch.inc';
   }
 
   /**
@@ -35,7 +32,8 @@ class BatchController implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->getParameter('app.root')
+      $container->getParameter('app.root'),
+      $container->get('batch.storage'),
     );
   }
 
@@ -51,7 +49,6 @@ class BatchController implements ContainerInjectionInterface {
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    */
   public function batchPage(Request $request) {
-    require_once $this->root . '/core/includes/batch.inc';
     $output = _batch_page($request);
 
     if ($output === FALSE) {
@@ -82,12 +79,27 @@ class BatchController implements ContainerInjectionInterface {
   }
 
   /**
-   * The _title_callback for the system.batch_page.normal route.
+   * The _title_callback for the system.batch_page.html route.
    *
    * @return string
    *   The page title.
    */
-  public function batchPageTitle() {
+  public function batchPageTitle(Request $request) {
+    $batch = &batch_get();
+
+    if (!($request_id = $request->query->get('id'))) {
+      return '';
+    }
+
+    // Retrieve the current state of the batch.
+    if (!$batch) {
+      $batch = $this->batchStorage->load($request_id);
+    }
+
+    if (!$batch) {
+      return '';
+    }
+
     $current_set = _batch_current_set();
     return !empty($current_set['title']) ? $current_set['title'] : '';
   }

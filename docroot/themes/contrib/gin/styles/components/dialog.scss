@@ -10,17 +10,17 @@
 
   // Dialog without title
   .ui-dialog-content:first-of-type {
-    border-top-left-radius: var(--gin-border-m);
-    border-top-right-radius: var(--gin-border-m);
+    border-start-start-radius: var(--gin-border-m);
+    border-start-end-radius: var(--gin-border-m);
   }
 
   // Node actions placement
   .layout-region-node-actions {
     position: absolute;
-    bottom: 0;
-    left: var(--gin-spacing-m);
-    top: auto;
-    right: auto;
+    inset-block-end: 0;
+    inset-inline-start: var(--gin-spacing-m);
+    inset-block-start: auto;
+    inset-inline-end: auto;
   }
 
   // Show meta full width
@@ -44,9 +44,11 @@
 
 .ui-dialog {
   position: absolute;
-  /*rtl:ignore*/
+  inset-block-start: 0;
+  // Don't migrate to logical CSS
+  // as otherwise it will break
+  // jQuery UI's dialog placement
   left: 0;
-  top: 0;
   font-family: var(--gin-font);
   outline: none;
 
@@ -66,7 +68,7 @@
     position: relative;
 
     @media (forced-colors: active) {
-      border-bottom: 1px solid buttonBorder;
+      border-block-end: 1px solid buttonBorder;
     }
   }
 
@@ -75,7 +77,7 @@
     font-weight: var(--gin-font-weight-normal);
     color: #fff;
     width: 100%;
-    padding-right: var(--gin-spacing-xl);
+    padding-inline-end: var(--gin-spacing-xl);
     box-sizing: border-box;
   }
 
@@ -85,18 +87,22 @@
 
   .ui-widget-content.ui-dialog-buttonpane {
     padding: var(--gin-spacing-s) var(--gin-spacing-l);
-    border-top: 1px solid var(--gin-border-color-layer);
-    border-bottom-left-radius: var(--gin-border-m);
-    border-bottom-right-radius: var(--gin-border-m);
+    border-block-start: 1px solid var(--gin-border-color-layer);
+    border-end-start-radius: var(--gin-border-m);
+    border-end-end-radius: var(--gin-border-m);
     background: var(--gin-bg-app);
 
     .button {
-      font-weight: var(--gin-font-weight-heavy);
-      margin-top: 0;
-      margin-bottom: 0;
+      font-family: var(--gin-font);
+      font-size: var(--gin-font-size-s);
+      font-weight: var(--gin-font-weight-semibold);
+      padding-block: calc(var(--gin-spacing-s) - 2px);
+      padding-inline: var(--gin-spacing-m);
+      margin-block: 0;
+      height: auto;
 
       &:last-of-type {
-        margin-right: 0;
+        margin-inline-end: 0;
       }
     }
   }
@@ -109,14 +115,14 @@
   }
 
   .ui-dialog-buttonset {
-    margin-top: 0;
+    margin-block-start: 0;
   }
 
   .ui-dialog-titlebar-close {
     position: absolute;
-    top: 50%;
-    left: auto;
-    right: 0;
+    inset-block-start: 50%;
+    inset-inline-start: auto;
+    inset-inline-end: 0;
     width: 2rem;
     height: 2rem;
     opacity: .8;
@@ -128,8 +134,8 @@
     .ui-icon-closethick {
       width: 100%;
       height: 100%;
-      top: 0;
-      left: 0;
+      inset-block-start: 0;
+      inset-inline-start: 0;
       margin: 0;
       transform: none;
       background: #fff;
@@ -149,21 +155,30 @@
   }
 
   .ui-widget-content.ui-dialog-content {
-    padding-left: var(--gin-spacing-l);
-    padding-right: var(--gin-spacing-l);
+    padding-inline: var(--gin-spacing-l);
     background: var(--gin-bg-layer);
   }
 
   .gin-layer-wrapper {
-    margin-bottom: var(--gin-spacing-l);
+    margin-block-end: var(--gin-spacing-l);
+  }
+
+  .gin-confirm-form {
+    margin-block-start: var(--gin-spacing-m);
+    margin-block-end: var(--gin-spacing-s);
+  }
+
+  &.token-tree-dialog {
+    max-width: none;
+    z-index: 505;
   }
 }
 
 .erl-overlay,
 .layout-paragraphs-dialog {
   position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
+  inset-block-start: 50% !important;
+  inset-inline-start: 50% !important;
   width: calc(100% - var(--gin-spacing-xl)) !important;
   transform: translate(-50%, -50%);
 
@@ -183,10 +198,10 @@ ul.paragraphs-add-dialog-list {
 
 .views-ui-dialog {
   .views-offset-bottom {
-    border-top: 1px solid var(--gin-border-color);
+    border-block-start: 1px solid var(--gin-border-color);
 
     @media (forced-colors: active) {
-      border-top: none;
+      border-block-start: none;
     }
   }
 }
@@ -241,11 +256,14 @@ table.treetable {
 }
 
 .ui-dialog .gin-layer-wrapper {
-  margin-bottom: var(--gin-spacing-l);
-  margin-top: var(--gin-spacing-l);
+  margin-block: var(--gin-spacing-l);
 }
 
 // Removes spacing from views dialog
 .views-ui-dialog.views-ui-dialog > .ui-dialog-content {
   padding: 0;
+}
+
+#drupal-modal .gin-sticky-form-actions.form-actions {
+  display: none;
 }

@@ -17,30 +17,17 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 class SmsIncomingController extends ControllerBase {
 
   /**
-   * The argument resolver.
-   *
-   * @var \Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface
-   */
-  protected $argumentResolver;
-
-  /**
-   * The SMS Provider.
-   *
-   * @var \Drupal\sms\Provider\SmsProviderInterface
-   */
-  protected $smsProvider;
-
-  /**
    * Creates an incoming route controller.
    *
-   * @param \Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface $controller_resolver
+   * @param \Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface $argumentResolver
    *   The argument resolver.
-   * @param \Drupal\sms\Provider\SmsProviderInterface $sms_provider
+   * @param \Drupal\sms\Provider\SmsProviderInterface $smsProvider
    *   The SMS service provider.
    */
-  public function __construct(ArgumentResolverInterface $controller_resolver, SmsProviderInterface $sms_provider) {
-    $this->argumentResolver = $controller_resolver;
-    $this->smsProvider = $sms_provider;
+  public function __construct(
+    protected ArgumentResolverInterface $argumentResolver,
+    protected SmsProviderInterface $smsProvider,
+  ) {
   }
 
   /**
@@ -49,7 +36,7 @@ class SmsIncomingController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('http_kernel.controller.argument_resolver'),
-      $container->get('sms.provider')
+      $container->get('sms.provider'),
     );
   }
 

@@ -2,12 +2,12 @@
 
 namespace Drupal\blazy\Views;
 
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Theme\BlazyViews;
-use Drupal\blazy\Utility\Sanitize;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Render\Markup;
+use Drupal\blazy\Theme\BlazyViews;
+use Drupal\blazy\Utility\Sanitize;
+use Drupal\blazy\internals\Internals;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -98,7 +98,7 @@ abstract class BlazyStyleVanilla extends StylePluginBase implements BlazyStyleVa
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
@@ -295,6 +295,7 @@ abstract class BlazyStyleVanilla extends StylePluginBase implements BlazyStyleVa
             }
 
             if ($result
+              /* @phpstan-ignore-next-line */
               && is_array($result)
               && isset($result['rendered'])
               && !($result['rendered'] instanceof Markup)) {

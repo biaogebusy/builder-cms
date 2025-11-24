@@ -45,14 +45,15 @@ class PaymentGatewayListBuilder extends DraggableListBuilder {
     $mode = $modes[$payment_gateway_plugin->getMode()] ?? $this->t('N/A');
     $status = $entity->status() ? $this->t('Enabled') : $this->t('Disabled');
     $row['label'] = $entity->label();
-    $row['id']['#markup'] = $entity->id();
     // $this->weightKey determines whether the table will be rendered as a form.
     if (!empty($this->weightKey)) {
+      $row['id']['#markup'] = $entity->id();
       $row['plugin']['#markup'] = $type;
       $row['mode']['#markup'] = $mode;
       $row['status']['#markup'] = $status;
     }
     else {
+      $row['id'] = $entity->id();
       $row['plugin'] = $type;
       $row['mode'] = $mode;
       $row['status'] = $status;
@@ -68,7 +69,7 @@ class PaymentGatewayListBuilder extends DraggableListBuilder {
     $entities = $this->load();
     // If there are less than 2 gateways, disable dragging.
     if (count($entities) <= 1) {
-      unset($this->weightKey);
+      $this->weightKey = NULL;
     }
     return parent::render();
   }

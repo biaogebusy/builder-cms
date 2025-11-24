@@ -30,14 +30,14 @@ class CustomerProfileEvent extends EventBase {
   /**
    * Constructs a new CustomerProfileEvent.
    *
-   * @param \Drupal\profile\Entity\ProfileInterface $customer_profile
-   *   The initially selected customer profile.
    * @param \Drupal\commerce_order\Entity\OrderItemInterface $order_item
    *   The order item.
+   * @param \Drupal\profile\Entity\ProfileInterface|null $customer_profile
+   *   The initially selected customer profile, NULL if not yet known.
    */
-  public function __construct(ProfileInterface $customer_profile = NULL, OrderItemInterface $order_item) {
-    $this->customerProfile = $customer_profile;
+  public function __construct(OrderItemInterface $order_item, ?ProfileInterface $customer_profile = NULL) {
     $this->orderItem = $order_item;
+    $this->customerProfile = $customer_profile;
   }
 
   /**

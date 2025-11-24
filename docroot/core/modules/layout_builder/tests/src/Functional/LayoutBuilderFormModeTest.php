@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -67,6 +69,7 @@ class LayoutBuilderFormModeTest extends BrowserTestBase {
     // Add the form mode and show the field with a constraint.
     EntityFormMode::create([
       'id' => 'entity_test.layout_builder',
+      'label' => 'Layout Builder',
       'targetEntityType' => 'entity_test',
     ])->save();
     EntityFormDisplay::create([
@@ -92,7 +95,7 @@ class LayoutBuilderFormModeTest extends BrowserTestBase {
   /**
    * Tests that the 'Discard changes' button skips validation and ignores input.
    */
-  public function testDiscardValidation() {
+  public function testDiscardValidation(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 

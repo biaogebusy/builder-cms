@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,6 +11,7 @@
 
 namespace Psy\Command;
 
+use Psy\ConfigPaths;
 use Psy\Context;
 use Psy\ContextAware;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,15 +21,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class EditCommand extends Command implements ContextAware
 {
-    /**
-     * @var string
-     */
-    private $runtimeDir = '';
-
-    /**
-     * @var Context
-     */
-    private $context;
+    private string $runtimeDir = '';
+    private Context $context;
 
     /**
      * Constructor.
@@ -97,6 +91,7 @@ class EditCommand extends Command implements ContextAware
         $shouldRemoveFile = false;
 
         if ($filePath === null) {
+            ConfigPaths::ensureDir($this->runtimeDir);
             $filePath = \tempnam($this->runtimeDir, 'psysh-edit-command');
             $shouldRemoveFile = true;
         }
@@ -104,7 +99,7 @@ class EditCommand extends Command implements ContextAware
         $editedContent = $this->editFile($filePath, $shouldRemoveFile);
 
         if ($execute) {
-            $this->getApplication()->addInput($editedContent);
+            $this->getShell()->addInput($editedContent);
         }
 
         return 0;

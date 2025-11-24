@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Kernel;
 
 use Drupal\entity_test\Entity\EntityTest;
@@ -102,6 +104,7 @@ class FlagActionTest extends FlagKernelTestBase {
     $test_entity->save();
     /** @var \Drupal\system\ActionConfigEntityInterface $action */
     $action = $this->container->get('entity_type.manager')->getStorage('action')->load('flag_action.' . $entity_flag->id() . '_flag');
+    /** @var \Drupal\flag\Plugin\Action\FlagAction $plugin */
     $plugin = $action->getPlugin();
     $plugin->execute($test_entity);
     $this->assertTrue($entity_flag->isFlagged($test_entity, $this->account));
@@ -115,10 +118,13 @@ class FlagActionTest extends FlagKernelTestBase {
     // Unflag.
     $this->entityTypeManager->getStorage('flagging')->resetCache();
     $action = $this->entityTypeManager->getStorage('action')->load('flag_action.' . $entity_flag->id() . '_unflag');
+    /** @var \Drupal\flag\Plugin\Action\FlagAction $plugin */
     $plugin = $action->getPlugin();
     $plugin->execute($test_entity);
+
     // @todo Flagging cache cannot be cleared, so this check cannot happen.
     // @see https://www.drupal.org/node/2801423
+    // phpcs:ignore
     // $this->assertFalse($entity_flag->isFlagged($test_entity, $this->account));
 
     // Access should be false for this user.

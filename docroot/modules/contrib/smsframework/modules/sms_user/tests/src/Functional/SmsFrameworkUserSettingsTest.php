@@ -22,7 +22,7 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * List of days in a week, starting from 'sunday' through to 'saturday'.
@@ -62,11 +62,11 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     // Ensure default select field values.
     foreach ($this->days as $day) {
       $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-' . $day . '-start', '-1');
-      $this->assertTrue($optionElement->hasAttribute('selected'));
+      static::assertTrue($optionElement->hasAttribute('selected'));
     }
     foreach ($this->days as $day) {
       $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-' . $day . '-end', '24');
-      $this->assertTrue($optionElement->hasAttribute('selected'));
+      static::assertTrue($optionElement->hasAttribute('selected'));
     }
 
     $edit = [
@@ -86,17 +86,17 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     // Check values are saved and form reflects this.
     $this->assertSession()->checkboxChecked('edit-active-hours-status');
     $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-sunday-start', '2');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
     $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-sunday-end', '22');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
     $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-tuesday-start', '0');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
     $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-tuesday-end', '24');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
     $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-thursday-start', '-1');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
     $optionElement = $this->assertSession()->optionExists('edit-active-hours-days-thursday-end', '24');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
 
     $ranges_expected = [
       ['start' => 'sunday 2:00', 'end' => 'sunday 22:00'],
@@ -104,7 +104,7 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     ];
     $ranges_actual = \Drupal::config('sms_user.settings')
       ->get('active_hours.ranges');
-    $this->assertEquals($ranges_expected, $ranges_actual);
+    static::assertEquals($ranges_expected, $ranges_actual);
   }
 
   /**
@@ -144,8 +144,8 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->responseContains('The configuration options have been saved.');
 
     $settings = $this->config('sms_user.settings')->get('account_registration');
-    $this->assertFalse($settings['unrecognized_sender']['status']);
-    $this->assertFalse($settings['incoming_pattern']['status']);
+    static::assertFalse($settings['unrecognized_sender']['status']);
+    static::assertFalse($settings['incoming_pattern']['status']);
   }
 
   /**
@@ -176,12 +176,12 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     $settings = $this->config('sms_user.settings')->get('account_registration');
 
     // Status.
-    $this->assertTrue($settings['unrecognized_sender']['status']);
-    $this->assertFalse($settings['incoming_pattern']['status']);
+    static::assertTrue($settings['unrecognized_sender']['status']);
+    static::assertFalse($settings['incoming_pattern']['status']);
 
     // Settings.
-    $this->assertTrue($settings['unrecognized_sender']['reply']['status']);
-    $this->assertEquals($reply_message, $settings['unrecognized_sender']['reply']['message']);
+    static::assertTrue($settings['unrecognized_sender']['reply']['status']);
+    static::assertEquals($reply_message, $settings['unrecognized_sender']['reply']['message']);
   }
 
   /**
@@ -208,15 +208,15 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     $settings = $this->config('sms_user.settings')->get('account_registration');
 
     // Status.
-    $this->assertFalse($settings['unrecognized_sender']['status']);
-    $this->assertTrue($settings['incoming_pattern']['status']);
+    static::assertFalse($settings['unrecognized_sender']['status']);
+    static::assertTrue($settings['incoming_pattern']['status']);
 
     // Settings.
-    $this->assertEquals($incoming_message, $settings['incoming_pattern']['incoming_messages'][0]);
-    $this->assertTrue($settings['incoming_pattern']['send_activation_email']);
-    $this->assertTrue($settings['incoming_pattern']['reply']['status']);
-    $this->assertEquals($reply_message_success, $settings['incoming_pattern']['reply']['message']);
-    $this->assertEquals($reply_message_failure, $settings['incoming_pattern']['reply']['message_failure']);
+    static::assertEquals($incoming_message, $settings['incoming_pattern']['incoming_messages'][0]);
+    static::assertTrue($settings['incoming_pattern']['send_activation_email']);
+    static::assertTrue($settings['incoming_pattern']['reply']['status']);
+    static::assertEquals($reply_message_success, $settings['incoming_pattern']['reply']['message']);
+    static::assertEquals($reply_message_failure, $settings['incoming_pattern']['reply']['message_failure']);
   }
 
   /**
@@ -306,10 +306,10 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->responseContains('There are no phone number settings configured for the user entity type. Some features cannot operate without these settings. <a href="' . Url::fromRoute('entity.phone_number_settings.add')->toString() . '">Add phone number settings</a>.', 'Warning message displayed for no phone number settings.');
 
     $input = $this->xpath('//input[@name="account_registration[behaviour]" and @disabled="disabled" and @value="all"]');
-    $this->assertTrue(count($input) === 1, "The 'All unrecognised phone numbers' radio is disabled.");
+    static::assertTrue(count($input) === 1, "The 'All unrecognised phone numbers' radio is disabled.");
 
     $input = $this->xpath('//input[@name="account_registration[behaviour]" and @disabled="disabled" and @value="incoming_pattern"]');
-    $this->assertTrue(count($input) === 1, "The 'incoming_pattern' radio is disabled.");
+    static::assertTrue(count($input) === 1, "The 'incoming_pattern' radio is disabled.");
   }
 
   /**
@@ -323,10 +323,10 @@ class SmsFrameworkUserSettingsTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->responseNotContains('There are no phone number settings configured for the user entity type. Some features cannot operate without these settings.', 'Warning message displayed for no phone number settings.');
 
     $input = $this->xpath('//input[@name="account_registration[behaviour]" and @disabled="disabled" and @value="all"]');
-    $this->assertTrue(count($input) === 0, "The 'All unrecognised phone numbers' radio is not disabled.");
+    static::assertTrue(count($input) === 0, "The 'All unrecognised phone numbers' radio is not disabled.");
 
     $input = $this->xpath('//input[@name="account_registration[behaviour]" and @disabled="disabled" and @value="incoming_pattern"]');
-    $this->assertTrue(count($input) === 0, "The 'incoming_pattern' radio is not disabled.");
+    static::assertTrue(count($input) === 0, "The 'incoming_pattern' radio is not disabled.");
   }
 
 }

@@ -3,24 +3,25 @@
 namespace Drupal\Core\Field\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'language' formatter.
- *
- * @FieldFormatter(
- *   id = "language",
- *   label = @Translation("Language"),
- *   field_types = {
- *     "language"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'language',
+  label: new TranslatableMarkup('Language'),
+  field_types: [
+    'language',
+  ],
+)]
 class LanguageFormatter extends StringFormatter {
 
   /**
@@ -34,7 +35,7 @@ class LanguageFormatter extends StringFormatter {
    * Constructs a LanguageFormatter instance.
    *
    * @param string $plugin_id
-   *   The plugin_id for the formatter.
+   *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -117,9 +118,15 @@ class LanguageFormatter extends StringFormatter {
     // storage by LanguageManager::getLanguages()) or in its native language
     // name. That only depends on formatter settings and no language condition.
     $languages = $this->getSetting('native_language') ? $this->languageManager->getNativeLanguages(LanguageInterface::STATE_ALL) : $this->languageManager->getLanguages(LanguageInterface::STATE_ALL);
-    return [
-      '#plain_text' => $item->language && isset($languages[$item->language->getId()]) ? $languages[$item->language->getId()]->getName() : '',
-    ];
+    // \Drupal\Core\Language\LanguageInterface::LANGCODE_NOT_SPECIFIED
+    // and \Drupal\Core\Language\LanguageInterface::LANGCODE_NOT_APPLICABLE are
+    // not returned from the language manager above.
+    $value = [];
+    if (isset($item->language)) {
+      $name = isset($languages[$item->language->getId()]) ? $languages[$item->language->getId()]->getName() : $item->language->getId();
+      $value = ['#plain_text' => $name];
+    }
+    return $value;
   }
 
 }

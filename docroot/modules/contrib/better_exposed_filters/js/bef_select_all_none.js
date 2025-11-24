@@ -7,17 +7,17 @@
 
 (function ($, once) {
   Drupal.behaviors.betterExposedFiltersSelectAllNone = {
-    attach: function (context) {
+    attach: function () {
       /*
        * Add Select all/none links to specified checkboxes
        */
-      var selected = $('.form-checkboxes.bef-select-all-none:not(.bef-processed)');
+      const selected = $('.form-checkboxes.bef-select-all-none:not(.bef-processed)');
       if (selected.length) {
-        var selAll = Drupal.t('Select All');
-        var selNone = Drupal.t('Select None');
+        const selAll = Drupal.t('Select All');
+        const selNone = Drupal.t('Select None');
 
         // Set up a prototype link and event handlers.
-        var link = $('<a class="bef-toggle bef-toggle--select-all" href="#">' + selAll + '</a>');
+        const link = $('<a class="bef-toggle bef-toggle--select-all" href="#">' + selAll + '</a>');
         link.click(function (event) {
           // Don't actually follow the link...
           event.preventDefault();
@@ -32,8 +32,6 @@
               .siblings('.bef-select-all-none, .bef-tree')
               .find('input:checkbox').each(function () {
                 $(this).prop('checked', true);
-                // @TODO:
-                // _bef_highlight(this, context);
               })
               .end()
 
@@ -50,8 +48,6 @@
               .siblings('.bef-select-all-none, .bef-tree')
               .find('input:checkbox').each(function () {
                 $(this).prop('checked', false);
-                // @TODO:
-                // _bef_highlight(this, context);
               })
               .end()
 
@@ -64,9 +60,9 @@
         // Add link to the page for each set of checkboxes.
         selected
           .addClass('bef-processed')
-          .each(function (index) {
+          .each(function () {
             // Clone the link prototype and insert into the DOM.
-            var newLink = link.clone(true);
+            const newLink = link.clone(true);
 
             newLink.insertBefore($(this));
 
@@ -86,36 +82,13 @@
             }
           });
       }
-
-      // @TODO:
-      // Add highlight class to checked checkboxes for better theming
-      // $('.bef-tree input[type="checkbox"], .bef-checkboxes input[type="checkbox"]')
-      // Highlight newly selected checkboxes
-      //  .change(function () {
-      //    _bef_highlight(this, context);
-      //  })
-      //  .filter(':checked').closest('.form-item', context).addClass('highlight')
-      // ;
-      // @TODO: Put this somewhere else...
-      // Check for and initialize datepickers
-      // if (Drupal.settings.better_exposed_filters.datepicker) {
-      //  // Note: JavaScript does not treat "" as null
-      //  if (Drupal.settings.better_exposed_filters.datepicker_options.dateformat) {
-      //    $('.bef-datepicker').datepicker({
-      //      dateFormat: Drupal.settings.better_exposed_filters.datepicker_options.dateformat
-      //    });
-      //  }
-      //  else {
-      //    $('.bef-datepicker').datepicker();
-      //  }
-      // }
-    }                   // attach: function() {
-  };                    // Drupal.behaviors.better_exposed_filters = {.
+    }
+  };
 
   Drupal.behaviors.betterExposedFiltersAllNoneNested = {
-    attach: function (context, settings) {
+    attach: function () {
       $(once('bef-all-none-nested', '.bef-select-all-none-nested ul li')).each(function () {
-        var $this = $(this);
+        const $this = $(this);
         // Check/uncheck child terms along with their parent.
         $this.find('input:checkbox:first').change(function () {
           $(this).closest('li').find('ul li input:checkbox').prop('checked', this.checked);
@@ -125,8 +98,8 @@
         // status as needed.
         $this.find('ul input:checkbox').change(function () {
           // Determine the number of unchecked sibling checkboxes.
-          var $this = $(this);
-          var uncheckedSiblings = $this.closest('li').siblings('li').find('> div > input:checkbox:not(:checked)').length;
+          const $this = $(this);
+          const uncheckedSiblings = $this.closest('li').siblings('li').find('> div input:checkbox:not(:checked)').length;
 
           // If this term or any siblings are unchecked, uncheck the parent and
           // all ancestors.

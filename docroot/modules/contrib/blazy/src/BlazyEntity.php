@@ -2,11 +2,10 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\Deprecated\BlazyEntityDeprecatedTrait;
-use Drupal\blazy\internals\Internals;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\blazy\Media\BlazyOEmbedInterface;
 use Drupal\blazy\Utility\CheckItem;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\blazy\internals\Internals;
 use Drupal\media\MediaInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -14,8 +13,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides common entity utilities to work with field details or vanilla.
  */
 class BlazyEntity implements BlazyEntityInterface {
-
-  use BlazyEntityDeprecatedTrait;
 
   /**
    * The blazy oembed service.
@@ -98,7 +95,7 @@ class BlazyEntity implements BlazyEntityInterface {
 
     // @todo remove $settings after sub-modules: gridstack, slick_browser.
     $data['#access'] = TRUE;
-    $data['#delta']  = $delta = $data['#delta'] ?? ($settings['delta'] ?? -1);
+    $data['#delta']  = $data['#delta'] ?? ($settings['delta'] ?? -1);
 
     // Extract media data with translated one, dup required by self::prepare().
     if ($entity instanceof MediaInterface) {
@@ -112,6 +109,17 @@ class BlazyEntity implements BlazyEntityInterface {
 
     // Individual entity settings.
     self::settings($settings, $entity);
+
+    // Since 3.0.9, mimicking Blazy formatters so to swap settings once.
+    // At most cases, this class is accessed from Views, or Entity Browser.
+    // Should save many lightbox-related sub-modules from another hook_alter.
+    // See \Drupal\blazy\Plugin\views\field\BLAH.
+    // See \Drupal\io_browser\Plugin\EntityBrowser\BLAH.
+    // See \Drupal\slick_browser\Plugin\EntityBrowser\BLAH.
+    $view = $data['#view'] ?? NULL;
+    $manager->moduleHandler()->alter('blazy_settings', $data, $view);
+    $settings = &$data['#settings'];
+
     // $manager->toSettings($settings, $info);
     $manager->postSettingsAlter($settings, $entity);
 
@@ -129,6 +137,24 @@ class BlazyEntity implements BlazyEntityInterface {
     }
 
     $manager->moduleHandler()->alter('blazy_build_entity', $build, $entity, $settings);
+
+    // Allows a standalone blazy layout media to have container for lightboxes.
+    if ($config = $build['#build']['#settings'] ?? []) {
+      if ($blazies = $config['blazies'] ?? NULL) {
+        if ($blazies->use('container')) {
+          $content = $build;
+          $attrs = [];
+          Blazy::containerAttributes($attrs, $config);
+
+          $build = [
+            '#type' => 'container',
+            '#attributes' => $attrs,
+            'content' => $content,
+          ];
+        }
+      }
+    }
+
     return $build;
   }
 

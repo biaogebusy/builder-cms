@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"ZJ",
+		"Ningbo Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beilun Qu": {
+			"local_name": "北仑区"
+		},
+		"Cixi Shi": {
+			"local_name": "慈溪市"
+		},
+		"Fenghua Shi": {
+			"local_name": "奉化市"
+		},
+		"Haishu Qu": {
+			"local_name": "海曙区"
+		},
+		"Jiangbei Qu": {
+			"local_name": "江北区"
+		},
+		"Jiangdong Qu": {
+			"local_name": "江东区"
+		},
+		"Ninghai Xian": {
+			"local_name": "宁海县"
+		},
+		"Xiangshan Xian": {
+			"local_name": "象山县"
+		},
+		"Yinzhou Qu": {
+			"local_name": "鄞州区"
+		},
+		"Yuyao Shi": {
+			"local_name": "余姚市"
+		},
+		"Zhenhai Qu": {
+			"local_name": "镇海区"
+		}
+	}
+}

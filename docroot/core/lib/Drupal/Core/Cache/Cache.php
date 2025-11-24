@@ -127,6 +127,21 @@ class Cache {
   }
 
   /**
+   * Gets all memory cache bin services.
+   *
+   * @return \Drupal\Core\Cache\CacheBackendInterface[]
+   *   An array of cache backend objects keyed by memory cache bins.
+   */
+  public static function getMemoryBins(): array {
+    $bins = [];
+    $container = \Drupal::getContainer();
+    foreach ($container->getParameter('memory_cache_bins') as $service_id => $bin) {
+      $bins[$bin] = $container->get($service_id);
+    }
+    return $bins;
+  }
+
+  /**
    * Generates a hash from a query object, to be used as part of the cache key.
    *
    * This smart caching strategy saves Drupal from querying and rendering to
@@ -136,6 +151,11 @@ class Cache {
    * call this function. Executing the query and formatting results should
    * happen in a #pre_render callback.
    *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. No
+   *   replacement provided.
+   *
+   * @see https://www.drupal.org/node/3308507
+   *
    * @param \Drupal\Core\Database\Query\SelectInterface $query
    *   A select query object.
    *
@@ -143,6 +163,7 @@ class Cache {
    *   A hash of the query arguments.
    */
   public static function keyFromQuery(SelectInterface $query) {
+    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. No replacement provided. See https://www.drupal.org/node/3322044', E_USER_DEPRECATED);
     $query->preExecute();
     $keys = [(string) $query, $query->getArguments()];
     return hash('sha256', serialize($keys));

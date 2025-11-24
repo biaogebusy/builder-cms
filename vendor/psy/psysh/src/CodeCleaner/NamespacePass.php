@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,8 +29,8 @@ use Psy\CodeCleaner;
  */
 class NamespacePass extends CodeCleanerPass
 {
-    private $namespace = null;
-    private $cleaner;
+    private ?Name $namespace = null;
+    private CodeCleaner $cleaner;
 
     /**
      * @param CodeCleaner $cleaner
@@ -83,7 +83,7 @@ class NamespacePass extends CodeCleanerPass
      *
      * @param Name|null $namespace
      */
-    private function setNamespace($namespace)
+    private function setNamespace(?Name $namespace)
     {
         $this->namespace = $namespace;
         $this->cleaner->setNamespace($namespace === null ? null : $this->getParts($namespace));

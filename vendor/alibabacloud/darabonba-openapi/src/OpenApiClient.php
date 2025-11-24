@@ -90,6 +90,8 @@ class OpenApiClient
 
     protected $_tlsMinVersion;
 
+    protected $_attributeMap;
+
     /**
      * Init client with Config
      * @param config config contains the necessary information to create a client
@@ -949,15 +951,8 @@ class OpenApiClient
                 $_lastRequest = $_request;
                 $_response = Tea::send($_request, $_runtime);
                 if (Utils::is4xx($_response->statusCode) || Utils::is5xx($_response->statusCode)) {
-                    $err = [];
-                    if (!Utils::isUnset(@$_response->headers["content-type"]) && Utils::equalString(@$_response->headers["content-type"], "text/xml;charset=utf-8")) {
-                        $_str = Utils::readAsString($_response->body);
-                        $respMap = XML::parseXml($_str, null);
-                        $err = Utils::assertAsMap(@$respMap["Error"]);
-                    } else {
-                        $_res = Utils::readAsJSON($_response->body);
-                        $err = Utils::assertAsMap($_res);
-                    }
+                    $_res = Utils::readAsJSON($_response->body);
+                    $err = Utils::assertAsMap($_res);
                     @$err["statusCode"] = $_response->statusCode;
                     throw new TeaError([
                         "code" => "" . (string) (self::defaultAny(@$err["Code"], @$err["code"])) . "",
@@ -1133,11 +1128,13 @@ class OpenApiClient
                     "network" => $this->_network,
                     "suffix" => $this->_suffix
                 ]);
-                $interceptorContext = new InterceptorContext([
-                    "request" => $requestContext,
-                    "configuration" => $configurationContext
-                ]);
+                $interceptorContext = new InterceptorContext([]);
+                $interceptorContext->request = $requestContext;
+                $interceptorContext->configuration = $configurationContext;
                 $attributeMap = new AttributeMap([]);
+                if (!Utils::isUnset($this->_attributeMap)) {
+                    $attributeMap = $this->_attributeMap;
+                }
                 // 1. spi.modifyConfiguration(context: SPI.InterceptorContext, attributeMap: SPI.AttributeMap);
                 $this->_spi->modifyConfiguration($interceptorContext, $attributeMap);
                 // 2. spi.modifyRequest(context: SPI.InterceptorContext, attributeMap: SPI.AttributeMap);

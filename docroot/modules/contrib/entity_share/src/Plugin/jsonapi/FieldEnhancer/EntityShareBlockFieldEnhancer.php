@@ -70,11 +70,10 @@ class EntityShareBlockFieldEnhancer extends ResourceFieldEnhancerBase implements
    * {@inheritdoc}
    */
   protected function doUndoTransform($data, Context $context) {
-
     if (isset($data['settings']['id'])) {
       $parsed_id = [];
       // Check if it is a link to an entity.
-      preg_match("/block_content:(.*)/", $data['settings']['id'], $parsed_id);
+      \preg_match('/block_content:(.*)/', $data['settings']['id'], $parsed_id);
       if (!empty($parsed_id)) {
         $block_content_uuid = $parsed_id[1];
         /** @var \Drupal\block_content\BlockContentInterface[] $block_content */
@@ -83,8 +82,8 @@ class EntityShareBlockFieldEnhancer extends ResourceFieldEnhancerBase implements
             'uuid' => $block_content_uuid,
           ]);
         if (!empty($block_contents)) {
-          $block_content = array_shift($block_contents);
-          $route_name = sprintf('jsonapi.%s--%s.individual', 'block_content', $block_content->bundle());
+          $block_content = \array_shift($block_contents);
+          $route_name = \sprintf('jsonapi.%s--%s.individual', 'block_content', $block_content->bundle());
           $url = Url::fromRoute($route_name, [
             'entity' => $block_content_uuid,
           ])

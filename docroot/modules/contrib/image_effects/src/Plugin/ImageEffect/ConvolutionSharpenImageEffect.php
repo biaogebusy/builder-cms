@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Sharpen image using convolution.
- *
- * @ImageEffect(
- *   id = "image_effects_convolution_sharpen",
- *   label = @Translation("Sharpen"),
- *   description = @Translation("Sharpen image using convolution.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_convolution_sharpen',
+  label: new TranslatableMarkup('Sharpen'),
+  description: new TranslatableMarkup('Sharpen image using convolution.'),
+)]
 class ConvolutionSharpenImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**

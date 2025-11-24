@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools\Form;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -28,7 +30,7 @@ class MigrationGroupAddForm extends MigrationGroupFormBase {
    * @return array
    *   An array of supported actions for the current entity form.
    */
-  protected function actions(array $form, FormStateInterface $form_state) {
+  protected function actions(array $form, FormStateInterface $form_state): array {
     $actions = parent::actions($form, $form_state);
     $actions['submit']['#value'] = $this->t('Create Migration Group');
     return $actions;

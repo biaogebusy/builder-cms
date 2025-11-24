@@ -68,7 +68,7 @@ function hook_votingapi_results_alter(array &$vote_results, $entity_type, $entit
  *
  * If your module uses custom tags or value_types, or calculates custom
  * aggregate functions, please implement this hook so other modules can properly
- * interperet and display your data.
+ * interpret and display your data.
  *
  * Three major bins of data are stored: tags, value_types, and aggregate result
  * functions. Each entry in these bins is keyed by the value stored in the
@@ -85,25 +85,25 @@ function hook_votingapi_metadata_alter(&$data) {
   $data['tags']['bread'] = [
     'name' => t('Bread'),
     'description' => t('The quality of the food at a restaurant.'),
-    'module' => 'mymodule',
+    'module' => 'my_module',
     // This is optional; we can add it for our own purposes.
   ];
   $data['tags']['circuses'] = [
     'name' => t('Circuses'),
     'description' => t('The quality of the presentation and atmosphere at a restaurant.'),
-    'module' => 'mymodule',
+    'module' => 'my_module',
   ];
 
   // Document two custom aggregate function.
   $data['functions']['standard_deviation'] = [
     'name' => t('Standard deviation'),
     'description' => t('The standard deviation of all votes cast on a given piece of content. Use this to find controversial content.'),
-    'module' => 'mymodule',
+    'module' => 'my_module',
   ];
   $data['functions']['median'] = [
     'name' => t('Median vote'),
     'description' => t('The median vote value cast on a given piece of content. More accurate than a pure average when there are a few outlying votes.'),
-    'module' => 'mymodule',
+    'module' => 'my_module',
   ];
 }
 
@@ -127,10 +127,10 @@ function hook_votingapi_metadata_alter(&$data) {
  */
 function hook_votingapi_views_formatters($field) {
   if ($field->field == 'value') {
-    return ['mymodule_funky_formatter' => t('MyModule value formatter')];
+    return ['my_module_funky_formatter' => t('MyModule value formatter')];
   }
   if ($field->field == 'tag') {
-    return ['mymodule_funky_tags' => t('MyModule tag formatter')];
+    return ['my_module_funky_tags' => t('MyModule tag formatter')];
   }
 }
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="private_message">
+  <description>PHP CodeSniffer configuration for Private Message module.</description>
+  <rule ref="vendor/drupal/coder/coder_sniffer/Drupal/ruleset.xml"/>
+  <arg name="extensions" value="php,inc,module,install,info,test,profile,theme"/>
+
+  <!-- Strict typing & type hinting rules -->
+  <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes.DeclareStrictTypesMissing">
+    <severity>5</severity>
+    <!-- TODO: Remove these two exclusions in private_message:5.0.0 -->
+    <exclude-pattern>src/Mapper/PrivateMessageMapper.php</exclude-pattern>
+    <exclude-pattern>src/Mapper/PrivateMessageMapperInterface.php</exclude-pattern>
+  </rule>
+</ruleset>

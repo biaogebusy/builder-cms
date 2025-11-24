@@ -52,8 +52,8 @@ class PullFormTest extends EntityShareClientFunctionalTestBase {
    */
   protected function getEntitiesDataArray() {
     $en_nodes = [];
-    for ($i = 1; $i <= 60; $i++) {
-      $en_nodes["es_test_$i"] = $this->getCompleteNodeInfos([
+    for ($i = 1; $i <= 60; ++$i) {
+      $en_nodes["es_test_{$i}"] = $this->getCompleteNodeInfos([
         'status' => [
           'value' => NodeInterface::PUBLISHED,
           'checker_callback' => 'getValue',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Service;
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -9,19 +11,15 @@ use Drupal\private_message\Entity\PrivateMessageThreadInterface;
 use Drupal\user\UserInterface;
 
 /**
- * The interface for the Private Message Service.
+ * The interface for the private message service.
+ *
+ * @todo This service refactoring is postponed to #3489224. To be implemented:
+ *   - Replacement of direct calls to database with entity API calls and
+ *     removing the $database class property
+ *   - Strict typing with respect to BC.
+ * @see https://www.drupal.org/project/private_message/issues/3489224
  */
 interface PrivateMessageServiceInterface {
-
-  /**
-   * The machine name of the private message module.
-   */
-  const MODULE_KEY = 'private_message';
-
-  /**
-   * The timestamp at which unread private messages were marked as read.
-   */
-  const LAST_CHECK_KEY = 'last_notification_check_timestamp';
 
   /**
    * Retrieves the private message thread for the given members.
@@ -29,50 +27,49 @@ interface PrivateMessageServiceInterface {
    * If no thread exists, one will be created.
    *
    * @param \Drupal\user\UserInterface[] $members
-   *   An array of User objects for whom the private message
-   *   thread should be retrieved.
+   *   List of users for whom the private message thread should be retrieved.
    *
-   * @return \Drupal\private_message\Entity\PrivateMessageThread
+   * @return \Drupal\private_message\Entity\PrivateMessageThreadInterface
    *   A private message thread that contains all members in the thread.
    */
-  public function getThreadForMembers(array $members);
+  public function getThreadForMembers(array $members): PrivateMessageThreadInterface;
 
   /**
-   * Get the most recently updated thread for the given user.
+   * Returns the most recently updated thread for the given user.
    *
    * @param \Drupal\user\UserInterface $user
    *   The user whose most recently updated thread should be retrieved.
+   *
+   * @return \Drupal\private_message\Entity\PrivateMessageThreadInterface|false
+   *   The most recently updated thread for the given user or FALSE.
    */
-  public function getFirstThreadForUser(UserInterface $user);
+  public function getFirstThreadForUser(UserInterface $user): PrivateMessageThreadInterface|false;
 
   /**
-   * Retrieve private message threads for a given user.
+   * Retrieves private message threads for a given user.
    *
    * @param int $count
    *   The number of threads to retrieve.
-   * @param int $timestamp
-   *   A timestamp relative to which only threads with an earlier timestamp
-   *   should be returned.
+   * @param int|null $timestamp
+   *   Only threads with an earlier timestamp should be returned.
    *
-   * @return array
+   * @return array{threads: array<int, PrivateMessageThreadInterface>, next_exists: bool}
    *   An array with two keys:
-   *   - threads: an array of
-   *     \Drupal\private_message\Entity\PrivateMessageThread
-   *   - next_exists: a boolean indicating whether any more private message
-   *     threads exist after the last one
+   *   - threads: Array of private message threads keyed by their ID.
+   *   - next_exists: Whether more threads exist after the last one.
    */
-  public function getThreadsForUser($count, $timestamp = FALSE);
+  public function getThreadsForUser(int $count, /* ?int */$timestamp = NULL): array;
 
   /**
-   * Retrieve the number of threads a user has.
+   * Retrieves the number of threads a user has.
    *
    * @return int
    *   The number of threads a user has.
    */
-  public function getCountThreadsForUser();
+  public function getCountThreadsForUser(): int;
 
   /**
-   * Retrieve a users private messages created after the given ID.
+   * Retrieves a users private messages created after the given ID.
    *
    * @param int $threadId
    *   The ID of the thread from which messages should be retrieved.
@@ -101,24 +98,6 @@ interface PrivateMessageServiceInterface {
   public function getPreviousMessages($threadId, $messageId);
 
   /**
-   * Get a list of User objects whose account names begin with the given string.
-   *
-   * Only accounts that have 'Use private messaging system' permission will be
-   * returned, and the viewing user must have both 'View user information' and
-   * 'access user profiles' to get any results at all.
-   *
-   * @param string $string
-   *   The string to search for.
-   * @param int $count
-   *   The maximum number of results to return.
-   *
-   * @return \Drupal\user\Entity\User[]
-   *   An array of User accounts whose account names begin with the given
-   *   string.
-   */
-  public function getUsersFromString($string, $count);
-
-  /**
    * Retrieve inbox information for the current user.
    *
    * If $existingThreadIds is provided it means that the inbox already has
@@ -144,23 +123,6 @@ interface PrivateMessageServiceInterface {
    *     or do exist but have been updated.
    */
   public function getUpdatedInboxThreads(array $existingThreadIds, $count = FALSE);
-
-  /**
-   * Determine whether given user is allowed to be used in a  thread.
-   *
-   * Usernames belonging to accounts that have the 'use private messaging
-   * system' permission will be considered valid.
-   *
-   * @param string $username
-   *   The username to be validated.
-   *
-   * @return bool
-   *   - TRUE if the belongs to an account that has the 'use private messaging
-   *     system' permission
-   *   - FALSE if the account doesn't exist, or does not have the required
-   *     permission
-   */
-  public function validatePrivateMessageMemberUsername($username);
 
   /**
    * Get the current user's unread threads count.
@@ -225,5 +187,21 @@ interface PrivateMessageServiceInterface {
    *   An array of thread IDs for threads in the system.
    */
   public function getThreadIds();
+
+  /**
+   * Get the current user's unread message count by thread id.
+   *
+   * Retrieves the number of the current user's messages that have been updated
+   * since user last thread access.
+   *
+   * @param int $uid
+   *   The user ID of the user whose count should be retrieved.
+   * @param int $thread_id
+   *   The thread ID which messages should be checked.
+   *
+   * @return int
+   *   The number of threads updated since the given timestamp
+   */
+  public function getThreadUnreadMessageCount($uid, $thread_id);
 
 }

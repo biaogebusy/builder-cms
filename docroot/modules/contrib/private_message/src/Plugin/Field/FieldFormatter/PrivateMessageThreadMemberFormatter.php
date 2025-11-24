@@ -1,85 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the private message member field formatter.
- *
- * @FieldFormatter(
- *   id = "private_message_thread_member_formatter",
- *   label = @Translation("Private Message Thread Members"),
- *   field_types = {
- *     "entity_reference"
- *   },
- * )
  */
+#[FieldFormatter(
+  id: 'private_message_thread_member_formatter',
+  label: new TranslatableMarkup('Private Message Thread Members'),
+  field_types: [
+    'entity_reference',
+  ],
+)]
 class PrivateMessageThreadMemberFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
-  /**
-   * The entity manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected AccountProxyInterface $currentUser;
-
-  /**
-   * The entity display repository.
-   *
-   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
-   */
-  protected EntityDisplayRepositoryInterface $entityDisplayRepository;
-
-  /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Construct a PrivateMessageThreadFormatter object.
-   *
-   * @param string $plugin_id
-   *   The ID of the plugin.
-   * @param mixed $plugin_definition
-   *   The plugin definition.
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
-   *   The field definition.
-   * @param array $settings
-   *   The field settings.
-   * @param mixed $label
-   *   The label of the field.
-   * @param string $view_mode
-   *   The current view mode.
-   * @param array $third_party_settings
-   *   The third party settings.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity manager service.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
-   *   The current user.
-   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
-   *   The entity display repository.
-   */
   public function __construct(
     $plugin_id,
     $plugin_definition,
@@ -88,23 +39,18 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
     $label,
     $view_mode,
     array $third_party_settings,
-    EntityTypeManagerInterface $entity_type_manager,
-    AccountProxyInterface $current_user,
-    EntityDisplayRepositoryInterface $entity_display_repository,
-    RendererInterface $renderer
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly AccountProxyInterface $currentUser,
+    protected readonly EntityDisplayRepositoryInterface $entityDisplayRepository,
+    protected readonly RendererInterface $renderer,
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
-
-    $this->entityTypeManager = $entity_type_manager;
-    $this->currentUser = $current_user;
-    $this->entityDisplayRepository = $entity_display_repository;
-    $this->renderer = $renderer;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): PrivateMessageThreadMemberFormatter {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
     return new static(
       $plugin_id,
       $plugin_definition,
@@ -116,7 +62,7 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
       $container->get('entity_type.manager'),
       $container->get('current_user'),
       $container->get('entity_display.repository'),
-      $container->get('renderer')
+      $container->get('renderer'),
     );
   }
 
@@ -124,7 +70,17 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
    * {@inheritdoc}
    */
   public static function isApplicable(FieldDefinitionInterface $field_definition): bool {
-    return ($field_definition->getFieldStorageDefinition()->getTargetEntityTypeId() == 'private_message_thread' && $field_definition->getFieldStorageDefinition()->getSetting('target_type') == 'user');
+    if ($field_definition->getFieldStorageDefinition()->getSetting('target_type') === 'user') {
+
+      return in_array(
+        $field_definition->getFieldStorageDefinition()->getTargetEntityTypeId(),
+        [
+          'private_message_thread',
+          'private_message_ban',
+        ]
+      );
+    }
+    return FALSE;
   }
 
   /**
@@ -133,14 +89,14 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
   public function settingsSummary(): array {
     $summary = [];
 
-    if ($this->getSetting('display_type') == 'label') {
-      $format = $this->t('Displays members using their username, linked to the user account if the viewer has permission to access user profiles');
+    if ($this->getSetting('display_type') === 'label') {
+      $summary['format'] = $this->t('Displays members using their username, linked to the user account if the viewer has permission to access user profiles');
     }
-    elseif ($this->getSetting('display_type') == 'entity') {
-      $format = $this->t('Displays members using the %display_mode display mode of the user entity', ['%display_mode' => $this->getSetting('entity_display_mode')]);
+    elseif ($this->getSetting('display_type') === 'entity') {
+      $summary['format'] = $this->t('Displays members using the %display_mode display mode of the user entity', [
+        '%display_mode' => $this->getSetting('entity_display_mode'),
+      ]);
     }
-
-    $summary['format'] = $format;
 
     $members_prefix = $this->getSetting('members_prefix');
     if (empty($members_prefix)) {
@@ -206,6 +162,7 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
       '#suffix' => '</div>',
     ];
 
+    $options = [];
     foreach ($this->entityDisplayRepository->getViewModes('user') as $display_mode_id => $display_mode) {
       $options[$display_mode_id] = $display_mode['label'];
     }
@@ -226,7 +183,7 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
       $display_type = $this->getSetting('display_type');
     }
 
-    if ($display_type == 'entity') {
+    if ($display_type === 'entity') {
       $element['entity_display_mode']['#type'] = 'select';
       $element['entity_display_mode']['#title'] = $this->t('View mode');
       $element['entity_display_mode']['#options'] = $options;
@@ -251,7 +208,7 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
     $element['prefix_separator'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Add separator after prefix'),
-      '#escription' => $this->t('No separator will be shown if the prefix is empty.'),
+      '#description' => $this->t('No separator will be shown if the prefix is empty.'),
       '#default_value' => $this->getSetting('prefix_separator'),
     ];
 
@@ -287,7 +244,10 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
           if ($this->getSetting('display_type') == 'label') {
             $url = Url::fromRoute('entity.user.canonical', ['user' => $user->id()]);
             if ($access_profiles && $url->access()) {
-              $users[$user->id()] = new FormattableMarkup('<a href=":link">@username</a>', [':link' => $url->toString(), '@username' => $user->getDisplayName()]);
+              $users[$user->id()] = new FormattableMarkup('<a href=":link">@username</a>', [
+                ':link' => $url->toString(),
+                '@username' => $user->getDisplayName(),
+              ]);
             }
             else {
               $users[$user->id()] = $user->getDisplayName();
@@ -316,6 +276,7 @@ class PrivateMessageThreadMemberFormatter extends FormatterBase implements Conta
     $members_prefix = $this->getSetting('members_prefix');
     if (strlen($members_prefix)) {
       $first_separator = $prefix_separator && (count($users) > 0) ? $separator : '';
+      // phpcs:ignore Drupal.Semantics.FunctionT.NotLiteralString
       $element['#markup'] .= '<span>' . $this->t($members_prefix) . $first_separator . '</span>';
     }
 

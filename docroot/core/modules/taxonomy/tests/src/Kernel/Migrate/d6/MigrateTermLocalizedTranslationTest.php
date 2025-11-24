@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
@@ -75,7 +77,7 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal6TestBase {
    *
    * @internal
    */
-  protected function assertEntity(int $id, string $expected_language, string $expected_label, string $expected_vid, ?string $expected_description = '', ?string $expected_format = NULL, int $expected_weight = 0, array $expected_parents = [], int $expected_field_integer_value = NULL, int $expected_term_reference_tid = NULL): void {
+  protected function assertEntity(int $id, string $expected_language, string $expected_label, string $expected_vid, ?string $expected_description = '', ?string $expected_format = NULL, int $expected_weight = 0, array $expected_parents = [], ?int $expected_field_integer_value = NULL, ?int $expected_term_reference_tid = NULL): void {
     /** @var \Drupal\taxonomy\TermInterface $entity */
     $entity = Term::load($id);
     $this->assertInstanceOf(TermInterface::class, $entity);
@@ -117,7 +119,7 @@ class MigrateTermLocalizedTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 i18n localized taxonomy term to Drupal 8 migration.
    */
-  public function testTranslatedLocalizedTaxonomyTerms() {
+  public function testTranslatedLocalizedTaxonomyTerms(): void {
     $this->assertEntity(14, 'en', 'Talos IV', 'vocabulary_name_much_longer_th', 'The home of Captain Christopher Pike.', NULL, 0, []);
     $this->assertEntity(15, 'en', 'Vulcan', 'vocabulary_name_much_longer_th', NULL, NULL, 0, []);
 

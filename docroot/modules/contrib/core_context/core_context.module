@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains hook implementations for Core Context.
+ */
+
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\core_context\FieldContextHandler;

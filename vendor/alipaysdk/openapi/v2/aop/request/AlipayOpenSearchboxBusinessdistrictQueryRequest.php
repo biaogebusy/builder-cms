@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.open.searchbox.businessdistrict.query request
  *
  * @author auto create
- * @since 1.0, 2024-01-19 15:30:13
+ * @since 1.0, 2025-08-14 11:22:36
  */
 class AlipayOpenSearchboxBusinessdistrictQueryRequest
 {

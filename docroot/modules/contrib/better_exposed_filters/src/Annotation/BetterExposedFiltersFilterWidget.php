@@ -3,6 +3,7 @@
 namespace Drupal\better_exposed_filters\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
+use Drupal\Core\Annotation\Translation;
 
 /**
  * Defines a Better exposed filters widget item annotation object.
@@ -20,7 +21,7 @@ class BetterExposedFiltersFilterWidget extends Plugin {
    *
    * @var string
    */
-  public $id;
+  public string $id;
 
   /**
    * The label of the plugin.
@@ -29,6 +30,6 @@ class BetterExposedFiltersFilterWidget extends Plugin {
    *
    * @ingroup plugin_translatable
    */
-  public $label;
+  public Translation $label;
 
 }

@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_payment;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\user\UserInterface;
 
 /**

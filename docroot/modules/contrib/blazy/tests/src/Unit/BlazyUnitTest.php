@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\blazy\Unit;
 
+use Drupal\Tests\UnitTestCase;
+use Drupal\Tests\blazy\Traits\BlazyManagerUnitTestTrait;
+use Drupal\Tests\blazy\Traits\BlazyUnitTestTrait;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\Theme\Attributes;
 use Drupal\blazy\Theme\BlazyTheme;
-use Drupal\Tests\blazy\Traits\BlazyManagerUnitTestTrait;
-use Drupal\Tests\blazy\Traits\BlazyUnitTestTrait;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\blazy\Blazy
@@ -67,7 +67,7 @@ class BlazyUnitTest extends UnitTestCase {
   /**
    * Provide test cases for ::testBuildIframe().
    */
-  public function providerTestBuildIframe() {
+  public static function providerTestBuildIframe() {
     return [
       [
         [
@@ -145,7 +145,7 @@ class BlazyUnitTest extends UnitTestCase {
   /**
    * Provider for ::testPreprocessBlazy.
    */
-  public function providerPreprocessBlazy() {
+  public static function providerPreprocessBlazy() {
     $uri = 'public://example.jpg';
 
     $data[] = [
@@ -253,7 +253,7 @@ class BlazyUnitTest extends UnitTestCase {
    * @return array
    *   An array of tested data.
    */
-  public function providerTestPreRenderImageLightbox() {
+  public static function providerTestPreRenderImageLightbox() {
     $data[] = [
       [
         'box_caption' => '',

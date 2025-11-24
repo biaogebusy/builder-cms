@@ -362,7 +362,7 @@ trait SearchApiFieldTrait {
       $this->getQuery()->addRetrievedFieldValue($field_id);
     }
 
-    list($datasource_id, $property_path) = Utility::splitCombinedId($combined_property_path);
+    [$datasource_id, $property_path] = Utility::splitCombinedId($combined_property_path);
     $this->retrievedProperties[$datasource_id][$property_path] = $combined_property_path;
     return $this;
   }
@@ -380,7 +380,7 @@ trait SearchApiFieldTrait {
    */
   public function getEntity(ResultRow $values) {
     $combined_property_path = $this->getCombinedPropertyPath();
-    list($datasource_id, $property_path) = Utility::splitCombinedId($combined_property_path);
+    [$datasource_id, $property_path] = Utility::splitCombinedId($combined_property_path);
 
     if ($values->search_api_datasource !== $datasource_id) {
       return NULL;
@@ -408,7 +408,7 @@ trait SearchApiFieldTrait {
       if (!empty($values->_relationship_parent_indices[$combined_property_path][$value_index])) {
         $value_index = $values->_relationship_parent_indices[$combined_property_path][$value_index];
       }
-      list($property_path) = Utility::splitPropertyPath($property_path);
+      [$property_path] = Utility::splitPropertyPath($property_path);
       $combined_property_path = $this->createCombinedPropertyPath($datasource_id, $property_path);
     }
 
@@ -612,7 +612,7 @@ trait SearchApiFieldTrait {
   protected function getValuesToExtract(array $values, $datasource_id, $property_path, $combined_property_path, array $dependents) {
     // Determine the path of the parent property, and the property key to
     // take from it for this property.
-    list($parent_path, $name) = Utility::splitPropertyPath($property_path);
+    [$parent_path, $name] = Utility::splitPropertyPath($property_path);
     $combined_parent_path = $this->createCombinedPropertyPath($datasource_id, $parent_path);
 
     // For top-level properties, we need the definition to check whether its
@@ -722,7 +722,7 @@ trait SearchApiFieldTrait {
               }
             }
           }
-          catch (\InvalidArgumentException $e) {
+          catch (\InvalidArgumentException) {
             // This can easily happen, for example, when requesting a field
             // that only exists on a different bundle. Unfortunately, there
             // is no ComplexDataInterface::hasProperty() method, so we can
@@ -1147,7 +1147,7 @@ trait SearchApiFieldTrait {
    */
   public function getDatasourceId() {
     if (!isset($this->datasourceId)) {
-      list($this->datasourceId) = Utility::splitCombinedId($this->getCombinedPropertyPath());
+      [$this->datasourceId] = Utility::splitCombinedId($this->getCombinedPropertyPath());
     }
     return $this->datasourceId;
   }
@@ -1299,7 +1299,7 @@ trait SearchApiFieldTrait {
           ->getDatasource($row->search_api_datasource)
           ->getItemUrl($row->_relationship_objects[NULL][0]);
       }
-      catch (SearchApiException $e) {
+      catch (SearchApiException) {
       }
     }
 

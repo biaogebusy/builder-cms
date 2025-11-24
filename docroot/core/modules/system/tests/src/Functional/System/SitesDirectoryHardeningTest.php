@@ -1,10 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -13,7 +13,6 @@ use Drupal\Tests\BrowserTestBase;
  * @group system
  */
 class SitesDirectoryHardeningTest extends BrowserTestBase {
-  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -25,28 +24,28 @@ class SitesDirectoryHardeningTest extends BrowserTestBase {
    *
    * Checks both the current sites directory and settings.php.
    */
-  public function testSitesDirectoryHardening() {
+  public function testSitesDirectoryHardening(): void {
     $site_path = $this->kernel->getSitePath();
     $settings_file = $this->settingsFile($site_path);
 
     // First, we check based on what the initial install has set.
-    $this->assertTrue(drupal_verify_install_file($site_path, FILE_NOT_WRITABLE, 'dir'), new FormattableMarkup('Verified permissions for @file.', ['@file' => $site_path]));
+    $this->assertTrue(drupal_verify_install_file($site_path, FILE_NOT_WRITABLE, 'dir'), "Verified permissions for $site_path.");
 
     // We intentionally don't check for settings.local.php as that file is
     // not created by Drupal.
-    $this->assertTrue(drupal_verify_install_file($settings_file, FILE_EXIST | FILE_READABLE | FILE_NOT_WRITABLE), new FormattableMarkup('Verified permissions for @file.', ['@file' => $settings_file]));
+    $this->assertTrue(drupal_verify_install_file($settings_file, FILE_EXIST | FILE_READABLE | FILE_NOT_WRITABLE), "Verified permissions for $settings_file.");
 
     $this->makeWritable($site_path);
     $this->checkSystemRequirements();
 
-    $this->assertTrue(drupal_verify_install_file($site_path, FILE_NOT_WRITABLE, 'dir'), new FormattableMarkup('Verified permissions for @file after manual permissions change.', ['@file' => $site_path]));
-    $this->assertTrue(drupal_verify_install_file($settings_file, FILE_EXIST | FILE_READABLE | FILE_NOT_WRITABLE), new FormattableMarkup('Verified permissions for @file after manual permissions change.', ['@file' => $settings_file]));
+    $this->assertTrue(drupal_verify_install_file($site_path, FILE_NOT_WRITABLE, 'dir'), "Verified permissions for $site_path after manual permissions change.");
+    $this->assertTrue(drupal_verify_install_file($settings_file, FILE_EXIST | FILE_READABLE | FILE_NOT_WRITABLE), "Verified permissions for $settings_file after manual permissions change.");
   }
 
   /**
    * Tests writable files remain writable when directory hardening is disabled.
    */
-  public function testSitesDirectoryHardeningConfig() {
+  public function testSitesDirectoryHardeningConfig(): void {
     $site_path = $this->kernel->getSitePath();
     $settings_file = $this->settingsFile($site_path);
 
@@ -61,7 +60,7 @@ class SitesDirectoryHardeningTest extends BrowserTestBase {
     $requirements = $this->checkSystemRequirements();
     $this->assertEquals(REQUIREMENT_WARNING, $requirements['configuration_files']['severity'], 'Warning severity is properly set.');
     $this->assertEquals('Protection disabled', (string) $requirements['configuration_files']['value']);
-    $description = strip_tags(\Drupal::service('renderer')->renderPlain($requirements['configuration_files']['description']));
+    $description = strip_tags((string) \Drupal::service('renderer')->renderInIsolation($requirements['configuration_files']['description']));
     $this->assertStringContainsString('settings.php is not protected from modifications and poses a security risk.', $description);
     $this->assertStringContainsString('services.yml is not protected from modifications and poses a security risk.', $description);
 
@@ -116,7 +115,7 @@ class SitesDirectoryHardeningTest extends BrowserTestBase {
    * @return string
    *   The path to settings.php.
    */
-  protected function settingsFile($site_path) {
+  protected function settingsFile($site_path): string {
     $settings_file = $site_path . '/settings.php';
     return $settings_file;
   }

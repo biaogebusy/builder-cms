@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Unit\Plugin\migrate\process\d7;
 
 use Drupal\field\Plugin\migrate\process\d7\FieldTypeDefaults;
@@ -26,7 +28,7 @@ class FieldTypeDefaultsTest extends MigrateProcessTestCase {
    *
    * @covers ::transform
    */
-  public function testDefaults() {
+  public function testDefaults(): void {
     // Assert common values are passed through without modification.
     $this->assertNull($this->plugin->transform(NULL, $this->migrateExecutable, $this->row, 'property'));
     $this->assertEquals('string', $this->plugin->transform('string', $this->migrateExecutable, $this->row, 'property'));

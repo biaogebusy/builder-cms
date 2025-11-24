@@ -1,42 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\core;
 
+use Consolidation\AnnotatedCommand\Input\StdinAwareInterface;
+use Consolidation\AnnotatedCommand\Input\StdinAwareTrait;
+use Consolidation\SiteAlias\SiteAliasManagerInterface;
 use Consolidation\SiteProcess\Util\Shell;
 use Consolidation\SiteProcess\Util\Tty;
+use Drush\Attributes as CLI;
+use Drush\Boot\DrupalBootLevels;
+use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 
-class SshCommands extends DrushCommands implements SiteAliasManagerAwareInterface
+#[CLI\Bootstrap(DrupalBootLevels::NONE)]
+final class SshCommands extends DrushCommands implements StdinAwareInterface
 {
-    use SiteAliasManagerAwareTrait;
+    use AutowireTrait;
+    use StdinAwareTrait;
+
+    const SSH = 'site:ssh';
+
+    public function __construct(
+        private readonly SiteAliasManagerInterface $siteAliasManager
+    ) {
+        parent::__construct();
+    }
 
     /**
-     * Connect to a Drupal site's server via SSH, and optionally run a shell
-     * command.
-     *
-     * @command site:ssh
-     * @param $code Code which should run at remote host.
-     * @option cd Directory to change to. Defaults to Drupal root.
-     * @optionset_proc_build
-     * @handle-remote-commands
-     * @usage drush @mysite ssh
-     *   Open an interactive shell on @mysite's server.
-     * @usage drush @prod ssh ls /tmp
-     *   Run <info>ls /tmp</info> on <info>@prod</info> site.
-     * @usage drush @prod ssh git pull
-     *   Run <info>git pull</info> on the Drupal root directory on the <info>@prod</info> site.
-     * @usage drush ssh git pull
-     *   Run <info>git pull</info> on the local Drupal root directory.
-     * @aliases ssh,site-ssh
-     * @topics docs:aliases
+     * Connect to a webserver via SSH, and optionally run a shell command.
      */
+    #[CLI\Command(name: self::SSH, aliases: ['ssh', 'site-ssh'])]
+    #[CLI\Argument(name: 'code', description: 'Code which should run at remote host.')]
+    #[CLI\Option(name: 'cd', description: 'Directory to change to. Defaults to Drupal root.')]
+    #[CLI\OptionsetProcBuild]
+    #[CLI\HandleRemoteCommands]
+    #[CLI\Usage(name: 'drush @mysite ssh', description: 'Open an interactive shell on @mysite\'s server.')]
+    #[CLI\Usage(name: 'drush @prod ssh "ls /tmp"', description: 'Run <info>ls /tmp</info> on <info>@prod</info> site.')]
+    #[CLI\Usage(name: 'drush @prod ssh "git pull"', description: 'Run <info>git pull</info> on the Drupal root directory on the <info>@prod</info> site.')]
+    #[CLI\Usage(name: 'drush ssh "git pull"', description: 'Run <info>git pull</info> on the local Drupal root directory.')]
+    #[CLI\Usage(name: 'echo \'Deny from all\' | drush @prod ssh "tee > do-not-expose-dir/.htaccess"', description: 'Protect directory <info>do-not-expose-dir</info> from being served by Apache httpd.')]
+    #[CLI\Topics(topics: [DocsCommands::ALIASES])]
     public function ssh(array $code, $options = ['cd' => self::REQ]): void
     {
-        $alias = $this->siteAliasManager()->getSelf();
+        $alias = $this->siteAliasManager->getSelf();
 
-        if (empty($code)) {
+        if ($code === []) {
             $code[] = 'bash';
             $code[] = '-l';
 
@@ -50,7 +60,9 @@ class SshCommands extends DrushCommands implements SiteAliasManagerAwareInterfac
         }
 
         $process = $this->processManager()->siteProcess($alias, $code);
-        if (Tty::isTtySupported()) {
+        if (!Tty::isTtySupported()) {
+            $process->setInput($this->stdin()->getStream());
+        } else {
             $process->setTty($options['tty']);
         }
         // The transport handles the chdir during processArgs().

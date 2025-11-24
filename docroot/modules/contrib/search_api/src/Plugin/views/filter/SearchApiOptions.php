@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\filter\ManyToOne;
 
@@ -9,9 +10,8 @@ use Drupal\views\Plugin\views\filter\ManyToOne;
  * Defines a filter for filtering on fields with a fixed set of possible values.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_options")
  */
+#[ViewsFilter('search_api_options')]
 class SearchApiOptions extends ManyToOne {
 
   use SearchApiFilterTrait;

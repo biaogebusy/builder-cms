@@ -22,9 +22,5 @@
         "source": "http://cgit.drupalcode.org/media_library_form_element"
     },
     "type": "drupal-module",
-    "license": "GPL-2.0+",
-    "require": {},
-    "require-dev": {
-        "drupal/webform": "6.2.x-dev@dev"
-    }
+    "license": "GPL-2.0+"
 }

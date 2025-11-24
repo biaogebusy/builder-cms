@@ -4,9 +4,9 @@
  */
 td.diff-section-title,
 div.diff-section-title {
+  padding: 0.1em 1em;
   font-size: 0.83em;
   font-weight: bold;
-  padding: 0.1em 1em;
 }
 td.diff-prevlink {
   text-align: left;
@@ -35,17 +35,17 @@ td.diff-context {
   vertical-align: top;
 }
 td.diff-marker {
-  text-align: center;
-  padding: 0.3em 1em;
   width: 1%;
+  padding: 0.3em 1em;
+  text-align: center;
 }
 td.diff td {
   padding: 0 1em;
 }
 td.diff-line-number {
-  text-align: center;
-  padding: 0.3em 1em;
   width: 1%;
-  color: #AAA;
+  padding: 0.3em 1em;
+  text-align: center;
+  color: #aaa;
   border-right: 1px #e6e4df solid;
 }

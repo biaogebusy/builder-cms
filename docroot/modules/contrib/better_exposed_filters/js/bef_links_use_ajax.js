@@ -9,7 +9,7 @@
 
   // This is only needed to provide ajax functionality
   Drupal.behaviors.better_exposed_filters_select_as_links = {
-    attach: function (context, settings) {
+    attach: function (context) {
       $(once('bef-links-use-ajax', '.bef-links.bef-links-use-ajax', context)).each(function () {
         let $links = $(this);
         let links_name = $(this).attr('name');

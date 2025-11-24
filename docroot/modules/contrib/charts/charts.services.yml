@@ -2,6 +2,7 @@ services:
   plugin.manager.charts:
     class: Drupal\charts\ChartManager
     parent: default_plugin_manager
+    arguments: ['@config.factory']
 
   plugin.manager.charts_type:
     class: Drupal\charts\TypeManager

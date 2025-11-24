@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\field_group\Functional;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -12,6 +13,7 @@ use Drupal\Tests\BrowserTestBase;
 class ManageDisplayTest extends BrowserTestBase {
 
   use FieldGroupTestTrait;
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -86,21 +88,21 @@ class ManageDisplayTest extends BrowserTestBase {
     $this->submitForm($group, 'Save and continue');
     $this->submitForm([], 'Create group');
 
-    $this->assertSession()->responseContains(t('New group %label successfully created.', ['%label' => $group_label]));
+    $this->assertSession()->responseContains($this->t('New group %label successfully created.', ['%label' => $group_label]));
 
     // Test if group is in the $groups array.
-    $this->group = field_group_load_field_group($group_name, 'node', $this->type, 'form', 'default');
-    $this->assertNotNull($group, 'Group was loaded');
+    $groupEntity = field_group_load_field_group($group_name, 'node', $this->type, 'form', 'default');
+    $this->assertNotNull($groupEntity, 'Group entity was loaded');
 
     // Test if region key is set.
-    $this->assertEquals('hidden', $this->group->region);
+    $this->assertEquals('hidden', $groupEntity->region);
 
     // Add new group on the 'Manage display' page.
     $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display/add-group');
     $this->submitForm($group, 'Save and continue');
     $this->submitForm([], 'Create group');
 
-    $this->assertSession()->responseContains(t('New group %label successfully created.', ['%label' => $group_label]));
+    $this->assertSession()->responseContains($this->t('New group %label successfully created.', ['%label' => $group_label]));
 
     // Test if group is in the $groups array.
     $loaded_group = field_group_load_field_group($group_name, 'node', $this->type, 'view', 'default');
@@ -120,7 +122,7 @@ class ManageDisplayTest extends BrowserTestBase {
 
     $this->drupalGet('admin/structure/types/manage/' . $this->type . '/form-display/' . $group->group_name . '/delete');
     $this->submitForm([], 'Delete');
-    $this->assertSession()->responseContains(t('The group %label has been deleted from the %type content type.', [
+    $this->assertSession()->responseContains($this->t('The group %label has been deleted from the %type content type.', [
       '%label' => $group->label,
       '%type' => $this->type,
     ]));
@@ -136,7 +138,7 @@ class ManageDisplayTest extends BrowserTestBase {
 
     $this->drupalGet('admin/structure/types/manage/' . $this->type . '/display/' . $group->group_name . '/delete');
     $this->submitForm([], 'Delete');
-    $this->assertSession()->responseContains(t('The group %label has been deleted from the %type content type.', [
+    $this->assertSession()->responseContains($this->t('The group %label has been deleted from the %type content type.', [
       '%label' => $group->label,
       '%type' => $this->type,
     ]));
@@ -167,7 +169,7 @@ class ManageDisplayTest extends BrowserTestBase {
     $this->assertSession()->responseContains('Your settings have been saved.');
 
     $group = field_group_load_field_group($group->group_name, 'node', $this->type, 'form', 'default');
-    $this->assertTrue(in_array('body', $group->children), t('Body is a child of %group', ['%group' => $group->group_name]));
+    $this->assertTrue(in_array('body', $group->children), $this->t('Body is a child of %group', ['%group' => $group->group_name]));
   }
 
 }

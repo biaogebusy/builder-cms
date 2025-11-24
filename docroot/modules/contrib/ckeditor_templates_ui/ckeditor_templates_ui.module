@@ -36,41 +36,17 @@ function ckeditor_templates_ui_help($route_name, RouteMatchInterface $route_matc
 /**
  * Implements hook_ckeditor_plugin_info_alter().
  */
-function ckeditor_templates_ui_ckeditor_plugin_info_alter(array &$plugins) {
+function ckeditor_templates_ui_ckeditor5_plugin_info_alter(array &$plugins) : void {
   // Change template plugin class.
-  $plugins['templates']['class'] = 'Drupal\ckeditor_templates_ui\CkeditorTemplatesUi';
+  $plugins['ckeditor5_template_template']->setClass('Drupal\ckeditor_templates_ui\CkeditorTemplatesUi');
 }
 
 /**
- * Implements hook_js_settings_alter().
- */
-function ckeditor_templates_ui_js_settings_alter(array &$settings, AttachedAssetsInterface $assets) {
-  $libraries = $assets->getLibraries();
-  if (in_array('ckeditor_templates/ckeditor.templates.dialog', $libraries, TRUE)) {
-    $query = \Drupal::entityTypeManager()->getStorage('ckeditor_template')->getQuery();
-    $templates_ids = $query->execute();
-    $ckeditor_templates = \Drupal::entityTypeManager()->getStorage('ckeditor_template')->loadMultiple($templates_ids);
-    // Sorting in postLoad does not stick.
-    uasort($ckeditor_templates, 'Drupal\Core\Config\Entity\ConfigEntityBase::sort');
-    $i = 0;
-    $templates = [];
-    foreach ($ckeditor_templates as $value) {
-      $templates[$i]['title'] = $value->label;
-      $templates[$i]['description'] = $value->description;
-      if ($value->image) {
-        // The CKEditor Templates plugin requires a "imagesPath" parameter
-        // that cannot evaluate to false, is the same for all templates and
-        // is used to create the image path. This makes it inconvenient for us.
-        // For things to work out all url-s must start with "/".
-        $templates[$i]['image'] = \Drupal::service('file_url_generator')->generateAbsoluteString($value->image);
-        $templates[$i]['image'] = \Drupal::service('file_url_generator')->transformRelative($templates[$i]['image']);
-        // Remove leading "/" since it will be added separately
-        // by the "imagesPath" parameter.
-        $templates[$i]['image'] = substr($templates[$i]['image'], 1);
-      }
-      $templates[$i]['html'] = $value->html['value'];
-      $i++;
-    }
-    $settings['ckeditor_templates_ui']['templates'] = $templates;
+* Implements hook_library_info_alter().
+*/
+function ckeditor_templates_ui_library_info_alter(&$libraries, $extension) {
+  if ($extension == 'ckeditor5_template' && isset($libraries['template'])) {
+    $new_path = '/' . \Drupal::service('extension.list.module')->getPath('ckeditor_templates_ui') . '/js/ckeditor_templates.js';
+    $libraries['template']['js'] = [$new_path => ['minified' => 'true']];
   }
 }

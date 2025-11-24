@@ -4,6 +4,8 @@ namespace Drupal\paragraphs_test\Plugin\paragraphs\Behavior;
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\paragraphs\Attribute\ParagraphsBehavior;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\Entity\ParagraphsType;
 use Drupal\paragraphs\ParagraphInterface;
@@ -11,14 +13,13 @@ use Drupal\paragraphs\ParagraphsBehaviorBase;
 
 /**
  * Provides a test feature plugin.
- *
- * @ParagraphsBehavior(
- *   id = "test_bold_text",
- *   label = @Translation("Test bold text plugin"),
- *   description = @Translation("Test bold text plugin"),
- *   weight = 2
- * )
  */
+#[ParagraphsBehavior(
+  id: 'test_bold_text',
+  label: new TranslatableMarkup('Test bold page plugin'),
+  description: new TranslatableMarkup('Test bold text plugin'),
+  weight: 2,
+)]
 class TestBoldTextBehavior extends ParagraphsBehaviorBase {
 
   /**
@@ -37,8 +38,8 @@ class TestBoldTextBehavior extends ParagraphsBehaviorBase {
   /**
    * {@inheritdoc}
    */
-  public function view(array &$build, Paragraph $paragraphs_entity, EntityViewDisplayInterface $display, $view_mode) {
-    if ($paragraphs_entity->getBehaviorSetting($this->getPluginId(), 'bold_text')) {
+  public function view(array &$build, Paragraph $paragraph, EntityViewDisplayInterface $display, $view_mode) {
+    if ($paragraph->getBehaviorSetting($this->getPluginId(), 'bold_text')) {
       $build['#attributes']['class'][] = 'bold_plugin_text';
       $build['#attached']['library'][] = 'paragraphs_test/drupal.paragraphs_test.bold_text';
     }

@@ -4,17 +4,14 @@ global:
     base:
       css/base.css: {}
     component:
-      css/components/blocks/banner/banner.css: {}
-      css/components/blocks/branding/branding.css: {}
-      css/components/blocks/disclaimer/disclaimer.css: {}
       css/components/blocks/help/help.css: {}
       css/components/blocks/page-title/page-title.css: {}
-      css/components/blocks/footer-promo/footer-promo.css: {}
       css/components/blocks/language-switcher/language-switcher.css: {}
       css/components/blocks/search/search.css: {}
       css/components/blocks/search/search-results.css: {}
       css/components/blocks/articles-aside/articles-aside.css: {}
       css/components/forms/contact.css: {}
+      css/components/forms/form.css: { weight: -10 }
       css/components/forms/content-moderation.css: {}
       css/components/content/node.css: {}
       css/components/content/full/node-full.css: {}
@@ -26,6 +23,7 @@ global:
       css/components/fields/summary.css: {}
       css/components/forms/buttons.css: {}
       css/components/forms/container-inline.module.css: {}
+      css/components/forms/form-items.css: {}
       css/components/views/promoted-items.css: {}
       css/components/views/frontpage.css: {}
       css/components/navigation/menu-footer/menu-footer.css: {}
@@ -44,24 +42,14 @@ global:
       css/components/toolbar/toolbar.css: {}
       css/components/layout_builder/layout-builder.css: {}
     layout:
-      css/layout/grid-2.css: {}
-      css/layout/grid-3.css: {}
-      css/layout/grid-4.css: {}
       css/layout/layout.css: {}
-  js:
-    js/components/navigation/menu-main/menu-main.js: {}
-  dependencies:
-    - umami/demo-umami-tour
 
 messages:
   css:
     component:
-      css/components/messages/messages.css: { weight: -10 }
-
-more-link:
-  css:
-    theme:
-      css/components/navigation/more-link/more-link.css: { weight: -10 }
+      css/components/messages/messages.css: {}
+  js:
+    js/components/messages/messages.js: {}
 
 quicklinks:
   css:
@@ -84,36 +72,6 @@ user:
     component:
       css/components/user/user.css: { weight: -10 }
 
-view-mode-card:
-  css:
-    theme:
-      css/components/content/card/card.css: {}
-  dependencies:
-    - umami/more-link
-
-view-mode-card-common:
-  css:
-    theme:
-      css/components/content/card/card.css: {}
-      css/components/content/card-common/card-common.css: {}
-  dependencies:
-    - umami/more-link
-
-view-mode-card-common-alt:
-  css:
-    theme:
-      css/components/content/card/card.css: {}
-      css/components/content/card-common-alt/card-common-alt.css: {}
-  dependencies:
-    - umami/more-link
-
-demo-umami-tour:
-  css:
-    theme:
-      css/components/tour/tour.theme.css: {}
-  dependencies:
-    - claro/tour-styling
-
 oneplusfourgrid_section:
   css:
     theme:
@@ -132,12 +90,10 @@ classy.base:
       css/classy/components/action-links.css: { weight: -10 }
       css/classy/components/breadcrumb.css: { weight: -10 }
       css/classy/components/button.css: { weight: -10 }
-      css/classy/components/collapse-processed.css: { weight: -10 }
       css/classy/components/container-inline.css: { weight: -10 }
       css/classy/components/details.css: { weight: -10 }
       css/classy/components/exposed-filters.css: { weight: -10 }
       css/classy/components/field.css: { weight: -10 }
-      css/classy/components/form.css: { weight: -10 }
       css/classy/components/icons.css: { weight: -10 }
       css/classy/components/inline-form.css: { weight: -10 }
       css/classy/components/item-list.css: { weight: -10 }
@@ -149,7 +105,6 @@ classy.base:
       css/classy/components/tabledrag.css: { weight: -10 }
       css/classy/components/tableselect.css: { weight: -10 }
       css/classy/components/tablesort.css: { weight: -10 }
-      css/classy/components/tabs.css: { weight: -10 }
       css/classy/components/textarea.css: { weight: -10 }
       css/classy/components/ui-dialog.css: { weight: -10 }
 

@@ -2,13 +2,12 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\PaymentGateway;
 
-use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Plugin\PluginWithFormsInterface;
-use Drupal\commerce_price\Price;
+use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -64,8 +63,24 @@ interface PaymentGatewayInterface extends PluginWithFormsInterface, Configurable
    *
    * @return string|null
    *   The JS library ID, or NULL if not available.
+   *
+   * @deprecated in commerce:3.0.0 and is removed from commerce:4.0.0. Use getLibraries() instead.
+   * @see https://www.drupal.org/project/commerce/issues/3465875
    */
   public function getJsLibrary();
+
+  /**
+   * Gets the library IDs.
+   *
+   * This is usually an external library defined in the module's
+   * libraries.yml file. Included by the PaymentInformation pane
+   * to get around core bug #1988968.
+   * Example: ['commerce_braintree/braintree'].
+   *
+   * @return array
+   *   The list of library IDs.
+   */
+  public function getLibraries(): array;
 
   /**
    * Gets the payment type used by the payment gateway.
@@ -136,24 +151,6 @@ interface PaymentGatewayInterface extends PluginWithFormsInterface, Configurable
    *   The label, or NULL if not available.
    */
   public function buildAvsResponseCodeLabel($avs_response_code, $card_type);
-
-  /**
-   * Converts the given amount to its minor units.
-   *
-   * For example, 9.99 USD becomes 999.
-   *
-   * @param \Drupal\commerce_price\Price $amount
-   *   The amount.
-   *
-   * @return int
-   *   The amount in minor units, as an integer.
-   *
-   * @deprecated
-   *   This method was replaced with MinorUnitsConverter::toMinorUnits().
-   *
-   * @see \Drupal\commerce_price\MinorUnitsConverter::toMinorUnits()
-   */
-  public function toMinorUnits(Price $amount);
 
   /**
    * Gets the remote customer ID for the given user.

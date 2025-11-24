@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Plugin;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\filter\FilterTest as FilterPlugin;
@@ -23,9 +24,7 @@ class FilterTest extends ViewTestBase {
   public static $testViews = ['test_filter', 'test_filter_in_operator_ui'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui', 'node'];
 
@@ -60,7 +59,7 @@ class FilterTest extends ViewTestBase {
   /**
    * Tests query of the row plugin.
    */
-  public function testFilterQuery() {
+  public function testFilterQuery(): void {
     // Check that we can find the test filter plugin.
     $plugin = $this->container->get('plugin.manager.views.filter')->createInstance('test_filter');
     $this->assertInstanceOf(FilterPlugin::class, $plugin);
@@ -99,7 +98,7 @@ class FilterTest extends ViewTestBase {
 
     // Check that we have a single element, as a result of applying the '= John'
     // filter.
-    $this->assertCount(1, $view->result, new FormattableMarkup('Results were returned. @count results.', ['@count' => count($view->result)]));
+    $this->assertCount(1, $view->result, 'Results were returned. ' . count($view->result) . ' results.');
 
     $view->destroy();
 
@@ -125,7 +124,7 @@ class FilterTest extends ViewTestBase {
 
     // Check if we have the other elements in the dataset, as a result of
     // applying the '<> John' filter.
-    $this->assertCount(4, $view->result, new FormattableMarkup('Results were returned. @count results.', ['@count' => count($view->result)]));
+    $this->assertCount(4, $view->result, 'Results were returned. ' . count($view->result) . ' results.');
 
     $view->destroy();
     $view->initDisplay();
@@ -149,13 +148,13 @@ class FilterTest extends ViewTestBase {
     $this->executeView($view);
 
     // Check if we have all 5 results.
-    $this->assertCount(5, $view->result, new FormattableMarkup('All @count results returned', ['@count' => count($view->displayHandlers)]));
+    $this->assertCount(5, $view->result, 'All ' . count($view->displayHandlers) . ' results returned');
   }
 
   /**
    * Tests an exposed filter when all options are selected.
    */
-  public function testInOperatorSelectAllOptions() {
+  public function testInOperatorSelectAllOptions(): void {
     $row['row[type]'] = 'fields';
     $this->drupalGet('admin/structure/views/nojs/display/test_filter_in_operator_ui/default/row');
     $this->submitForm($row, 'Apply');
@@ -172,13 +171,13 @@ class FilterTest extends ViewTestBase {
     $this->drupalGet('admin/structure/views/view/test_filter_in_operator_ui/edit/default');
     $this->submitForm([], 'Save');
     $this->submitForm([], 'Update preview');
-    $this->assertSession()->pageTextNotContains('An illegal choice has been detected.');
+    $this->assertSession()->pageTextNotContains('The submitted value "page" in the Type element is not allowed.');
   }
 
   /**
    * Tests the limit of the expose operator functionality.
    */
-  public function testLimitExposedOperators() {
+  public function testLimitExposedOperators(): void {
 
     $this->drupalGet('test_filter_in_operator_ui');
     $this->assertSession()->statusCodeEquals(200);

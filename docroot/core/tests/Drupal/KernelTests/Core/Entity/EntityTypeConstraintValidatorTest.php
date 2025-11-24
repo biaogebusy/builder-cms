@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\TypedData\DataDefinition;
@@ -18,6 +20,9 @@ class EntityTypeConstraintValidatorTest extends EntityKernelTestBase {
    */
   protected $typedData;
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['node', 'field', 'user'];
 
   /**
@@ -31,7 +36,7 @@ class EntityTypeConstraintValidatorTest extends EntityKernelTestBase {
   /**
    * Tests the EntityTypeConstraintValidator.
    */
-  public function testValidation() {
+  public function testValidation(): void {
     // Create a typed data definition with an EntityType constraint.
     $entity_type = 'node';
     $definition = DataDefinition::create('entity_reference')
@@ -56,7 +61,7 @@ class EntityTypeConstraintValidatorTest extends EntityKernelTestBase {
 
     // Make sure the information provided by a violation is correct.
     $violation = $violations[0];
-    $this->assertEquals(t('The entity must be of type %type.', ['%type' => $entity_type]), $violation->getMessage(), 'The message for invalid value is correct.');
+    $this->assertEquals(sprintf('The entity must be of type %s.', $entity_type), $violation->getMessage(), 'The message for invalid value is correct.');
     $this->assertEquals($typed_data, $violation->getRoot(), 'Violation root is correct.');
     $this->assertEquals($account, $violation->getInvalidValue(), 'The invalid value is set correctly in the violation.');
   }

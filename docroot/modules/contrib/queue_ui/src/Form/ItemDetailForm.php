@@ -2,12 +2,16 @@
 
 namespace Drupal\queue_ui\Form;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Queue\QueueWorkerManagerInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\queue_ui\QueueUIManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -21,39 +25,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ItemDetailForm extends FormBase {
 
   /**
-   * The QueueUIManager.
-   *
-   * @var \Drupal\queue_ui\QueueUIManager
-   */
-  private $queueUIManager;
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  private $renderer;
-
-  /**
-   * The ModuleHandler object.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  private $moduleHandler;
-
-  /**
    * Logger.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
-  protected $logger;
-
-  /**
-   * Messenger instance.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
+  protected LoggerChannelInterface $logger;
 
   /**
    * InspectForm constructor.
@@ -64,22 +38,22 @@ class ItemDetailForm extends FormBase {
    *   The Renderer object.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The ModuleHandler object.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface|null $loggerFactory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The Logger object.
-   * @param \Drupal\Core\Messenger\MessengerInterface|null $messenger
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   Messenger instance.
+   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queueWorkerManager
+   *   The queue worker manager.
    */
-  public function __construct(QueueUIManager $queueUIManager, RendererInterface $renderer, ModuleHandlerInterface $moduleHandler, LoggerChannelFactoryInterface $loggerFactory = NULL, MessengerInterface $messenger = NULL) {
-    $this->queueUIManager = $queueUIManager;
-    $this->renderer = $renderer;
-    $this->moduleHandler = $moduleHandler;
-    if ($loggerFactory === NULL) {
-      $loggerFactory = \Drupal::service('logger.factory');
-    }
+  public function __construct(
+    private QueueUIManager $queueUIManager,
+    private RendererInterface $renderer,
+    private ModuleHandlerInterface $moduleHandler,
+    LoggerChannelFactoryInterface $loggerFactory,
+    MessengerInterface $messenger,
+    private readonly QueueWorkerManagerInterface $queueWorkerManager,
+  ) {
     $this->logger = $loggerFactory->get('queue_ui');
-    if ($messenger === NULL) {
-      $messenger = \Drupal::service('messenger');
-    }
     $this->messenger = $messenger;
   }
 
@@ -92,7 +66,8 @@ class ItemDetailForm extends FormBase {
       $container->get('renderer'),
       $container->get('module_handler'),
       $container->get('logger.factory'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('plugin.manager.queue_worker')
     );
   }
 
@@ -104,55 +79,117 @@ class ItemDetailForm extends FormBase {
   }
 
   /**
+   * Returns the page title.
+   *
+   * @param string $queueName
+   *   The name of the queue.
+   * @param string $queueItem
+   *   The queue item ID.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The translatable markup object representing the page title.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  final public function pageTitleCallback(string $queueName, string $queueItem): TranslatableMarkup {
+    $queue_worker = $this->queueWorkerManager->getDefinition($queueName);
+    return $this->t('Queue %name Item %id Details', [
+      '%name' => $queue_worker['title'],
+      '%id' => $queueItem,
+    ]);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $queueName = FALSE, $queueItem = FALSE) {
-    if ($queue_ui = $this->queueUIManager->fromQueueName($queueName)) {
-      try {
-        $queueItemLoaded = $queue_ui->loadItem($queueItem);
-      }
-      catch (\Exception $e) {
-        $this->messenger->addWarning($this->t('No queue item found with ID @id under queue @name', [
-          '@id' => $queueItem,
-          '@name' => $queueName,
-        ]));
-        $this->logger->notice("No queue item found with ID @id under queue @name", [
-          '@id' => $queueItem,
-          '@name' => $queueName,
-        ]);
-        throw new NotFoundHttpException();
-      }
+    try {
+      $queueDefinition = $this->queueWorkerManager->getDefinition($queueName);
+    }
+    catch (PluginNotFoundException $e) {
+      $this->messenger->addWarning($this->t('No queue found with name %name', [
+        '%name' => $queueName,
+      ]));
+      $this->logger->notice('No queue found with name %name', [
+        '@id' => $queueItem,
+        '@name' => $queueName,
+      ]);
+      throw new NotFoundHttpException();
+    }
 
-      $data = [
-        '#type' => 'html_tag',
-        '#tag' => 'pre' ,
-        '#value' => print_r(unserialize($queueItemLoaded->data, ['allowed_classes' => FALSE]), TRUE),
-      ];
-      $data = $this->renderer->renderPlain($data);
-
-      $rows = [
+    try {
+      /** @var \Drupal\queue_ui\QueueUIInterface $queueUi */
+      $queueUi = $this->queueUIManager->fromQueueName($queueName);
+      $queueItemLoaded = $queueUi->loadItem($queueItem);
+      if (empty($queueItemLoaded)) {
+        $this->handleQueueItemNotFound($queueName, $queueItem);
+      }
+    }
+    catch (\Exception $e) {
+      $this->handleQueueItemNotFound($queueName, $queueItem);
+    }
+    $form['#title'] = $this->pageTitleCallback($queueName, $queueItem);
+    $form['table'] = [
+      '#type' => 'table',
+      '#rows' => [
         'id' => [
           'data' => [
-            'header' => $this->t('Item ID'),
-            'data' => $queueItemLoaded->item_id,
+            'header' => [
+              'data' => $this->t('Item ID'),
+              'data-queue-ui-view-item-id-name' => '',
+            ],
+            'data' => [
+              'data' => $queueItemLoaded->item_id,
+              'data-queue-ui-view-item-id-value' => '',
+            ],
+          ],
+        ],
+        'queueTitle' => [
+          'data' => [
+            'header' => [
+              'data' => $this->t('Queue title'),
+              'data-queue-ui-view-queue-title-name' => '',
+            ],
+            'data' => [
+              'data' => $queueDefinition['title'],
+              'data-queue-ui-view-queue-title-value' => '',
+            ],
           ],
         ],
         'queueName' => [
           'data' => [
-            'header' => $this->t('Queue name'),
-            'data' => $queueItemLoaded->name,
+            'header' => [
+              'data' => $this->t('Queue name'),
+              'data-queue-ui-view-queue-name-name' => '',
+            ],
+            'data' => [
+              'data' => $queueItemLoaded->name,
+              'data-queue-ui-view-queue-name-value' => '',
+            ],
           ],
         ],
         'expire' => [
           'data' => [
-            'header' => $this->t('Expire'),
-            'data' => ($queueItemLoaded->expire ? date(DATE_RSS, $queueItemLoaded->expire) : $queueItemLoaded->expire),
+            'header' => [
+              'data' => $this->t('Expire'),
+              'data-queue-ui-view-expire-name' => '',
+            ],
+            'data' => [
+              'data' => ($queueItemLoaded->expire ? date(DATE_RSS, $queueItemLoaded->expire) : $queueItemLoaded->expire),
+              'data-queue-ui-view-expire-value' => '',
+            ],
           ],
         ],
         'created' => [
           'data' => [
-            'header' => $this->t('Created'),
-            'data' => date(DATE_RSS, $queueItemLoaded->created),
+            'header' => [
+              'data' => $this->t('Created'),
+              'data-queue-ui-view-created-name' => '',
+            ],
+            'data' => [
+              'data' => date(DATE_RSS, $queueItemLoaded->created),
+              'data-queue-ui-view-created-value' => '',
+            ],
           ],
         ],
         'data' => [
@@ -160,19 +197,20 @@ class ItemDetailForm extends FormBase {
             'header' => [
               'data' => $this->t('Data'),
               'style' => 'vertical-align:top',
+              'data-queue-ui-view-data-name' => '',
             ],
-            'data' => $data,
+            'data' => [
+              'data' => [
+                '#type' => 'html_tag',
+                '#tag' => 'pre' ,
+                '#value' => print_r(unserialize($queueItemLoaded->data, ['allowed_classes' => FALSE]), TRUE),
+              ],
+              'data-queue-ui-view-data-value' => '',
+            ],
           ],
         ],
-      ];
-
-      return [
-        'table' => [
-          '#type' => 'table',
-          '#rows' => $rows,
-        ],
-      ];
-    }
+      ],
+    ];
     return $form;
   }
 
@@ -181,6 +219,28 @@ class ItemDetailForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
+  }
+
+  /**
+   * Handles the case when a queue item is not found.
+   *
+   * @param string $queueName
+   *   The name of the queue.
+   * @param string $queueItem
+   *   The ID of the queue item.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+   */
+  private function handleQueueItemNotFound(string $queueName = '', string $queueItem = ''): void {
+    $this->messenger->addWarning($this->t('No queue item found with ID %id under queue %name', [
+      '%id' => $queueItem,
+      '%name' => $queueName,
+    ]));
+    $this->logger->notice('No queue item found with ID %id under queue %name', [
+      '%id' => $queueItem,
+      '%name' => $queueName,
+    ]);
+    throw new NotFoundHttpException();
   }
 
 }

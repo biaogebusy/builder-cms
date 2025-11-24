@@ -3,9 +3,9 @@
 namespace Drupal\menu_item_extras\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\menu_item_extras\Service\MenuLinkContentServiceInterface;
 use Drupal\system\MenuInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\menu_item_extras\Service\MenuLinkContentServiceInterface;
 
 /**
  * Defines a route controller for a form for menu link content entity creation.

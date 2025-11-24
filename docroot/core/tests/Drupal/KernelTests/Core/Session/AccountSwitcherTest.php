@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Session;
 
 use Drupal\Core\Session\UserSession;
@@ -12,7 +14,7 @@ use Drupal\KernelTests\KernelTestBase;
  */
 class AccountSwitcherTest extends KernelTestBase {
 
-  public function testAccountSwitching() {
+  public function testAccountSwitching(): void {
     $session_handler = $this->container->get('session_handler.write_safe');
     $user = $this->container->get('current_user');
     $switcher = $this->container->get('account_switcher');

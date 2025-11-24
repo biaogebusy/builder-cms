@@ -113,7 +113,7 @@ abstract class SelectionDisplayBase extends PluginBase implements SelectionDispl
    * {@inheritdoc}
    */
   public function label() {
-    $this->label;
+    return $this->label;
   }
 
   /**

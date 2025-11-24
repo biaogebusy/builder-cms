@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm;
 
 /**
@@ -7,10 +9,7 @@ namespace Drupal\file_mdm;
  */
 class FileMetadataException extends \Exception {
 
-  /**
-   * Constructs a FileMetadataException object.
-   */
-  public function __construct($message, $plugin_id = NULL, $method = NULL, \Exception $previous = NULL) {
+  public function __construct(string $message, string $plugin_id = NULL, string $method = NULL, \Exception $previous = NULL) {
     $msg = $message;
     $msg .= $plugin_id ? " (plugin: {$plugin_id})" : "";
     $msg .= $method ? " (method: {$method})" : "";

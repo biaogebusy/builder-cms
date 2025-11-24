@@ -6,8 +6,8 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\filter\Plugin\FilterInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
-use Drupal\migrate\MigrateSkipProcessException;
 use Drupal\migrate\Plugin\migrate\process\StaticMap;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
@@ -20,10 +20,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 // cspell:ignore shortcode spamspan typogrify wordfilter xbbcode
 
 /**
- * @MigrateProcessPlugin(
- *   id = "filter_id"
- * )
+ * Determines the filter ID.
  */
+#[MigrateProcess('filter_id')]
 class FilterID extends StaticMap implements ContainerFactoryPluginInterface {
 
   /**
@@ -47,7 +46,7 @@ class FilterID extends StaticMap implements ContainerFactoryPluginInterface {
    * @param \Drupal\Core\StringTranslation\TranslationInterface $translator
    *   (optional) The string translation service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PluginManagerInterface $filter_manager, TranslationInterface $translator = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PluginManagerInterface $filter_manager, ?TranslationInterface $translator = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->filterManager = $filter_manager;
     $this->stringTranslation = $translator;
@@ -86,7 +85,8 @@ class FilterID extends StaticMap implements ContainerFactoryPluginInterface {
       if (in_array(static::getSourceFilterType($value), [FilterInterface::TYPE_TRANSFORM_REVERSIBLE, FilterInterface::TYPE_TRANSFORM_IRREVERSIBLE], TRUE)) {
         $message = sprintf('Filter %s could not be mapped to an existing filter plugin; omitted since it is a transformation-only filter. Install and configure a successor after the migration.', $plugin_id);
         $migrate_executable->saveMessage($message, MigrationInterface::MESSAGE_INFORMATIONAL);
-        throw new MigrateSkipProcessException("The transformation-only filter $plugin_id was skipped.");
+        $this->stopPipeline();
+        return NULL;
       }
       $fallback = $this->filterManager->getFallbackPluginId($plugin_id);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 /**
@@ -12,7 +14,7 @@ class SerializeQueryTest extends DatabaseTestBase {
   /**
    * Confirms that a query can be serialized and unserialized.
    */
-  public function testSerializeQuery() {
+  public function testSerializeQuery(): void {
     $query = $this->connection->select('test');
     $query->addField('test', 'age');
     $query->condition('name', 'Ringo');

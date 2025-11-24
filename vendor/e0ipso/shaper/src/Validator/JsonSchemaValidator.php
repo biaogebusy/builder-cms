@@ -35,7 +35,7 @@ class JsonSchemaValidator extends ValidateableBase {
    * @param \JsonSchema\Validator $validator
    *   The validator.
    */
-  public function __construct(array $schema = NULL, Validator $validator = NULL, $mode = NULL) {
+  public function __construct(?array $schema = NULL, ?Validator $validator = NULL, $mode = NULL) {
     $this->schema = $schema;
     $this->validator = $validator;
     $this->checkMode = $mode;

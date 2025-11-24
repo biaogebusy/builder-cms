@@ -12,14 +12,13 @@ use Drupal\Tests\BrowserTestBase;
 class AdminToolbarAlterTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'toolbar',
     'breakpoint',
     'admin_toolbar',
+    'user',
   ];
 
   /**
@@ -37,19 +36,28 @@ class AdminToolbarAlterTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
-    // Create and log in an administrative user.
-    $this->adminUser = $this->drupalCreateUser([
+    $perms = [
       'access toolbar',
       'access administration pages',
-    ]);
+      'administer site configuration',
+      'administer permissions',
+      'administer users',
+      'administer account settings',
+    ];
+
+    // Create and log in an administrative user.
+    $this->adminUser = $this->drupalCreateUser($perms);
     $this->drupalLogin($this->adminUser);
   }
 
   /**
    * Tests for a the hover of sub menus.
+   *
+   * @return void
+   *   Nothing to return.
    */
   public function testAdminToolbar() {
     // Assert that expanded links are present in the HTML.

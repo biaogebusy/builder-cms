@@ -3,7 +3,7 @@
  * Breadcrumb region.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .breadcrumb {
   position: relative;
@@ -12,7 +12,7 @@
   line-height: var(--sp1);
 
   /* Shadow on the right side of breadcrumbs for narrow screens. */
-  &:after {
+  &::after {
     position: absolute;
     inset-block-start: 0;
     inset-inline-end: calc(var(--sp1) * -1);
@@ -31,7 +31,7 @@
   }
 }
 
-[dir="rtl"] .breadcrumb:after {
+[dir="rtl"] .breadcrumb::after {
   background: linear-gradient(to right, var(--color--white) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
@@ -65,6 +65,7 @@
 
   @media (--lg) {
     overflow: visible;
+    width: auto;
     margin-inline-start: 0;
     margin-inline-end: 0;
     padding-block-end: 0;
@@ -76,15 +77,15 @@
 .breadcrumb__item {
   display: inline-block;
 
-  &:nth-child(n+2):before {
+  &:nth-child(n + 2)::before {
     display: inline-block;
     width: 8px;
     height: 8px;
     margin-inline: 16px 20px;
     content: "";
     transform: rotate(45deg); /* LTR */
-    border-block-start: 2px solid var(--color--gray-25);
-    border-inline-end: 2px solid var(--color--gray-25);
+    border-block-start: 2px solid var(--color--gray-45);
+    border-inline-end: 2px solid var(--color--gray-45);
   }
 
   &:last-child {
@@ -96,13 +97,13 @@
   }
 }
 
-[dir="rtl"] .breadcrumb__item:nth-child(n+2):before {
+[dir="rtl"] .breadcrumb__item:nth-child(n + 2)::before {
   transform: rotate(-45deg);
 }
 
 .breadcrumb__link {
   text-decoration: none;
-  color: var(--color--blue-20);
+  color: var(--color-text-primary-medium);
 
   &:hover,
   &:focus {

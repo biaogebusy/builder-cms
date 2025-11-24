@@ -2,6 +2,7 @@
 
 namespace Drupal\viewsreference\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -77,6 +78,10 @@ class ViewsReferenceLazyFieldFormatter extends FormatterBase implements TrustedC
     $parent_entity_type = $items->getEntity()->getEntityTypeId();
     $parent_entity_id = $items->getEntity()->id();
     $parent_field_name = $items->getFieldDefinition()->getName();
+    $parent_revision_id = NULL;
+    if ($items->getEntity() instanceof RevisionableInterface) {
+      $parent_revision_id = $items->getEntity()->getRevisionId();
+    }
 
     foreach ($items as $delta => $item) {
       $view_name = $item->getValue()['target_id'];
@@ -102,6 +107,8 @@ class ViewsReferenceLazyFieldFormatter extends FormatterBase implements TrustedC
             $parent_entity_type,
             (string) $parent_entity_id,
             $parent_field_name,
+            $parent_revision_id,
+            $delta,
           ],
         ],
         '#create_placeholder' => TRUE,
@@ -136,8 +143,17 @@ class ViewsReferenceLazyFieldFormatter extends FormatterBase implements TrustedC
    *   The parent entity ID.
    * @param string|null $parent_field_name
    *   The parent field name.
+   * @param string|null $parent_revision_id
+   *   The parent revision ID.
+   * @param int|null $delta
+   *   The field item delta.
    */
-  public static function lazyBuilder(string $view_name, string $display_id, string $data, string $enabled_settings, bool $plugin_types, ?string $parent_entity_type, ?string $parent_entity_id, ?string $parent_field_name): array {
+  public static function lazyBuilder(string $view_name, string $display_id, string $data, string $enabled_settings, bool $plugin_types, ?string $parent_entity_type, ?string $parent_entity_id, ?string $parent_field_name, ?string $parent_revision_id, ?int $delta): array {
+    // Since no JS creating a node is a multi-step, it is possible that
+    // no display ID has yet been selected.
+    if (!$display_id) {
+      return [];
+    }
     $unserialized_data = !empty($data) ? unserialize($data, ['allowed_classes' => FALSE]) : [];
     $unserialized_enabled_settings = !empty($enabled_settings) ? unserialize($enabled_settings, ['allowed_classes' => FALSE]) : [];
     $view = Views::getView($view_name);
@@ -158,6 +174,8 @@ class ViewsReferenceLazyFieldFormatter extends FormatterBase implements TrustedC
       'parent_entity_type' => $parent_entity_type,
       'parent_entity_id' => $parent_entity_id,
       'parent_field_name' => $parent_field_name,
+      'parent_revision_id' => $parent_revision_id,
+      'field_item_delta' => $delta,
     ];
 
     $view->preExecute();

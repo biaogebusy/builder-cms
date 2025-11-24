@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -64,7 +66,7 @@ class CreateSampleEntityTest extends KernelTestBase {
    *
    * @covers ::createWithSampleValues
    */
-  public function testSampleValueContentEntity() {
+  public function testSampleValueContentEntity(): void {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $definition) {
       if ($definition->entityClassImplements(FieldableEntityInterface::class)) {
         $label = $definition->getKey('label');

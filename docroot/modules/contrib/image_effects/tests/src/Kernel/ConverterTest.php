@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Kernel;
 
-use Drupal\image\Entity\ImageStyle;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Converter test.
@@ -22,30 +24,24 @@ class ConverterTest extends KernelTestBase {
 
   /**
    * Test image style.
-   *
-   * @var \Drupal\image\Entity\ImageStyle
    */
-  protected $testImageStyle;
+  protected ImageStyle $testImageStyle;
 
   /**
    * Test image style name.
-   *
-   * @var string
    */
-  protected $testImageStyleName = 'image_effects_test';
+  protected string $testImageStyleName = 'image_effects_test';
 
   /**
    * Test image style label.
-   *
-   * @var string
    */
-  protected $testImageStyleLabel = 'Image Effects Test';
+  protected string $testImageStyleLabel = 'Image Effects Test';
 
   /**
    * Tests conversion of core 'rotate' image effects.
    */
-  public function testConvertRotate() {
-    $this->installConfig(['image']);
+  public function testConvertRotate(): void {
+    $this->installConfig(['image', 'image_effects']);
 
     // Create a test ImageStyle.
     $this->testImageStyle = ImageStyle::create([

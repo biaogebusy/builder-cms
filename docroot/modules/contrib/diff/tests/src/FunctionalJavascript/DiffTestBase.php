@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -79,7 +81,7 @@ abstract class DiffTestBase extends WebDriverTestBase {
       $permissions = $additional_permissions;
     }
     elseif (!empty($additional_permissions)) {
-      $permissions = array_merge($permissions, $additional_permissions);
+      $permissions = \array_merge($permissions, $additional_permissions);
     }
 
     $this->adminUser = $this->drupalCreateUser($permissions);

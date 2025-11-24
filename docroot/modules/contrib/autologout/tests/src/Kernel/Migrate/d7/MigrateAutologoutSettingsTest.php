@@ -7,21 +7,29 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 /**
  * Upgrade variables to autologout.settings.yml.
  *
- * @group migrate_drupal_7
+ * @group Autologout
  */
 class MigrateAutologoutSettingsTest extends MigrateDrupal7TestBase {
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['autologout'];
+  protected static $modules = [
+    'autologout',
+  ];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installConfig(static::$modules);
+    $this->loadFixture(implode(DIRECTORY_SEPARATOR, [
+      DRUPAL_ROOT,
+      \Drupal::service('extension.list.module')->getPath('autologout'),
+      'tests',
+      'fixtures',
+      'drupal7.php',
+    ]));
     $this->executeMigrations(['d7_autologout_settings']);
   }
 
@@ -33,14 +41,15 @@ class MigrateAutologoutSettingsTest extends MigrateDrupal7TestBase {
     $this->assertSame(1800, $config->get('timeout'));
     $this->assertSame(172800, $config->get('max_timeout'));
     $this->assertSame(20, $config->get('padding'));
-    $this->assertSame(FALSE, $config->get('role_logout'));
-    $this->assertSame('/user/login', $config->get('redirect_url'));
-    $this->assertSame(FALSE, $config->get('no_dialog'));
-    $this->assertSame('Your session is about to expire. Do you want to reset it?', $config->get('message'));
+    $this->assertFalse($config->get('role_logout'));
+    $this->assertSame('user/login', $config->get('redirect_url'));
+    $this->assertFalse($config->get('no_dialog'));
+    $this->assertSame('We are about to log you out for inactivity. If we do, you will lose any unsaved work. Do you need more time?', $config->get('message'));
     $this->assertSame('You have been logged out due to inactivity.', $config->get('inactivity_message'));
-    $this->assertSame(FALSE, $config->get('enforce_admin'));
-    $this->assertSame(FALSE, $config->get('use_alt_logout_method'));
-    $this->assertSame(TRUE, $config->get('use_watchdog'));
+    $this->assertFalse($config->get('enforce_admin'));
+    $this->assertFalse($config->get('use_alt_logout_method'));
+    $this->assertFalse($config->get('use_watchdog'));
+    $this->assertSame("0", $config->get('whitelisted_ip_addresses'));
   }
 
 }

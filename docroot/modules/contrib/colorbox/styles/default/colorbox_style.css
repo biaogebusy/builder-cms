@@ -2,13 +2,20 @@
  * Colorbox Core Style:
  * The following CSS is consistent between example themes and should not be altered.
  */
+
+/**
+ * Disable stylelint rule 'selector-id-pattern' since these CSS IDs are provided
+ * by the colorbox JS library and not defined by the module.
+ */
+
+/* stylelint-disable selector-id-pattern */
 #colorbox,
 #cboxOverlay,
 #cboxWrapper {
   position: absolute;
+  z-index: 9999;
   top: 0;
   left: 0;
-  z-index: 9999;
   overflow: hidden;
 }
 #cboxOverlay {
@@ -46,16 +53,16 @@
 #cboxNext,
 #cboxClose,
 #cboxSlideshow {
-  border: 0;
-  padding: 0;
-  margin: 0;
   overflow: visible;
   width: auto;
-  background: none;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
+  border: 0;
+  background: none;
 }
 /**
- * Avoid outlines on :active (mouseclick),
+ * Avoid outlines on :active (mouse click),
  * but preserve outlines on :focus (tabbed navigating)
  */
 #cboxPrevious:active,
@@ -65,16 +72,16 @@
   outline: 0;
 }
 .cboxPhoto {
+  display: block;
   float: left;
+  max-width: none;
   margin: auto;
   border: 0;
-  display: block;
-  max-width: none;
 }
 .cboxIframe {
+  display: block;
   width: 100%;
   height: 100%;
-  display: block;
   border: 0;
 }
 /* Reset box sizing to content-box if theme is using border-box. */
@@ -98,10 +105,10 @@
   outline: 0;
 }
 #cboxWrapper {
-  background: #fff;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
+  background: #fff;
 }
 #cboxTopLeft {
   width: 15px;
@@ -132,8 +139,8 @@
   width: 15px;
 }
 #cboxContent {
-  background: #fff;
   overflow: hidden;
+  background: #fff;
 }
 #cboxError {
   padding: 50px;
@@ -144,15 +151,15 @@
 }
 #cboxTitle {
   position: absolute;
-  background: rgba(255, 255, 255, 0.7);
   bottom: 28px;
   left: 0;
-  color: #535353;
-  width: 100%;
-  padding: 4px 6px;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
+  width: 100%;
+  padding: 4px 6px;
+  color: #535353;
+  background: rgba(255, 255, 255, 0.7);
 }
 #cboxCurrent {
   position: absolute;
@@ -162,24 +169,24 @@
 }
 .cboxSlideshow_on #cboxSlideshow {
   position: absolute;
-  bottom: 0;
   right: 30px;
-  background: url(images/controls.png) no-repeat -75px -50px;
+  bottom: 0;
   width: 25px;
   height: 25px;
   text-indent: -9999px;
+  background: url(images/controls.png) no-repeat -75px -50px;
 }
 .cboxSlideshow_on #cboxSlideshow:hover {
   background-position: -101px -50px;
 }
 .cboxSlideshow_off #cboxSlideshow {
   position: absolute;
-  bottom: 0;
   right: 30px;
-  background: url(images/controls.png) no-repeat -25px -50px;
+  bottom: 0;
   width: 25px;
   height: 25px;
   text-indent: -9999px;
+  background: url(images/controls.png) no-repeat -25px -50px;
 }
 .cboxSlideshow_off #cboxSlideshow:hover {
   background-position: -49px -50px;
@@ -188,10 +195,10 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  background: url(images/controls.png) no-repeat -75px 0;
   width: 25px;
   height: 25px;
   text-indent: -9999px;
+  background: url(images/controls.png) no-repeat -75px 0;
 }
 #cboxPrevious:hover {
   background-position: -75px -25px;
@@ -200,10 +207,10 @@
   position: absolute;
   bottom: 0;
   left: 27px;
-  background: url(images/controls.png) no-repeat -50px 0;
   width: 25px;
   height: 25px;
   text-indent: -9999px;
+  background: url(images/controls.png) no-repeat -50px 0;
 }
 #cboxNext:hover {
   background-position: -50px -25px;
@@ -216,12 +223,12 @@
 }
 #cboxClose {
   position: absolute;
-  bottom: 0;
   right: 0;
-  background: url(images/controls.png) no-repeat -25px 0;
+  bottom: 0;
   width: 25px;
   height: 25px;
   text-indent: -9999px;
+  background: url(images/controls.png) no-repeat -25px 0;
 }
 #cboxClose:hover {
   background-position: -25px -25px;

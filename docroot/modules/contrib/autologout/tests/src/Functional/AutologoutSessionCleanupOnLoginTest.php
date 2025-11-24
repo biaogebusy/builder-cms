@@ -4,8 +4,8 @@ namespace Drupal\Tests\autologout\Functional;
 
 use Behat\Mink\Driver\BrowserKitDriver;
 use Behat\Mink\Session;
-use Drupal\Tests\DrupalTestBrowser;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\DrupalTestBrowser;
 use Drupal\user\Entity\User;
 
 /**

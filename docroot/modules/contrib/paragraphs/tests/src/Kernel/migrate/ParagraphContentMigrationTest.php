@@ -93,12 +93,12 @@ class ParagraphContentMigrationTest extends ParagraphsMigrationTestBase {
    * @return string[][]
    *   The node migration to run.
    */
-  public function providerParagraphContentMigration() {
+  public static function providerParagraphContentMigration() {
     return [
-      ['node_migration' => NULL],
-      ['node_migration' => 'd7_node_revision:paragraphs_test'],
-      ['node_migration' => 'd7_node_translation:paragraphs_test'],
-      ['node_migration' => 'd7_node_complete:paragraphs_test'],
+      ['migration_to_run' => NULL],
+      ['migration_to_run' => 'd7_node_revision:paragraphs_test'],
+      ['migration_to_run' => 'd7_node_translation:paragraphs_test'],
+      ['migration_to_run' => 'd7_node_complete:paragraphs_test'],
     ];
   }
 

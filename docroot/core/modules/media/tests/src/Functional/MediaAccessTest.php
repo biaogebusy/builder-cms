@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\field\Entity\FieldConfig;
@@ -43,7 +45,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
   /**
    * Tests some access control functionality.
    */
-  public function testMediaAccess() {
+  public function testMediaAccess(): void {
     $assert_session = $this->assertSession();
     $media_type = $this->createMediaType('test');
 
@@ -106,7 +108,9 @@ class MediaAccessTest extends MediaFunctionalTestBase {
     $this->assertNoCacheContext('user');
     $this->assertCacheContext('user.permissions');
     $assert_session->statusCodeEquals(200);
-    $user_media->setUnpublished()->save();
+    $previous_revision = $user_media->getLoadedRevisionId();
+    $user_media->setUnpublished()->setNewRevision();
+    $user_media->save();
     $this->drupalGet('media/' . $user_media->id());
     $this->assertCacheContext('user.permissions');
     $assert_session->statusCodeEquals(403);
@@ -116,6 +120,43 @@ class MediaAccessTest extends MediaFunctionalTestBase {
     $this->drupalGet('media/' . $user_media->id());
     $this->assertCacheContext('user');
     $assert_session->statusCodeEquals(200);
+
+    // Test revision access - logged-in user.
+    $this->grantPermissions($role, ['view all media revisions']);
+    $this->drupalGet('media/' . $user_media->id() . '/revisions');
+    $this->assertCacheContext('user');
+    $assert_session->statusCodeEquals(200);
+    $this->drupalGet('media/' . $user_media->id() . '/revisions/' . $user_media->getRevisionId() . '/view');
+    $this->assertCacheContext('user');
+    $assert_session->statusCodeEquals(200);
+    $this->drupalGet('media/' . $user_media->id() . '/revisions/' . $previous_revision . '/view');
+    $this->assertCacheContext('user.permissions');
+    $assert_session->statusCodeEquals(200);
+    $role->revokePermission('view own unpublished media')->save();
+    $this->drupalGet('media/' . $user_media->id() . '/revisions/' . $user_media->getRevisionId() . '/view');
+    $this->assertCacheContext('user.permissions');
+    $assert_session->statusCodeEquals(403);
+
+    $user_media->setPublished()->setNewRevision();
+    $user_media->save();
+
+    // Revision access - logged-out user.
+    $this->drupalLogout();
+    $this->drupalGet('media/' . $user_media->id() . '/revisions');
+    $assert_session->statusCodeEquals(403);
+    $this->drupalGet('media/' . $user_media->id() . '/revisions/' . $user_media->getRevisionId() . '/view');
+    $assert_session->statusCodeEquals(403);
+    $this->drupalGet('media/' . $user_media->id() . '/revisions/' . $previous_revision . '/view');
+    $assert_session->statusCodeEquals(403);
+
+    // Reverse revision access testing changes.
+    $role
+      ->revokePermission('view all media revisions')
+      ->grantPermission('view own unpublished media')
+      ->save();
+    $user_media->setPublished()->setNewRevision();
+    $user_media->save();
+    $this->drupalLogin($this->nonAdminUser);
 
     // Test 'create media' permission.
     $this->drupalGet('media/add/' . $media_type->id());
@@ -177,9 +218,9 @@ class MediaAccessTest extends MediaFunctionalTestBase {
 
     // Create a new role, which implicitly checks if the permission exists.
     $mediaOverviewRole = $this->createRole(['access content overview', 'access media overview']);
-    $this->nonAdminUser->addRole($mediaOverviewRole);
-    $this->nonAdminUser->save();
+    $this->nonAdminUser->addRole($mediaOverviewRole)->save();
 
+    $this->grantPermissions($role, ['access user profiles']);
     $this->drupalGet('admin/content');
     $assert_session->linkByHrefExists('/admin/content/media');
     $this->clickLink('Media');
@@ -197,7 +238,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
   /**
    * Tests view access control on the canonical page.
    */
-  public function testCanonicalMediaAccess() {
+  public function testCanonicalMediaAccess(): void {
     $media_type = $this->createMediaType('test');
     $assert_session = $this->assertSession();
 
@@ -241,7 +282,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
   /**
    * Tests unpublished media access.
    */
-  public function testUnpublishedMediaUserAccess() {
+  public function testUnpublishedMediaUserAccess(): void {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
@@ -283,7 +324,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
   /**
    * Tests media access of anonymous user.
    */
-  public function testMediaAnonymousUserAccess() {
+  public function testMediaAnonymousUserAccess(): void {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)
@@ -322,7 +363,7 @@ class MediaAccessTest extends MediaFunctionalTestBase {
   /**
    * Tests access for embedded medias.
    */
-  public function testReferencedRendering() {
+  public function testReferencedRendering(): void {
     \Drupal::configFactory()
       ->getEditable('media.settings')
       ->set('standalone_url', TRUE)

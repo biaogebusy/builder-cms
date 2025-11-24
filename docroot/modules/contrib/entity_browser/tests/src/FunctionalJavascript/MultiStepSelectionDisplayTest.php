@@ -20,7 +20,6 @@ class MultiStepSelectionDisplayTest extends EntityBrowserWebDriverTestBase {
     $this->getSession()->getPage()->clickLink('Select entities');
     $this->getSession()
       ->switchToIFrame('entity_browser_iframe_test_entity_browser_file');
-    $this->waitForAjaxToFinish();
   }
 
   /**
@@ -55,7 +54,6 @@ class MultiStepSelectionDisplayTest extends EntityBrowserWebDriverTestBase {
    * It's related to: Drupal.entityBrowserCommandQueue.executeCommands
    */
   protected function waitSelectionDisplayAjaxCommands() {
-    $this->waitForAjaxToFinish();
     $this->getSession()->wait(200);
     $this->waitForAjaxToFinish();
   }

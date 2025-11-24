@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.ebpp.industry.perform.order.create request
  *
  * @author auto create
- * @since 1.0, 2024-04-22 15:27:00
+ * @since 1.0, 2024-09-25 17:07:11
  */
 class AlipayEbppIndustryPerformOrderCreateRequest
 {

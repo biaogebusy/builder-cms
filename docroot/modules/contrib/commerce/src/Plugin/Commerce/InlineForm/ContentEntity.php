@@ -6,6 +6,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceInlineForm;
 
 /**
  * Provides an inline form for managing a content entity.
@@ -14,12 +16,11 @@ use Drupal\Core\Render\Element;
  * of another content entity form, the entity langcodes will be kept in sync.
  * Translating the parent entity will also translate the entity managed by the
  * inline form.
- *
- * @CommerceInlineForm(
- *   id = "content_entity",
- *   label = @Translation("Content entity"),
- * )
  */
+#[CommerceInlineForm(
+  id: "content_entity",
+  label: new TranslatableMarkup("Content entity"),
+)]
 class ContentEntity extends EntityInlineFormBase {
 
   /**

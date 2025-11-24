@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.security.prod.ashield.filetoken.get request
  *
  * @author auto create
- * @since 1.0, 2023-08-10 14:01:39
+ * @since 1.0, 2025-08-13 14:32:39
  */
 class AlipaySecurityProdAshieldFiletokenGetRequest
 {

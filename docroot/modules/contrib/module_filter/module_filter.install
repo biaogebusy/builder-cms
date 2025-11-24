@@ -8,7 +8,7 @@
 /**
  * Implements hook_install().
  */
-function module_filter_install() {
+function module_filter_install(): void {
   $state = \Drupal::state();
   $state->set('module_filter.recent', ['module_filter' => \Drupal::time()->getRequestTime()]);
 }
@@ -16,34 +16,29 @@ function module_filter_install() {
 /**
  * Implements hook_uninstall().
  */
-function module_filter_uninstall() {
+function module_filter_uninstall(): void {
   $state = \Drupal::state();
   $state->delete('module_filter.recent');
 }
 
 /**
- * Add the filters_enabled.permission default configuration.
+ * Implements hook_update_last_removed().
  */
-function module_filter_update_9401() {
-  $config_factory = \Drupal::configFactory();
-  $config = $config_factory->getEditable('module_filter.settings');
-  $config->set('enabled_filters.permissions', TRUE);
-  $config->save(TRUE);
-}
-
-/**
- * Ensure that the 'path' configuration property is a boolean.
- */
-function module_filter_update_9402() {
-  $config_factory = \Drupal::configFactory();
-  $config = $config_factory->getEditable('module_filter.settings');
-  $config->set('path', (bool) $config->get('path'));
-  $config->save(TRUE);
+function module_filter_update_last_removed(): int {
+  return 9402;
 }
 
 /**
  * Enable jQuery UI Autocomplete module.
  */
-function module_filter_update_9403() {
+function module_filter_update_9403(): void {
   \Drupal::service('module_installer')->install(['jquery_ui_autocomplete']);
+}
+
+/**
+ * Add new config key for descriptions_show.
+ */
+function module_filter_update_9404(): void {
+  $config_factory = \Drupal::configFactory();
+  $config_factory->getEditable('module_filter.settings')->set('descriptions_show', FALSE)->save();
 }

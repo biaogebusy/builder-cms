@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\Plugin;
 
 use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
@@ -7,7 +9,8 @@ use Drupal\migrate\Plugin\Exception\BadPluginDefinitionException;
 use Drupal\migrate_drupal\Plugin\MigrateFieldPluginManager;
 use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
 
-// cspell:ignore entityreference filefield imagefield optionwidgets
+// cspell:ignore entityreference filefield imagefield nodereference
+// cspell:ignore optionwidgets userreference
 
 /**
  * Tests that modules exist for all source and destination plugins.
@@ -21,7 +24,7 @@ class MigrationProvidersExistTest extends MigrateDrupalTestBase {
   /**
    * Tests that a missing source_module property raises an exception.
    */
-  public function testSourceProvider() {
+  public function testSourceProvider(): void {
     $this->enableModules(['migration_provider_test']);
     $this->expectException(BadPluginDefinitionException::class);
     $this->expectExceptionMessage('The no_source_module plugin must define the source_module property.');
@@ -31,7 +34,7 @@ class MigrationProvidersExistTest extends MigrateDrupalTestBase {
   /**
    * Tests that modules exist for all source plugins.
    */
-  public function testProvidersExist() {
+  public function testProvidersExist(): void {
     $this->enableAllModules();
 
     /** @var \Drupal\migrate\Plugin\MigrateSourcePluginManager $plugin_manager */
@@ -58,7 +61,7 @@ class MigrationProvidersExistTest extends MigrateDrupalTestBase {
   /**
    * Tests that modules exist for all field plugins.
    */
-  public function testFieldProvidersExist() {
+  public function testFieldProvidersExist(): void {
     $expected_mappings = [
       'userreference' => [
         'source_module' => 'userreference',
@@ -173,7 +176,7 @@ class MigrationProvidersExistTest extends MigrateDrupalTestBase {
    *
    * @dataProvider fieldPluginDefinitionsProvider
    */
-  public function testFieldProviderMissingRequiredProperty(array $definitions, $missing_property) {
+  public function testFieldProviderMissingRequiredProperty(array $definitions, $missing_property): void {
     $discovery = $this->getMockBuilder(MigrateFieldPluginManager::class)
       ->disableOriginalConstructor()
       ->onlyMethods(['getDefinitions'])
@@ -199,7 +202,7 @@ class MigrationProvidersExistTest extends MigrateDrupalTestBase {
    * @return array
    *   Array of plugin definitions.
    */
-  public function fieldPluginDefinitionsProvider() {
+  public static function fieldPluginDefinitionsProvider() {
     return [
       'missing_core_scenario' => [
         'definitions' => [

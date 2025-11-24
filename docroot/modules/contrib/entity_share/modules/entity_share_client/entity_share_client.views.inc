@@ -23,11 +23,11 @@ function entity_share_client_views_data_alter(array &$data): void {
       ];
 
       $data[$data_table]['entity_share_client_import_status_' . $entity_type_id] = [
-        'title' => t('Entity import status for the @type entity type', $t_args),
-        'help' => t('Add a relationship to fetch data on the import status of @type entities.', $t_args),
+        'title' => \t('Entity import status for the @type entity type', $t_args),
+        'help' => \t('Add a relationship to fetch data on the import status of @type entities.', $t_args),
         'relationship' => [
-          'group' => t('Entity Share'),
-          'label' => t('Entity Import Status: @type', $t_args),
+          'group' => \t('Entity Share'),
+          'label' => \t('Entity Import Status: @type', $t_args),
           'base' => 'entity_import_status',
           'base field' => 'entity_id',
           'field' => $entity_type->getKey('id'),

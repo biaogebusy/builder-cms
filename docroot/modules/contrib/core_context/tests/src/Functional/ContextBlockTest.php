@@ -15,6 +15,8 @@ use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 
 /**
+ * Tests that blocks can pick up context values provided by Core Context.
+ *
  * @group core_context
  */
 class ContextBlockTest extends BrowserTestBase {

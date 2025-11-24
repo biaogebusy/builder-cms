@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Plugin;
 
+use Drupal\Core\Extension\Exception\UnknownExtensionException;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -46,13 +48,13 @@ trait CategorizingPluginManagerTrait {
    *   machine-readable name passed.
    */
   protected function getProviderName($provider) {
-    $list = $this->getModuleHandler()->getModuleList();
-    // If the module exists, return its human-readable name.
-    if (isset($list[$provider])) {
-      return $this->getModuleHandler()->getName($provider);
+    try {
+      return $this->getModuleExtensionList()->getName($provider);
     }
-    // Otherwise, return the machine name.
-    return $provider;
+    catch (UnknownExtensionException $e) {
+      // Otherwise, return the machine name.
+      return $provider;
+    }
   }
 
   /**
@@ -60,8 +62,14 @@ trait CategorizingPluginManagerTrait {
    *
    * @return \Drupal\Core\Extension\ModuleHandlerInterface
    *   The module handler.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no
+   *   replacement.
+   *
+   * @see https://www.drupal.org/node/3310017
    */
   public function getModuleHandler() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no replacement. See https://www.drupal.org/node/3310017', E_USER_DEPRECATED);
     // If the class has an injected module handler, use it. Otherwise fall back
     // to fetch it from the service container.
     if (isset($this->moduleHandler)) {
@@ -71,10 +79,24 @@ trait CategorizingPluginManagerTrait {
   }
 
   /**
+   * Returns the module extension list used.
+   *
+   * @return \Drupal\Core\Extension\ModuleExtensionList
+   *   The module extension list.
+   */
+  protected function getModuleExtensionList(): ModuleExtensionList {
+    // If the class has an injected module extension list, use it. Otherwise
+    // fall back to fetch it from the service container.
+    if (isset($this->moduleExtensionList)) {
+      return $this->moduleExtensionList;
+    }
+    return \Drupal::service('extension.list.module');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getCategories() {
-    /** @var \Drupal\Core\Plugin\CategorizingPluginManagerTrait|\Drupal\Component\Plugin\PluginManagerInterface $this */
     // Fetch all categories from definitions and remove duplicates.
     $categories = array_unique(array_values(array_map(function ($definition) {
       return $definition['category'];
@@ -86,9 +108,8 @@ trait CategorizingPluginManagerTrait {
   /**
    * {@inheritdoc}
    */
-  public function getSortedDefinitions(array $definitions = NULL, $label_key = 'label') {
+  public function getSortedDefinitions(?array $definitions = NULL, $label_key = 'label') {
     // Sort the plugins first by category, then by label.
-    /** @var \Drupal\Core\Plugin\CategorizingPluginManagerTrait|\Drupal\Component\Plugin\PluginManagerInterface $this */
     $definitions = $definitions ?? $this->getDefinitions();
     uasort($definitions, function ($a, $b) use ($label_key) {
       if ((string) $a['category'] != (string) $b['category']) {
@@ -102,7 +123,7 @@ trait CategorizingPluginManagerTrait {
   /**
    * {@inheritdoc}
    */
-  public function getGroupedDefinitions(array $definitions = NULL, $label_key = 'label') {
+  public function getGroupedDefinitions(?array $definitions = NULL, $label_key = 'label') {
     /** @var \Drupal\Core\Plugin\CategorizingPluginManagerTrait|\Drupal\Component\Plugin\PluginManagerInterface $this */
     $definitions = $this->getSortedDefinitions($definitions ?? $this->getDefinitions(), $label_key);
     $grouped_definitions = [];

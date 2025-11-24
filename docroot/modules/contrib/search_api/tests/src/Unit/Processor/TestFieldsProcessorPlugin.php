@@ -59,7 +59,7 @@ class TestFieldsProcessorPlugin extends FieldsProcessorPluginBase {
    * @param callable|null $override
    *   The new code of the method, or NULL to use the default.
    */
-  public function setMethodOverride($method, callable $override = NULL) {
+  public function setMethodOverride($method, ?callable $override = NULL) {
     $this->methodOverrides[$method] = $override;
   }
 

@@ -2,9 +2,11 @@
 
 namespace Drupal\paragraphs\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\paragraphs\ParagraphInterface;
 
 /**
@@ -18,6 +20,13 @@ use Drupal\paragraphs\ParagraphInterface;
  *   }
  * )
  */
+#[FieldFormatter(
+  id: 'paragraph_summary',
+  label: new TranslatableMarkup('Paragraph summary'),
+  field_types: [
+    'entity_reference_revisions'
+  ]
+)]
 class ParagraphsSummaryFormatter extends EntityReferenceFormatterBase {
 
   /**

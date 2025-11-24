@@ -2,24 +2,26 @@
 
 namespace Drupal\commerce_tax\Plugin\Commerce\TaxNumberType;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_tax\Attribute\CommerceTaxNumberType;
+
 /**
  * Provides the European Union VAT tax number type.
  *
  * Note that in addition to EU members, the country list also includes
  * Isle of Man (IM), which uses GB VAT, and Monaco (MC), which uses FR VAT.
- *
- * @CommerceTaxNumberType(
- *   id = "european_union_vat",
- *   label = "European Union VAT",
- *   countries = {
- *     "EU",
- *     "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI",
- *     "FR", "GR", "HR", "HU", "IE", "IM", "IT", "LT", "LU",
- *     "LV", "MC", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
- *   },
- *   examples = {"DE123456789", "HU12345678"}
- * )
  */
+#[CommerceTaxNumberType(
+  id: "european_union_vat",
+  label: new TranslatableMarkup("European Union VAT"),
+  countries: [
+    "EU",
+    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI",
+    "FR", "GR", "HR", "HU", "IE", "IM", "IT", "LT", "LU",
+    "LV", "MC", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
+  ],
+  examples: ["DE123456789", "HU12345678"]
+)]
 class EuropeanUnionVat extends TaxNumberTypeWithVerificationBase {
 
   /**

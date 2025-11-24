@@ -5,7 +5,9 @@
  * Post update functions for Allowed Formats module.
  */
 
+use Drupal\Core\Config\Entity\ConfigEntityUpdater;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\FieldConfigInterface;
 
 /**
  * Updates existing configuration to store allowed_formats as sequence.
@@ -31,4 +33,13 @@ function allowed_formats_post_update_store_allowed_formats_as_sequence() {
   }
 
   return t('Allowed formats in field configuration has been updated.');
+}
+
+/**
+ * Convert allowed formats to Drupal 10.1.x.
+ */
+function allowed_formats_post_update_formats2core(?array &$sandbox = NULL): void {
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'field_config', function (FieldConfigInterface $field_config): bool {
+    return _allowed_formats_convert_formats2core($field_config);
+  });
 }

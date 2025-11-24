@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
-use Drupal\commerce_price\Price;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_price\Price;
 
 class PaymentRefundForm extends PaymentGatewayFormBase {
 

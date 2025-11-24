@@ -2,16 +2,16 @@
 
 namespace Drupal\blazy\Theme;
 
-use Drupal\blazy\Blazy;
-use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Media\BlazyFile;
-use Drupal\blazy\Utility\Arrays;
-use Drupal\blazy\Utility\Sanitize;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\blazy\Blazy;
+use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Media\BlazyFile;
+use Drupal\blazy\Utility\Arrays;
+use Drupal\blazy\Utility\Sanitize;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides lightbox utilities.
@@ -25,10 +25,7 @@ class Lightbox {
   /**
    * Provides lightbox libraries.
    */
-  public static function attach(array &$load, array &$attach, $blazies = NULL): void {
-    // @todo remove NULL check at 3.x.
-    $blazies = $blazies ?: $attach['blazies'];
-
+  public static function attach(array &$load, array &$attach, $blazies): void {
     if ($name = $blazies->get('lightbox.name')) {
       $load['library'][] = 'blazy/lightbox';
 
@@ -36,7 +33,7 @@ class Lightbox {
       if ($name == 'colorbox') {
         self::attachColorbox($load);
       }
-      foreach (['colorbox', 'flybox', 'mfp', 'photobox'] as $key) {
+      foreach (['colorbox', 'flybox', 'mfp'] as $key) {
         if ($name == $key) {
           $blazies->set('libs.' . $key, TRUE);
         }
@@ -54,7 +51,7 @@ class Lightbox {
     $manager    = Internals::service('blazy.manager');
     $settings   = &$element['#settings'];
     $blazies    = $settings['blazies'];
-    $switch     = $blazies->get('lightbox.name');
+    $switch     = $blazies->get('switch') ?: $blazies->get('lightbox.name');
     $switch_css = str_replace('_', '-', $switch);
     $item       = $blazies->get('image.item');
     $uri        = $blazies->get('image.uri');
@@ -85,6 +82,10 @@ class Lightbox {
     $attrs = &$element['#url_attributes'];
     $attrs['class'][] = sprintf($multimedia ? $format2 : $format1, $switch_css);
     $attrs['data-' . $switch_css . '-trigger'] = TRUE;
+
+    if ($blazies->get('media.type') === 'image') {
+      $attrs['class'][] = 'litebox--image';
+    }
 
     // Might not be present from BlazyFilter.
     $json = ['id' => $switch_css, 'count' => $count, 'boxType' => 'image'];
@@ -133,12 +134,6 @@ class Lightbox {
         // Point HREF to the original site ethically.
         if ($input = $blazies->get('media.input_url')) {
           $url = $input;
-        }
-
-        // @todo remove at 3.x, good lightbox, but offers less flexibility.
-        if ($blazies->get('photobox')) {
-          $url = $oembed_url;
-          $attrs['rel'] = 'video';
         }
 
         $attrs['data-oembed-url'] = $oembed_url;
@@ -273,7 +268,7 @@ class Lightbox {
     array &$attrs,
     array $options,
     array $settings,
-    $manager
+    $manager,
   ): void {
     [
       'box_url' => $box_url,
@@ -377,7 +372,7 @@ class Lightbox {
 
       // Responsive image is unwrapped. Local videos wrapped.
       $content = $_resimage ? $box_html : $html;
-      $content = $manager->renderer()->renderPlain($content);
+      $content = $manager->renderInIsolation($content);
       $content = is_object($content) ? $content->__toString() : $content;
 
       // @todo merge with BlazyDefault::TAGS when mixed contents supported.
@@ -437,6 +432,10 @@ class Lightbox {
 
     if ($is_html) {
       $attrs['class'][] = 'litebox--html';
+    }
+
+    if ($blazies->is('bg')) {
+      $attrs['class'][] = 'litebox--bg';
     }
 
     // Only strip if not already.
@@ -544,8 +543,6 @@ class Lightbox {
         break;
 
       case 'custom':
-        $caption = '';
-
         // $object can be file or media for plain images, or media entities.
         if ($custom && $object instanceof EntityInterface) {
           $options = ['clear' => TRUE];

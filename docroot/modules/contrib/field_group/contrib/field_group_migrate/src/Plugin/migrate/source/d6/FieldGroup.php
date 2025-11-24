@@ -42,7 +42,7 @@ class FieldGroup extends DrupalSqlBase {
       ->condition('group_name', $row->getSourceProperty('group_name'));
     $fields = $query->execute()->fetchCol();
     $row->setSourceProperty('children', $fields);
-    $row->setSourceProperty('settings', unserialize($row->getSourceProperty('settings')));
+    $row->setSourceProperty('settings', unserialize($row->getSourceProperty('settings'), ['allowed_classes' => FALSE]));
 
     switch ($row->getSourceProperty('constants/mode')) {
       case 'entity_form_display':

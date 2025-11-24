@@ -15,20 +15,14 @@ use Drupal\sms_user\AccountRegistrationInterface;
 class SmsEventSubscriber implements EventSubscriberInterface {
 
   /**
-   * The account registration service.
-   *
-   * @var \Drupal\sms_user\AccountRegistrationInterface
-   */
-  protected $accountRegistration;
-
-  /**
    * Constructs a new SmsEvents instance.
    *
-   * @param \Drupal\sms_user\AccountRegistrationInterface $account_registration
+   * @param \Drupal\sms_user\AccountRegistrationInterface $accountRegistration
    *   The account registration service.
    */
-  public function __construct(AccountRegistrationInterface $account_registration) {
-    $this->accountRegistration = $account_registration;
+  public function __construct(
+    protected AccountRegistrationInterface $accountRegistration,
+  ) {
   }
 
   /**

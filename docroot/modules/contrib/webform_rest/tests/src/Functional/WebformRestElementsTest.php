@@ -16,7 +16,7 @@ class WebformRestElementsTest extends WebformBrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'webform',
     'webform_rest',
     'webform_rest_test',
@@ -37,9 +37,9 @@ class WebformRestElementsTest extends WebformBrowserTestBase {
 
     // Get webform elements.
     $result = $this->drupalGet("/webform_rest/webform_rest_test/elements", ['query' => ['_format' => 'hal_json']]);
-    $this->assertResponse(200);
-    $this->assertRaw('"first_name":{"#title":"First name"');
-    $this->assertRaw('"last_name":{"#title":"Last name"');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->responseContains('"first_name":{"#title":"First name"');
+    $this->assertSession()->responseContains('"last_name":{"#title":"Last name"');
   }
 
 }

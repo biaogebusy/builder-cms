@@ -13,28 +13,18 @@ class LayoutInfoController extends ControllerBase {
 
   /**
    * The Layout Plugin Manager.
-   *
-   * @var Drupal\Core\Layout\LayoutPluginManagerInterface
    */
-  protected $layoutPluginManager;
-
-  /**
-   * LayoutInfoController constructor.
-   *
-   * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $pluginManagerLayout
-   *   The layout manager.
-   */
-  public function __construct(LayoutPluginManagerInterface $pluginManagerLayout) {
-    $this->layoutPluginManager = $pluginManagerLayout;
-  }
+  protected LayoutPluginManagerInterface $layoutPluginManager;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.core.layout')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->layoutPluginManager = $container->get('plugin.manager.core.layout');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
@@ -43,7 +33,7 @@ class LayoutInfoController extends ControllerBase {
    * @return array
    *   Array of page elements to render.
    */
-  public function layoutInfoPage() {
+  public function layoutInfoPage(): array {
     $headers = [
       $this->t('Icon'),
       $this->t('Label'),

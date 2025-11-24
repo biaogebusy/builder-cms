@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.ec.authorization.code.create request
  *
  * @author auto create
- * @since 1.0, 2024-03-14 11:52:19
+ * @since 1.0, 2024-08-15 19:47:07
  */
 class AlipayCommerceEcAuthorizationCodeCreateRequest
 {

@@ -2,8 +2,8 @@
 
 namespace Drupal\flag\Plugin\views\filter;
 
-use Drupal\views\Plugin\views\filter\BooleanOperator;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Plugin\views\filter\BooleanOperator;
 
 /**
  * Filters content by its flagging status in a view.
@@ -36,11 +36,11 @@ class FlagViewsFilter extends BooleanOperator {
       1 => $this->t('Flagged'),
       0 => $this->t('Not flagged'),
     ];
-    $form['value']['#default_value'] = isset($this->options['value']) ? $this->options['value'] : 0;
+    $form['value']['#default_value'] = $this->options['value'] ?? 0;
     $form['value']['#description'] = '<p>' . $this->t('This filter is only needed if the relationship used has the "Include only flagged content" option <strong>unchecked</strong>. Otherwise, this filter is useless, because all records are already limited to flagged content.') . '</p><p>' . $this->t('By choosing <em>Not flagged</em>, it is possible to create a list of content <a href="@unflagged-url">that is specifically not flagged</a>.', ['@unflagged-url' => 'http://drupal.org/node/299335']) . '</p>';
 
     // Workaround for bug in Views: $no_operator class property has no effect.
-    // TODO: remove when https://www.drupal.org/node/2869191 is fixed.
+    // @todo remove when https://www.drupal.org/node/2869191 is fixed.
     unset($form['operator']);
     unset($form['expose']['use_operator']);
   }
@@ -54,6 +54,7 @@ class FlagViewsFilter extends BooleanOperator {
     $operator = $this->value ? 'IS NOT' : 'IS';
     $operator .= ' NULL';
 
+    // @phpstan-ignore-next-line
     $this->query->addWhere($this->options['group'], "$this->tableAlias.uid", NULL, $operator);
   }
 

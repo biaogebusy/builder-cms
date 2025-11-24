@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Validation;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestStringId;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\TestTools\Random;
 
 /**
  * Tests the unique field value validation constraint.
@@ -29,7 +33,7 @@ class UniqueFieldConstraintTest extends KernelTestBase {
    *
    * @covers ::validate
    */
-  public function testEntityWithStringId() {
+  public function testEntityWithStringId(): void {
     $this->installEntitySchema('entity_test_string_id');
 
     EntityTestStringId::create([
@@ -65,7 +69,7 @@ class UniqueFieldConstraintTest extends KernelTestBase {
    *
    * @dataProvider providerTestEntityWithStringIdWithViolation
    */
-  public function testEntityWithStringIdWithViolation($id) {
+  public function testEntityWithStringIdWithViolation($id): void {
     $this->installEntitySchema('entity_test_string_id');
 
     $value = $this->randomString();
@@ -101,15 +105,50 @@ class UniqueFieldConstraintTest extends KernelTestBase {
    *
    * @see self::testEntityWithStringIdWithViolation()
    */
-  public function providerTestEntityWithStringIdWithViolation() {
+  public static function providerTestEntityWithStringIdWithViolation() {
     return [
       'without an id' => [NULL],
       'zero as integer' => [0],
       'zero as string' => ["0"],
       'non-zero as integer' => [mt_rand(1, 127)],
       'non-zero as string' => [(string) mt_rand(1, 127)],
-      'alphanumeric' => [$this->randomMachineName()],
+      'alphanumeric' => [Random::machineName()],
     ];
+  }
+
+  /**
+   * Tests validating inaccessible entities.
+   *
+   * The unique_field_constraint_test_entity_test_access() function
+   * forbids 'view' access to entity_test entities.
+   *
+   * @covers ::validate
+   */
+  public function testViolationDespiteNoAccess(): void {
+    $this->installEntitySchema('entity_test');
+
+    // Create and save an entity with a given field value in the field that has
+    // the unique constraint.
+    EntityTest::create([
+      'name' => 'A totally unique entity name',
+    ])->save();
+
+    // Prepare a second entity with the same value in the unique field.
+    $entity = EntityTest::create([
+      'name' => 'A totally unique entity name',
+    ]);
+    /** @var \Symfony\Component\Validator\ConstraintViolationList $violations */
+    $violations = $entity->get('name')->validate();
+
+    $message = new FormattableMarkup('A @entity_type with @field_name %value already exists.', [
+      '%value' => 'A totally unique entity name',
+      '@entity_type' => $entity->getEntityType()->getSingularLabel(),
+      '@field_name' => 'Name',
+    ]);
+
+    // Check that the validation has created the appropriate violation.
+    $this->assertCount(1, $violations);
+    $this->assertEquals($message, $violations[0]->getMessage());
   }
 
 }

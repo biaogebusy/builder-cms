@@ -161,7 +161,7 @@ abstract class PelEntryNumber extends PelEntry
     public function validateNumber($n)
     {
         if ($this->dimension == 1 || is_scalar($n)) {
-            if ($n < $this->min || $n > $this->max) {
+            if (is_int($n) && ($n < $this->min || $n > $this->max)) {
                 Pel::maybeThrow(new PelOverflowException((int) $n, $this->min, $this->max));
             }
         } else {
@@ -241,7 +241,7 @@ abstract class PelEntryNumber extends PelEntry
      * sophisticated behavior than the default, which is to just return
      * the number as is.
      *
-     * @param int $number
+     * @param int|array $number
      *            the number which will be formatted.
      * @param boolean $brief
      *            it could be that there is both a verbose and a
@@ -251,7 +251,7 @@ abstract class PelEntryNumber extends PelEntry
      */
     public function formatNumber($number, $brief = false)
     {
-        return $number;
+        return is_int($number) ? (string) $number : implode(', ', $number);
     }
 
     /**

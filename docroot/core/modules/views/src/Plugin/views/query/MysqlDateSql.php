@@ -23,10 +23,13 @@ class MysqlDateSql implements DateSqlInterface {
 
   /**
    * An array of PHP-to-MySQL replacement patterns.
+   *
+   * @var string[]
    */
   protected static $replace = [
     'Y' => '%Y',
     'y' => '%y',
+    'o' => '%x',
     'M' => '%b',
     'm' => '%m',
     'n' => '%c',

@@ -14,7 +14,7 @@ function commerce_payment_post_update_1(&$sandbox = NULL) {
   $payment_method_storage = \Drupal::entityTypeManager()->getStorage('commerce_payment_method');
   if (!isset($sandbox['current_count'])) {
     $query = $payment_method_storage->getQuery();
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->accessCheck(FALSE)->count()->execute();
     $sandbox['current_count'] = 0;
 
     if (empty($sandbox['total_count'])) {
@@ -24,6 +24,7 @@ function commerce_payment_post_update_1(&$sandbox = NULL) {
   }
 
   $query = $payment_method_storage->getQuery();
+  $query->accessCheck(FALSE);
   $query->range($sandbox['current_count'], 25);
   $result = $query->execute();
   if (empty($result)) {
@@ -53,7 +54,7 @@ function commerce_payment_post_update_2(&$sandbox = NULL) {
   $payment_storage = \Drupal::entityTypeManager()->getStorage('commerce_payment');
   if (!isset($sandbox['current_count'])) {
     $query = $payment_storage->getQuery();
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->accessCheck(FALSE)->count()->execute();
     $sandbox['current_count'] = 0;
 
     if (empty($sandbox['total_count'])) {
@@ -63,6 +64,7 @@ function commerce_payment_post_update_2(&$sandbox = NULL) {
   }
 
   $query = $payment_storage->getQuery();
+  $query->accessCheck(FALSE);
   $query->range($sandbox['current_count'], 25);
   $result = $query->execute();
   if (empty($result)) {
@@ -115,6 +117,7 @@ function commerce_payment_post_update_3(&$sandbox = NULL) {
   $payment_method_storage = \Drupal::entityTypeManager()->getStorage('commerce_payment_method');
   if (!isset($sandbox['current_count'])) {
     $query = $payment_method_storage->getQuery();
+    $query->accessCheck(FALSE);
     $query
       ->condition('reusable', TRUE)
       ->condition($query->orConditionGroup()
@@ -131,6 +134,7 @@ function commerce_payment_post_update_3(&$sandbox = NULL) {
   }
 
   $query = $payment_method_storage->getQuery();
+  $query->accessCheck(FALSE);
   $query
     ->condition('reusable', TRUE)
     ->condition($query->orConditionGroup()

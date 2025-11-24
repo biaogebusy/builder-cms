@@ -29,7 +29,7 @@ class RangeFieldInstanceSettingsTest extends UnitTestCase {
   /**
    * Data provider for testTransform.
    */
-  public function transformDataProvider() {
+  public static function transformDataProvider() {
     return [
       'min/max and prefix/suffix are set' => [
         [

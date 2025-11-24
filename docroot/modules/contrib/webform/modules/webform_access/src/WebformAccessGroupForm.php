@@ -23,7 +23,7 @@ class WebformAccessGroupForm extends EntityForm {
   /**
    * Entity manager.
    *
-   * @var Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManagerInterface;
 

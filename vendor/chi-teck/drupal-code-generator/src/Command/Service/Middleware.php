@@ -1,28 +1,40 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Service;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements service:middleware command.
- */
-final class Middleware extends ModuleGenerator {
-
-  protected string $name = 'service:middleware';
-  protected string $description = 'Generates a middleware';
-  protected string $alias = 'middleware';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/service/middleware';
+#[Generator(
+  name: 'service:middleware',
+  description: 'Generates a middleware',
+  aliases: ['middleware'],
+  templatePath: Application::TEMPLATE_PATH . '/Service/_middleware',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Middleware extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['class'] = $this->ask('Class', '{machine_name|camelize}Middleware');
-    $this->addFile('src/{class}.php', 'middleware');
-    $this->addServicesFile()->template('services');
+  protected function generate(array &$vars, AssetCollection $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+
+    $vars['class'] = $ir->askClass(default: '{machine_name|camelize}Middleware');
+    $vars['services'] = $ir->askServices(forced_services: ['http_kernel']);
+    // HTTP kernel argument should not be included to services definition as it
+    // is added by container compiler pass.
+    $vars['service_arguments'] = $vars['services'];
+    unset($vars['service_arguments']['http_kernel']);
+
+    $assets->addFile('src/{class}.php', 'middleware.twig');
+    $assets->addServicesFile()->template('services.twig');
   }
 
 }

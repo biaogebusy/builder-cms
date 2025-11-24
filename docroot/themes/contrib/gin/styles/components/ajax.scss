@@ -11,7 +11,7 @@
 .ajax-progress {
   &__throbber {
     border: 3px solid var(--gin-color-primary);
-    border-right: 3px dotted transparent;
+    border-inline-end: 3px dotted transparent;
   }
 
   .ajax-progress__message {
@@ -26,7 +26,7 @@
 
       .ajax-progress__throbber {
         border: 3px solid var(--gin-bg-app);
-        border-right: 3px dotted transparent;
+        border-inline-end: 3px dotted transparent;
       }
     }
   }
@@ -36,7 +36,7 @@
 .media-library-widget {
   .ajax-progress__throbber {
     border: 2px solid var(--gin-color-primary);
-    border-right: 2px dotted transparent;
+    border-inline-end: 2px dotted transparent;
   }
 }
 
@@ -61,14 +61,16 @@
     content: "";
     display: block;
     position: absolute;
-    top: var(--gin-spacing-xs);
-    left: var(--gin-spacing-xs);
+    inset-block-start: var(--gin-spacing-xs);
+    inset-inline-start: var(--gin-spacing-xs);
     width: 1.125rem;
     height: 1.125rem;
     border: 2px solid var(--gin-color-primary);
-    border-right: 2px dotted transparent;
+    border-inline-end: 2px dotted transparent;
     border-radius: 50%;
-    animation: gin-throbber 0.75s linear infinite;
+    @media (prefers-reduced-motion: no-preference) {
+      animation: gin-throbber 0.75s linear infinite;
+    }
   }
 }
 
@@ -94,14 +96,14 @@
 
   .ajax-progress-throbber {
     position: absolute;
-    top: 0;
-    right: var(--gin-spacing-xxs);
+    inset-block-start: 0;
+    inset-inline-end: var(--gin-spacing-xxs);
     width: 24px;
     height: 24px;
 
     &::before {
-      top: 0;
-      left: .25em;
+      inset-block-start: 0;
+      inset-inline-start: .25em;
     }
   }
 }

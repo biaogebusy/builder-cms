@@ -213,7 +213,7 @@ class FieldPermissionsCommentTest extends FieldPermissionsTestBase {
     $edit[$this->fieldName . '[0][value]'] = 'Limit User comment body';
     $this->submitForm($edit, 'Save');
     $this->drupalGet('node/' . $this->node->id());
-    // Test visibility second comment by limituser..
+    // Test visibility of the second comment by the limited user.
     $this->assertSession()->pageTextContains('Limit User comment subject');
     $this->assertSession()->pageTextContains('Limit User comment body');
     $this->drupalLogout();
@@ -234,7 +234,7 @@ class FieldPermissionsCommentTest extends FieldPermissionsTestBase {
     $this->drupalLogout();
     $this->drupalLogin($this->limitedUser);
     $this->drupalGet('node/' . $this->node->id());
-    // Test hide body comment post by Adminuser but display subject..
+    // Test hide body comment post by Admin user but display subject.
     $this->assertSession()->pageTextContains($this->commentSubject);
     $this->assertSession()->pageTextNotContains($this->fieldText);
     // Test view your comment.
@@ -266,14 +266,14 @@ class FieldPermissionsCommentTest extends FieldPermissionsTestBase {
     $this->drupalLogout();
 
     $this->drupalLogin($this->limitedUser);
-    // View your comment but not view field body comment post by admin.
+    // View your comment but not view field body comment post by Admin.
     $this->drupalGet('node/' . $this->node->id());
-    // Hide body comment post by Adminuser.
+    // Hide body comment post by Admin user.
     $this->assertSession()->pageTextNotContains($this->fieldText);
     $this->assertSession()->pageTextContains($this->commentSubject);
     $this->assertSession()->pageTextContains('Limit User comment subject');
     $this->assertSession()->pageTextContains('Limit User comment body');
-    // Edit your comment not accesss to body field.
+    // Edit your comment not access to body field.
     $this->drupalGet('comment/2/edit');
     $this->assertSession()->pageTextNotContains('Limit User comment body');
     $this->drupalLogout();
@@ -296,10 +296,10 @@ class FieldPermissionsCommentTest extends FieldPermissionsTestBase {
     $perm = ['edit ' . $this->fieldName, 'view ' . $this->fieldName];
     $permission = $this->grantCustomPermissions($this->adminUserRole, $perm, $permission);
     $this->setCommentFieldPermissions(FieldPermissionTypeInterface::ACCESS_CUSTOM, $permission, $path);
-    // view.
+    // View.
     $this->drupalGet('node/' . $this->node->id());
     $this->assertSession()->pageTextContains('Limit User comment body');
-    // edit.
+    // Edit.
     $this->drupalGet('comment/2/edit');
     $this->assertSession()->pageTextContains('Limit User comment body');
     $this->drupalLogout();

@@ -1,0 +1,13 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"MO"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Macau": {
+			"local_name": "澳门"
+		}
+	}
+}

@@ -2,27 +2,26 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldFormatter;
 
-use Drupal\commerce\AjaxFormTrait;
-use Drupal\commerce\EntityHelper;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\AjaxFormTrait;
+use Drupal\commerce\EntityHelper;
 use Drupal\views\ViewEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_order_item_table' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_order_item_table",
- *   label = @Translation("Order item table"),
- *   field_types = {
- *     "entity_reference",
- *   },
- * )
  */
+#[FieldFormatter(
+  id: "commerce_order_item_table",
+  label: new TranslatableMarkup("Order item table"),
+  field_types: ["entity_reference"],
+)]
 class OrderItemTable extends FormatterBase implements ContainerFactoryPluginInterface {
 
   use AjaxFormTrait;

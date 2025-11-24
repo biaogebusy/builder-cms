@@ -5,6 +5,8 @@
  * Hook documentation for Private Message Notify module hooks.
  */
 
+declare(strict_types=1);
+
 use Drupal\private_message\Entity\PrivateMessageInterface;
 use Drupal\private_message\Entity\PrivateMessageThreadInterface;
 
@@ -17,10 +19,8 @@ use Drupal\private_message\Entity\PrivateMessageThreadInterface;
  *   Thread entity a new message is added to.
  * @param array $exclude
  *   Array of UIDs to exclude from notifications.
- *
- * @return void
  */
-function hook_private_message_notify_exclude(PrivateMessageInterface $privateMessage, PrivateMessageThreadInterface $thread, array &$exclude) {
+function hook_private_message_notify_exclude(PrivateMessageInterface $privateMessage, PrivateMessageThreadInterface $thread, array &$exclude) : void {
   // Allow other modules to exclude notifications recipient,
   // i.e. - check some "mute" flags.
 }

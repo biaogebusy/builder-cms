@@ -54,12 +54,6 @@ JS;
    *   The HTML selector for the target container.
    */
   protected function sortableTo($item, $from, $to) {
-    // Versions of Drupal older than 8.8 allow normal Selenium-style dragging
-    // and dropping.
-    if (version_compare(\Drupal::VERSION, '8.8.0', '<')) {
-      $this->doLegacyDrag($item, $to);
-      return;
-    }
 
     $item = addslashes($item);
     $from = addslashes($from);

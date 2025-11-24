@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce\Kernel;
 
-use Drupal\commerce\Interval;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\commerce\Interval;
 
 /**
  * Tests the Interval class.
@@ -99,7 +99,7 @@ class IntervalTest extends KernelTestBase {
    * @return array
    *   A list of testAddition function arguments.
    */
-  public function additionDateProvider() {
+  public static function additionDateProvider() {
     return [
       ['2017-02-24 17:15' , new Interval('1', 'hour'), '2017-02-24 18:15'],
       ['2017-02-24 17:15' , new Interval('8', 'hour'), '2017-02-25 01:15'],
@@ -128,7 +128,7 @@ class IntervalTest extends KernelTestBase {
    * @return array
    *   A list of testSubtraction function arguments.
    */
-  public function subtractionDateProvider() {
+  public static function subtractionDateProvider() {
     return [
       ['2017-02-24 17:15' , new Interval('1', 'hour'), '2017-02-24 16:15'],
       ['2017-02-24 17:15' , new Interval('18', 'hour'), '2017-02-23 23:15'],
@@ -157,7 +157,7 @@ class IntervalTest extends KernelTestBase {
    * @return array
    *   A list of testFlooring function arguments.
    */
-  public function flooringDateProvider() {
+  public static function flooringDateProvider() {
     return [
       ['2017-02-24 17:15' , new Interval('1', 'hour'), '2017-02-24 17:00'],
       ['2017-02-24 17:15' , new Interval('2', 'hour'), '2017-02-24 17:00'],
@@ -182,7 +182,7 @@ class IntervalTest extends KernelTestBase {
    * @return array
    *   A list of testCeiling function arguments.
    */
-  public function ceilingDateProvider() {
+  public static function ceilingDateProvider() {
     return [
       ['2017-02-24 17:15' , new Interval('1', 'hour'), '2017-02-24 18:00'],
       ['2017-02-24 17:15' , new Interval('2', 'hour'), '2017-02-24 19:00'],

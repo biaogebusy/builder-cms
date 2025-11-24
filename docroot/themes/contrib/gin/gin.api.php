@@ -51,5 +51,23 @@ function hook_gin_content_form_routes_alter(array &$routes) {
 }
 
 /**
+ * Register form ids to opt-out of Gin’s sticky action buttons.
+ *
+ * Leverage this hook to opt-out of Gin's sticky action buttons.
+ * Opting out will keep the action buttons within the form.
+ *
+ * @return array
+ *   An array of form ids to ignore.
+ *
+ * @see GinContentFormHelper->stickyActionButtons()
+ */
+function hook_gin_ignore_sticky_form_actions() {
+  return [
+    // My custom form.
+    'my_custom_form',
+  ];
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

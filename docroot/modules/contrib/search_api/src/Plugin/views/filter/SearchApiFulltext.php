@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Entity\Index;
@@ -13,9 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Defines a filter for adding a fulltext search to the view.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_fulltext")
  */
+#[ViewsFilter('search_api_fulltext')]
 class SearchApiFulltext extends FilterPluginBase {
 
   use SearchApiFilterTrait;
@@ -76,7 +76,7 @@ class SearchApiFulltext extends FilterPluginBase {
     parent::showOperatorForm($form, $form_state);
 
     if (!empty($form['operator'])) {
-      $form['operator']['#description'] = $this->t('Depending on the parse mode set, some of these options might not work as expected. Please either use "@multiple_words" as the parse mode or make sure that the filter behaves as expected for multiple words.', ['@multiple_words' => $this->t('Multiple words')]);
+      $form['operator']['#description'] = $this->t('Depending on the parse mode set, some of these options might not work as expected. Either use "@multiple_words" as the parse mode or make sure that the filter behaves as expected for multiple words.', ['@multiple_words' => $this->t('Multiple words')]);
     }
   }
 
@@ -136,6 +136,8 @@ class SearchApiFulltext extends FilterPluginBase {
     $options['expose']['contains']['placeholder'] = ['default' => ''];
     $options['expose']['contains']['expose_fields'] = ['default' => FALSE];
     $options['expose']['contains']['searched_fields_id'] = ['default' => ''];
+    $options['expose']['contains']['value_maxlength'] = ['default' => 128];
+    $options['expose']['contains']['value_max_words'] = ['default' => ''];
 
     return $options;
   }
@@ -223,6 +225,22 @@ class SearchApiFulltext extends FilterPluginBase {
       '#description' => $this->t('Hint text that appears inside the field when empty.'),
     ];
 
+    $form['expose']['value_maxlength'] = [
+      '#title' => $this->t('Search field character limit'),
+      '#description' => $this->t('Maximum number of characters to allow as keywords input.'),
+      '#type' => 'number',
+      '#min' => 1,
+      '#default_value' => $this->options['expose']['value_maxlength'],
+    ];
+
+    $form['expose']['value_max_words'] = [
+      '#title' => $this->t('Maximum number of words'),
+      '#description' => $this->t('Set a maximum number of words to allow as keywords input.'),
+      '#type' => 'number',
+      '#min' => 1,
+      '#default_value' => $this->options['expose']['value_max_words'],
+    ];
+
     $form['expose']['expose_fields'] = [
       '#type' => 'checkbox',
       '#default_value' => $this->options['expose']['expose_fields'],
@@ -282,11 +300,17 @@ class SearchApiFulltext extends FilterPluginBase {
   protected function valueForm(&$form, FormStateInterface $form_state) {
     parent::valueForm($form, $form_state);
 
+    $exposed = (bool) $form_state->get('exposed');
+    $max_length = NULL;
+    if ($exposed && $this->options['expose']['value_maxlength']) {
+      $max_length = $this->options['expose']['value_maxlength'];
+    }
     $form['value'] = [
       '#type' => 'textfield',
-      '#title' => !$form_state->get('exposed') ? $this->t('Value') : '',
+      '#title' => !$exposed ? $this->t('Value') : '',
       '#size' => 30,
       '#default_value' => $this->value,
+      '#maxlength' => $max_length,
     ];
     if (!empty($this->options['expose']['placeholder'])) {
       $form['value']['#attributes']['placeholder'] = $this->options['expose']['placeholder'];
@@ -353,12 +377,22 @@ class SearchApiFulltext extends FilterPluginBase {
       $form_state->setErrorByName($identifier, $msg);
     }
 
+    // Abort if the number of words exceeds the limit.
+    $words = preg_split('/\s+/', $input) ?: [];
+    $max_words = $this->options['expose']['value_max_words'];
+    if (is_numeric($max_words) && $max_words > 0 && count($words) > $max_words) {
+      $this->getQuery()->abort();
+      $msg = $this->t('Maximum number of words exceeded. You may enter a maximum of @count words.', [
+        '@count' => $max_words,
+      ]);
+      $form_state->setErrorByName($identifier, $msg);
+    }
+
     // Only continue if there is a minimum word length set.
     if ($this->options['min_length'] < 2) {
       return;
     }
 
-    $words = preg_split('/\s+/', $input) ?: [];
     foreach ($words as $i => $word) {
       if (mb_strlen($word) < $this->options['min_length']) {
         unset($words[$i]);
@@ -382,13 +416,15 @@ class SearchApiFulltext extends FilterPluginBase {
     if ($this->value === '') {
       return;
     }
-    $fields = $this->options['fields'];
-    $fields = $fields ?: array_keys($this->getFulltextFields());
+    $query = $this->getQuery();
+
+    $indexed_fulltext_fields = $query->getIndex()->getFulltextFields();
+    $fields = array_intersect($this->options['fields'], $indexed_fulltext_fields);
+    $fields = $fields ?: $indexed_fulltext_fields;
     // Override the search fields, if exposed.
     if (!empty($this->searchedFields)) {
       $fields = array_intersect($fields, $this->searchedFields);
     }
-    $query = $this->getQuery();
 
     // Save any keywords that were already set.
     $old = $query->getKeys();
@@ -461,7 +497,7 @@ class SearchApiFulltext extends FilterPluginBase {
           // new ones.
           else {
             foreach ($old as $key => $value) {
-              if (substr($key, 0, 1) === '#') {
+              if (str_starts_with($key, '#')) {
                 continue;
               }
               $keys[] = $value;

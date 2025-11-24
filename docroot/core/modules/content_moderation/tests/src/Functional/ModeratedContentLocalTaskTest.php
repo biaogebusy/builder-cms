@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -35,7 +37,7 @@ class ModeratedContentLocalTaskTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalPlaceBlock('local_tasks_block');
@@ -50,7 +52,7 @@ class ModeratedContentLocalTaskTest extends BrowserTestBase {
   /**
    * Tests the moderated content local task appears.
    */
-  public function testModeratedContentLocalTask() {
+  public function testModeratedContentLocalTask(): void {
     $this->drupalLogin($this->adminUser);
 
     // Verify the moderated content tab exists.
@@ -64,8 +66,7 @@ class ModeratedContentLocalTaskTest extends BrowserTestBase {
     // Verify the moderated content local task does not exist without the node
     // module installed.
     $this->drupalGet('admin/content');
-    $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->linkNotExists('Moderated content');
+    $this->assertSession()->statusCodeEquals(403);
   }
 
 }

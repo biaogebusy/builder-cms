@@ -66,6 +66,7 @@ function commerce_tax_update_8201() {
   $has_eu_vat = (bool) $tax_type_storage->getQuery()
     ->condition('plugin', 'european_union_vat')
     ->condition('status', TRUE)
+    ->accessCheck(FALSE)
     ->count()
     ->execute();
 

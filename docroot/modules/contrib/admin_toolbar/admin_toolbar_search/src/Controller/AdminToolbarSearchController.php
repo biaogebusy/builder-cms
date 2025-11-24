@@ -2,15 +2,14 @@
 
 namespace Drupal\admin_toolbar_search\Controller;
 
-use Drupal\admin_toolbar_search\SearchLinks;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
- * Class AdminToolbarSearchController.
+ * Class AdminToolbarSearchController to the search functionality.
  *
- * @package Drupal\admin_toolbar_tools\Controller
+ * @package Drupal\admin_toolbar_search\Controller
  */
 class AdminToolbarSearchController extends ControllerBase {
 
@@ -22,26 +21,19 @@ class AdminToolbarSearchController extends ControllerBase {
   protected $links;
 
   /**
-   * Constructs an AdminToolbarSearchController object.
-   *
-   * @param \Drupal\admin_toolbar_search\SearchLinks $links
-   *   The search links service.
-   */
-  public function __construct(SearchLinks $links) {
-    $this->links = $links;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('admin_toolbar_search.search_links')
-    );
+    $instance = parent::create($container);
+    $instance->links = $container->get('admin_toolbar_search.search_links');
+    return $instance;
   }
 
   /**
    * Return additional search links.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   A JSON response with the search links.
    */
   public function search() {
     return new JsonResponse($this->links->getLinks());

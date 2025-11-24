@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional;
 
+use Drupal\Core\Config\ConfigCollectionEvents;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
@@ -13,9 +16,7 @@ use Drupal\Tests\BrowserTestBase;
 class LanguageConfigOverrideImportTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'language',
@@ -32,7 +33,7 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
   /**
    * Tests that language can be enabled and overrides are created during a sync.
    */
-  public function testConfigOverrideImport() {
+  public function testConfigOverrideImport(): void {
     ConfigurableLanguage::createFromLangcode('fr')->save();
     /** @var \Drupal\Core\Config\StorageInterface $sync */
     $sync = \Drupal::service('config.storage.sync');
@@ -59,8 +60,9 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
     $this->assertEquals('FR default site name', $override->get('name'));
     $this->drupalGet('fr');
     $this->assertSession()->pageTextContains('FR default site name');
-
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->drupalCreateUser([
+      'translate configuration',
+    ]));
     $this->drupalGet('admin/config/development/maintenance/translate/fr/edit');
     $this->assertSession()->pageTextContains('FR message: @site is currently under maintenance. We should be back shortly. Thank you for your patience');
   }
@@ -68,7 +70,7 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
   /**
    * Tests that configuration events are not fired during a sync of overrides.
    */
-  public function testConfigOverrideImportEvents() {
+  public function testConfigOverrideImportEvents(): void {
     // Enable the config_events_test module so we can record events occurring.
     \Drupal::service('module_installer')->install(['config_events_test']);
     $this->rebuildContainer();
@@ -91,7 +93,12 @@ class LanguageConfigOverrideImportTest extends BrowserTestBase {
     // Test that no config save event has been fired during the import because
     // language configuration overrides do not fire events.
     $event_recorder = \Drupal::state()->get('config_events_test.event', FALSE);
-    $this->assertFalse($event_recorder);
+    $this->assertSame([
+      'event_name' => ConfigCollectionEvents::SAVE_IN_COLLECTION,
+      'current_config_data' => ['name' => 'FR default site name'],
+      'original_config_data' => [],
+      'raw_config_data' => ['name' => 'FR default site name'],
+    ], $event_recorder);
 
     $this->drupalGet('fr');
     $this->assertSession()->pageTextContains('FR default site name');

@@ -4,9 +4,15 @@ namespace Drupal\filter\Plugin\Filter;
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\filter\Attribute\Filter;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
+use Drupal\filter\Plugin\FilterInterface;
+use Masterminds\HTML5\Parser\DOMTreeBuilder;
+use Masterminds\HTML5\Parser\Scanner;
+use Masterminds\HTML5\Parser\Tokenizer;
 
 /**
  * Provides a filter to limit allowed HTML tags.
@@ -14,19 +20,18 @@ use Drupal\filter\Plugin\FilterBase;
  * The attributes in the annotation show examples of allowing all attributes
  * by only having the attribute name, or allowing a fixed list of values, or
  * allowing a value with a wildcard prefix.
- *
- * @Filter(
- *   id = "filter_html",
- *   title = @Translation("Limit allowed HTML tags and correct faulty HTML"),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_HTML_RESTRICTOR,
- *   settings = {
- *     "allowed_html" = "<a href hreflang> <em> <strong> <cite> <blockquote cite> <code> <ul type> <ol start type='1 A I'> <li> <dl> <dt> <dd> <h2 id='jump-*'> <h3 id> <h4 id> <h5 id> <h6 id>",
- *     "filter_html_help" = TRUE,
- *     "filter_html_nofollow" = FALSE
- *   },
- *   weight = -10
- * )
  */
+#[Filter(
+  id: "filter_html",
+  title: new TranslatableMarkup("Limit allowed HTML tags and correct faulty HTML"),
+  type: FilterInterface::TYPE_HTML_RESTRICTOR,
+  weight: -10,
+  settings: [
+    "allowed_html" => "<a href hreflang> <em> <strong> <cite> <blockquote cite> <code> <ul type> <ol start type='1 A I'> <li> <dl> <dt> <dd> <h2 id='jump-*'> <h3 id> <h4 id> <h5 id> <h6 id>",
+    "filter_html_help" => TRUE,
+    "filter_html_nofollow" => FALSE,
+  ],
+)]
 class FilterHtml extends FilterBase {
 
   /**
@@ -45,11 +50,6 @@ class FilterHtml extends FilterBase {
       '#title' => $this->t('Allowed HTML tags'),
       '#default_value' => $this->settings['allowed_html'],
       '#description' => $this->t('A list of HTML tags that can be used. By default only the <em>lang</em> and <em>dir</em> attributes are allowed for all HTML tags. Each HTML tag may have attributes which are treated as allowed attribute names for that HTML tag. Each attribute may allow all values, or only allow specific values. Attribute names or values may be written as a prefix and wildcard like <em>jump-*</em>. JavaScript event attributes, JavaScript URLs, and CSS are always stripped.'),
-      '#attached' => [
-        'library' => [
-          'filter/drupal.filter.filter_html.admin',
-        ],
-      ],
     ];
     $form['filter_html_help'] = [
       '#type' => 'checkbox',
@@ -121,7 +121,7 @@ class FilterHtml extends FilterBase {
       $allowed_attributes = ['exact' => [], 'prefix' => []];
       foreach (($global_allowed_attributes + $tag_attributes) as $name => $values) {
         // A trailing * indicates wildcard, but it must have some prefix.
-        if (substr($name, -1) === '*' && $name[0] !== '*') {
+        if (str_ends_with($name, '*') && $name[0] !== '*') {
           $allowed_attributes['prefix'][str_replace('*', '', $name)] = $this->prepareAttributeValues($values);
         }
         else {
@@ -203,7 +203,7 @@ class FilterHtml extends FilterBase {
     }
     // Handle prefix (wildcard) matches.
     foreach ($allowed['prefix'] as $prefix => $value) {
-      if (strpos($name, $prefix) === 0) {
+      if (str_starts_with($name, $prefix)) {
         return $value;
       }
     }
@@ -228,7 +228,7 @@ class FilterHtml extends FilterBase {
     $result = ['exact' => [], 'prefix' => []];
     foreach ($attribute_values as $name => $allowed) {
       // A trailing * indicates wildcard, but it must have some prefix.
-      if (substr($name, -1) === '*' && $name[0] !== '*') {
+      if (str_ends_with($name, '*') && $name[0] !== '*') {
         $result['prefix'][str_replace('*', '', $name)] = $allowed;
       }
       else {
@@ -250,22 +250,30 @@ class FilterHtml extends FilterBase {
     // Parse the allowed HTML setting, and gradually make the list of allowed
     // tags more specific.
     $restrictions = ['allowed' => []];
+    $html = $this->settings['allowed_html'];
 
-    // Make all the tags self-closing, so they will be parsed into direct
-    // children of the body tag in the DomDocument.
-    $html = str_replace('>', ' />', $this->settings['allowed_html']);
     // Protect any trailing * characters in attribute names, since DomDocument
     // strips them as invalid.
     // cSpell:disable-next-line
     $star_protector = '__zqh6vxfbk3cg__';
     $html = str_replace('*', $star_protector, $html);
-    $body_child_nodes = Html::load($html)->getElementsByTagName('body')->item(0)->childNodes;
 
-    foreach ($body_child_nodes as $node) {
-      if ($node->nodeType !== XML_ELEMENT_NODE) {
-        // Skip the empty text nodes inside tags.
-        continue;
+    // Use HTML5 parser with a custom tokenizer to correctly parse tags that
+    // normally use text mode, such as iframe.
+    $events = new DOMTreeBuilder(FALSE, ['disable_html_ns' => TRUE]);
+    $scanner = new Scanner('<body>' . $html);
+    $parser = new class($scanner, $events) extends Tokenizer {
+
+      public function setTextMode($textMode, $untilTag = NULL) {
+        // Do nothing, we never enter text mode.
       }
+
+    };
+    $parser->parse();
+
+    $dom = $events->document();
+    $xpath = new \DOMXPath($dom);
+    foreach ($xpath->query('//body//*') as $node) {
       $tag = $node->tagName;
 
       // All attributes are already allowed on this tag, this is the most
@@ -338,7 +346,7 @@ class FilterHtml extends FilterBase {
     // added by hand to content, and especially the class attribute can have
     // undesired visual effects by allowing content authors to apply any
     // available style, so specific values should be explicitly allowed.
-    // @see http://www.w3.org/TR/html5/dom.html#global-attributes
+    // @see https://www.w3.org/TR/html5/dom.html#global-attributes
     $restrictions['allowed']['*'] = [
       'style' => FALSE,
       'on*' => FALSE,
@@ -447,7 +455,7 @@ class FilterHtml extends FilterBase {
     $output .= \Drupal::service('renderer')->render($table);
 
     $output .= '<p>' . $this->t('Most unusual characters can be directly entered without any problems.') . '</p>';
-    $output .= '<p>' . $this->t('If you do encounter problems, try using HTML character entities. A common example looks like &amp;amp; for an ampersand &amp; character. For a full list of entities see HTML\'s <a href=":html-entities">entities</a> page. Some of the available characters include:', [':html-entities' => 'http://www.w3.org/TR/html4/sgml/entities.html']) . '</p>';
+    $output .= '<p>' . $this->t('If you do encounter problems, try using HTML character entities. A common example looks like &amp;amp; for an ampersand &amp; character. For a full list of entities see HTML\'s <a href=":html-entities">entities</a> page. Some of the available characters include:', [':html-entities' => 'https://www.w3.org/TR/html4/sgml/entities.html']) . '</p>';
 
     $entities = [
       [$this->t('Ampersand'), '&amp;'],

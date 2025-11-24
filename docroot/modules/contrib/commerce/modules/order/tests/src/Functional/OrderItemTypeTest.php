@@ -20,6 +20,7 @@ class OrderItemTypeTest extends OrderBrowserTestBase {
     // The cart module is installed to confirm that it doesn't cause problems
     // when creating an add_to_cart form display for new order item types.
     'commerce_cart',
+    'commerce_product',
   ];
 
   /**
@@ -33,7 +34,7 @@ class OrderItemTypeTest extends OrderBrowserTestBase {
       'purchasableEntityType' => 'commerce_product_variation',
       'orderType' => 'default',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains('Saved the Foo order item type.');
 
     $order_item_type = OrderItemType::load($edit['id']);
@@ -68,7 +69,7 @@ class OrderItemTypeTest extends OrderBrowserTestBase {
       'label' => 'Default2',
       'id' => 'default2',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Default2 order item type.');
 
     // Confirm that the original order item type is unchanged.
@@ -106,7 +107,7 @@ class OrderItemTypeTest extends OrderBrowserTestBase {
     $this->drupalGet($order_item_type->toUrl('delete-form'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains($this->t('This action cannot be undone.'));
-    $this->submitForm([], $this->t('Delete'));
+    $this->submitForm([], (string) $this->t('Delete'));
     $order_item_type_exists = (bool) OrderItemType::load($order_item_type->id());
     $this->assertEmpty($order_item_type_exists);
   }

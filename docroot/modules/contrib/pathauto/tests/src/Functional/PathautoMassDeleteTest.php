@@ -64,6 +64,8 @@ class PathautoMassDeleteTest extends BrowserTestBase {
     $permissions = [
       'administer pathauto',
       'administer url aliases',
+      'bulk delete aliases',
+      'bulk update aliases',
       'create url aliases',
     ];
     $this->adminUser = $this->drupalCreateUser($permissions);
@@ -97,7 +99,11 @@ class PathautoMassDeleteTest extends BrowserTestBase {
 
     // 2. Test deleting only specific (entity type) aliases.
     $manager = $this->container->get('plugin.manager.alias_type');
-    $pathauto_plugins = ['canonical_entities:node' => 'nodes', 'canonical_entities:taxonomy_term' => 'terms', 'canonical_entities:user' => 'accounts'];
+    $pathauto_plugins = [
+      'canonical_entities:node' => 'nodes',
+      'canonical_entities:taxonomy_term' => 'terms',
+      'canonical_entities:user' => 'accounts',
+    ];
     foreach ($pathauto_plugins as $pathauto_plugin => $attribute) {
       $this->generateAliases();
       $edit = [

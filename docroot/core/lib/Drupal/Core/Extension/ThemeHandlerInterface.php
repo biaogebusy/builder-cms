@@ -21,7 +21,7 @@ interface ThemeHandlerInterface {
    *   - stylesheets: A two dimensional array, using the first key for the
    *     media attribute (e.g. 'all'), the second for the name of the file
    *     (e.g. style.css). The value is a complete filepath (e.g.
-   *     themes/bartik/style.css). Not set if no stylesheets are defined in the
+   *     themes/olivero/style.css). Not set if no stylesheets are defined in the
    *     .info.yml file.
    *   - scripts: An associative array of JavaScripts, using the filename as key
    *     and the complete filepath as value. Not set if no scripts are defined
@@ -74,6 +74,13 @@ interface ThemeHandlerInterface {
    *
    * @return \Drupal\Core\Extension\Extension[]
    *   An associative array of theme extensions.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use
+   *   \Drupal::service('extension.list.theme')->reset()->getList() instead.
+   *
+   * @see https://www.drupal.org/node/3413196
+   * @see \Drupal\Core\Extension\ThemeExtensionList::reset()
+   * @see \Drupal\Core\Extension\ThemeExtensionList::getList()
    */
   public function rebuildThemeData();
 
@@ -91,6 +98,11 @@ interface ThemeHandlerInterface {
    * @return array
    *   Returns an array of all of the theme's ancestors; the first element's
    *   value will be NULL if an error occurred.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There
+   *    is no direct replacement.
+   *
+   * @see https://www.drupal.org/node/3413187
    */
   public function getBaseThemes(array $themes, $theme);
 

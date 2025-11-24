@@ -15,26 +15,38 @@
  * @see claro_form_node_form_alter()
  */
 #}
-<div class="layout-node-form clearfix">
-  <div class="layout-region layout-region-node-main">
-    {{ form|without('advanced', 'footer', 'actions', 'gin_actions', 'gin_sidebar', 'gin_sidebar_toggle') }}
-  </div>
-  <div class="layout-region layout-region-node-secondary" id="gin_sidebar">
-    <div class="layout-region__content">
-      {{ form.advanced }}
-      {{ form.gin_sidebar_toggle }}
+{% if form.is_ajax_request %}
+  {% block main %}
+    {{ form|without('advanced', 'footer', 'actions') }}
+  {% endblock %}
+
+  {% block secondary %}
+    {{ form.advanced }}
+  {% endblock %}
+
+  {% block footer %}
+    {{ form.footer }}
+    {{ form.actions }}
+  {% endblock %}
+{% else %}
+  <div class="layout-node-form clearfix">
+    <div class="layout-region layout-region-node-main">
+      {{ form|without('advanced', 'footer', 'gin_actions', 'gin_sidebar', 'gin_sidebar_toggle') }}
+    </div>
+    <div class="layout-region layout-region-node-secondary" id="gin_sidebar" tabindex="0">
+      <span class="gin-sidebar-draggable" id="gin-sidebar-draggable"></span>
+      <div class="layout-region__content">
+        {{ form.advanced }}
+        {{ form.gin_sidebar_toggle }}
+      </div>
     </div>
   </div>
-  <div class="layout-node-form__actions">
-    {{ form.gin_actions }}
-  </div>
-</div>
-
-{% if gin_layout_paragraphs == 1 %}
-<style>
-  .layout-node-form {
-    --gin-lp-layout: "{{ 'Layout'|t }}";
-    --gin-lp-content: "{{ 'Content'|t }}";
-  }
-</style>
+  {% if gin_layout_paragraphs == 1 %}
+    <style>
+      .layout-node-form {
+        --gin-lp-layout: "{{ 'Layout'|t }}";
+        --gin-lp-content: "{{ 'Content'|t }}";
+      }
+    </style>
+  {% endif %}
 {% endif %}

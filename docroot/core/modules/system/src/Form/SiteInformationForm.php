@@ -3,7 +3,9 @@
 namespace Drupal\system\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\ConfigTarget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\Core\Routing\RequestContext;
@@ -43,6 +45,8 @@ class SiteInformationForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\path_alias\AliasManagerInterface $alias_manager
    *   The path alias manager.
    * @param \Drupal\Core\Path\PathValidatorInterface $path_validator
@@ -50,8 +54,8 @@ class SiteInformationForm extends ConfigFormBase {
    * @param \Drupal\Core\Routing\RequestContext $request_context
    *   The request context.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, AliasManagerInterface $alias_manager, PathValidatorInterface $path_validator, RequestContext $request_context) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, AliasManagerInterface $alias_manager, PathValidatorInterface $path_validator, RequestContext $request_context) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->aliasManager = $alias_manager;
     $this->pathValidator = $path_validator;
     $this->requestContext = $request_context;
@@ -63,6 +67,7 @@ class SiteInformationForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('path_alias.manager'),
       $container->get('path.validator'),
       $container->get('router.request_context')
@@ -88,10 +93,6 @@ class SiteInformationForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $site_config = $this->config('system.site');
-    $site_mail = $site_config->get('mail');
-    if (empty($site_mail)) {
-      $site_mail = ini_get('sendmail_from');
-    }
 
     $form['site_information'] = [
       '#type' => 'details',
@@ -101,20 +102,24 @@ class SiteInformationForm extends ConfigFormBase {
     $form['site_information']['site_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Site name'),
-      '#default_value' => $site_config->get('name'),
+      '#config_target' => 'system.site:name',
       '#required' => TRUE,
     ];
     $form['site_information']['site_slogan'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Slogan'),
-      '#default_value' => $site_config->get('slogan'),
+      '#config_target' => 'system.site:slogan',
       '#description' => $this->t("How this is used depends on your site's theme."),
       '#maxlength' => 255,
     ];
     $form['site_information']['site_mail'] = [
       '#type' => 'email',
       '#title' => $this->t('Email address'),
-      '#default_value' => $site_mail,
+      '#config_target' => new ConfigTarget(
+        'system.site',
+        'mail',
+        fromConfig: fn($value) => $value ?: ini_get('sendmail_from'),
+      ),
       '#description' => $this->t("The <em>From</em> address in automated emails sent during registration and new password requests, and other notifications. (Use an address ending in your site's domain to help prevent this email being flagged as spam.)"),
       '#required' => TRUE,
     ];
@@ -123,13 +128,13 @@ class SiteInformationForm extends ConfigFormBase {
       '#title' => $this->t('Front page'),
       '#open' => TRUE,
     ];
-    $front_page = $site_config->get('page.front') != '/user/login' ? $this->aliasManager->getAliasByPath($site_config->get('page.front')) : '';
     $form['front_page']['site_frontpage'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default front page'),
-      '#default_value' => $front_page,
+      '#default_value' => $this->aliasManager->getAliasByPath($site_config->get('page.front')),
+      '#required' => TRUE,
       '#size' => 40,
-      '#description' => $this->t('Optionally, specify a relative URL to display as the front page. Leave blank to display the default front page.'),
+      '#description' => $this->t('Specify a relative URL to display as the front page.'),
       '#field_prefix' => $this->requestContext->getCompleteBaseUrl(),
     ];
     $form['error_page'] = [
@@ -140,14 +145,14 @@ class SiteInformationForm extends ConfigFormBase {
     $form['error_page']['site_403'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default 403 (access denied) page'),
-      '#default_value' => $site_config->get('page.403'),
+      '#config_target' => 'system.site:page.403',
       '#size' => 40,
       '#description' => $this->t('This page is displayed when the requested document is denied to the current user. Leave blank to display a generic "access denied" page.'),
     ];
     $form['error_page']['site_404'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Default 404 (not found) page'),
-      '#default_value' => $site_config->get('page.404'),
+      '#config_target' => 'system.site:page.404',
       '#size' => 40,
       '#description' => $this->t('This page is displayed when no other content matches the requested document. Leave blank to display a generic "page not found" page.'),
     ];
@@ -159,15 +164,8 @@ class SiteInformationForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Check for empty front page path.
-    if ($form_state->isValueEmpty('site_frontpage')) {
-      // Set to default "user/login".
-      $form_state->setValueForElement($form['front_page']['site_frontpage'], '/user/login');
-    }
-    else {
-      // Get the normal path of the front page.
-      $form_state->setValueForElement($form['front_page']['site_frontpage'], $this->aliasManager->getPathByAlias($form_state->getValue('site_frontpage')));
-    }
+    // Get the normal path of the front page.
+    $form_state->setValueForElement($form['front_page']['site_frontpage'], $this->aliasManager->getPathByAlias($form_state->getValue('site_frontpage')));
     // Validate front page path.
     if (($value = $form_state->getValue('site_frontpage')) && $value[0] !== '/') {
       $form_state->setErrorByName('site_frontpage', $this->t("The path '%path' has to start with a slash.", ['%path' => $form_state->getValue('site_frontpage')]));
@@ -206,12 +204,7 @@ class SiteInformationForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('system.site')
-      ->set('name', $form_state->getValue('site_name'))
-      ->set('mail', $form_state->getValue('site_mail'))
-      ->set('slogan', $form_state->getValue('site_slogan'))
       ->set('page.front', $form_state->getValue('site_frontpage'))
-      ->set('page.403', $form_state->getValue('site_403'))
-      ->set('page.404', $form_state->getValue('site_404'))
       ->save();
 
     parent::submitForm($form, $form_state);

@@ -2,8 +2,6 @@
 
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow;
 
-use Drupal\commerce_checkout\CheckoutPaneManager;
-use Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SortArray;
@@ -11,6 +9,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce_checkout\CheckoutPaneManager;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -75,8 +75,8 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
-    unset($this->panes);
+  public function __sleep(): array {
+    $this->panes = NULL;
     return parent::__sleep();
   }
 
@@ -306,9 +306,19 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
   protected function buildPaneRow(CheckoutPaneInterface $pane, array &$form, FormStateInterface $form_state) {
     $pane_id = $pane->getPluginId();
     $label = $pane->getLabel();
+    $default_step = $pane->defaultConfiguration()['step'];
+    $default_step_title = $this->getTableRegions()[$default_step]['title'] ?? $default_step;
     $region_titles = array_map(function ($region) {
       return $region['title'];
     }, $this->getTableRegions());
+    $suffix = '';
+    $admin_description = $pane->getAdminDescription();
+    if (!empty($admin_description)) {
+      $suffix = '<div class="pane-configuration-admin-description">' . $admin_description . '</div>';
+    }
+    $suffix .= $this->t('<div class="pane-configuration-default-step"><span class="pane-configuration-default-step__label">Default step:</span> <span class="pane-configuration-default-step__title">@default_step_title</span></div>', [
+      '@default_step_title' => $default_step_title,
+    ]);
 
     $pane_row = [
       '#attributes' => [
@@ -316,6 +326,7 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
       ],
       'human_name' => [
         '#plain_text' => $label,
+        '#suffix' => $suffix,
       ],
       'weight' => [
         '#type' => 'textfield',
@@ -360,7 +371,11 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
       $pane_row['#attributes']['class'][] = 'pane-configuration-editing';
 
       $pane_row['configuration'] = [
-        '#parents' => array_merge($form['#parents'], ['panes', $pane_id, 'configuration']),
+        '#parents' => array_merge($form['#parents'], [
+          'panes',
+          $pane_id,
+          'configuration',
+        ]),
         '#type' => 'container',
         '#wrapper_attributes' => ['colspan' => 2],
         '#attributes' => [
@@ -412,7 +427,10 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
           '#type' => 'image_button',
           '#name' => $pane_id . '_configuration_edit',
           '#src' => 'core/misc/icons/787878/cog.svg',
-          '#attributes' => ['class' => ['pane-configuration-edit'], 'alt' => $this->t('Edit')],
+          '#attributes' => [
+            'class' => ['pane-configuration-edit'],
+            'alt' => $this->t('Edit'),
+          ],
           '#op' => 'edit',
           '#limit_validation_errors' => [],
           '#prefix' => '<div class="pane-configuration-edit-wrapper">',
@@ -531,18 +549,25 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
     $form = parent::buildForm($form, $form_state, $step_id);
 
     foreach ($this->getVisiblePanes($step_id) as $pane_id => $pane) {
+      $wrapper_element = $pane->getWrapperElement();
       $form[$pane_id] = [
         // Workaround for core bug #2897377.
         '#id' => Html::getId('edit-' . $pane_id),
         '#parents' => [$pane_id],
         '#theme' => 'commerce_checkout_pane',
-        '#type' => $pane->getWrapperElement(),
+        '#type' => $wrapper_element,
         '#title' => $pane->getDisplayLabel(),
         '#attributes' => [
-          'class' => ['checkout-pane', 'checkout-pane-' . str_replace('_', '-', $pane_id)],
+          'class' => [
+            'checkout-pane',
+            'checkout-pane-' . str_replace('_', '-', $pane_id),
+          ],
         ],
         '#pane_id' => $pane_id,
       ];
+      if ($wrapper_element === 'details_open') {
+        $form[$pane_id]['#open'] = TRUE;
+      }
       $form[$pane_id] = $pane->buildPaneForm($form[$pane_id], $form_state, $form);
       // Avoid rendering an empty container.
       $form[$pane_id]['#access'] = (bool) Element::getVisibleChildren($form[$pane_id]);
@@ -553,16 +578,23 @@ abstract class CheckoutFlowWithPanesBase extends CheckoutFlowBase implements Che
       unset($form['sidebar']);
 
       foreach ($this->getVisiblePanes('_sidebar') as $pane_id => $pane) {
+        $wrapper_element = $pane->getWrapperElement();
         $form['sidebar'][$pane_id] = [
           // Workaround for core bug #2897377.
           '#id' => Html::getId('edit-' . $pane_id),
           '#parents' => ['sidebar', $pane_id],
-          '#type' => $pane->getWrapperElement(),
+          '#type' => $wrapper_element,
           '#title' => $pane->getDisplayLabel(),
           '#attributes' => [
-            'class' => ['checkout-pane', 'checkout-pane-' . str_replace('_', '-', $pane_id)],
+            'class' => [
+              'checkout-pane',
+              'checkout-pane-' . str_replace('_', '-', $pane_id),
+            ],
           ],
         ];
+        if ($wrapper_element === 'details_open') {
+          $form['sidebar'][$pane_id]['#open'] = TRUE;
+        }
         $form['sidebar'][$pane_id] = $pane->buildPaneForm($form['sidebar'][$pane_id], $form_state, $form);
       }
     }

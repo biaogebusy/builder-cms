@@ -3,13 +3,28 @@ area:
   axis: 'xy'
   axis_inverted: false
   stacking: true
+arearange:
+  label: 'Area Range'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: true
 bar:
   label: 'Bar'
   axis: 'xy'
   axis_inverted: true
   stacking: true
+boxplot:
+  label: 'Boxplot'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false
 bubble:
   label: 'Bubble'
+  axis: 'xy'
+  axis_inverted: false
+  stacking: false
+candlestick:
+  label: 'Candlestick'
   axis: 'xy'
   axis_inverted: false
   stacking: false
@@ -26,6 +41,11 @@ donut:
 gauge:
   label: 'Gauge'
   axis: 'y_only'
+  axis_inverted: false
+  stacking: false
+heatmap:
+  label: 'Heatmap'
+  axis: 'xy'
   axis_inverted: false
   stacking: false
 line:

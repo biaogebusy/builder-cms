@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
 
 /**
- * Class ContentLockRoutes.
+ * Builds up the content lock routes on all content entities.
  *
  * @package Drupal\content_lock\Routing
  */

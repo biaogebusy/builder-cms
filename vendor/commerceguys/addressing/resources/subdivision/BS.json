@@ -1,57 +1,101 @@
 {
 	"country_code": "BS",
 	"subdivisions": {
-		"Abaco": {
-			"name": "Abaco Islands"
+		"AK": {
+			"name": "Acklins"
 		},
-		"Acklins": {
-			"iso_code": "BS-AK"
+		"BY": {
+			"name": "Berry Islands"
 		},
-		"Andros": {
-			"name": "Andros Island"
+		"BI": {
+			"name": "Bimini"
 		},
-		"Berry Islands": {
-			"iso_code": "BS-BY"
+		"BP": {
+			"name": "Black Point"
 		},
-		"Bimini": {
-			"iso_code": "BS-BI"
+		"CI": {
+			"name": "Cat Island"
 		},
-		"Cat Island": {
-			"iso_code": "BS-CI"
+		"CO": {
+			"name": "Central Abaco"
 		},
-		"Crooked Island": [],
-		"Eleuthera": [],
-		"Exuma": {
-			"name": "Exuma and Cays",
-			"iso_code": "BS-EX"
+		"CS": {
+			"name": "Central Andros"
 		},
-		"Grand Bahama": [],
-		"Harbour Island": {
-			"iso_code": "BS-HI"
+		"CE": {
+			"name": "Central Eleuthera"
 		},
-		"Inagua": {
-			"iso_code": "BS-IN"
+		"FP": {
+			"name": "City of Freeport"
 		},
-		"Long Island": {
-			"iso_code": "BS-LI"
+		"CK": {
+			"name": "Crooked Island and Long Cay"
 		},
-		"Mayaguana": {
-			"iso_code": "BS-MG"
+		"EG": {
+			"name": "East Grand Bahama"
 		},
-		"N.P.": {
+		"EX": {
+			"name": "Exuma"
+		},
+		"GC": {
+			"name": "Grand Cay"
+		},
+		"HI": {
+			"name": "Harbour Island"
+		},
+		"HT": {
+			"name": "Hope Town"
+		},
+		"IN": {
+			"name": "Inagua"
+		},
+		"LI": {
+			"name": "Long Island"
+		},
+		"MC": {
+			"name": "Mangrove Cay"
+		},
+		"MG": {
+			"name": "Mayaguana"
+		},
+		"MI": {
+			"name": "Moore's Island"
+		},
+		"NP": {
 			"name": "New Providence"
 		},
-		"Ragged Island": {
-			"iso_code": "BS-RI"
+		"NO": {
+			"name": "North Abaco"
 		},
-		"Rum Cay": {
-			"iso_code": "BS-RC"
+		"NS": {
+			"name": "North Andros"
 		},
-		"San Salvador": {
-			"iso_code": "BS-SS"
+		"NE": {
+			"name": "North Eleuthera"
 		},
-		"Spanish Wells": {
-			"iso_code": "BS-SW"
+		"RI": {
+			"name": "Ragged Island"
+		},
+		"RC": {
+			"name": "Rum Cay"
+		},
+		"SS": {
+			"name": "San Salvador"
+		},
+		"SO": {
+			"name": "South Abaco"
+		},
+		"SA": {
+			"name": "South Andros"
+		},
+		"SE": {
+			"name": "South Eleuthera"
+		},
+		"SW": {
+			"name": "Spanish Wells"
+		},
+		"WG": {
+			"name": "West Grand Bahama"
 		}
 	}
 }

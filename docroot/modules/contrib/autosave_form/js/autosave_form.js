@@ -52,7 +52,8 @@
     autoOpen: true,
     width: 'auto',
     resizable: false,
-    closeOnEscape: false
+    closeOnEscape: false,
+    classes: { 'ui-dialog': 'autosave-dialog' }
   };
 
   /**
@@ -147,7 +148,7 @@
           };
           $.extend(true, dialogOptions, Drupal.autosaveForm.defaultDialogOptions, Drupal.autosaveForm.dialog_options);
 
-          $('<div></div>').appendTo('body')
+          $('<div class="autosave-message"></div>').appendTo('body')
             .html('<div>' + Drupal.autosaveForm.message + '</div>')
             .dialog(dialogOptions);
         }

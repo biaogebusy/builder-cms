@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_product\Plugin\Field;
 
-use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\TypedData\ComputedItemListTrait;
+use Drupal\commerce_product\Entity\ProductInterface;
 
 /**
  * Computed field item list for the default_variation field.

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\redirect\Plugin\migrate\process\d7\PathRedirect.
- */
-
 namespace Drupal\redirect\Plugin\migrate\process\d7;
 
 use Drupal\migrate\MigrateExecutableInterface;

@@ -19,6 +19,7 @@ use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\entity_share\EntityShareInterface;
 use Drupal\entity_share\EntityShareUtility;
 use Drupal\entity_share_client\Exception\ResourceTypeNotFoundException;
 use Drupal\entity_share_client\ImportContext;
@@ -122,7 +123,7 @@ class PullForm extends FormBase {
    *
    * @var int
    */
-  protected $maxSize = 50;
+  protected $maxSize = EntityShareInterface::JSON_API_PAGER_SIZE_MAX;
 
   /**
    * Constructs a ContentEntityForm object.
@@ -204,22 +205,22 @@ class PullForm extends FormBase {
     if ($select_element) {
       $select_element['#title'] = $this->t('Import configuration');
       $select_element['#ajax'] = [
-        'callback' => [get_class($this), 'buildAjaxChannelSelect'],
+        'callback' => [static::class, 'buildAjaxChannelSelect'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'channel-wrapper',
       ];
       $form['import_config'] = $select_element;
     }
     else {
       $url = Url::fromRoute('entity.import_config.collection');
-      if ($url->renderAccess($url->toRenderArray())) {
+      if ($url->access()) {
         $this->messenger()
-          ->addError($this->t('Please configure <a href=":url">Import configuration</a> before trying to import content.', [':url' => $url->toString()]));
+          ->addError($this->t('Configure <a href=":url">Import configuration</a> before trying to import content.', [':url' => $url->toString()]));
       }
       else {
         $this->messenger()
-          ->addError($this->t('There are no "Import configuration" available. Please contact the website administrator.'));
+          ->addError($this->t('There are no "Import configuration" available. Contact the website administrator.'));
       }
       return;
     }
@@ -229,9 +230,9 @@ class PullForm extends FormBase {
     if ($select_element) {
       $select_element['#title'] = $this->t('Remote website');
       $select_element['#ajax'] = [
-        'callback' => [get_class($this), 'buildAjaxChannelSelect'],
+        'callback' => [static::class, 'buildAjaxChannelSelect'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'channel-wrapper',
       ];
       $form['remote'] = $select_element;
@@ -253,8 +254,7 @@ class PullForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-  }
+  public function validateForm(array &$form, FormStateInterface $form_state) {}
 
   /**
    * {@inheritdoc}
@@ -262,11 +262,11 @@ class PullForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $additional_query_parameters = [];
     $get_offset = $this->query->get('offset');
-    if (is_numeric($get_offset)) {
+    if (\is_numeric($get_offset)) {
       $additional_query_parameters['offset'] = $get_offset;
     }
     $get_page = $this->query->get('page');
-    if (is_numeric($get_page)) {
+    if (\is_numeric($get_page)) {
       $additional_query_parameters['page'] = $get_page;
     }
     $get_sort = $this->query->get('sort', '');
@@ -290,8 +290,8 @@ class PullForm extends FormBase {
    */
   public function validateSelectedEntities(array &$form, FormStateInterface $form_state) {
     $selected_entities = $form_state->getValue('entities');
-    if (!is_null($selected_entities)) {
-      $selected_entities = array_filter($selected_entities);
+    if ($selected_entities !== NULL) {
+      $selected_entities = \array_filter($selected_entities);
       if (empty($selected_entities)) {
         $form_state->setErrorByName('entities', $this->t('You must select at least one entity.'));
       }
@@ -308,12 +308,12 @@ class PullForm extends FormBase {
    */
   public function synchronizeSelectedEntities(array &$form, FormStateInterface $form_state) {
     $selected_entities = $form_state->getValue('entities');
-    $selected_entities = array_filter($selected_entities);
+    $selected_entities = \array_filter($selected_entities);
     $remote_id = $form_state->getValue('remote');
     $channel_id = $form_state->getValue('channel');
     $import_config_id = $form_state->getValue('import_config');
     $import_context = new ImportContext($remote_id, $channel_id, $import_config_id);
-    $this->importService->importEntities($import_context, array_values($selected_entities));
+    $this->importService->importEntities($import_context, \array_values($selected_entities));
   }
 
   /**
@@ -396,9 +396,9 @@ class PullForm extends FormBase {
     $default_value = $this->query->get($field);
 
     // If only one option, pre-select it and disable the select.
-    if (count($options) == 1) {
+    if (\count($options) == 1) {
       $disabled = TRUE;
-      $default_value = key($options);
+      $default_value = \key($options);
       $form_state->setValue($field, $default_value);
     }
     return [
@@ -474,9 +474,9 @@ class PullForm extends FormBase {
     if ($select_element) {
       $select_element['#title'] = $this->t('Channel');
       $select_element['#ajax'] = [
-        'callback' => [get_class($this), 'buildAjaxEntitiesSelectTable'],
+        'callback' => [static::class, 'buildAjaxEntitiesSelectTable'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'entities-wrapper',
       ];
       $form['channel_wrapper']['channel'] = $select_element;
@@ -518,9 +518,9 @@ class PullForm extends FormBase {
     $selected_channel = $form_state->getValue('channel', $this->query->get('channel'));
 
     if (
-      empty($this->remoteWebsites[$selected_remote_id]) ||
-      empty($this->channelsInfos[$selected_channel]) ||
-      $selected_import_config == NULL
+      empty($this->remoteWebsites[$selected_remote_id])
+      || empty($this->channelsInfos[$selected_channel])
+      || $selected_import_config == NULL
     ) {
       return;
     }
@@ -539,8 +539,8 @@ class PullForm extends FormBase {
     $this->maxSize = EntityShareUtility::getMaxSize($import_config, $selected_channel, $this->channelsInfos);
 
     // If Ajax was triggered set offset to default value: 0.
-    $offset = !is_array($triggering_element) ? $this->query->get('offset', 0) : 0;
-    if (!is_array($triggering_element) && is_numeric($this->query->get('page'))) {
+    $offset = !\is_array($triggering_element) ? $this->query->get('offset', 0) : 0;
+    if (!\is_array($triggering_element) && \is_numeric($this->query->get('page'))) {
       $offset = $this->query->get('page') * $this->maxSize;
     }
 
@@ -559,7 +559,7 @@ class PullForm extends FormBase {
     if (empty($searched_text)) {
       $get_searched_text = $this->query->get('search', '');
       // If it is not an ajax trigger, check if it is in the GET parameters.
-      if (!is_array($triggering_element) && !empty($get_searched_text)) {
+      if (!\is_array($triggering_element) && !empty($get_searched_text)) {
         $searched_text = $get_searched_text;
       }
     }
@@ -581,7 +581,7 @@ class PullForm extends FormBase {
           ],
         ];
       }
-      $parsed_url['query']['filter'] = isset($parsed_url['query']['filter']) ? array_merge_recursive($parsed_url['query']['filter'], $search_filter_and_group) : $search_filter_and_group;
+      $parsed_url['query']['filter'] = isset($parsed_url['query']['filter']) ? \array_merge_recursive($parsed_url['query']['filter'], $search_filter_and_group) : $search_filter_and_group;
     }
     // Change the sort if a sort had been selected.
     $sort_field = $this->query->get('order', '');
@@ -601,7 +601,7 @@ class PullForm extends FormBase {
       $parsed_url['query']['sort'] = [
         $sort_field => [
           'path' => $this->fieldMappings[$channel_entity_type][$channel_bundle][$sort_field],
-          'direction' => strtoupper($sort_direction),
+          'direction' => \strtoupper($sort_direction),
         ],
       ];
     }
@@ -620,20 +620,20 @@ class PullForm extends FormBase {
     $json = Json::decode((string) $response->getBody());
 
     // Apply max size to response data.
-    $json['data'] = array_slice($json['data'], 0, $this->maxSize);
+    $json['data'] = \array_slice($json['data'], 0, $this->maxSize);
 
     // Search.
     $form['channel_wrapper']['entities_wrapper']['search'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Search'),
       '#default_value' => $searched_text,
-      '#weight' => -20,
+      '#weight' => (int) -20,
       '#ajax' => [
-        'callback' => [get_class($this), 'buildAjaxEntitiesSelectTable'],
+        'callback' => [static::class, 'buildAjaxEntitiesSelectTable'],
         'disable-refocus' => TRUE,
         'effect' => 'fade',
         'keypress' => TRUE,
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'entities-wrapper',
       ],
     ];
@@ -684,7 +684,7 @@ class PullForm extends FormBase {
       // Pager.
       $form['channel_wrapper']['entities_wrapper']['pager'] = [
         '#type' => 'actions',
-        '#weight' => -10,
+        '#weight' => (int) -10,
       ];
       $pager_links = $this->getBasicPagerLinks();
       foreach ($pager_links as $key => $label) {
@@ -701,7 +701,7 @@ class PullForm extends FormBase {
     if (!empty($sort_field) || !empty($sort_direction)) {
       $form['channel_wrapper']['entities_wrapper']['reset_sort'] = [
         '#type' => 'actions',
-        '#weight' => -15,
+        '#weight' => (int) -15,
         'reset_sort' => [
           '#type' => 'submit',
           '#value' => $this->t('Reset sort'),
@@ -710,7 +710,7 @@ class PullForm extends FormBase {
       ];
     }
 
-    $label_header_machine_name = isset($entity_keys['label']) ? $entity_keys['label'] : 'label';
+    $label_header_machine_name = $entity_keys['label'] ?? 'label';
 
     // Table to select entities.
     $header = [
@@ -781,7 +781,7 @@ class PullForm extends FormBase {
 
     // Actions on top are the same as the actions at the bottom.
     $form['channel_wrapper']['entities_wrapper']['actions_top'] = $form['channel_wrapper']['entities_wrapper']['actions_bottom'];
-    $form['channel_wrapper']['entities_wrapper']['actions_top']['#weight'] = -1;
+    $form['channel_wrapper']['entities_wrapper']['actions_top']['#weight'] = (int) -1;
   }
 
   /**
@@ -829,7 +829,7 @@ class PullForm extends FormBase {
       '@image' => $image,
     ]), '<current>', [], [
       'attributes' => ['title' => $title],
-      'query' => array_merge($context['query'], [
+      'query' => \array_merge($context['query'], [
         'sort' => $context['sort'],
         'order' => $header_machine_name,
       ]),
@@ -863,8 +863,8 @@ class PullForm extends FormBase {
    */
   public function goToPage(array &$form, FormStateInterface $form_state) {
     $triggering_element = $form_state->getTriggeringElement();
-    $link_name = current($triggering_element['#parents']);
-    if ($link_name !== FALSE && array_key_exists($link_name, $this->getBasicPagerLinks())) {
+    $link_name = \current($triggering_element['#parents']);
+    if ($link_name !== FALSE && \array_key_exists($link_name, $this->getBasicPagerLinks())) {
       $this->pagerRedirect($form_state, $link_name);
     }
   }
@@ -881,7 +881,7 @@ class PullForm extends FormBase {
     $storage = $form_state->getStorage();
     if (isset($storage['links'][$link_name]['href'])) {
       $parsed_url = UrlHelper::parse($storage['links'][$link_name]['href']);
-      if (isset($parsed_url['query']['page']) && isset($parsed_url['query']['page']['offset'])) {
+      if (isset($parsed_url['query']['page'], $parsed_url['query']['page']['offset'])) {
         $offset = $parsed_url['query']['page']['offset'];
         // In the case of the basic pager, previous and next links' offset needs
         // to manually be set.
@@ -926,7 +926,7 @@ class PullForm extends FormBase {
       'search' => $form_state->getValue('search', ''),
     ];
     if ($additional_query_parameters) {
-      $query_parameters = array_merge($query_parameters, $additional_query_parameters);
+      $query_parameters = \array_merge($query_parameters, $additional_query_parameters);
     }
     $form_state->setRedirect('entity_share_client.admin_content_pull_form', [], ['query' => $query_parameters]);
   }
@@ -956,7 +956,7 @@ class PullForm extends FormBase {
       $this->messenger()->addError($message);
     }
     else {
-      $this->messenger()->addError($this->t('An error occurred when requesting the remote website. Please contact the site administrator.'));
+      $this->messenger()->addError($this->t('An error occurred when requesting the remote website. Contact the site administrator.'));
     }
   }
 
@@ -970,7 +970,7 @@ class PullForm extends FormBase {
    *   Prepared message.
    */
   protected function prepareErrorMessage(string $message) {
-    return preg_replace('/\sresponse:.+$/s', '', $message);
+    return \preg_replace('/\sresponse:.+$/s', '', $message);
   }
 
 }

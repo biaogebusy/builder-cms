@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductAttribute;
@@ -11,8 +12,9 @@ use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Tests the product variation field renderer.
@@ -111,7 +113,7 @@ class ProductVariationFieldRendererTest extends CommerceKernelTestBase {
 
     $this->container->get('commerce_product.attribute_field_manager')->createField($attribute, $this->secondVariationType->id());
 
-    $user = $this->createUser([], ['administer commerce_product']);
+    $user = $this->createUser(['administer commerce_product']);
     $this->container->get('current_user')->setAccount($user);
   }
 
@@ -176,7 +178,7 @@ class ProductVariationFieldRendererTest extends CommerceKernelTestBase {
     $this->assertArrayHasKey('list_price', $rendered_fields);
     $this->assertNotEmpty($rendered_fields['list_price']);
     $this->assertEquals('product--variation-field--variation_list_price__' . $variation->getProductId(), $rendered_fields['list_price']['#ajax_replace_class']);
-    $this->assertEquals('container', $rendered_fields['list_price']['#type']);
+    $this->assertEquals('html_tag', $rendered_fields['list_price']['#type']);
 
     $product_view_builder = $this->container->get('entity_type.manager')->getViewBuilder('commerce_product');
     $product_build = $product_view_builder->view($product);
@@ -265,6 +267,7 @@ class ProductVariationFieldRendererTest extends CommerceKernelTestBase {
     // Make sure loadFromContext does not return the default variation, which is
     // always translated via ::getDefaultVariation on the product entity.
     $request = Request::create('');
+    $request->setSession(new Session(new MockArraySessionStorage()));
     $request->query->add([
       'v' => $variation2->id(),
     ]);
@@ -323,7 +326,7 @@ class ProductVariationFieldRendererTest extends CommerceKernelTestBase {
     $rendered_field = $this->variationFieldRenderer->renderField('list_price', $variation, 'default');
     $this->assertNotEmpty($rendered_field);
     $this->assertEquals('product--variation-field--variation_list_price__' . $variation->getProductId(), $rendered_field['#ajax_replace_class']);
-    $this->assertEquals('container', $rendered_field['#type']);
+    $this->assertEquals('html_tag', $rendered_field['#type']);
 
     // Confirm that hidden fields don't get AJAX classes.
     $rendered_field = $this->variationFieldRenderer->renderField('price', $variation, 'default');

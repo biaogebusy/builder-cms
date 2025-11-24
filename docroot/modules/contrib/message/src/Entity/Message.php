@@ -4,6 +4,7 @@ namespace Drupal\message\Entity;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\Language;
@@ -61,6 +62,8 @@ use Drupal\user\UserInterface;
  * )
  */
 class Message extends ContentEntityBase implements MessageInterface {
+
+  use EntityChangedTrait;
 
   /**
    * Holds the arguments of the message instance.
@@ -204,9 +207,14 @@ class Message extends ContentEntityBase implements MessageInterface {
       ->setDescription(t('The time that the message was created.'))
       ->setTranslatable(TRUE);
 
+    $fields['changed'] = BaseFieldDefinition::create('changed')
+      ->setLabel(t('Changed'))
+      ->setDescription(t('The time that the message was last edited.'))
+      ->setTranslatable(TRUE);
+
     $fields['arguments'] = BaseFieldDefinition::create('map')
       ->setLabel(t('Arguments'))
-      ->setDescription(t('Holds the arguments of the message in serialise format.'));
+      ->setDescription(t('Holds the arguments of the message in serialize format.'));
 
     return $fields;
   }

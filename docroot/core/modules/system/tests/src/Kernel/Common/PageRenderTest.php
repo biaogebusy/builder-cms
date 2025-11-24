@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Common;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -16,7 +18,7 @@ class PageRenderTest extends KernelTestBase {
   /**
    * Tests hook_page_attachments() exceptions.
    */
-  public function testHookPageAttachmentsExceptions() {
+  public function testHookPageAttachmentsExceptions(): void {
     $this->enableModules(['common_test', 'system']);
 
     $this->assertPageRenderHookExceptions('common_test', 'hook_page_attachments');
@@ -25,7 +27,7 @@ class PageRenderTest extends KernelTestBase {
   /**
    * Tests hook_page_attachments_alter() exceptions.
    */
-  public function testHookPageAlter() {
+  public function testHookPageAlter(): void {
     $this->enableModules(['common_test', 'system']);
 
     $this->assertPageRenderHookExceptions('common_test', 'hook_page_attachments_alter');
@@ -58,7 +60,7 @@ class PageRenderTest extends KernelTestBase {
     $page = [];
     try {
       $html_renderer->invokePageAttachmentHooks($page);
-      $this->error($assertion);
+      $this->fail($assertion);
     }
     catch (\LogicException $e) {
       $this->assertEquals('Only #attached and #cache may be set in ' . $hook . '().', $e->getMessage());
@@ -71,7 +73,7 @@ class PageRenderTest extends KernelTestBase {
     $page = [];
     try {
       $html_renderer->invokePageAttachmentHooks($page);
-      $this->error($assertion);
+      $this->fail($assertion);
     }
     catch (\LogicException $e) {
       $this->assertEquals('Only #attached and #cache may be set in ' . $hook . '().', $e->getMessage());

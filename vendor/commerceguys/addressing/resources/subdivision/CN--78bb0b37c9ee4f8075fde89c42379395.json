@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HA",
+		"Sanmenxia Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Hubin Qu": {
+			"local_name": "湖滨区"
+		},
+		"Lingbao Shi": {
+			"local_name": "灵宝市"
+		},
+		"Lushi Xian": {
+			"local_name": "卢氏县"
+		},
+		"Mianchi Xian": {
+			"local_name": "渑池县"
+		},
+		"Shan Xian": {
+			"local_name": "陕县"
+		},
+		"Yima Shi": {
+			"local_name": "义马市"
+		}
+	}
+}

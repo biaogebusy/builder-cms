@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -17,7 +19,7 @@ class LinkTypeAjaxTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * The flag service.
@@ -92,28 +94,31 @@ class LinkTypeAjaxTest extends WebDriverTestBase {
     // Navigate to the node page.
     $this->drupalGet($this->node->toUrl());
 
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
+    $assert_session = $this->assertSession();
+
     // Confirm the flag link exists.
-    $this->assertSession()->linkExists($this->flag->getShortText('flag'));
+    $assert_session->linkExists($this->flag->getShortText('flag'));
 
     // Click the flag link.
     $this->clickLink($this->flag->getShortText('flag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl());
-    $this->assertSession()->linkExists($this->flag->getShortText('unflag'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl());
+    $assert_session->linkExists($this->flag->getShortText('unflag'));
     $this->assertNotNull($this->flagService->getFlagging($this->flag, $this->node, $auth_user));
 
     // Click the unflag link, repeat the check.
     $this->clickLink($this->flag->getShortText('unflag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl());
-    $this->assertSession()->linkExists($this->flag->getShortText('flag'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl());
+    $assert_session->linkExists($this->flag->getShortText('flag'));
     $this->assertNull($this->flagService->getFlagging($this->flag, $this->node, $auth_user));
 
     // And flag again.
     $this->clickLink($this->flag->getShortText('flag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl());
-    $this->assertSession()->linkExists($this->flag->getShortText('unflag'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl());
+    $assert_session->linkExists($this->flag->getShortText('unflag'));
     $this->assertNotNull($this->flagService->getFlagging($this->flag, $this->node, $auth_user));
 
     // Add an unrelated flag, and enable flag events.
@@ -130,13 +135,13 @@ class LinkTypeAjaxTest extends WebDriverTestBase {
     $this->drupalGet($this->node->toUrl());
 
     // Confirm the flag link exists.
-    $this->assertSession()->linkExists($this->flag->getShortText('flag'));
+    $assert_session->linkExists($this->flag->getShortText('flag'));
 
     // Click the flag link.
     $this->clickLink($this->flag->getShortText('flag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl());
-    $this->assertSession()->linkExists($this->flag->getShortText('unflag'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl());
+    $assert_session->linkExists($this->flag->getShortText('unflag'));
     $this->assertNotNull($this->flagService->getFlagging($this->flag, $this->node, $auth_user));
 
     // Verifies that the event subscriber was called.
@@ -144,9 +149,9 @@ class LinkTypeAjaxTest extends WebDriverTestBase {
 
     // Click the unflag link, repeat the check.
     $this->clickLink($this->flag->getShortText('unflag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl());
-    $this->assertSession()->linkExists($this->flag->getShortText('flag'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl());
+    $assert_session->linkExists($this->flag->getShortText('flag'));
     $this->assertNull($this->flagService->getFlagging($this->flag, $this->node, $auth_user));
 
     // Verifies that the event subscriber was called.
@@ -154,9 +159,9 @@ class LinkTypeAjaxTest extends WebDriverTestBase {
 
     // And flag again.
     $this->clickLink($this->flag->getShortText('flag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl());
-    $this->assertSession()->linkExists($this->flag->getShortText('unflag'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl());
+    $assert_session->linkExists($this->flag->getShortText('unflag'));
     $this->assertNotNull($this->flagService->getFlagging($this->flag, $this->node, $auth_user));
   }
 

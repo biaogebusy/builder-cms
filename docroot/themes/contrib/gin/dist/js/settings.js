@@ -47,15 +47,13 @@
       })), document.querySelector('input[name="high_contrast_mode"]').addEventListener("change", (e => {
         const highContrastMode = e.currentTarget.matches(":checked");
         this.setHighContrastMode(highContrastMode);
-      })), document.querySelector('[data-drupal-selector="edit-submit"]').addEventListener("click", (() => {
-        localStorage.setItem("Drupal.gin.darkmode", "");
       }));
     },
     darkmode: function() {
       let darkmodeParam = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : null;
       const darkmodeEnabled = null != darkmodeParam ? darkmodeParam : drupalSettings.gin.darkmode, darkmodeClass = drupalSettings.gin.darkmode_class;
       1 == darkmodeEnabled || "auto" === darkmodeEnabled && window.matchMedia("(prefers-color-scheme: dark)").matches ? document.querySelector("html").classList.add(darkmodeClass) : document.querySelector("html").classList.remove(darkmodeClass), 
-      localStorage.setItem("Drupal.gin.darkmode", ""), window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e => {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e => {
         e.matches && "auto" === document.querySelector('input[name="enable_darkmode"]:checked').value && document.querySelector("html").classList.add(darkmodeClass);
       })), window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e => {
         e.matches && "auto" === document.querySelector('input[name="enable_darkmode"]:checked').value && document.querySelector("html").classList.remove(darkmodeClass);

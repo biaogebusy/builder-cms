@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\migrate\Kernel\SqlBaseTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\migrate\Kernel;
 
@@ -42,7 +39,7 @@ class SqlBaseTest extends MigrateTestBase {
   /**
    * Tests different connection types.
    */
-  public function testConnectionTypes() {
+  public function testConnectionTypes(): void {
     $sql_base = new TestSqlBase([], $this->migration);
 
     // Verify that falling back to the default 'migrate' connection (defined in
@@ -129,6 +126,31 @@ class SqlBaseTest extends MigrateTestBase {
   }
 
   /**
+   * Tests the exception when a connection is defined but not available.
+   */
+  public function testBrokenConnection(): void {
+    if (Database::getConnection()->driver() === 'sqlite') {
+      $this->markTestSkipped('Not compatible with sqlite');
+    }
+
+    $sql_base = new TestSqlBase([], $this->migration);
+    $target = 'test_state_db_target2';
+    $key = 'test_state_migrate_connection2';
+    $database = Database::getConnectionInfo('default')['default'];
+    $database['database'] = 'godot';
+    $config = ['target' => $target, 'key' => $key, 'database' => $database];
+    $database_state_key = 'migrate_sql_base_test2';
+    \Drupal::state()->set($database_state_key, $config);
+    $sql_base->setConfiguration(['database_state_key' => $database_state_key]);
+
+    // Call checkRequirements(): it will call getDatabase() and convert the
+    // exception to a RequirementsException.
+    $this->expectException(RequirementsException::class);
+    $this->expectExceptionMessage('No database connection available for source plugin sql_base');
+    $sql_base->checkRequirements();
+  }
+
+  /**
    * Tests that SqlBase respects high-water values.
    *
    * @param mixed $high_water
@@ -138,7 +160,7 @@ class SqlBaseTest extends MigrateTestBase {
    *
    * @dataProvider highWaterDataProvider
    */
-  public function testHighWater($high_water = NULL, array $query_result = []) {
+  public function testHighWater($high_water = NULL, array $query_result = []): void {
     $configuration = [
       'high_water_property' => [
         'name' => 'order',
@@ -169,7 +191,7 @@ class SqlBaseTest extends MigrateTestBase {
    * @return array
    *   The scenarios to test.
    */
-  public function highWaterDataProvider() {
+  public static function highWaterDataProvider() {
     return [
       'no high-water value set' => [],
       'high-water value set' => [33],
@@ -200,8 +222,8 @@ class TestSqlBase extends SqlBase {
    * @param \Drupal\migrate\Plugin\MigrationInterface $migration
    *   (optional) The migration being run.
    */
-  public function __construct(array $configuration = [], MigrationInterface $migration = NULL) {
-    parent::__construct($configuration, 'sql_base', [], $migration, \Drupal::state());
+  public function __construct(array $configuration = [], ?MigrationInterface $migration = NULL) {
+    parent::__construct($configuration, 'sql_base', ['requirements_met' => TRUE], $migration, \Drupal::state());
   }
 
   /**

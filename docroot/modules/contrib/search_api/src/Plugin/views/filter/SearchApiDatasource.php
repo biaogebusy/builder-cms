@@ -2,13 +2,14 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
+
 /**
  * Provides filtering on the datasource.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_datasource")
  */
+#[ViewsFilter('search_api_datasource')]
 class SearchApiDatasource extends SearchApiOptions {
 
   /**

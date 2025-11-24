@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_price\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests that price item list `equals` works as expected.

@@ -109,4 +109,23 @@ trait CommerceBrowserTestTrait {
     $this->assertNotEmpty($valid, $message);
   }
 
+  /**
+   * Gets a future year as a string.
+   *
+   * This method is useful when providing an expiry year for a credit card.
+   *
+   * @return string
+   *   The future year.
+   */
+  protected function futureYear(): string {
+    // This value does not change during a test run just in case someone is
+    // running tests during the last seconds of New Year's Eve. This is also why
+    // 2 is added to the year so that it is always in the future.
+    static $value;
+    if (!isset($value)) {
+      $value = strval((int) date("Y") + 2);
+    }
+    return $value;
+  }
+
 }

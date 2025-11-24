@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\Tests\SchemaCheckTestTrait;
@@ -28,7 +30,7 @@ class MigrateUserConfigsTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of user variables to user.mail.yml.
    */
-  public function testUserMail() {
+  public function testUserMail(): void {
     $config = $this->config('user.mail');
 
     $this->assertSame('Account details for [user:name] at [site:name] (approved)', $config->get('status_activated.subject'));

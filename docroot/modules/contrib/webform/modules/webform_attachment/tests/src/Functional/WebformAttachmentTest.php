@@ -233,11 +233,11 @@ class WebformAttachmentTest extends WebformBrowserTestBase {
     // Sanitize.
     /* ********************************************************************** */
 
-    $webform_attachment_santize = Webform::load('test_attachment_sanitize');
+    $webform_attachment_sanitize = Webform::load('test_attachment_sanitize');
 
-    $sid = $this->postSubmissionTest($webform_attachment_santize, ['textfield' => 'Some text!@#$%^&*)']);
+    $sid = $this->postSubmissionTest($webform_attachment_sanitize, ['textfield' => 'Some text!@#$%^&*)']);
     $webform_submission = WebformSubmission::load($sid);
-    $element = $webform_attachment_santize->getElement('webform_attachment_token');
+    $element = $webform_attachment_sanitize->getElement('webform_attachment_token');
     $this->assertEquals(WebformAttachmentToken::getFileName($element, $webform_submission), 'some-text.txt');
 
     /* ********************************************************************** */

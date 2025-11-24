@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_cart\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderType;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
-use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
 
 /**
@@ -155,6 +155,13 @@ class AddToCartFormTest extends CartBrowserTestBase {
       'quantity[0][value]' => 0,
     ]);
     $this->assertSession()->pageTextContains('Quantity must be higher than or equal to 1.');
+
+    // Confirm that empty quantity is not allowed.
+    $this->postAddToCart($this->variation->getProduct(), [
+      'quantity[0][value]' => '',
+    ]);
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('The Quantity field is required.');
   }
 
   /**

@@ -16,11 +16,7 @@ services:
     # will not call further decorators, but directly override the core form
     # builder by extending from it and just calling the parent methods.
     decoration_priority: 10000
-    arguments: ['@form_builder.autosave_form.inner', '@form_validator', '@form_submitter', '@form_cache', '@module_handler', '@event_dispatcher', '@request_stack', '@class_resolver', '@element_info', '@theme.manager', '@?csrf_token', '@autosave_form.entity_form_storage']
-    # Workaround for serializing decorated services. Remove when either
-    # https://www.drupal.org/project/drupal/issues/2896993 or
-    # https://www.drupal.org/project/drupal/issues/2531564 are fixed.
-    properties: { _serviceId: form_builder }
+    arguments: ['@form_builder.autosave_form.inner', '@form_validator', '@form_submitter', '@form_cache', '@module_handler', '@event_dispatcher', '@request_stack', '@class_resolver', '@element_info', '@theme.manager', '@autosave_form.entity_form_storage', '@?csrf_token']
   form_error_handler.autosave_form:
     public:    false
     class: Drupal\autosave_form\Form\AutosaveFormErrorHandler

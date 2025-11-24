@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NX",
+		"Guyuan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Jingyuan Xian": {
+			"local_name": "泾源县"
+		},
+		"Longde Xian": {
+			"local_name": "隆德县"
+		},
+		"Pengyang Xian": {
+			"local_name": "彭阳县"
+		},
+		"Xiji Xian": {
+			"local_name": "西吉县"
+		},
+		"Yuanzhou Qu": {
+			"local_name": "原州区"
+		}
+	}
+}

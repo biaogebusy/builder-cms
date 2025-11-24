@@ -6,7 +6,6 @@ drupal.filter.admin:
     - core/jquery
     - core/drupal
     - core/once
-    - core/jquery.once.bc
     - core/drupal.form
 
 drupal.filter.filter_html.admin:
@@ -16,8 +15,7 @@ drupal.filter.filter_html.admin:
   dependencies:
     - core/jquery
     - core/once
-    - core/jquery.once.bc
-    - core/drupal.array.includes
+  deprecated: The %library_id% asset library is deprecated in Drupal 10.3.0 and will be removed in Drupal 11.0.0. See https://www.drupal.org/node/3422372
 
 drupal.filter:
   version: VERSION
@@ -27,7 +25,6 @@ drupal.filter:
     - core/jquery
     - core/drupal
     - core/once
-    - core/jquery.once.bc
 
 caption:
   version: VERSION

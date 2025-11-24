@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Hooks for the JavaScript Cookie library module.
+ */
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function js_cookie_library_info_alter(array &$libraries, $extension) {
+  if ($extension !== 'js_cookie') {
+    return;
+  }
+
+  // Handle CDN.
+  foreach ($libraries as $library_name => &$library) {
+    if (isset($library['directory']) && !file_exists(DRUPAL_ROOT . $library['directory'])) {
+      if (isset($library['cdn']['js'])) {
+        $library['js'] = $library['cdn']['js'];
+      }
+      if (isset($library['cdn']['css'])) {
+        $library['css'] = $library['cdn']['css'];
+      }
+    }
+  }
+}

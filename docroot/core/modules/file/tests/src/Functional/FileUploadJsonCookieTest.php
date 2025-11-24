@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
@@ -37,6 +39,6 @@ class FileUploadJsonCookieTest extends FileUploadResourceTestBase {
    *
    * @var string
    */
-  protected static $entityTypeId;
+  protected static string $entityTypeId;
 
 }

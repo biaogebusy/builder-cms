@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\metatag\Unit;
+namespace Drupal\Tests\metatag\Unit;
 
 use Drupal\metatag\MetatagTrimmer;
 use Drupal\Tests\UnitTestCase;
@@ -23,7 +23,7 @@ class MetatagTrimmerTest extends UnitTestCase {
   /**
    * {@inheritDoc}
    */
-  protected function setUp() : void {
+  protected function setUp(): void {
     parent::setUp();
     $this->metatagTrimmer = new MetatagTrimmer();
   }
@@ -45,7 +45,7 @@ class MetatagTrimmerTest extends UnitTestCase {
   }
 
   /**
-   * Tests the trimAferValue method.
+   * Tests the trimAfterValue method.
    */
   public function testTrimAfterValue() {
     $trimResult1 = $this->metatagTrimmer->trimAfterValue('Test 123', 7);
@@ -88,6 +88,64 @@ class MetatagTrimmerTest extends UnitTestCase {
     $this->assertEquals('Test 12', $trimResult2);
     $trimResult3 = $this->metatagTrimmer->trimByMethod("Test 123", 7, 'afterValue');
     $this->assertEquals('Test 123', $trimResult3);
+  }
+
+  /**
+   * Tests how the end of the string is trimmed.
+   */
+  public function testEndOfTheWordTrimming() {
+    // Test standard end char trimming:
+    $trimResult = $this->metatagTrimmer->trimEndChars('Test ');
+    $this->assertEquals('Test', $trimResult);
+
+    $trimResult = $this->metatagTrimmer->trimEndChars("Test\n");
+    $this->assertEquals('Test', $trimResult);
+
+    // Test end char trimming with specific chars provided:
+    $trimEndChars = '|"';
+    $trimResult = $this->metatagTrimmer->trimEndChars('Test|', $trimEndChars);
+    $this->assertEquals('Test', $trimResult);
+
+    $trimEndChars .= "\\n";
+    $trimResult = $this->metatagTrimmer->trimEndChars("Test\\n", $trimEndChars);
+    $this->assertEquals("Test", $trimResult);
+
+    $trimResult = $this->metatagTrimmer->trimEndChars('Test"', $trimEndChars);
+    $this->assertEquals('Test', $trimResult);
+
+    $trimEndChars .= "'";
+    $trimResult = $this->metatagTrimmer->trimEndChars("Test'", $trimEndChars);
+    $this->assertEquals('Test', $trimResult);
+
+    $trimEndChars .= '&';
+    $trimResult = $this->metatagTrimmer->trimEndChars("Test&'", $trimEndChars);
+    $this->assertEquals('Test', $trimResult);
+
+    $trimResult = $this->metatagTrimmer->trimEndChars("Test&|'", $trimEndChars);
+    $this->assertEquals('Test', $trimResult);
+  }
+
+  /**
+   * Tests the optional suffix.
+   */
+  public function testTrimSuffix() {
+    // A string too long to be trimmed, so no suffix is added.
+    $trim_result = $this->metatagTrimmer->trimByMethod('Test 123', 10, 'onValue', suffix: '...');
+    $this->assertEquals('Test 123', $trim_result);
+
+    // A string that is trimmed to a word limit before the cutoff point, with a
+    // suffix.
+    $trim_result = $this->metatagTrimmer->trimByMethod('Test 123', 7, 'beforeValue', suffix: '...');
+    $this->assertEquals('Test...', $trim_result);
+
+    // A string that is trimmed to an exact point, with a suffix.
+    $trim_result = $this->metatagTrimmer->trimByMethod('Test 123', 7, 'onValue', suffix: '...');
+    $this->assertEquals('Test 12...', $trim_result);
+
+    // A string that is trimmed to a word limit after the cutoff point, with a
+    // suffix.
+    $trim_result = $this->metatagTrimmer->trimByMethod('Test 123 456', 7, 'afterValue', suffix: '...');
+    $this->assertEquals('Test 123...', $trim_result);
   }
 
 }

@@ -90,11 +90,6 @@ function template_preprocess_ctools_wizard_trail_links(&$variables) {
  * @param $definitions
  */
 function ctools_condition_info_alter(&$definitions) {
-  // Drupal 9.x only: override core node_type with ctools constraints.
-  if (isset($definitions['node_type']) && $definitions['node_type']['class'] == 'Drupal\node\Plugin\Condition\NodeType') {
-    $definitions['node_type']['class'] = NodeType::class;
-  }
-
   // Replace all generic entity bundle conditions classes if they are unaltered,
   // these exist in Drupal 9.3+.
   foreach ($definitions as $id => $definition) {
@@ -103,6 +98,12 @@ function ctools_condition_info_alter(&$definitions) {
     }
   }
 
+  if (\version_compare(\Drupal::VERSION, '10.0', '<')) {
+    // Drupal 9.x only: override core node_type with ctools constraints.
+    $definitions['node_type'] = $definitions['entity_bundle:node'];
+    $definitions['node_type']['id'] = 'node_type';
+    $definitions['node_type']['class'] = NodeType::class;
+  }
 }
 
 /**

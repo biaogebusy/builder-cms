@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -14,21 +16,11 @@ use Drupal\Core\Theme\ThemeNegotiatorInterface;
 class VisualDiffThemeNegotiator implements ThemeNegotiatorInterface {
 
   /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * VisualDiffThemeNegotiator constructor.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    $this->configFactory = $config_factory;
-  }
+  public function __construct(
+    protected ConfigFactoryInterface $configFactory,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -65,10 +57,10 @@ class VisualDiffThemeNegotiator implements ThemeNegotiatorInterface {
    * @return bool
    *   Return TRUE if route name is ok.
    */
-  protected function isDiffRoute(RouteMatchInterface $route_match) {
+  protected function isDiffRoute(RouteMatchInterface $route_match): bool {
     $regex_pattern = '/^entity\..*\.revisions_diff$/';
     return $route_match->getRouteName() === 'diff.revisions_diff' ||
-      preg_match($regex_pattern, $route_match->getRouteName());
+      \preg_match($regex_pattern, (string) $route_match->getRouteName());
   }
 
 }

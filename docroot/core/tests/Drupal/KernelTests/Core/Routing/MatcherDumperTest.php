@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Routing;
 
+use ColinODell\PsrTestLogger\TestLogger;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\KeyValueStore\KeyValueMemoryFactory;
+use Drupal\Core\Routing\MatcherDumper;
 use Drupal\Core\Routing\RouteCompiler;
+use Drupal\Core\Lock\NullLockBackend;
 use Drupal\Core\State\State;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\Core\Routing\RoutingFixtures;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
-use Drupal\Core\Database\Database;
-use Drupal\Core\Routing\MatcherDumper;
-use Drupal\Tests\Core\Routing\RoutingFixtures;
 
 /**
  * Confirm that the matcher dumper is functioning properly.
@@ -34,21 +40,28 @@ class MatcherDumperTest extends KernelTestBase {
   protected $state;
 
   /**
+   * The logger.
+   */
+  protected TestLogger $logger;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
 
     $this->fixtures = new RoutingFixtures();
-    $this->state = new State(new KeyValueMemoryFactory());
+    $time = $this->prophesize(TimeInterface::class)->reveal();
+    $this->state = new State(new KeyValueMemoryFactory(), new MemoryBackend($time), new NullLockBackend());
+    $this->logger = new TestLogger();
   }
 
   /**
    * Confirms that the dumper can be instantiated successfully.
    */
-  public function testCreate() {
+  public function testCreate(): void {
     $connection = Database::getConnection();
-    $dumper = new MatcherDumper($connection, $this->state);
+    $dumper = new MatcherDumper($connection, $this->state, $this->logger);
 
     $class_name = 'Drupal\Core\Routing\MatcherDumper';
     $this->assertInstanceOf($class_name, $dumper);
@@ -57,9 +70,9 @@ class MatcherDumperTest extends KernelTestBase {
   /**
    * Confirms that we can add routes to the dumper.
    */
-  public function testAddRoutes() {
+  public function testAddRoutes(): void {
     $connection = Database::getConnection();
-    $dumper = new MatcherDumper($connection, $this->state);
+    $dumper = new MatcherDumper($connection, $this->state, $this->logger);
 
     $route = new Route('test');
     $collection = new RouteCollection();
@@ -78,9 +91,9 @@ class MatcherDumperTest extends KernelTestBase {
   /**
    * Confirms that we can add routes to the dumper when it already has some.
    */
-  public function testAddAdditionalRoutes() {
+  public function testAddAdditionalRoutes(): void {
     $connection = Database::getConnection();
-    $dumper = new MatcherDumper($connection, $this->state);
+    $dumper = new MatcherDumper($connection, $this->state, $this->logger);
 
     $route = new Route('test');
     $collection = new RouteCollection();
@@ -106,9 +119,9 @@ class MatcherDumperTest extends KernelTestBase {
   /**
    * Confirm that we can dump a route collection to the database.
    */
-  public function testDump() {
+  public function testDump(): void {
     $connection = Database::getConnection();
-    $dumper = new MatcherDumper($connection, $this->state, 'test_routes');
+    $dumper = new MatcherDumper($connection, $this->state, $this->logger, 'test_routes');
 
     $route = new Route('/test/{my}/path');
     $route->setOption('compiler_class', RouteCompiler::class);
@@ -141,15 +154,15 @@ class MatcherDumperTest extends KernelTestBase {
   /**
    * Tests the determination of the masks generation.
    */
-  public function testMenuMasksGeneration() {
+  public function testMenuMasksGeneration(): void {
     $connection = Database::getConnection();
-    $dumper = new MatcherDumper($connection, $this->state, 'test_routes');
+    $dumper = new MatcherDumper($connection, $this->state, $this->logger, 'test_routes');
 
     $collection = new RouteCollection();
     $collection->add('test_route_1', new Route('/test-length-3/{my}/path'));
     $collection->add('test_route_2', new Route('/test-length-3/hello/path'));
-    $collection->add('test_route_3', new Route('/test-length-5/{my}/path/marvin/magrathea'));
-    $collection->add('test_route_4', new Route('/test-length-7/{my}/path/marvin/magrathea/earth/ursa-minor'));
+    $collection->add('test_route_3', new Route('/test-length-5/{my}/path/marvin/android'));
+    $collection->add('test_route_4', new Route('/test-length-7/{my}/path/marvin/android/earth/ursa-minor'));
 
     $dumper->addRoutes($collection);
 

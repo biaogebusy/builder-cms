@@ -48,10 +48,10 @@ class ParagraphsFieldInstanceSettingsTest extends ProcessTestCase {
    * @return array
    *   The source data and expected data.
    */
-  public function getData() {
+  public static function getData() {
     $data = [
       'With one bundle allowed' => [
-        'source_data' => [
+        'source' => [
           'allowed_bundles' => [
             'paragraph_bundle_one' => 'paragraph_bundle_one',
             'paragraph_bundle_two' => -1,
@@ -61,7 +61,7 @@ class ParagraphsFieldInstanceSettingsTest extends ProcessTestCase {
             'paragraph_bundle_two' => 2,
           ],
         ],
-        'expected_results' => [
+        'expected' => [
           'handler_settings' => [
             'negate' => 0,
             'target_bundles' => [
@@ -97,7 +97,7 @@ class ParagraphsFieldInstanceSettingsTest extends ProcessTestCase {
         ],
       ],
       'With all bundles allowed' => [
-        'source_data' => [
+        'source' => [
           'allowed_bundles' => [
             'paragraph_bundle_one' => -1,
             'paragraph_bundle_two' => -1,
@@ -107,7 +107,7 @@ class ParagraphsFieldInstanceSettingsTest extends ProcessTestCase {
             'paragraph_bundle_two' => 2,
           ],
         ],
-        'expected_results' => [
+        'expected' => [
           'handler_settings' => [
             'negate' => 0,
             'target_bundles' => NULL,

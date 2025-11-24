@@ -5,8 +5,9 @@ namespace Drupal\commerce\Element;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides a form element for configuring conditions.
@@ -32,10 +33,11 @@ use Drupal\Core\Render\Element\FormElement;
  *   ],
  * ];
  * @endcode
- *
- * @FormElement("commerce_conditions")
  */
-class Conditions extends FormElement {
+#[FormElement(
+  id: "commerce_conditions",
+)]
+class Conditions extends FormElementBase {
 
   use CommerceElementTrait;
 
@@ -142,12 +144,13 @@ class Conditions extends FormElement {
         '#title' => $category_label,
         '#group' => $tab_group,
       ];
+      $user_input = $form_state->getUserInput();
       foreach ($definitions as $plugin_id => $definition) {
         $category_parents = array_merge($element['#parents'], [$category_id]);
         $checkbox_parents = array_merge($category_parents, [$plugin_id, 'enable']);
         $checkbox_name = self::buildElementName($checkbox_parents);
-        $checkbox_input = NestedArray::getValue($form_state->getUserInput(), $checkbox_parents);
-        $enabled = isset($default_value[$plugin_id]) || !empty($checkbox_input);
+        $checkbox_input = NestedArray::getValue($user_input, $checkbox_parents);
+        $enabled = $user_input ? !empty($checkbox_input) : isset($default_value[$plugin_id]);
         $ajax_wrapper_id = Html::getUniqueId('ajax-wrapper-' . $plugin_id);
         // Preselect the first vertical tab that has an enabled condition.
         if ($enabled && !isset($element['conditions']['#default_tab'])) {
@@ -161,6 +164,7 @@ class Conditions extends FormElement {
         $element[$category_id][$plugin_id]['enable'] = [
           '#type' => 'checkbox',
           '#title' => $definition['display_label'],
+          '#description' => $definition['description'] ?? '',
           '#default_value' => $enabled,
           '#attributes' => [
             'class' => ['enable'],
@@ -230,7 +234,7 @@ class Conditions extends FormElement {
     $value = [];
     // Transfer the configuration of each enabled plugin.
     foreach ($element['#categories'] as $category_id) {
-      foreach (Element::getVisibleChildren($element[$category_id]) as $plugin_id) {
+      foreach (Element::children($element[$category_id]) as $plugin_id) {
         $plugin_element = $element[$category_id][$plugin_id];
         $plugin_value = $form_state->getValue($plugin_element['#parents']);
         if ($plugin_value['enable']) {

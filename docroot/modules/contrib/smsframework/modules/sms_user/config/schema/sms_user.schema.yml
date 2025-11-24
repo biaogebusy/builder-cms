@@ -13,14 +13,14 @@ sms_user.settings:
         ranges:
           type: sequence
           sequence:
-            - type: mapping
-              mapping:
-                start:
-                  type: string
-                  label: 'Start time in PHP strtotime natural language.'
-                end:
-                  type: string
-                  label: 'End time in PHP strtotime natural language.'
+            type: mapping
+            mapping:
+              start:
+                type: string
+                label: 'Start time in PHP strtotime natural language.'
+              end:
+                type: string
+                label: 'End time in PHP strtotime natural language.'
     account_registration:
       type: mapping
       label: 'Options to create user accounts when a message is received.'
@@ -51,7 +51,7 @@ sms_user.settings:
               type: sequence
               label: 'Incoming message patterns.'
               sequence:
-               - type: string
+                 type: string
                  label: 'An incoming message pattern matcher.'
             send_activation_email:
               type: boolean

@@ -31,7 +31,7 @@ class CKEditorUploadImageController extends ControllerBase {
     else {
       $maxDimensions = 0;
     }
-    $maxFilesize = min(Bytes::toInt($imageUpload['max_size']), Environment::getUploadMaxSize());
+    $maxFilesize = min(Bytes::toNumber($imageUpload['max_size']), Environment::getUploadMaxSize());
     $destination = $imageUpload['scheme'] . '://' . $imageUpload['directory'];
     /** @var \Drupal\Core\File\FileSystemInterface $fileSystem */
     $fileSystem = \Drupal::service('file_system');

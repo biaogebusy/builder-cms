@@ -137,10 +137,13 @@ class EntityField extends BlockBase implements ContextAwarePluginInterface, Cont
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     $entity = $this->getContextValue('entity');
     $build = [];
-    /** @var \Drupal\Core\Field\FieldItemListInterface $field */
-    $field = $entity->{$this->fieldName};
-    $display_settings = $this->getConfiguration()['formatter'];
-    $build['field'] = $field->view($display_settings);
+
+    if ($entity->hasField($this->fieldName)) {
+      /** @var \Drupal\Core\Field\FieldItemListInterface $field */
+      $field = $entity->{$this->fieldName};
+      $display_settings = $this->getConfiguration()['formatter'];
+      $build['field'] = $field->view($display_settings);
+    }
 
     // Set the cache data appropriately.
     $build['#cache']['contexts'] = $this->getCacheContexts();
@@ -376,7 +379,7 @@ class EntityField extends BlockBase implements ContextAwarePluginInterface, Cont
   /**
    * {@inheritdoc}
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     parent::__wakeup();
     // @todo figure out why this happens.
     // prevent $fieldStorageDefinition being erroneously set to $this.

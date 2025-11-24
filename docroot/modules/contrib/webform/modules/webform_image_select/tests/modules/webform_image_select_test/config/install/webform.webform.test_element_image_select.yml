@@ -21,129 +21,129 @@ elements: |
     '#type': webform_image_select
     '#title': image_select_default
     '#images':
-      kitten_1:
-        text: 'Cute Kitten 1'
-        src: 'http://placekitten.com/220/200'
-      kitten_2:
-        text: 'Cute Kitten 2'
-        src: 'http://placekitten.com/180/200'
-      kitten_3:
-        text: 'Cute Kitten 3'
-        src: 'http://placekitten.com/130/200'
-      kitten_4:
-        text: 'Cute Kitten 4'
-        src: 'http://placekitten.com/270/200'
+      dog_1:
+        text: 'Cute Dog 1'
+        src: 'https://placedog.net/220/200'
+      dog_2:
+        text: 'Cute Dog 2'
+        src: 'https://placedog.net/180/200'
+      dog_3:
+        text: 'Cute Dog 3'
+        src: 'https://placedog.net/130/200'
+      dog_4:
+        text: 'Cute Dog 4'
+        src: 'https://placedog.net/270/200'
     '#required': true
   image_select_randomize:
     '#type': webform_image_select
     '#title': image_select_randomize
     '#images':
-      kitten_1:
-        text: 'Cute Kitten 1'
-        src: 'http://placekitten.com/220/200'
-      kitten_2:
-        text: 'Cute Kitten 2'
-        src: 'http://placekitten.com/180/200'
-      kitten_3:
-        text: 'Cute Kitten 3'
-        src: 'http://placekitten.com/130/200'
-      kitten_4:
-        text: 'Cute Kitten 4'
-        src: 'http://placekitten.com/270/200'
+      dog_1:
+        text: 'Cute Dog 1'
+        src: 'https://placedog.net/220/200'
+      dog_2:
+        text: 'Cute Dog 2'
+        src: 'https://placedog.net/180/200'
+      dog_3:
+        text: 'Cute Dog 3'
+        src: 'https://placedog.net/130/200'
+      dog_4:
+        text: 'Cute Dog 4'
+        src: 'https://placedog.net/270/200'
     '#images_randomize': true
   image_select_multiple:
     '#type': webform_image_select
     '#title': image_select_multiple
     '#multiple': true
     '#images':
-      kitten_1:
-        text: 'Cute Kitten 1'
-        src: 'http://placekitten.com/220/200'
-      kitten_2:
-        text: 'Cute Kitten 2'
-        src: 'http://placekitten.com/180/200'
-      kitten_3:
-        text: 'Cute Kitten 3'
-        src: 'http://placekitten.com/130/200'
-      kitten_4:
-        text: 'Cute Kitten 4'
-        src: 'http://placekitten.com/270/200'
+      dog_1:
+        text: 'Cute Dog 1'
+        src: 'https://placedog.net/220/200'
+      dog_2:
+        text: 'Cute Dog 2'
+        src: 'https://placedog.net/180/200'
+      dog_3:
+        text: 'Cute Dog 3'
+        src: 'https://placedog.net/130/200'
+      dog_4:
+        text: 'Cute Dog 4'
+        src: 'https://placedog.net/270/200'
   image_select_limit:
     '#type': webform_image_select
     '#title': 'image_select_limit (2)'
     '#multiple': 2
     '#images':
-      kitten_1:
-        text: 'Cute Kitten 1'
-        src: 'http://placekitten.com/220/200'
-      kitten_2:
-        text: 'Cute Kitten 2'
-        src: 'http://placekitten.com/180/200'
-      kitten_3:
-        text: 'Cute Kitten 3'
-        src: 'http://placekitten.com/130/200'
-      kitten_4:
-        text: 'Cute Kitten 4'
-        src: 'http://placekitten.com/270/200'
+      dog_1:
+        text: 'Cute Dog 1'
+        src: 'https://placedog.net/220/200'
+      dog_2:
+        text: 'Cute Dog 2'
+        src: 'https://placedog.net/180/200'
+      dog_3:
+        text: 'Cute Dog 3'
+        src: 'https://placedog.net/130/200'
+      dog_4:
+        text: 'Cute Dog 4'
+        src: 'https://placedog.net/270/200'
   image_select_show_label:
     '#type': webform_image_select
     '#title': image_select_show_label
     '#show_label': true
     '#images':
-      kitten_1:
-        text: 'Cute Kitten 1'
-        src: 'http://placekitten.com/220/200'
-      kitten_2:
-        text: 'Cute Kitten 2'
-        src: 'http://placekitten.com/180/200'
-      kitten_3:
-        text: 'Cute Kitten 3'
-        src: 'http://placekitten.com/130/200'
-      kitten_4:
-        text: 'Cute Kitten 4'
-        src: 'http://placekitten.com/270/200'
+      dog_1:
+        text: 'Cute Dog 1'
+        src: 'https://placedog.net/220/200'
+      dog_2:
+        text: 'Cute Dog 2'
+        src: 'https://placedog.net/180/200'
+      dog_3:
+        text: 'Cute Dog 3'
+        src: 'https://placedog.net/130/200'
+      dog_4:
+        text: 'Cute Dog 4'
+        src: 'https://placedog.net/270/200'
   image_select_html:
     '#type': webform_image_select
     '#title': image_select_html
     '#show_label': true
     '#images':
       '<1>':
-        text: 'Cute <b style="color:red">Kitten</b> 1'
-        src: 'http://placekitten.com/220/200'
+        text: 'Cute <b style="color:red">Dog</b> 1'
+        src: 'https://placedog.net/220/200'
       '"2"':
-        text: 'Cute <em style="color:blue">Kitten</em> 2'
-        src: 'http://placekitten.com/180/200'
+        text: 'Cute <em style="color:blue">Dog</em> 2'
+        src: 'https://placedog.net/180/200'
       '&3':
-        text: 'Cute <u style="color:green">Kitten</u> 3'
-        src: 'http://placekitten.com/130/200'
+        text: 'Cute <u style="color:green">Dog</u> 3'
+        src: 'https://placedog.net/130/200'
       4:
-        text: 'Cute Kitten 4 <script>alert("XSS");</script>'
-        src: 'http://placekitten.com/270/200'
+        text: 'Cute Dog 4 <script>alert("XSS");</script>'
+        src: 'https://placedog.net/270/200'
   image_select_states_trigger:
     '#type': webform_image_select
     '#title': image_select_trigger_state
-    '#description': 'Please select the first cute kitten.'
+    '#description': 'Please select the first cute dog.'
     '#images':
-      kitten_1:
-        text: 'Cute Kitten 1'
-        src: 'http://placekitten.com/220/200'
-      kitten_2:
-        text: 'Cute Kitten 2'
-        src: 'http://placekitten.com/180/200'
-      kitten_3:
-        text: 'Cute Kitten 3'
-        src: 'http://placekitten.com/130/200'
-      kitten_4:
-        text: 'Cute Kitten 4'
-        src: 'http://placekitten.com/270/200'
+      dog_1:
+        text: 'Cute Dog 1'
+        src: 'https://placedog.net/220/200'
+      dog_2:
+        text: 'Cute Dog 2'
+        src: 'https://placedog.net/180/200'
+      dog_3:
+        text: 'Cute Dog 3'
+        src: 'https://placedog.net/130/200'
+      dog_4:
+        text: 'Cute Dog 4'
+        src: 'https://placedog.net/270/200'
   image_select_states_target:
     '#type': webform_message
     '#title': image_select_trigger_state
-    '#message_message': 'You have selected the first kitten!!!'
+    '#message_message': 'You have selected the first dog!!!'
     '#states':
       visible:
         ':input[name="image_select_states_trigger"]':
-          value: kitten_1
+          value: dog_1
   image_select_animals:
     '#type': webform_image_select
     '#title': image_select_animals

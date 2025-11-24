@@ -1,0 +1,5 @@
+admin_toolbar_search.settings:
+  title: 'Admin Toolbar Search'
+  description: 'Configure the Admin Toolbar Search module.'
+  route_name: admin_toolbar_search.settings
+  parent: system.admin_config_ui

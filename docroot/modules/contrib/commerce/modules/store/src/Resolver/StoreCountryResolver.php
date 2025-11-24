@@ -20,21 +20,12 @@ use Drupal\commerce_store\CurrentStoreInterface;
 class StoreCountryResolver implements CountryResolverInterface {
 
   /**
-   * The current store.
-   *
-   * @var \Drupal\commerce_store\CurrentStoreInterface
-   */
-  protected $currentStore;
-
-  /**
    * Constructs a new StoreCountryResolver object.
    *
-   * @param \Drupal\commerce_store\CurrentStoreInterface $current_store
+   * @param \Drupal\commerce_store\CurrentStoreInterface $currentStore
    *   The current store.
    */
-  public function __construct(CurrentStoreInterface $current_store) {
-    $this->currentStore = $current_store;
-  }
+  public function __construct(protected CurrentStoreInterface $currentStore) {}
 
   /**
    * {@inheritdoc}

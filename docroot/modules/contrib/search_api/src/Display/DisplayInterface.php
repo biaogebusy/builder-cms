@@ -11,7 +11,7 @@ use Drupal\search_api\Plugin\HideablePluginInterface;
 /**
  * Defines an interface for display plugins.
  *
- * @see \Drupal\search_api\Annotation\SearchApiDisplay
+ * @see \Drupal\search_api\Attribute\SearchApiDisplay
  * @see \Drupal\search_api\Display\DisplayPluginManager
  * @see \Drupal\search_api\Display\DisplayPluginBase
  * @see plugin_api

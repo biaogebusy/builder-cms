@@ -33,7 +33,7 @@ class BulkFormEntityListBuilder extends EntityListBuilder implements FormInterfa
   /**
    * The bulk operations.
    *
-   * @todo Change the typehint to ActionConfigEntityInterface when
+   * @todo Change the type hint to ActionConfigEntityInterface when
    *   https://www.drupal.org/project/drupal/issues/3017214 is in.
    *
    * @var \Drupal\system\Entity\Action[]

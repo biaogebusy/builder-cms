@@ -15,7 +15,7 @@ use Drupal\sms\Message\SmsMessageInterface;
 /**
  * Implements hook_token_info().
  */
-function sms_token_info() {
+function sms_token_info(): array {
   $info['types']['sms'] = [
     'name' => t('SMS'),
     'description' => t("SMS Framework tokens."),

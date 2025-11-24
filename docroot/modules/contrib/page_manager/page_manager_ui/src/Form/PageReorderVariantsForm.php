@@ -61,7 +61,7 @@ class PageReorderVariantsForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $machine_name = '') {
     $cached_values = $this->tempstore->get($this->getTempstoreId())->get($machine_name);
     $form_state->setTemporaryValue('wizard', $cached_values);
-    /** @var $page \Drupal\page_manager\Entity\Page */
+    /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
 
     $form['variants'] = [

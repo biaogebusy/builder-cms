@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
@@ -115,7 +117,7 @@ class EmphasisTest extends WebDriverTestBase {
   /**
    * Ensures that CKEditor italic model is converted to em.
    */
-  public function testEmphasis() {
+  public function testEmphasis(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -137,7 +139,7 @@ class EmphasisTest extends WebDriverTestBase {
   /**
    * Tests that arbitrary attributes are allowed via GHS.
    */
-  public function testEmphasisArbitraryHtml() {
+  public function testEmphasisArbitraryHtml(): void {
     $assert_session = $this->assertSession();
     $editor = Editor::load('test_format');
     $settings = $editor->getSettings();

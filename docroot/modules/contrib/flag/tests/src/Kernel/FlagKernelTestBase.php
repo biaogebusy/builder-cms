@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Kernel;
 
-use Drupal\flag\FlagInterface;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\Tests\flag\Traits\FlagCreateTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\flag\FlagInterface;
 
 /**
  * Basic setup for kernel tests based around flaggings articles.
@@ -46,7 +48,6 @@ abstract class FlagKernelTestBase extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
     $this->installEntitySchema('flagging');
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('flag', ['flag_counts']);
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['filter', 'flag', 'node']);

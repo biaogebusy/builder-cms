@@ -2,18 +2,18 @@
 
 namespace Drupal\autologout\EventSubscriber;
 
-use Drupal\autologout\AutologoutManagerInterface;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Theme\ThemeManager;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\autologout\AutologoutManagerInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Defines autologout Subscriber.
@@ -25,49 +25,49 @@ class AutologoutSubscriber implements EventSubscriberInterface {
    *
    * @var \Drupal\autologout\AutologoutManagerInterface
    */
-  protected $autoLogoutManager;
+  protected AutologoutManagerInterface $autoLogoutManager;
 
   /**
    * The user account service.
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $currentUser;
+  protected AccountInterface $currentUser;
 
   /**
    * The Config service.
    *
    * @var \Drupal\Core\Config\ConfigFactory
    */
-  protected $config;
+  protected ConfigFactory $config;
 
   /**
    * The theme manager service.
    *
    * @var \Drupal\Core\Theme\ThemeManager
    */
-  protected $theme;
+  protected ThemeManager $theme;
 
   /**
    * The Time Service.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $time;
+  protected TimeInterface $time;
 
   /**
    * The request stacks service.
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  protected $requestStack;
+  protected RequestStack $requestStack;
 
   /**
    * The language manager.
    *
    * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $languageManager;
+  protected LanguageManagerInterface $languageManager;
 
   /**
    * Constructs an AutologoutSubscriber object.
@@ -118,41 +118,23 @@ class AutologoutSubscriber implements EventSubscriberInterface {
     }
 
     // If user is not anonymous.
-    if ($uid != 0) {
-      $session = $this->requestStack->getCurrentRequest()->getSession();
-      $auto_redirect = $session->get('auto_redirect');
+    $session = $this->requestStack->getCurrentRequest()->hasSession()
+      ? $this->requestStack->getCurrentRequest()->getSession()
+      : NULL;
+    $auto_redirect = $session ? $session->get('auto_redirect') : NULL;
 
-      // Get http referer.
-      $referer = "";
-      $request = $this->requestStack->getCurrentRequest();
-      if ($request->server->get('HTTP_REFERER')) {
-        $referer = $request->server->get('HTTP_REFERER');
-      }
-      // Get query string from http referer url.
-      $parse_url = parse_url($referer, PHP_URL_QUERY);
-      // If http referer url has 'destination' and session is not set,
-      // then only redirect to user page if uid dosen't match.
-      if ($parse_url !== NULL && (strpos($parse_url, 'destination') !== FALSE) && empty($auto_redirect)) {
-        parse_str($parse_url, $output);
-        $destination_uid = explode("/", $output['destination']);
+    // If http referer url has 'destination' and session is not set,
+    // then only redirect to user page if uid doesn't match.
+    if (empty($auto_redirect) && ($destination = $this->getDestination())) {
+      $match = preg_match('#^destination=(/[a-z]+)?/user/([0-9]+)$#', $destination, $matches);
 
-        // If array contains language code, remove it.
-        $languagecode = $this->languageManager->getCurrentLanguage()->getId();
-        if ($destination_uid[1] === $languagecode) {
-          unset($destination_uid[1]);
-          $destination_uid = array_values($destination_uid);
-        }
+      if ($match && $matches[2] != $uid) {
+        $session->set('auto_redirect', 1);
+        $login_url = Url::fromRoute('user.page', [], ['absolute' => TRUE])->toString();
 
-        // If destination uid and actual uid does not match then,
-        // redirect to loggedin user page.
-        if (($destination_uid[1] == "user") && ($destination_uid[2] != $uid)) {
-          $auto_redirect = $session->set('auto_redirect', 1);
-          $login_url = Url::fromRoute('user.page', [], ['absolute' => TRUE])->toString();
-
-          // Redirect user to user page.
-          $response = new RedirectResponse($login_url);
-          $event->setResponse($response);
-        }
+        // Redirect user to user page.
+        $response = new RedirectResponse($login_url);
+        $event->setResponse($response);
       }
     }
 
@@ -169,9 +151,10 @@ class AutologoutSubscriber implements EventSubscriberInterface {
     $is_altlogout = strpos($event->getRequest()->getRequestUri(), '/autologout_alt_logout') !== FALSE;
 
     // We need a backup plan if JS is disabled.
-    if (!$is_altlogout && !$refresh_only && isset($_SESSION['autologout_last'])) {
+    $session = $this->requestStack->getCurrentRequest()->getSession()->get('autologout_last');
+    if (!$is_altlogout && !$refresh_only && isset($session)) {
       // If time since last access is > timeout + padding, log them out.
-      $diff = $now - $_SESSION['autologout_last'];
+      $diff = $now - $session;
       if ($diff >= ($timeout + (int) $timeout_padding)) {
         $autologout_manager->logout();
         // User has changed so force Drupal to remake decisions based on user.
@@ -183,21 +166,40 @@ class AutologoutSubscriber implements EventSubscriberInterface {
         $autologout_manager->inactivityMessage();
       }
       else {
-        $_SESSION['autologout_last'] = $now;
+        $this->requestStack->getCurrentRequest()->getSession()->set('autologout_last', $now);
       }
     }
     else {
-      $_SESSION['autologout_last'] = $now;
+      $this->requestStack->getCurrentRequest()->getSession()->set('autologout_last', $now);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::REQUEST][] = ['onRequest', 100];
 
     return $events;
+  }
+
+  /**
+   * Get destination from referer.
+   *
+   * @return string|null
+   *   The destination query string or null.
+   */
+  private function getDestination(): ?string {
+    $request = $this->requestStack->getCurrentRequest();
+    if (!$referer = $request->server->get('HTTP_REFERER')) {
+      return NULL;
+    }
+    // Get query string from http referer url.
+    $referer_parts = parse_url($referer, PHP_URL_QUERY);
+    if (!empty($referer_parts) && str_contains($referer_parts, 'destination')) {
+      return $referer_parts;
+    }
+    return FALSE;
   }
 
 }

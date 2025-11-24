@@ -61,7 +61,7 @@ interface ParagraphsConversionInterface extends PluginFormInterface, Configurabl
    * @param array $converted_paragraphs
    *   (optional) The array of converted paragraphs.
    */
-  public function convert(array $settings, ParagraphInterface $original_paragraph, array $converted_paragraphs = NULL);
+  public function convert(array $settings, ParagraphInterface $original_paragraph, ?array $converted_paragraphs = NULL);
 
   /**
    * Check if the current plugin supports conversion for a paragraph.
@@ -74,6 +74,6 @@ interface ParagraphsConversionInterface extends PluginFormInterface, Configurabl
    * @param array $parent_allowed_types
    *   (optional) The allowed paragraph types on the parent field.
    */
-  public function supports(ParagraphInterface $paragraph, array $parent_allowed_types = NULL);
+  public function supports(ParagraphInterface $paragraph, ?array $parent_allowed_types = NULL);
 
 }

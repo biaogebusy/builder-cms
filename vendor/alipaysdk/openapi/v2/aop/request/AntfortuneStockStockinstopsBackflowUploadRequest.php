@@ -3,7 +3,7 @@
  * ALIPAY API: antfortune.stock.stockinstops.backflow.upload request
  *
  * @author auto create
- * @since 1.0, 2024-03-12 17:02:00
+ * @since 1.0, 2024-08-16 11:17:07
  */
 class AntfortuneStockStockinstopsBackflowUploadRequest
 {
@@ -28,7 +28,7 @@ class AntfortuneStockStockinstopsBackflowUploadRequest
 	private $forwardRoom;
 	
 	/** 
-	 * forward发送的时间
+	 * forward发送的时间，单位为秒
 	 **/
 	private $forwardTime;
 	

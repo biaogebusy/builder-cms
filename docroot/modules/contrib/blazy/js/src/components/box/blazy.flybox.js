@@ -5,11 +5,12 @@
  * @todo provide Native Fullscreen API toggler with an optional polyfill.
  */
 
-(function ($, Drupal) {
+(function ($, Drupal, _doc) {
 
   'use strict';
 
   var ID = 'flybox';
+  var ID_ITEM = 'flybx';
   var ID_ONCE = ID;
   var IS_ID = 'is-' + ID;
   var SELF_CLASS = 'b-' + ID;
@@ -54,11 +55,21 @@
    * Flybox utility functions.
    *
    * @param {HTMLElement} el
-   *   The flybox HTML element.
+   *   The flybox gallery HTML element.
    */
   function process(el) {
     $.on(el, 'click.' + ID, S_TRIGGER, launch);
     $.addClass(el, C_MOUNTED);
+  }
+
+  /**
+   * Trigger click on a flybox link.
+   *
+   * @param {HTMLElement} el
+   *   The triggering element of flybox.
+   */
+  function subprocess(el) {
+    $.on(el, 'click.' + ID, launch);
   }
 
   /**
@@ -69,7 +80,19 @@
   Drupal.behaviors.flyBox = {
     attach: function (context) {
 
-      $.once(process, ID_ONCE, S_GALLERY, context);
+      $.ready(function () {
+        // @todo remove to decouple from containing gallery.
+        var items = $.once(process, ID_ONCE, S_GALLERY, context);
+
+        // Allows flybox embedded inside another gallery for mixed galleries.
+        if (!items.length) {
+          items = $.findAll(_doc, S_TRIGGER);
+          if (items.length) {
+            $.once(subprocess, ID_ITEM, items, context);
+          }
+        }
+      });
+
     },
     detach: function (context, setting, trigger) {
       if (trigger === 'unload') {
@@ -78,4 +101,4 @@
     }
   };
 
-})(dBlazy, Drupal);
+})(dBlazy, Drupal, this.document);

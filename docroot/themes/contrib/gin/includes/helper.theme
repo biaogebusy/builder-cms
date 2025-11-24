@@ -58,12 +58,17 @@ function _gin_user_form_submit(&$form, FormStateInterface $form_state) {
       'high_contrast_mode' => (bool) $form_state->getValue('high_contrast_mode'),
       'layout_density' => $form_state->getValue('layout_density'),
       'show_description_toggle' => $form_state->getValue('show_description_toggle'),
+      'sticky_action_buttons' => $form_state->getValue('sticky_action_buttons'),
     ];
     $settings->setAll($user_settings, $account);
   }
   else {
     $settings->clear($account);
   }
+
+  // Clear render cache to ensure the correct
+  // templates are loaded for our toolbar options.
+  \Drupal::service('cache.render')->deleteAll();
 }
 
 /**
@@ -99,4 +104,35 @@ function _gin_is_active() {
   $gin_activated = array_key_exists('gin', $base_themes);
 
   return $gin_activated;
+}
+
+/**
+ * Helper function for check if a module is active.
+ */
+function _gin_module_is_active($module) {
+  $module_handler = \Drupal::service('module_handler');
+
+  // Check if Navigation module is active.
+  $check_module = $module_handler->moduleExists($module);
+
+  if ($check_module) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Helper function for check for the module version installed.
+ */
+function _gin_module_version($module) {
+  $extensionList = \Drupal::service('extension.list.module');
+  $extension_info = $extensionList->getExtensionInfo($module);
+
+  if (!empty($extension_info['version'])) {
+    return $extension_info['version'];
+  }
+
+  // Module not found or version unavailable.
+  return FALSE;
 }

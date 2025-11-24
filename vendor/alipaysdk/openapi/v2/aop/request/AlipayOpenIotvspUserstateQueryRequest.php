@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.open.iotvsp.userstate.query request
  *
  * @author auto create
- * @since 1.0, 2024-03-20 09:46:58
+ * @since 1.0, 2025-08-08 14:32:05
  */
 class AlipayOpenIotvspUserstateQueryRequest
 {

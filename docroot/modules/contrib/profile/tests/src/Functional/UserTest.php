@@ -103,11 +103,11 @@ class UserTest extends ProfileTestBase {
     ]);
     $this->drupalGet($overview_url);
     $this->assertSession()->titleEquals($this->type->getDisplayLabel() . ' | Drupal');
-    $this->assertSession()->pageTextContains('Add profile');
+    $this->assertSession()->pageTextContains('Add Test profile');
 
     // Confirm that a new profile can be added.
-    $this->getSession()->getPage()->clickLink('Add profile');
-    $this->assertSession()->titleEquals('Add profile | Drupal');
+    $this->getSession()->getPage()->clickLink('Add Test profile');
+    $this->assertSession()->titleEquals('Add Test profile | Drupal');
     $this->submitForm([
       'profile_fullname[0][value]' => 'John Smith',
     ], 'Save');
@@ -178,6 +178,7 @@ class UserTest extends ProfileTestBase {
     $this->drupalGet($overview_url);
     $this->assertSession()->pageTextContains('John Smith');
     $this->assertSession()->linkNotExists('Add profile');
+    $this->assertSession()->linkNotExists('Add Test profile');
 
     $add_url = Url::fromRoute('profile.user_page.add_form', [
       'user' => $first_user->id(),
@@ -191,6 +192,7 @@ class UserTest extends ProfileTestBase {
     $this->drupalGet($overview_url);
     $this->assertSession()->pageTextContains('John Smith');
     $this->assertSession()->linkNotExists('Add profile');
+    $this->assertSession()->linkNotExists('Add Test profile');
 
     $add_url = Url::fromRoute('profile.user_page.add_form', [
       'user' => $first_user->id(),
@@ -203,8 +205,8 @@ class UserTest extends ProfileTestBase {
     $this->drupalLogin($third_user);
     $this->drupalGet($overview_url);
     $this->assertSession()->pageTextContains('John Smith');
-    $this->assertSession()->linkExists('Add profile');
-    $this->getSession()->getPage()->clickLink('Add profile');
+    $this->assertSession()->linkExists('Add Test profile');
+    $this->getSession()->getPage()->clickLink('Add Test profile');
     $this->submitForm([
       'profile_fullname[0][value]' => 'Jane Smith',
     ], 'Save');

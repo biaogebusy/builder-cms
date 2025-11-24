@@ -1,6 +1,6 @@
 {
   "name": "drupal/devel_generate",
-  "description": "Generate dummy users, nodes, menus, taxonomy terms...",
+  "description": "Generate test users, nodes, menus, taxonomy terms...",
   "type": "drupal-module",
   "homepage": "http://drupal.org/project/devel",
   "authors": [
@@ -41,12 +41,5 @@
   "require": {},
   "suggest": {
     "drupal/realistic_dummy_content": "Generate realistic demo content with Devel's devel_generate module."
-  },
-  "extra": {
-    "drush": {
-      "services": {
-        "drush.services.yml": "^9 || ^10"
-      }
-    }
   }
 }

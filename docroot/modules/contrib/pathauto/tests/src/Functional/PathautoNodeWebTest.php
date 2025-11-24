@@ -49,6 +49,8 @@ class PathautoNodeWebTest extends BrowserTestBase {
     $permissions = [
       'administer pathauto',
       'administer url aliases',
+      'bulk delete aliases',
+      'bulk update aliases',
       'create url aliases',
       'bypass node access',
       'access content overview',
@@ -288,7 +290,11 @@ class PathautoNodeWebTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
 
     // Now create a node through the API.
-    $node = Node::create(['type' => 'article', 'title' => 'Sample article API', 'path' => ['alias' => '/sample-article-api']]);
+    $node = Node::create([
+      'type' => 'article',
+      'title' => 'Sample article API',
+      'path' => ['alias' => '/sample-article-api'],
+    ]);
     $node->save();
 
     // Test the alias.

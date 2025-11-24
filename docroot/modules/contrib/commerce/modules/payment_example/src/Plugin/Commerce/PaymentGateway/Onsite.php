@@ -2,48 +2,37 @@
 
 namespace Drupal\commerce_payment_example\Plugin\Commerce\PaymentGateway;
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_payment\Attribute\CommercePaymentGateway;
 use Drupal\commerce_payment\CreditCard;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
 use Drupal\commerce_payment\Exception\HardDeclineException;
-use Drupal\commerce_payment\PaymentMethodTypeManager;
-use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OnsitePaymentGatewayBase;
-use Drupal\commerce_price\MinorUnitsConverterInterface;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsZeroBalanceOrderInterface;
+use Drupal\commerce_payment\PluginForm\PaymentMethodEditForm;
+use Drupal\commerce_payment_example\PluginForm\Onsite\PaymentMethodAddForm;
 use Drupal\commerce_price\Price;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Provides the On-site payment gateway.
- *
- * @CommercePaymentGateway(
- *   id = "example_onsite",
- *   label = "Example (On-site)",
- *   display_label = "Example",
- *   forms = {
- *     "add-payment-method" = "Drupal\commerce_payment_example\PluginForm\Onsite\PaymentMethodAddForm",
- *     "edit-payment-method" = "Drupal\commerce_payment\PluginForm\PaymentMethodEditForm",
- *   },
- *   payment_method_types = {"credit_card"},
- *   credit_card_types = {
- *     "amex", "dinersclub", "discover", "jcb", "maestro", "mastercard", "visa",
- *   },
- *   requires_billing_information = FALSE,
- * )
  */
-class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, MinorUnitsConverterInterface $minor_units_converter) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time, $minor_units_converter);
-
-    // You can create an instance of the SDK here and assign it to $this->api.
-    // Or inject Guzzle when there's no suitable SDK.
-  }
+#[CommercePaymentGateway(
+  id: "example_onsite",
+  label: new TranslatableMarkup("Example (On-site)"),
+  display_label: new TranslatableMarkup("Example"),
+  forms: [
+    "add-payment-method" => PaymentMethodAddForm::class,
+    "edit-payment-method" => PaymentMethodEditForm::class,
+  ],
+  payment_method_types: ["credit_card"],
+  credit_card_types: [
+    "amex", "dinersclub", "discover", "jcb", "maestro", "mastercard", "visa",
+  ],
+  requires_billing_information: FALSE,
+)]
+class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface, SupportsZeroBalanceOrderInterface {
 
   /**
    * {@inheritdoc}
@@ -100,7 +89,7 @@ class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
       /** @var \Drupal\address\Plugin\Field\FieldType\AddressItem $billing_address */
       $billing_address = $billing_profile->get('address')->first();
       if ($billing_address->getPostalCode() == '53140') {
-        throw new HardDeclineException('The payment was declined');
+        throw HardDeclineException::createForPayment($payment, 'The payment was declined');
       }
     }
 
@@ -126,7 +115,7 @@ class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
   /**
    * {@inheritdoc}
    */
-  public function capturePayment(PaymentInterface $payment, Price $amount = NULL) {
+  public function capturePayment(PaymentInterface $payment, ?Price $amount = NULL) {
     $this->assertPaymentState($payment, ['authorization']);
     // If not specified, capture the entire amount.
     $amount = $amount ?: $payment->getAmount();
@@ -157,7 +146,7 @@ class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
   /**
    * {@inheritdoc}
    */
-  public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
+  public function refundPayment(PaymentInterface $payment, ?Price $amount = NULL) {
     $this->assertPaymentState($payment, ['completed', 'partially_refunded']);
     // If not specified, refund the entire amount.
     $amount = $amount ?: $payment->getAmount();
@@ -195,6 +184,15 @@ class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
         throw new \InvalidArgumentException(sprintf('$payment_details must contain the %s key.', $required_key));
       }
     }
+
+    // Add details to payment method before declining so that these details are
+    // available to the FailedPaymentEvent.
+    $payment_method->card_type = $payment_details['type'];
+    // Only the last 4 numbers are safe to store.
+    $payment_method->card_number = substr($payment_details['number'], -4);
+    $payment_method->card_exp_month = $payment_details['expiration']['month'];
+    $payment_method->card_exp_year = $payment_details['expiration']['year'];
+
     // Add a built in test for testing decline exceptions.
     // Note: Since requires_billing_information is FALSE, the payment method
     // is not guaranteed to have a billing profile. Confirm tha
@@ -203,7 +201,7 @@ class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
       /** @var \Drupal\address\Plugin\Field\FieldType\AddressItem $billing_address */
       $billing_address = $billing_profile->get('address')->first();
       if ($billing_address->getPostalCode() == '53141') {
-        throw new HardDeclineException('The payment method was declined');
+        throw HardDeclineException::createForPayment($payment_method, 'The payment method was declined');
       }
     }
 
@@ -221,11 +219,6 @@ class Onsite extends OnsitePaymentGatewayBase implements OnsiteInterface {
     // You might need to do different API requests based on whether the
     // payment method is reusable: $payment_method->isReusable().
     // Non-reusable payment methods usually have an expiration timestamp.
-    $payment_method->card_type = $payment_details['type'];
-    // Only the last 4 numbers are safe to store.
-    $payment_method->card_number = substr($payment_details['number'], -4);
-    $payment_method->card_exp_month = $payment_details['expiration']['month'];
-    $payment_method->card_exp_year = $payment_details['expiration']['year'];
     $expires = CreditCard::calculateExpirationTimestamp($payment_details['expiration']['month'], $payment_details['expiration']['year']);
     // The remote ID returned by the request.
     $remote_id = '789';

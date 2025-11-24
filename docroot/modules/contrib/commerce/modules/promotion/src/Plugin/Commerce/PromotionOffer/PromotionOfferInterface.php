@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
 
 /**
  * Defines the base interface for offers.

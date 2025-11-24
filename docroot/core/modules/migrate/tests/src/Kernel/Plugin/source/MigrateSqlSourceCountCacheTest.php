@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\Plugin\source;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
@@ -23,7 +25,7 @@ class MigrateSqlSourceCountCacheTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     // All tests use the same source_data, expected_data, expected_count, and
     // high_water. The high water is set later to maintain the order of the
     // parameters.

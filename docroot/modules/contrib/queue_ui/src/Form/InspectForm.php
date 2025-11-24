@@ -4,6 +4,8 @@ namespace Drupal\queue_ui\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Queue\QueueWorkerManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\queue_ui\QueueUIManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,21 +19,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class InspectForm extends FormBase {
 
   /**
-   * The QueueUIManager.
-   *
-   * @var \Drupal\queue_ui\QueueUIManager
-   */
-  private $queueUIManager;
-
-  /**
    * InspectForm constructor.
    *
    * @param \Drupal\queue_ui\QueueUIManager $queueUIManager
    *   The QueueUIManager object.
+   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queueWorkerManager
+   *   The queue worker manager.
    */
-  public function __construct(QueueUIManager $queueUIManager) {
-    $this->queueUIManager = $queueUIManager;
-  }
+  public function __construct(
+    private QueueUIManager $queueUIManager,
+    private readonly QueueWorkerManagerInterface $queueWorkerManager,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -43,7 +41,8 @@ class InspectForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.queue_ui')
+      $container->get('plugin.manager.queue_ui'),
+      $container->get('plugin.manager.queue_worker')
     );
   }
 
@@ -55,9 +54,28 @@ class InspectForm extends FormBase {
   }
 
   /**
+   * Returns the page title for the given queue name.
+   *
+   * @param string $queueName
+   *   The name of the queue.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The translatable markup object representing the page title.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  final public function pageTitleCallback(string $queueName): TranslatableMarkup {
+    $queue_worker = $this->queueWorkerManager->getDefinition($queueName);
+    return $this->t('Inspecting %name Queue', [
+      '%name' => $queue_worker['title'],
+    ]);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $queueName = FALSE) {
+    $form['#title'] = $this->pageTitleCallback($queueName);
     if ($queue_ui = $this->queueUIManager->fromQueueName($queueName)) {
 
       $rows = [];
@@ -86,7 +104,7 @@ class InspectForm extends FormBase {
         ];
       }
 
-      return [
+      $form += [
         'table' => [
           '#type' => 'table',
           '#header' => [

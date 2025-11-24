@@ -65,14 +65,14 @@ class RecentlyRead extends ContentEntityBase implements RecentlyReadInterface {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
+  public function getName(): string {
     return $this->get('name')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setName($name) {
+  public function setName(string $name): RecentlyReadInterface {
     $this->set('name', $name);
     return $this;
   }
@@ -80,14 +80,14 @@ class RecentlyRead extends ContentEntityBase implements RecentlyReadInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCreatedTime() {
+  public function getCreatedTime(): int {
     return $this->get('created')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setCreatedTime($timestamp) {
+  public function setCreatedTime(int $timestamp): RecentlyReadInterface {
     $this->set('created', $timestamp);
     return $this;
   }
@@ -180,21 +180,25 @@ class RecentlyRead extends ContentEntityBase implements RecentlyReadInterface {
       ->setSetting('target_type', 'user')
       ->setSetting('handler', 'default')
       ->setTranslatable(TRUE)
-      ->setDisplayOptions('view', [
-        'label' => 'hidden',
-        'type' => 'author',
-        'weight' => 0,
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
-        'weight' => 5,
-        'settings' => [
-          'match_operator' => 'CONTAINS',
-          'size' => '60',
-          'autocomplete_type' => 'tags',
-          'placeholder' => '',
-        ],
-      ])
+      ->setDisplayOptions(
+              'view', [
+                'label' => 'hidden',
+                'type' => 'author',
+                'weight' => 0,
+              ]
+          )
+      ->setDisplayOptions(
+              'form', [
+                'type' => 'entity_reference_autocomplete',
+                'weight' => 5,
+                'settings' => [
+                  'match_operator' => 'CONTAINS',
+                  'size' => '60',
+                  'autocomplete_type' => 'tags',
+                  'placeholder' => '',
+                ],
+              ]
+          )
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 

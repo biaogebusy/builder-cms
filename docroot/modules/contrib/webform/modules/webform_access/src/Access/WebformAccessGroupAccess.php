@@ -11,7 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 class WebformAccessGroupAccess {
 
   /**
-   * Check whether the current user is a administor or assign admin access.
+   * Check whether the current user is a administrator or assign admin access.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.

@@ -36,7 +36,7 @@ slick:
     base:
       /libraries/slick/slick/slick.css: {}
   dependencies:
-    - core/jquery
+    - slick/jquery-type-polyfill
 
 accessible-slick:
   remote: https://accessible360.github.io/accessible-slick/
@@ -123,3 +123,9 @@ vanilla:
     js/slick.vanilla.min.js: { weight: -0.003, minified: true }
   dependencies:
     - slick/base
+
+jquery-type-polyfill:
+  js:
+    js/jquery-type-polyfill.min.js: { weight: -19, minified: true }
+  dependencies:
+    - core/jquery

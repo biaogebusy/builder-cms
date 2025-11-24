@@ -16,10 +16,9 @@ class TwigVariablesEncoder implements EncoderInterface {
   protected $format = 'twig_variable';
 
   /**
-   *
    * {@inheritdoc}
    */
-  public function supportsEncoding($format) {
+  public function supportsEncoding($format): bool {
     return $format == $this->format;
   }
 
@@ -35,7 +34,7 @@ class TwigVariablesEncoder implements EncoderInterface {
    *
    * {@inheritdoc}
    */
-  public function encode($data, $format, array $context = []) {
+  public function encode(mixed $data, string $format, array $context = []): string {
     return $data;
   }
 }

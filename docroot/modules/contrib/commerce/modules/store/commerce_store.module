@@ -84,3 +84,22 @@ function template_preprocess_commerce_store(array &$variables) {
     $variables['store'][$key] = $variables['elements'][$key];
   }
 }
+
+/**
+ * Implements hook_field_group_content_element_keys_alter().
+ *
+ * Allow stores to render fields groups defined from Fields UI.
+ */
+function commerce_store_field_group_content_element_keys_alter(&$keys) {
+  $keys['commerce_store'] = 'store';
+}
+
+/**
+ * Implements hook_gin_content_form_routes().
+ */
+function commerce_store_gin_content_form_routes() {
+  return [
+    'entity.commerce_store.edit_form',
+    'entity.commerce_store.add_form',
+  ];
+}

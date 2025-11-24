@@ -398,7 +398,7 @@ class MenuLinksOriginTest extends KernelTestBase {
     $child2_pending_revision->set('parent', $child1->id());
     $violations = $child2_pending_revision->validate();
     $this->assertCount(1, $violations);
-    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', $violations[0]->getMessage());
+    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', (string) $violations[0]->getMessage());
     $this->assertEquals('menu_parent', $violations[0]->getPropertyPath());
 
     // Check that changing the weight in a pending revision is not allowed.
@@ -406,7 +406,7 @@ class MenuLinksOriginTest extends KernelTestBase {
     $child2_pending_revision->set('weight', 500);
     $violations = $child2_pending_revision->validate();
     $this->assertCount(1, $violations);
-    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', $violations[0]->getMessage());
+    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', (string) $violations[0]->getMessage());
     $this->assertEquals('weight', $violations[0]->getPropertyPath());
 
     // Check that changing both the parent and the weight in a pending revision
@@ -416,8 +416,8 @@ class MenuLinksOriginTest extends KernelTestBase {
     $child2_pending_revision->set('weight', 500);
     $violations = $child2_pending_revision->validate();
     $this->assertCount(2, $violations);
-    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', $violations[0]->getMessage());
-    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', $violations[1]->getMessage());
+    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', (string) $violations[0]->getMessage());
+    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', (string) $violations[1]->getMessage());
     $this->assertEquals('menu_parent', $violations[0]->getPropertyPath());
     $this->assertEquals('weight', $violations[1]->getPropertyPath());
 
@@ -427,7 +427,7 @@ class MenuLinksOriginTest extends KernelTestBase {
     $root_2_pending_revision->set('parent', $root_1->id());
     $violations = $root_2_pending_revision->validate();
     $this->assertCount(1, $violations);
-    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', $violations[0]->getMessage());
+    $this->assertEquals('You can only change the hierarchy for the <em>published</em> version of this menu link.', (string) $violations[0]->getMessage());
     $this->assertEquals('menu_parent', $violations[0]->getPropertyPath());
   }
 

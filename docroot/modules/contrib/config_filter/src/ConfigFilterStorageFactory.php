@@ -2,8 +2,8 @@
 
 namespace Drupal\config_filter;
 
-use Drupal\config_filter\Config\FilteredStorage;
 use Drupal\Core\Config\StorageInterface;
+use Drupal\config_filter\Config\FilteredStorage;
 
 /**
  * Class ConfigFilterFactory.

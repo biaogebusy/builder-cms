@@ -10,8 +10,8 @@
   display: inherit;
 }
 .page-manager-wizard-tree .page__section_item__1 > .page__section__label {
-  color: #0074bd;
   text-decoration: none;
+  color: #0074bd;
 }
 .page-manager-wizard-tree .page__section_item__1 > .page__section__label:hover {
   cursor: pointer;

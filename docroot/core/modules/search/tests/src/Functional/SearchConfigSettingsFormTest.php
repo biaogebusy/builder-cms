@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Core\Link;
@@ -87,7 +89,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
   /**
    * Verifies the search settings form.
    */
-  public function testSearchSettingsPage() {
+  public function testSearchSettingsPage(): void {
 
     // Test that the settings form displays the correct count of items left to index.
     $this->drupalGet('admin/config/search/pages');
@@ -139,7 +141,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
   /**
    * Verifies plugin-supplied settings form.
    */
-  public function testSearchModuleSettingsPage() {
+  public function testSearchModuleSettingsPage(): void {
     $this->drupalGet('admin/config/search/pages');
     $this->clickLink('Edit', 1);
 
@@ -161,7 +163,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
   /**
    * Verifies that you can disable individual search plugins.
    */
-  public function testSearchModuleDisabling() {
+  public function testSearchModuleDisabling(): void {
     // Array of search plugins to test: 'keys' are the keywords to search for,
     // and 'text' is the text to assert is on the results page.
     $plugin_info = [
@@ -250,7 +252,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
   /**
    * Tests the ordering of search pages on a clean install.
    */
-  public function testDefaultSearchPageOrdering() {
+  public function testDefaultSearchPageOrdering(): void {
     $this->drupalGet('search');
     $elements = $this->xpath('//div[@id="block-local-tasks"]//a');
     $this->assertSame(Url::fromRoute('search.view_node_search')->toString(), $elements[0]->getAttribute('href'));
@@ -261,7 +263,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
   /**
    * Tests multiple search pages of the same type.
    */
-  public function testMultipleSearchPages() {
+  public function testMultipleSearchPages(): void {
     $this->assertDefaultSearch('node_search', 'The default page is set to the installer default.');
     $search_storage = \Drupal::entityTypeManager()->getStorage('search_page');
     $entities = $search_storage->loadMultiple();
@@ -280,8 +282,8 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
 
     $first = [];
     $first['label'] = $this->randomString();
-    $first_id = $first['id'] = strtolower($this->randomMachineName(8));
-    $first['path'] = strtolower($this->randomMachineName(8));
+    $first_id = $first['id'] = $this->randomMachineName(8);
+    $first['path'] = $this->randomMachineName(8);
     $this->submitForm($first, 'Save');
     $this->assertDefaultSearch($first_id, 'The default page matches the only search page.');
     $this->assertSession()->statusMessageContains("The {$first['label']} search page has been added.", 'status');
@@ -292,7 +294,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
     $this->submitForm($edit, 'Add search page');
     $edit = [];
     $edit['label'] = $this->randomString();
-    $edit['id'] = strtolower($this->randomMachineName(8));
+    $edit['id'] = $this->randomMachineName(8);
     $edit['path'] = $first['path'];
     $this->submitForm($edit, 'Save');
     $this->assertSession()->statusMessageContains('The search page path must be unique.', 'error');
@@ -300,8 +302,8 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
     // Add a second search page.
     $second = [];
     $second['label'] = $this->randomString();
-    $second_id = $second['id'] = strtolower($this->randomMachineName(8));
-    $second['path'] = strtolower($this->randomMachineName(8));
+    $second_id = $second['id'] = $this->randomMachineName(8);
+    $second['path'] = $this->randomMachineName(8);
     $this->submitForm($second, 'Save');
     $this->assertDefaultSearch($first_id, 'The default page matches the only search page.');
 
@@ -358,7 +360,7 @@ class SearchConfigSettingsFormTest extends BrowserTestBase {
   /**
    * Tests that the enable/disable/default routes are protected from CSRF.
    */
-  public function testRouteProtection() {
+  public function testRouteProtection(): void {
     // Ensure that the enable and disable routes are protected.
     $this->drupalGet('admin/config/search/pages/manage/node_search/enable');
     $this->assertSession()->statusCodeEquals(403);

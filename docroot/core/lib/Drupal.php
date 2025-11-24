@@ -75,7 +75,7 @@ class Drupal {
   /**
    * The current system version.
    */
-  const VERSION = '9.5.11';
+  const VERSION = '10.5.6';
 
   /**
    * Core API compatibility.
@@ -98,16 +98,6 @@ class Drupal {
   const CORE_MINIMUM_SCHEMA_VERSION = 8000;
 
   /**
-   * Minimum supported version of PHP.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. Use
-   *   \Drupal\Core\Utility\PhpRequirements::getMinimumSupportedPhp() instead.
-   *
-   * @see https://www.drupal.org/node/3261451
-   */
-  const MINIMUM_SUPPORTED_PHP = '7.4.0';
-
-  /**
    * Minimum allowed version of PHP for Drupal to be bootstrapped.
    *
    * Below this version:
@@ -123,7 +113,7 @@ class Drupal {
    * - Once in the error message printed to the user immediately after.
    * Remember to update both whenever this constant is updated.
    */
-  const MINIMUM_PHP = '7.3.0';
+  const MINIMUM_PHP = '8.1.0';
 
   /**
    * Minimum recommended value of PHP memory_limit.
@@ -141,7 +131,7 @@ class Drupal {
    * message, but Drupal can still be installed. Used for (e.g.) PHP versions
    * that have reached their EOL or will in the near future.
    */
-  const RECOMMENDED_PHP = '8.1.6';
+  const RECOMMENDED_PHP = '8.3.0';
 
   /**
    * The currently active container object, or NULL if not initialized yet.
@@ -233,8 +223,10 @@ class Drupal {
   /**
    * Gets the active install profile.
    *
-   * @return string|null
-   *   The name of the active install profile.
+   * @return string|false|null
+   *   The name of the active install profile. FALSE indicates that the site is
+   *   not using an install profile. NULL indicates that the site has not yet
+   *   been installed.
    */
   public static function installProfile() {
     return static::getContainer()->getParameter('install_profile');
@@ -356,7 +348,7 @@ class Drupal {
    * an object of a class that implements
    * \Drupal\Core\DependencyInjection\ContainerInjectionInterface.
    *
-   * One common usecase is to provide a class which contains the actual code
+   * One common use case is to provide a class which contains the actual code
    * of a hook implementation, without having to create a service.
    *
    * @param string $class
@@ -404,14 +396,15 @@ class Drupal {
    * Retrieves a configuration object.
    *
    * This is the main entry point to the configuration API. Calling
-   * @code \Drupal::config('book.admin') @endcode will return a configuration
-   * object the Book module can use to read its administrative settings.
+   * @code \Drupal::config('my_module.admin') @endcode will return a
+   * configuration object the my_module module can use to read its
+   * administrative settings.
    *
    * @param string $name
    *   The name of the configuration object to retrieve, which typically
    *   corresponds to a configuration file. For
-   *   @code \Drupal::config('book.admin') @endcode, the configuration
-   *   object returned will contain the content of the book.admin
+   *   @code \Drupal::config('my_module.admin') @endcode, the configuration
+   *   object returned will contain the content of the my_module.admin
    *   configuration file.
    *
    * @return \Drupal\Core\Config\ImmutableConfig

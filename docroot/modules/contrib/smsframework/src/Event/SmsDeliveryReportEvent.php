@@ -19,14 +19,14 @@ class SmsDeliveryReportEvent extends Event {
    *
    * @var \Symfony\Component\HttpFoundation\Response
    */
-  protected $response;
+  protected Response $response;
 
   /**
    * The SMS delivery reports.
    *
    * @var \Drupal\sms\Message\SmsDeliveryReportInterface[]
    */
-  protected $reports;
+  protected array $reports;
 
   /**
    * Get the response for this event.

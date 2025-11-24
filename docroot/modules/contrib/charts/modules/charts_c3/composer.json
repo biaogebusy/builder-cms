@@ -37,8 +37,8 @@
                     "installer-name": "d3"
                 },
                 "dist": {
-                    "url": "https://github.com/d3/d3/archive/v4.9.1.zip",
-                    "type": "zip"
+                    "url": "https://cdnjs.cloudflare.com/ajax/libs/d3/4.9.1/d3.min.js",
+                    "type": "file"
                 },
                 "require": {
                     "composer/installers": "^1.0 || ^2.0"

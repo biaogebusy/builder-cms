@@ -9,13 +9,12 @@
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\crop\Entity\Crop;
-use Drupal\image\Entity\ImageStyle;
-use Drupal\media\MediaSourceInterface;
-use Drupal\media\MediaTypeInterface;
-use Drupal\file\FileInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
+use Drupal\crop\Entity\Crop;
+use Drupal\file\FileInterface;
+use Drupal\media\MediaSourceInterface;
+use Drupal\media\MediaTypeInterface;
 
 /**
  * Implements hook_theme().
@@ -181,7 +180,7 @@ function crop_file_url_alter(&$uri) {
     if ($crop = Crop::getCropFromImageStyleId($file_uri, $image_style_id)) {
       // Found a crop for this image, append a hash of it to the URL,
       // so that browsers reload the image and CDNs and proxies can be bypassed.
-      $shortened_hash = substr(md5(implode($crop->position()) . implode($crop->anchor())), 0, 8);
+      $shortened_hash = $crop->getShortHash();
 
       // If the URI has a schema and that is not http, https or data, convert
       // the URI to the external URL. Otherwise the appended query argument

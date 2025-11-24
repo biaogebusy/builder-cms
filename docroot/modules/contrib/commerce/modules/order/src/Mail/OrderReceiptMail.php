@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order\Mail;
 
-use Drupal\commerce\MailHandlerInterface;
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\OrderTotalSummaryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Token;
+use Drupal\commerce\MailHandlerInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\OrderTotalSummaryInterface;
 
 class OrderReceiptMail implements OrderReceiptMailInterface {
 
@@ -59,6 +59,9 @@ class OrderReceiptMail implements OrderReceiptMailInterface {
     if ($billing_profile = $order->getBillingProfile()) {
       $profile_view_builder = $this->entityTypeManager->getViewBuilder('profile');
       $body['#billing_information'] = $profile_view_builder->view($billing_profile);
+    }
+    if (!empty($bcc)) {
+      $bcc = $this->token->replace($bcc, ['commerce_order' => $order]);
     }
 
     $params = [

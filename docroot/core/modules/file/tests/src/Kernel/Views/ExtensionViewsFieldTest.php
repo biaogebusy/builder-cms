@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Views;
 
 use Drupal\Core\Render\RenderContext;
@@ -64,7 +66,7 @@ class ExtensionViewsFieldTest extends ViewsKernelTestBase {
   /**
    * Tests file extension views field handler extension_detect_tar option.
    */
-  public function testFileExtensionTarOption() {
+  public function testFileExtensionTarOption(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
 

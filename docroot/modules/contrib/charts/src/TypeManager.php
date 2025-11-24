@@ -2,16 +2,16 @@
 
 namespace Drupal\charts;
 
-use Drupal\charts\Event\ChartsEvents;
-use Drupal\charts\Event\TypesInfoEvent;
-use Drupal\charts\Plugin\chart\Library\ChartInterface;
-use Drupal\charts\Plugin\chart\Type\Type;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
 use Drupal\Core\Plugin\Discovery\YamlDiscovery;
+use Drupal\charts\Event\ChartsEvents;
+use Drupal\charts\Event\TypesInfoEvent;
+use Drupal\charts\Plugin\chart\Library\ChartInterface;
+use Drupal\charts\Plugin\chart\Type\Type;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**

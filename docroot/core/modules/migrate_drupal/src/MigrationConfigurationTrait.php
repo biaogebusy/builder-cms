@@ -211,40 +211,18 @@ trait MigrationConfigurationTrait {
         $version_string = $connection
           ->query('SELECT [schema_version] FROM {system} WHERE [name] = :module', [':module' => 'system'])
           ->fetchField();
-        if ($version_string && $version_string[0] == '1') {
-          if ((int) $version_string >= 1000) {
-            $version_string = '5';
-          }
-          else {
-            $version_string = FALSE;
-          }
-        }
       }
       catch (DatabaseExceptionWrapper $e) {
-        $version_string = FALSE;
+        // All database errors return FALSE.
       }
-    }
-    // For Drupal 8 (and we're predicting beyond) the schema version is in the
-    // key_value store.
-    elseif ($connection->schema()->tableExists('key_value')) {
-      try {
-        $result = $connection
-          ->query("SELECT [value] FROM {key_value} WHERE [collection] = :system_schema AND [name] = :module", [
-            ':system_schema' => 'system.schema',
-            ':module' => 'system',
-          ])
-          ->fetchField();
-        $version_string = unserialize($result);
-      }
-      catch (DatabaseExceptionWrapper $e) {
-        $version_string = FALSE;
-      }
-    }
-    else {
-      $version_string = FALSE;
     }
 
-    return $version_string ? substr($version_string, 0, 1) : FALSE;
+    return match (TRUE) {
+      !isset($version_string) => FALSE,
+      (int) $version_string >= 6000 => substr($version_string, 0, 1),
+      (int) $version_string >= 1000 => '5',
+      default => FALSE,
+    };
   }
 
   /**

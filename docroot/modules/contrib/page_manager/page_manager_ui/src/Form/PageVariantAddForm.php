@@ -5,9 +5,9 @@ namespace Drupal\page_manager_ui\Form;
 use Drupal\Core\Display\VariantManager;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\page_manager\Entity\PageVariant;
 use Drupal\page_manager\PageInterface;
-use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -64,8 +64,7 @@ class PageVariantAddForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $machine_name = '') {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    // The name label for variants is not required and can be changed later.
-    $form['name']['label']['#required'] = FALSE;
+    $form['name']['label']['#required'] = TRUE;
     $form['name']['label']['#disabled'] = FALSE;
 
     $variant_plugin_options = [];
@@ -119,15 +118,15 @@ class PageVariantAddForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // If the label is not present or is an empty string.
-    if (!$form_state->hasValue('label') || !$form_state->getValue('label')) {
-      $cached_values = $form_state->getTemporaryValue('wizard');
-      /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
-      $page_variant = $cached_values['page_variant'];
-      $plugin = $page_variant->getVariantPlugin();
-      /** @var \Drupal\Core\StringTranslation\TranslatableMarkup $admin_label */
-      $admin_label = $plugin->getPluginDefinition()['admin_label'];
-      $form_state->setValue('label', (string) $admin_label);
+    $cached_values = $form_state->getTemporaryValue('wizard');
+    /** @var \Drupal\page_manager\Entity\Page $page */
+    $page = $cached_values['page'];
+    // Validates the variant label, we cannot have variants with the same
+    // label name on the same page.
+    foreach ($page->getVariants() as $variant) {
+      if ($variant->label() === $form_state->getValue('label')) {
+        $form_state->setErrorByName('label', $this->t('The variant label name must be unique'));
+      }
     }
     // Currently the parent does nothing, but that could change.
     parent::validateForm($form, $form_state);
@@ -138,11 +137,11 @@ class PageVariantAddForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    /** @var $page \Drupal\page_manager\Entity\Page */
+    /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
     $variant_plugin_id = $cached_values['variant_plugin_id'] = $form_state->getValue('variant_plugin_id');
 
-    /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
     $page_variant = $cached_values['page_variant'];
     $page_variant->setVariantPluginId($variant_plugin_id);
     $page_variant->set('label', $form_state->getValue('label'));

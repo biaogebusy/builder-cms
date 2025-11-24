@@ -467,6 +467,7 @@ class EntityBrowserEditForm extends EntityForm {
     elseif ($status == SAVED_NEW) {
       $this->messenger->addMessage($this->t('The entity browser %name has been added. Now you may configure the widgets you would like to use.', ['%name' => $this->entity->label()]));
     }
+    return $status;
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Traits;
 
 use Drupal\Component\Utility\Html;
@@ -86,13 +88,13 @@ trait FlagCreateTrait {
       'label' => $this->randomString(),
       'entity_type' => 'node',
       'bundles' => array_keys(\Drupal::service('entity_type.bundle.info')->getBundleInfo('node')),
-      'flag_short' => $this->randomHTMLString(),
-      'unflag_short' => $this->randomHTMLString(),
-      'unflag_denied_text' => $this->randomHTMLString(),
-      'flag_long' => $this->randomHTMLString(16),
-      'unflag_long' => $this->randomHTMLString(16),
-      'flag_message' => $this->randomHTMLString(32),
-      'unflag_message' => $this->randomHTMLString(32),
+      'flag_short' => $this->randomHtmlString(),
+      'unflag_short' => $this->randomHtmlString(),
+      'unflag_denied_text' => $this->randomHtmlString(),
+      'flag_long' => $this->randomHtmlString(16),
+      'unflag_long' => $this->randomHtmlString(16),
+      'flag_message' => $this->randomHtmlString(32),
+      'unflag_message' => $this->randomHtmlString(32),
       'flag_type' => $this->getFlagType('node'),
       'link_type' => 'reload',
       'flagTypeConfig' => [
@@ -111,7 +113,7 @@ trait FlagCreateTrait {
       case 'comment':
         $default = array_merge($default, [
           'flagTypeConfig' => [
-            'access_author' => $this->randomHTMLString(),
+            'access_author' => $this->randomHtmlString(),
           ],
         ]);
         break;
@@ -119,8 +121,8 @@ trait FlagCreateTrait {
       case 'confirm':
         $default = array_merge($default, [
           'linkTypeConfig' => [
-            'flag_confirmation' => $this->randomHTMLString(),
-            'unflag_confirmation' => $this->randomHTMLString(),
+            'flag_confirmation' => $this->randomHtmlString(),
+            'unflag_confirmation' => $this->randomHtmlString(),
           ],
         ]);
         break;
@@ -128,9 +130,9 @@ trait FlagCreateTrait {
       case 'field_entry':
         $default = array_merge($default, [
           'linkTypeConfig' => [
-            'flag_confirmation' => $this->randomHTMLString(),
-            'unflag_confirmation' => $this->randomHTMLString(),
-            'edit_flagging' => $this->randomHTMLString(),
+            'flag_confirmation' => $this->randomHtmlString(),
+            'unflag_confirmation' => $this->randomHtmlString(),
+            'edit_flagging' => $this->randomHtmlString(),
           ],
         ]);
         break;
@@ -193,7 +195,7 @@ trait FlagCreateTrait {
    * @return string
    *   A random string of HTML-safe characters.
    */
-  protected function randomHTMLString($length = 8) {
+  protected function randomHtmlString($length = 8) {
     // A safe string.
     $str = Html::decodeEntities(Xss::filter($this->randomString($length * 2), []));
 

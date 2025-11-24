@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"YN",
+		"Baoshan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Changning Xian": {
+			"local_name": "昌宁县"
+		},
+		"Longling Xian": {
+			"local_name": "龙陵县"
+		},
+		"Longyang Qu": {
+			"local_name": "隆阳区"
+		},
+		"Shidian Xian": {
+			"local_name": "施甸县"
+		},
+		"Tengchong Xian": {
+			"local_name": "腾冲县"
+		}
+	}
+}

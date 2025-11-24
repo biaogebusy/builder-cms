@@ -18,6 +18,7 @@ namespace Symfony\Component\Validator\Constraints;
  * @author Benjamin Dulau <benjamin.dulau@gmail.com>
  * @author Bernhard Schussek <bschussek@gmail.com>
  */
+#[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class Image extends File
 {
     public const SIZE_NOT_DETECTED_ERROR = '6d55c3f4-e58e-4fe3-91ee-74b492199956';
@@ -36,12 +37,13 @@ class Image extends File
 
     // Include the mapping from the base class
 
-    protected static $errorNames = [
+    protected const ERROR_NAMES = [
         self::NOT_FOUND_ERROR => 'NOT_FOUND_ERROR',
         self::NOT_READABLE_ERROR => 'NOT_READABLE_ERROR',
         self::EMPTY_ERROR => 'EMPTY_ERROR',
         self::TOO_LARGE_ERROR => 'TOO_LARGE_ERROR',
         self::INVALID_MIME_TYPE_ERROR => 'INVALID_MIME_TYPE_ERROR',
+        self::FILENAME_TOO_LONG => 'FILENAME_TOO_LONG',
         self::SIZE_NOT_DETECTED_ERROR => 'SIZE_NOT_DETECTED_ERROR',
         self::TOO_WIDE_ERROR => 'TOO_WIDE_ERROR',
         self::TOO_NARROW_ERROR => 'TOO_NARROW_ERROR',
@@ -57,7 +59,12 @@ class Image extends File
         self::CORRUPTED_IMAGE_ERROR => 'CORRUPTED_IMAGE_ERROR',
     ];
 
-    public $mimeTypes = 'image/*';
+    /**
+     * @deprecated since Symfony 6.1, use const ERROR_NAMES instead
+     */
+    protected static $errorNames = self::ERROR_NAMES;
+
+    public $mimeTypes;
     public $minWidth;
     public $maxWidth;
     public $maxHeight;
@@ -86,4 +93,115 @@ class Image extends File
     public $allowLandscapeMessage = 'The image is landscape oriented ({{ width }}x{{ height }}px). Landscape oriented images are not allowed.';
     public $allowPortraitMessage = 'The image is portrait oriented ({{ width }}x{{ height }}px). Portrait oriented images are not allowed.';
     public $corruptedMessage = 'The image file is corrupted.';
+
+    public function __construct(
+        ?array $options = null,
+        int|string|null $maxSize = null,
+        ?bool $binaryFormat = null,
+        ?array $mimeTypes = null,
+        ?int $filenameMaxLength = null,
+        ?int $minWidth = null,
+        ?int $maxWidth = null,
+        ?int $maxHeight = null,
+        ?int $minHeight = null,
+        int|float|null $maxRatio = null,
+        int|float|null $minRatio = null,
+        int|float|null $minPixels = null,
+        int|float|null $maxPixels = null,
+        ?bool $allowSquare = null,
+        ?bool $allowLandscape = null,
+        ?bool $allowPortrait = null,
+        ?bool $detectCorrupted = null,
+        ?string $notFoundMessage = null,
+        ?string $notReadableMessage = null,
+        ?string $maxSizeMessage = null,
+        ?string $mimeTypesMessage = null,
+        ?string $disallowEmptyMessage = null,
+        ?string $filenameTooLongMessage = null,
+        ?string $uploadIniSizeErrorMessage = null,
+        ?string $uploadFormSizeErrorMessage = null,
+        ?string $uploadPartialErrorMessage = null,
+        ?string $uploadNoFileErrorMessage = null,
+        ?string $uploadNoTmpDirErrorMessage = null,
+        ?string $uploadCantWriteErrorMessage = null,
+        ?string $uploadExtensionErrorMessage = null,
+        ?string $uploadErrorMessage = null,
+        ?string $sizeNotDetectedMessage = null,
+        ?string $maxWidthMessage = null,
+        ?string $minWidthMessage = null,
+        ?string $maxHeightMessage = null,
+        ?string $minHeightMessage = null,
+        ?string $minPixelsMessage = null,
+        ?string $maxPixelsMessage = null,
+        ?string $maxRatioMessage = null,
+        ?string $minRatioMessage = null,
+        ?string $allowSquareMessage = null,
+        ?string $allowLandscapeMessage = null,
+        ?string $allowPortraitMessage = null,
+        ?string $corruptedMessage = null,
+        ?array $groups = null,
+        mixed $payload = null,
+        array|string|null $extensions = null,
+        ?string $extensionsMessage = null,
+    ) {
+        parent::__construct(
+            $options,
+            $maxSize,
+            $binaryFormat,
+            $mimeTypes,
+            $filenameMaxLength,
+            $notFoundMessage,
+            $notReadableMessage,
+            $maxSizeMessage,
+            $mimeTypesMessage,
+            $disallowEmptyMessage,
+            $filenameTooLongMessage,
+            $uploadIniSizeErrorMessage,
+            $uploadFormSizeErrorMessage,
+            $uploadPartialErrorMessage,
+            $uploadNoFileErrorMessage,
+            $uploadNoTmpDirErrorMessage,
+            $uploadCantWriteErrorMessage,
+            $uploadExtensionErrorMessage,
+            $uploadErrorMessage,
+            $groups,
+            $payload,
+            $extensions,
+            $extensionsMessage,
+        );
+
+        $this->minWidth = $minWidth ?? $this->minWidth;
+        $this->maxWidth = $maxWidth ?? $this->maxWidth;
+        $this->maxHeight = $maxHeight ?? $this->maxHeight;
+        $this->minHeight = $minHeight ?? $this->minHeight;
+        $this->maxRatio = $maxRatio ?? $this->maxRatio;
+        $this->minRatio = $minRatio ?? $this->minRatio;
+        $this->minPixels = $minPixels ?? $this->minPixels;
+        $this->maxPixels = $maxPixels ?? $this->maxPixels;
+        $this->allowSquare = $allowSquare ?? $this->allowSquare;
+        $this->allowLandscape = $allowLandscape ?? $this->allowLandscape;
+        $this->allowPortrait = $allowPortrait ?? $this->allowPortrait;
+        $this->detectCorrupted = $detectCorrupted ?? $this->detectCorrupted;
+        $this->sizeNotDetectedMessage = $sizeNotDetectedMessage ?? $this->sizeNotDetectedMessage;
+        $this->maxWidthMessage = $maxWidthMessage ?? $this->maxWidthMessage;
+        $this->minWidthMessage = $minWidthMessage ?? $this->minWidthMessage;
+        $this->maxHeightMessage = $maxHeightMessage ?? $this->maxHeightMessage;
+        $this->minHeightMessage = $minHeightMessage ?? $this->minHeightMessage;
+        $this->minPixelsMessage = $minPixelsMessage ?? $this->minPixelsMessage;
+        $this->maxPixelsMessage = $maxPixelsMessage ?? $this->maxPixelsMessage;
+        $this->maxRatioMessage = $maxRatioMessage ?? $this->maxRatioMessage;
+        $this->minRatioMessage = $minRatioMessage ?? $this->minRatioMessage;
+        $this->allowSquareMessage = $allowSquareMessage ?? $this->allowSquareMessage;
+        $this->allowLandscapeMessage = $allowLandscapeMessage ?? $this->allowLandscapeMessage;
+        $this->allowPortraitMessage = $allowPortraitMessage ?? $this->allowPortraitMessage;
+        $this->corruptedMessage = $corruptedMessage ?? $this->corruptedMessage;
+
+        if (null === $this->mimeTypes && [] === $this->extensions) {
+            $this->mimeTypes = 'image/*';
+        }
+
+        if (!\in_array('image/*', (array) $this->mimeTypes, true) && !\array_key_exists('mimeTypesMessage', $options ?? []) && null === $mimeTypesMessage) {
+            $this->mimeTypesMessage = 'The mime type of the file is invalid ({{ type }}). Allowed mime types are {{ types }}.';
+        }
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Service;
 
 use Drupal\private_message\Entity\PrivateMessageInterface;
@@ -7,8 +9,6 @@ use Drupal\private_message\Entity\PrivateMessageThreadInterface;
 
 /**
  * Handles the generation/update of private messages, threads, and metadata.
- *
- * @package Drupal\private_message\Service
  */
 interface PrivateMessageThreadManagerInterface {
 
@@ -19,12 +19,12 @@ interface PrivateMessageThreadManagerInterface {
    *
    * @param \Drupal\private_message\Entity\PrivateMessageInterface $message
    *   The new message object.
-   * @param array $recipients
-   *   (optional) An array of message recipients. Defaults to an empty array.
+   * @param array $members
+   *   (optional) An array of thread members. Defaults to an empty array.
    * @param \Drupal\private_message\Entity\PrivateMessageThreadInterface|null $thread
    *   (optional) The private message thread. If NULL, one will be loaded
-   *   using the recipients array.
+   *   using the members array.
    */
-  public function saveThread(PrivateMessageInterface $message, array $recipients = [], PrivateMessageThreadInterface $thread = NULL);
+  public function saveThread(PrivateMessageInterface $message, array $members = [], ?PrivateMessageThreadInterface $thread = NULL);
 
 }

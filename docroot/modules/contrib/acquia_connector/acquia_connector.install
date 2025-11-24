@@ -5,18 +5,15 @@
  * Install, update, and uninstall functions for the Acquia Connector module.
  */
 
-use Drupal\acquia_connector\Controller\TestStatusController;
-use Drupal\acquia_connector\Helper\Storage;
-use Drupal\acquia_connector\Subscription;
-use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Url;
 
 /**
  * Implements hook_uninstall().
  */
 function acquia_connector_uninstall() {
-  $storage = new Storage();
-  $storage->deleteAllData();
+  $subscription = \Drupal::service('acquia_connector.subscription');
+  $settings = $subscription->getSettings();
+  $settings->deleteAllData();
 }
 
 /**
@@ -25,122 +22,74 @@ function acquia_connector_uninstall() {
 function acquia_connector_requirements($phase) {
   $requirements = [];
 
-  switch ($phase) {
-    case 'runtime':
-      acquia_connector_load_versions();
-      $config = \Drupal::config('acquia_connector.settings');
-      $last_sent = \Drupal::state()->get('acquia_connector.cron_last', 0);
-      $subscription = new Subscription();
-      $has_credentials = $subscription->hasCredentials();
-      $state_site_name = \Drupal::state()->get('spi.site_name');
-      $state_site_machine_name = \Drupal::state()->get('spi.site_machine_name');
+  if ($phase !== 'runtime') {
+    return $requirements;
+  }
+  $subscription = \Drupal::service('acquia_connector.subscription');
 
-      // After Tue Nov 15 2022.
-      $time = \Drupal::time();
-      $eol_warning_date = new DrupalDateTime('Tue Nov 15 2022');
-      $current_date = DrupalDateTime::createFromTimestamp($time->getRequestTime());
-      if ($current_date >= $eol_warning_date) {
-        $requirements['acquia_3_x_eol'] = [
-          'title' => t('Acquia 3.x EOL'),
-          'value' => t('Acquia Connector 3.x has reached end of life, please upgrade to 4.x to continue using it.'),
-          'description' => t('Please upgrade to 4.x before March 1st 2023, after that the 3.x version of the module will no longer work.'),
-          'severity' => REQUIREMENT_WARNING,
-        ];
+  $has_credentials = $subscription->hasCredentials();
 
-        // After Wed Mar 01 2023.
-        $eol_date = new DrupalDateTime('Wed Mar 01 2023');
-        if ($current_date >= $eol_date) {
-          $requirements['acquia_3_x_eol']['severity'] = REQUIREMENT_ERROR;
-        }
-      }
-
-      // Inform users on subscription status. Either we know they are active,
-      // or we know they have credentials but not active (not set up yet) or
-      // we have credentials but an inactive subscription (either bad
-      // credentials or expired subscription).
-      if ($subscription->isActive()) {
-        $requirements['acquia_subscription_status'] = [
-          'title' => t('Acquia Subscription status'),
-          'severity' => REQUIREMENT_OK,
-          'value' => t('Active'),
-          'description' => t('You can <a href=":refresh-status">manually refresh the subscription status</a>.', [
-            ':refresh-status' => Url::fromRoute('acquia_connector.refresh_status', [], ['absolute' => TRUE])
-              ->toString(),
-          ]),
-        ];
-      }
-      elseif (!$has_credentials) {
-        $requirements['acquia_subscription_status'] = [
-          'title' => t('Acquia Subscription status'),
-          'severity' => REQUIREMENT_WARNING,
-          'value' => t('Unknown'),
-          'description' => t('You did not complete your signup to Acquia. You can provide the subscription identifier and the subscription key at the <a href=":settings">Acquia settings</a> page or try to <a href=":refresh-status">manually refresh the subscription status</a>.', [':settings' => Url::fromRoute('acquia_connector.settings')->toString(), ':refresh-status' => Url::fromRoute('acquia_connector.refresh_status')->toString()]),
-        ];
-      }
-      else {
-        $subscription = \Drupal::state()->get('acquia_subscription_data');
-        $href = isset($subscription['uuid']) ? 'https://cloud.acquia.com/app/develop/applications/' . $subscription['uuid'] : 'https://cloud.acquia.com';
-        $requirements['acquia_subscription_status'] = [
-          'title' => t('Acquia Subscription status'),
-          'severity' => REQUIREMENT_WARNING,
-          'value' => t('Inactive'),
-          'description' => t('Your subscription is expired or you are using an invalid identifier and key pair. You can check the subscription identifier and the subscription key at the <a href=":settings">Acquia settings</a> page. Check <a href=":acquia-network">your subscription on the Acquia Subscription</a> for further status information.', [':settings' => Url::fromRoute('acquia_connector.settings')->toString(), ':acquia-network' => $href]),
-        ];
-      }
-
-      // Acquia SPI custom tests status.
-      $variables = [
-        ':help' => Url::fromUri('base:admin/help/acquia_connector', ['absolute' => TRUE])
+  // Inform users on subscription status. Either we know they are active,
+  // or we know they have credentials but not active (not set up yet) or
+  // we have credentials but an inactive subscription (either bad
+  // credentials or expired subscription).
+  if ($subscription->isActive()) {
+    $requirements['acquia_subscription_status'] = [
+      'title' => t('Acquia Subscription status'),
+      'severity' => REQUIREMENT_OK,
+      'value' => t('Active'),
+      'description' => t('You can <a href=":refresh-status">manually refresh the subscription status</a>.', [
+        ':refresh-status' => Url::fromRoute('acquia_connector.refresh_status', [], ['absolute' => TRUE])
           ->toString(),
-        ':validate' => Url::fromRoute('acquia_connector.test_validate', [], ['absolute' => TRUE])
+      ]),
+    ];
+  }
+  elseif (!$has_credentials) {
+    $requirements['acquia_subscription_status'] = [
+      'title' => t('Acquia Subscription status'),
+      'severity' => REQUIREMENT_WARNING,
+      'value' => t('Unknown'),
+      'description' => t('You did not complete your signup to Acquia. You can provide the subscription identifier and the subscription key at the <a href=":settings">Acquia settings</a> page or try to <a href=":refresh-status">manually refresh the subscription status</a>.', [
+        ':settings' => Url::fromRoute('acquia_connector.settings')
           ->toString(),
-      ];
-
-      // Compatibility for Drupal 9.2.
-      if (method_exists(\Drupal::moduleHandler(), 'invokeAllWith')) {
-        $modules = [];
-        \Drupal::moduleHandler()->invokeAllWith('acquia_connector_spi_test', function (callable $hook, string $module) use (&$modules) {
-          // There is minimal overhead since the hook is not invoked.
-          $modules[] = $module;
-        });
-      }
-      else {
-        // @phpstan-ignore-next-line
-        $modules = \Drupal::moduleHandler()->getImplementations('acquia_connector_spi_test');
-      }
-
-      if (empty($modules)) {
-        $description = t('No custom tests were detected in any module.');
-        $value       = t('Not implemented (<a href=":help">more information</a>)', $variables);
-        $severity    = REQUIREMENT_OK;
-      }
-      else {
-        $status = new TestStatusController();
-        $result = $status->testStatus();
-
-        if (!empty($result)) {
-          $variables['%modules'] = implode(', ', array_keys($result));
-          $description = t('Custom tests within the following module(s) have failed validation and will not be sent: %modules. <br/>Please check the error logs for more information regarding how to pass validation or <a href=":validate">perform another validation check</a>. A validation check can also be performed via the Drush command, "spi-test-validate".', $variables);
-          $value = t('Failed (<a href=":help">more information</a>)', $variables);
-          $severity = REQUIREMENT_ERROR;
-        }
-        else {
-          $variables['%modules'] = implode(', ', $modules);
-          $description = t('Custom test data is structured properly and is sending from: %modules', $variables);
-          $value = t('Passed');
-          $severity = REQUIREMENT_OK;
-        }
-
-      }
-
-      $requirements['acquia_spi_test'] = [
-        'title'       => t('Acquia Subscription SPI Custom Tests'),
-        'description' => $description,
-        'value'       => $value,
-        'severity'    => $severity,
-      ];
-      break;
+        ':refresh-status' => Url::fromRoute('acquia_connector.refresh_status')
+          ->toString(),
+      ]),
+    ];
+  }
+  else {
+    // Should get cached data if it exists.
+    $subscription = $subscription->getSubscription();
+    $href = isset($subscription['uuid']) ? 'https://cloud.acquia.com/app/develop/applications/' . $subscription['uuid'] : 'https://cloud.acquia.com';
+    $requirements['acquia_subscription_status'] = [
+      'title' => t('Acquia Subscription status'),
+      'severity' => REQUIREMENT_WARNING,
+      'value' => t('Inactive'),
+      'description' => t('Your subscription is expired or you are using an invalid identifier and key pair. You can check the subscription identifier and the subscription key at the <a href=":settings">Acquia settings</a> page or try to <a href=":refresh-status">manually refresh the subscription status</a>. Check <a href=":acquia-network">your subscription on the Acquia Subscription</a> for further status information.', [
+        ':settings' => Url::fromRoute('acquia_connector.settings')
+          ->toString(),
+        ':refresh-status' => Url::fromRoute('acquia_connector.refresh_status')
+          ->toString(),
+        ':acquia-network' => $href,
+      ]),
+    ];
   }
 
   return $requirements;
+}
+
+/**
+ * Implements hook_requirements_alter().
+ */
+function acquia_connector_requirements_alter(array &$requirements): void {
+  $php_severity = $requirements['php']['severity'] ?? NULL;
+  // Customers always use a supported version of PHP on the Acquia Platform.
+  if ($php_severity === REQUIREMENT_ERROR) {
+    $requirements['php']['severity'] = REQUIREMENT_WARNING;
+    $requirements['php']['description'] = t('<p>@requirement</p><p>As part of your subscription, Acquia supports older versions of PHP in an effort to provide additional
+     time for our customers to make the transition to a supported version. Read our <a href="https://docs.acquia.com/cloud-platform/manage/php/">PHP Documentation</a> for more information.</p>',
+      [
+        '@requirement' => $requirements['php']['description'] ?? '',
+      ]);
+  }
 }

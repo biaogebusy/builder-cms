@@ -49,10 +49,14 @@ include:
 # variables:
 #   SKIP_ESLINT: '1'
 
+composer:
+  variables:
+    DRUPAL_CORE: 10.3.10
+
 variables:
-  _TARGET_PHP: "8.1"
-  _TARGET_CORE: "10.1.3"
   SYMFONY_DEPRECATIONS_HELPER: disabled
+  OPT_IN_TEST_PREVIOUS_MINOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 0
 
 ###################################################################################
 #

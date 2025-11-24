@@ -4,9 +4,10 @@ namespace Drupal\commerce_tax;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Site\Settings;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -74,6 +75,10 @@ class TaxTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function render() {
     $build = parent::render();
+
+    if (!Settings::get('commerce_show_partner_banners', TRUE)) {
+      return $build;
+    }
 
     /** @var \Drupal\commerce_store\StoreStorageInterface $store_storage */
     $store_storage = $this->entityTypeManager->getStorage('commerce_store');

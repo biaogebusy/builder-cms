@@ -5,6 +5,8 @@ namespace Drupal\views\Plugin\views\query;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 
+// cspell:ignore unixepoch
+
 /**
  * SQLite-specific date handling.
  *
@@ -45,7 +47,7 @@ class SqliteDateSql implements DateSqlInterface {
     'd' => '%d',
     // No format for full day name.
     'l' => '%d',
-    // no format for day of month number without leading zeros.
+    // No format for day of month number without leading zeros.
     'j' => '%d',
     'W' => '%W',
     'H' => '%H',

@@ -10,20 +10,24 @@
  * System admin module: modules page.
  */
 
-.modules-table-filter {
-  padding: 0.25rem 1.5rem;
-  border: 1px solid #d3d4d9;
+:root {
+  --module-table-cell-padding-vertical: var(--space-m);
+  --module-table-cell-padding-horizontal: calc(var(--space-m) - (var(--input-border-size) * 2));
+}
+
+.modules-table-filter,
+.permissions-table-filter {
+  padding: 0.25rem var(--space-l);
+  border: 1px solid var(--color-gray-200);
   border-radius: 2px 2px 0 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Visually hide the module filter input description. */
 
-.modules-table-filter .form-item__description {
+.modules-table-filter .form-item__description,
+.permissions-table-filter .form-item__description {
   position: absolute !important;
-}
-
-.modules-table-filter .form-item__description {
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
   width: 1px;
@@ -44,9 +48,9 @@
 }
 
 .claro-details__summary.claro-details__summary--package-listing {
-  color: #232429;
+  color: var(--color-text);
   border-radius: 0.25rem;
-  background: #f3f4f9;
+  background: var(--color-gray-050);
   font-size: 1.125rem; /* 18px */
   line-height: 1.424rem; /* 23px */
 }
@@ -56,8 +60,8 @@
 }
 
 .module-list__module {
-  color: #232429;
-  border-bottom: 1px solid #d3d4d9;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-gray-200);
   background: none;
 }
 
@@ -67,7 +71,7 @@
 
 .module-list__module td {
   height: auto;
-  padding: 1rem calc(1rem - 2px);
+  padding: var(--module-table-cell-padding-vertical) var(--module-table-cell-padding-horizontal);
   vertical-align: top;
 }
 
@@ -90,13 +94,13 @@
 
 [dir="rtl"] .module-list__checkbox {
   padding-right: 0.6875rem;
-  padding-left: calc(1rem - 2px);
+  padding-left: var(--module-table-cell-padding-horizontal);
   text-align: right;
 }
 
 .module-list__checkbox .form-type--checkbox {
   margin: 0;
-  line-height: 1.295rem;
+  line-height: var(--details-line-height);
 }
 
 .module-list__checkbox .form-checkbox:not([disabled]) {
@@ -118,18 +122,18 @@ td.module-list__description {
 }
 
 .claro-details__summary.module-list__module-summary {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-top: var(--module-table-cell-padding-vertical);
+  padding-bottom: var(--module-table-cell-padding-vertical);
   font-weight: normal;
-  line-height: 1.295rem;
+  line-height: var(--details-line-height);
 }
 
 .claro-details__summary.module-list__module-summary::before {
-  top: 1.75rem;
+  top: calc(var(--space-m) + var(--space-s));
 }
 
 .module-details__description {
-  font-size: 0.75rem;
+  font-size: var(--space-s);
   line-height: 0.9375rem;
 }
 
@@ -139,14 +143,14 @@ td.module-list__description {
 }
 
 .module-details__requirements {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-m);
 }
 
 .module-details__links {
   position: relative;
   /* Negative margin matches the value of action link's top padding. */
-  margin-top: -0.375rem;
-  margin-bottom: 1rem;
+  margin-top: calc((var(--space-s) - ((var(--space-l) - var(--space-s)) / 2)) * -1);
+  margin-bottom: var(--space-m);
 }
 
 .module-details__links .action-link + .action-link {
@@ -158,7 +162,7 @@ td.module-list__description {
 }
 
 .claro-details .tableresponsive-toggle {
-  padding: 1rem 1rem 1rem 0;
+  padding: var(--space-m) var(--space-m) var(--space-m) 0;
 }
 
 .claro-details .tableresponsive-toggle::before {
@@ -167,7 +171,7 @@ td.module-list__description {
   position: relative;
   top: -1px;
   display: inline-block;
-  width: 2rem;
+  width: calc(var(--space-m) * 2);
   height: 1.25rem;
   content: "";
   cursor: pointer;
@@ -177,8 +181,8 @@ td.module-list__description {
 }
 
 .claro-details .tableresponsive-toggle:hover {
-  color: #0036b1;
-  background-color: #f5f8ff;
+  color: var(--color-absolutezero-hover);
+  background-color: var(--color-bgblue-hover);
 }
 
 .claro-details .tableresponsive-toggle:hover::before {
@@ -186,12 +190,13 @@ td.module-list__description {
 }
 
 .claro-details .tableresponsive-toggle-columns button {
-  margin-top: 0.5rem;
+  margin-top: var(--space-xs);
+  -webkit-text-decoration: none;
   text-decoration: none;
-  color: #55565b;
+  color: var(--color-gray-800);
   font-weight: bold;
 }
 
 .claro-details .admin-missing {
-  color: #dc2323;
+  color: var(--color-maximumred);
 }

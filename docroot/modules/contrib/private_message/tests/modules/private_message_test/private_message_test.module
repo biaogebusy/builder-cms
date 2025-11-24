@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for Private Message Test module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Session\AccountInterface;
+
+/**
+ * Implements hook_user_format_name_alter().
+ */
+function private_message_test_user_format_name_alter(MarkupInterface|string &$name, AccountInterface $account): void {
+  $name = $account->get('full_name')->value;
+}

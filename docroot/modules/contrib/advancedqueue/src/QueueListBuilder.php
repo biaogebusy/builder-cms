@@ -4,12 +4,31 @@ namespace Drupal\advancedqueue;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * Defines the list builder for queues.
  */
 class QueueListBuilder extends ConfigEntityListBuilder {
+
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, protected RouterInterface $router) {
+    parent::__construct($entity_type, $storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('router')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -48,7 +67,7 @@ class QueueListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\advancedqueue\Entity\QueueInterface $entity */
     $operations = parent::getDefaultOperations($entity);
 
-    if ($entity->getBackendId() === 'database') {
+    if ($entity->getBackendId() === 'database' && $this->router->getRouteCollection()->get('view.advancedqueue_jobs.page_1')) {
       $operations['jobs'] = [
         'title' => $this->t('List jobs'),
         'weight' => -20,

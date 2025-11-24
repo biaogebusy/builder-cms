@@ -1,63 +1,36 @@
 <?php
-// @codingStandardsIgnoreFile
+
+declare(strict_types=1);
 
 namespace Drupal\image_effects\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\image_effects\Plugin\ImageEffectsPluginManager;
+use Drupal\image_effects\Plugin\ColorSelectorPluginManager;
+use Drupal\image_effects\Plugin\FontSelectorPluginManager;
+use Drupal\image_effects\Plugin\ImageSelectorPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Main image_effects settings admin form.
- *
- * @todo the array syntax for $form_state->getValue([...]) fails code style
- * checking, but this is quite inconvenient. See if sniff gets adjusted or
- * a different way to access nested keys will be available.
  */
 class SettingsForm extends ConfigFormBase {
 
-  /**
-   * The color selector plugin manager.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsPluginManager
-   */
-  protected $colorManager;
-
-  /**
-   * The image selector plugin manager.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsPluginManager
-   */
-  protected $imageManager;
-
-  /**
-   * The font selector plugin manager.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsPluginManager
-   */
-  protected $fontManager;
-
-  /**
-   * Constructs the class for image_effects settings form.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginManager $color_plugin_manager
-   *   The color selector plugin manager.
-   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginManager $image_plugin_manager
-   *   The image selector plugin manager.
-   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginManager $font_plugin_manager
-   *   The font selector plugin manager.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, ImageEffectsPluginManager $color_plugin_manager, ImageEffectsPluginManager $image_plugin_manager, ImageEffectsPluginManager $font_plugin_manager) {
-    parent::__construct($config_factory);
-    $this->colorManager = $color_plugin_manager;
-    $this->imageManager = $image_plugin_manager;
-    $this->fontManager = $font_plugin_manager;
+  public function __construct(
+    ConfigFactoryInterface $configFactory,
+    TypedConfigManagerInterface $typedConfigManager,
+    protected ColorSelectorPluginManager $colorManager,
+    protected ImageSelectorPluginManager $imageManager,
+    protected FontSelectorPluginManager $fontManager,
+  ) {
+    parent::__construct(
+      $configFactory,
+      $typedConfigManager,
+    );
   }
 
   /**
@@ -65,10 +38,11 @@ class SettingsForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('config.factory'),
-      $container->get('plugin.manager.image_effects.color_selector'),
-      $container->get('plugin.manager.image_effects.image_selector'),
-      $container->get('plugin.manager.image_effects.font_selector')
+      $container->get(ConfigFactoryInterface::class),
+      $container->get(TypedConfigManagerInterface::class),
+      $container->get(ColorSelectorPluginManager::class),
+      $container->get(ImageSelectorPluginManager::class),
+      $container->get(FontSelectorPluginManager::class),
     );
   }
 
@@ -97,6 +71,7 @@ class SettingsForm extends ConfigFormBase {
 
     // Color selector plugin.
     $color_plugin_id = $ajaxing ? $form_state->getValue(['settings', 'color_selector', 'plugin_id']) : $config->get('color_selector.plugin_id');
+    /** @var \Drupal\image_effects\Plugin\ImageEffectsPluginBase $color_plugin */
     $color_plugin = $this->colorManager->getPlugin($color_plugin_id);
     if ($ajaxing && $form_state->hasValue(['settings', 'color_selector', 'plugin_settings'])) {
       $color_plugin->setConfiguration($form_state->getValue(['settings', 'color_selector', 'plugin_settings']));
@@ -104,6 +79,7 @@ class SettingsForm extends ConfigFormBase {
 
     // Image selector plugin.
     $image_plugin_id = $ajaxing ? $form_state->getValue(['settings', 'image_selector', 'plugin_id']) : $config->get('image_selector.plugin_id');
+    /** @var \Drupal\image_effects\Plugin\ImageEffectsPluginBase $image_plugin */
     $image_plugin = $this->imageManager->getPlugin($image_plugin_id);
     if ($ajaxing && $form_state->hasValue(['settings', 'image_selector', 'plugin_settings'])) {
       $image_plugin->setConfiguration($form_state->getValue(['settings', 'image_selector', 'plugin_settings']));
@@ -111,6 +87,7 @@ class SettingsForm extends ConfigFormBase {
 
     // Font selector plugin.
     $font_plugin_id = $ajaxing ? $form_state->getValue(['settings', 'font_selector', 'plugin_id']) : $config->get('font_selector.plugin_id');
+    /** @var \Drupal\image_effects\Plugin\ImageEffectsPluginBase $font_plugin */
     $font_plugin = $this->fontManager->getPlugin($font_plugin_id);
     if ($ajaxing && $form_state->hasValue(['settings', 'font_selector', 'plugin_settings'])) {
       $font_plugin->setConfiguration($form_state->getValue(['settings', 'font_selector', 'plugin_settings']));
@@ -201,6 +178,7 @@ class SettingsForm extends ConfigFormBase {
     $config = $this->config('image_effects.settings');
 
     // Color plugin.
+    /** @var \Drupal\image_effects\Plugin\ImageEffectsPluginBase $color_plugin */
     $color_plugin = $this->colorManager->getPlugin($form_state->getValue(['settings', 'color_selector', 'plugin_id']));
     if ($form_state->hasValue(['settings', 'color_selector', 'plugin_settings'])) {
       $color_plugin->setConfiguration($form_state->getValue(['settings', 'color_selector', 'plugin_settings']));
@@ -210,6 +188,7 @@ class SettingsForm extends ConfigFormBase {
       ->set('color_selector.plugin_settings.' . $color_plugin->getPluginId(), $color_plugin->getConfiguration());
 
     // Image plugin.
+    /** @var \Drupal\image_effects\Plugin\ImageEffectsPluginBase $image_plugin */
     $image_plugin = $this->imageManager->getPlugin($form_state->getValue(['settings', 'image_selector', 'plugin_id']));
     if ($form_state->hasValue(['settings', 'image_selector', 'plugin_settings'])) {
       $image_plugin->setConfiguration($form_state->getValue(['settings', 'image_selector', 'plugin_settings']));
@@ -219,6 +198,7 @@ class SettingsForm extends ConfigFormBase {
       ->set('image_selector.plugin_settings.' . $image_plugin->getPluginId(), $image_plugin->getConfiguration());
 
     // Font plugin.
+    /** @var \Drupal\image_effects\Plugin\ImageEffectsPluginBase $font_plugin */
     $font_plugin = $this->fontManager->getPlugin($form_state->getValue(['settings', 'font_selector', 'plugin_id']));
     if ($form_state->hasValue(['settings', 'font_selector', 'plugin_settings'])) {
       $font_plugin->setConfiguration($form_state->getValue(['settings', 'font_selector', 'plugin_settings']));
@@ -234,7 +214,7 @@ class SettingsForm extends ConfigFormBase {
   /**
    * AJAX callback.
    */
-  public function processAjax($form, FormStateInterface $form_state) {
+  public function processAjax(array $form, FormStateInterface $form_state): AjaxResponse {
     $response = new AjaxResponse();
     $status_messages = ['#type' => 'status_messages'];
     $response->addCommand(new HtmlCommand('#image-effects-ajax-messages', $status_messages));

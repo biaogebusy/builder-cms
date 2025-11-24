@@ -44,12 +44,12 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
     $this->index = $this->createMock(IndexInterface::class);
     $this->index->expects($this->any())
       ->method('status')
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
     $items = $this->getTestItem();
     $fields = $items[$this->itemIds[0]]->getFields();
     $this->index->expects($this->any())
       ->method('getFields')
-      ->will($this->returnValue($fields));
+      ->willReturn($fields);
 
     $this->processor = new TestFieldsProcessorPlugin(['#index' => $this->index], '', []);
   }
@@ -191,7 +191,7 @@ class FieldsProcessorPluginBaseTest extends UnitTestCase {
   public function testProcessFieldValueOverride() {
     $override = function (&$value, &$type) {
       // Check whether the passed $type matches the one included in the value.
-      if (strpos($value, "{$type}_field") !== FALSE) {
+      if (str_contains($value, "{$type}_field")) {
         $value = "&$value";
       }
       else {

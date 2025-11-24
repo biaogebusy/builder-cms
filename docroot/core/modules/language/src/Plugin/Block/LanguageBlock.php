@@ -3,24 +3,26 @@
 namespace Drupal\language\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\language\Plugin\Derivative\LanguageBlock as LanguageBlockDeriver;
 
 /**
  * Provides a 'Language switcher' block.
- *
- * @Block(
- *   id = "language_block",
- *   admin_label = @Translation("Language switcher"),
- *   category = @Translation("System"),
- *   deriver = "Drupal\language\Plugin\Derivative\LanguageBlock"
- * )
  */
+#[Block(
+  id: "language_block",
+  admin_label: new TranslatableMarkup("Language switcher"),
+  category: new TranslatableMarkup("System"),
+  deriver: LanguageBlockDeriver::class
+)]
 class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -43,7 +45,7 @@ class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
@@ -87,7 +89,16 @@ class LanguageBlock extends BlockBase implements ContainerFactoryPluginInterface
     $route_match = \Drupal::routeMatch();
     // If there is no route match, for example when creating blocks on 404 pages
     // for logged-in users with big_pipe enabled using the front page instead.
-    $url = $route_match->getRouteObject() ? Url::fromRouteMatch($route_match) : Url::fromRoute('<front>');
+    if ($this->pathMatcher->isFrontPage() || !$route_match->getRouteObject()) {
+      // We are skipping the route match on both 404 and front page.
+      // Example: If on front page, there is no route match like when creating
+      // blocks on 404 pages for logged-in users with big_pipe enabled, use the
+      // front page.
+      $url = Url::fromRoute('<front>');
+    }
+    else {
+      $url = Url::fromRouteMatch($route_match);
+    }
     $links = $this->languageManager->getLanguageSwitchLinks($type, $url);
 
     if (isset($links->links)) {

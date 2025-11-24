@@ -2,6 +2,7 @@
 
 namespace Drupal\panels\Form;
 
+use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\PluginHelper;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
@@ -97,7 +98,7 @@ class LayoutChangeSettings extends FormBase {
     ];
 
     $layout_settings = !empty($cached_values['layout_change']['layout_settings']) ? $cached_values['layout_change']['layout_settings'] : [];
-    if (!$layout_settings && PluginHelper::isConfigurable($variant_plugin->getLayout())) {
+    if (!$layout_settings && $variant_plugin->getLayout() instanceof ConfigurableInterface) {
       $layout_settings = $variant_plugin->getLayout()->getConfiguration();
     }
     $layout_id = !empty($cached_values['layout_change']['new_layout']) ? $cached_values['layout_change']['new_layout'] : $variant_plugin->getConfiguration()['layout'];
@@ -132,7 +133,7 @@ class LayoutChangeSettings extends FormBase {
         $layout->submitConfigurationForm($form, $sub_form_state);
         // If this plugin is configurable, get that configuration and set it in
         // cached values.
-        if (PluginHelper::isConfigurable($layout)) {
+        if ($layout instanceof ConfigurableInterface) {
           $cached_values = $this->setCachedValues($next_params['step'], $plugin, $layout, $cached_values, $layout->getConfiguration());
         }
       }
@@ -164,7 +165,7 @@ class LayoutChangeSettings extends FormBase {
    * @param \Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant $plugin
    *   The plugin to update.
    * @param \Drupal\Core\Layout\LayoutInterface $layout
-   *   The layout for which we are upating settings.
+   *   The layout for which we are updating settings.
    * @param array $cached_values
    *   The current cached values from the wizard.
    * @param array $configuration

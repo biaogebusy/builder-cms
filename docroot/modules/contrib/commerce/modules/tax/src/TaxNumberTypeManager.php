@@ -6,6 +6,8 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_tax\Attribute\CommerceTaxNumberType;
+use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\TaxNumberTypeInterface;
 
 /**
  * Manages tax number type plugins.
@@ -35,7 +37,14 @@ class TaxNumberTypeManager extends DefaultPluginManager implements TaxNumberType
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Commerce/TaxNumberType', $namespaces, $module_handler, 'Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\TaxNumberTypeInterface', 'Drupal\commerce_tax\Annotation\CommerceTaxNumberType');
+    parent::__construct(
+      'Plugin/Commerce/TaxNumberType',
+      $namespaces,
+      $module_handler,
+      TaxNumberTypeInterface::class,
+      CommerceTaxNumberType::class,
+      'Drupal\commerce_tax\Annotation\CommerceTaxNumberType',
+    );
 
     $this->alterInfo('commerce_tax_number_type_info');
     $this->setCacheBackend($cache_backend, 'commerce_tax_number_type_plugins');

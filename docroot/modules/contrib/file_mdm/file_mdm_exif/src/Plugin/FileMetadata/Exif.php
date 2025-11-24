@@ -1,132 +1,84 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm_exif\Plugin\FileMetadata;
 
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\file_mdm\Plugin\Attribute\FileMetadata;
 use Drupal\file_mdm\Plugin\FileMetadata\FileMetadataPluginBase;
 use Drupal\file_mdm_exif\ExifTagMapperInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
 use lsolesen\pel\PelEntry;
+use lsolesen\pel\PelEntryNumber;
 use lsolesen\pel\PelExif;
 use lsolesen\pel\PelIfd;
 use lsolesen\pel\PelJpeg;
 use lsolesen\pel\PelTiff;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 /**
  * FileMetadata plugin for EXIF.
- *
- * @FileMetadata(
- *   id = "exif",
- *   title = @Translation("EXIF"),
- *   help = @Translation("File metadata plugin for EXIF image information, using the PHP Exif Library (PEL)."),
- * )
  */
+#[FileMetadata(
+  id: 'exif',
+  title: new TranslatableMarkup('EXIF'),
+  help: new TranslatableMarkup('File metadata plugin for EXIF image information, using the PHP Exif Library (PEL).')
+)]
 class Exif extends FileMetadataPluginBase {
 
   /**
    * The MIME type guessing service.
-   *
-   * @var \Symfony\Component\Mime\MimeTypeGuesserInterface
    */
-  protected $mimeTypeGuesser;
+  protected readonly MimeTypeGuesserInterface $mimeTypeGuesser;
 
   /**
    * The EXIF tag mapping service.
-   *
-   * @var \Drupal\file_mdm_exif\ExifTagMapperInterface
    */
-  protected $tagMapper;
+  protected readonly ExifTagMapperInterface $tagMapper;
 
   /**
    * The PEL file object being processed.
-   *
-   * @var \lsolesen\pel\PelJpeg|\lsolesen\pel\PelTiff
    */
-  protected $pelFile;
+  protected PelJpeg|PelTiff|false $pelFile;
 
-  /**
-   * Constructs an Exif file metadata plugin.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param array $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_service
-   *   The cache service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
-   * @param \Symfony\Component\Mime\MimeTypeGuesserInterface $mime_type_guesser
-   *   The MIME type mapping service.
-   * @param \Drupal\file_mdm_exif\ExifTagMapperInterface $tag_mapper
-   *   The EXIF tag mapping service.
-   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
-   *   The stream wrapper manager service.
-   */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, CacheBackendInterface $cache_service, ConfigFactoryInterface $config_factory, MimeTypeGuesserInterface $mime_type_guesser, ExifTagMapperInterface $tag_mapper, StreamWrapperManagerInterface $stream_wrapper_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $cache_service, $config_factory, $stream_wrapper_manager);
-    $this->mimeTypeGuesser = $mime_type_guesser;
-    $this->tagMapper = $tag_mapper;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('cache.file_mdm'),
-      $container->get('config.factory'),
-      $container->get('file.mime_type.guesser'),
-      $container->get('file_mdm_exif.tag_mapper'),
-      $container->get('stream_wrapper_manager')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->mimeTypeGuesser = $container->get('file.mime_type.guesser');
+    $instance->tagMapper = $container->get(ExifTagMapperInterface::class);
+    return $instance;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getSupportedKeys($options = NULL) {
+  public function getSupportedKeys(array $options = NULL): array {
     return $this->tagMapper->getSupportedKeys($options);
   }
 
   /**
    * Returns the PEL file object for the image file.
    *
-   * @return \lsolesen\pel\PelJpeg|\lsolesen\pel\PelTiff
-   *   A PEL file object.
+   * @return \lsolesen\pel\PelJpeg|\lsolesen\pel\PelTiff|false
+   *   A PEL file object, or FALSE if it cannot be opened.
    */
-  protected function getFile() {
-    if ($this->pelFile !== NULL) {
-      return $this->pelFile;
-    }
-    else {
+  protected function getFile(): PelJpeg|PelTiff|false {
+    if (!isset($this->pelFile)) {
       switch ($this->mimeTypeGuesser->guessMimeType($this->getUri())) {
         case 'image/jpeg':
           $this->pelFile = new PelJpeg($this->getLocalTempPath());
-          return $this->pelFile !== NULL ? $this->pelFile : FALSE;
+          break;
 
         case 'image/tiff':
           $this->pelFile = new PelTiff($this->getLocalTempPath());
-          return $this->pelFile !== NULL ? $this->pelFile : FALSE;
+          break;
 
         default:
-          return FALSE;
+          $this->pelFile = FALSE;
 
       }
     }
+    return $this->pelFile;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function doGetMetadataFromFile() {
+  protected function doGetMetadataFromFile(): mixed {
     // Get the file as a PelJpeg or PelTiff object.
     $file = $this->getFile();
     if (!$file) {
@@ -144,7 +96,7 @@ class Exif extends FileMetadataPluginBase {
         return [];
       }
     }
-    elseif ($file instanceof PelTiff) {
+    else {
       $tiff = $file;
     }
 
@@ -170,10 +122,10 @@ class Exif extends FileMetadataPluginBase {
    * @param int $key_tag
    *   The TAG EXIF integer identifier.
    *
-   * @return \lsolesen\pel\PelEntry
+   * @return \lsolesen\pel\PelEntry|null
    *   The PelEntry for the specified IFD and TAG.
    */
-  protected function getEntry(PelTiff $tiff, $ifd_tag, $key_tag) {
+  protected function getEntry(PelTiff $tiff, int $ifd_tag, int $key_tag): ?PelEntry {
     $ifd = $tiff->getIfd();
     switch ($ifd_tag) {
       case PelIfd::IFD0:
@@ -181,50 +133,46 @@ class Exif extends FileMetadataPluginBase {
 
       case PelIfd::IFD1:
         $ifd1 = $ifd->getNextIfd();
-        if (!$ifd1) {
+        if ($ifd1 === NULL) {
           return NULL;
         }
         return $ifd1->getEntry($key_tag);
 
       case PelIfd::EXIF:
         $exif = $ifd->getSubIfd(PelIfd::EXIF);
-        if (!$exif) {
+        if ($exif === NULL) {
           return NULL;
         }
         return $exif->getEntry($key_tag);
 
       case PelIfd::INTEROPERABILITY:
         $exif = $ifd->getSubIfd(PelIfd::EXIF);
-        if (!$exif) {
+        if ($exif === NULL) {
           return NULL;
         }
         $interop = $exif->getSubIfd(PelIfd::INTEROPERABILITY);
-        if (!$interop) {
+        if ($interop === NULL) {
           return NULL;
         }
         return $interop->getEntry($key_tag);
 
       case PelIfd::GPS:
         $gps = $ifd->getSubIfd(PelIfd::GPS);
-        if (!$gps) {
+        if ($gps === NULL) {
           return NULL;
         }
         return $gps->getEntry($key_tag);
 
     }
+
+    return NULL;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function isSaveToFileSupported() {
+  public function isSaveToFileSupported(): bool {
     return TRUE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function doSaveMetadataToFile() {
+  protected function doSaveMetadataToFile(): bool {
     // Get the file as a PelJpeg or PelTiff object.
     $file = $this->getFile();
     if (!$file) {
@@ -247,7 +195,7 @@ class Exif extends FileMetadataPluginBase {
         $exif->setTiff($tiff);
       }
     }
-    elseif ($file instanceof PelTiff) {
+    else {
       $tiff = $file;
     }
 
@@ -317,15 +265,15 @@ class Exif extends FileMetadataPluginBase {
   /**
    * Adds or changes entries for an IFD.
    *
-   * @param lsolesen\pel\PelIfd $ifd
+   * @param \lsolesen\pel\PelIfd $ifd
    *   A PelIfd object.
-   * @param lsolesen\pel\PelEntry[] $entries
+   * @param array<string|PelEntry> $entries
    *   An array of PelEntry objects.
    *
    * @return bool
    *   TRUE if entries were added/changed successfully, FALSE otherwise.
    */
-  protected function setIfdEntries(PelIfd $ifd, array $entries) {
+  protected function setIfdEntries(PelIfd $ifd, array $entries): bool {
     foreach ($entries as $tag => $input_entry) {
       if ($c = $ifd->getEntry($tag)) {
         if ($input_entry === 'deleted') {
@@ -337,7 +285,7 @@ class Exif extends FileMetadataPluginBase {
           }
           else {
             $v = $input_entry->getValue();
-            if (is_array($v)) {
+            if (is_array($v) && $c instanceof PelEntryNumber) {
               $c->setValueArray($v);
             }
             else {
@@ -355,10 +303,7 @@ class Exif extends FileMetadataPluginBase {
     return TRUE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function doGetMetadata($key = NULL) {
+  protected function doGetMetadata(mixed $key = NULL): mixed {
     if (!$this->metadata) {
       return NULL;
     }
@@ -378,10 +323,7 @@ class Exif extends FileMetadataPluginBase {
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function doSetMetadata($key, $value) {
+  protected function doSetMetadata(mixed $key, mixed $value): bool {
     $ifd_tag = $this->tagMapper->resolveKeyToIfdAndTag($key);
     if ($value instanceof PelEntry) {
       $this->metadata[$ifd_tag['ifd']][$ifd_tag['tag']] = $value;
@@ -399,10 +341,7 @@ class Exif extends FileMetadataPluginBase {
     return FALSE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function doRemoveMetadata($key) {
+  protected function doRemoveMetadata(mixed $key): bool {
     if (!$this->metadata || !$key) {
       return FALSE;
     }

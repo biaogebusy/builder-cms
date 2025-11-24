@@ -9,26 +9,17 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class OrderAssignSubscriber implements EventSubscriberInterface {
 
   /**
-   * The address book.
-   *
-   * @var \Drupal\commerce_order\AddressBookInterface
-   */
-  protected $addressBook;
-
-  /**
    * Constructs a new AddressBookSubscriber object.
    *
-   * @param \Drupal\commerce_order\AddressBookInterface $address_book
+   * @param \Drupal\commerce_order\AddressBookInterface $addressBook
    *   The address book.
    */
-  public function __construct(AddressBookInterface $address_book) {
-    $this->addressBook = $address_book;
-  }
+  public function __construct(protected AddressBookInterface $addressBook) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       'commerce_order.order.assign' => 'onAssign',
     ];

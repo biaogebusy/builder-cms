@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Cache\Context;
 
 use Drupal\Core\Cache\Context\ProtocolVersionCacheContext;
@@ -18,7 +20,7 @@ class ProtocolVersionCacheContextTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetContext
    */
-  public function testGetContext($protocol, $context) {
+  public function testGetContext($protocol, $context): void {
     $request_stack = new RequestStack();
     $request = Request::create('/');
     $request->server->set('SERVER_PROTOCOL', $protocol);
@@ -30,7 +32,7 @@ class ProtocolVersionCacheContextTest extends UnitTestCase {
   /**
    * Provides a list of query arguments and expected cache contexts.
    */
-  public function providerTestGetContext() {
+  public static function providerTestGetContext() {
     return [
       ['HTTP/1.0', 'HTTP/1.0'],
       ['HTTP/1.1', 'HTTP/1.1'],

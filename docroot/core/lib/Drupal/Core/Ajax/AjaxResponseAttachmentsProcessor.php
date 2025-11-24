@@ -7,6 +7,7 @@ use Drupal\Core\Asset\AssetResolverInterface;
 use Drupal\Core\Asset\AttachedAssets;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\AttachmentsInterface;
 use Drupal\Core\Render\AttachmentsResponseProcessorInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -87,8 +88,10 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
    *   The renderer.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Language\LanguageManagerInterface|null $languageManager
+   *   The language manager.
    */
-  public function __construct(AssetResolverInterface $asset_resolver, ConfigFactoryInterface $config_factory, AssetCollectionRendererInterface $css_collection_renderer, AssetCollectionRendererInterface $js_collection_renderer, RequestStack $request_stack, RendererInterface $renderer, ModuleHandlerInterface $module_handler) {
+  public function __construct(AssetResolverInterface $asset_resolver, ConfigFactoryInterface $config_factory, AssetCollectionRendererInterface $css_collection_renderer, AssetCollectionRendererInterface $js_collection_renderer, RequestStack $request_stack, RendererInterface $renderer, ModuleHandlerInterface $module_handler, protected ?LanguageManagerInterface $languageManager = NULL) {
     $this->assetResolver = $asset_resolver;
     $this->config = $config_factory->get('system.performance');
     $this->cssCollectionRenderer = $css_collection_renderer;
@@ -96,16 +99,17 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
     $this->moduleHandler = $module_handler;
+    if (!isset($languageManager)) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $language_manager argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3347754', E_USER_DEPRECATED);
+      $this->languageManager = \Drupal::languageManager();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function processAttachments(AttachmentsInterface $response) {
-    // @todo Convert to assertion once https://www.drupal.org/node/2408013 lands
-    if (!$response instanceof AjaxResponse) {
-      throw new \InvalidArgumentException('\Drupal\Core\Ajax\AjaxResponse instance expected.');
-    }
+    assert($response instanceof AjaxResponse, '\Drupal\Core\Ajax\AjaxResponse instance expected.');
 
     $request = $this->requestStack->getCurrentRequest();
 
@@ -128,11 +132,12 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
    *   An array of commands ready to be returned as JSON.
    */
   protected function buildAttachmentsCommands(AjaxResponse $response, Request $request) {
-    $ajax_page_state = $request->request->get('ajax_page_state');
+    $ajax_page_state = $request->get('ajax_page_state');
+    $maintenance_mode = defined('MAINTENANCE_MODE') || \Drupal::state()->get('system.maintenance_mode');
 
     // Aggregate CSS/JS if necessary, but only during normal site operation.
-    $optimize_css = !defined('MAINTENANCE_MODE') && $this->config->get('css.preprocess');
-    $optimize_js = !defined('MAINTENANCE_MODE') && $this->config->get('js.preprocess');
+    $optimize_css = !$maintenance_mode && $this->config->get('css.preprocess');
+    $optimize_js = !$maintenance_mode && $this->config->get('js.preprocess');
 
     $attachments = $response->getAttachments();
 
@@ -141,8 +146,8 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     $assets->setLibraries($attachments['library'] ?? [])
       ->setAlreadyLoadedLibraries(isset($ajax_page_state['libraries']) ? explode(',', $ajax_page_state['libraries']) : [])
       ->setSettings($attachments['drupalSettings'] ?? []);
-    $css_assets = $this->assetResolver->getCssAssets($assets, $optimize_css);
-    [$js_assets_header, $js_assets_footer] = $this->assetResolver->getJsAssets($assets, $optimize_js);
+    $css_assets = $this->assetResolver->getCssAssets($assets, $optimize_css, $this->languageManager->getCurrentLanguage());
+    [$js_assets_header, $js_assets_footer] = $this->assetResolver->getJsAssets($assets, $optimize_js, $this->languageManager->getCurrentLanguage());
 
     // First, AttachedAssets::setLibraries() ensures duplicate libraries are
     // removed: it converts it to a set of libraries if necessary. Second,
@@ -170,7 +175,7 @@ class AjaxResponseAttachmentsProcessor implements AttachmentsResponseProcessorIn
     $resource_commands = [];
     if ($css_assets) {
       $css_render_array = $this->cssCollectionRenderer->render($css_assets);
-      $resource_commands[] = new AddCssCommand($this->renderer->renderPlain($css_render_array));
+      $resource_commands[] = new AddCssCommand(array_column($css_render_array, '#attributes'));
     }
     if ($js_assets_header) {
       $js_header_render_array = $this->jsCollectionRenderer->render($js_assets_header);

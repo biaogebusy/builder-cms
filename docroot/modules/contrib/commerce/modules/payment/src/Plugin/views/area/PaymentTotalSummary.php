@@ -3,6 +3,7 @@
 namespace Drupal\commerce_payment\Plugin\views\area;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Drupal\views\Plugin\views\argument\NumericArgument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -11,9 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Defines an area handler that outputs the payment total summary for an order.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("commerce_payment_total_summary")
  */
+#[ViewsArea("commerce_payment_total_summary")]
 class PaymentTotalSummary extends AreaPluginBase {
 
   /**

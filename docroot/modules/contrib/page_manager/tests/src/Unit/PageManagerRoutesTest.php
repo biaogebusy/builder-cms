@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -11,6 +10,7 @@ use Drupal\page_manager\PageInterface;
 use Drupal\page_manager\PageVariantInterface;
 use Drupal\page_manager\Routing\PageManagerRoutes;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -58,6 +58,7 @@ class PageManagerRoutesTest extends UnitTestCase {
    * @covers ::__construct
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->pageStorage = $this->prophesize(ConfigEntityStorageInterface::class);
 
     $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class);
@@ -126,23 +127,23 @@ class PageManagerRoutesTest extends UnitTestCase {
     $this->assertSame(['page_manager.page_view_page1_variant1'], array_keys($collection->all()));
     $route = $collection->get('page_manager.page_view_page1_variant1');
     $expected_defaults = [
-      '_entity_view' => 'page_manager_page_variant',
+      '_entity_view' => '_page_manager_page_variant',
       '_title' => 'Page label',
-      'page_manager_page_variant' => 'variant1',
-      'page_manager_page' => 'page1',
-      'page_manager_page_variant_weight' => 0,
-      'base_route_name' => 'page_manager.page_view_page1',
+      '_page_manager_page_variant' => 'variant1',
+      '_page_manager_page' => 'page1',
+      '_page_manager_page_variant_weight' => 0,
+      '_base_route_name' => 'page_manager.page_view_page1',
     ];
     $expected_requirements = [
-      '_page_access' => 'page_manager_page.view',
+      '_page_access' => '_page_manager_page.view',
     ];
     $expected_options = [
       'compiler_class' => 'Symfony\Component\Routing\RouteCompiler',
       'parameters' => [
-        'page_manager_page_variant' => [
+        '_page_manager_page_variant' => [
           'type' => 'entity:page_variant',
         ],
-        'page_manager_page' => [
+        '_page_manager_page' => [
           'type' => 'entity:page',
         ],
       ],
@@ -189,6 +190,7 @@ class PageManagerRoutesTest extends UnitTestCase {
 
     $collection = new RouteCollection();
     $collection->add("$route_name.POST", new Route($existing_route_path, ['default_exists' => 'default_value'], $requirements, ['parameters' => ['foo' => ['type' => 'bar']]], '', [], ['POST']));
+    // phpcs:ignore
     $collection->add("$route_name.POST_with_format", new Route($existing_route_path, ['default_exists' => 'default_value'], $requirements + ['_format' => 'json'], ['parameters' => ['foo' => ['type' => 'bar']]], '', [], ['GET', 'POST']));
     $collection->add($route_name, new Route($existing_route_path, ['default_exists' => 'default_value'], $requirements, ['parameters' => ['foo' => ['type' => 'bar']]]));
     $route_event = new RouteBuildEvent($collection);
@@ -204,23 +206,23 @@ class PageManagerRoutesTest extends UnitTestCase {
 
     $route = $collection->get('page_manager.page_view_page1_variant1');
     $expected_defaults = [
-      '_entity_view' => 'page_manager_page_variant',
+      '_entity_view' => '_page_manager_page_variant',
       '_title' => NULL,
-      'page_manager_page_variant' => 'variant1',
-      'page_manager_page' => 'page1',
-      'page_manager_page_variant_weight' => 0,
-      'overridden_route_name' => 'test_route',
-      'base_route_name' => 'test_route',
+      '_page_manager_page_variant' => 'variant1',
+      '_page_manager_page' => 'page1',
+      '_page_manager_page_variant_weight' => 0,
+      '_overridden_route_name' => 'test_route',
+      '_base_route_name' => 'test_route',
     ];
-    $expected_requirements = $requirements + ['_page_access' => 'page_manager_page.view'];
+    $expected_requirements = $requirements + ['_page_access' => '_page_manager_page.view'];
     $expected_options = [
       'compiler_class' => 'Symfony\Component\Routing\RouteCompiler',
       'parameters' => [
         'foo' => ['type' => 'bar'],
-        'page_manager_page_variant' => [
+        '_page_manager_page_variant' => [
           'type' => 'entity:page_variant',
         ],
-        'page_manager_page' => [
+        '_page_manager_page' => [
           'type' => 'entity:page',
         ],
       ],
@@ -229,8 +231,10 @@ class PageManagerRoutesTest extends UnitTestCase {
     $this->assertMatchingRoute($route, $existing_route_path, $expected_defaults, $expected_requirements, $expected_options);
   }
 
-
-  public function providerTestAlterRoutesOverrideExisting() {
+  /**
+   * Data Provider for testAlterRoutesOverrideExisting.
+   */
+  public static function providerTestAlterRoutesOverrideExisting() {
     $data = [];
     $data['no_slug'] = ['/test_route', '/test_route'];
     $data['slug'] = ['/test_route/{test_route}', '/test_route/{test_route}'];
@@ -293,25 +297,25 @@ class PageManagerRoutesTest extends UnitTestCase {
       'page_manager.page_view_page1_variant1' => [
         'path' => '/test_route1',
         'defaults' => [
-          '_entity_view' => 'page_manager_page_variant',
+          '_entity_view' => '_page_manager_page_variant',
           '_title' => 'Page 1',
-          'page_manager_page_variant' => 'variant1',
-          'page_manager_page' => 'page1',
-          'page_manager_page_variant_weight' => 0,
-          'overridden_route_name' => 'test_route',
-          'base_route_name' => 'test_route',
+          '_page_manager_page_variant' => 'variant1',
+          '_page_manager_page' => 'page1',
+          '_page_manager_page_variant_weight' => 0,
+          '_overridden_route_name' => 'test_route',
+          '_base_route_name' => 'test_route',
         ],
         'requirements' => [
           '_access' => 'TRUE',
-          '_page_access' => 'page_manager_page.view',
+          '_page_access' => '_page_manager_page.view',
         ],
         'options' => [
           'compiler_class' => 'Symfony\Component\Routing\RouteCompiler',
           'parameters' => [
-            'page_manager_page_variant' => [
+            '_page_manager_page_variant' => [
               'type' => 'entity:page_variant',
             ],
-            'page_manager_page' => [
+            '_page_manager_page' => [
               'type' => 'entity:page',
             ],
           ],
@@ -321,23 +325,23 @@ class PageManagerRoutesTest extends UnitTestCase {
       'page_manager.page_view_page2_variant2' => [
         'path' => '/test_route2',
         'defaults' => [
-          '_entity_view' => 'page_manager_page_variant',
+          '_entity_view' => '_page_manager_page_variant',
           '_title' => 'Page 2',
-          'page_manager_page_variant' => 'variant2',
-          'page_manager_page' => 'page2',
-          'page_manager_page_variant_weight' => 0,
-          'base_route_name' => 'page_manager.page_view_page2',
+          '_page_manager_page_variant' => 'variant2',
+          '_page_manager_page' => 'page2',
+          '_page_manager_page_variant_weight' => 0,
+          '_base_route_name' => 'page_manager.page_view_page2',
         ],
         'requirements' => [
-          '_page_access' => 'page_manager_page.view',
+          '_page_access' => '_page_manager_page.view',
         ],
         'options' => [
           'compiler_class' => 'Symfony\Component\Routing\RouteCompiler',
           'parameters' => [
-            'page_manager_page_variant' => [
+            '_page_manager_page_variant' => [
               'type' => 'entity:page_variant',
             ],
-            'page_manager_page' => [
+            '_page_manager_page' => [
               'type' => 'entity:page',
             ],
           ],
@@ -368,6 +372,7 @@ class PageManagerRoutesTest extends UnitTestCase {
     $page->id()->willReturn('page1');
     $page->label()->willReturn(NULL);
     $page->usesAdminTheme()->willReturn(FALSE);
+    // phpcs:ignore
     $page->getParameters()->willReturn(['foo' => ['machine_name' => 'foo', 'type' => 'integer', 'label' => 'Foo'], 'test_route' => ['machine_name' => 'test_route', 'type' => '', 'label' => '']]);
 
     $variant1 = $this->prophesize(PageVariantInterface::class);
@@ -382,15 +387,15 @@ class PageManagerRoutesTest extends UnitTestCase {
     $this->routeSubscriber->onAlterRoutes($route_event);
 
     $expected_defaults = [
-      '_entity_view' => 'page_manager_page_variant',
+      '_entity_view' => '_page_manager_page_variant',
       '_title' => NULL,
-      'page_manager_page_variant' => 'variant1',
-      'page_manager_page' => 'page1',
-      'page_manager_page_variant_weight' => 0,
-      'overridden_route_name' => $route_name,
-      'base_route_name' => 'test_route',
+      '_page_manager_page_variant' => 'variant1',
+      '_page_manager_page' => 'page1',
+      '_page_manager_page_variant_weight' => 0,
+      '_overridden_route_name' => $route_name,
+      '_base_route_name' => 'test_route',
     ];
-    $expected_requirements = $requirements + ['_page_access' => 'page_manager_page.view'];
+    $expected_requirements = $requirements + ['_page_access' => '_page_manager_page.view'];
     $expected_options = [
       'compiler_class' => 'Symfony\Component\Routing\RouteCompiler',
       'parameters' => [
@@ -398,10 +403,10 @@ class PageManagerRoutesTest extends UnitTestCase {
           'bar' => 'bar',
           'type' => 'integer',
         ],
-        'page_manager_page_variant' => [
+        '_page_manager_page_variant' => [
           'type' => 'entity:page_variant',
         ],
-        'page_manager_page' => [
+        '_page_manager_page' => [
           'type' => 'entity:page',
         ],
       ],

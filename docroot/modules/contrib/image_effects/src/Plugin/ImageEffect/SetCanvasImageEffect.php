@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 
 /**
  * Defines the size of the working canvas and background color.
- *
- * @ImageEffect(
- *   id = "image_effects_set_canvas",
- *   label = @Translation("Set canvas"),
- *   description = @Translation("Define the size of the working canvas and background color, this controls the dimensions of the output image.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_set_canvas',
+  label: new TranslatableMarkup('Set canvas'),
+  description: new TranslatableMarkup('Define the size of the working canvas and background color, this controls the dimensions of the output image.'),
+)]
 class SetCanvasImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -223,7 +226,7 @@ class SetCanvasImageEffect extends ConfigurableImageEffectBase {
 
     // Get offset of original image.
     if ($this->configuration['canvas_size'] === 'exact') {
-      list($x_pos, $y_pos) = explode('-', $this->configuration['exact']['placement']);
+      [$x_pos, $y_pos] = explode('-', $this->configuration['exact']['placement']);
       $data['x_pos'] = ImageUtility::getKeywordOffset($x_pos, $data['width'], $image->getWidth()) + $this->configuration['exact']['x_offset'];
       $data['y_pos'] = ImageUtility::getKeywordOffset($y_pos, $data['height'], $image->getHeight()) + $this->configuration['exact']['y_offset'];
     }
@@ -240,11 +243,15 @@ class SetCanvasImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
-    if ($dimensions['width'] && $dimensions['height']) {
-      $d = $this->getDimensions($dimensions['width'], $dimensions['height']);
-      $dimensions['width'] = $d['width'];
-      $dimensions['height'] = $d['height'];
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
+    if ($dimensions['width'] === NULL || $dimensions['height'] === NULL) {
+      $dimensions['width'] = $dimensions['height'] = NULL;
+      return;
     }
+
+    ['width' => $dimensions['width'], 'height' => $dimensions['height']] = $this->getDimensions($dimensions['width'], $dimensions['height']);
   }
 
   /**
@@ -260,7 +267,7 @@ class SetCanvasImageEffect extends ConfigurableImageEffectBase {
    *   - width: Integer with the derivative image width.
    *   - height: Integer with the derivative image height.
    */
-  protected function getDimensions($source_width, $source_height) {
+  protected function getDimensions(int $source_width, int $source_height): array {
     $dimensions = [];
     if ($this->configuration['canvas_size'] === 'exact') {
       // Exact size.

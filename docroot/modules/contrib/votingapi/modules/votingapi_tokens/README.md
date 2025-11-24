@@ -1,4 +1,4 @@
-#VotinAPI tokens
+#VotingAPI tokens
 
 This module enables tokens for all entity types that has voting_api_field.
 

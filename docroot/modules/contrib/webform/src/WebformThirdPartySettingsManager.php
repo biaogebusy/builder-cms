@@ -116,7 +116,7 @@ class WebformThirdPartySettingsManager implements WebformThirdPartySettingsManag
    * {@inheritdoc}
    */
   public function getThirdPartySettings($module) {
-    $this->config->get("third_party_settings.$module") ?: [];
+    return $this->config->get("third_party_settings.$module") ?: [];
   }
 
   /**

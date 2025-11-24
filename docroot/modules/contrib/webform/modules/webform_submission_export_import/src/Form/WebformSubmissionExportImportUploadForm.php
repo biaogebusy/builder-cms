@@ -658,7 +658,7 @@ class WebformSubmissionExportImportUploadForm extends ConfirmFormBase {
   }
 
   /**
-   * Disply import status.
+   * Display import status.
    *
    * @param array $stats
    *   Import stats.

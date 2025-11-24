@@ -10,10 +10,9 @@ class ConditionGroup implements ConditionGroupInterface {
   /**
    * Array containing sub-conditions.
    *
-   * Each of these is either an array (field, value, operator), or another
-   * \Drupal\search_api\Query\ConditionGroupInterface object.
+   * Each of these is either a condition or another condition group.
    *
-   * @var array
+   * @var \Drupal\search_api\Query\ConditionGroupInterface[]|\Drupal\search_api\Query\ConditionInterface[]
    */
   protected $conditions = [];
 
@@ -89,6 +88,21 @@ class ConditionGroup implements ConditionGroupInterface {
    */
   public function &getTags() {
     return $this->tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEmpty(): bool {
+    foreach ($this->conditions as $condition) {
+      if ($condition instanceof ConditionInterface) {
+        return FALSE;
+      }
+      if ($condition instanceof ConditionGroupInterface && !$condition->isEmpty()) {
+        return FALSE;
+      }
+    }
+    return TRUE;
   }
 
   /**

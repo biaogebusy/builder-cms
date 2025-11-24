@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
+
 /**
  * Tests for range element.
  *
@@ -40,12 +42,22 @@ class WebformElementRangeTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<output style="background-color: yellow" for="range_output_below" data-display="below" data-field-prefix="$" data-field-suffix=".00"></output>');
 
     // Check output left range element.
-    $assert_session->responseContains('<span class="field-prefix"><div class="js-form-item form-item js-form-type-number form-item-range-output-left__output js-form-item-range-output-left__output form-no-label">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<span class="field-prefix"><div class="js-form-item form-item form-type-number js-form-type-number form-item-range-output-left__output js-form-item-range-output-left__output form-no-label">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<span class="field-prefix"><div class="js-form-item form-item js-form-type-number form-item-range-output-left__output js-form-item-range-output-left__output form-no-label">'),
+    );
     $assert_session->responseContains('<label for="range_output_left__output" class="visually-hidden">range_output_left</label>');
     $assert_session->responseContains('<input style="background-color: yellow;width:6em" type="number" id="range_output_left__output" step="100" min="0" max="10000" class="form-number" />');
 
     // Check output right range element.
-    $assert_session->responseContains('<span class="field-suffix"><span class="webform-range-output-delimiter"></span><div class="js-form-item form-item js-form-type-number form-item-range-output-disabled__output js-form-item-range-output-disabled__output form-no-label form-disabled">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<span class="field-suffix"><span class="webform-range-output-delimiter"></span><div class="js-form-item form-item form-type-number js-form-type-number form-item-range-output-disabled__output js-form-item-range-output-disabled__output form-no-label form-disabled">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<span class="field-suffix"><span class="webform-range-output-delimiter"></span><div class="js-form-item form-item js-form-type-number form-item-range-output-disabled__output js-form-item-range-output-disabled__output form-no-label form-disabled">'),
+    );
     $assert_session->responseContains('<label for="range_output_right__output" class="visually-hidden">range_output_right</label>');
     $assert_session->responseContains('<input style="width:4em" type="number" id="range_output_right__output" step="1" min="0" max="100" class="form-number" />');
 

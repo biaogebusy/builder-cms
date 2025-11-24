@@ -18,58 +18,74 @@
       }
 
       var $self = this;
-      this.links = [];
 
-      $("#admin-toolbar-search-input").autocomplete({
-        minLength: 2,
-        source: function (request, response) {
-          var data = $self.handleAutocomplete(request.term);
-          if (!$self.extraFetched && drupalSettings.adminToolbarSearch.loadExtraLinks) {
-            $.getJSON( Drupal.url( "admin/admin-toolbar-search" ), function( data ) {
-              $(data).each(function () {
-                var item = this;
-                item.label = this.labelRaw + ' ' + this.value;
-                $self.links.push(item);
-              });
+      const elements = once('admin-toolbar-search', '#toolbar-bar', context);
+      $(elements).each(function () {
+        $self.links = [];
 
-              $self.extraFetched = true;
+        var $searchTab = $(this).find('#admin-toolbar-search-tab')
+        var $searchInput = $searchTab.find('#admin-toolbar-search-input');
 
-              var results = $self.handleAutocomplete(request.term);
-              response(results);
-            });
-          }
-          else {
-            response(data);
-          }
-        },
-        open: function () {
-          var zIndex = $('#toolbar-item-administration-tray')
-            .css("z-index") + 1;
-          $(this).autocomplete('widget').css('z-index', zIndex);
-
-          return false;
-        },
-        select: function (event, ui) {
-          if (ui.item.value) {
-            location.href = ui.item.value;
-            return false;
-          }
+        if ($searchInput.length === 0) {
+          return;
         }
-      }).data("ui-autocomplete")._renderItem = (function (ul, item) {
-        ul.addClass('admin-toolbar-search-autocomplete-list');
-        return $("<li>")
-          .append('<div>' + item.labelRaw + ' <span class="admin-toolbar-search-url">' + item.value + '</span></div>')
-          .appendTo(ul);
-      });
 
-      // Populate the links for search results when the input is pressed.
-      $(context).find('#admin-toolbar-search-input')
-        .once('admin_toolbar_search')
-        .each(function () {
-          $(this).focus(function () {
-            Drupal.behaviors.adminToolbarSearch.populateLinks($self);
-          });
+        $searchInput.autocomplete({
+          minLength: 2,
+          position: { collision : 'fit' },
+          source: function (request, response) {
+            var data = $self.handleAutocomplete(request.term);
+            if (!$self.extraFetched && drupalSettings.adminToolbarSearch.loadExtraLinks) {
+              $.getJSON( Drupal.url('admin/admin-toolbar-search'), function ( data ) {
+                $(data).each(function () {
+                  var item = this;
+                  item.label = this.labelRaw + ' ' + this.value;
+                  $self.links.push(item);
+                });
+
+                $self.extraFetched = true;
+
+                var results = $self.handleAutocomplete(request.term);
+                response(results);
+              });
+            }
+            else {
+              response(data);
+            }
+          },
+          open: function () {
+            var zIndex = $('#toolbar-item-administration-tray')
+              .css('z-index') + 1;
+            $(this).autocomplete('widget').css('z-index', zIndex);
+
+            return false;
+          },
+          select: function (event, ui) {
+            if (ui.item.value) {
+              location.href = ui.item.value;
+              return false;
+            }
+          }
+        }).data('ui-autocomplete')._renderItem = (function (ul, item) {
+          ul.addClass('admin-toolbar-search-autocomplete-list');
+          return $('<li>')
+            .append('<div ><a href="' + item.value + '">' + item.labelRaw + ' <span class="admin-toolbar-search-url">' + item.value + '</span></a></div>')
+            .appendTo(ul);
         });
+
+        // Populate the links for search results when the input is pressed.
+        $searchInput.focus(function () {
+          Drupal.behaviors.adminToolbarSearch.populateLinks($self);
+        });
+
+        // Show/hide search input field when mobile tab item is pressed.
+        $('#admin-toolbar-mobile-search-tab .toolbar-item', context).click(function (e) {
+          e.preventDefault();
+          $(this).toggleClass('is-active');
+          $searchTab.toggleClass('visible');
+          $searchInput.focus();
+        });
+      });
     },
     getItemLabel: function (item) {
       var breadcrumbs = [];
@@ -124,7 +140,7 @@
             $self.links.push({
               'value': this.href,
               'label': label + ' ' + this.href,
-              'labelRaw': label
+              'labelRaw': Drupal.checkPlain(label)
             });
           }
         });

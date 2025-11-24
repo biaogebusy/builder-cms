@@ -9,17 +9,19 @@
 
   /**
    * Used to lower the cpu burden for activity tracking on browser events.
+   *
+   * @param {function} f
+   *   The function to debounce.
    */
   function debounce(f) {
-      var timeout;
+      let timeout;
       return function () {
-          var savedContext = this;
-          var savedArguments = arguments;
-          var finalRun = function () {
+          let savedContext = this;
+          let savedArguments = arguments;
+          let finalRun = function () {
               timeout = null;
               f.apply(savedContext, savedArguments);
           };
-
           if (!timeout) {
             f.apply(savedContext, savedArguments);
           }
@@ -39,23 +41,19 @@
         return;
       }
 
-      var paddingTimer;
-      var theDialog;
-      var t;
-      var localSettings;
-
-      // Activity is a boolean used to detect a user has
-      // interacted with the page.
-      var activity;
+      let paddingTimer;
+      let theDialog;
+      let t;
+      let localSettings;
 
       // Timer to keep track of activity resets.
-      var activityResetTimer;
+      let activityResetTimer;
 
       // Prevent settings being overridden by ajax callbacks by cloning it.
       localSettings = jQuery.extend(true, {}, settings.autologout);
 
       // Add timer element to prevent detach of all behaviours.
-      var timerMarkup = $('<div id="timer"></div>').hide();
+      let timerMarkup = $('<div id="timer"></div>').hide();
       $('body').append(timerMarkup);
 
       if (localSettings.refresh_only) {
@@ -63,14 +61,12 @@
         t = setTimeout(keepAlive, localSettings.timeout);
       }
       else {
-        // Set no activity to start with.
-        activity = false;
-
+        settings.activity = false;
         if (localSettings.logout_regardless_of_activity) {
           // Ignore users activity and set timeout.
-          var timestamp = Math.round((new Date()).getTime() / 1000);
-          var login_time = cookies.get("Drupal.visitor.autologout_login");
-          var difference = (timestamp - login_time) * 1000;
+          let timestamp = Math.round((new Date()).getTime() / 1000);
+          let login_time = cookies.get("Drupal.visitor.autologout_login");
+          let difference = (timestamp - login_time) * 1000;
 
           t = setTimeout(init, localSettings.timeout - difference);
         }
@@ -85,43 +81,36 @@
             $(event.target).trigger('preventAutologout');
           }));
 
-          // Support for CKEditor.
-          if (typeof CKEDITOR !== 'undefined') {
-            CKEDITOR.on('instanceCreated', function (e) {
-              e.editor.on('contentDom', function () {
-                e.editor.document.on('keyup', debounce(function (event) {
-                  // Keyup event in ckeditor should prevent autologout.
-                  $(e.editor.element.$).trigger('preventAutologout');
-                }));
-              });
-            });
-          }
+          // Replaces the CKEditor5 check because keyup should always prevent autologout.
+          document.addEventListener('keyup', debounce(function (event) {
+            document.dispatchEvent(new Event('preventAutologout'));
+          }));
 
           $('body').bind('preventAutologout', function (event) {
             // When the preventAutologout event fires, we set activity to true.
-            activity = true;
+            settings.activity = true;
 
             // Clear timer if one exists.
             clearTimeout(activityResetTimer);
 
             // Set a timer that goes off and resets this activity indicator after
-            // a minute, otherwise sessions never timeout.
+            // half a minute, otherwise sessions never timeouts.
             activityResetTimer = setTimeout(function () {
-              activity = false;
-            }, 60000);
+              settings.activity = false;
+            }, 30000);
           });
 
           // On pages where the user should be logged out, set the timer to popup
           // and log them out.
-          t = setTimeout(init, localSettings.timeout);
+          setTimeout(function () {
+            init();
+          }, localSettings.timeout);
         }
       }
 
       function init() {
-        var noDialog = settings.autologout.no_dialog;
-        if (activity) {
-          // The user has been active on the page.
-          activity = false;
+        let noDialog = settings.autologout.no_dialog;
+        if (settings.activity) {
           refresh();
         }
         else {
@@ -149,11 +138,11 @@
       }
 
       function dialog() {
-        var disableButtons = settings.autologout.disable_buttons;
+        let disableButtons = settings.autologout.disable_buttons;
 
-        var buttons = {};
+        let buttons = {};
         if (!disableButtons) {
-          var yesButton = settings.autologout.yes_button;
+          let yesButton = settings.autologout.yes_button;
           buttons[Drupal.t(yesButton)] = function () {
             cookies.set("Drupal.visitor.autologout_login", Math.round((new Date()).getTime() / 1000));
             $(this).dialog("destroy");
@@ -161,7 +150,7 @@
             refresh();
           };
 
-          var noButton = settings.autologout.no_button;
+          let noButton = settings.autologout.no_button;
           buttons[Drupal.t(noButton)] = function () {
             $(this).dialog("destroy");
             logout();
@@ -208,7 +197,7 @@
 
       function logout() {
         if (localSettings.use_alt_logout_method) {
-          var logoutUrl = drupalSettings.path.baseUrl + "autologout_alt_logout";
+          let logoutUrl = drupalSettings.path.baseUrl + "autologout_alt_logout";
           triggerLogoutEvent('alternative', logoutUrl);
 
           window.location = logoutUrl;
@@ -225,7 +214,7 @@
               });
             },
             success: function () {
-              var logoutUrl = localSettings.redirect_url;
+              let logoutUrl = localSettings.redirect_url;
               triggerLogoutEvent('normal', logoutUrl);
 
               window.location = logoutUrl;
@@ -250,15 +239,14 @@
        *   is the time remaining for the current user in ms.
        */
       Drupal.Ajax.prototype.autologoutGetTimeLeft = function (callback) {
-        var ajax = this;
+        let ajax = this;
 
-        if (ajax.ajaxing) {
-          return false;
-        }
+        // Store the original success temporary to be called later.
+        const originalSuccess = ajax.options.success;
         ajax.options.submit = {
-          uactive : activity
+          uactive: settings.activity
         };
-        ajax.options.success = function (response, status) {
+        ajax.options.success = function (response, status, xmlhttprequest) {
           if (typeof response == 'string') {
             response = $.parseJSON(response);
           }
@@ -267,12 +255,18 @@
             window.location = localSettings.redirect_url;
           }
 
-          callback(response[1].settings.time);
-
-          response[0].data = '<div id="timer" style="display: none;">' + response[0].data + '</div>';
+          // Loop through response to get correct keys.
+          for (let key in response) {
+            if (response[key].command === "settings" && typeof response[key].settings.time !== 'undefined') {
+              callback(response[key].settings.time);
+            }
+            if (response[key].command === "insert" && response[key].selector === '#timer' && typeof response[key].data !== 'undefined') {
+              response[key].data = '<div id="timer" style="display: none;">' + response[key].data + '</div>';
+            }
+          }
 
           // Let Drupal.ajax handle the JSON response.
-          return ajax.success(response, status);
+          return originalSuccess.call(ajax, response, status, xmlhttprequest);
         };
 
         try {
@@ -288,7 +282,7 @@
         element: document.body,
         url: drupalSettings.path.baseUrl + 'autologout_ajax_get_time_left',
         submit: {
-          uactive : activity
+          uactive: settings.activity
         },
         event: 'autologout.getTimeLeft',
         error: function (XMLHttpRequest, textStatus) {
@@ -306,13 +300,15 @@
        *   The function to tell the timer to run after its been restarted.
        */
       Drupal.Ajax.prototype.autologoutRefresh = function (timerfunction) {
-        var ajax = this;
+        let ajax = this;
 
         if (ajax.ajaxing) {
           return false;
         }
 
-        ajax.options.success = function (response, status) {
+        // Store the original success temporary to be called later.
+        const originalSuccess = ajax.options.success;
+        ajax.options.success = function (response, status, xmlhttprequest) {
           if (typeof response === 'string') {
             response = $.parseJSON(response);
           }
@@ -322,13 +318,12 @@
           }
 
           t = setTimeout(timerfunction, localSettings.timeout);
-          activity = false;
 
           // Wrap response data in timer markup to prevent detach of all behaviors.
           response[0].data = '<div id="timer" style="display: none;">' + response[0].data + '</div>';
 
           // Let Drupal.ajax handle the JSON response.
-          return ajax.success(response, status);
+          return originalSuccess.call(ajax, response, status, xmlhttprequest);
         };
 
         try {
@@ -350,7 +345,11 @@
       });
 
       function keepAlive() {
-        Drupal.Ajax['autologout.refresh'].autologoutRefresh(keepAlive);
+        if (!document.hidden) {
+          Drupal.Ajax['autologout.refresh'].autologoutRefresh(keepAlive);
+        } else {
+          t = setTimeout(keepAlive, localSettings.timeout);
+        }
       }
 
       function refresh() {
@@ -358,7 +357,7 @@
       }
 
       // Check if the page was loaded via a back button click.
-      var $dirty_bit = $('#autologout-cache-check-bit');
+      let $dirty_bit = $('#autologout-cache-check-bit');
       if ($dirty_bit.length !== 0) {
         if ($dirty_bit.val() === '1') {
           // Page was loaded via back button click, we should refresh the timer.

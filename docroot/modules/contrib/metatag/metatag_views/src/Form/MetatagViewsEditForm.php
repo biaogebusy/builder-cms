@@ -110,7 +110,7 @@ class MetatagViewsEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function form(array $values, array $element, array $token_types = [], array $included_groups = NULL, array $included_tags = NULL, $verbose_help = FALSE) {
+  public function form(array $values, array $element, array $token_types = [], ?array $included_groups = NULL, ?array $included_tags = NULL, $verbose_help = FALSE) {
     // Add the outer fieldset.
     $element += [
       '#type' => 'details',

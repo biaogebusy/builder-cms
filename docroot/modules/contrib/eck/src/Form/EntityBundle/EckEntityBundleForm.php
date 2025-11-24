@@ -110,26 +110,55 @@ class EckEntityBundleForm extends EntityForm {
     $entity_type_config = \Drupal::config('eck.eck_entity_type.' . $entity_type_id);
 
     $base_fields = $this->entityFieldManager->getBaseFieldDefinitions($type->getEntityType()->getBundleOf());
-    $bundle_fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $type->id());
+    $bundle_overrides = [];
+    if ($type->id() !== NULL) {
+      $bundle_overrides = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $type->id());
+    }
 
-    foreach (['title', 'uid', 'created', 'changed'] as $field) {
+    foreach (['title', 'uid', 'created', 'changed', 'status'] as $field) {
       if (!empty($entity_type_config->get($field))) {
-        if (!isset($form['title_overrides'])) {
-          $form['title_overrides'] = [
+        if (!isset($form['field_overrides'])) {
+          $form['field_overrides'] = [
             '#type' => 'details',
-            '#title' => $this->t('Base field title overrides'),
-            '#open' => $type->isNew(),
+            '#title' => $this->t('Base field title and description overrides'),
+            '#open' => FALSE,
           ];
         }
 
-        if (($value = $bundle_fields[$field]->getLabel()) == $base_fields[$field]->getLabel()) {
-          $value = '';
+        $form['field_overrides'][$field] = [
+          '#type' => 'fieldset',
+          '#title' => $base_fields[$field]->getLabel(),
+          '#tree' => FALSE,
+        ];
+
+        $fieldset = &$form['field_overrides'][$field];
+
+        if (isset($bundle_overrides[$field])) {
+          $title_override = $bundle_overrides[$field]->getLabel();
+          if ($title_override === $base_fields[$field]->getLabel()) {
+            unset($title_override);
+          }
         }
 
-        $form['title_overrides'][$field . '_title_override'] = [
+        $fieldset[$field . '_title_override'] = [
           '#type' => 'textfield',
-          '#title' => $base_fields[$field]->getLabel(),
-          '#default_value' => $value,
+          '#title' => $this->t('Title'),
+          '#description' => $this->t('New title for the base @title field.', ['@title' => $field]),
+          '#default_value' => $title_override ?? '',
+        ];
+
+        if (isset($bundle_overrides[$field])) {
+          $description_override = $bundle_overrides[$field]->getDescription();
+          if ($description_override === $base_fields[$field]->getDescription()) {
+            unset($description_override);
+          }
+        }
+
+        $fieldset[$field . '_description_override'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Description'),
+          '#description' => $this->t('New description for the base @title field. Enter %none to hide the default description.', ['@title' => $field, '%none' => '<none>']),
+          '#default_value' => $description_override ?? '',
         ];
       }
     }
@@ -199,15 +228,29 @@ class EckEntityBundleForm extends EntityForm {
     $bundle_fields = $this->entityFieldManager->getFieldDefinitions($type->getEntityType()->getBundleOf(), $type->id());
     $base_fields = $this->entityFieldManager->getBaseFieldDefinitions($type->getEntityType()->getBundleOf());
 
-    foreach (['created', 'changed', 'uid', 'title'] as $field) {
+    foreach (['created', 'changed', 'uid', 'title', 'status'] as $field) {
       if (!$form_state->hasValue($field . '_title_override')) {
         continue;
       }
 
-      $label = $form_state->getValue($field . '_title_override') ?: $base_fields[$field]->getLabel();
+      $has_changed = FALSE;
       $field_definition = $bundle_fields[$field];
+      $field_config = $field_definition->getConfig($type->id());
+
+      $label = $form_state->getValue($field . '_title_override') ?: $base_fields[$field]->getLabel();
       if ($field_definition->getLabel() != $label) {
-        $field_definition->getConfig($type->id())->setLabel($label)->save();
+        $field_config->setLabel($label);
+        $has_changed = TRUE;
+      }
+
+      $description = $form_state->getValue($field . '_description_override') ?: $base_fields[$field]->getDescription();
+      if ($field_definition->getDescription() != $description) {
+        $field_config->setDescription($description);
+        $has_changed = TRUE;
+      }
+
+      if ($has_changed) {
+        $field_config->save();
       }
     }
 

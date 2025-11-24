@@ -2,7 +2,7 @@
 
 /**
  * @file
- *   Contains user_default_page.module.
+ * Contains user_default_page.module.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -21,7 +21,11 @@ function user_default_page_help($route_name, RouteMatchInterface $route_match) {
 
       $output .= '<h3>' . t('Installation') . '</h3>';
       $output .= '<dl>';
-      $output .= '<dt>' . t('Enable the module via <a href=":drush_install_module">drush command</a> or the <a href=":extend_link">extend menu</a>.', [':extend_link' => '/admin/modules', ':drush_install_module' => 'https://www.drupal.org/docs/8/extending-drupal-8/installing-modules-from-the-command-line']) . '</dt>';
+      $output .= '<dt>' . t('Enable the module via <a href=":drush_install_module">drush command</a> or the <a href=":extend_link">extend menu</a>.',
+      [
+        ':extend_link' => '/admin/modules',
+        ':drush_install_module' => 'https://www.drupal.org/docs/8/extending-drupal-8/installing-modules-from-the-command-line',
+      ]) . '</dt>';
       $output .= '</dl>';
 
       $output .= '<h3>' . t('Usage') . '</h3>';
@@ -51,11 +55,6 @@ function user_default_page_user_logout($account) {
     'autologout.alt_logout',
     'autologout.ajax_logout',
   ])) {
-    return;
-  }
-
-  // Prevent redirection for other formats, like JSON
-  if (\Drupal::request()->getRequestFormat() !== 'html') {
     return;
   }
 
@@ -112,7 +111,7 @@ function user_default_page_page_attachments(array &$page) {
     $logout_message = (\Drupal::currentUser()->isAnonymous()) ?
       $entity->getLogoutRedirectMessage() :
       $entity->getLoginRedirectMessage();
-    \Drupal::messenger()->addStatus(t($logout_message));
+    \Drupal::messenger()->addStatus(($logout_message));
   }
 }
 
@@ -123,11 +122,6 @@ function user_default_page_user_login($account) {
   // Avoid redirection if logging in using one time login link.
   $route = \Drupal::routeMatch()->getRouteName();
   if ($route === 'user.reset.login') {
-    return;
-  }
-
-  // Prevent redirection for other formats, like JSON
-  if (\Drupal::request()->getRequestFormat() !== 'html') {
     return;
   }
 
@@ -166,7 +160,7 @@ function user_default_page_user_login($account) {
     if (!in_array($current_route, $ignored_routes)) {
       // Set Login redirect message.
       if ($login_message) {
-        \Drupal::messenger()->addStatus(t($login_message));
+        \Drupal::messenger()->addStatus(($login_message));
       }
       user_default_page_redirect($login_redirect);
     }
@@ -223,11 +217,15 @@ function user_default_page_redirect($path) {
   if ($url_object) {
     $url_object->setAbsolute();
     $url = $url_object->toString();
-    \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $url);
+    $response = new RedirectResponse($url);
+  }
+
+  if (isset($response)) {
+    $response->send();
   }
   else {
     $message = t('The system attempted to redirect to %path, but the page is not valid', ['%path' => $path]);
-    // TODO: Conditionally display message based on user permissions.
+    // @todo Conditionally display message based on user permissions.
     \Drupal::messenger()->addWarning($message);
     \Drupal::logger('user_default_page')->warning($message);
   }

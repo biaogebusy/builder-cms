@@ -42,26 +42,7 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
     $settings = &$build['#settings'];
 
     // BC for mismatched minor versions.
-    $blazies = $this->verifySafely($settings);
-    $entity  = $items->getEntity();
-
-    // @todo remove after sub-modules.
-    if (!empty($settings['item_id'])) {
-      foreach (['item_id', 'namespace'] as $key) {
-        if (!empty($settings[$key])) {
-          $k = str_replace('_', '.', $key);
-          $blazies->set($k, $settings[$key]);
-        }
-      }
-    }
-
-    // BVEF compat due to its ::viewElements being left behind.
-    // @todo remove once BVEF is updated to Blazy:2.10.
-    if (!$blazies->was('initialized')) {
-      $this->preSettings($settings);
-      Preloader::prepare($settings, $items);
-      $this->postSettings($settings);
-    }
+    $entity = $items->getEntity();
 
     $build['#entity'] = $entity;
     $this->prepareData($build);
@@ -111,9 +92,6 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
     // Extracts (Responsive) image dimensions, requires first.uri above.
     $this->postSettings($settings);
 
-    // @todo remove after sub-modules hook_alters at 3.x.
-    $build['settings'] = &$settings;
-
     // Allows altering the presettings once for the entire ecosystem.
     // Has the needed settings above to modify sub-modules ::buildSettings().
     $this->moduleHandler->alter('blazy_presettings', $settings, $items, $entities);
@@ -129,6 +107,8 @@ class BlazyFormatter extends BlazyManager implements BlazyFormatterInterface {
     $this->preBuildElements($build, $items, $entities);
 
     $settings = &$build['#settings'];
+
+    $build['#vanilla'] = !empty($settings['vanilla']);
 
     // Since 2.17, allows altering the settings once for the entire ecosystem,
     // rather than each hook_alter for every modules.

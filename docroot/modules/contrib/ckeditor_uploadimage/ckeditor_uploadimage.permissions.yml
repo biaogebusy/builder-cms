@@ -1,3 +1,0 @@
-use ckeditor_uploadimage:
-  title: 'Use the CKEditor Upload Image'
-  restrict access: TRUE

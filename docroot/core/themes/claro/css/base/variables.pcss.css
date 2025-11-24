@@ -21,8 +21,8 @@
   --color-maximumred-active: var(--color-red-600); /* 10% darker than base. */
   --color-bgblue-hover: var(--color-blue-020); /* 2% darker than base. */
   --color-bgblue-active: var(--color-blue-050); /* 5% darker than base. */
-  --color-bgred-hover: #fdf5f5; /* 5% darker than base. */
-  --color-bgred-active: #fceded; /* 10% darker than base. */
+  --color-bgred-hover: var(--color-red-020); /* 5% darker than base. */
+  --color-bgred-active: var(--color-red-050); /* 10% darker than base. */
   /* Gray variations. */
   --color-gray: #232429;
   --color-gray-900: #393a3f;
@@ -48,7 +48,7 @@
   --color-blue-300: #6694ff;
   --color-blue-200: #99b8ff;
   --color-blue-100: #ccdbff;
-  --color-blue-070: #f3f4f9;
+  --color-blue-070: #dbe6ff;
   --color-blue-050: #e5edff;
   --color-blue-020: #f5f8ff;
   /* Red variations. */
@@ -132,7 +132,7 @@
   --input--error-color: var(--color-maximumred);
   --input--error-border-color: var(--color-maximumred);
   --input--disabled-color: rgba(84, 85, 96, 0.6); /* Davy's gray with 0.6 opacity. */
-  --input--disabled-fg-color: var(--color-gray-600);
+  --input--disabled-fg-color: var(--color-gray-800);
   --input--disabled-bg-color: #f2f2f3; /* Light gray with 0.3 opacity on white bg. */
   --input--disabled-border-color: #bababf; /* Old silver with 0.5 opacity on white bg. */
   --input--disabled-border-opacity: 0.5;
@@ -156,7 +156,6 @@
   /*
    * Details.
    */
-  --details-bg-color: rgba(243, 244, 249, 0.4);
   --details-border-color: var(--color-gray-100);
   --details-summary-shadow-color: var(--color-focus);
   --details-summary-focus-border-size: var(--focus-border-size);
@@ -192,6 +191,7 @@
   --button-bg-color--danger: var(--color-maximumred);
   --button--hover-bg-color--danger: var(--color-maximumred-hover);
   --button--active-bg-color--danger: var(--color-maximumred-active);
+  --dropbutton-widget-z-index: 100;
   /**
    * jQuery.UI dropdown.
    */
@@ -243,8 +243,17 @@
    */
   --breadcrumb-height: 1.25rem;
   /**
-    * Vertical Tabs.
-    */
+   * Layout.
+   */
+  --layout-region-edit-width: min(960px, 100%);
+  --layout-region-edit-extended-width: min(1088px, 100%);
+  /**
+   * Vertical Tabs.
+   *
+   * These are shared between the vertical tabs and media library.
+   * @see ../components/vertical-tabs.pcss.css
+   * @see ../theme/media-library.pcss.css
+   */
   --vertical-tabs-margin-vertical: var(--space-s);
   --vertical-tabs-border-radius: var(--details-accordion-border-size-radius);
   --vertical-tabs-shadow: var(--details-box-shadow);

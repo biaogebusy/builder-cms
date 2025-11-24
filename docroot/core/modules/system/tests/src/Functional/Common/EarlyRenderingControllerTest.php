@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Common;
 
 use Drupal\Core\Url;
@@ -25,7 +27,7 @@ class EarlyRenderingControllerTest extends BrowserTestBase {
   /**
    * Tests theme preprocess functions being able to attach assets.
    */
-  public function testEarlyRendering() {
+  public function testEarlyRendering(): void {
     // Render array: non-early & early.
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.render_array'));
     $this->assertSession()->statusCodeEquals(200);
@@ -63,7 +65,7 @@ class EarlyRenderingControllerTest extends BrowserTestBase {
     $this->assertSession()->responseHeaderNotContains('X-Drupal-Cache-Tags', 'foo');
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.response-with-attachments.early'));
     $this->assertSession()->statusCodeEquals(500);
-    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Please ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\AttachmentsTestResponse.');
+    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\AttachmentsTestResponse.');
 
     // Cacheable Response object: non-early & early.
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.cacheable-response'));
@@ -71,8 +73,9 @@ class EarlyRenderingControllerTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains('Hello world!');
     $this->assertSession()->responseHeaderNotContains('X-Drupal-Cache-Tags', 'foo');
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.cacheable-response.early'));
-    $this->assertSession()->statusCodeEquals(500);
-    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Please ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\CacheableTestResponse.');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('Hello world!');
+    $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'foo');
 
     // Basic domain object: non-early & early.
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.domain-object'));
@@ -91,7 +94,7 @@ class EarlyRenderingControllerTest extends BrowserTestBase {
     $this->assertSession()->responseHeaderNotContains('X-Drupal-Cache-Tags', 'foo');
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.domain-object-with-attachments.early'));
     $this->assertSession()->statusCodeEquals(500);
-    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Please ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\AttachmentsTestDomainObject.');
+    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\AttachmentsTestDomainObject.');
 
     // Cacheable Response object: non-early & early.
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.cacheable-domain-object'));
@@ -100,7 +103,7 @@ class EarlyRenderingControllerTest extends BrowserTestBase {
     $this->assertSession()->responseHeaderNotContains('X-Drupal-Cache-Tags', 'foo');
     $this->drupalGet(Url::fromRoute('early_rendering_controller_test.cacheable-domain-object.early'));
     $this->assertSession()->statusCodeEquals(500);
-    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Please ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\CacheableTestDomainObject.');
+    $this->assertSession()->pageTextContains('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Ensure you are not rendering content too early. Returned object class: Drupal\early_rendering_controller_test\CacheableTestDomainObject.');
 
     // The exceptions are expected. Do not interpret them as a test failure.
     // Not using File API; a potential error must trigger a PHP warning.

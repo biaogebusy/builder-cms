@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views\Unit\EventSubscriber\RouteSubscriberTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\views\Unit\EventSubscriber;
 
@@ -28,9 +25,9 @@ class RouteSubscriberTest extends UnitTestCase {
   protected $entityTypeManager;
 
   /**
-   * The mocked view storage.
+   * The mocked config entity storage.
    *
-   * @var \Drupal\Tests\views\Kernel\ViewStorageTest|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $viewStorage;
 
@@ -52,6 +49,8 @@ class RouteSubscriberTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->viewStorage = $this->getMockBuilder('Drupal\Core\Config\Entity\ConfigEntityStorage')
       ->disableOriginalConstructor()
@@ -67,7 +66,7 @@ class RouteSubscriberTest extends UnitTestCase {
   /**
    * @covers ::routeRebuildFinished
    */
-  public function testRouteRebuildFinished() {
+  public function testRouteRebuildFinished(): void {
     [$display_1, $display_2] = $this->setupMocks();
 
     $display_1->expects($this->once())
@@ -90,14 +89,14 @@ class RouteSubscriberTest extends UnitTestCase {
    *
    * @see \Drupal\views\EventSubscriber\RouteSubscriber::onAlterRoutes()
    */
-  public function testOnAlterRoutes() {
+  public function testOnAlterRoutes(): void {
     $collection = new RouteCollection();
     // The first route will be overridden later.
     $collection->add('test_route', new Route('test_route', ['_controller' => 'Drupal\Tests\Core\Controller\TestController']));
     $route_2 = new Route('test_route/example', ['_controller' => 'Drupal\Tests\Core\Controller\TestController']);
     $collection->add('test_route_2', $route_2);
 
-    $route_event = new RouteBuildEvent($collection, 'views');
+    $route_event = new RouteBuildEvent($collection);
 
     [$display_1, $display_2] = $this->setupMocks();
 

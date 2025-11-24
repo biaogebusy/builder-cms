@@ -18,5 +18,8 @@ quick_node_clone.settings:
       type: string
       label: 'Text to prepend to title'
     clone_status:
+      type: string
+      label: 'Cloned node status'
+    create_group_relationships:
       type: boolean
-      label: 'Clone publication status of original?'
+      label: 'Create group relationships?'

@@ -2,12 +2,12 @@
 
 namespace Drupal\blazy\Skin;
 
-use Drupal\blazy\BlazyInterface;
-use Drupal\blazy\Plugin\SkinPluginInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\blazy\BlazyInterface;
+use Drupal\blazy\Plugin\SkinPluginInterface;
 
 /**
  * Provides skin manager base service.
@@ -101,7 +101,7 @@ abstract class SkinManagerBase extends DefaultPluginManager implements SkinManag
     \Traversable $namespaces,
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler,
-    BlazyInterface $manager
+    BlazyInterface $manager,
   ) {
     parent::__construct(static::$path, $namespaces, $module_handler, static::$interface, static::$annotation);
 

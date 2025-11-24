@@ -3,6 +3,7 @@
 namespace Drupal\image_widget_crop_examples\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\file\Entity\File;
@@ -50,13 +51,15 @@ class ImageWidgetCropExamplesForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManager $config_typed
+   *   The typed config object.
    * @param \Drupal\file\FileUsage\FileUsageInterface $file_usage
    *   File usage service.
    * @param \Drupal\image_widget_crop\ImageWidgetCropInterface $iwc_manager
    *   The ImageWidgetCrop manager service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, FileUsageInterface $file_usage, ImageWidgetCropInterface $iwc_manager) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManager $config_typed, FileUsageInterface $file_usage, ImageWidgetCropInterface $iwc_manager) {
+    parent::__construct($config_factory, $config_typed);
     $this->settings = $this->config('image_widget_crop_examples.settings');
     $this->fileUsage = $file_usage;
     $this->imageWidgetCropManager = $iwc_manager;
@@ -68,6 +71,7 @@ class ImageWidgetCropExamplesForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static (
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('file.usage'),
       $container->get('image_widget_crop.manager')
     );

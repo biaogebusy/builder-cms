@@ -4,6 +4,7 @@ namespace Drupal\charts\Plugin\chart\Library;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 
 /**
@@ -65,5 +66,19 @@ interface ChartInterface extends PluginInspectionInterface, PluginFormInterface,
    *   TRUE if the chart type is supported, FALSE otherwise.
    */
   public function isSupportedChartType(string $chart_type_id);
+
+  /**
+   * Adds Library- and Chart Type-related to the base settings element.
+   *
+   * @param array $element
+   *   The element to add the options to.
+   * @param array $options
+   *   The options to add to the element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form interface.
+   * @param array $complete_form
+   *   The complete form.
+   */
+  public function addBaseSettingsElementOptions(array &$element, array $options, FormStateInterface $form_state, array &$complete_form = []): void;
 
 }

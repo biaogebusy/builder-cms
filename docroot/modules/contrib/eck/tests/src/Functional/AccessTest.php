@@ -32,7 +32,7 @@ class AccessTest extends FunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->entityTypeInfo = $this->createEntityType();
     $this->bundleInfo = $this->createEntityBundle($this->entityTypeInfo['id']);
@@ -84,12 +84,6 @@ class AccessTest extends FunctionalTestBase {
    */
   public function testDynamicRoutes() {
     $routes = [
-      "view own {$this->entityTypeInfo['id']} entities" => [
-        "eck.entity.{$this->entityTypeInfo['id']}.list",
-      ],
-      "view any {$this->entityTypeInfo['id']} entities" => [
-        "eck.entity.{$this->entityTypeInfo['id']}.list",
-      ],
       "access {$this->entityTypeInfo['id']} entity listing" => [
         "eck.entity.{$this->entityTypeInfo['id']}.list",
       ],
@@ -145,7 +139,8 @@ class AccessTest extends FunctionalTestBase {
       'eck_entity_type' => $entityTypeName,
       'eck_entity_bundle' => $this->bundleInfo['type'],
     ];
-    $this->drupalPostForm(Url::fromRoute("eck.entity.add", $route_args), $edit, $this->t('Save'));
+    $this->drupalGet(Url::fromRoute("eck.entity.add", $route_args));
+    $this->submitForm($edit, 'Save');
 
     $this->drupalLogin($ownEntityUser);
     $edit['title[0][value]'] = $this->randomMachineName();
@@ -153,7 +148,8 @@ class AccessTest extends FunctionalTestBase {
       'eck_entity_type' => $entityTypeName,
       'eck_entity_bundle' => $this->bundleInfo['type'],
     ];
-    $this->drupalPostForm(Url::fromRoute("eck.entity.add", $route_args), $edit, $this->t('Save'));
+    $this->drupalGet(Url::fromRoute("eck.entity.add", $route_args));
+    $this->submitForm($edit, 'Save');
 
     // Get the entity that was created by the 'any' user.
     $arguments = [$entityTypeName => 1];
@@ -200,6 +196,36 @@ class AccessTest extends FunctionalTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->drupalGet(Url::fromRoute("entity.{$entityTypeName}.delete_form", $arguments));
     // The 'any' user has permission to delete content which is not theirs.
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Create entity with "Unpublished" status.
+    $this->createEntity($entityTypeName, [
+      'type' => $this->bundleInfo['type'],
+      'title' => $this->randomString(),
+      'status' => FALSE,
+    ]);
+
+    // Normal users should not have access to unpublished entities.
+    $arguments = [$entityTypeName => 3];
+    $this->drupalGet(Url::fromRoute("entity.{$entityTypeName}.canonical", $arguments));
+    $this->assertSession()->statusCodeEquals(403);
+
+    // This one permission should be not enough to get access.
+    $viewUnpublishedEntityUser = $this->drupalCreateUser([
+      'view unpublished eck entities',
+    ]);
+    $this->drupalLogin($viewUnpublishedEntityUser);
+    $this->drupalGet(Url::fromRoute("entity.{$entityTypeName}.canonical", $arguments));
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Finally, users with normal access and 'view unpublished eck entities'
+    // permission should have access.
+    $viewUnpublishedAndAnyEntityUser = $this->drupalCreateUser([
+      'view unpublished eck entities',
+      "view any {$entityTypeName} entities",
+    ]);
+    $this->drupalLogin($viewUnpublishedAndAnyEntityUser);
+    $this->drupalGet(Url::fromRoute("entity.{$entityTypeName}.canonical", $arguments));
     $this->assertSession()->statusCodeEquals(200);
   }
 

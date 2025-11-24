@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Theme;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -13,9 +15,7 @@ use Twig\TemplateWrapper;
 class TwigNamespaceTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'twig_theme_test',
@@ -50,7 +50,7 @@ class TwigNamespaceTest extends KernelTestBase {
   /**
    * Tests template discovery using namespaces.
    */
-  public function testTemplateDiscovery() {
+  public function testTemplateDiscovery(): void {
     // Tests resolving namespaced templates in modules.
     $this->assertTwigTemplate($this->twig->load('@node/node.html.twig'), 'Found node.html.twig in node module.');
 
@@ -61,7 +61,7 @@ class TwigNamespaceTest extends KernelTestBase {
   /**
    * Tests template extension and includes using namespaces.
    */
-  public function testTwigNamespaces() {
+  public function testTwigNamespaces(): void {
     // Test twig @extends and @include in template files.
     $test = ['#theme' => 'twig_namespace_test'];
     $this->setRawContent(\Drupal::service('renderer')->renderRoot($test));

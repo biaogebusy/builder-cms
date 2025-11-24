@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Extension;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -21,7 +23,7 @@ class UpdateSchemaTest extends KernelTestBase {
    *
    * @see \Drupal\Core\Update\UpdateHookRegistry::getAvailableUpdates()
    */
-  public function testDrupalGetSchemaVersionsInt() {
+  public function testDrupalGetSchemaVersionsInt(): void {
     \Drupal::state()->set('update_test_schema_version', 8001);
     $this->installSchema('update_test_schema', ['update_test_schema_table']);
     $schema = \Drupal::service('update.update_hook_registry')->getAvailableUpdates('update_test_schema');

@@ -134,7 +134,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
       ->save();
 
     $this->sendIncomingMessage('+123', $this->randomString());
-    $this->assertCount(0, $this->getTestMessages($this->gateway), 'No messages were created');
+    static::assertCount(0, $this->getTestMessages($this->gateway), 'No messages were created');
     $this->assertUserCount(0, 'No users exist.');
   }
 
@@ -151,8 +151,8 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->sendIncomingMessage($sender_number, $this->randomString());
 
     $user = $this->getLastUser();
-    $this->assertTrue($user instanceof UserInterface, 'One user created.');
-    $this->assertEquals($sender_number, $user->{$this->phoneField->getName()}->value, 'Phone number associated');
+    static::assertTrue($user instanceof UserInterface, 'One user created.');
+    static::assertEquals($sender_number, $user->{$this->phoneField->getName()}->value, 'Phone number associated');
   }
 
   /**
@@ -171,7 +171,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->assertUserCount(1);
     $this->sendIncomingMessage($sender_number, $this->randomString());
     $this->assertUserCount(1);
-    $this->assertCount(0, $this->getTestMessages($this->gateway));
+    static::assertCount(0, $this->getTestMessages($this->gateway));
   }
 
   /**
@@ -187,7 +187,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
 
     $this->sendIncomingMessage('+123123123', $this->randomString());
     $this->assertUserCount(1, 'User created');
-    $this->assertFalse($this->inTestMessages($this->gateway, $reply_message));
+    static::assertFalse($this->inTestMessages($this->gateway, $reply_message));
   }
 
   /**
@@ -203,7 +203,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
 
     $this->sendIncomingMessage('+123123123', $this->randomString());
     $this->assertUserCount(1, 'User created');
-    $this->assertTrue($this->inTestMessages($this->gateway, $reply_message));
+    static::assertTrue($this->inTestMessages($this->gateway, $reply_message));
   }
 
   /**
@@ -216,8 +216,8 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
 
     $this->assertUserCount(0);
     $this->sendIncomingMessage('+123123123', $this->randomString());
-    $this->assertFalse(empty($this->getLastUser()->getAccountName()));
-    $this->assertTrue(empty($this->getLastUser()->getEmail()));
+    static::assertFalse(empty($this->getLastUser()->getAccountName()));
+    static::assertTrue(empty($this->getLastUser()->getEmail()));
   }
 
   /**
@@ -236,10 +236,10 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->sendIncomingMessage($sender_number, $message);
 
     $user = user_load_by_name($username);
-    $this->assertTrue($user instanceof UserInterface, 'User was created');
-    $this->assertEquals($username, $user->getAccountName());
-    $this->assertEquals($email, $user->getEmail());
-    $this->assertEquals($sender_number, $user->{$this->phoneField->getName()}->value, 'Phone number associated');
+    static::assertTrue($user instanceof UserInterface, 'User was created');
+    static::assertEquals($username, $user->getAccountName());
+    static::assertEquals($email, $user->getEmail());
+    static::assertEquals($sender_number, $user->{$this->phoneField->getName()}->value, 'Phone number associated');
   }
 
   /**
@@ -260,8 +260,8 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->sendIncomingMessage('+123123123', $message);
 
     $user = $this->getLastUser();
-    $this->assertEquals($email, $user->getEmail());
-    $this->assertEquals($username, $user->getAccountName());
+    static::assertEquals($email, $user->getEmail());
+    static::assertEquals($username, $user->getAccountName());
 
     // Ensure password is correct:
     /** @var \Drupal\user\UserAuthInterface $userAuth */
@@ -303,7 +303,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $message = "$password $username $password2";
     $this->sendIncomingMessage('+123123123', $message);
 
-    $this->assertFalse(user_load_by_name($username) instanceof UserInterface, 'User was not created');
+    static::assertFalse(user_load_by_name($username) instanceof UserInterface, 'User was not created');
   }
 
   /**
@@ -320,8 +320,8 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $username = $this->randomMachineName();
     $message = "$username " . $this->randomMachineName();
     $this->sendIncomingMessage('+123123123', $message);
-    $this->assertEquals($username, $this->getLastUser()->getAccountName());
-    $this->assertTrue(empty($this->getLastUser()->getEmail()));
+    static::assertEquals($username, $this->getLastUser()->getAccountName());
+    static::assertTrue(empty($this->getLastUser()->getEmail()));
   }
 
   /**
@@ -344,7 +344,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $user = $this->getLastUser();
     $reply_message = $user->getAccountName() . ' Foo ' . $user->getEmail();
     $reply = $this->getLastTestMessage($this->gateway);
-    $this->assertEquals($reply_message, $reply->getMessage());
+    static::assertEquals($reply_message, $reply->getMessage());
   }
 
   /**
@@ -378,7 +378,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $incoming_message = $this->randomMachineName() . ' ' . $this->randomMachineName();
     $this->sendIncomingMessage('+123123123', $incoming_message);
     $this->assertUserCount(1, 'User created');
-    $this->assertFalse($this->inTestMessages($this->gateway, $reply_message));
+    static::assertFalse($this->inTestMessages($this->gateway, $reply_message));
   }
 
   /**
@@ -396,7 +396,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $incoming_message = $this->randomMachineName() . ' ' . $this->randomMachineName();
     $this->sendIncomingMessage('+123123123', $incoming_message);
     $this->assertUserCount(1, 'User created');
-    $this->assertTrue($this->inTestMessages($this->gateway, $reply_message));
+    static::assertTrue($this->inTestMessages($this->gateway, $reply_message));
   }
 
   /**
@@ -420,7 +420,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->sendIncomingMessage('+123123123', 'E ' . $email . ' U ' . $username);
 
     $emails = $this->getMails();
-    $this->assertCount(1, $emails, 'One email was sent.');
+    static::assertCount(1, $emails, 'One email was sent.');
     $this->assertMailString('to', $email, 1);
     $this->assertMailString('subject', $subject, 1);
     $this->assertMailString('body', 'Foo ' . $username . ' Bar', 1);
@@ -446,7 +446,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->sendIncomingMessage('+123123123', 'E ' . $email . ' P ' . $password);
 
     $emails = $this->getMails();
-    $this->assertCount(0, $emails, 'Zero emails sent because incoming message contained password.');
+    static::assertCount(0, $emails, 'Zero emails sent because incoming message contained password.');
   }
 
   /**
@@ -472,7 +472,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
 
     $expected_error = 'The username ' . $username . ' is already taken. This value is not a valid email address. ';
     $actual = $this->getLastTestMessage($this->gateway)->getMessage();
-    $this->assertEquals($failure_prefix . $expected_error, $actual);
+    static::assertEquals($failure_prefix . $expected_error, $actual);
   }
 
   /**
@@ -510,7 +510,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
     $this->sendIncomingMessage('+123123123', $incoming_message);
 
     $reply_message = 'Username is ' . $username . ' Password is ' . $password;
-    $this->assertTrue($this->inTestMessages($this->gateway, $reply_message));
+    static::assertTrue($this->inTestMessages($this->gateway, $reply_message));
   }
 
   /**
@@ -542,7 +542,7 @@ class SmsFrameworkUserAccountRegistrationServiceTest extends SmsFrameworkKernelB
    *   A message.
    */
   protected function assertUserCount(int $expectedUserCount, string $message = ''): void {
-    $this->assertCount($expectedUserCount, User::loadMultiple(), $message);
+    static::assertCount($expectedUserCount, User::loadMultiple(), $message);
   }
 
   /**

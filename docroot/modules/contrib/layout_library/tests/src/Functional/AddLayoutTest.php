@@ -24,7 +24,7 @@ class AddLayoutTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'layout_library',
     'field_ui',
     'block',

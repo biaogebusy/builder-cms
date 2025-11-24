@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Functional;
 
 use Drupal\Tests\block\Traits\BlockCreationTrait;
+use Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler;
 use Drupal\workspaces\Entity\Workspace;
 use Drupal\workspaces\WorkspaceInterface;
 
@@ -15,7 +18,7 @@ trait WorkspaceTestUtilities {
 
   use BlockCreationTrait;
 
-  protected $switcher_block_configured = FALSE;
+  protected $switcherBlockConfigured = FALSE;
 
   /**
    * Loads a single entity by its label.
@@ -42,6 +45,32 @@ trait WorkspaceTestUtilities {
     }
 
     return $entity;
+  }
+
+  /**
+   * Creates and activates a new Workspace through the UI.
+   *
+   * @param string $label
+   *   The label of the workspace to create.
+   * @param string $id
+   *   The ID of the workspace to create.
+   * @param string $parent
+   *   (optional) The ID of the parent workspace. Defaults to '_none'.
+   *
+   * @return \Drupal\workspaces\WorkspaceInterface
+   *   The workspace that was just created.
+   */
+  protected function createAndActivateWorkspaceThroughUi(string $label, string $id, string $parent = '_none'): WorkspaceInterface {
+    $this->drupalGet('/admin/config/workflow/workspaces/add');
+    $this->submitForm([
+      'id' => $id,
+      'label' => $label,
+      'parent' => $parent,
+    ], 'Save and switch');
+
+    $this->getSession()->getPage()->hasContent("$label ($id)");
+
+    return Workspace::load($id);
   }
 
   /**
@@ -78,17 +107,13 @@ trait WorkspaceTestUtilities {
   protected function setupWorkspaceSwitcherBlock() {
     // Add the block to the sidebar.
     $this->placeBlock('workspace_switcher', [
-      'id' => 'workspaceswitcher',
+      'id' => 'workspace_switcher',
       'region' => 'sidebar_first',
       'label' => 'Workspace switcher',
     ]);
-
-    // Confirm the block shows on the front page.
     $this->drupalGet('<front>');
-    $page = $this->getSession()->getPage();
 
-    $this->assertTrue($page->hasContent('Workspace switcher'));
-    $this->switcher_block_configured = TRUE;
+    $this->switcherBlockConfigured = TRUE;
   }
 
   /**
@@ -101,12 +126,14 @@ trait WorkspaceTestUtilities {
    *   The workspace to set active.
    */
   protected function switchToWorkspace(WorkspaceInterface $workspace) {
-    $this->assertTrue($this->switcher_block_configured, 'This test was not written correctly: you must call setupWorkspaceSwitcherBlock() before switchToWorkspace()');
+    $this->assertTrue($this->switcherBlockConfigured, 'This test was not written correctly: you must call setupWorkspaceSwitcherBlock() before switchToWorkspace()');
     /** @var \Drupal\Tests\WebAssert $session */
     $session = $this->assertSession();
     $session->buttonExists('Activate');
     $this->submitForm(['workspace_id' => $workspace->id()], 'Activate');
     $session->pageTextContains($workspace->label() . ' is now the active workspace.');
+    // Keep the test runner in sync with the system under test.
+    \Drupal::service('workspaces.manager')->setActiveWorkspace($workspace);
   }
 
   /**
@@ -120,6 +147,8 @@ trait WorkspaceTestUtilities {
     $session = $this->assertSession();
     $this->submitForm([], 'Switch to Live');
     $session->pageTextContains('You are now viewing the live version of the site.');
+    // Keep the test runner in sync with the system under test.
+    \Drupal::service('workspaces.manager')->switchToLive();
   }
 
   /**
@@ -172,6 +201,19 @@ trait WorkspaceTestUtilities {
     $this->assertSession()->statusCodeEquals(200);
     $page = $session->getPage();
     return $page->hasContent($label);
+  }
+
+  /**
+   * Marks an entity type as ignored in a workspace.
+   *
+   * @param string $entity_type_id
+   *   The entity type ID.
+   */
+  protected function ignoreEntityType(string $entity_type_id): void {
+    $entity_type = clone \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+    $entity_type->setHandlerClass('workspace', IgnoredWorkspaceHandler::class);
+    \Drupal::state()->set("$entity_type_id.entity_type", $entity_type);
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
   }
 
 }

@@ -6,6 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Url;
 use Drupal\workspaces\WorkspaceInterface;
 use Drupal\workspaces\WorkspaceOperationFactory;
@@ -14,7 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a form that merges the contents for a workspace into another one.
  */
-class WorkspaceMergeForm extends ConfirmFormBase implements WorkspaceFormInterface, ContainerInjectionInterface {
+class WorkspaceMergeForm extends ConfirmFormBase implements ContainerInjectionInterface, WorkspaceSafeFormInterface {
 
   /**
    * The source workspace entity.
@@ -77,7 +78,7 @@ class WorkspaceMergeForm extends ConfirmFormBase implements WorkspaceFormInterfa
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, WorkspaceInterface $source_workspace = NULL, WorkspaceInterface $target_workspace = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?WorkspaceInterface $source_workspace = NULL, ?WorkspaceInterface $target_workspace = NULL) {
     $this->sourceWorkspace = $source_workspace;
     $this->targetWorkspace = $target_workspace;
 
@@ -136,7 +137,7 @@ class WorkspaceMergeForm extends ConfirmFormBase implements WorkspaceFormInterfa
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return Url::fromRoute('entity.workspace.collection', [], ['query' => \Drupal::destination()->getAsArray()]);
+    return Url::fromRoute('entity.workspace.collection', [], ['query' => $this->getDestinationArray()]);
   }
 
   /**

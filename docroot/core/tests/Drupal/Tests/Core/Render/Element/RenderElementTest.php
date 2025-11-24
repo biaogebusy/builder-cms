@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render\Element;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\GeneratedUrl;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * @coversDefaultClass \Drupal\Core\Render\Element\RenderElement
+ * @coversDefaultClass \Drupal\Core\Render\Element\RenderElementBase
  * @group Render
  */
 class RenderElementTest extends UnitTestCase {
@@ -45,7 +47,7 @@ class RenderElementTest extends UnitTestCase {
   /**
    * @covers ::preRenderAjaxForm
    */
-  public function testPreRenderAjaxForm() {
+  public function testPreRenderAjaxForm(): void {
     $request = Request::create('/test');
     $request->query->set('foo', 'bar');
     $this->requestStack->push($request);
@@ -67,7 +69,7 @@ class RenderElementTest extends UnitTestCase {
       ],
     ];
 
-    $element = RenderElement::preRenderAjaxForm($element);
+    $element = RenderElementBase::preRenderAjaxForm($element);
 
     $this->assertTrue($element['#ajax_processed']);
     $this->assertEquals($url, $element['#attached']['drupalSettings']['ajax']['test']['url']);
@@ -76,7 +78,7 @@ class RenderElementTest extends UnitTestCase {
   /**
    * @covers ::preRenderAjaxForm
    */
-  public function testPreRenderAjaxFormWithQueryOptions() {
+  public function testPreRenderAjaxFormWithQueryOptions(): void {
     $request = Request::create('/test');
     $request->query->set('foo', 'bar');
     $this->requestStack->push($request);
@@ -103,7 +105,7 @@ class RenderElementTest extends UnitTestCase {
       ],
     ];
 
-    $element = RenderElement::preRenderAjaxForm($element);
+    $element = RenderElementBase::preRenderAjaxForm($element);
 
     $this->assertTrue($element['#ajax_processed']);
     $this->assertEquals($url, $element['#attached']['drupalSettings']['ajax']['test']['url']);

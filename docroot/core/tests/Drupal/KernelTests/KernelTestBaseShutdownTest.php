@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests;
 
 /**
@@ -37,7 +39,7 @@ class KernelTestBaseShutdownTest extends KernelTestBase {
   /**
    * @covers ::assertPostConditions
    */
-  public function testShutdownFunction() {
+  public function testShutdownFunction(): void {
     $this->expectedShutdownCalled = ['shutdownFunction', 'shutdownFunction2'];
     drupal_register_shutdown_function([$this, 'shutdownFunction']);
   }
@@ -45,7 +47,7 @@ class KernelTestBaseShutdownTest extends KernelTestBase {
   /**
    * @covers ::assertPostConditions
    */
-  public function testNoShutdownFunction() {
+  public function testNoShutdownFunction(): void {
     $this->expectedShutdownCalled = [];
   }
 

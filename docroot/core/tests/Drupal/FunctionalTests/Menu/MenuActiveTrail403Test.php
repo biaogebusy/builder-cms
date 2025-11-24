@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Menu;
 
 use Drupal\Core\Url;
@@ -84,7 +86,7 @@ class MenuActiveTrail403Test extends BrowserTestBase {
   /**
    * Tests that visiting 403 page does not override original active trail.
    */
-  public function testMenuActiveTrail403Cache() {
+  public function testMenuActiveTrail403Cache(): void {
     $this->drupalLogin($this->privilegedUser);
     $system_status_url = Url::fromRoute('system.status');
     $this->drupalGet($system_status_url);

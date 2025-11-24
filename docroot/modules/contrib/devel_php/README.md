@@ -33,13 +33,3 @@ Otherwise, it uses configuration from the Devel module:
 - On Devel toolbar configuration page
   (`/admin/config/development/devel/toolbar`), you can enable `Execute PHP`
   menu link.
-
-
-## Maintainers
-
-Current maintainers:
-- Luca Lusso - [lussoluca](https://www.drupal.org/user/138068)
-- Florent Torregrosa - [Grimreaper](https://www.drupal.org/user/2388214)
-
-Supporting organizations:
-- [SparkFabrik](https://www.drupal.org/sparkfabrik)

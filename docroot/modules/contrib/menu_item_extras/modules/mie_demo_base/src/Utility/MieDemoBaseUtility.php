@@ -2,7 +2,7 @@
 
 namespace Drupal\mie_demo_base\Utility;
 
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
@@ -31,7 +31,8 @@ class MieDemoBaseUtility {
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
     try {
-      $file_system->copy($source, $destination, FileSystemInterface::EXISTS_RENAME);
+      $file_rename = FileExists::Rename;
+      $file_system->copy($source, $destination, $file_rename);
     }
     catch (\Exception $e) {
     }

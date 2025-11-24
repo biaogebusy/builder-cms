@@ -587,7 +587,7 @@ class WebformEntityAccessControlHandlerTest extends UnitTestCase {
 
     $tests[] = [
       'duplicate', [
-        'permisssions' => ['create webform', 'edit own webform'],
+        'permissions' => ['create webform', 'edit own webform'],
         'account_is_webform_owner' => FALSE,
       ],
       [

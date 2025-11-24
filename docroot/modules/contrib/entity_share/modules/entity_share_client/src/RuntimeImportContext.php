@@ -11,8 +11,6 @@ use Drupal\entity_share_client\Service\ImportServiceInterface;
  * Class RuntimeImportContext.
  *
  * Contains properties to store data during import.
- *
- * @package Drupal\entity_share_client
  */
 class RuntimeImportContext {
 
@@ -285,7 +283,11 @@ class RuntimeImportContext {
    * Getter.
    *
    * @return array
-   *   The remote field mappings.
+   *   The remote field mappings. A nested array of public JSONAPI field names,
+   *   whose successive keys are:
+   *   - The entity type ID.
+   *   - The entity bundle.
+   *   - The Drupal internal field name.
    */
   public function getFieldMappings(): array {
     return $this->fieldMappings;
@@ -370,7 +372,7 @@ class RuntimeImportContext {
       $this->importedEntities[$langcode] = [];
     }
     elseif (!empty($entity_uuid)) {
-      foreach (array_keys($this->importedEntities) as $imported_entities_langcode) {
+      foreach (\array_keys($this->importedEntities) as $imported_entities_langcode) {
         if (isset($this->importedEntities[$imported_entities_langcode][$entity_uuid])) {
           unset($this->importedEntities[$imported_entities_langcode][$entity_uuid]);
         }
@@ -405,9 +407,8 @@ class RuntimeImportContext {
     if (isset($this->importedEntities[$langcode][$entity_uuid])) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**

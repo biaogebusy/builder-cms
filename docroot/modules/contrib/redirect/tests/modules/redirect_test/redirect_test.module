@@ -5,6 +5,8 @@
  * A test module for testing the redirect module.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\redirect\Entity\Redirect;
 

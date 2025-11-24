@@ -101,6 +101,8 @@ class TaggedHandlersPass implements CompilerPassInterface {
    *   If a tagged handler does not implement the required interface.
    * @throws \Symfony\Component\DependencyInjection\Exception\LogicException
    *   If at least one tagged service is required but none are found.
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function process(ContainerBuilder $container) {
     // Avoid using ContainerBuilder::findTaggedServiceIds() as that results in
@@ -178,7 +180,7 @@ class TaggedHandlersPass implements CompilerPassInterface {
     foreach ($this->tagCache[$tag] ?? [] as $id => $attributes) {
       // Validate the interface.
       $handler = $container->getDefinition($id);
-      if (!is_subclass_of($handler->getClass(), $interface)) {
+      if (!is_a($handler->getClass(), $interface, TRUE)) {
         throw new LogicException("Service '$id' for consumer '$consumer_id' does not implement $interface.");
       }
       $handlers[$id] = $attributes[0]['priority'] ?? 0;

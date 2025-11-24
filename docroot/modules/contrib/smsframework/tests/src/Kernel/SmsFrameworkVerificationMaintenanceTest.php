@@ -86,7 +86,7 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
       ->setStatus(FALSE)
       ->save();
     $this->container->get('cron')->run();
-    $this->assertTrue($this->getLastVerification() instanceof PhoneNumberVerificationInterface);
+    static::assertTrue($this->getLastVerification() instanceof PhoneNumberVerificationInterface);
   }
 
   /**
@@ -98,7 +98,7 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
       ->set('created', 0)
       ->save();
     $this->container->get('cron')->run();
-    $this->assertFalse($this->getLastVerification());
+    static::assertFalse($this->getLastVerification());
   }
 
   /**
@@ -111,7 +111,7 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
       ->save();
     $this->container->get('cron')->run();
     $this->testEntity = EntityTest::load($this->testEntity->id());
-    $this->assertNotEmpty($this->testEntity->{$this->phoneField->getName()});
+    static::assertNotEmpty($this->testEntity->{$this->phoneField->getName()});
   }
 
   /**
@@ -127,7 +127,7 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
       ->save();
     $this->container->get('cron')->run();
     $this->testEntity = EntityTest::load($this->testEntity->id());
-    $this->assertEmpty($this->testEntity->{$this->phoneField->getName()});
+    static::assertEmpty($this->testEntity->{$this->phoneField->getName()});
   }
 
   /**
@@ -139,7 +139,7 @@ final class SmsFrameworkVerificationMaintenanceTest extends SmsFrameworkKernelBa
       ->set('created', 0)
       ->save();
     $this->container->get('cron')->run();
-    $this->assertTrue($this->getLastVerification() instanceof PhoneNumberVerificationInterface);
+    static::assertTrue($this->getLastVerification() instanceof PhoneNumberVerificationInterface);
   }
 
 }

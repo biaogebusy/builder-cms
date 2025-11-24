@@ -2,15 +2,15 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\StackedRouteMatchInterface;
 use Drupal\page_manager\EventSubscriber\RouteNameResponseSubscriber;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
@@ -20,6 +20,7 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 class RouteNameResponseSubscriberTest extends UnitTestCase {
 
   use ProphecyTrait;
+
   /**
    * @covers ::onResponse
    */
@@ -29,7 +30,7 @@ class RouteNameResponseSubscriberTest extends UnitTestCase {
 
     $route_name = 'the_route_name';
     $master_route_match = $this->prophesize(RouteMatchInterface::class);
-    $master_route_match->getParameter('base_route_name')->willReturn(NULL);
+    $master_route_match->getParameter('_base_route_name')->willReturn(NULL);
     $master_route_match->getRouteName()->willReturn($route_name);
     $current_route_match = $this->prophesize(StackedRouteMatchInterface::class);
     $current_route_match->getMasterRouteMatch()->willReturn($master_route_match->reveal());
@@ -67,7 +68,7 @@ class RouteNameResponseSubscriberTest extends UnitTestCase {
 
     $route_name = 'the_route_name';
     $master_route_match = $this->prophesize(RouteMatchInterface::class);
-    $master_route_match->getParameter('base_route_name')->willReturn($route_name);
+    $master_route_match->getParameter('_base_route_name')->willReturn($route_name);
     $master_route_match->getRouteName()->shouldNotBeCalled();
     $current_route_match = $this->prophesize(StackedRouteMatchInterface::class);
     $current_route_match->getMasterRouteMatch()->willReturn($master_route_match->reveal());

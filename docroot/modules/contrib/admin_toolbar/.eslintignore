@@ -1,0 +1,6 @@
+#
+# ESLint ignore file for the Admin Toolbar project.
+#
+
+# Exclude external hoverIntent jQuery Plugin library from eslint validation.
+js/jquery.hoverIntent.js

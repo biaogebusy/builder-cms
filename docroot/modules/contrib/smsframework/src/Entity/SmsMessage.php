@@ -49,7 +49,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    *
    * @var \Drupal\sms\Message\SmsMessageResultInterface|null
    */
-  protected $result = NULL;
+  protected ?StdMessageResultInterface $result = NULL;
 
   /**
    * Following are implementors of plain SmsMessage interface.
@@ -96,7 +96,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function removeRecipient($recipient) {
-    $this->recipient_phone_number->filter(function ($item) use ($recipient) {
+    $this->recipient_phone_number->filter(static function ($item) use ($recipient) {
       return ($item->value != $recipient);
     });
     return $this;
@@ -106,7 +106,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function removeRecipients(array $recipients) {
-    $this->recipient_phone_number->filter(function ($item) use ($recipients) {
+    $this->recipient_phone_number->filter(static function ($item) use ($recipients) {
       return !in_array($item->value, $recipients);
     });
     return $this;
@@ -124,7 +124,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    */
   public function getOption($name) {
     $options = $this->getOptions();
-    return isset($options[$name]) ? $options[$name] : NULL;
+    return $options[$name] ?? NULL;
   }
 
   /**
@@ -179,7 +179,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * @throws \Drupal\sms\Exception\SmsStorageException
    *   If the SMS message entity already has saved results.
    */
-  public function setResult(StdMessageResultInterface $result = NULL) {
+  public function setResult(?StdMessageResultInterface $result = NULL) {
     // Throw an exception if there is already a result for this SMS message.
     $previous_result = $this->getResult();
     if ($previous_result) {

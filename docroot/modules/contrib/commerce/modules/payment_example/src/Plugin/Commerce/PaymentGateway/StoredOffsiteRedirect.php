@@ -2,38 +2,35 @@
 
 namespace Drupal\commerce_payment_example\Plugin\Commerce\PaymentGateway;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_payment\Attribute\CommercePaymentGateway;
 use Drupal\commerce_payment\CreditCard;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
 use Drupal\commerce_payment\PaymentMethodStorageInterface;
-use Drupal\commerce_payment\PaymentMethodTypeManager;
-use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
-use Drupal\commerce_price\MinorUnitsConverterInterface;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsZeroBalanceOrderInterface;
+use Drupal\commerce_payment_example\PluginForm\OffsiteRedirect\PaymentOffsiteForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Provides an example offsite payment gateway with stored payment methods.
- *
- * @CommercePaymentGateway(
- *   id = "example_stored_offsite_redirect",
- *   label = "Example (Off-site redirect with stored payment methods)",
- *   display_label = "Example Stored Offsite",
- *   forms = {
- *     "offsite-payment" = "Drupal\commerce_payment_example\PluginForm\OffsiteRedirect\PaymentOffsiteForm",
- *   },
- *   payment_method_types = {"credit_card"},
- *   credit_card_types = {
- *     "amex", "dinersclub", "discover", "jcb", "maestro", "mastercard", "visa",
- *   },
- * )
  */
-class StoredOffsiteRedirect extends OffsiteRedirect implements SupportsStoredPaymentMethodsInterface {
+#[CommercePaymentGateway(
+  id: "example_stored_offsite_redirect",
+  label: new TranslatableMarkup("Example (Off-site redirect with stored payment methods)"),
+  display_label: new TranslatableMarkup("Example Stored Offsite"),
+  forms: [
+    "offsite-payment" => PaymentOffsiteForm::class,
+  ],
+  payment_method_types: ["credit_card"],
+  credit_card_types: [
+    "amex", "dinersclub", "discover", "jcb", "maestro", "mastercard", "visa",
+  ],
+)]
+class StoredOffsiteRedirect extends OffsiteRedirect implements SupportsStoredPaymentMethodsInterface, SupportsZeroBalanceOrderInterface {
 
   /**
    * The messenger.
@@ -43,47 +40,12 @@ class StoredOffsiteRedirect extends OffsiteRedirect implements SupportsStoredPay
   protected $messenger;
 
   /**
-   * Constructs a new PaymentGatewayBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
-   *   The payment type manager.
-   * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
-   *   The payment method type manager.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time.
-   * @param \Drupal\commerce_price\MinorUnitsConverterInterface $minor_units_converter
-   *   The minor units converter.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, MinorUnitsConverterInterface $minor_units_converter, MessengerInterface $messenger) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time, $minor_units_converter);
-    $this->messenger = $messenger;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_payment_type'),
-      $container->get('plugin.manager.commerce_payment_method_type'),
-      $container->get('datetime.time'),
-      $container->get('commerce_price.minor_units_converter'),
-      $container->get('messenger')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->messenger = $container->get('messenger');
+    return $instance;
   }
 
   /**
@@ -115,6 +77,11 @@ class StoredOffsiteRedirect extends OffsiteRedirect implements SupportsStoredPay
    * {@inheritdoc}
    */
   public function createPayment(PaymentInterface $payment, $capture = TRUE) {
+    // If order is free only create the payment method but not the payment.
+    if ($payment->getAmount()->isZero()) {
+      return;
+    }
+
     $this->assertPaymentState($payment, ['new']);
     $payment_method = $payment->getPaymentMethod();
     $this->assertPaymentMethod($payment_method);
@@ -122,7 +89,6 @@ class StoredOffsiteRedirect extends OffsiteRedirect implements SupportsStoredPay
     // Perform the create payment request here, throw an exception if it fails.
     // See \Drupal\commerce_payment\Exception for the available exceptions.
     // Remember to take into account $capture when performing the request.
-    $amount = $payment->getAmount();
     $payment_method_token = $payment_method->getRemoteId();
     // The remote ID returned by the request.
     $remote_id = '123456';
@@ -150,6 +116,12 @@ class StoredOffsiteRedirect extends OffsiteRedirect implements SupportsStoredPay
     // The payment method is created first so that it can be attached to the
     // generated payment transaction.
     $this->createPaymentMethod($payment_method, $request);
+
+    // If order is free only create the payment method but not the payment.
+    if ($order->getBalance()->isZero()) {
+      return;
+    }
+
     $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     $payment = $payment_storage->create([
       'state' => 'completed',

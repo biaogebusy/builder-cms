@@ -197,7 +197,7 @@ class XmlSitemap extends ConfigEntityBase implements XmlSitemapInterface {
   /**
    * {@inheritdoc}
    */
-  public static function loadByContext(array $context = NULL) {
+  public static function loadByContext(?array $context = NULL) {
     if (!isset($context)) {
       $context = xmlsitemap_get_current_context();
     }

@@ -3,6 +3,7 @@
 namespace Drupal\user\Plugin\views\argument;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\views\Plugin\views\argument\ManyToOne;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -10,9 +11,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Allow role ID(s) as argument.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("user__roles_rid")
  */
+#[ViewsArgument(
+ id: 'user__roles_rid'
+)]
 class RolesRid extends ManyToOne {
 
   /**
@@ -28,7 +30,7 @@ class RolesRid extends ManyToOne {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager

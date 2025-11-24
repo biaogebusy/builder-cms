@@ -2,10 +2,6 @@
 
 namespace Drupal\commerce_product\Entity;
 
-use Drupal\commerce\Entity\CommerceContentEntityBase;
-use Drupal\commerce\EntityHelper;
-use Drupal\commerce\EntityOwnerTrait;
-use Drupal\commerce_price\Price;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityPublishedTrait;
@@ -13,6 +9,10 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Url;
+use Drupal\commerce\Entity\CommerceContentEntityBase;
+use Drupal\commerce\EntityHelper;
+use Drupal\commerce\EntityOwnerTrait;
+use Drupal\commerce_price\Price;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -51,7 +51,7 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
  *       "default" = "Drupal\commerce_product\ProductVariationRouteProvider",
  *     },
  *     "inline_form" = "Drupal\commerce_product\Form\ProductVariationInlineForm",
- *     "translation" = "Drupal\content_translation\ContentTranslationHandler"
+ *     "translation" = "Drupal\commerce_product\ProductTranslationHandler"
  *   },
  *   admin_permission = "administer commerce_product",
  *   fieldable = TRUE,
@@ -218,21 +218,6 @@ class ProductVariation extends CommerceContentEntityBase implements ProductVaria
    */
   public function setPrice(Price $price) {
     $this->set('price', $price);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isActive() {
-    return (bool) $this->getEntityKey('published');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setActive($active) {
-    $this->set('status', (bool) $active);
     return $this;
   }
 

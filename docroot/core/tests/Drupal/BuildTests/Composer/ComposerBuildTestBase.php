@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\BuildTests\Composer;
 
 use Drupal\BuildTests\Framework\BuildTestBase;
@@ -49,7 +51,7 @@ abstract class ComposerBuildTestBase extends BuildTestBase {
    * @return \Symfony\Component\Finder\Finder
    *   A Finder object with all the composer.json files for components.
    */
-  protected function getComponentPathsFinder(string $drupal_root): Finder {
+  protected static function getComponentPathsFinder(string $drupal_root): Finder {
     $finder = new Finder();
     $finder->name('composer.json')
       ->in($drupal_root . static::$componentsPath)

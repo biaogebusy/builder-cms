@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Kernel\Views;
 
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
@@ -50,7 +52,7 @@ class FilterDateTest extends DateTimeHandlerTestBase {
     parent::setUp($import_test_views);
 
     // Change field storage to date-only.
-    $storage = FieldStorageConfig::load('node.' . static::$field_name);
+    $storage = FieldStorageConfig::load('node.' . static::$fieldName);
     $storage->setSetting('datetime_type', DateTimeItem::DATETIME_TYPE_DATE);
     $storage->save();
 
@@ -85,9 +87,9 @@ class FilterDateTest extends DateTimeHandlerTestBase {
   /**
    * Tests offsets with date-only fields.
    */
-  public function testDateOffsets() {
+  public function testDateOffsets(): void {
     $view = Views::getView('test_filter_datetime');
-    $field = static::$field_name . '_value';
+    $field = static::$fieldName . '_value';
 
     foreach (static::$timezones as $timezone) {
 
@@ -169,9 +171,9 @@ class FilterDateTest extends DateTimeHandlerTestBase {
   /**
    * Tests date filter with date-only fields.
    */
-  public function testDateIs() {
+  public function testDateIs(): void {
     $view = Views::getView('test_filter_datetime');
-    $field = static::$field_name . '_value';
+    $field = static::$fieldName . '_value';
 
     foreach (static::$timezones as $timezone) {
 
@@ -222,7 +224,7 @@ class FilterDateTest extends DateTimeHandlerTestBase {
    */
   protected function updateNodesDateFieldsValues(array $dates) {
     foreach ($dates as $index => $date) {
-      $this->nodes[$index]->{static::$field_name}->value = $date;
+      $this->nodes[$index]->{static::$fieldName}->value = $date;
       $this->nodes[$index]->save();
     }
   }

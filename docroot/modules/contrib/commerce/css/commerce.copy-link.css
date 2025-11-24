@@ -1,0 +1,23 @@
+.commerce-copy-link {
+  --copy-icon: var(--commerce-icon--copy-link);
+
+  width: 1em;
+  height: 1em;
+  padding: 0.25em 0.25em;
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 1em;
+  mask-size: 1em;
+  -webkit-mask-image: var(--copy-icon);
+  mask-image: var(--copy-icon);
+}
+
+.commerce-copy-link.copied {
+  --copy-icon: var(--commerce-icon--checked-lg);
+}

@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.open.public.life.label.delete request
  *
  * @author auto create
- * @since 1.0, 2023-09-11 19:35:58
+ * @since 1.0, 2025-08-14 00:52:40
  */
 class AlipayOpenPublicLifeLabelDeleteRequest
 {

@@ -1,0 +1,13 @@
+parameters:
+  level: 2
+
+  ignoreErrors:
+    # new static() is a best practice in Drupal, so we cannot fix that.
+    - "#^Unsafe usage of new static#"
+    # Ignore PHPUnit Prophecy class reflection errors.
+    - "#^Call to an undefined method Prophecy#"
+
+  paths:
+    - .
+includes:
+  - phpstan-baseline.neon

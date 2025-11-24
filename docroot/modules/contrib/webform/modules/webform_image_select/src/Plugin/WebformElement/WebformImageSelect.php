@@ -116,7 +116,7 @@ class WebformImageSelect extends Select {
       if (isset($element['#images'][$value]) && isset($element['#images'][$value]['src'])) {
         $src = $element['#images'][$value]['src'];
 
-        // Always use absolute URLs for the src so that it will load via e-mail.
+        // Always use absolute URLs for the src so that it will load via email.
         if (strpos($src, '/') === 0) {
           $src = $this->request->getSchemeAndHttpHost() . $src;
         }
@@ -125,7 +125,7 @@ class WebformImageSelect extends Select {
           '#theme' => 'image',
           // ISSUE:
           // Image src must be an absolute URL so that it can be sent
-          // via e-mail but template_preprocess_image() converts the #uri to
+          // via email but template_preprocess_image() converts the #uri to
           // a root-relative URL.
           // @see template_preprocess_image()
           //

@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
-use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\commerce_product\Entity\Product;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_product\Entity\Product;
+use Drupal\commerce_product\Entity\ProductVariation;
 
 /**
  * Tests the product variation access control.
@@ -44,7 +44,7 @@ class ProductVariationAccessTest extends CommerceKernelTestBase {
 
     // Create uid: 1 here so that it's skipped in test cases.
     $admin_user = $this->createUser();
-    $regular_user = $this->createUser(['uid' => 2]);
+    $regular_user = $this->createUser([], NULL, FALSE, ['uid' => 2]);
     \Drupal::currentUser()->setAccount($regular_user);
   }
 
@@ -69,36 +69,61 @@ class ProductVariationAccessTest extends CommerceKernelTestBase {
     $product->save();
     $variation = $this->reloadEntity($variation);
 
-    $account = $this->createUser([], ['access administration pages']);
+    $account = $this->createUser(['access administration pages']);
     $this->assertFalse($variation->access('view', $account));
     $this->assertFalse($variation->access('update', $account));
     $this->assertFalse($variation->access('delete', $account));
 
-    $account = $this->createUser([], ['view commerce_product']);
+    $account = $this->createUser(['view commerce_product']);
     $this->assertTrue($variation->access('view', $account));
     $this->assertFalse($variation->access('update', $account));
     $this->assertFalse($variation->access('delete', $account));
 
-    $account = $this->createUser([], ['update any default commerce_product']);
+    $account = $this->createUser(['update any default commerce_product']);
     $this->assertFalse($variation->access('view', $account));
     $this->assertFalse($variation->access('update', $account));
     $this->assertFalse($variation->access('delete', $account));
 
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'manage default commerce_product_variation',
     ]);
     $this->assertFalse($variation->access('view', $account));
     $this->assertTrue($variation->access('update', $account));
     $this->assertTrue($variation->access('delete', $account));
 
-    $account = $this->createUser([], ['administer commerce_product']);
+    $account = $this->createUser(['administer commerce_product']);
     $this->assertTrue($variation->access('view', $account));
     $this->assertTrue($variation->access('update', $account));
     $this->assertTrue($variation->access('delete', $account));
 
+    // Unpublished variation.
+    $variation->setUnpublished();
+
+    $account = $this->createUser(['view commerce_product']);
+    $this->assertFalse($variation->access('view', $account));
+    $this->assertFalse($variation->access('update', $account));
+    $this->assertFalse($variation->access('delete', $account));
+
+    $account = $this->createUser([
+      'view commerce_product',
+      'manage default commerce_product_variation',
+    ]);
+    $this->assertTrue($variation->access('view', $account));
+    $this->assertTrue($variation->access('update', $account));
+    $this->assertTrue($variation->access('delete', $account));
+
+    $account = $this->createUser(['administer commerce_product']);
+    $this->assertTrue($variation->access('view', $account));
+    $this->assertTrue($variation->access('update', $account));
+    $this->assertTrue($variation->access('delete', $account));
+
+    $variation->setPublished();
+
     // Broken product reference.
     $variation->set('product_id', '999');
-    $account = $this->createUser([], ['manage default commerce_product_variation']);
+    $account = $this->createUser([
+      'manage default commerce_product_variation',
+    ]);
     $this->assertFalse($variation->access('view', $account));
     $this->assertFalse($variation->access('update', $account));
     $this->assertFalse($variation->access('delete', $account));
@@ -110,13 +135,13 @@ class ProductVariationAccessTest extends CommerceKernelTestBase {
   public function testCreateAccess() {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('commerce_product_variation');
 
-    $account = $this->createUser([], ['access content']);
+    $account = $this->createUser(['access content']);
     $this->assertFalse($access_control_handler->createAccess('test', $account));
 
-    $account = $this->createUser([], ['administer commerce_product']);
+    $account = $this->createUser(['administer commerce_product']);
     $this->assertTrue($access_control_handler->createAccess('default', $account));
 
-    $account = $this->createUser([], ['manage default commerce_product_variation']);
+    $account = $this->createUser(['manage default commerce_product_variation']);
     $this->assertTrue($access_control_handler->createAccess('default', $account));
   }
 
@@ -140,16 +165,24 @@ class ProductVariationAccessTest extends CommerceKernelTestBase {
       'status' => 1,
     ]);
     $variation_denied->save();
+    /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation_unpublished */
+    $variation_unpublished = ProductVariation::create([
+      'type' => 'default',
+      'sku' => $this->randomMachineName(),
+      'title' => $this->randomString(),
+      'status' => 0,
+    ]);
+    $variation_unpublished->save();
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $product = Product::create([
       'type' => 'default',
       'title' => 'My Product Title',
-      'variations' => [$variation, $variation_denied],
+      'variations' => [$variation, $variation_denied, $variation_unpublished],
     ]);
     $product->save();
     $product = $this->reloadEntity($product);
 
-    $user = $this->createUser([], ['view commerce_product']);
+    $user = $this->createUser(['view commerce_product']);
     $this->container->get('current_user')->setAccount($user);
 
     /** @var \Drupal\commerce_product\ProductVariationStorageInterface $variation_storage */
@@ -157,6 +190,11 @@ class ProductVariationAccessTest extends CommerceKernelTestBase {
     $this->container->get('request_stack')->getCurrentRequest()->query->set('v', $variation_denied->id());
     $context = $variation_storage->loadFromContext($product);
     $this->assertNotEquals($variation_denied->id(), $context->id());
+    $this->assertEquals($variation->id(), $context->id());
+
+    $this->container->get('request_stack')->getCurrentRequest()->query->set('v', $variation_unpublished->id());
+    $context = $variation_storage->loadFromContext($product);
+    $this->assertNotEquals($variation_unpublished->id(), $context->id());
     $this->assertEquals($variation->id(), $context->id());
 
     $enabled = $variation_storage->loadEnabled($product);
@@ -184,19 +222,19 @@ class ProductVariationAccessTest extends CommerceKernelTestBase {
     $product->save();
     $variation = $this->reloadEntity($variation);
 
-    $account = $this->createUser([], ['administer commerce_product']);
+    $account = $this->createUser(['administer commerce_product']);
     $this->assertTrue($variation->toUrl('collection')->access($account));
     $this->assertTrue($variation->toUrl('add-form')->access($account));
     $this->assertTrue($variation->toUrl('edit-form')->access($account));
     $this->assertTrue($variation->toUrl('delete-form')->access($account));
 
-    $account = $this->createUser([], ['manage default commerce_product_variation']);
+    $account = $this->createUser(['manage default commerce_product_variation']);
     $this->assertTrue($variation->toUrl('collection')->access($account));
     $this->assertTrue($variation->toUrl('add-form')->access($account));
     $this->assertTrue($variation->toUrl('edit-form')->access($account));
     $this->assertTrue($variation->toUrl('delete-form')->access($account));
 
-    $account = $this->createUser([], ['access commerce_product overview']);
+    $account = $this->createUser(['access commerce_product overview']);
     $this->assertTrue($variation->toUrl('collection')->access($account));
     $this->assertFalse($variation->toUrl('add-form')->access($account));
     $this->assertFalse($variation->toUrl('edit-form')->access($account));

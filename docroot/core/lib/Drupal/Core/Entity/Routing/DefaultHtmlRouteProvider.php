@@ -158,7 +158,7 @@ class DefaultHtmlRouteProvider implements EntityRouteProviderInterface, EntityHa
       // @todo We have to check if a route contains a bundle in its path as
       //   test entities have inconsistent usage of "add-form" link templates.
       //   Fix it in https://www.drupal.org/node/2699959.
-      if (($bundle_key = $entity_type->getKey('bundle')) && strpos($route->getPath(), '{' . $expected_parameter . '}') !== FALSE) {
+      if (($bundle_key = $entity_type->getKey('bundle')) && str_contains($route->getPath(), '{' . $expected_parameter . '}')) {
         $route->setDefault('_title_callback', EntityController::class . '::addBundleTitle');
         // If the bundles are entities themselves, we can add parameter
         // information to the route options.
@@ -316,9 +316,14 @@ class DefaultHtmlRouteProvider implements EntityRouteProviderInterface, EntityHa
    *   The generated route, if available.
    */
   protected function getCollectionRoute(EntityTypeInterface $entity_type) {
-    // If the entity type does not provide an admin permission, there is no way
-    // to control access, so we cannot provide a route in a sensible way.
-    if ($entity_type->hasLinkTemplate('collection') && $entity_type->hasListBuilderClass() && ($admin_permission = $entity_type->getAdminPermission())) {
+    // If the entity type does not provide either an admin or collection
+    // permission, there is no way to control access, so we cannot provide
+    // a route in a sensible way.
+    $permissions = array_filter([
+      $entity_type->getAdminPermission(),
+      $entity_type->getCollectionPermission(),
+    ]);
+    if ($entity_type->hasLinkTemplate('collection') && $entity_type->hasListBuilderClass() && $permissions) {
       /** @var \Drupal\Core\StringTranslation\TranslatableMarkup $label */
       $label = $entity_type->getCollectionLabel();
 
@@ -330,7 +335,7 @@ class DefaultHtmlRouteProvider implements EntityRouteProviderInterface, EntityHa
           '_title_arguments' => $label->getArguments(),
           '_title_context' => $label->getOption('context'),
         ])
-        ->setRequirement('_permission', $admin_permission);
+        ->setRequirement('_permission', implode('+', $permissions));
 
       return $route;
     }

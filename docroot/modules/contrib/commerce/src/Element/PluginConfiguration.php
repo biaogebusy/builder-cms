@@ -3,7 +3,8 @@
 namespace Drupal\commerce\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides a form element for configuring plugins.
@@ -23,10 +24,11 @@ use Drupal\Core\Render\Element\FormElement;
  *   ],
  * ];
  * @endcode
- *
- * @FormElement("commerce_plugin_configuration")
  */
-class PluginConfiguration extends FormElement {
+#[FormElement(
+  id: "commerce_plugin_configuration",
+)]
+class PluginConfiguration extends FormElementBase {
 
   use CommerceElementTrait;
 

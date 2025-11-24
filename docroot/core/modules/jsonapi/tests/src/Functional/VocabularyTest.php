@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Url;
@@ -87,6 +89,7 @@ class VocabularyTest extends ConfigEntityResourceTestBase {
           'status' => TRUE,
           'dependencies' => [],
           'name' => 'Llama',
+          'new_revision' => FALSE,
           'description' => NULL,
           'weight' => 0,
           'drupal_internal__vid' => 'llama',

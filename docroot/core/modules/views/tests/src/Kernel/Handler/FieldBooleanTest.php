@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -33,7 +35,7 @@ class FieldBooleanTest extends ViewsKernelTestBase {
     return $data;
   }
 
-  public function testFieldBoolean() {
+  public function testFieldBoolean(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -64,7 +66,7 @@ class FieldBooleanTest extends ViewsKernelTestBase {
     $this->assertEquals('False', $view->field['age']->advancedRender($view->result[0]));
     $this->assertEquals('True', $view->field['age']->advancedRender($view->result[1]));
 
-    // test awesome unicode.
+    // Test awesome unicode.
     $view->field['age']->options['type'] = 'unicode-yes-no';
     $this->assertEquals('✖', $view->field['age']->advancedRender($view->result[0]));
     $this->assertEquals('✔', $view->field['age']->advancedRender($view->result[1]));

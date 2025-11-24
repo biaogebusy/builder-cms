@@ -1,3 +1,15 @@
+# Private Message Ban routing definition
+entity.private_message_ban.edit_form:
+  route_name: entity.private_message_ban.edit_form
+  base_route: entity.private_message_ban.edit_form
+  title: 'Edit'
+
+entity.private_message_ban.delete_form:
+  route_name: entity.private_message_ban.delete_form
+  base_route: entity.private_message_ban.edit_form
+  title: 'Delete'
+  weight: 10
+
 private_message.private_message_settings_tab:
   route_name: private_message.private_message_settings
   title: Settings

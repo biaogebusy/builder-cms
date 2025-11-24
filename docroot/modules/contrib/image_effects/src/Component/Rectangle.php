@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -30,40 +32,24 @@ class Rectangle {
 
   /**
    * The width of the rectangle.
-   *
-   * @var int
    */
-  private $width;
+  private readonly int $width;
 
   /**
    * The height of the rectangle.
-   *
-   * @var int
    */
-  private $height;
+  private readonly int $height;
 
   /**
    * The width of the rotated rectangle.
-   *
-   * @var int
    */
-  private $boundingWidth;
+  private int $boundingWidth;
 
   /**
    * The height of the rotated rectangle.
-   *
-   * @var int
    */
-  private $boundingHeight;
+  private int $boundingHeight;
 
-  /**
-   * Constructs a new Rectangle object.
-   *
-   * @param int $width
-   *   The width of the rectangle.
-   * @param int $height
-   *   The height of the rectangle.
-   */
   public function __construct(int $width, int $height) {
     if ($width > 0 && $height > 0) {
       $this->width = $width;

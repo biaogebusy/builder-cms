@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api\Form;
 
+use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -18,12 +20,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a form for the Index entity.
  *
- * When altering this form via hook_form_FORM_ID_alter(), please be aware that
- * this form's form ID ("search_api_index_form") is also the base form ID of
- * several other forms, which will therefore trigger the same hook
- * implementation via hook_form_BASE_FORM_ID_alter(). In cases where this isn't
- * desired you should therefore make sure to explicitly check the form ID within
- * the hook's body.
+ * When altering this form via hook_form_FORM_ID_alter(), be aware that this
+ * form's form ID ("search_api_index_form") is also the base form ID of several
+ * other forms, which will therefore trigger the same hook implementation via
+ * hook_form_BASE_FORM_ID_alter(). In cases where this isn't desired you should
+ * therefore make sure to explicitly check the form ID within the hook's body.
  */
 class IndexForm extends EntityForm {
 
@@ -83,6 +84,24 @@ class IndexForm extends EntityForm {
   }
 
   /**
+   * Retrieves all available search servers.
+   *
+   * @return \Drupal\search_api\ServerInterface[]
+   *   The available servers.
+   */
+  protected function getServers(): array {
+    try {
+      return $this->entityTypeManager
+        ->getStorage('search_api_server')
+        ->loadMultiple();
+    }
+    catch (InvalidPluginDefinitionException | PluginNotFoundException) {
+      // This should never happen.
+      return [];
+    }
+  }
+
+  /**
    * Retrieves all available servers as an options list.
    *
    * @return string[]
@@ -90,11 +109,7 @@ class IndexForm extends EntityForm {
    */
   protected function getServerOptions() {
     $options = [];
-    /** @var \Drupal\search_api\ServerInterface[] $servers */
-    $servers = $this->entityTypeManager
-      ->getStorage('search_api_server')
-      ->loadMultiple();
-    foreach ($servers as $server_id => $server) {
+    foreach ($this->getServers() as $server_id => $server) {
       // @todo Special formatting for disabled servers.
       $options[$server_id] = Utility::escapeHtml($server->label());
     }
@@ -179,7 +194,7 @@ class IndexForm extends EntityForm {
         'trigger_as' => ['name' => 'datasources_configure'],
         'callback' => '::buildAjaxDatasourceConfigForm',
         'wrapper' => 'search-api-datasources-config-form',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'effect' => 'fade',
       ],
     ];
@@ -227,7 +242,7 @@ class IndexForm extends EntityForm {
         'trigger_as' => ['name' => 'tracker_configure'],
         'callback' => '::buildAjaxTrackerConfigForm',
         'wrapper' => 'search-api-tracker-config-form',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'effect' => 'fade',
       ],
     ];
@@ -267,30 +282,36 @@ class IndexForm extends EntityForm {
 
     $this->buildTrackerConfigForm($form, $form_state, $index);
 
+    $server_options = $this->getServerOptions();
     $form['server'] = [
       '#type' => 'radios',
       '#title' => $this->t('Server'),
       '#description' => $this->t('Select the server this index should use. Indexes cannot be enabled without a connection to a valid, enabled server.'),
-      '#options' => ['' => '<em>' . $this->t('- No server -') . '</em>'] + $this->getServerOptions(),
-      '#default_value' => $index->hasValidServer() ? $index->getServerId() : '',
+      '#options' => ['' => '<em>' . $this->t('- No server -') . '</em>'] + $server_options,
+      '#default_value' => (string) $index->getServerInstanceIfAvailable()?->id(),
     ];
 
     $form['status'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
-      '#description' => $this->t('Only enabled indexes can be used for indexing and searching. This setting will only take effect if the selected server is also enabled.'),
+      '#description' => $this->t('Only enabled indexes can be used for indexing and searching.'),
       '#default_value' => $index->status(),
-      // Can't enable an index lying on a disabled server or no server at all.
-      '#disabled' => !$index->status() && (!$index->hasValidServer() || !$index->getServerInstance()->status()),
-      // @todo This doesn't seem to work and should also hide for disabled
-      //   servers. If that works, we can probably remove the last sentence of
-      //   the description.
       '#states' => [
-        'invisible' => [
-          ':input[name="server"]' => ['value' => ''],
+        'visible' => [
+          'xor',
         ],
       ],
     ];
+    // Only show the status checkbox if the server is enabled.
+    foreach ($this->getServers() as $server_id => $server) {
+      if ($server->status()) {
+        $form['status']['#states']['visible'][] = [
+          ':input[name="server"]' => [
+            'value' => $server_id,
+          ],
+        ];
+      }
+    }
 
     $form['description'] = [
       '#type' => 'textarea',
@@ -311,7 +332,7 @@ class IndexForm extends EntityForm {
     // it to the correct place in the form values.
     $form['options']['read_only'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Read only'),
+      '#title' => $this->t('Read-only'),
       '#description' => $this->t('Do not write to this index or track the status of items in this index.'),
       '#default_value' => $index->isReadOnly(),
       '#parents' => ['read_only'],
@@ -373,17 +394,22 @@ class IndexForm extends EntityForm {
         $datasource_form_state = SubformState::createForSubform($datasource_form, $form, $form_state);
         $form['datasource_configs'][$datasource_id] = $datasource->buildConfigurationForm($datasource_form, $datasource_form_state);
 
-        $show_message = TRUE;
-        $form['datasource_configs'][$datasource_id]['#type'] = 'details';
-        $form['datasource_configs'][$datasource_id]['#title'] = $this->t('Configure the %datasource datasource', ['%datasource' => $datasource->label()]);
-        $form['datasource_configs'][$datasource_id]['#open'] = $index->isNew();
+        // Only show the details and configuration message if there is something
+        // to configure. The "File" datasource for example has no options by
+        // default.
+        if (!empty($form['datasource_configs'][$datasource_id])) {
+          $show_message = TRUE;
+          $form['datasource_configs'][$datasource_id]['#type'] = 'details';
+          $form['datasource_configs'][$datasource_id]['#title'] = $this->t('Configure the %datasource datasource', ['%datasource' => $datasource->label()]);
+          $form['datasource_configs'][$datasource_id]['#open'] = $index->isNew();
+        }
       }
     }
 
     // If the user changed the datasources and there is at least one datasource
     // config form, show a message telling the user to configure it.
     if ($selected_datasources && $show_message) {
-      $this->messenger->addWarning($this->t('Please configure the used datasources.'));
+      $this->messenger->addWarning($this->t('Configure the used datasources.'));
     }
   }
 
@@ -401,12 +427,10 @@ class IndexForm extends EntityForm {
     $selected_tracker = $form_state->getValue('tracker');
     if ($selected_tracker === NULL || $selected_tracker == $index->getTrackerId()) {
       // Initial form build, use the saved tracker (or none for new indexes).
-      if ($index->hasValidTracker()) {
-        $tracker = $index->getTrackerInstance();
-      }
+      $tracker = $index->getTrackerInstanceIfAvailable();
       // Only notify the user of a missing tracker plugin if we're editing an
       // existing index.
-      elseif (!$index->isNew()) {
+      if (!$tracker && !$index->isNew()) {
         $this->messenger->addError($this->t('The tracker plugin is missing or invalid.'));
       }
     }
@@ -437,7 +461,7 @@ class IndexForm extends EntityForm {
       // If the user changed the tracker and the new one has a config form, show
       // a message telling the user to configure it.
       if ($selected_tracker && $selected_tracker != $tracker->getPluginId()) {
-        $this->messenger->addWarning($this->t('Please configure the used tracker.'));
+        $this->messenger->addWarning($this->t('Configure the used tracker.'));
       }
     }
   }
@@ -622,7 +646,7 @@ class IndexForm extends EntityForm {
       try {
         /** @var \Drupal\search_api\IndexInterface $index */
         $index = $this->getEntity();
-        $index->save();
+        $return = $index->save();
         $this->messenger->addStatus($this->t('The index was successfully saved.'));
         $button = $form_state->getTriggeringElement();
         if (!empty($button['#redirect_to_url'])) {
@@ -631,6 +655,7 @@ class IndexForm extends EntityForm {
         else {
           $form_state->setRedirect('entity.search_api_index.canonical', ['search_api_index' => $index->id()]);
         }
+        return $return;
       }
       catch (EntityStorageException $e) {
         $form_state->setRebuild();
@@ -642,6 +667,7 @@ class IndexForm extends EntityForm {
         $this->messenger->addError($this->t('The index could not be saved.'));
       }
     }
+    return 0;
   }
 
 }

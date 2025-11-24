@@ -103,20 +103,11 @@ class ParagraphsAccessTest extends ParagraphsTestBase {
     $role->save();
 
     // Set field_images from demo to private file storage.
-    if ($this->coreVersion('10.2')) {
-      $edit = array(
-        'field_storage[subform][settings][uri_scheme]' => 'private',
-      );
-      $this->drupalGet('admin/structure/paragraphs_type/images/fields/paragraph.images.field_images_demo');
-      $this->submitForm($edit, 'Save settings');
-    }
-    else {
-      $edit = array(
-        'settings[uri_scheme]' => 'private',
-      );
-      $this->drupalGet('admin/structure/paragraphs_type/images/fields/paragraph.images.field_images_demo/storage');
-      $this->submitForm($edit, 'Save field settings');
-    }
+    $edit = array(
+      'field_storage[subform][settings][uri_scheme]' => 'private',
+    );
+    $this->drupalGet('admin/structure/paragraphs_type/images/fields/paragraph.images.field_images_demo');
+    $this->submitForm($edit, 'Save settings');
 
     // Use the stable widget.
     $form_display = EntityFormDisplay::load('node.paragraphed_content_demo.default')

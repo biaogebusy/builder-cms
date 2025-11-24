@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_price\Kernel;
 
-use Drupal\commerce_price\Plugin\Field\FieldType\PriceItem;
-use Drupal\commerce_price\Price;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_price\Plugin\Field\FieldType\PriceItem;
+use Drupal\commerce_price\Price;
 
 /**
  * Tests generating sample values for price fields.
@@ -44,7 +44,7 @@ class PriceItemGeneratedSampleValueTest extends CommerceKernelTestBase {
    * @return \Generator
    *   The test data.
    */
-  public function dataForGeneratedSamples() {
+  public static function dataForGeneratedSamples() {
     yield [
       ['USD'],
     ];

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
@@ -109,8 +110,8 @@ class PhysicalFile extends ImportProcessorPluginBase implements PluginFormInterf
       }
 
       if (!$uri_public_name || !isset($entity_json_data['attributes'][$uri_public_name])) {
-        $this->logger->error('Impossible to get the URI of the file in JSON:API data. Please check that the server website is correctly exposing it.');
-        $this->messenger()->addError($this->t('Impossible to get the URI of the file in JSON:API data. Please check that the server website is correctly exposing it.'));
+        $this->logger->error('Impossible to get the URI of the file in JSON:API data. Check that the server website is correctly exposing it.');
+        $this->messenger()->addError($this->t('Impossible to get the URI of the file in JSON:API data. Check that the server website is correctly exposing it.'));
         return;
       }
 
@@ -126,8 +127,8 @@ class PhysicalFile extends ImportProcessorPluginBase implements PluginFormInterf
       ];
 
       $file_overwrite_mode = $this->configuration['rename']
-        ? FileSystemInterface::EXISTS_RENAME
-        : FileSystemInterface::EXISTS_REPLACE;
+        ? FileExists::Rename
+        : FileExists::Replace;
 
       $file_destination = $this->fileSystem->getDestinationFilename($processed_entity->getFileUri(), $file_overwrite_mode);
       $processed_entity->setFileUri($file_destination);
@@ -138,7 +139,7 @@ class PhysicalFile extends ImportProcessorPluginBase implements PluginFormInterf
         try {
           $response = $this->remoteManager->request($runtime_import_context->getRemote(), 'GET', $remote_file_url);
           $file_content = (string) $response->getBody();
-          $result = @file_put_contents($file_destination, $file_content);
+          $result = @\file_put_contents($file_destination, $file_content);
           if (!$result) {
             throw new \Exception('Error writing file to ' . $file_destination);
           }

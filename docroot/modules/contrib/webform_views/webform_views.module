@@ -4,7 +4,7 @@
  * @file
  * Webform integration with views.
  */
-
+use Drupal\webform\Plugin\WebformElement\WebformOtherInterface;
 use Drupal\webform_views\WebformSubmissionViewsData;
 use Drupal\webform\Entity\Webform;
 use Drupal\views\Views;
@@ -93,7 +93,7 @@ function webform_views_webform_element_info_alter(array &$elements) {
     elseif (is_subclass_of($v['class'], WebformElementEntityReferenceInterface::class)) {
       $views_handler = WebformEntityReferenceViews::class;
     }
-    elseif (is_subclass_of($v['class'], \Drupal\webform\Plugin\WebformElement\WebformOtherInterface::class)) {
+    elseif (is_subclass_of($v['class'], WebformOtherInterface::class)) {
       $views_handler = WebformSelectOtherViews::class;
     }
     elseif (is_subclass_of($v['class'], WebformComputedBase::class)) {
@@ -209,6 +209,7 @@ function webform_views_applicable_views() {
     $contains_webform_id_in_path = (bool) \Drupal::entityQuery('webform')
       ->condition(\Drupal::entityTypeManager()->getDefinition('webform')->getKey('id'), $contains_webform_id_in_path, 'IN')
       ->count()
+      ->accessCheck(TRUE)
       ->execute();
 
     // TODO: in theory we should do a more intensive analysis than just

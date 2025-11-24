@@ -6,6 +6,8 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_payment\Attribute\CommercePaymentGateway;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayInterface;
 
 /**
  * Manages discovery and instantiation of payment gateway plugins.
@@ -27,7 +29,14 @@ class PaymentGatewayManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Commerce/PaymentGateway', $namespaces, $module_handler, 'Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\PaymentGatewayInterface', 'Drupal\commerce_payment\Annotation\CommercePaymentGateway');
+    parent::__construct(
+      'Plugin/Commerce/PaymentGateway',
+      $namespaces,
+      $module_handler,
+      PaymentGatewayInterface::class,
+      CommercePaymentGateway::class,
+      'Drupal\commerce_payment\Annotation\CommercePaymentGateway',
+    );
 
     $this->alterInfo('commerce_payment_gateway_info');
     $this->setCacheBackend($cache_backend, 'commerce_payment_gateway_plugins');

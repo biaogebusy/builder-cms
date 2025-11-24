@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Asset;
 
+use Drupal\Component\FileCache\FileCacheFactory;
+use Drupal\Component\FileCache\FileCacheInterface;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Asset\Exception\IncompleteLibraryDefinitionException;
@@ -12,7 +14,10 @@ use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\Core\Theme\ComponentPluginManager;
+use Drupal\Core\Theme\ActiveTheme;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\Plugin\Component;
 
 /**
  * Parses library files to get extension data.
@@ -55,11 +60,25 @@ class LibraryDiscoveryParser {
   protected $librariesDirectoryFileFinder;
 
   /**
+   * The component plugin manager.
+   *
+   * @var \Drupal\Core\Theme\ComponentPluginManager
+   */
+  protected $componentPluginManager;
+
+  /**
    * The extension path resolver.
    *
    * @var \Drupal\Core\Extension\ExtensionPathResolver
    */
   protected $extensionPathResolver;
+
+  /**
+   * The file cache.
+   *
+   * @var \Drupal\Component\FileCache\FileCacheInterface
+   */
+  protected FileCacheInterface $fileCache;
 
   /**
    * Constructs a new LibraryDiscoveryParser instance.
@@ -76,22 +95,22 @@ class LibraryDiscoveryParser {
    *   The libraries directory file finder.
    * @param \Drupal\Core\Extension\ExtensionPathResolver $extension_path_resolver
    *   The extension path resolver.
+   * @param \Drupal\Core\Theme\ComponentPluginManager|null $component_plugin_manager
+   *   The component plugin manager.
    */
-  public function __construct($root, ModuleHandlerInterface $module_handler, ThemeManagerInterface $theme_manager, StreamWrapperManagerInterface $stream_wrapper_manager, LibrariesDirectoryFileFinder $libraries_directory_file_finder = NULL, ExtensionPathResolver $extension_path_resolver = NULL) {
+  public function __construct($root, ModuleHandlerInterface $module_handler, ThemeManagerInterface $theme_manager, StreamWrapperManagerInterface $stream_wrapper_manager, LibrariesDirectoryFileFinder $libraries_directory_file_finder, ExtensionPathResolver $extension_path_resolver, ?ComponentPluginManager $component_plugin_manager = NULL) {
     $this->root = $root;
     $this->moduleHandler = $module_handler;
     $this->themeManager = $theme_manager;
     $this->streamWrapperManager = $stream_wrapper_manager;
-    if (!$libraries_directory_file_finder) {
-      @trigger_error('Calling LibraryDiscoveryParser::__construct() without the $libraries_directory_file_finder argument is deprecated in drupal:8.9.0. The $libraries_directory_file_finder argument will be required in drupal:10.0.0. See https://www.drupal.org/node/3099614', E_USER_DEPRECATED);
-      $libraries_directory_file_finder = \Drupal::service('library.libraries_directory_file_finder');
-    }
     $this->librariesDirectoryFileFinder = $libraries_directory_file_finder;
-    if (!$extension_path_resolver) {
-      @trigger_error('Calling LibraryDiscoveryParser::__construct() without the $extension_path_resolver argument is deprecated in drupal:9.3.0 and is required in drupal:10.0.0. See https://www.drupal.org/node/2940438', E_USER_DEPRECATED);
-      $extension_path_resolver = \Drupal::service('extension.path.resolver');
-    }
     $this->extensionPathResolver = $extension_path_resolver;
+    $this->fileCache = FileCacheFactory::get('library_parser');
+    if (!isset($component_plugin_manager)) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $component_plugin_manager argument is deprecated in drupal:10.3.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3410260', E_USER_DEPRECATED);
+      $component_plugin_manager = \Drupal::service('plugin.manager.sdc');
+    }
+    $this->componentPluginManager = $component_plugin_manager;
   }
 
   /**
@@ -167,7 +186,7 @@ class LibraryDiscoveryParser {
       // Assign Drupal's license to libraries that don't have license info.
       if (!isset($library['license'])) {
         $library['license'] = [
-          'name' => 'GNU-GPL-2.0-or-later',
+          'name' => 'GPL-2.0-or-later',
           'url' => 'https://www.drupal.org/licensing/faq',
           'gpl-compatible' => TRUE,
         ];
@@ -212,7 +231,10 @@ class LibraryDiscoveryParser {
             $options['group'] = JS_LIBRARY;
           }
           elseif ($type == 'css') {
-            $options['group'] = $extension_type == 'theme' ? CSS_AGGREGATE_THEME : CSS_AGGREGATE_DEFAULT;
+            // Component stylesheets should be added in the "theme" aggregate
+            // group to load them alongside the theme.
+            // @see \Drupal\Core\Plugin\Component::getLibraryName
+            $options['group'] = ($extension_type == 'theme' || str_starts_with($id, 'components.')) ? CSS_AGGREGATE_THEME : CSS_AGGREGATE_DEFAULT;
           }
           // By default, all library assets are files.
           if (!isset($options['type'])) {
@@ -228,7 +250,7 @@ class LibraryDiscoveryParser {
               if ($source[1] !== '/') {
                 $source = substr($source, 1);
                 // Non core provided libraries can be in multiple locations.
-                if (strpos($source, 'libraries/') === 0) {
+                if (str_starts_with($source, 'libraries/')) {
                   $path_to_source = $this->librariesDirectoryFileFinder->find(substr($source, 10));
                   if ($path_to_source) {
                     $source = $path_to_source;
@@ -343,7 +365,9 @@ class LibraryDiscoveryParser {
    *   repository URL for reference.
    * - license: If the remote property is set, the license information is
    *   required. It has 3 properties:
-   *   - name: The human-readable name of the license.
+   *   - name: A System Package Data Exchange (SPDX) license identifier such as
+   *     "GPL-2.0-or-later" (see https://spdx.org/licenses/), or if not
+   *     applicable, the human-readable name of the license.
    *   - url: The URL of the license file/information for the version of the
    *     library used.
    *   - gpl-compatible: A Boolean for whether this library is GPL compatible.
@@ -366,15 +390,28 @@ class LibraryDiscoveryParser {
     $libraries = [];
 
     $library_file = $path . '/' . $extension . '.libraries.yml';
-    if (file_exists($this->root . '/' . $library_file)) {
-      try {
-        $libraries = Yaml::decode(file_get_contents($this->root . '/' . $library_file)) ?? [];
-      }
-      catch (InvalidDataTypeException $e) {
-        // Rethrow a more helpful exception to provide context.
-        throw new InvalidLibraryFileException(sprintf('Invalid library definition in %s: %s', $library_file, $e->getMessage()), 0, $e);
+    $library_path = $this->root . '/' . $library_file;
+
+    if (file_exists($library_path)) {
+      $libraries = $this->fileCache->get($library_path);
+      if ($libraries === NULL) {
+        try {
+          $libraries = Yaml::decode(file_get_contents($this->root . '/' . $library_file)) ?? [];
+          $this->fileCache->set($library_path, $libraries);
+        }
+        catch (InvalidDataTypeException $e) {
+          // Rethrow a more helpful exception to provide context.
+          throw new InvalidLibraryFileException(sprintf('Invalid library definition in %s: %s', $library_file, $e->getMessage()), 0, $e);
+        }
       }
     }
+    // Core also provides additional libraries that don't come from the YAML,
+    // file nor the hook_library_info_build. They come from single-directory
+    // component definitions.
+    $additional_libraries = $extension === 'core'
+      ? $this->librariesForComponents()
+      : [];
+    $libraries = array_merge($additional_libraries, $libraries);
 
     // Allow modules to add dynamic library definitions.
     $hook = 'library_info_build';
@@ -386,6 +423,91 @@ class LibraryDiscoveryParser {
     $this->moduleHandler->alter('library_info', $libraries, $extension);
     $this->themeManager->alter('library_info', $libraries, $extension);
 
+    return $libraries;
+  }
+
+  /**
+   * Apply overrides to files that have moved.
+   *
+   * @param array $library
+   *   The library definition.
+   * @param string $library_name
+   *   The library name.
+   * @param string $extension
+   *   The extension name.
+   * @param array $overrides
+   *   The library overrides.
+   * @param Drupal\Core\Theme\ActiveTheme $active_theme
+   *   The active theme.
+   *
+   * @return array
+   *   The modified library overrides.
+   */
+  protected function applyLibrariesMovedOverrides(array $library, string $library_name, string $extension, array $overrides, ActiveTheme $active_theme): array {
+    if (!isset($library['moved_files'])) {
+      return $overrides;
+    }
+    foreach ($library['moved_files'] as $old_library_name => $moved_files) {
+      $deprecation_version = $moved_files['deprecation_version'];
+      $removed_version = $moved_files['removed_version'];
+      $deprecation_link = $moved_files['deprecation_link'];
+      if (isset($overrides[$old_library_name]['css']) && isset($moved_files['css'])) {
+        foreach ($overrides[$old_library_name]['css'] as $key => $files) {
+          foreach ($files as $original => $target) {
+            if (isset($moved_files['css'][$key][$original])) {
+              $new_key = array_key_first($moved_files['css'][$key][$original]);
+              $new_file = $moved_files['css'][$key][$original][$new_key];
+              $theme_name = $active_theme->getName();
+              // phpcs:ignore
+              @trigger_error("Targeting $old_library_name $original from $theme_name library_overrides is deprecated in $deprecation_version and will be removed in $removed_version. Target $extension/$library_name $new_file instead. See $deprecation_link", E_USER_DEPRECATED);
+              $overrides[$extension . '/' . $library_name]['css'][$new_key][$new_file] = $target;
+            }
+          }
+        }
+      }
+      if (isset($overrides[$old_library_name]['js']) && isset($moved_files['js'])) {
+        foreach ($overrides[$old_library_name]['js'] as $original => $target) {
+          if (isset($moved_files['js'][$original])) {
+            $new_file = $moved_files['js'][$original];
+            $theme_name = $active_theme->getName();
+            // phpcs:ignore
+            @trigger_error("Targeting $old_library_name $original from $theme_name library_overrides is deprecated in $deprecation_version and will be removed in $removed_version. Target $extension/$library_name $new_file instead. See $deprecation_link", E_USER_DEPRECATED);
+            $overrides[$extension . '/' . $library_name]['js'][$new_file] = $target;
+          }
+        }
+      }
+    }
+    return $overrides;
+  }
+
+  /**
+   * Builds the dynamic library definitions for single-directory components.
+   *
+   * @return array
+   *   The core library definitions for Single-Directory Components.
+   */
+  protected function librariesForComponents(): array {
+    // Iterate over all the components to get the CSS and JS files.
+    $components = $this->componentPluginManager->getAllComponents();
+    $libraries = array_reduce(
+      $components,
+      static function (array $libraries, Component $component) {
+        $library = $component->library;
+        if (empty($library)) {
+          return $libraries;
+        }
+        $library_name = $component->getLibraryName();
+        [, $library_id] = explode('/', $library_name);
+        return array_merge($libraries, [$library_id => $library]);
+      },
+      []
+    );
+    $libraries['components.all'] = [
+      'dependencies' => array_map(
+        static fn(Component $component) => $component->getLibraryName(),
+        $components
+      ),
+    ];
     return $libraries;
   }
 
@@ -407,11 +529,14 @@ class LibraryDiscoveryParser {
     $all_libraries_overrides = $active_theme->getLibrariesOverride();
     foreach ($all_libraries_overrides as $theme_path => $libraries_overrides) {
       foreach ($libraries as $library_name => $library) {
+        $libraries_overrides = $this->applyLibrariesMovedOverrides($library, $library_name, $extension, $libraries_overrides, $active_theme);
+
         // Process libraries overrides.
         if (isset($libraries_overrides["$extension/$library_name"])) {
           if (isset($library['deprecated'])) {
             $override_message = sprintf('Theme "%s" is overriding a deprecated library.', $extension);
             $library_deprecation = str_replace('%library_id%', "$extension/$library_name", $library['deprecated']);
+            // phpcs:ignore Drupal.Semantics.FunctionTriggerError
             @trigger_error("$override_message $library_deprecation", E_USER_DEPRECATED);
           }
           // Active theme defines an override for this library.
@@ -456,19 +581,6 @@ class LibraryDiscoveryParser {
     }
 
     return $libraries;
-  }
-
-  /**
-   * Wraps drupal_get_path().
-   *
-   * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
-   *   \Drupal\Core\Extension\ExtensionList::getPath() instead.
-   *
-   * @see https://www.drupal.org/node/2940438
-   */
-  protected function drupalGetPath($type, $name) {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Extension\ExtensionPathResolver::getPath() instead. See https://www.drupal.org/node/2940438', E_USER_DEPRECATED);
-    return $this->extensionPathResolver->getPath($type, $name);
   }
 
   /**

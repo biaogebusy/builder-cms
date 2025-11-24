@@ -1,69 +1,53 @@
 {
 	"country_code": "MY",
 	"subdivisions": {
-		"Johor": {
-			"iso_code": "MY-01",
-			"postal_code_pattern": "79|8[0-6]"
+		"01": {
+			"name": "Johor"
 		},
-		"Kedah": {
-			"iso_code": "MY-02",
-			"postal_code_pattern": "0[5-9]|34950"
+		"02": {
+			"name": "Kedah"
 		},
-		"Kelantan": {
-			"iso_code": "MY-03",
-			"postal_code_pattern": "1[5-9]"
+		"03": {
+			"name": "Kelantan"
 		},
-		"Kuala Lumpur": {
-			"iso_code": "MY-14",
-			"postal_code_pattern": "5|60"
+		"14": {
+			"name": "Kuala Lumpur"
 		},
-		"Labuan": {
-			"iso_code": "MY-15",
-			"postal_code_pattern": "87"
+		"15": {
+			"name": "Labuan"
 		},
-		"Melaka": {
-			"iso_code": "MY-04",
-			"postal_code_pattern": "7[5-8]"
+		"04": {
+			"name": "Melaka"
 		},
-		"Negeri Sembilan": {
-			"iso_code": "MY-05",
-			"postal_code_pattern": "7[0-4]"
+		"05": {
+			"name": "Negeri Sembilan"
 		},
-		"Pahang": {
-			"iso_code": "MY-06",
-			"postal_code_pattern": "2[5-8]|[346]9"
+		"06": {
+			"name": "Pahang"
 		},
-		"Perak": {
-			"iso_code": "MY-08",
-			"postal_code_pattern": "3[0-6]|39000"
+		"08": {
+			"name": "Perak"
 		},
-		"Perlis": {
-			"iso_code": "MY-09",
-			"postal_code_pattern": "0[12]"
+		"09": {
+			"name": "Perlis"
 		},
-		"Pulau Pinang": {
-			"iso_code": "MY-07",
-			"postal_code_pattern": "1[0-4]"
+		"07": {
+			"name": "Pulau Pinang"
 		},
-		"Putrajaya": {
-			"iso_code": "MY-16",
-			"postal_code_pattern": "62"
+		"16": {
+			"name": "Putrajaya"
 		},
-		"Sabah": {
-			"iso_code": "MY-12",
-			"postal_code_pattern": "8[89]|9[01]"
+		"12": {
+			"name": "Sabah"
 		},
-		"Sarawak": {
-			"iso_code": "MY-13",
-			"postal_code_pattern": "9[3-8]"
+		"13": {
+			"name": "Sarawak"
 		},
-		"Selangor": {
-			"iso_code": "MY-10",
-			"postal_code_pattern": "4[0-8]|6[3-8]"
+		"10": {
+			"name": "Selangor"
 		},
-		"Terengganu": {
-			"iso_code": "MY-11",
-			"postal_code_pattern": "2[0-4]"
+		"11": {
+			"name": "Terengganu"
 		}
 	}
 }

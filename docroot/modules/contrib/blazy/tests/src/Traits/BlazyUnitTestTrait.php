@@ -336,14 +336,6 @@ trait BlazyUnitTestTrait {
     $item->entity = $entity;
   }
 
-  /**
-   * Returns the cross-compat D8 ~ D10 app root.
-   */
-  protected function root($container): string {
-    return \version_compare(\Drupal::VERSION, '9.0', '<')
-      ? $container->get('app.root') : $container->getParameter('app.root');
-  }
-
 }
 
 namespace Drupal\blazy;

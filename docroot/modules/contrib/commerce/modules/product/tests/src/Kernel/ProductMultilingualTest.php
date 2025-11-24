@@ -2,13 +2,15 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductAttributeValue;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+
+// cspell:ignore produit Мој супер производ Magasin défaut deux
 
 /**
  * Tests the product and variation entity in a multilingual context.
@@ -41,7 +43,7 @@ class ProductMultilingualTest extends CommerceKernelTestBase {
     ConfigurableLanguage::createFromLangcode('fr')->save();
     ConfigurableLanguage::createFromLangcode('sr')->save();
 
-    $user = $this->createUser([], ['administer commerce_product']);
+    $user = $this->createUser(['administer commerce_product']);
     $this->container->get('current_user')->setAccount($user);
   }
 
@@ -223,6 +225,7 @@ class ProductMultilingualTest extends CommerceKernelTestBase {
       'title' => 'Version une',
     ]);
     $variation1->addTranslation('sr', [
+      // cspell:disable-next-line
       'title' => 'Верзија два',
     ]);
     $product->addVariation($variation1);
@@ -278,9 +281,11 @@ class ProductMultilingualTest extends CommerceKernelTestBase {
       'attribute_color' => $black,
     ]);
     $variation1->addTranslation('fr', [
+      // cspell:disable-next-line
       'title' => 'Version une',
     ]);
     $variation1->addTranslation('sr', [
+      // cspell:disable-next-line
       'title' => 'Верзија два',
     ]);
     $product->addVariation($variation1);

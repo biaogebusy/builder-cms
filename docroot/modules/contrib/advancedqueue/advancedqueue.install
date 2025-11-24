@@ -77,13 +77,21 @@ function advancedqueue_schema() {
         'default' => 0,
         'description' => 'The lease expiration timestamp.',
       ],
+      'fingerprint' => [
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'The unique hash of the job item.',
+      ],
     ],
     'primary key' => ['job_id'],
     'indexes' => [
       'queue' => ['queue_id', 'state', 'available', 'expires'],
       'queue_state' => ['state'],
       'queue_expires' => ['expires'],
+      'fingerprint' => ['fingerprint'],
       'queue_processed' => ['processed'],
+      'type' => ['type'],
     ],
   ];
 
@@ -93,7 +101,7 @@ function advancedqueue_schema() {
 /**
  * Add an index to the state column.
  */
-function advancedqueue_update_8101() {
+function advancedqueue_update_8101(): void {
   $spec = advancedqueue_schema();
   $schema = Database::getConnection()->schema();
   $schema->addIndex('advancedqueue', 'queue_state', ['state'], $spec['advancedqueue']);
@@ -102,7 +110,7 @@ function advancedqueue_update_8101() {
 /**
  * Add an index to the expires column.
  */
-function advancedqueue_update_8102() {
+function advancedqueue_update_8102(): void {
   $spec = advancedqueue_schema();
   $schema = Database::getConnection()->schema();
   $schema->addIndex('advancedqueue', 'queue_expires', ['expires'], $spec['advancedqueue']);
@@ -111,8 +119,31 @@ function advancedqueue_update_8102() {
 /**
  * Add an index to the processed column.
  */
-function advancedqueue_update_8103() {
+function advancedqueue_update_8103(): void {
   $spec = advancedqueue_schema();
   $schema = Database::getConnection()->schema();
   $schema->addIndex('advancedqueue', 'queue_processed', ['processed'], $spec['advancedqueue']);
+}
+
+/**
+ * Add fingerprint column and index.
+ */
+function advancedqueue_update_8104(): void {
+  $spec = advancedqueue_schema();
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('advancedqueue', 'fingerprint')) {
+    $schema->addField('advancedqueue', 'fingerprint', $spec['advancedqueue']['fields']['fingerprint']);
+    $schema->addIndex('advancedqueue', 'fingerprint', ['fingerprint'], $spec['advancedqueue']);
+  }
+}
+
+/**
+ * Add an index on the "type" column.
+ */
+function advancedqueue_update_8105(): void {
+  $spec = advancedqueue_schema();
+  $schema = \Drupal::database()->schema();
+  if (!$schema->indexExists('advancedqueue', 'type')) {
+    $schema->addIndex('advancedqueue', 'type', ['type'], $spec['advancedqueue']);
+  }
 }

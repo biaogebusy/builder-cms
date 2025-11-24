@@ -1,0 +1,23 @@
+{
+  "name": "ckeditor5_template",
+  "version": "1.0.6",
+  "description": "Provides a template plugin for CKEditor5 in Drupal.",
+  "main": "index.js",
+  "scripts": {
+    "dll:build": "webpack --config webpack.config.js"
+  },
+  "author": "Vincent Höhn (vincent.hoehn)",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@ckeditor/ckeditor5-dev-utils": "^40.0.0",
+    "ckeditor5": "^41.0.0",
+    "prettier": "^2.8.8",
+    "raw-loader": "^4.0.2",
+    "terser-webpack-plugin": "^3.0.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^4.4.0"
+  },
+  "dependencies": {
+    "v18": "^1.0.2"
+  }
+}

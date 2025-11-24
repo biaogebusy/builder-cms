@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -16,17 +18,16 @@ use Drupal\KernelTests\KernelTestBase;
 class EntityFormDisplayTest extends KernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = [
     'field_ui',
     'field',
     'entity_test',
     'field_test',
-    'user',
+    'system',
     'text',
+    'user',
   ];
 
   /**
@@ -34,13 +35,15 @@ class EntityFormDisplayTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('action');
+    $this->installConfig('user');
     $this->installEntitySchema('entity_test');
   }
 
   /**
    * @covers \Drupal\Core\Entity\EntityDisplayRepository::getFormDisplay
    */
-  public function testEntityGetFromDisplay() {
+  public function testEntityGetFromDisplay(): void {
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
 
@@ -64,7 +67,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of a field component within an EntityFormDisplay object.
    */
-  public function testFieldComponent() {
+  public function testFieldComponent(): void {
     // Create a field storage and a field.
     $field_name = 'test_field';
     $field_storage = FieldStorageConfig::create([
@@ -103,20 +106,16 @@ class EntityFormDisplayTest extends KernelTestBase {
     $this->assertEquals($default_widget, $widget->getPluginId());
     $this->assertEquals($widget_settings, $widget->getSettings());
 
-    // Check that the widget is statically persisted, by assigning an
-    // arbitrary property and reading it back.
-    $random_value = $this->randomString();
-    $widget->randomValue = $random_value;
-    $widget = $form_display->getRenderer($field_name);
-    $this->assertEquals($random_value, $widget->randomValue);
+    // Check that the widget is statically persisted.
+    $this->assertSame($widget, $form_display->getRenderer($field_name));
 
     // Check that changing the definition creates a new widget.
     $form_display->setComponent($field_name, [
       'type' => 'field_test_multiple',
     ]);
-    $widget = $form_display->getRenderer($field_name);
-    $this->assertEquals('test_field_widget', $widget->getPluginId());
-    $this->assertFalse(isset($widget->randomValue));
+    $renderer = $form_display->getRenderer($field_name);
+    $this->assertEquals('test_field_widget', $renderer->getPluginId());
+    $this->assertNotSame($widget, $renderer);
 
     // Check that specifying an unknown widget (e.g. case of a disabled module)
     // gets stored as is in the display, but results in the default widget being
@@ -133,7 +132,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests the behavior of a field component for a base field.
    */
-  public function testBaseFieldComponent() {
+  public function testBaseFieldComponent(): void {
     $display = EntityFormDisplay::create([
       'targetEntityType' => 'entity_test_base_field_display',
       'bundle' => 'entity_test_base_field_display',
@@ -194,7 +193,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests deleting field.
    */
-  public function testDeleteField() {
+  public function testDeleteField(): void {
     $field_name = 'test_field';
     // Create a field storage and a field.
     $field_storage = FieldStorageConfig::create([
@@ -210,7 +209,11 @@ class EntityFormDisplayTest extends KernelTestBase {
     $field->save();
 
     // Create default and compact entity display.
-    EntityFormMode::create(['id' => 'entity_test.compact', 'targetEntityType' => 'entity_test'])->save();
+    EntityFormMode::create([
+      'id' => 'entity_test.compact',
+      'label' => 'Compact',
+      'targetEntityType' => 'entity_test',
+    ])->save();
     EntityFormDisplay::create([
       'targetEntityType' => 'entity_test',
       'bundle' => 'entity_test',
@@ -244,7 +247,7 @@ class EntityFormDisplayTest extends KernelTestBase {
   /**
    * Tests \Drupal\Core\Entity\EntityDisplayBase::onDependencyRemoval().
    */
-  public function testOnDependencyRemoval() {
+  public function testOnDependencyRemoval(): void {
     $this->enableModules(['field_plugins_test']);
 
     $field_name = 'test_field';
@@ -284,6 +287,25 @@ class EntityFormDisplayTest extends KernelTestBase {
     \Drupal::service('config.manager')->uninstall('module', 'text');
     $display = $display_repository->getFormDisplay('entity_test', 'entity_test');
     $this->assertNull($display->getComponent($field_name));
+  }
+
+  /**
+   * Tests the serialization and unserialization of the class.
+   */
+  public function testSerialization(): void {
+    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
+    $display_repository = \Drupal::service('entity_display.repository');
+
+    $form_display = $display_repository->getFormDisplay('entity_test', 'entity_test');
+    // Make sure the langcode base field is visible in the original form
+    // display.
+    $this->assertNotEmpty($form_display->getComponent('langcode'));
+    // Remove the langcode.
+    $form_display->removeComponent('langcode');
+
+    $unserialized = unserialize(serialize($form_display));
+    // Verify that components are retained upon unserialization.
+    $this->assertEquals($form_display->getComponents(), $unserialized->getComponents());
   }
 
 }

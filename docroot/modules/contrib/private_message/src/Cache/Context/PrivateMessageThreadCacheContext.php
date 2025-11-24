@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Cache\Context;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CacheContextInterface;
-use Drupal\Core\Routing\ResettableStackedRouteMatchInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * Defines the PrivateMessageThread service, for "per thread" caching.
@@ -13,22 +15,9 @@ use Drupal\Core\Routing\ResettableStackedRouteMatchInterface;
  */
 class PrivateMessageThreadCacheContext implements CacheContextInterface {
 
-  /**
-   * The current route matcher.
-   *
-   * @var \Drupal\Core\Routing\ResettableStackedRouteMatchInterface
-   */
-  protected $currentRouteMatcher;
-
-  /**
-   * Constructs a new UserCacheContextBase class.
-   *
-   * @param \Drupal\Core\Routing\ResettableStackedRouteMatchInterface $currentRouteMatcher
-   *   The current route matcher.
-   */
-  public function __construct(ResettableStackedRouteMatchInterface $currentRouteMatcher) {
-    $this->currentRouteMatcher = $currentRouteMatcher;
-  }
+  public function __construct(
+    protected readonly RouteMatchInterface $currentRouteMatch,
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -40,17 +29,18 @@ class PrivateMessageThreadCacheContext implements CacheContextInterface {
   /**
    * {@inheritdoc}
    */
-  public function getContext() {
-    $thread = $this->currentRouteMatcher->getParameter('private_message_thread');
+  public function getContext(): string {
+    $thread = $this->currentRouteMatch->getParameter('private_message_thread');
     if ($thread) {
-      return $thread->id();
+      return (string) $thread->id();
     }
+    return 'none';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCacheableMetadata() {
+  public function getCacheableMetadata(): CacheableMetadata {
     return new CacheableMetadata();
   }
 

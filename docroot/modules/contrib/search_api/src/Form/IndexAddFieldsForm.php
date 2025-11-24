@@ -11,8 +11,11 @@ use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
+use Drupal\Core\TypedData\DataDefinitionInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Datasource\DatasourceInterface;
@@ -26,7 +29,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a form for adding fields to a search index.
  */
-class IndexAddFieldsForm extends EntityForm {
+class IndexAddFieldsForm extends EntityForm implements TrustedCallbackInterface {
 
   use UnsavedConfigurationFormTrait;
 
@@ -67,6 +70,18 @@ class IndexAddFieldsForm extends EntityForm {
    * @var string[][]
    */
   protected $unmappedFields = [];
+
+  /**
+   * The "add field" buttons.
+   *
+   * Buttons cannot trigger form submits via ajax within a table unless they are
+   * moved there in pre-render.
+   *
+   * @see preRenderForm()
+   *
+   * @todo Remove this once #3486574 is fixed.
+   */
+  protected array $addFieldButtons = [];
 
   /**
    * The "id" attribute of the generated form.
@@ -129,6 +144,13 @@ class IndexAddFieldsForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public static function trustedCallbacks(): array {
+    return ['preRenderForm'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getBaseFormId() {
     return NULL;
   }
@@ -177,16 +199,7 @@ class IndexAddFieldsForm extends EntityForm {
       '#type' => 'status_messages',
     ];
 
-    $datasources = [
-      '' => NULL,
-    ];
-    $datasources += $this->entity->getDatasources();
-    foreach ($datasources as $datasource_id => $datasource) {
-      $item = $this->getDatasourceListItem($datasource);
-      if ($item) {
-        $form['datasources']['datasource_' . $datasource_id] = $item;
-      }
-    }
+    $form = $this->buildDatasourcesForm($form, $form_state);
 
     $form['actions'] = $this->actionsElement($form, $form_state);
 
@@ -208,11 +221,82 @@ class IndexAddFieldsForm extends EntityForm {
           '#theme' => 'item_list',
           '#items' => $unmapped_fields,
           '#prefix' => $this->t('The following fields cannot be indexed since there is no type mapping for them:'),
-          '#suffix' => $this->t("If you think one of these fields should be available for indexing, please report this in the module's <a href=':url'>issue queue</a>. (Make sure to first search for an existing issue for this field.) Please note that entity-valued fields generally can be indexed by either indexing their parent reference field, or their child entity ID field.", [':url' => Url::fromUri('https://www.drupal.org/project/issues/search_api')->toString()]),
+          '#suffix' => $this->t("If you think one of these fields should be available for indexing, report this in the module's <a href=':url'>issue queue</a>. (Make sure to first search for an existing issue for this field.) Note that entity-valued fields generally can be indexed by either indexing their parent reference field, or their child entity ID field.", [':url' => Url::fromUri('https://www.drupal.org/project/issues/search_api')->toString()]),
         ],
       ];
     }
 
+    if ($this->addFieldButtons) {
+      foreach ($this->addFieldButtons as $button) {
+        $form['add_field_buttons'][] = $button;
+      }
+      $form['#pre_render'] = [
+        [$this, 'preRenderForm'],
+      ];
+    }
+
+    return $form;
+  }
+
+  /**
+   * Builds the data sources portion of the form.
+   *
+   * Separating this out into a separate method allows other modules to more
+   * easily override it.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return array
+   *   The form structure.
+   */
+  protected function buildDatasourcesForm(array $form, FormStateInterface $form_state): array {
+    $datasources = [
+      '' => NULL,
+    ];
+    $datasources += $this->entity->getDatasources();
+    foreach ($datasources as $datasource_id => $datasource) {
+      $item = $this->getDatasourceListItem($datasource);
+      if ($item) {
+        $form['datasources']['datasource_' . $datasource_id] = $item;
+      }
+    }
+    return $form;
+  }
+
+  /**
+   * Prerender callback for the form.
+   *
+   * Moves the buttons into the table now that the AJAX has been prepared since
+   * AJAX submit cannot happen as part of a table row.
+   *
+   * @param array $form
+   *   The form.
+   *
+   * @return array
+   *   The processed form.
+   *
+   * @see https://www.drupal.org/project/drupal/issues/3486574
+   */
+  public function preRenderForm(array $form): array {
+    foreach (Element::children($form['add_field_buttons']) as $key) {
+      $button = $form['add_field_buttons'][$key];
+
+      // Check that the table row still exists. Solr for example removes rows in
+      // some cases if already added. Other backends allow a field to be added
+      // multiple times.
+      if (empty($form['datasources'][$button['#datasource_key']]['table']['#rows'][$button['#row_key']])) {
+        continue;
+      }
+
+      // Move the button into the appropriate table row.
+      $form['datasources'][$button['#datasource_key']]['table']['#rows'][$button['#row_key']]['add'] = [
+        'data' => $button,
+      ];
+    }
+    unset($form['add_field_buttons']);
     return $form;
   }
 
@@ -226,8 +310,8 @@ class IndexAddFieldsForm extends EntityForm {
    *   A render array representing the given datasource and, possibly, its
    *   attached properties.
    */
-  protected function getDatasourceListItem(DatasourceInterface $datasource = NULL) {
-    $datasource_id = $datasource ? $datasource->getPluginId() : NULL;
+  protected function getDatasourceListItem(?DatasourceInterface $datasource = NULL) {
+    $datasource_id = $datasource?->getPluginId();
     $datasource_id_param = $datasource_id ?: '';
     $properties = $this->entity->getPropertyDefinitions($datasource_id);
     if ($properties) {
@@ -240,9 +324,27 @@ class IndexAddFieldsForm extends EntityForm {
       $base_url = $this->entity->toUrl('add-fields');
       $base_url->setOption('query', ['datasource' => $datasource_id_param]);
 
-      $item = $this->getPropertiesList($properties, $active_property_path, $base_url, $datasource_id);
-      $item['#title'] = $datasource ? $datasource->label() : $this->t('General');
-      return $item;
+      // Add a heading for the section of fields.
+      $render = [];
+      $render['title'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $datasource ? $datasource->label() : $this->t('General'),
+      ];
+
+      // Build a table of rows containing the available properties.
+      $render['table'] = [
+        '#type' => 'table',
+        '#header' => [
+          ['data' => $this->t('Label')],
+          ['data' => $this->t('Machine name')],
+          ['data' => $this->t('Expand')],
+          ['data' => $this->t('Add field')],
+        ],
+        '#rows' => $this->getPropertiesList($properties, $active_property_path, $base_url, $datasource_id),
+        '#empty' => $this->t('No fields are available to add.'),
+      ];
+      return $render;
     }
 
     return NULL;
@@ -265,18 +367,32 @@ class IndexAddFieldsForm extends EntityForm {
    *   (optional) The common property path prefix of the given properties.
    * @param string $label_prefix
    *   (optional) The prefix to use for the labels of created fields.
+   * @param int $depth
+   *   The current depth in the nesting.
+   * @param array $rows
+   *   The table rows so far.
    *
    * @return array
-   *   A render array representing the given properties and, possibly, nested
-   *   properties.
+   *   An array of table rows representing the given properties and, possibly,
+   *   nested properties.
    */
-  protected function getPropertiesList(array $properties, $active_property_path, Url $base_url, $datasource_id, $parent_path = '', $label_prefix = '') {
-    $list = [];
-
+  protected function getPropertiesList(
+    array $properties,
+    string $active_property_path,
+    Url $base_url,
+    ?string $datasource_id,
+    string $parent_path = '',
+    string $label_prefix = '',
+    int $depth = 0,
+    array $rows = [],
+  ): array {
     $active_item = '';
     if ($active_property_path) {
-      list($active_item, $active_property_path) = explode(':', $active_property_path, 2) + [1 => ''];
+      [$active_item, $active_property_path] = explode(':', $active_property_path, 2) + [1 => ''];
     }
+
+    // Sort the displayed properties alphabetically.
+    uasort($properties, [static::class, 'compareFieldLabels']);
 
     $type_mapping = $this->dataTypeHelper->getFieldTypeMapping();
 
@@ -285,6 +401,7 @@ class IndexAddFieldsForm extends EntityForm {
       if ($property instanceof ProcessorPropertyInterface && $property->isHidden()) {
         continue;
       }
+
       $this_path = $parent_path ? $parent_path . ':' : '';
       $this_path .= $key;
 
@@ -320,11 +437,21 @@ class IndexAddFieldsForm extends EntityForm {
           }
         }
 
-        // Remove hidden properties right away so we don't even show a "+" link
-        // in case all sub-properties are hidden.
+        // Remove hidden properties as well as those that can neither be
+        // expanded nor indexed right away so we don't even show an "Expand"
+        // link when it won't actually list any nested items.
         foreach ($nested_properties as $nested_key => $nested_property) {
-          if ($nested_property instanceof ProcessorPropertyInterface
-              && $nested_property->isHidden()) {
+          $nested_property = $this->fieldsHelper->getInnerProperty($nested_property);
+          if (
+            (
+              $nested_property instanceof ProcessorPropertyInterface
+              && $nested_property->isHidden()
+            )
+            || (
+              !($nested_property instanceof ComplexDataDefinitionInterface)
+              && empty($type_mapping[$nested_property->getDataType()])
+            )
+          ) {
             unset($nested_properties[$nested_key]);
           }
         }
@@ -346,64 +473,41 @@ class IndexAddFieldsForm extends EntityForm {
       }
 
       // If the property can neither be expanded nor indexed, just skip it.
-      if (!($nested_properties || $can_be_indexed)) {
+      if (!$nested_properties && !$can_be_indexed) {
         continue;
       }
 
-      $item = [
-        '#type' => 'container',
-        '#attributes' => [
-          'class' => ['container-inline'],
-        ],
+      // Create a skeleton of the row array.
+      $row = [
+        'label' => ['data' => $label],
+        'machine_name' => ['data' => Html::escape($this_path)],
+        'expand' => ['data' => ''],
+        'add' => ['data' => ''],
       ];
-
-      $nested_list = [];
-      if ($nested_properties) {
-        if ($key == $active_item) {
-          $link_url = clone $base_url;
-          $query_base['property_path'] = $parent_path;
-          $link_url->setOption('query', $query_base);
-          $item['expand_link'] = [
-            '#type' => 'link',
-            '#title' => '(-) ',
-            '#attributes' => ['data-disable-refocus' => ['true']],
-            '#url' => $link_url,
-            '#ajax' => [
-              'wrapper' => $this->formIdAttribute,
-            ],
-          ];
-
-          $nested_list = $this->getPropertiesList($nested_properties, $active_property_path, $base_url, $datasource_id, $this_path, $label_prefix . $label . ' » ');
-        }
-        else {
-          $link_url = clone $base_url;
-          $query_base['property_path'] = $this_path;
-          $link_url->setOption('query', $query_base);
-          $item['expand_link'] = [
-            '#type' => 'link',
-            '#title' => '(+) ',
-            '#attributes' => ['data-disable-refocus' => ['true']],
-            '#url' => $link_url,
-            '#ajax' => [
-              'wrapper' => $this->formIdAttribute,
-            ],
-          ];
-        }
+      if ($depth > 0) {
+        $row['label']['style'] = [
+          'style' => 'padding-left: ' . ($depth * 3) . 'rem;',
+        ];
       }
 
-      $label_markup = Html::escape($label);
-      $escaped_path = Html::escape($this_path);
-      $label_markup = "$label_markup <small>(<code>$escaped_path</code>)</small>";
-      $item['label']['#markup'] = $label_markup . ' ';
-
       if ($can_be_indexed) {
-        $item['add'] = [
+        // Store the buttons for moving into the table on pre-render. See
+        // preRenderForm() for details.
+        $this->addFieldButtons[] = [
           '#type' => 'submit',
           '#name' => Utility::createCombinedId($datasource_id, $this_path),
           '#value' => $this->t('Add'),
           '#submit' => ['::addField', '::save'],
-          '#attributes' => ['data-disable-refocus' => ['true']],
+          '#attributes' => [
+            'class' => [
+              'button',
+              'button--primary',
+              'button--extrasmall',
+            ],
+          ],
           '#property' => $property,
+          '#row_key' => count($rows),
+          '#datasource_key' => 'datasource_' . $datasource_id,
           '#prefixed_label' => $label_prefix . $label,
           '#data_type' => $type_mapping[$type],
           '#ajax' => [
@@ -412,41 +516,86 @@ class IndexAddFieldsForm extends EntityForm {
         ];
       }
 
-      if ($nested_list) {
-        $item['properties'] = $nested_list;
+      // This selector is used to maintain focus as the button switches from
+      // expand to collapse, so Drupal Core Ajax can find the corresponding
+      // matching button.
+      $focus_selector = 'js-expand-collapse-focus--' . $key . '--' . $depth;
+
+      // Add the "Expand"/"Collapse" button if applicable.
+      $is_active = $key === $active_item;
+      if ($nested_properties || $is_active) {
+        $link_url = clone $base_url;
+        if ($is_active) {
+          $link_path = $parent_path;
+        }
+        else {
+          $link_path = $this_path;
+          // Auto-expand single-child items.
+          if (count($nested_properties) === 1) {
+            $nested_property = $this->fieldsHelper->getInnerProperty(reset($nested_properties));
+            if ($nested_property instanceof ComplexDataDefinitionInterface) {
+              $link_path .= ':' . key($nested_properties);
+            }
+          }
+        }
+        $query_base['property_path'] = $link_path;
+        $link_url->setOption('query', $query_base);
+        $link = [
+          '#type' => 'link',
+          '#title' => $is_active ? $this->t('Collapse') : $this->t('Expand'),
+          '#attributes' => [
+            'class' => [
+              'button',
+              'button--extrasmall',
+            ],
+            'data-drupal-selector' => [
+              $focus_selector,
+            ],
+          ],
+          '#url' => $link_url,
+          '#ajax' => [
+            'wrapper' => $this->formIdAttribute,
+          ],
+        ];
+        $row['expand']['data'] = $this->renderer->render($link);
       }
 
-      $list[$key] = $item;
+      $rows[] = $row;
+
+      // If this is expanded, add rows for all nested properties.
+      if ($nested_properties && $is_active) {
+        $rows = $this->getPropertiesList(
+          $nested_properties,
+          $active_property_path,
+          $base_url,
+          $datasource_id,
+          $this_path,
+          $label_prefix . $label . ' » ',
+          ($depth + 1),
+          $rows,
+        );
+      }
     }
 
-    if ($list) {
-      uasort($list, [static::class, 'compareFieldLabels']);
-      $list['#theme'] = 'search_api_form_item_list';
-    }
-
-    return $list;
+    return $rows;
   }
 
   /**
-   * Compares labels of property render arrays.
+   * Compares two properties according to their labels, ignoring case.
    *
-   * Used as an uasort() callback in
-   * \Drupal\search_api\Form\IndexAddFieldsForm::getPropertiesList().
+   * Used as an uasort() callback in getPropertiesList().
    *
-   * @param array $a
-   *   First property render array.
-   * @param array $b
-   *   Second property render array.
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface $a
+   *   The first property.
+   * @param \Drupal\Core\TypedData\DataDefinitionInterface $b
+   *   The second property.
    *
    * @return int
-   *   -1, 0 or 1 if the first array should be considered, respectively, less
+   *   -1, 0 or 1 if the first property should be considered, respectively, less
    *   than, equal to or greater than the second.
    */
-  public static function compareFieldLabels(array $a, array $b) {
-    $a_title = (string) $a['label']['#markup'];
-    $b_title = (string) $b['label']['#markup'];
-
-    return strnatcasecmp($a_title, $b_title);
+  public static function compareFieldLabels(DataDefinitionInterface $a, DataDefinitionInterface $b): int {
+    return strnatcasecmp($a->getLabel(), $b->getLabel());
   }
 
   /**
@@ -482,7 +631,7 @@ class IndexAddFieldsForm extends EntityForm {
     /** @var \Drupal\Core\TypedData\DataDefinitionInterface $property */
     $property = $button['#property'];
 
-    list($datasource_id, $property_path) = Utility::splitCombinedId($button['#name']);
+    [$datasource_id, $property_path] = Utility::splitCombinedId($button['#name']);
     $field = $this->fieldsHelper->createFieldFromProperty($this->entity, $property, $datasource_id, $property_path, NULL, $button['#data_type']);
     $field->setLabel($button['#prefixed_label']);
     $this->entity->addField($field);

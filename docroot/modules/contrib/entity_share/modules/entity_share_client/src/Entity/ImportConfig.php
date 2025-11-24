@@ -5,6 +5,9 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_client\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
+use Drupal\entity_share\EntityShareInterface;
+use Drupal\entity_share_client\Plugin\ImportProcessorPluginCollection;
 
 /**
  * Defines the Import config entity.
@@ -48,7 +51,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *
  * @SuppressWarnings(PHPMD.CamelCasePropertyName)
  */
-class ImportConfig extends ConfigEntityBase implements ImportConfigInterface {
+class ImportConfig extends ConfigEntityBase implements ImportConfigInterface, EntityWithPluginCollectionInterface {
 
   /**
    * The Import config ID.
@@ -69,7 +72,7 @@ class ImportConfig extends ConfigEntityBase implements ImportConfigInterface {
    *
    * @var int
    */
-  protected $import_maxsize = 50;
+  protected $import_maxsize = EntityShareInterface::JSON_API_PAGER_SIZE_MAX;
 
   /**
    * The array of import processor settings.
@@ -86,8 +89,38 @@ class ImportConfig extends ConfigEntityBase implements ImportConfigInterface {
    *   ],
    *   …
    * ]
+   *
    * @endcode
    */
   protected $import_processor_settings = [];
+
+  /**
+   * The plugin collection that holds the import processors for this entity.
+   *
+   * @var \Drupal\entity_share_client\Plugin\ImportProcessorPluginCollection
+   */
+  protected $importProcessorPluginCollection;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginCollections() {
+    return [
+      'import_processor_settings' => $this->importProcessorPluginCollection(),
+    ];
+  }
+
+  /**
+   * Returns the import processor source lazy plugin collection.
+   *
+   * @return \Drupal\entity_share_client\Plugin\ImportProcessorPluginCollection|null
+   *   The plugin collection or NULL if there are no processor settings yet.
+   */
+  protected function importProcessorPluginCollection() {
+    if (!$this->importProcessorPluginCollection && $this->import_processor_settings) {
+      $this->importProcessorPluginCollection = new ImportProcessorPluginCollection(\Drupal::service('plugin.manager.entity_share_client_import_processor'), $this->import_processor_settings);
+    }
+    return $this->importProcessorPluginCollection;
+  }
 
 }

@@ -275,9 +275,9 @@ class WebformEntityReferenceManager implements WebformEntityReferenceManagerInte
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   An entity.
    * @param array $target_entities
-   *   An associate array of targeted webfrom entities.
+   *   An associate array of targeted webform entities.
    * @param array $sorted_entities
-   *   An associate array of sorted webfrom entities by weight.
+   *   An associate array of sorted webform entities by weight.
    */
   protected function getParagraphWebformsRecursive(EntityInterface $entity, array &$target_entities, array &$sorted_entities) {
     // Add paragraphs check.

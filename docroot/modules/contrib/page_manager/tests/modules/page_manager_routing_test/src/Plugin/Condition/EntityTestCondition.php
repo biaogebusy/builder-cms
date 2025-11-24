@@ -5,7 +5,7 @@ namespace Drupal\page_manager_routing_test\Plugin\Condition;
 use Drupal\Core\Condition\ConditionPluginBase;
 
 /**
- * @todo.
+ * Test Plugin for entity conditions.
  *
  * @Condition(
  *   id = "page_manager_routing_test__entity_test",

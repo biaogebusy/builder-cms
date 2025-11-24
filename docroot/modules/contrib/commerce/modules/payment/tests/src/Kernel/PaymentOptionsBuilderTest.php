@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\commerce_price\Price;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the payment options builder.
@@ -138,6 +138,7 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
     ]);
     $profile->save();
 
+    // User's default payment method.
     $payment_method = PaymentMethod::create([
       'uid' => $user->id(),
       'type' => 'credit_card',
@@ -146,7 +147,22 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
       'card_number' => '1111',
       'billing_profile' => $profile,
       'reusable' => TRUE,
-      'expires' => strtotime('2028/03/24'),
+      'expires' => strtotime('+1 year'),
+      'default' => TRUE,
+    ]);
+    $payment_method->setBillingProfile($profile);
+    $payment_method->save();
+
+    // Second payment method belonging to the user.
+    $payment_method = PaymentMethod::create([
+      'uid' => $user->id(),
+      'type' => 'credit_card',
+      'payment_gateway' => 'onsite',
+      'card_type' => 'visa',
+      'card_number' => '1119',
+      'billing_profile' => $profile,
+      'reusable' => TRUE,
+      'expires' => strtotime('+1 year'),
     ]);
     $payment_method->setBillingProfile($profile);
     $payment_method->save();
@@ -161,7 +177,7 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
       'card_number' => '1112',
       'billing_profile' => $profile,
       'reusable' => TRUE,
-      'expires' => strtotime('2028/03/24'),
+      'expires' => strtotime('+1 year'),
     ]);
     $payment_method->setBillingProfile($profile);
     $payment_method->save();
@@ -203,49 +219,61 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
     $options = $this->paymentOptionsBuilder->buildOptions($this->order);
     /** @var \Drupal\commerce_payment\PaymentOption[] $options */
     $options = array_values($options);
-    $this->assertCount(5, $options);
+    $this->assertCount(6, $options);
 
     // Stored payment methods.
-    $this->assertEquals('1', $options[0]->getId());
-    $this->assertEquals('Visa ending in 1111', $options[0]->getLabel());
+    $this->assertEquals('2', $options[0]->getId());
+    $this->assertEquals('Visa ending in 1119', $options[0]->getLabel());
     $this->assertEquals('onsite', $options[0]->getPaymentGatewayId());
-    $this->assertEquals('1', $options[0]->getPaymentMethodId());
+    $this->assertEquals('2', $options[0]->getPaymentMethodId());
     $this->assertNull($options[0]->getPaymentMethodTypeId());
+    $this->assertEquals([
+      'id' => '2',
+      'label' => 'Visa ending in 1119',
+      'payment_gateway_id' => 'onsite',
+      'payment_method_id' => '2',
+      'payment_method_type_id' => NULL,
+    ], $options[0]->toArray());
+    $this->assertEquals('1', $options[1]->getId());
+    $this->assertEquals('Visa ending in 1111', $options[1]->getLabel());
+    $this->assertEquals('onsite', $options[1]->getPaymentGatewayId());
+    $this->assertEquals('1', $options[1]->getPaymentMethodId());
+    $this->assertNull($options[1]->getPaymentMethodTypeId());
     $this->assertEquals([
       'id' => '1',
       'label' => 'Visa ending in 1111',
       'payment_gateway_id' => 'onsite',
       'payment_method_id' => '1',
       'payment_method_type_id' => NULL,
-    ], $options[0]->toArray());
+    ], $options[1]->toArray());
 
     // Order payment method.
-    $this->assertEquals('3', $options[1]->getId());
-    $this->assertEquals('Visa ending in 9999', $options[1]->getLabel());
-    $this->assertEquals('onsite', $options[1]->getPaymentGatewayId());
-    $this->assertEquals('3', $options[1]->getPaymentMethodId());
-    $this->assertNull($options[1]->getPaymentMethodTypeId());
+    $this->assertEquals('4', $options[2]->getId());
+    $this->assertEquals('Visa ending in 9999', $options[2]->getLabel());
+    $this->assertEquals('onsite', $options[2]->getPaymentGatewayId());
+    $this->assertEquals('4', $options[2]->getPaymentMethodId());
+    $this->assertNull($options[2]->getPaymentMethodTypeId());
 
     // Add new payment method.
-    $this->assertEquals('new--credit_card--onsite', $options[2]->getId());
-    $this->assertEquals('Credit card', $options[2]->getLabel());
-    $this->assertEquals('onsite', $options[2]->getPaymentGatewayId());
-    $this->assertNull($options[2]->getPaymentMethodId());
-    $this->assertEquals('credit_card', $options[2]->getPaymentMethodTypeId());
+    $this->assertEquals('new--credit_card--onsite', $options[3]->getId());
+    $this->assertEquals('Credit card', $options[3]->getLabel());
+    $this->assertEquals('onsite', $options[3]->getPaymentGatewayId());
+    $this->assertNull($options[3]->getPaymentMethodId());
+    $this->assertEquals('credit_card', $options[3]->getPaymentMethodTypeId());
 
     // Offsite gateways.
-    $this->assertEquals('offsite', $options[3]->getId());
-    $this->assertEquals('Example', $options[3]->getLabel());
-    $this->assertEquals('offsite', $options[3]->getPaymentGatewayId());
-    $this->assertNull($options[3]->getPaymentMethodId());
-    $this->assertNull($options[3]->getPaymentMethodTypeId());
-
-    // Manual gateways.
-    $this->assertEquals('cash_on_delivery', $options[4]->getId());
-    $this->assertEquals('Cash on delivery', $options[4]->getLabel());
-    $this->assertEquals('cash_on_delivery', $options[4]->getPaymentGatewayId());
+    $this->assertEquals('offsite', $options[4]->getId());
+    $this->assertEquals('Example', $options[4]->getLabel());
+    $this->assertEquals('offsite', $options[4]->getPaymentGatewayId());
     $this->assertNull($options[4]->getPaymentMethodId());
     $this->assertNull($options[4]->getPaymentMethodTypeId());
+
+    // Manual gateways.
+    $this->assertEquals('cash_on_delivery', $options[5]->getId());
+    $this->assertEquals('Cash on delivery', $options[5]->getLabel());
+    $this->assertEquals('cash_on_delivery', $options[5]->getPaymentGatewayId());
+    $this->assertNull($options[5]->getPaymentMethodId());
+    $this->assertNull($options[5]->getPaymentMethodTypeId());
 
     // Change the weight of the offsite gateway to ensure that an offsite
     // gateway can appear before a gateway that supports payment methods.
@@ -256,16 +284,24 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
     $options = $this->paymentOptionsBuilder->buildOptions($this->order);
     /** @var \Drupal\commerce_payment\PaymentOption[] $options */
     $options = array_values($options);
-    $this->assertCount(5, $options);
+    $this->assertCount(6, $options);
 
     // Offsite gateways.
-    $this->assertEquals('offsite', $options[2]->getId());
-    $this->assertEquals('Example', $options[2]->getLabel());
-    $this->assertEquals('offsite', $options[2]->getPaymentGatewayId());
+    $this->assertEquals('offsite', $options[3]->getId());
+    $this->assertEquals('Example', $options[3]->getLabel());
+    $this->assertEquals('offsite', $options[3]->getPaymentGatewayId());
 
-    $this->assertEquals('Credit card', $options[3]->getLabel());
-    $this->assertEquals('onsite', $options[3]->getPaymentGatewayId());
-    $this->assertEquals('credit_card', $options[3]->getPaymentMethodTypeId());
+    $this->assertEquals('Credit card', $options[4]->getLabel());
+    $this->assertEquals('onsite', $options[4]->getPaymentGatewayId());
+    $this->assertEquals('credit_card', $options[4]->getPaymentMethodTypeId());
+
+    // Set expiration date way back in time.
+    $this->order->get('payment_method')->entity->setExpiresTime(1)->save();
+    // Check if expired reusable payment method is still available.
+    $options = $this->paymentOptionsBuilder->buildOptions($this->order);
+    /** @var \Drupal\commerce_payment\PaymentOption[] $options */
+    $options = array_values($options);
+    $this->assertCount(5, $options);
   }
 
   /**
@@ -317,7 +353,7 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
 
     // The order payment method is selected first.
     $default_option = $this->paymentOptionsBuilder->selectDefaultOption($this->order, $options);
-    $this->assertEquals($options[3], $default_option);
+    $this->assertEquals($options[4], $default_option);
 
     // The order payment gateway is selected second.
     $this->order->set('payment_method', NULL);
@@ -325,8 +361,14 @@ class PaymentOptionsBuilderTest extends OrderKernelTestBase {
     $default_option = $this->paymentOptionsBuilder->selectDefaultOption($this->order, $options);
     $this->assertEquals($options['cash_on_delivery'], $default_option);
 
-    // Finally, the method falls back to the first option.
+    // Default payment method is selected third.
+    $this->order->set('payment_method', NULL);
     $this->order->set('payment_gateway', NULL);
+    $default_option = $this->paymentOptionsBuilder->selectDefaultOption($this->order, $options);
+    $this->assertEquals($options[1], $default_option);
+
+    // Finally, the method falls back to the first option.
+    unset($options[1]);
     $default_option = $this->paymentOptionsBuilder->selectDefaultOption($this->order, $options);
     $this->assertEquals(reset($options), $default_option);
 

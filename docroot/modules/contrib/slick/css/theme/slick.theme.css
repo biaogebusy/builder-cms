@@ -162,9 +162,17 @@
 .slick-prev {
   left: 0;
 }
+[dir='rtl'] .slick-prev {
+  right: 0;
+  left: auto;
+}
 
 .slick-next {
   right: 0;
+}
+[dir='rtl'] .slick-next {
+  right: auto;
+  left: 0;
 }
 
 .slick__arrow {

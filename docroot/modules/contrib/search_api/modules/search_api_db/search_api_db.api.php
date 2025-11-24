@@ -23,7 +23,7 @@
  *   The search query that is being executed.
  *
  * @deprecated in search_api:8.x-1.16 and is removed from search_api:2.0.0.
- *   Please use the "search_api_db.query_pre_execute" event instead.
+ *   Use the "search_api_db.query_pre_execute" event instead.
  *
  * @see https://www.drupal.org/node/3103591
  * @see \Drupal\search_api_db\Plugin\search_api\backend\Database::preQuery()

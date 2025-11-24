@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestTools;
 
 use Symfony\Component\VarDumper\Cloner\VarCloner;
@@ -20,7 +22,7 @@ class TestVarDumper {
   public static function cliHandler($var) {
     $cloner = new VarCloner();
     $dumper = new CliDumper();
-    fwrite(STDOUT, "\n");
+    fwrite(STDERR, "\n");
     $dumper->setColors(TRUE);
     $dumper->dump(
       $cloner->cloneVar($var),
@@ -28,7 +30,7 @@ class TestVarDumper {
         // A negative depth means "end of dump".
         if ($depth >= 0) {
           // Adds a two spaces indentation to the line.
-          fwrite(STDOUT, str_repeat($indent_pad, $depth) . $line . "\n");
+          fwrite(STDERR, str_repeat($indent_pad, $depth) . $line . "\n");
         }
       }
     );

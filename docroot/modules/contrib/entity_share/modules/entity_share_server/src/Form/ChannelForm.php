@@ -12,13 +12,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
+use Drupal\entity_share\EntityShareInterface;
 use Drupal\entity_share_server\Entity\ChannelInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Entity form for the channel entity.
- *
- * @package Drupal\entity_share_server\Form
  */
 class ChannelForm extends EntityForm implements ContainerInjectionInterface {
 
@@ -73,7 +72,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
-      '#maxlength' => 255,
+      '#maxlength' => (int) 255,
       '#default_value' => $channel->label(),
       '#description' => $this->t('Label for the channel.'),
       '#required' => TRUE,
@@ -96,9 +95,9 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
       '#default_value' => $channel->get('channel_entity_type'),
       '#required' => TRUE,
       '#ajax' => [
-        'callback' => [get_class($this), 'buildAjaxBundleSelect'],
+        'callback' => [static::class, 'buildAjaxBundleSelect'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'bundle-wrapper',
       ],
     ];
@@ -121,7 +120,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
       '#description' => $this->t("The JSON:API's page limit option to limit the number of entities per page."),
       '#default_value' => $channel->get('channel_maxsize'),
       '#min' => 1,
-      '#max' => 50,
+      '#max' => EntityShareInterface::JSON_API_PAGER_SIZE_MAX,
       '#required' => TRUE,
     ];
 
@@ -146,18 +145,18 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     $channel = $this->entity;
 
     $channel->set('access_by_permission', $form_state->getValue('access_by_permission'));
-    $authorized_roles = array_filter($form_state->getValue('authorized_roles'));
+    $authorized_roles = \array_filter($form_state->getValue('authorized_roles'));
     $channel->set('authorized_roles', $authorized_roles);
-    $authorized_users = array_filter($form_state->getValue('authorized_users'));
+    $authorized_users = \array_filter($form_state->getValue('authorized_users'));
     $channel->set('authorized_users', $authorized_users);
 
     // Sorts order.
     $channel_sorts = $channel->get('channel_sorts');
-    if (is_null($channel_sorts)) {
+    if ($channel_sorts === NULL) {
       $channel_sorts = [];
     }
     $sorts = $form_state->getValue('sort_table');
-    if (!is_null($sorts) && is_array($sorts)) {
+    if ($sorts !== NULL && \is_array($sorts)) {
       foreach ($sorts as $sort_id => $sort) {
         $channel_sorts[$sort_id]['weight'] = $sort['weight'];
       }
@@ -247,9 +246,9 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
       '#default_value' => $channel->get('channel_bundle'),
       '#required' => TRUE,
       '#ajax' => [
-        'callback' => [get_class($this), 'buildAjaxLanguageSelect'],
+        'callback' => [static::class, 'buildAjaxLanguageSelect'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'language-wrapper',
       ],
     ];
@@ -325,7 +324,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     /** @var \Drupal\entity_share_server\Entity\ChannelInterface $channel */
     $channel = $this->entity;
     $channel_groups = $channel->get('channel_groups');
-    if (is_null($channel_groups)) {
+    if ($channel_groups === NULL) {
       $channel_groups = [];
     }
 
@@ -343,7 +342,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     else {
       $form['channel_groups']['group_actions'] = [
         '#type' => 'actions',
-        '#weight' => -5,
+        '#weight' => (int) -5,
       ];
       $form['channel_groups']['group_actions']['group_add'] = [
         '#type' => 'link',
@@ -391,7 +390,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
         $row = [
           'id' => $group_id,
           'conjunction' => $group['conjunction'],
-          'memberof' => isset($group['memberof']) ? $group['memberof'] : '',
+          'memberof' => $group['memberof'] ?? '',
           'operations' => $this->renderer->render($operations),
         ];
 
@@ -422,7 +421,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     /** @var \Drupal\entity_share_server\Entity\ChannelInterface $channel */
     $channel = $this->entity;
     $channel_filters = $channel->get('channel_filters');
-    if (is_null($channel_filters)) {
+    if ($channel_filters === NULL) {
       $channel_filters = [];
     }
 
@@ -440,7 +439,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     else {
       $form['channel_filters']['filter_actions'] = [
         '#type' => 'actions',
-        '#weight' => -5,
+        '#weight' => (int) -5,
       ];
       $form['channel_filters']['filter_actions']['filter_add'] = [
         '#type' => 'link',
@@ -492,7 +491,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
           'path' => $filter['path'],
           'operator' => $filter['operator'],
           'value' => '',
-          'filter' => isset($filter['memberof']) ? $filter['memberof'] : '',
+          'filter' => $filter['memberof'] ?? '',
           'operations' => $this->renderer->render($operations),
         ];
 
@@ -531,7 +530,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     /** @var \Drupal\entity_share_server\Entity\ChannelInterface $channel */
     $channel = $this->entity;
     $channel_searches = $channel->get('channel_searches');
-    if (is_null($channel_searches)) {
+    if ($channel_searches === NULL) {
       $channel_searches = [];
     }
 
@@ -559,7 +558,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     else {
       $form['channel_searches']['search_actions'] = [
         '#type' => 'actions',
-        '#weight' => -5,
+        '#weight' => (int) -5,
       ];
       $form['channel_searches']['search_actions']['search_add'] = [
         '#type' => 'link',
@@ -643,7 +642,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     /** @var \Drupal\entity_share_server\Entity\ChannelInterface $channel */
     $channel = $this->entity;
     $channel_sorts = $channel->get('channel_sorts');
-    if (is_null($channel_sorts)) {
+    if ($channel_sorts === NULL) {
       $channel_sorts = [];
     }
 
@@ -661,7 +660,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     else {
       $form['channel_sorts']['sort_actions'] = [
         '#type' => 'actions',
-        '#weight' => -5,
+        '#weight' => (int) -5,
       ];
       $form['channel_sorts']['sort_actions']['sort_add'] = [
         '#type' => 'link',
@@ -698,7 +697,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
         ],
       ];
 
-      uasort($channel_sorts, [SortArray::class, 'sortByWeightElement']);
+      \uasort($channel_sorts, [SortArray::class, 'sortByWeightElement']);
       foreach ($channel_sorts as $sort_id => $sort) {
         $row = [
           '#attributes' => [
@@ -782,7 +781,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
         '%entity_share_server_access_channels' => $this->t('Access channels list'),
       ]),
       '#options' => $this->getAuthorizedRolesOptions(),
-      '#default_value' => !is_null($authorized_roles) ? $authorized_roles : [],
+      '#default_value' => $authorized_roles ?? [],
     ];
 
     $authorized_users = $channel->get('authorized_users');
@@ -793,7 +792,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
         '%entity_share_server_access_channels' => $this->t('Access channels list'),
       ]),
       '#options' => $this->getAuthorizedUsersOptions(),
-      '#default_value' => !is_null($authorized_users) ? $authorized_users : [],
+      '#default_value' => $authorized_users ?? [],
     ];
   }
 
@@ -819,7 +818,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
 
       $options[$entity_type_id] = $definition->getLabel();
     }
-    asort($options);
+    \asort($options);
 
     return $options;
   }
@@ -844,10 +843,10 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
   /**
    * Get roles with the permission entity_share_server_access_channels.
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   *
    * @return array
    *   An array of options.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   protected function getAuthorizedRolesOptions() {
     $authorized_roles = [];
@@ -869,10 +868,10 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
   /**
    * Get users with the permission entity_share_server_access_channels.
    *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   *
    * @return array
    *   An array of options.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    */
   protected function getAuthorizedUsersOptions() {
     $authorized_users = [];
@@ -880,7 +879,7 @@ class ChannelForm extends EntityForm implements ContainerInjectionInterface {
     $users = [];
 
     if (!empty($authorized_roles)) {
-      $authorized_roles = array_keys($authorized_roles);
+      $authorized_roles = \array_keys($authorized_roles);
       $users = $this->entityTypeManager
         ->getStorage('user')
         ->loadByProperties(['roles' => $authorized_roles]);

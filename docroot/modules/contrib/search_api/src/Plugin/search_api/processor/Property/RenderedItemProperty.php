@@ -7,6 +7,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Processor\ConfigurablePropertyBase;
+use Drupal\search_api\Utility\Utility;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 
 /**
  * Defines a "rendered item" property.
@@ -35,7 +38,9 @@ class RenderedItemProperty extends ConfigurablePropertyBase {
     $index = $field->getIndex();
     $form['#tree'] = TRUE;
 
-    $roles = user_role_names();
+    $roles = array_map(function (RoleInterface $role) {
+      return Utility::escapeHtml($role->label());
+    }, Role::loadMultiple());
     $form['roles'] = [
       '#type' => 'select',
       '#title' => $this->t('User roles'),
@@ -52,26 +57,38 @@ class RenderedItemProperty extends ConfigurablePropertyBase {
     ];
 
     $options_present = FALSE;
+    $bundle_options = [
+      '' => $this->t("Don't include the rendered item."),
+      ':default' => $this->t('Use the default setting.'),
+    ];
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
+      $datasource_config = $configuration['view_mode'][$datasource_id] ?? [];
+      $form['view_mode'][$datasource_id][':default'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Default view mode for %datasource', ['%datasource' => $datasource->label()]),
+        '#options' => ['' => $bundle_options['']] + $datasource->getViewModes(),
+        '#default_value' => $datasource_config[':default'] ?? '',
+        '#description' => $this->t('You can override this setting per bundle by choosing different view modes below.'),
+      ];
       $bundles = $datasource->getBundles();
       foreach ($bundles as $bundle_id => $bundle_label) {
         $view_modes = $datasource->getViewModes($bundle_id);
-        $view_modes[''] = $this->t("Don't include the rendered item.");
-        if (count($view_modes) > 1) {
+        if ($view_modes) {
           $form['view_mode'][$datasource_id][$bundle_id] = [
             '#type' => 'select',
-            '#title' => $this->t('View mode for %datasource » %bundle', ['%datasource' => $datasource->label(), '%bundle' => $bundle_label]),
-            '#options' => $view_modes,
+            '#title' => $this->t('View mode for %datasource » %bundle', [
+              '%datasource' => $datasource->label(),
+              '%bundle' => $bundle_label,
+            ]),
+            '#options' => $bundle_options + $view_modes,
+            '#default_value' => $datasource_config[$bundle_id] ?? ':default',
           ];
-          if (isset($configuration['view_mode'][$datasource_id][$bundle_id])) {
-            $form['view_mode'][$datasource_id][$bundle_id]['#default_value'] = $configuration['view_mode'][$datasource_id][$bundle_id];
-          }
           $options_present = TRUE;
         }
         else {
           $form['view_mode'][$datasource_id][$bundle_id] = [
             '#type' => 'value',
-            '#value' => $view_modes ? key($view_modes) : FALSE,
+            '#value' => FALSE,
           ];
         }
       }

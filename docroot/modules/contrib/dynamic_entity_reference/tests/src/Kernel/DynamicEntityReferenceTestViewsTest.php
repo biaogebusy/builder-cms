@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
-use Drupal\Tests\SchemaCheckTestTrait;
 use Drupal\config_test\TestInstallStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\TypedConfigManager;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\SchemaCheckTestTrait;
 
 /**
  * Tests that test views provided by dynamic_entity_reference match schema.
@@ -16,6 +16,11 @@ use Drupal\KernelTests\KernelTestBase;
 class DynamicEntityReferenceTestViewsTest extends KernelTestBase {
 
   use SchemaCheckTestTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['entity_test'];
 
   /**
    * Tests default configuration data type.
@@ -30,6 +35,7 @@ class DynamicEntityReferenceTestViewsTest extends KernelTestBase {
       \Drupal::service('module_handler'),
       \Drupal::service('class_resolver')
     );
+    $typed_config->setValidationConstraintManager(\Drupal::service('validation.constraint'));
 
     // Create a configuration storage with access to default configuration in
     // every module, profile and theme.

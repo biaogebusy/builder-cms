@@ -33,7 +33,7 @@ function hook_message_view(Message $message, $view_mode, $langcode) {
   $message->content['my_additional_field'] = [
     '#markup' => 'foo',
     '#weight' => 10,
-    '#theme' => 'mymodule_my_additional_field',
+    '#theme' => 'my_module_my_additional_field',
   ];
 }
 

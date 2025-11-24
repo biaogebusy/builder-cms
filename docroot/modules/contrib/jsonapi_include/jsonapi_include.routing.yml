@@ -1,6 +1,5 @@
-
-jsonapi_include.jsonapi_include_settings:
-  path: 'admin/config/services/jsonapi-include/settings'
+jsonapi_include.settings:
+  path: 'admin/config/services/jsonapi/include'
   defaults:
     _form: '\Drupal\jsonapi_include\Form\SettingsForm'
     _title: 'JSON:API Include'

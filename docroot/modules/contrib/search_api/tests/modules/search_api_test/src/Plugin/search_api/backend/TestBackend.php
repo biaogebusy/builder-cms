@@ -4,6 +4,8 @@ namespace Drupal\search_api_test\Plugin\search_api\backend;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiBackend;
 use Drupal\search_api\Backend\BackendPluginBase;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
@@ -13,13 +15,12 @@ use Drupal\search_api_test\TestPluginTrait;
 
 /**
  * Provides a dummy backend for testing purposes.
- *
- * @SearchApiBackend(
- *   id = "search_api_test",
- *   label = @Translation("Test backend"),
- *   description = @Translation("Dummy backend implementation")
- * )
  */
+#[SearchApiBackend(
+  id: 'search_api_test',
+  label: new TranslatableMarkup('Test backend'),
+  description: new TranslatableMarkup('Dummy backend implementation'),
+)]
 class TestBackend extends BackendPluginBase implements PluginFormInterface {
 
   use PluginFormTrait;
@@ -219,7 +220,7 @@ class TestBackend extends BackendPluginBase implements PluginFormInterface {
     $indexed = \Drupal::state()->get($key, []);
     /** @var \Drupal\search_api\Item\ItemInterface $item */
     foreach (array_keys($indexed) as $item_id) {
-      list($item_datasource_id) = Utility::splitCombinedId($item_id);
+      [$item_datasource_id] = Utility::splitCombinedId($item_id);
       if ($item_datasource_id == $datasource_id) {
         unset($indexed[$item_id]);
       }

@@ -5,7 +5,10 @@
  * Provides functionality for handling postal addresses.
  */
 
+use Drupal\address\AddressInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldTypeCategoryManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implements hook_theme().
@@ -20,6 +23,7 @@ function address_theme() {
         'organization' => '',
         'address_line1' => '',
         'address_line2' => '',
+        'address_line3' => '',
         'postal_code' => '',
         'sorting_code' => '',
         'dependent_locality' => [],
@@ -38,18 +42,20 @@ function address_theme() {
  */
 function address_theme_suggestions_address_plain(array $variables) {
   $suggestions = [];
-  $original = $variables['theme_hook_original'] . '__';
-  $field = $variables['address']->getFieldDefinition();
-  $entity_type_id = $field->getTargetEntityTypeId();
-  $bundle = $field->getTargetBundle();
-  $sanitized_view_mode = strtr($variables['view_mode'], '.', '_');
+  if (!empty($variables['address']) && $variables['address'] instanceof AddressInterface) {
+    $original = $variables['theme_hook_original'] . '__';
+    $field = $variables['address']->getFieldDefinition();
+    $entity_type_id = $field->getTargetEntityTypeId();
+    $bundle = $field->getTargetBundle();
+    $sanitized_view_mode = strtr($variables['view_mode'], '.', '_');
 
-  $suggestions[] = $original . $entity_type_id . '__' . $sanitized_view_mode;
-  $suggestions[] = $original . $entity_type_id . '__' . $bundle;
-  $suggestions[] = $original . $entity_type_id . '__' . $bundle . '__' . $sanitized_view_mode;
-  $suggestions[] = $original . $field->getName();
-  $suggestions[] = $original . $entity_type_id . '__' . $field->getName();
-  $suggestions[] = $original . $entity_type_id . '__' . $field->getName() . '__' . $bundle;
+    $suggestions[] = $original . $entity_type_id . '__' . $sanitized_view_mode;
+    $suggestions[] = $original . $entity_type_id . '__' . $bundle;
+    $suggestions[] = $original . $entity_type_id . '__' . $bundle . '__' . $sanitized_view_mode;
+    $suggestions[] = $original . $field->getName();
+    $suggestions[] = $original . $entity_type_id . '__' . $field->getName();
+    $suggestions[] = $original . $entity_type_id . '__' . $field->getName() . '__' . $bundle;
+  }
 
   return $suggestions;
 }
@@ -64,7 +70,7 @@ function address_theme_suggestions_address_plain(array $variables) {
  */
 function _address_update_entity(EntityInterface $entity, $field_name) {
   $update_helper = '\CommerceGuys\Addressing\UpdateHelper';
-  foreach ($entity->{$field_name} as $delta => $address) {
+  foreach ($entity->{$field_name} as $address) {
     $names = $update_helper::splitRecipient($address->given_name, $address->country_code);
     $address->given_name = $names['givenName'];
     $address->family_name = $names['familyName'];
@@ -84,4 +90,25 @@ function address_module_implements_alter(&$implementations, $hook) {
     unset($implementations['address']);
     $implementations['address'] = $group;
   }
+}
+
+/**
+ * Implements hook_field_info_alter().
+ *
+ * @todo Remove once minimum version supported is at least 10.2.0.
+ */
+function address_field_info_alter(&$info) {
+  // Allow module to work with versions of older versions of Drupal.
+  if (\version_compare(\Drupal::VERSION, '10.1.9999', '<')) {
+    $info['address']['category'] = new TranslatableMarkup("Address");
+    $info['address_country']['category'] = new TranslatableMarkup("Address");
+    $info['address_zone']['category'] = new TranslatableMarkup("Address");
+  }
+}
+
+/**
+ * Implements hook_field_type_category_info_alter().
+ */
+function address_field_type_category_info_alter(&$definitions) {
+  $definitions[FieldTypeCategoryManagerInterface::FALLBACK_CATEGORY]['libraries'][] = 'address/field-icon';
 }

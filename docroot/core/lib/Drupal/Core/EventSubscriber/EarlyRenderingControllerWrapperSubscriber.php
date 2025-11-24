@@ -33,7 +33,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *
  * If the render context is empty, then the controller either did not do any
  * rendering at all, or used the RendererInterface::renderRoot() or
- * ::renderPlain() methods. In that case, no bubbleable metadata is lost.
+ * ::renderInIsolation() methods. In that case, no bubbleable metadata is lost.
  *
  * If the render context is not empty, then the controller did use
  * RendererInterface::render(), and bubbleable metadata was collected.
@@ -146,12 +146,15 @@ class EarlyRenderingControllerWrapperSubscriber implements EventSubscriberInterf
           $response->addCacheableDependency($early_rendering_bubbleable_metadata);
         }
       }
+      elseif ($response instanceof CacheableResponseInterface) {
+        $response->addCacheableDependency($early_rendering_bubbleable_metadata);
+      }
       // If a non-Ajax Response or domain object is returned and it cares about
       // attachments or cacheability, then throw an exception: early rendering
       // is not permitted in that case. It is the developer's responsibility
       // to not use early rendering.
-      elseif ($response instanceof AttachmentsInterface || $response instanceof CacheableResponseInterface || $response instanceof CacheableDependencyInterface) {
-        throw new \LogicException(sprintf('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Please ensure you are not rendering content too early. Returned object class: %s.', get_class($response)));
+      elseif ($response instanceof AttachmentsInterface || $response instanceof CacheableDependencyInterface) {
+        throw new \LogicException(sprintf('The controller result claims to be providing relevant cache metadata, but leaked metadata was detected. Ensure you are not rendering content too early. Returned object class: %s.', get_class($response)));
       }
       else {
         // A Response or domain object is returned that does not care about
@@ -166,7 +169,7 @@ class EarlyRenderingControllerWrapperSubscriber implements EventSubscriberInterf
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::CONTROLLER][] = ['onController'];
 
     return $events;

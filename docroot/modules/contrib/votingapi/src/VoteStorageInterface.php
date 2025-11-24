@@ -67,7 +67,7 @@ interface VoteStorageInterface extends EntityStorageInterface {
   public function getVotesSinceMoment();
 
   /**
-   * Delets votes for deleted entity everywhere in the database.
+   * Deletes votes for deleted entity everywhere in the database.
    *
    * @param string $entity_type_id
    *   The entity type ID.

@@ -68,10 +68,10 @@ class Multiselect extends Select {
     foreach ($choices as $key => $choice) {
       if (is_array($choice)) {
         // @todo add support for optgroup.
-        $options[] .= self::getOptions($type, $element, $choice);
+        $options[] = self::getOptions($type, $element, $choice);
       }
       elseif (is_object($choice) && isset($choice->option)) {
-        $options[] .= self::getOptions($type, $element, $choice->option);
+        $options[] = self::getOptions($type, $element, $choice->option);
       }
       else {
         $key = (string) $key;
@@ -89,16 +89,26 @@ class Multiselect extends Select {
 
           case 'selected':
             if ($value_valid && ((!$value_is_array && (string) $element['#value'] === $key || ($value_is_array && in_array($key, $element['#value']))) || $empty_choice)) {
-              $options[] = [
-                'type' => 'option',
-                'value' => $key,
-                'label' => $choice,
-              ];
+              if ($value_is_array) {
+                $options[array_search($key, $element['#value'])] = [
+                  'type' => 'option',
+                  'value' => $key,
+                  'label' => $choice,
+                ];
+              }
+              else {
+                $options[$element['#value']] = [
+                  'type' => 'option',
+                  'value' => $key,
+                  'label' => $choice,
+                ];
+              }
             }
             break;
         }
       }
     }
+    ksort($options);
     return $options;
   }
 

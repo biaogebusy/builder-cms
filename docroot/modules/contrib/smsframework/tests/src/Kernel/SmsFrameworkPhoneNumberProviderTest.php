@@ -116,13 +116,13 @@ final class SmsFrameworkPhoneNumberProviderTest extends SmsFrameworkKernelBase {
       $entity = $this->createEntityWithPhoneNumber($this->phoneNumberSettings, $phone_numbers);
 
       $return = $this->phoneNumberProvider->getPhoneNumbers($entity, NULL);
-      $this->assertEquals($phone_numbers, $return);
+      static::assertEquals($phone_numbers, $return);
 
       $return = $this->phoneNumberProvider->getPhoneNumbers($entity, FALSE);
-      $this->assertEquals($phone_numbers, $return);
+      static::assertEquals($phone_numbers, $return);
 
       $return = $this->phoneNumberProvider->getPhoneNumbers($entity, TRUE);
-      $this->assertEquals([], $return);
+      static::assertEquals([], $return);
     }
   }
 
@@ -151,13 +151,13 @@ final class SmsFrameworkPhoneNumberProviderTest extends SmsFrameworkKernelBase {
       }
 
       $return = $this->phoneNumberProvider->getPhoneNumbers($entity, NULL);
-      $this->assertEquals($phone_numbers, $return);
+      static::assertEquals($phone_numbers, $return);
 
       $return = $this->phoneNumberProvider->getPhoneNumbers($entity, FALSE);
-      $this->assertEquals($phone_number_unverified, $return, $entity->id());
+      static::assertEquals($phone_number_unverified, $return, $entity->id());
 
       $return = $this->phoneNumberProvider->getPhoneNumbers($entity, TRUE);
-      $this->assertEquals($phone_number_verified, $return);
+      static::assertEquals($phone_number_verified, $return);
     }
   }
 
@@ -186,7 +186,7 @@ final class SmsFrameworkPhoneNumberProviderTest extends SmsFrameworkKernelBase {
     $phoneNumberSettings->save();
 
     // Must check for verified:
-    $this->assertEquals([], $this->phoneNumberProvider->getPhoneNumbers($entity, TRUE));
+    static::assertEquals([], $this->phoneNumberProvider->getPhoneNumbers($entity, TRUE));
   }
 
   /**
@@ -222,7 +222,7 @@ final class SmsFrameworkPhoneNumberProviderTest extends SmsFrameworkKernelBase {
       ->setSenderNumber('+999888777')
       ->setMessage($this->randomString());
     $this->phoneNumberProvider->sendMessage($entity, $sms_message);
-    $this->assertCount(1, $this->getTestMessages($this->gateway));
+    static::assertCount(1, $this->getTestMessages($this->gateway));
   }
 
   /**
@@ -243,7 +243,7 @@ final class SmsFrameworkPhoneNumberProviderTest extends SmsFrameworkKernelBase {
     $this->phoneNumberProvider->sendMessage($entity, $sms_message);
 
     $message = $this->getLastTestMessage($this->gateway);
-    $this->assertEquals([$phone_numbers[0]], $message->getRecipients(), 'The SMS message is using the first phone number from the entity.');
+    static::assertEquals([$phone_numbers[0]], $message->getRecipients(), 'The SMS message is using the first phone number from the entity.');
   }
 
 }

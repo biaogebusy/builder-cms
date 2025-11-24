@@ -2,14 +2,14 @@
 
 namespace Drupal\bootstrap_layout_builder\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
- * Provides a container wrapper render element.
+ * Provides a container wapper render element.
  *
  * @RenderElement("blb_container_wrapper")
  */
-class ContainerWrapper extends RenderElement {
+class ContainerWrapper extends RenderElementBase {
 
   /**
    * {@inheritdoc}

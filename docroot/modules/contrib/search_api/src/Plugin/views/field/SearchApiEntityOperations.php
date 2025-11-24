@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api\Plugin\views\field;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\search_api\LoggerTrait;
@@ -13,9 +15,8 @@ use Drupal\views\ResultRow;
  * Renders all operations links for an entity.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("search_api_entity_operations")
  */
+#[ViewsField('search_api_entity_operations')]
 class SearchApiEntityOperations extends EntityOperations {
 
   use LoggerTrait;
@@ -36,8 +37,10 @@ class SearchApiEntityOperations extends EntityOperations {
     if ($entity) {
       $entity_type = $entity->getEntityType();
       if ($entity_type->hasListBuilderClass()) {
+        $cacheability = new CacheableMetadata();
+        $cacheability->addCacheContexts(['url']);
         $operations = $this->entityTypeManager->getListBuilder($entity_type->id())
-          ->getOperations($entity);
+          ->getOperations($entity, $cacheability);
         if ($this->options['destination']) {
           foreach ($operations as $i => $operation) {
             if (!isset($operation['query'])) {
@@ -50,10 +53,8 @@ class SearchApiEntityOperations extends EntityOperations {
         $build = [
           '#type' => 'operations',
           '#links' => $operations,
-          '#cache' => [
-            'contexts' => ['url'],
-          ],
         ];
+        $cacheability->applyTo($build);
       }
     }
 

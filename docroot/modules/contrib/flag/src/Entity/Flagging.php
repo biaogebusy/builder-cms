@@ -2,14 +2,14 @@
 
 namespace Drupal\flag\Entity;
 
+use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\flag\Event\UnflaggingEvent;
-use Drupal\flag\FlaggingInterface;
 use Drupal\flag\Event\FlagEvents;
 use Drupal\flag\Event\FlaggingEvent;
+use Drupal\flag\Event\UnflaggingEvent;
+use Drupal\flag\FlaggingInterface;
 use Drupal\flag\Plugin\Field\FlaggedEntityFieldItemList;
 use Drupal\user\UserInterface;
 
@@ -54,6 +54,7 @@ use Drupal\user\UserInterface;
 class Flagging extends ContentEntityBase implements FlaggingInterface {
 
   // @todo should there be a data_table annotation?
+  // phpcs:ignore
   // @todo should the bundle entity_key annotation be "flag" not "type"?
 
   /**
@@ -116,10 +117,6 @@ class Flagging extends ContentEntityBase implements FlaggingInterface {
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
-    // Add descriptions to the fields defined by the parent method.
-    $fields['id']->setDescription(t('The flagging ID.'));
-    $fields['flag_id']->setDescription(t('The Flag ID.'));
-
     // This field is on flaggings even though it duplicates the entity type
     // field on the flag so that flagging queries can use it.
     $fields['entity_type'] = BaseFieldDefinition::create('string')
@@ -178,17 +175,19 @@ class Flagging extends ContentEntityBase implements FlaggingInterface {
    * {@inheritdoc}
    */
   public static function bundleFieldDefinitions(EntityTypeInterface $entity_type, $bundle, array $base_field_definitions) {
-    /** @var Flag $flag */
-    if ($flag = Flag::load($bundle)) {
-      $fields['flagged_entity'] = clone $base_field_definitions['flagged_entity'];
-      $fields['flagged_entity']->setSetting('target_type', $flag->getFlaggableEntityTypeId());
+    $flag = Flag::load($bundle);
+    if ($flag) {
+      /** @var \Drupal\Core\Field\BaseFieldDefinition $flagged_entity */
+      $flagged_entity = clone $base_field_definitions['flagged_entity'];
+      $flagged_entity->setSetting('target_type', $flag->getFlaggableEntityTypeId());
+      $fields['flagged_entity'] = $flagged_entity;
       return $fields;
     }
     return parent::bundleFieldDefinitions($entity_type, $bundle, $base_field_definitions);
   }
 
   /**
-   * {@inheritdoc
+   * {@inheritdoc}
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
@@ -235,6 +234,7 @@ class Flagging extends ContentEntityBase implements FlaggingInterface {
    */
   public function setOwnerId($uid) {
     $this->set('uid', $uid);
+    return $this;
   }
 
 }

@@ -7,7 +7,7 @@ namespace Drupal\Tests\token\Kernel;
  *
  * @group token
  */
-class UnitTest extends KernelTestBase {
+class UnitTest extends TokenKernelTestBase {
 
   /**
    * @var \Drupal\token\Token

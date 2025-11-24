@@ -8,8 +8,6 @@ namespace Drupal\entity_share_client;
  * Class ImportContext.
  *
  * Contains properties to store data during import.
- *
- * @package Drupal\entity_share_client
  */
 class ImportContext {
 

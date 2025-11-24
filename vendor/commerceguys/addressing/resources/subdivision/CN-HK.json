@@ -1,0 +1,19 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HK"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Kowloon": {
+			"local_name": "九龍"
+		},
+		"Hong Kong Island": {
+			"local_name": "香港島"
+		},
+		"New Territories": {
+			"local_name": "新界"
+		}
+	}
+}

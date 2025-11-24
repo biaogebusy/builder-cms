@@ -6,6 +6,8 @@ use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Defines the interface for checkout flow resolvers.
+ *
+ * Interface for services tagged as 'commerce_checkout.checkout_flow_resolver'.
  */
 interface CheckoutFlowResolverInterface {
 

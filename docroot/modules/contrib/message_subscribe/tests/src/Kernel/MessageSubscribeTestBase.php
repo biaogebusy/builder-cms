@@ -9,7 +9,7 @@ use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
- * Base class for messsage subscribe kernel tests.
+ * Base class for message subscribe kernel tests.
  */
 abstract class MessageSubscribeTestBase extends KernelTestBase {
 
@@ -54,7 +54,6 @@ abstract class MessageSubscribeTestBase extends KernelTestBase {
   public function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('flag', ['flag_counts']);
     $this->installEntitySchema('flagging');
     $this->installEntitySchema('message');

@@ -4,9 +4,9 @@ namespace Drupal\Tests\commerce_cart\Functional;
 
 use Behat\Mink\Driver\BrowserKitDriver;
 use Behat\Mink\Session;
+use Drupal\Tests\DrupalTestBrowser;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\Tests\DrupalTestBrowser;
 use Drupal\user\RoleInterface;
 
 /**
@@ -40,7 +40,7 @@ class CartEntityAccessTest extends CartBrowserTestBase {
       'view own commerce_order',
     ]);
 
-    // Ensure that vaccess checks are respected even if anonymous users have
+    // Ensure that access checks are respected even if anonymous users have
     // permission to view their own orders.
     user_role_grant_permissions(RoleInterface::ANONYMOUS_ID, ['view own commerce_order']);
 
@@ -238,7 +238,7 @@ class CartEntityAccessTest extends CartBrowserTestBase {
     $this->mink->setDefaultSessionName($name);
 
     if ($create_session) {
-      // Visit the front page to initialise the session.
+      // Visit the front page to initialize the session.
       $this->initFrontPage();
     }
   }

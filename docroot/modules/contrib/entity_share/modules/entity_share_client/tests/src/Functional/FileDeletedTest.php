@@ -78,14 +78,14 @@ class FileDeletedTest extends FileTest {
    */
   public function testBasicPull() {
     foreach (static::$filesData as $file_data) {
-      $this->assertFalse(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
+      $this->assertFalse(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
     }
 
     $this->pullEveryChannels();
     $this->checkCreatedEntities();
 
     foreach (static::$filesData as $file_data) {
-      $this->assertFalse(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has not been recreated.');
+      $this->assertFalse(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has not been recreated.');
     }
   }
 

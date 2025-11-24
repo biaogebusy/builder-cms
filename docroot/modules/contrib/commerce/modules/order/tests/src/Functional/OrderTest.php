@@ -3,9 +3,9 @@
 namespace Drupal\Tests\commerce_order\Functional;
 
 use Behat\Mink\Driver\BrowserKitDriver;
+use Drupal\Tests\DrupalTestBrowser;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
-use Drupal\Tests\DrupalTestBrowser;
 use GuzzleHttp\Exception\ConnectException;
 
 /**
@@ -16,7 +16,7 @@ use GuzzleHttp\Exception\ConnectException;
 class OrderTest extends OrderBrowserTestBase {
 
   /**
-   * Tests creating an order programaticaly and through the UI.
+   * Tests creating an order programmatically and through the UI.
    */
   public function testCreateOrder() {
     $order_item = $this->createEntity('commerce_order_item', [
@@ -39,7 +39,7 @@ class OrderTest extends OrderBrowserTestBase {
   }
 
   /**
-   * Tests deleting an order programaticaly and through the UI.
+   * Tests deleting an order programmatically and through the UI.
    */
   public function testDeleteOrder() {
     $order_item = $this->createEntity('commerce_order_item', [

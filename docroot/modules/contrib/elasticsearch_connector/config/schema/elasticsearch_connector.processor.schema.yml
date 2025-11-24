@@ -1,0 +1,98 @@
+plugin.plugin_configuration.search_api_processor.elasticsearch_highlight:
+  type: search_api.default_processor_configuration
+  label: 'Elasticsearch Highlight processor configuration'
+  mapping:
+    boundary_scanner:
+      type: string
+      label: 'Boundary scanner'
+      constraints:
+        Choice:
+          - chars
+          - sentence
+          - word
+    boundary_scanner_locale:
+      type: langcode
+      label: 'Boundary scanner locale'
+    encoder:
+      type: string
+      label: 'Snippet encoder'
+      constraints:
+        Choice:
+          - default
+          - html
+    fields:
+      requiredKey: false
+      type: sequence
+      label: 'Fields to highlight'
+      orderby: value
+      sequence:
+        type: machine_name
+        label: 'Field name'
+      constraints:
+        NotBlank:
+          message: "Enable at least one field, otherwise disable the ElasticSearch Highlight processor."
+    fragment_size:
+      type: integer
+      label: 'Snippet size'
+      constraints:
+        NotBlank: { }
+        Range:
+          min: 0
+          # See PHP_INT_MAX.
+          max: 2147483647
+    fragmenter:
+      type: string
+      label: 'Fragmenter'
+      constraints:
+        Choice:
+          - simple
+          - span
+    no_match_size:
+      type: integer
+      label: 'Snippet size when there is no match'
+      constraints:
+        NotBlank: { }
+        Range:
+          min: 0
+          # See PHP_INT_MAX.
+          max: 2147483647
+    number_of_fragments:
+      type: integer
+      label: 'Maximum number of snippets per field'
+      constraints:
+        NotBlank: { }
+        Range:
+          min: 0
+          # See PHP_INT_MAX.
+          max: 2147483647
+    order:
+      type: string
+      label: 'Snippet order'
+      constraints:
+        Choice:
+          - none
+          - score
+    pre_tag:
+      type: string
+      label: 'Highlight opening tag'
+      constraints:
+        Regex:
+          # Forbid any kind of control character.
+          # @see https://stackoverflow.com/a/66587087
+          pattern: '/([^\PC])/u'
+          match: false
+          message: 'Highlight tags are not allowed to span multiple lines or contain control characters.'
+    require_field_match:
+      type: boolean
+      label: 'Only show snippets from fields that match the query'
+    snippet_joiner:
+      type: label
+      label: 'Snippet-joiner'
+    type:
+      type: string
+      label: 'Highlighter type'
+      constraints:
+        Choice:
+          - unified
+          - plain
+          - fvh

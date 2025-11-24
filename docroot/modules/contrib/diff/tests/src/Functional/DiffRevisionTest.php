@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -78,6 +80,10 @@ class DiffRevisionTest extends DiffTestBase {
     // Assert the revision summary.
     $this->assertSession()->pageTextContainsOnce('Revision 2 comment');
 
+    // Assert the submit button.
+    $this->assertSession()->elementExists('xpath', '//input[@type="submit" and @id="edit-submit" and @value="Compare selected revisions"]');
+    $this->assertSession()->elementNotExists('xpath', '//input[@type="submit" and @id="edit-submit-top" and @value="Compare selected revisions"]');
+
     // Compare the revisions in standard mode.
     $this->submitForm([], 'Compare selected revisions');
     $this->clickLink('Split fields');
@@ -99,11 +105,11 @@ class DiffRevisionTest extends DiffTestBase {
     $this->assertEquals($diff_row[0]->getText(), '1');
     $this->assertEquals($diff_row[1]->getText(), '-');
     $this->assertEquals($diff_row[2]->find('xpath', 'span')->getText(), '1');
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($diff_row[2]->getHtml())), '<p>Revision 1</p>');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $diff_row[2]->getHtml())), '<p>Revision 1</p>');
     $this->assertEquals($diff_row[3]->getText(), '1');
     $this->assertEquals($diff_row[4]->getText(), '+');
     $this->assertEquals($diff_row[5]->find('xpath', 'span')->getText(), '2');
-    $this->assertEquals(htmlspecialchars_decode((strip_tags($diff_row[5]->getHtml()))), '<p>Revision 2</p>');
+    $this->assertEquals(\htmlspecialchars_decode((\strip_tags((string) $diff_row[5]->getHtml()))), '<p>Revision 2</p>');
 
     // Compare the revisions in markdown mode.
     $this->clickLink('Strip tags');
@@ -120,10 +126,10 @@ class DiffRevisionTest extends DiffTestBase {
     // Assert changes made to the body, text 1 changed to 2.
     $this->assertEquals($diff_row[0]->getText(), '-');
     $this->assertEquals($diff_row[1]->find('xpath', 'span')->getText(), '1');
-    $this->assertEquals(htmlspecialchars_decode(trim(strip_tags($diff_row[1]->getHtml()))), 'Revision 1');
+    $this->assertEquals(\htmlspecialchars_decode(\trim(\strip_tags((string) $diff_row[1]->getHtml()))), 'Revision 1');
     $this->assertEquals($diff_row[2]->getText(), '+');
     $this->assertEquals($diff_row[3]->find('xpath', 'span')->getText(), '2');
-    $this->assertEquals(htmlspecialchars_decode(trim(strip_tags($diff_row[3]->getHtml()))), 'Revision 2');
+    $this->assertEquals(\htmlspecialchars_decode(\trim(\strip_tags((string) $diff_row[3]->getHtml()))), 'Revision 2');
 
     // Compare the revisions in single column mode.
     $this->clickLink('Unified fields');
@@ -142,13 +148,13 @@ class DiffRevisionTest extends DiffTestBase {
     $this->assertEquals($diff_row[1]->getText(), '');
     $this->assertEquals($diff_row[2]->getText(), '-');
     $this->assertEquals($diff_row[3]->find('xpath', 'span')->getText(), '1');
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($diff_row[3]->getHtml())), '<p>Revision 1</p>');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $diff_row[3]->getHtml())), '<p>Revision 1</p>');
     $diff_row = $rows[2]->findAll('xpath', '/td');
     $this->assertEquals($diff_row[0]->getText(), '');
     $this->assertEquals($diff_row[1]->getText(), '1');
     $this->assertEquals($diff_row[2]->getText(), '+');
     $this->assertEquals($diff_row[3]->find('xpath', 'span')->getText(), '2');
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($diff_row[3]->getHtml())), '<p>Revision 2</p>');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $diff_row[3]->getHtml())), '<p>Revision 2</p>');
     $this->assertSession()->pageTextContainsOnce('first_unique_text');
     $this->assertSession()->pageTextContainsOnce('second_unique_text');
     $diff_row = $rows[3]->findAll('xpath', '/td');
@@ -167,16 +173,16 @@ class DiffRevisionTest extends DiffTestBase {
     // there are no line numbers.
     $this->assertEquals($diff_row[0]->getText(), '-');
     $this->assertEquals($diff_row[1]->find('xpath', 'span')->getText(), '1');
-    $this->assertEquals(htmlspecialchars_decode(trim(strip_tags($diff_row[1]->getHtml()))), 'Revision 1');
+    $this->assertEquals(\htmlspecialchars_decode(\trim(\strip_tags((string) $diff_row[1]->getHtml()))), 'Revision 1');
     $diff_row = $rows[2]->findAll('xpath', '/td');
     $this->assertEquals($diff_row[0]->getText(), '+');
     $this->assertEquals($diff_row[1]->find('xpath', 'span')->getText(), '2');
-    $this->assertEquals(htmlspecialchars_decode(trim(strip_tags($diff_row[1]->getHtml()))), 'Revision 2');
+    $this->assertEquals(\htmlspecialchars_decode(\trim(\strip_tags((string) $diff_row[1]->getHtml()))), 'Revision 2');
 
     $this->drupalGet('node/' . $node->id());
-    $this->clickLink(t('Revisions'));
+    $this->clickLink(\t('Revisions'));
     // Revert the revision, confirm.
-    $this->clickLink(t('Revert'));
+    $this->clickLink(\t('Revert'));
     $this->submitForm([], 'Revert');
     $this->assertSession()->pageTextContains('Article ' . $title . ' has been reverted to the revision from');
 
@@ -208,7 +214,7 @@ class DiffRevisionTest extends DiffTestBase {
     // Assert that there are no radio buttons for revision selection.
     $this->assertSession()->elementNotExists('xpath', '//input[@type="radio"]');
     // Assert that there is no submit button.
-    $this->assertSession()->elementNotExists('xpath', '//input[@type="submit" and text()="Compare selected revisions"]');
+    $this->assertSession()->elementNotExists('xpath', '//input[@type="submit" and @value="Compare selected revisions"]');
 
     // Create two new revisions of node.
     $edit = [
@@ -236,7 +242,7 @@ class DiffRevisionTest extends DiffTestBase {
     $this->clickLink('Revisions');
     // Assert the revision summary.
     $page_text = $this->getSession()->getPage()->getText();
-    $nr_found = substr_count($page_text, 'this revision message will appear twice');
+    $nr_found = \substr_count((string) $page_text, 'this revision message will appear twice');
     $this->assertGreaterThan(1, $nr_found, "'this revision message will appear twice' found more than once on the page");
     $this->assertSession()->pageTextContains('Copy of the revision from');
     $edit = [
@@ -284,6 +290,33 @@ class DiffRevisionTest extends DiffTestBase {
       $this->assertEquals($text[0]->getText(), 'Current revision');
       $this->assertSession()->linkNotExists('Set as current revision');
     }
+
+    // Create more revisions.
+    $this->drupalGet('node/' . $node->id());
+    $edit = [
+      'body[0][value]' => '<p>More revisions to test the top submit button</p>
+      <p>first_unique_text</p>
+      <p>second_unique_text</p>',
+      'revision' => TRUE,
+      'revision_log[0][value]' => 'Revision comment',
+    ];
+    // Set to published if content moderation is enabled.
+    if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
+      $edit['moderation_state[0][state]'] = 'published';
+    }
+    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+
+    $this->drupalGet('node/' . $node->id());
+
+    // Check the revisions overview.
+    $this->clickLink(\t('Revisions'));
+    $rows = $this->xpath('//tbody/tr');
+    // Make sure there are 6 revisions.
+    $this->assertCount(6, $rows);
+
+    // Assert the submit buttons.
+    $this->assertSession()->elementExists('xpath', '//input[@type="submit" and @id="edit-submit-top" and @value="Compare selected revisions"]');
+    $this->assertSession()->elementExists('xpath', '//input[@type="submit" and @id="edit-submit" and @value="Compare selected revisions"]');
   }
 
   /**
@@ -443,7 +476,6 @@ class DiffRevisionTest extends DiffTestBase {
     ], 'Continue');
     $this->submitForm([
       'group_field_options_wrapper' => 'field_ui:entity_reference:node',
-      'new_storage_type' => 'reference',
       'label' => 'Content reference test',
       'field_name' => 'content',
     ], 'Continue');

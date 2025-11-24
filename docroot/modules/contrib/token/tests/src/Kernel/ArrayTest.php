@@ -7,7 +7,7 @@ namespace Drupal\Tests\token\Kernel;
  *
  * @group token
  */
-class ArrayTest extends KernelTestBase {
+class ArrayTest extends TokenKernelTestBase {
 
   function testArrayTokens() {
     // Test a simple array.
@@ -51,6 +51,7 @@ class ArrayTest extends KernelTestBase {
       'reversed' => 'b, d, a, c',
       'reversed:keys' => '1, 4, 0, 2',
       'join:/' => 'c/a/d/b',
+      // cspell:disable-next-line
       'join' => 'cadb',
       'join:, ' => 'c, a, d, b',
       'join: ' => 'c a d b',

@@ -1,28 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Field;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
 
 /**
  * Plugin to diff file fields.
- *
- * @FieldDiffBuilder(
- *   id = "file_field_diff_builder",
- *   label = @Translation("File Field Diff"),
- *   field_types = {
- *     "file"
- *   },
- * )
  */
+#[FieldDiffBuilder(
+  id: 'file_field_diff_builder',
+  label: new TranslatableMarkup('File Field Diff'),
+  field_types: ['file'],
+)]
 class FileFieldBuilder extends FieldDiffBuilderBase {
 
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): mixed {
     $result = [];
     $fileManager = $this->entityTypeManager->getStorage('file');
 
@@ -33,10 +34,10 @@ class FileFieldBuilder extends FieldDiffBuilderBase {
 
         // Add file name to the comparison.
         if (isset($values['target_id'])) {
-          /** @var \Drupal\file\Entity\File $file */
+          /** @var \Drupal\file\Entity\File|null $file */
           $file = $fileManager->load($values['target_id']);
-          $result[$field_key][] = $this->t('File: :image', [
-            ':image' => $file->getFilename(),
+          $result[$field_key][] = $this->t('File: :file', [
+            ':file' => $file?->getFilename() ?? 'deleted',
           ]);
         }
 
@@ -73,7 +74,7 @@ class FileFieldBuilder extends FieldDiffBuilderBase {
         // Add the requested separator between resulted strings.
         if ($this->configuration['property_separator']) {
           $separator = $this->configuration['property_separator'] == 'nl' ? "\n" : $this->configuration['property_separator'];
-          $result[$field_key] = implode($separator, $result[$field_key]);
+          $result[$field_key] = \implode($separator, $result[$field_key]);
         }
       }
 
@@ -85,7 +86,7 @@ class FileFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['show_id'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Show file ID'),
@@ -122,7 +123,7 @@ class FileFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['show_id'] = $form_state->getValue('show_id');
     $this->configuration['compare_description_field'] = $form_state->getValue('compare_description_field');
     $this->configuration['compare_display_field'] = $form_state->getValue('compare_display_field');
@@ -134,7 +135,7 @@ class FileFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     $default_configuration = [
       'show_id' => 1,
       'compare_description_field' => 0,

@@ -1,0 +1,13 @@
+name: 'REST Views Test Config'
+type: module
+description: 'Provides default views for REST View tests.'
+package: Testing
+core_version_requirement: ^10.1 || ^11
+dependencies:
+  - drupal:views
+  - rest_views:rest_views
+
+# Information added by Drupal.org packaging script on 2024-07-31
+version: '3.1.1'
+project: 'rest_views'
+datestamp: 1722394207

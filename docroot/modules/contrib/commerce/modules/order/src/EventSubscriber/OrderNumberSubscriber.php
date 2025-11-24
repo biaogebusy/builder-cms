@@ -37,7 +37,7 @@ class OrderNumberSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       'commerce_order.place.pre_transition' => ['setOrderNumber', -30],
     ];

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Ajax;
 
 use Drupal\Core\Ajax\AjaxResponse;
@@ -26,6 +28,8 @@ class AjaxResponseTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->ajaxResponse = new AjaxResponse();
   }
 
@@ -35,7 +39,7 @@ class AjaxResponseTest extends UnitTestCase {
    * @see \Drupal\Core\Ajax\AjaxResponse::addCommand()
    * @see \Drupal\Core\Ajax\AjaxResponse::getCommands()
    */
-  public function testCommands() {
+  public function testCommands(): void {
     $command_one = $this->createMock('Drupal\Core\Ajax\CommandInterface');
     $command_one->expects($this->once())
       ->method('render')
@@ -75,18 +79,18 @@ class AjaxResponseTest extends UnitTestCase {
    *
    * @cover ::prepareResponse
    */
-  public function testPrepareResponseForIeFormRequestsWithFileUpload() {
+  public function testPrepareResponseForIeFormRequestsWithFileUpload(): void {
     $request = Request::create('/example', 'POST');
     $request->headers->set('Accept', 'text/html');
     $response = new AjaxResponse([]);
     $response->headers->set('Content-Type', 'application/json; charset=utf-8');
 
     $ajax_response_attachments_processor = $this->createMock('\Drupal\Core\Render\AttachmentsResponseProcessorInterface');
-    $subscriber = new AjaxResponseSubscriber($ajax_response_attachments_processor);
+    $subscriber = new AjaxResponseSubscriber(fn() => $ajax_response_attachments_processor);
     $event = new ResponseEvent(
       $this->createMock('\Symfony\Component\HttpKernel\HttpKernelInterface'),
       $request,
-      HttpKernelInterface::MASTER_REQUEST,
+      HttpKernelInterface::MAIN_REQUEST,
       $response
     );
     $subscriber->onResponse($event);

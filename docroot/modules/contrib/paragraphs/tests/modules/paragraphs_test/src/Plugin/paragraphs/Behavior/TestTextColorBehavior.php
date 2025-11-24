@@ -4,6 +4,8 @@ namespace Drupal\paragraphs_test\Plugin\paragraphs\Behavior;
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\paragraphs\Attribute\ParagraphsBehavior;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\ParagraphInterface;
 use Drupal\paragraphs\ParagraphsBehaviorBase;
@@ -18,6 +20,12 @@ use Drupal\paragraphs\ParagraphsBehaviorBase;
  *   weight = 1
  * )
  */
+#[ParagraphsBehavior(
+  id: 'test_text_color',
+  label: new TranslatableMarkup('Test text color behavior plugin'),
+  description: new TranslatableMarkup('Test text color behavior plugin'),
+  weight: 1,
+)]
 class TestTextColorBehavior extends ParagraphsBehaviorBase {
 
   /**

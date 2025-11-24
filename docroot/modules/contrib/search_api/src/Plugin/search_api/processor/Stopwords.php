@@ -3,23 +3,24 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 
 /**
  * Allows you to define stopwords which will be ignored in searches.
- *
- * @SearchApiProcessor(
- *   id = "stopwords",
- *   label = @Translation("Stopwords"),
- *   description = @Translation("Allows you to define stopwords which will be ignored in searches. <strong>Caution:</strong> Only use after both 'Ignore case' and 'Tokenizer' have run."),
- *   stages = {
- *     "pre_index_save" = 0,
- *     "preprocess_index" = -5,
- *     "preprocess_query" = -2,
- *   }
- * )
  */
+#[SearchApiProcessor(
+  id: 'stopwords',
+  label: new TranslatableMarkup('Stopwords'),
+  description: new TranslatableMarkup('Allows you to define stopwords which will be ignored in searches. <strong>Caution:</strong> Only use after both "Ignore case" and "Tokenizer" have run.'),
+  stages: [
+    'pre_index_save' => 0,
+    'preprocess_index' => -5,
+    'preprocess_query' => -2,
+  ],
+)]
 class Stopwords extends FieldsProcessorPluginBase {
 
   /**
@@ -59,7 +60,7 @@ class Stopwords extends FieldsProcessorPluginBase {
    */
   public function setConfiguration(array $configuration) {
     parent::setConfiguration($configuration);
-    unset($this->stopwords);
+    $this->stopwords = NULL;
   }
 
   /**

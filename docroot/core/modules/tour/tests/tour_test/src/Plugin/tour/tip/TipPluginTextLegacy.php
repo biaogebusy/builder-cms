@@ -86,33 +86,11 @@ class TipPluginTextLegacy extends TipPluginBase implements ContainerFactoryPlugi
   /**
    * Returns body of the text tip.
    *
-   * @return string
+   * @return array
    *   The tip body.
    */
-  public function getBody() {
-    return $this->get('body');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAttributes() {
-    $attributes = parent::getAttributes();
-    $attributes['data-aria-describedby'] = 'tour-tip-' . $this->getAriaId() . '-contents';
-    $attributes['data-aria-labelledby'] = 'tour-tip-' . $this->getAriaId() . '-label';
-    if ($location = $this->get('location')) {
-      $attributes['data-options'] = 'tipLocation:' . $location;
-    }
-    return $attributes;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getOutput() {
-    $output = '<h2 class="tour-tip-label" id="tour-tip-' . $this->getAriaId() . '-label">' . Html::escape($this->getLabel()) . '</h2>';
-    $output .= '<p class="tour-tip-body" id="tour-tip-' . $this->getAriaId() . '-contents">' . $this->token->replace($this->getBody()) . '</p>';
-    return ['#markup' => $output];
+  public function getBody(): array {
+    return [$this->get('body')];
   }
 
 }

@@ -1,13 +1,17 @@
 <?php
 
+use League\Csv\Writer;
+
 /**
  * @file
  */
 
-use League\Csv\Writer;
-
 /**
  * Implements hook_requirements().
+ *
+ * @param $phase
+ *
+ * @return array
  */
 function csv_serialization_requirements($phase) {
   $requirements = [];

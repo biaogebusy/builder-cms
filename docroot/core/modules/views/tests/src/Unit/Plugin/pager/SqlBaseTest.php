@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\pager;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -35,6 +37,8 @@ class SqlBaseTest extends UnitTestCase {
   protected $display;
 
   protected function setUp(): void {
+    parent::setUp();
+
     $this->pager = $this->getMockBuilder('Drupal\views\Plugin\views\pager\SqlBase')
       ->disableOriginalConstructor()
       ->getMockForAbstractClass();
@@ -64,13 +68,13 @@ class SqlBaseTest extends UnitTestCase {
    *
    * @see \Drupal\views\Plugin\views\pager\SqlBase::query()
    */
-  public function testQuery() {
+  public function testQuery(): void {
     $request = new Request([
       'items_per_page' => 'All',
     ]);
     $this->view->expects($this->any())
       ->method('getRequest')
-      ->will($this->returnValue($request));
+      ->willReturn($request);
 
     $options = [];
     $this->pager->init($this->view, $this->display, $options);

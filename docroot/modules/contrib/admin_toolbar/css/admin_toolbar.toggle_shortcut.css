@@ -1,0 +1,76 @@
+/* Admin Toolbar Toggle Shortcut CSS styles. */
+
+/* Admin Toolbar default visible state. */
+body.toolbar-horizontal {
+  /* Show toolbar: simple slide down animation with a transform property. */
+  transition: all 300ms ease-in-out;
+
+  /* Admin Toolbar hidden state. */
+  &.toggle-toolbar-hidden {
+    margin-left: unset !important;
+    padding-top: unset !important;
+    transition: all 200ms ease-out;
+  }
+}
+
+/* Styles for the toggle buttons: collapse and expand. */
+
+/* Collapse button in the toolbar. */
+.toolbar-oriented .toolbar-tab.toolbar-tab--collapse-trigger {
+  float: right;
+}
+
+.toolbar-icon-collapse {
+  width: 2.4375rem !important;
+  height: 2.4375rem !important;
+  padding: 0 !important;
+  text-align: left !important;
+  text-indent: -100vw !important;
+
+  &::before {
+    background-image: url(../images/icons/collapse.svg);
+  }
+}
+
+/* Expand button. */
+.toolbar-expand-floating-button {
+  position: fixed;
+  z-index: 103;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4375rem;
+  height: 2.4375rem;
+  padding: 0;
+  cursor: pointer;
+  /* Hide button: simple slide up animation with a transform property. */
+  transition: all 200ms ease-out;
+  transform: translateY(-220%);
+  border: 0 none;
+  background-color: #0f0f0f;
+
+  &:hover {
+    .toolbar-expand-floating-button__icon {
+      filter: brightness(5);
+    }
+  }
+
+  /* Show expand button. */
+  .toggle-toolbar-hidden & {
+    /* Show button: simple slide down animation with a transform property. */
+    transition: all 300ms ease-in-out;
+    transform: translateY(0);
+  }
+}
+
+/*
+  Define our own icon style instead using .toolbar-icon-x
+  because Gin overrides these styles.
+*/
+.toolbar-expand-floating-button__icon {
+  width: 16px;
+  height: 16px;
+  background: center / contain no-repeat url(../images/icons/expand.svg);
+}

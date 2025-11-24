@@ -195,7 +195,7 @@ class PhoneNumberSettings extends ConfigEntityBase implements PhoneNumberSetting
    * {@inheritdoc}
    */
   public function getFieldName($map) {
-    return isset($this->fields[$map]) ? $this->fields[$map] : NULL;
+    return $this->fields[$map] ?? NULL;
   }
 
   /**
@@ -221,6 +221,7 @@ class PhoneNumberSettings extends ConfigEntityBase implements PhoneNumberSetting
     /** @var static $phone_number_settings */
     foreach ($entities as $phone_number_settings) {
       $verification_ids += $verification_storage->getQuery()
+        ->accessCheck(FALSE)
         ->condition('entity__target_type', $phone_number_settings->getPhoneNumberEntityTypeId())
         ->condition('bundle', $phone_number_settings->getPhoneNumberBundle())
         ->execute();
@@ -239,7 +240,7 @@ class PhoneNumberSettings extends ConfigEntityBase implements PhoneNumberSetting
       $field_config = FieldConfig::loadByName(
         $this->getPhoneNumberEntityTypeId(),
         $this->getPhoneNumberBundle(),
-        $field_name
+        $field_name,
       );
       if ($field_config) {
         $this->addDependency('config', $field_config->getConfigDependencyName());

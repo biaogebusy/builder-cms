@@ -31,6 +31,7 @@ class Address extends FieldTargetBase {
       ->addProperty('sorting_code')
       ->addProperty('address_line1')
       ->addProperty('address_line2')
+      ->addProperty('address_line3')
       ->addProperty('organization')
       ->addProperty('given_name')
       ->addProperty('additional_name')

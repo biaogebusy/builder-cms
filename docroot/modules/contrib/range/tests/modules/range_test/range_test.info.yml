@@ -6,7 +6,7 @@ dependencies:
   - range:range
   - drupal:views
 
-# Information added by Drupal.org packaging script on 2022-12-05
-version: '8.x-1.5'
+# Information added by Drupal.org packaging script on 2024-08-13
+version: '8.x-1.6'
 project: 'range'
-datestamp: 1670244261
+datestamp: 1723584521

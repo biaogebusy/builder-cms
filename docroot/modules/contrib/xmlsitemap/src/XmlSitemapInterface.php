@@ -137,14 +137,14 @@ interface XmlSitemapInterface extends ConfigEntityInterface {
   /**
    * Returns the sitemap with the context specified as parameter.
    *
-   * @param array $context
+   * @param array|null $context
    *   An optional XML Sitemap context array to use to find the correct XML
    *   sitemap. If not provided, the current site's context will be used.
    *
    * @return \Drupal\xmlsitemap\XmlSitemapInterface
    *   Sitemap with the specified context or NULL.
    */
-  public static function loadByContext(array $context = NULL);
+  public static function loadByContext(?array $context = NULL);
 
   /**
    * Save the state information about the sitemap.

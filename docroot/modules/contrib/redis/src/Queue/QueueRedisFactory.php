@@ -2,19 +2,21 @@
 
 namespace Drupal\redis\Queue;
 
+use Drupal\Core\Queue\QueueFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\redis\ClientFactory;
+
+// BC for Drupal core 10.1 and earlier.
+if (!interface_exists(QueueFactoryInterface::class)) {
+  interface BCQueueFactoryInterface {
+  }
+  class_alias(BCQueueFactoryInterface::class, QueueFactoryInterface::class);
+}
 
 /**
  * Defines the queue factory for the Redis backend.
  */
-class QueueRedisFactory {
-
-  /**
-   * Queue implementation class namespace prefix.
-   */
-  const CLASS_NAMESPACE = ClientFactory::REDIS_IMPL_QUEUE;
-
+class QueueRedisFactory implements QueueFactoryInterface {
   /**
    * @var \Drupal\redis\ClientFactory
    */
@@ -30,8 +32,10 @@ class QueueRedisFactory {
   /**
    * Constructs this factory object.
    *
-   * @param \Drupal\Core\Database\Connection $connection
-   *   The Connection object containing the key-value tables.
+   * @param \Drupal\redis\ClientFactory $client_factory
+   *   Client factory for generating the redis connection.
+   * @param \Drupal\Core\Site\Settings $settings
+   *   Drupal settings for creating the connection.
    */
   public function __construct(ClientFactory $client_factory, Settings $settings) {
     $this->clientFactory = $client_factory;
@@ -39,18 +43,11 @@ class QueueRedisFactory {
   }
 
   /**
-   * Constructs a new queue object for a given name.
-   *
-   * @param string $name
-   *   The name of the collection holding key and value pairs.
-   *
-   * @return \Drupal\Core\Queue\DatabaseQueue
-   *   A key/value store implementation for the given $collection.
+   * {@inheritdoc}
    */
   public function get($name) {
     $settings = $this->settings->get('redis_queue_' . $name, ['reserve_timeout' => NULL]);
-    $class_name = $this->clientFactory->getClass(static::CLASS_NAMESPACE);
-    return new $class_name($name, $settings, $this->clientFactory->getClient());
+    return new RedisQueue($name, $settings, $this->clientFactory->getClient());
   }
 
 }

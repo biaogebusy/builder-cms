@@ -1,1 +1,1 @@
-!function(i){const n=i.de=i.de||{};n.dictionary=Object.assign(n.dictionary||{},{Source:"Quellcode"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));
+!function(n){const i=n.de=n.de||{};i.dictionary=Object.assign(i.dictionary||{},{"Show source":"Quelle anzeigen"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));

@@ -104,7 +104,7 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
       'user_id[0][target_id]' => $this->adminUser->label() . ' (' . $this->adminUser->id() . ')',
     ];
 
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $entities = \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->loadByProperties([
@@ -126,7 +126,7 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
       // Remove one child.
       'dynamic_references[0][target_id]' => '',
     ];
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('entity_test/' . $entity->id());
     $assert_session->pageTextContains('Bazbar');
     // Reload entity.
@@ -152,17 +152,11 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
     $edit = [
       'dynamic_references[0][target_id]' => 'duplicate label',
     ];
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
     // We don't know the order in which the entities will be listed, so just
     // assert parts and make sure both are shown.
-    // @todo remove this once 9.1 and 9.0 are not supported anymore.
-    if (version_compare(\Drupal::VERSION, '9.2', '>=')) {
-      $error_message = t('Multiple test entity entities match this reference;');
-    }
-    else {
-      $error_message = t('Multiple entities match this reference;');
-    }
+    $error_message = 'Multiple test entity entities match this reference;';
     $assert_session->responseContains($error_message);
     $assert_session->responseContains($labels[0]);
     $assert_session->responseContains($labels[1]);
@@ -178,21 +172,11 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
     }
 
     // Submit again with the same values.
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
-    $params = [
-      '%value' => 'duplicate label',
-    ];
     // We don't know which id it will display, so just assert a part of the
     // error.
-    // @todo remove this once 9.1 and 9.0 are not supported anymore.
-    if (version_compare(\Drupal::VERSION, '9.2', '>=')) {
-      $error_message = t('Many test entity entities are called %value. Specify the one you want by appending the id in parentheses', $params);
-    }
-    else {
-      $error_message = t('Many entities are called %value. Specify the one you want by appending the id in parentheses', $params);
-    }
-    $assert_session->responseContains($error_message);
+    $assert_session->pageTextContains('Many test entity entities are called duplicate label. Specify the one you want by appending the id in parentheses');
 
     // Submit with a label that does not match anything.
     // Now try to submit and just specify the label.
@@ -200,14 +184,8 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
     $edit = [
       'dynamic_references[0][target_id]' => 'does not exist',
     ];
-    $this->submitForm($edit, t('Save'));
-    // @todo remove this once 9.1 and 9.0 are not supported anymore.
-    if (version_compare(\Drupal::VERSION, '9.2', '>=')) {
-      $assert_session->responseContains(t('There are no test entity entities matching "%value".', ['%value' => 'does not exist']));
-    }
-    else {
-      $assert_session->responseContains(t('There are no entities matching "%value".', ['%value' => 'does not exist']));
-    }
+    $this->submitForm($edit, 'Save');
+    $assert_session->pageTextContains('There are no test entity entities matching "does not exist".');
 
     $this->drupalGet('entity_test/manage/' . $entity->id() . '/edit');
     $edit = [
@@ -215,7 +193,7 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
       // Reference itself.
       'dynamic_references[0][target_id]' => 'Bazbar (' . $entity->id() . ')',
     ];
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('entity_test/' . $entity->id());
     $assert_session->pageTextContains('Bazbar');
     // Reload entity.
@@ -280,7 +258,7 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
       'user_id[0][target_id]' => $this->adminUser->label() . ' (' . $this->adminUser->id() . ')',
     ];
 
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $entities = \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->loadByProperties(['name' => 'Barfoo']);
@@ -302,7 +280,7 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
       // Remove one child.
       'dynamic_references[1][target_id]' => '',
     ];
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('entity_test/' . $entity->id());
     $assert_session->pageTextContains('Bazbar');
     // Reload entity.
@@ -328,18 +306,11 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
     $edit = [
       'dynamic_references[1][target_id]' => 'duplicate label',
     ];
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
     // We don't know the order in which the entities will be listed, so just
     // assert parts and make sure both are shown.
-    // @todo remove this once 9.1 and 9.0 are not supported anymore.
-    if (version_compare(\Drupal::VERSION, '9.2', '>=')) {
-      $error_message = t('Multiple test entity entities match this reference;');
-    }
-    else {
-      $error_message = t('Multiple entities match this reference;');
-    }
-    $assert_session->responseContains($error_message);
+    $assert_session->responseContains('Multiple test entity entities match this reference;');
     $assert_session->responseContains($labels[0]);
     $assert_session->responseContains($labels[1]);
 
@@ -354,21 +325,11 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
     }
 
     // Submit again with the same values.
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
-    $params = [
-      '%value' => 'duplicate label',
-    ];
     // We don't know which id it will display, so just assert a part of the
     // error.
-    // @todo remove this once 9.1 and 9.0 are not supported anymore.
-    if (version_compare(\Drupal::VERSION, '9.2', '>=')) {
-      $error_message = t('Many test entity entities are called %value. Specify the one you want by appending the id in parentheses', $params);
-    }
-    else {
-      $error_message = t('Many entities are called %value. Specify the one you want by appending the id in parentheses', $params);
-    }
-    $assert_session->responseContains($error_message);
+    $assert_session->pageTextContains('Many test entity entities are called duplicate label. Specify the one you want by appending the id in parentheses');
 
     // Submit with a label that does not match anything.
     // Now try to submit and just specify the label.
@@ -376,14 +337,8 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
     $edit = [
       'dynamic_references[1][target_id]' => 'does not exist',
     ];
-    $this->submitForm($edit, t('Save'));
-    // @todo remove this once 9.1 and 9.0 are not supported anymore.
-    if (version_compare(\Drupal::VERSION, '9.2', '>=')) {
-      $assert_session->responseContains(t('There are no test entity entities matching "%value".', ['%value' => 'does not exist']));
-    }
-    else {
-      $assert_session->responseContains(t('There are no entities matching "%value".', ['%value' => 'does not exist']));
-    }
+    $this->submitForm($edit, 'Save');
+    $assert_session->pageTextContains('There are no test entity entities matching "does not exist".');
 
     $this->drupalGet('entity_test/manage/' . $entity->id() . '/edit');
     $edit = [
@@ -391,7 +346,7 @@ class DynamicEntityReferenceBaseTest extends BrowserTestBase {
       // Reference itself.
       'dynamic_references[1][target_id]' => 'Bazbar (' . $entity->id() . ')',
     ];
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('entity_test/' . $entity->id());
     $assert_session->pageTextContains('Bazbar');
     // Reload entity.

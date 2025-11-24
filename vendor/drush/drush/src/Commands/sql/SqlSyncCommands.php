@@ -1,51 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\sql;
 
 use Consolidation\AnnotatedCommand\CommandData;
+use Consolidation\AnnotatedCommand\Hooks\HookManager;
+use Consolidation\SiteAlias\SiteAlias;
+use Consolidation\SiteAlias\SiteAliasManagerInterface;
+use Drush\Attributes as CLI;
+use Drush\Boot\DrupalBootLevels;
+use Drush\Commands\AutowireTrait;
+use Drush\Commands\core\DocsCommands;
+use Drush\Commands\core\RsyncCommands;
+use Drush\Commands\core\StatusCommands;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\Exceptions\UserAbortException;
-use Consolidation\SiteAlias\SiteAlias;
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Symfony\Component\Filesystem\Path;
 
-class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInterface
+#[CLI\Bootstrap(DrupalBootLevels::NONE)]
+final class SqlSyncCommands extends DrushCommands
 {
-    use SiteAliasManagerAwareTrait;
+    use AutowireTrait;
+
+    const SYNC = 'sql:sync';
+
+    public function __construct(
+        private readonly SiteAliasManagerInterface $siteAliasManager
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Copy DB data from a source site to a target site. Transfers data via rsync.
-     *
-     * @command sql:sync
-     * @aliases sql-sync
-     * @param $source A site-alias or site specification whose database you want to copy from.
-     * @param $target A site-alias or site specification whose database you want to replace.
-     * @optionset_table_selection
-     * @option no-dump Do not dump the sql database; always use an existing dump file.
-     * @option no-sync Do not rsync the database dump file from source to target.
-     * @option runner Where to run the rsync command; defaults to the local site. Can also be <info>source</info> or <info>target</info>.
-     * @option create-db Create a new database before importing the database dump on the target machine.
-     * @option db-su Account to use when creating a new database (e.g. <info>root</info>).
-     * @option db-su-pw Password for the db-su account.
-     * @option source-dump The path for retrieving the sql-dump on source machine.
-     * @option target-dump The path for storing the sql-dump on target machine.
-     * @option extra-dump Add custom arguments/options to the dumping of the database (e.g. mysqldump command).
-     * @usage drush sql:sync @source @self
-     *   Copy the database from the site with the alias 'source' to the local site.
-     * @usage drush sql:sync @self @target
-     *   Copy the database from the local site to the site with the alias 'target'.
-     * @usage drush sql:sync #prod #dev
-     *   Copy the database from the site in /sites/prod to the site in /sites/dev (multisite installation).
-     * @topics docs:aliases,docs:policy,docs:configuration,docs:example-sync-via-http
-     * @throws \Exception
      */
+    #[CLI\Command(name: self::SYNC, aliases: ['sql-sync'])]
+    #[CLI\Argument(name: 'source', description: 'A site-alias or site specification whose database you want to copy from.')]
+    #[CLI\Argument(name: 'target', description: 'A site-alias or site specification whose database you want to replace.')]
+    #[CLI\OptionsetTableSelection]
+    #[CLI\Option(name: 'no-dump', description: 'Do not dump the sql database; always use an existing dump file.')]
+    #[CLI\Option(name: 'no-sync', description: 'Do not rsync the database dump file from source to target.')]
+    #[CLI\Option(name: 'runner', description: 'Where to run the rsync command; defaults to the local site. Can also be <info>source</info> or <info>target</info>.')]
+    #[CLI\Option(name: 'create-db', description: 'Create a new database before importing the database dump on the target machine.')]
+    #[CLI\Option(name: 'db-su', description: 'Account to use when creating a new database (e.g. <info>root</info>).')]
+    #[CLI\Option(name: 'db-su-pw', description: 'Password for the db-su account.')]
+    #[CLI\Option(name: 'source-dump', description: 'The path for retrieving the sql-dump on source machine.')]
+    #[CLI\Option(name: 'target-dump', description: 'The path for storing the sql-dump on target machine.')]
+    #[CLI\Option(name: 'extra-dump', description: 'Add custom arguments/options to the dumping of the database (e.g. mysqldump command).')]
+    #[CLI\Usage(name: 'drush sql:sync @source @self', description: "Copy the database from the site with the alias 'source' to the local site.")]
+    #[CLI\Usage(name: 'drush sql:sync @self @target', description: "Copy the database from the local site to the site with the alias 'target'.")]
+    #[CLI\Usage(name: 'drush sql:sync #prod #dev', description: 'Copy the database from the site in /sites/prod to the site in /sites/dev (multisite installation).')]
+    #[CLI\Topics(topics: [DocsCommands::ALIASES, DocsCommands::POLICY, DocsCommands::CONFIGURATION, DocsCommands::EXAMPLE_SYNC_VIA_HTTP])]
     public function sqlsync($source, $target, $options = ['no-dump' => false, 'no-sync' => false, 'runner' => self::REQ, 'create-db' => false, 'db-su' => self::REQ, 'db-su-pw' => self::REQ, 'target-dump' => self::REQ, 'source-dump' => self::OPT, 'extra-dump' => self::REQ]): void
     {
-        $manager = $this->siteAliasManager();
-        $sourceRecord = $manager->get($source);
-        $targetRecord = $manager->get($target);
+        $sourceRecord = $this->siteAliasManager->get($source);
+        $targetRecord = $this->siteAliasManager->get($target);
 
         // Append --strict in case we are calling older versions of Drush.
         $global_options = Drush::redispatchOptions()  + ['strict' => 0];
@@ -53,7 +63,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
         // Create target DB if needed.
         if ($options['create-db']) {
             $this->logger()->notice(dt('Starting to create database on target.'));
-            $process = $this->processManager()->drush($targetRecord, 'sql-create', [], $global_options);
+            $process = $this->processManager()->drush($targetRecord, SqlCommands::CREATE, [], $global_options);
             $process->mustRun();
         }
 
@@ -64,20 +74,16 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
         $this->import($global_options, $target_dump_path, $targetRecord);
     }
 
-    /**
-     * @hook validate sql-sync
-     * @throws \Exception
-     */
+    #[CLI\Hook(type: HookManager::ARGUMENT_VALIDATOR, target: self::SYNC)]
     public function validate(CommandData $commandData): void
     {
         $source = $commandData->input()->getArgument('source');
         $target = $commandData->input()->getArgument('target');
         // Get target info for confirmation prompt.
-        $manager = $this->siteAliasManager();
-        if (!$sourceRecord = $manager->get($source)) {
+        if (!$sourceRecord = $this->siteAliasManager->get($source)) {
             throw new \Exception(dt('Error: no alias record could be found for source !source', ['!source' => $source]));
         }
-        if (!$targetRecord = $manager->get($target)) {
+        if (!$targetRecord = $this->siteAliasManager->get($target)) {
             throw new \Exception(dt('Error: no alias record could be found for target !target', ['!target' => $target]));
         }
         if (!$commandData->input()->getOption('no-dump') && !$source_db_name = $this->databaseName($sourceRecord)) {
@@ -86,7 +92,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
         if (!$target_db_name = $this->databaseName($targetRecord)) {
             throw new \Exception(dt('Error: no database record could be found for target !target', ['!target' => $target]));
         }
-        $txt_source = ($sourceRecord->remoteHost() ? $sourceRecord->remoteHost() . '/' : '') . $source_db_name;
+        $txt_source = ($sourceRecord->remoteHost() ? $sourceRecord->remoteHost() . '/' : '') . $this->databaseName($sourceRecord);
         $txt_target = ($targetRecord->remoteHost() ? $targetRecord->remoteHost() . '/' : '') . $target_db_name;
 
         if ($commandData->input()->getOption('no-dump') && !$commandData->input()->getOption('source-dump')) {
@@ -114,7 +120,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
             return 'simulated_db';
         }
 
-        $process = $this->processManager()->drush($record, 'core-status', [], ['fields' => 'db-name', 'format' => 'json']);
+        $process = $this->processManager()->drush($record, StatusCommands::STATUS, [], ['fields' => 'db-name', 'format' => 'json'] + Drush::redispatchOptions() + ['strict' => 0]);
         $process->setSimulated(false);
         $process->mustRun();
         $data = $process->getOutputAsJson();
@@ -126,12 +132,6 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
 
     /**
      * Perform sql-dump on source unless told otherwise. Returns the path to the dump file.
-     *
-     * @param $options
-     * @param $global_options
-     * @param $sourceRecord
-     *
-     * @throws \Exception
      */
     public function dump(array $options, array $global_options, SiteAlias $sourceRecord): string
     {
@@ -141,7 +141,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
         ];
         if (!$options['no-dump']) {
             $this->logger()->notice(dt('Starting to dump database on source.'));
-            $process = $this->processManager()->drush($sourceRecord, 'sql-dump', [], $dump_options + ['format' => 'json']);
+            $process = $this->processManager()->drush($sourceRecord, SqlCommands::DUMP, [], $dump_options + ['format' => 'json'] + Drush::redispatchOptions() + ['strict' => 0]);
             $process->mustRun();
 
             if ($this->getConfig()->simulate()) {
@@ -161,7 +161,6 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
     }
 
     /**
-     * @param array $options
      * @param $source_dump_path
      *   Path to the target file.
      * @throws \Exception
@@ -178,7 +177,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
         } else {
             $tmp = '/tmp'; // Our fallback plan.
             $this->logger()->notice(dt('Starting to discover temporary files directory on target.'));
-            $process = $this->processManager()->drush($targetRecord, 'core-status', [], ['format' => 'string', 'field' => 'drush-temp']);
+            $process = $this->processManager()->drush($targetRecord, StatusCommands::STATUS, [], ['format' => 'string', 'field' => 'drush-temp'] + Drush::redispatchOptions() + ['strict' => 0]);
             $process->setSimulated(false);
             $process->run();
 
@@ -195,7 +194,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
                 $double_dash_options['remove-source-files'] = true;
             }
             if (!$runner = $options['runner']) {
-                $runner = $sourceRecord->isRemote() && $targetRecord->isRemote() ? $targetRecord : $this->siteAliasManager()->getSelf();
+                $runner = $sourceRecord->isRemote() && $targetRecord->isRemote() ? $targetRecord : $this->siteAliasManager->getSelf();
             }
             if ($runner == 'source') {
                 $runner = $sourceRecord;
@@ -204,7 +203,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
                 $runner = $targetRecord;
             }
             $this->logger()->notice(dt('Copying dump file from source to target.'));
-            $process = $this->processManager()->drush($runner, 'core-rsync', [$sourceRecord->name() . ":$source_dump_path", $targetRecord->name() . ":$target_dump_path"], ['yes' => true], $double_dash_options);
+            $process = $this->processManager()->drush($runner, RsyncCommands::RSYNC, [$sourceRecord->name() . ":$source_dump_path", $targetRecord->name() . ":$target_dump_path"], ['yes' => true] + Drush::redispatchOptions() + ['strict' => 0], $double_dash_options);
             $process->mustRun($process->showRealtime());
         }
         return $target_dump_path;
@@ -224,7 +223,7 @@ class SqlSyncCommands extends DrushCommands implements SiteAliasManagerAwareInte
             'file' => $target_dump_path,
             'file-delete' => true,
         ];
-        $process = $this->processManager()->drush($targetRecord, 'sql-query', [], $query_options);
+        $process = $this->processManager()->drush($targetRecord, SqlCommands::QUERY, [], $query_options + Drush::redispatchOptions() + ['strict' => 0]);
         $process->mustRun();
     }
 }

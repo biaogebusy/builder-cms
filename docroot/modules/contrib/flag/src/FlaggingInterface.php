@@ -27,7 +27,7 @@ interface FlaggingInterface extends ContentEntityInterface, EntityOwnerInterface
   public function getFlag();
 
   /**
-   * Returns the flaggable entity.
+   * Returns the entity that is flagged by this flagging.
    *
    * @return \Drupal\Core\Entity\EntityInterface
    *   The entity object.
@@ -35,7 +35,7 @@ interface FlaggingInterface extends ContentEntityInterface, EntityOwnerInterface
   public function getFlaggable();
 
   /**
-   * Gets the entity type of the flaggable.
+   * Returns the type of entity flagged by this flagging (e.g., 'node').
    *
    * @return string
    *   A string containing the flaggable type ID.
@@ -51,7 +51,7 @@ interface FlaggingInterface extends ContentEntityInterface, EntityOwnerInterface
   public function getCreatedTime();
 
   /**
-   * Gets the entity ID of the flaggable.
+   * Returns the ID of the entity that is flagged by this flagging.
    *
    * @return string
    *   A string containing the flaggable ID.

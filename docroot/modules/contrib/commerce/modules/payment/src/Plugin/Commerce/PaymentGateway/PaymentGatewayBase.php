@@ -2,22 +2,17 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\PaymentGateway;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Plugin\PluginWithFormsTrait;
 use Drupal\commerce_payment\CreditCard;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
 use Drupal\commerce_payment\Exception\HardDeclineException;
 use Drupal\commerce_payment\Exception\InvalidRequestException;
-use Drupal\commerce_payment\PaymentMethodTypeManager;
-use Drupal\commerce_payment\PaymentTypeManager;
-use Drupal\commerce_price\MinorUnitsConverterInterface;
 use Drupal\commerce_price\Price;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Plugin\PluginBase;
-use Drupal\Core\Plugin\PluginWithFormsTrait;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,18 +44,8 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
    *
    * @var string|int|null
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing, PSR2.Classes.PropertyDeclaration.Underscore
   protected $_parentEntityId;
-
-  /**
-   * The ID of the parent config entity.
-   *
-   * @deprecated in commerce:8.x-2.16 and is removed from commerce:3.x.
-   *   Use $this->parentEntity->id() instead.
-   *
-   * @var string
-   */
-  protected $entityId;
 
   /**
    * The payment type used by the gateway.
@@ -74,7 +59,7 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
    *
    * @var \Drupal\commerce_payment\Plugin\Commerce\PaymentMethodType\PaymentMethodTypeInterface[]
    */
-  protected $paymentMethodTypes;
+  protected $paymentMethodTypes = [];
 
   /**
    * The time.
@@ -91,73 +76,39 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
   protected $minorUnitsConverter;
 
   /**
-   * Constructs a new PaymentGatewayBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
-   *   The payment type manager.
-   * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
-   *   The payment method type manager.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time.
-   * @param \Drupal\commerce_price\MinorUnitsConverterInterface $minor_units_converter
-   *   The minor units converter.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, MinorUnitsConverterInterface $minor_units_converter = NULL) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->entityTypeManager = $entity_type_manager;
-    $this->time = $time;
-    if (!$minor_units_converter instanceof MinorUnitsConverterInterface) {
-      @trigger_error('Calling PaymentGatewayBase::__construct() with the $minor_units_converter argument is supported in commerce:2.25 and will be required before commerce:3.0. See https://www.drupal.org/project/commerce/issues/3150917.', E_USER_DEPRECATED);
-      $minor_units_converter = \Drupal::service('commerce_price.minor_units_converter');
-    }
-    $this->minorUnitsConverter = $minor_units_converter;
-
-    if (array_key_exists('_entity', $configuration)) {
-      $this->parentEntity = $configuration['_entity'];
-      $this->entityId = $this->parentEntity->id();
-      unset($configuration['_entity']);
-    }
-    // Instantiate the types right away to ensure that their IDs are valid.
-    $this->paymentType = $payment_type_manager->createInstance($this->pluginDefinition['payment_type']);
-    foreach ($this->pluginDefinition['payment_method_types'] as $plugin_id) {
-      $this->paymentMethodTypes[$plugin_id] = $payment_method_type_manager->createInstance($plugin_id);
-    }
-    $this->pluginDefinition['forms'] += $this->getDefaultForms();
-    $this->setConfiguration($configuration);
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_payment_type'),
-      $container->get('plugin.manager.commerce_payment_method_type'),
-      $container->get('datetime.time'),
-      $container->get('commerce_price.minor_units_converter')
-    );
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    /** @var \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager */
+    $payment_type_manager = $container->get('plugin.manager.commerce_payment_type');
+    /** @var \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager */
+    $payment_method_type_manager = $container->get('plugin.manager.commerce_payment_method_type');
+    $instance->time = $container->get('datetime.time');
+    $instance->minorUnitsConverter = $container->get('commerce_price.minor_units_converter');
+
+    if (array_key_exists('_entity', $configuration)) {
+      $instance->parentEntity = $configuration['_entity'];
+      unset($configuration['_entity']);
+    }
+    $instance->paymentType = $payment_type_manager->createInstance($plugin_definition['payment_type']);
+    foreach ($plugin_definition['payment_method_types'] as $plugin_id) {
+      $instance->paymentMethodTypes[$plugin_id] = $payment_method_type_manager->createInstance($plugin_id);
+    }
+    $instance->pluginDefinition['forms'] += $instance->getDefaultForms();
+    $instance->setConfiguration($configuration);
+
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     if (!empty($this->parentEntity)) {
       $this->_parentEntityId = $this->parentEntity->id();
-      unset($this->parentEntity);
+      $this->parentEntity = NULL;
     }
 
     return parent::__sleep();
@@ -166,13 +117,13 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
   /**
    * {@inheritdoc}
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     parent::__wakeup();
 
     if (!empty($this->_parentEntityId)) {
       $payment_gateway_storage = $this->entityTypeManager->getStorage('commerce_payment_gateway');
       $this->parentEntity = $payment_gateway_storage->load($this->_parentEntityId);
-      unset($this->_parentEntityId);
+      $this->_parentEntityId = NULL;
     }
   }
 
@@ -248,6 +199,20 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
   /**
    * {@inheritdoc}
    */
+  public function getLibraries(): array {
+    $libraries = $this->pluginDefinition['libraries'];
+    if (!empty($this->pluginDefinition['js_library'])) {
+      @trigger_error('\Drupal\commerce_payment\Attribute\CommercePaymentGateway::jsLibrary has been deprecated in favor of \Drupal\commerce_payment\Attribute\CommercePaymentGateway::libraries. Use that instead.');
+      $libraries[] = $this->pluginDefinition['js_library'];
+      // Remove duplication if occurs.
+      $libraries = array_unique($libraries);
+    }
+    return $libraries;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPaymentType() {
     return $this->paymentType;
   }
@@ -305,10 +270,14 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
    */
   public function setConfiguration(array $configuration) {
     $this->configuration = NestedArray::mergeDeep($this->defaultConfiguration(), $configuration);
-    // Providing a default for payment_metod_types in defaultConfiguration()
+    // Providing a default for payment_method_types in defaultConfiguration()
     // doesn't work because NestedArray::mergeDeep causes duplicates.
     if (empty($this->configuration['payment_method_types'])) {
       $this->configuration['payment_method_types'][] = 'credit_card';
+    }
+    else {
+      // Remove any duplicates caused by NestedArray::mergeDeep.
+      $this->configuration['payment_method_types'] = array_unique($this->configuration['payment_method_types']);
     }
   }
 
@@ -476,13 +445,6 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function toMinorUnits(Price $amount) {
-    return $this->minorUnitsConverter->toMinorUnits($amount);
-  }
-
-  /**
    * {@inheritDoc}
    */
   public function getRemoteCustomerId(UserInterface $account) {
@@ -551,12 +513,12 @@ abstract class PaymentGatewayBase extends PluginBase implements PaymentGatewayIn
    * @throws \Drupal\commerce_payment\Exception\HardDeclineException
    *   Thrown when the payment method has expired.
    */
-  protected function assertPaymentMethod(PaymentMethodInterface $payment_method = NULL) {
+  protected function assertPaymentMethod(?PaymentMethodInterface $payment_method = NULL) {
     if (empty($payment_method)) {
       throw new \InvalidArgumentException('The provided payment has no payment method referenced.');
     }
     if ($payment_method->isExpired()) {
-      throw new HardDeclineException('The provided payment method has expired');
+      throw HardDeclineException::createForPayment($payment_method, 'The provided payment method has expired');
     }
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
@@ -12,9 +14,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 abstract class OptionsFieldUnitTestBase extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['options'];
 
@@ -49,7 +49,7 @@ abstract class OptionsFieldUnitTestBase extends FieldKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->fieldStorageDefinition = [

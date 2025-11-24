@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.iservice.icontrol.serviceorder.create request
  *
  * @author auto create
- * @since 1.0, 2024-04-28 20:49:26
+ * @since 1.0, 2024-11-01 15:47:21
  */
 class AlipayIserviceIcontrolServiceorderCreateRequest
 {

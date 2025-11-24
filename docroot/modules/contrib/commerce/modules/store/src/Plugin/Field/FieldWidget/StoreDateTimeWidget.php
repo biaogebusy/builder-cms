@@ -3,9 +3,11 @@
 namespace Drupal\commerce_store\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
@@ -25,15 +27,12 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
  * If the user enters "2019-10-31 23:59:00", the value is stored and loaded
  * as-is. Once the timezone is assigned, it becomes "2019-10-31 23:59:00 EST",
  * assuming that the current store's timezone is EST.
- *
- * @FieldWidget(
- *   id = "commerce_store_datetime",
- *   label = @Translation("Date and time (Store timezone)"),
- *   field_types = {
- *     "datetime"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_store_datetime",
+  label: new TranslatableMarkup("Date and time (Store timezone)"),
+  field_types: ["datetime"],
+)]
 class StoreDateTimeWidget extends WidgetBase {
 
   /**

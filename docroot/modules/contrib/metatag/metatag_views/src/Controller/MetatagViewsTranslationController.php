@@ -2,6 +2,7 @@
 
 namespace Drupal\metatag_views\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -9,7 +10,6 @@ use Drupal\Core\Url;
 use Drupal\metatag\MetatagManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
  * Translate Views meta tags.

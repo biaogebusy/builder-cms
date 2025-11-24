@@ -9,8 +9,6 @@ use Drupal\entity_share_server\OperatorsHelper;
 
 /**
  * Form to add a filter on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class FilterAddForm extends FilterBaseForm {
 
@@ -44,9 +42,9 @@ class FilterAddForm extends FilterBaseForm {
       '#empty_option' => $this->t('Select an operator'),
       '#required' => TRUE,
       '#ajax' => [
-        'callback' => [get_class($this), 'buildAjaxValueElement'],
+        'callback' => [static::class, 'buildAjaxValueElement'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'value-wrapper',
       ],
     ];
@@ -79,7 +77,7 @@ class FilterAddForm extends FilterBaseForm {
     $channel = $this->entity;
     $channel_filters = $channel->get('channel_filters');
 
-    if (is_null($channel_filters)) {
+    if ($channel_filters === NULL) {
       $channel_filters = [];
     }
 
@@ -90,8 +88,8 @@ class FilterAddForm extends FilterBaseForm {
     ];
 
     $value = $form_state->getValue(['value_wrapper', 'value']);
-    if (!is_null($value)) {
-      $new_filter['value'] = array_filter($value);
+    if ($value !== NULL) {
+      $new_filter['value'] = \array_filter($value);
     }
 
     $memberof = $form_state->getValue('memberof');
@@ -123,7 +121,7 @@ class FilterAddForm extends FilterBaseForm {
     }
 
     // Operators which do not require value.
-    if (in_array($selected_operator, OperatorsHelper::getStandAloneOperators())) {
+    if (\in_array($selected_operator, OperatorsHelper::getStandAloneOperators(), TRUE)) {
       return;
     }
 
@@ -135,7 +133,7 @@ class FilterAddForm extends FilterBaseForm {
       $form_state->set('number_of_values', $number_of_values);
     }
 
-    for ($i = 0; $i < $number_of_values; $i++) {
+    for ($i = 0; $i < $number_of_values; ++$i) {
       $form['value_wrapper']['value'][$i] = [
         '#type' => 'textfield',
         '#title' => $this->t('Value'),

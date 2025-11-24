@@ -41,4 +41,18 @@ class ViewsReferenceSelectWidget extends OptionsSelectWidget {
     return $select_element;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function validateElement(array $element, FormStateInterface $form_state) {
+    parent::validateElement($element, $form_state);
+    if (isset($element['#array_parents'][0])) {
+      $key = $element['#array_parents'][0];
+      $field_values = $form_state->getValue($key);
+      if (is_array($field_values)) {
+        self::validateDisplayId($field_values, $form_state, $key);
+      }
+    }
+  }
+
 }

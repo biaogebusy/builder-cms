@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Theme;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -19,7 +21,7 @@ class MessageTest extends KernelTestBase {
   /**
    * Tests setting messages output.
    */
-  public function testMessages() {
+  public function testMessages(): void {
     // Enable the Starterkit theme.
     \Drupal::service('theme_installer')->install(['starterkit_theme']);
     $this->config('system.theme')->set('default', 'starterkit_theme')->save();

@@ -19,7 +19,7 @@ use Drupal\views\Views;
  *   id = "viewsreference",
  *   label = @Translation("Views reference"),
  *   description = @Translation("A field reference to a view."),
- *   category = @Translation("Reference"),
+ *   category = "reference",
  *   default_widget = "viewsreference_autocomplete",
  *   default_formatter = "viewsreference_formatter",
  *   list_class = "\Drupal\viewsreference\Plugin\Field\ViewsReferenceFieldItemList",
@@ -121,6 +121,7 @@ class ViewsReferenceItem extends EntityReferenceItem {
       '#title' => $this->t('View display plugins to allow'),
       '#default_value' => $default_plugins,
       '#weight' => 1,
+      '#required' => TRUE,
     ];
 
     $form['preselect_views'] = [
@@ -199,17 +200,6 @@ class ViewsReferenceItem extends EntityReferenceItem {
       $options[$view->get('id')] = $view->get('label');
     }
     return $options;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isEmpty() {
-    // Avoid loading the entity by first checking the 'display_id'.
-    if (NULL === $this->display_id || '' == $this->display_id) {
-      return TRUE;
-    }
-    return parent::isEmpty();
   }
 
 }

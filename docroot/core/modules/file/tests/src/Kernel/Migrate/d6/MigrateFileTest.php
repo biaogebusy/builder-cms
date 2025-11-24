@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate\d6;
 
 use Drupal\file\Entity\File;
@@ -30,6 +32,13 @@ class MigrateFileTest extends MigrateDrupal6TestBase implements MigrateDumpAlter
    */
   protected function setUp(): void {
     parent::setUp();
+
+    // Remove the file_directory_path to test site_path setting.
+    // @see \Drupal\Tests\file\Kernel\Migrate\d6\FileMigrationTestTrait::prepareMigration()
+    Database::getConnection('default', 'migrate')
+      ->delete('variable')
+      ->condition('name', 'file_directory_path')
+      ->execute();
 
     $this->setUpMigratedFiles();
   }
@@ -66,11 +75,11 @@ class MigrateFileTest extends MigrateDrupal6TestBase implements MigrateDumpAlter
   /**
    * Tests the Drupal 6 files to Drupal 8 migration.
    */
-  public function testFiles() {
+  public function testFiles(): void {
     $this->assertEntity(1, 'Image1.png', 39325, 'public://image-1.png', 'image/png', 1);
     $this->assertEntity(2, 'Image2.jpg', 1831, 'public://image-2.jpg', 'image/jpeg', 1);
     $this->assertEntity(3, 'image-3.jpg', 1831, 'public://image-3.jpg', 'image/jpeg', 1);
-    $this->assertEntity(4, 'html-1.txt', 24, 'public://html-1.txt', 'text/plain', 1);
+    $this->assertEntity(4, 'html-1.txt', 19, 'public://html-1.txt', 'text/plain', 1);
     // Ensure temporary file was not migrated.
     $this->assertNull(File::load(6));
 
@@ -97,11 +106,11 @@ class MigrateFileTest extends MigrateDrupal6TestBase implements MigrateDumpAlter
       ->truncate($map_table)
       ->execute();
 
-    // Update the file_directory_path.
+    // Set the file_directory_path.
     Database::getConnection('default', 'migrate')
-      ->update('variable')
-      ->fields(['value' => serialize('files/test')])
-      ->condition('name', 'file_directory_path')
+      ->insert('variable')
+      ->fields(['name', 'value'])
+      ->values(['name' => 'file_directory_path', 'value' => serialize('files/test')])
       ->execute();
 
     $this->executeMigration('d6_file');

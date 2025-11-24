@@ -21,6 +21,11 @@ use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 class Paragraphs extends FieldPluginBase {
 
   /**
+   * Recursion counter.
+   */
+  static int $recursionCounter = 0;
+
+  /**
    * {@inheritdoc}
    */
   public function defineValueProcessPipeline(MigrationInterface $migration, $field_name, $data) {
@@ -67,6 +72,15 @@ class Paragraphs extends FieldPluginBase {
     // @todo: This is a great example why we should consider derive paragraph
     // migrations based on parent entity type (and bundle).
     if (!in_array('Paragraphs Content', $migration->getMigrationTags(), TRUE)) {
+
+      // Workaround for recursion on D11+, because getMigrationDependencies()
+      // expands plugins, it will go through the deriver again, which will create
+      // a stub migration again.
+      if (static::$recursionCounter > 0) {
+        return;
+      }
+      static::$recursionCounter++;
+
       $dependencies = $migration->getMigrationDependencies() + ['required' => []];
       $dependencies['required'] = array_unique(array_merge(array_values($dependencies['required']), [
         'd7_paragraphs',
@@ -79,6 +93,8 @@ class Paragraphs extends FieldPluginBase {
         ]));
         $migration->set('migration_dependencies', $dependencies);
       }
+
+      static::$recursionCounter--;
     }
   }
 

@@ -4,12 +4,14 @@ namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Verifies that the "Search excerpt" field in entity displays works correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ExcerptFieldTest extends SearchApiBrowserTestBase {
 
   use ExampleContentTrait;
@@ -52,6 +54,8 @@ class ExcerptFieldTest extends SearchApiBrowserTestBase {
 
   /**
    * Tests that the "Search excerpt" field in entity displays works correctly.
+   *
+   * @see search_api_test_excerpt_field_search_api_results_alter()
    */
   public function testSearchExcerptField() {
     $assertSession = $this->assertSession();
@@ -64,8 +68,7 @@ class ExcerptFieldTest extends SearchApiBrowserTestBase {
 
     // Visiting the same page a second time retrieves the rendered node from
     // cache, not using the updated test excerpt template.
-    $stateKey = 'search_api_test_excerpt_field';
-    \Drupal::state()->set($stateKey, 'test--{{item_id}}--excerpt');
+    \Drupal::keyValue('search_api_test')->set('excerpt_template', 'test--{{item_id}}--excerpt');
     $this->drupalGet($path);
     foreach ($this->ids as $itemId) {
       $assertSession->pageTextContains("Item $itemId test excerpt");

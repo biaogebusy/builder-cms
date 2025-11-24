@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Http;
 
 use Drupal\Core\Cache\CacheableMetadata;
@@ -29,7 +31,7 @@ class CacheableExceptionTest extends UnitTestCase {
   /**
    * @covers \Drupal\Core\Http\Exception\CacheableHttpException
    */
-  public function testCacheableHttpException() {
+  public function testCacheableHttpException(): void {
     $exception = new CacheableHttpException((new CacheableMetadata())->setCacheContexts(['route']), 500, 'test message', NULL, ['X-Drupal-Exception' => 'Test'], 123);
     $this->assertSame(['route'], $exception->getCacheContexts());
     $this->assertSame(500, $exception->getStatusCode());
@@ -41,29 +43,31 @@ class CacheableExceptionTest extends UnitTestCase {
   /**
    * @dataProvider providerTestExceptions
    */
-  public function testExceptions($status_code, $class, $argument = NULL, $expected_headers = []) {
+  public function testExceptions($status_code, $class, $argument = NULL, $expected_headers = []): void {
     $cacheable_metadata = (new CacheableMetadata())->setCacheContexts(['route']);
     $message = "$class test message";
+    $previous = new class('Error of PHP 7+') extends \Error {};
     if ($argument) {
-      $exception = new $class($cacheable_metadata, $argument, $message, NULL, 123);
+      $exception = new $class($cacheable_metadata, $argument, $message, $previous, 123);
     }
     else {
-      $exception = new $class($cacheable_metadata, $message, NULL, 123);
+      $exception = new $class($cacheable_metadata, $message, $previous, 123);
     }
     $this->assertSame(['route'], $exception->getCacheContexts());
     $this->assertSame($message, $exception->getMessage());
     $this->assertSame($status_code, $exception->getStatusCode());
     $this->assertSame($expected_headers, $exception->getHeaders());
+    $this->assertSame($previous, $exception->getPrevious());
     $this->assertSame(123, $exception->getCode());
   }
 
-  public function providerTestExceptions() {
+  public static function providerTestExceptions() {
     return [
       [400, CacheableBadRequestHttpException::class],
       [401, CacheableUnauthorizedHttpException::class, 'test challenge', ['WWW-Authenticate' => 'test challenge']],
       [403, CacheableAccessDeniedHttpException::class],
       [404, CacheableNotFoundHttpException::class],
-      [405, CacheableMethodNotAllowedHttpException::Class, ['POST', 'PUT'], ['Allow' => 'POST, PUT']],
+      [405, CacheableMethodNotAllowedHttpException::class, ['POST', 'PUT'], ['Allow' => 'POST, PUT']],
       [406, CacheableNotAcceptableHttpException::class],
       [409, CacheableConflictHttpException::class],
       [410, CacheableGoneHttpException::class],

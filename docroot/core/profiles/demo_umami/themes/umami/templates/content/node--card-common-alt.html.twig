@@ -56,18 +56,67 @@
  * - view_mode: View mode; for example, "teaser" or "full".
  * - teaser: Flag for the teaser state. Will be true if view_mode is 'teaser'.
  * - page: Flag for the full page state. Will be true if view_mode is 'full'.
- * - readmore: Flag for more state. Will be true if the teaser content of the
- *   node cannot hold the main body content.
- * - logged_in: Flag for authenticated user status. Will be true when the
- *   current user is a logged-in member.
- * - is_admin: Flag for admin user status. Will be true when the current user
- *   is an administrator.
  *
  * @see template_preprocess_node()
  */
 #}
-{% extends "node--card-common.html.twig" %}
+{%
+  set classes = [
+    'node',
+    'node--type-' ~ node.bundle|clean_class,
+    node.isPromoted() ? 'node--promoted',
+    node.isSticky() ? 'node--sticky',
+    not node.isPublished() ? 'node--unpublished',
+    view_mode ? 'node--view-mode-' ~ view_mode|clean_class,
+    'umami-card--alt',
+  ]
+%}
+{{ attach_library('umami/classy.node') }}
 
-{% block libraries %}
-  {{ attach_library('umami/view-mode-card-common-alt') }}
-{% endblock %}
+{% set read_more %}
+{% trans %}View {{ node.type.entity.label() }}{% endtrans %}
+{% endset %}
+
+{% embed "umami:card" with {
+  attributes: attributes.addClass(classes),
+  content,
+  content_attributes,
+  label,
+  title_attributes,
+  title_prefix,
+  title_suffix,
+  read_more,
+  url,
+  } only %}
+  {% block content %}
+    <div{{ content_attributes.addClass('umami-card__content') }}>
+      {{ content }}
+    </div>
+    {% embed "umami:title" with {
+      attributes: title_attributes.addClass('umami-card__title'),
+      label: label ? label : content.field_title,
+      title_prefix,
+      title_suffix,
+    } only %}
+      {% block title_prefix %}
+        {{ title_prefix }}
+      {% endblock %}
+      {% block title_suffix %}
+        {{ title_suffix }}
+      {% endblock %}
+    {% endembed %}
+    {% embed "umami:read-more" with {
+      attributes: create_attribute({'class': ['umami-card__read-more']}),
+      read_more,
+      label,
+      url
+    } only %}
+      {% block a11y %}
+        {{ label }}
+      {% endblock %}
+      {% block text %}
+        {{ read_more }}
+      {% endblock %}
+    {% endembed %}
+  {% endblock %}
+{% endembed %}

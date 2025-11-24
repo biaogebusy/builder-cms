@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_price\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_price\Plugin\Field\FieldType\PriceItem;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests the formatted price data type for price fields.

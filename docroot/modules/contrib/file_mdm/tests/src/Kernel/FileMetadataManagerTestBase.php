@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file_mdm\Kernel;
 
+use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\file_mdm\FileMetadataInterface;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -10,21 +14,9 @@ use Drupal\KernelTests\KernelTestBase;
  */
 abstract class FileMetadataManagerTestBase extends KernelTestBase {
 
-  /**
-   * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected $fileSystem;
+  protected readonly FileSystemInterface $fileSystem;
+  protected readonly ModuleExtensionList $moduleList;
 
-  /**
-   * @var \Drupal\Core\Extension\ModuleExtensionList
-   */
-  protected $moduleList;
-
-  /**
-   * {@inheritdoc}
-   */
   public function setUp(): void {
     parent::setUp();
     $this->fileSystem = \Drupal::service('file_system');
@@ -46,7 +38,7 @@ abstract class FileMetadataManagerTestBase extends KernelTestBase {
    * @return int
    *   The count of metadata keys found in the file.
    */
-  protected function countMetadataKeys(FileMetadataInterface $file_md, $metadata_id, $options = NULL) {
+  protected function countMetadataKeys(FileMetadataInterface $file_md, string $metadata_id, mixed $options = NULL): int {
     $supported_keys = $file_md->getSupportedKeys($metadata_id, $options);
     $count = 0;
     foreach ($supported_keys as $key) {

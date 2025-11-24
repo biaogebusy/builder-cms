@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to edit a group on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class GroupEditForm extends GroupBaseForm {
 
@@ -38,7 +36,7 @@ class GroupEditForm extends GroupBaseForm {
     $channel = $this->entity;
     $channel_groups = $channel->get('channel_groups');
     $group_id = $this->getgroupId();
-    if (is_null($channel_groups)) {
+    if ($channel_groups === NULL) {
       $channel_groups = [];
     }
 
@@ -65,7 +63,7 @@ class GroupEditForm extends GroupBaseForm {
       '#title' => $this->t('Parent group'),
       '#options' => $this->getGroupOptions($group_id),
       '#empty_option' => $this->t('Select a group'),
-      '#default_value' => isset($channel_groups[$group_id]['memberof']) ? $channel_groups[$group_id]['memberof'] : '',
+      '#default_value' => $channel_groups[$group_id]['memberof'] ?? '',
     ];
 
     return $form;

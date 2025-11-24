@@ -1,5 +1,0 @@
-{
-    "name": "drupal/lightning_roles",
-    "type": "drupal-module",
-    "description": "Automatically manages user roles and permissions."
-}

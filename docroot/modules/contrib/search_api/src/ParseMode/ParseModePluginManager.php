@@ -4,35 +4,40 @@ namespace Drupal\search_api\ParseMode;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\search_api\Annotation\SearchApiParseMode as SearchApiParseModeAnnotation;
+use Drupal\search_api\Attribute\SearchApiParseMode as SearchApiParseModeAttribute;
 use Drupal\search_api\Event\SearchApiEvents;
 use Drupal\search_api\SearchApiPluginManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Manages parse mode plugins.
  *
- * @see \Drupal\search_api\Annotation\SearchApiParseMode
+ * @see \Drupal\search_api\Attribute\SearchApiParseMode
  * @see \Drupal\search_api\ParseMode\ParseModeInterface
  * @see \Drupal\search_api\ParseMode\ParseModePluginBase
  * @see plugin_api
  */
 class ParseModePluginManager extends SearchApiPluginManager {
 
-  /**
-   * Constructs a ParseModePluginManager object.
-   *
-   * @param \Traversable $namespaces
-   *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   Cache backend instance to use.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
-   *   The event dispatcher.
-   */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EventDispatcherInterface $eventDispatcher) {
-    parent::__construct('Plugin/search_api/parse_mode', $namespaces, $module_handler, $eventDispatcher, 'Drupal\search_api\ParseMode\ParseModeInterface', 'Drupal\search_api\Annotation\SearchApiParseMode');
+  public function __construct(
+    #[Autowire(service: 'container.namespaces')]
+    \Traversable $namespaces,
+    #[Autowire(service: 'cache.discovery')]
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+    EventDispatcherInterface $eventDispatcher,
+  ) {
+    parent::__construct(
+      'Plugin/search_api/parse_mode',
+      $namespaces,
+      $module_handler,
+      $eventDispatcher,
+      ParseModeInterface::class,
+      SearchApiParseModeAttribute::class,
+      SearchApiParseModeAnnotation::class,
+    );
 
     $this->setCacheBackend($cache_backend, 'search_api_parse_mode');
     $this->alterInfo('search_api_parse_mode_info');

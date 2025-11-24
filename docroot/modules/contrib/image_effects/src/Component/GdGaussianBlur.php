@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -31,8 +33,8 @@ abstract class GdGaussianBlur {
    * @return float[]
    *   The array of coefficients to use for the blur.
    */
-  public static function gaussianCoeffs($radius, $sigma_arg = NULL) {
-    $sigma = $sigma_arg === NULL ? $radius * 2 / 3 : $sigma_arg;
+  public static function gaussianCoeffs(int $radius, ?float $sigma_arg = NULL): array {
+    $sigma = $sigma_arg ?? $radius * 2 / 3;
     $s = $sigma * $sigma * 2;
 
     $result = [];
@@ -54,10 +56,10 @@ abstract class GdGaussianBlur {
   /**
    * Applies the Gaussian coefficients to the destination image.
    *
-   * @param resource $src
-   *   The source image resource.
-   * @param resource $dst
-   *   The destination image resource.
+   * @param \GDImage $src
+   *   The source image.
+   * @param \GDImage $dst
+   *   The destination image.
    * @param float[] $coeffs
    *   The array of coefficients to use for the blur.
    * @param int $radius
@@ -65,7 +67,7 @@ abstract class GdGaussianBlur {
    * @param string $axis
    *   The direction of the blur.
    */
-  public static function applyCoeffs($src, $dst, array $coeffs, $radius, $axis) {
+  public static function applyCoeffs(\GDImage $src, \GDImage $dst, array $coeffs, int $radius, string $axis): void {
     if ($axis === 'HORIZONTAL') {
       $numlines = imagesy($src);
       $linelen = imagesx($src);
@@ -83,10 +85,10 @@ abstract class GdGaussianBlur {
   /**
    * Applies the Gaussian coefficients to a line of the destination image.
    *
-   * @param resource $src
-   *   The source image resource.
-   * @param resource $dst
-   *   The destination image resource.
+   * @param \GDImage $src
+   *   The source image.
+   * @param \GDImage $dst
+   *   The destination image.
    * @param int $line
    *   The image's line to be processed.
    * @param int $linelen
@@ -98,7 +100,7 @@ abstract class GdGaussianBlur {
    * @param string $axis
    *   The direction of the blur.
    */
-  protected static function applyCoeffsLine($src, $dst, $line, $linelen, array $coeffs, $radius, $axis) {
+  protected static function applyCoeffsLine(\GDImage $src, \GDImage $dst, int $line, int $linelen, array $coeffs, int $radius, string $axis): void {
     // Preloads line's pixels colors to minimize calls to imagexxx functions.
     $pixels = [];
     for ($ndx = 0; $ndx < $linelen; $ndx++) {
@@ -120,7 +122,7 @@ abstract class GdGaussianBlur {
         $a += $coeff * $pixels[$rndx]['alpha'];
       }
 
-      // Set resulting pixel color on the destination resource.
+      // Set resulting pixel color on the destination image.
       $dst_color = imagecolorallocatealpha($dst, static::ucharClamp($r, 0xFF), static::ucharClamp($g, 0xFF), static::ucharClamp($b, 0xFF), static::ucharClamp($a, 0x7F));
       if ($axis === 'HORIZONTAL') {
         imagesetpixel($dst, $ndx, $line, $dst_color);
@@ -145,7 +147,7 @@ abstract class GdGaussianBlur {
    *   The input value if in-bounds, otherwise the reflected value within the
    *   range.
    */
-  protected static function reflect($max, $x) {
+  protected static function reflect(int $max, int $x): int {
     if ($x < 0) {
       return -$x;
     }
@@ -175,7 +177,7 @@ abstract class GdGaussianBlur {
    * @return int
    *   The converted value.
    */
-  protected static function ucharClamp($clr, $max) {
+  protected static function ucharClamp(float $clr, int $max): int {
     // Convert and clamp.
     $result = (int) ($clr + 0.5);
     if ($result > $max) {

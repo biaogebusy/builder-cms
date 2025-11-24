@@ -40,13 +40,13 @@ class EckEntityListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $entityTypeId = $entity->getEntityTypeId();
-    $entityBundle = $entity->type->entity->label();
+    $entityBundle = $entity->type->entity;
     $route = "entity.{$entityTypeId}.canonical";
     $routeArguments = [$entityTypeId => $entity->id()];
 
     $row['id'] = $entity->id();
     $row['title'] = new Link($entity->label(), Url::fromRoute($route, $routeArguments));
-    $row['bundle'] = $entityBundle;
+    $row['bundle'] = $entityBundle ? $entityBundle->label() : '';
 
     return array_merge($row, parent::buildRow($entity));
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Site;
 
 use Composer\Autoload\ClassLoader;
@@ -33,6 +35,8 @@ class SettingsTest extends UnitTestCase {
    * @covers ::__construct
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->config = [
       'one' => '1',
       'two' => '2',
@@ -44,7 +48,7 @@ class SettingsTest extends UnitTestCase {
   /**
    * @covers ::get
    */
-  public function testGet() {
+  public function testGet(): void {
     // Test stored settings.
     $this->assertEquals($this->config['one'], Settings::get('one'), 'The correct setting was not returned.');
     $this->assertEquals($this->config['two'], Settings::get('two'), 'The correct setting was not returned.');
@@ -57,14 +61,14 @@ class SettingsTest extends UnitTestCase {
   /**
    * @covers ::getAll
    */
-  public function testGetAll() {
+  public function testGetAll(): void {
     $this->assertEquals($this->config, Settings::getAll());
   }
 
   /**
    * @covers ::getInstance
    */
-  public function testGetInstance() {
+  public function testGetInstance(): void {
     $singleton = $this->settings->getInstance();
     $this->assertEquals($singleton, $this->settings);
   }
@@ -74,7 +78,7 @@ class SettingsTest extends UnitTestCase {
    *
    * @covers ::getHashSalt
    */
-  public function testGetHashSalt() {
+  public function testGetHashSalt(): void {
     $this->assertSame($this->config['hash_salt'], $this->settings->getHashSalt());
   }
 
@@ -85,7 +89,7 @@ class SettingsTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetHashSaltEmpty
    */
-  public function testGetHashSaltEmpty(array $config) {
+  public function testGetHashSaltEmpty(array $config): void {
     // Re-create settings with no 'hash_salt' key.
     $settings = new Settings($config);
     $this->expectException(\RuntimeException::class);
@@ -97,7 +101,7 @@ class SettingsTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerTestGetHashSaltEmpty() {
+  public static function providerTestGetHashSaltEmpty() {
     return [
       [[]],
       [['hash_salt' => '']],
@@ -110,7 +114,7 @@ class SettingsTest extends UnitTestCase {
    *
    * @covers ::__sleep
    */
-  public function testSerialize() {
+  public function testSerialize(): void {
     $this->expectException(\LogicException::class);
     serialize(new Settings([]));
   }
@@ -120,7 +124,7 @@ class SettingsTest extends UnitTestCase {
    *
    * @covers ::getApcuPrefix
    */
-  public function testGetApcuPrefix() {
+  public function testGetApcuPrefix(): void {
     $settings = new Settings([
       'hash_salt' => 123,
       'apcu_ensure_unique_prefix' => TRUE,
@@ -139,13 +143,12 @@ class SettingsTest extends UnitTestCase {
    *
    * @covers ::getInstance
    */
-  public function testGetInstanceReflection() {
+  public function testGetInstanceReflection(): void {
     $settings = new Settings([]);
 
     $class = new \ReflectionClass(Settings::class);
     $instance_property = $class->getProperty("instance");
-    $instance_property->setAccessible(TRUE);
-    $instance_property->setValue(NULL);
+    $instance_property->setValue(NULL, NULL);
 
     $this->expectException(\BadMethodCallException::class);
     $settings->getInstance();
@@ -198,10 +201,9 @@ class SettingsTest extends UnitTestCase {
 
     $class = new \ReflectionClass(Settings::class);
     $instance_property = $class->getProperty('deprecatedSettings');
-    $instance_property->setAccessible(TRUE);
     $deprecated_settings = $instance_property->getValue();
     $deprecated_settings['deprecated_legacy'] = $deprecated_setting;
-    $instance_property->setValue($deprecated_settings);
+    $instance_property->setValue(NULL, $deprecated_settings);
 
     if ($expect_deprecation_message) {
       $this->expectDeprecation($deprecated_setting['message']);
@@ -218,7 +220,7 @@ class SettingsTest extends UnitTestCase {
    *
    * @see self::providerTestRealDeprecatedSettings()
    */
-  public function providerTestFakeDeprecatedSettings(): array {
+  public static function providerTestFakeDeprecatedSettings(): array {
 
     $only_legacy = [
       'deprecated_legacy' => 'old',
@@ -304,24 +306,8 @@ class SettingsTest extends UnitTestCase {
   /**
    * Provides data for testRealDeprecatedSettings().
    */
-  public function providerTestRealDeprecatedSettings(): array {
+  public static function providerTestRealDeprecatedSettings(): array {
     return [
-      [
-        'sanitize_input_whitelist',
-        'The "sanitize_input_whitelist" setting is deprecated in drupal:9.1.0 and will be removed in drupal:10.0.0. Use Drupal\Core\Security\RequestSanitizer::SANITIZE_INPUT_SAFE_KEYS instead. See https://www.drupal.org/node/3163148.',
-      ],
-      [
-        'twig_sandbox_whitelisted_classes',
-        'The "twig_sandbox_whitelisted_classes" setting is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use "twig_sandbox_allowed_classes" instead. See https://www.drupal.org/node/3162897.',
-      ],
-      [
-        'twig_sandbox_whitelisted_methods',
-        'The "twig_sandbox_whitelisted_methods" setting is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use "twig_sandbox_allowed_methods" instead. See https://www.drupal.org/node/3162897.',
-      ],
-      [
-        'twig_sandbox_whitelisted_prefixes',
-        'The "twig_sandbox_whitelisted_prefixes" setting is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use "twig_sandbox_allowed_prefixes" instead. See https://www.drupal.org/node/3162897.',
-      ],
       [
         'block_interest_cohort',
         'The "block_interest_cohort" setting is deprecated in drupal:9.5.0. This setting should be removed from the settings file, since its usage has been removed. See https://www.drupal.org/node/3320787.',
@@ -382,7 +368,7 @@ class SettingsTest extends UnitTestCase {
   /**
    * Provides data for testDatabaseInfoInitialization().
    */
-  public function providerTestDatabaseInfoInitialization(): array {
+  public static function providerTestDatabaseInfoInitialization(): array {
     return [
       ['mysql', NULL, NULL, 'Drupal\\mysql\\Driver\\Database\\mysql', 'core/modules/mysql/src/Driver/Database/mysql/'],
       ['mysql', '', NULL, 'Drupal\\mysql\\Driver\\Database\\mysql', 'core/modules/mysql/src/Driver/Database/mysql/'],

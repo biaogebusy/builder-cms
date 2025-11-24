@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
@@ -39,7 +41,7 @@ class PreviewTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
 
     ViewTestData::createTestViews(self::class, ['views_test_config']);
@@ -114,7 +116,7 @@ class PreviewTest extends WebDriverTestBase {
    *
    * @see https://www.drupal.org/node/2452659
    */
-  public function testTaxonomyAJAX() {
+  public function testTaxonomyAJAX(): void {
     \Drupal::service('module_installer')->install(['taxonomy']);
     $this->getPreviewAJAX('taxonomy_term', 'page_1', 0);
   }
@@ -122,7 +124,7 @@ class PreviewTest extends WebDriverTestBase {
   /**
    * Tests pagers in the preview form.
    */
-  public function testPreviewWithPagersUI() {
+  public function testPreviewWithPagersUI(): void {
     // Create 11 nodes and make sure that everyone is returned.
     $this->drupalCreateContentType(['type' => 'page']);
     for ($i = 0; $i < 11; $i++) {
@@ -227,7 +229,7 @@ class PreviewTest extends WebDriverTestBase {
   /**
    * Tests the link to sort in the preview form.
    */
-  public function testPreviewSortLink() {
+  public function testPreviewSortLink(): void {
     // Get the preview.
     $this->getPreviewAJAX('test_click_sort_ajax', 'page_1', 0);
 

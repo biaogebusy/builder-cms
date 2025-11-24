@@ -2,8 +2,8 @@
 
 namespace Drupal\colorbox;
 
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Installer\InstallerKernel;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -105,7 +105,7 @@ class ColorboxAttachment implements ElementAttachmentInterface {
     // Add colorbox js settings.
     $page['#attached']['drupalSettings']['colorbox'] = $js_settings;
 
-    // Add and initialise the Colorbox plugin.
+    // Add and initialize the Colorbox plugin.
     if ($this->settings->get('advanced.compression_type') == 'minified') {
       $page['#attached']['library'][] = 'colorbox/colorbox';
     }

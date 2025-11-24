@@ -10,7 +10,7 @@ use Drupal\views\Views;
  *
  * @group token
  */
-class ViewsTest extends KernelTestBase {
+class ViewsTest extends TokenKernelTestBase {
 
   /**
    * {@inheritdoc}

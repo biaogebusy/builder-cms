@@ -6,7 +6,6 @@
 @import "../navigation/toolbar-menu";
 @import "../navigation/toolbar-block";
 @import "../navigation/toolbar-link";
-@import "../navigation/tooltip";
 
 // Toolbar Variables
 :root {
@@ -35,13 +34,13 @@ html.admin-toolbar-expanded {
 
 body.gin--navigation {
   @include mq($to: medium) {
-    padding-top: var(--gin-toolbar-y-offset) !important;
-    padding-left: var(--gin-toolbar-x-offset, 39px) !important;
+    padding-block-start: var(--gin-toolbar-y-offset) !important;
+    padding-inline-start: var(--gin-toolbar-x-offset, 39px) !important;
   }
 }
 
 .gin--navigation .gin-secondary-toolbar:not(.gin-secondary-toolbar--frontend) {
-  margin-bottom: var(--gin-spacing-xxs);
+  margin-block-end: var(--gin-spacing-xxs);
 }
 
 .gin--navigation .gin-secondary-toolbar--frontend {
@@ -49,29 +48,35 @@ body.gin--navigation {
   margin-inline-start: var(--gin-toolbar-x-offset);
 }
 
-// Set transtion to Gin's to avoid different speeds.
+// Set transition to Gin's to avoid different speeds.
 .admin-toolbar ~ .dialog-off-canvas-main-canvas,
 .gin--navigation .gin-secondary-toolbar--frontend {
-  transition: margin-inline-start var(--gin-transition-fast), margin-left var(--gin-transition-fast);
+  @media (prefers-reduced-motion: no-preference) {
+    transition: margin-inline-start var(--gin-transition-fast), margin-inline-start var(--gin-transition-fast);
+  }
 }
 
 // ----------
 // Navigation
 // ----------
 .gin--navigation {
-  font-family: var(--gin-font);
-  padding-top: 0 !important;
+  padding-block-start: 0 !important;
 
   .admin-toolbar {
-    top: 0;
+    font-family: var(--gin-font);
+    inset-block-start: 0;
     overflow-y: initial;
     padding-inline: 0;
     padding-block-start: 0;
-    border-right: 0;
-    box-shadow: 1px 0 0 var(--gin-border-color-layer);
+    border-inline-end: 1px solid var(--gin-border-color-layer);
 
     // Hide on smaller screens for now as this is not ready yet.
     @include mq($to: medium) {
+      display: none;
+    }
+
+    // Beta 1
+    &::after {
       display: none;
     }
   }
@@ -107,7 +112,11 @@ body.gin--navigation {
 
   // Navigation header
   .admin-toolbar__header {
-    margin-bottom: -4px;
+    margin-block-end: -.5rem;
+
+    &:has(img) {
+      margin-block-end: -1.25rem;
+    }
   }
 
   // Content block
@@ -130,17 +139,23 @@ body.gin--navigation {
   .toolbar-menu__item--level-1 {
     > .toolbar-link {
       padding-block: calc(var(--gin-spacing-xs) + 1px);
-      margin-bottom: var(--gin-spacing-xxxs);
+      margin-block-end: var(--gin-spacing-xxxs);
 
       &:focus {
         outline: none;
         box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);
       }
     }
-  }
 
-  .navigation-menu-wrapper.menu--logo {
-    margin-bottom: -5px;
+    // Beta 1
+    > .toolbar-link--create {
+      margin-block-start: var(--gin-spacing-l);
+    }
+
+    // Beta 1
+    > .toolbar-link--sidebar-toggle {
+      margin-block-end: calc(var(--gin-spacing-xxs) * -1);
+    }
   }
 
   .menu-item.current > .toolbar-link {
@@ -166,6 +181,10 @@ body.gin--navigation {
       &::before,
       &::after {
         background: var(--gin-color-primary);
+
+        @media (forced-colors: active) {
+          background-color: LinkText;
+        }
       }
 
       &:hover,
@@ -187,12 +206,16 @@ body.gin--navigation {
   .toolbar-link--sidebar-toggle:hover,
   .toolbar-link--sidebar-toggle:focus {
     color: var(--gin-color-primary-hover);
-    background-color: var(--gin-color-primary-light-hover);
+    background-color: var(--gin-bg-item-hover);
 
     // Icons
     &::before,
     &::after {
       background: var(--gin-color-primary);
+
+      @media (forced-colors: active) {
+        background-color: LinkText;
+      }
     }
   }
 
@@ -202,8 +225,10 @@ body.gin--navigation {
   .toolbar-menu__item--level-1 > .toolbar-link--manage-display,
   .toolbar-menu__item--level-1 > .toolbar-link--manage-permissions,
   .toolbar-menu__item--level-1 > .toolbar-link--delete,
-  .toolbar-menu__item--level-1 > .toolbar-link[class*="toolbar-link--admin-toolbar-tools-extra-linksentity"],
-  .toolbar-menu__item--level-1 > .toolbar-link--announcements-feed-announcement
+  .toolbar-menu__item--level-1 > .toolbar-link--announcements-feed-announcement,
+  .toolbar-menu__item--level-1 > .toolbar-link[class*="toolbar-link--admin-toolbar-tools-extra-"],
+  // Beta 1: Hide Admin Toolbar Extra links from Level 1
+  .toolbar-menu__item--level-1[data-url*="/media/add/"]
   {
     display: none;
   }
@@ -235,6 +260,16 @@ body.gin--navigation {
   .toolbar .toolbar-menu .toolbar-menu a {
     color: var(--gin-color-text);
   }
+
+  // Beta 1
+  .admin-toolbar__item {
+    flex-basis: unset;
+    flex-grow: unset;
+  }
+
+  .admin-toolbar__item > .toolbar-menu {
+    margin-block-start: 0;
+  }
 }
 
 // Submenu
@@ -252,10 +287,6 @@ html:not(.admin-toolbar-expanded) .gin--navigation .toolbar-menu__item--level-1.
 
 .toolbar-menu__item--to-title {
   padding-inline: 6px;
-
-  .toolbar-link:hover {
-    color: var(--gin-color-primary-hover);
-  }
 }
 
 .toolbar-menu__item--level-1 .toolbar-link,
@@ -267,7 +298,7 @@ html:not(.admin-toolbar-expanded) .gin--navigation .toolbar-menu__item--level-1.
 // module is still active
 .toolbar-anti-flicker.toolbar-loading.toolbar-fixed body.gin--navigation,
 .toolbar-anti-flicker.toolbar-loading.toolbar-fixed.toolbar-horizontal.toolbar-tray-open body.gin--navigation {
-  padding-top: 0;
+  padding-block-start: 0;
 }
 
 // --------------
@@ -296,7 +327,10 @@ button.toolbar-link--sidebar-toggle {
     opacity: .75;
     position: relative;
     mask-size: var(--space-s) var(--space-s);
-    transition: transform var(--gin-transition);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: transform var(--gin-transition);
+    }
   }
 
   &:hover::before,
@@ -306,12 +340,12 @@ button.toolbar-link--sidebar-toggle {
   }
 
   &[aria-expanded=false]::before {
-    left: 1px;
+    inset-inline-start: 1px;
     transform: rotate(-90deg);
   }
 
   &[aria-expanded=true]::before {
-    left: -1px;
+    inset-inline-start: -1px;
     transform: rotate(90deg);
   }
 }
@@ -321,7 +355,7 @@ button.toolbar-link--sidebar-toggle {
 // --------------
 
 .toolbar-link--has-icon {
-  --icon: icon('fallback'); /* Default icon, aka --basic */
+  --icon: #{icon('fallback')}; /* Default icon, aka --basic */
 
   &::before {
     width: var(--gin-icon-size-toolbar);
@@ -336,103 +370,74 @@ button.toolbar-link--sidebar-toggle {
   }
 }
 
-// Custom Gin Home logo
-.toolbar-link--gin-home {
-  color: var(--gin-bg-layer2);
-  box-sizing: border-box;
-  width: 40px;
-  height: 40px;
-  max-width: 40px;
-  padding: 10px !important; // make the logo 32px
-  margin: 6px 4px 0 !important;
+// Beta 1: Logo
+.admin-toolbar__logo {
+  margin: 0;
+  overflow: unset;
 
-  &, &:hover, &:focus {
-    background: var(--gin-color-primary) !important;
+  img {
+    width: 40px;
+    height: auto;
   }
 
-  &::before {
-    --icon: #{icon('drupal')};
-    background: var(--gin-bg-layer2) !important;
+  .toolbar-link:not(.toolbar-link--gin-home) {
+    padding: var(--gin-spacing-xxs) !important;
+    margin-block-start: var(--gin-spacing-xxs);
   }
 
-  span {
-    display: none;
-  }
+  // Custom Gin Home logo
+  .toolbar-link--gin-home {
+    color: var(--gin-bg-layer2);
+    box-sizing: border-box;
+    width: 40px;
+    height: 40px;
+    max-width: 40px;
+    padding: 10px !important;
+    margin-block: 6px 0 !important;
+    margin-inline: var(--gin-spacing-xxs) !important;
 
-  // Navigation expanded
-  .admin-toolbar-expanded & {
-    margin-inline-start: 0;
+    &, &:hover, &:focus {
+      background: var(--gin-color-primary) !important;
+
+      @media (forced-colors: active) {
+        background: CanvasText !important;
+      }
+    }
 
     &::before {
-      margin-inline-end: 0;
+      --icon: #{icon('drupal')};
+      background: var(--gin-bg-layer2) !important;
+
+      @media (forced-colors: active) {
+        background: Canvas !important;
+      }
+    }
+
+    span {
+      display: none;
+    }
+
+    // Navigation expanded
+    .admin-toolbar-expanded & {
+      margin-inline-start: 0;
+
+      &::before {
+        margin-inline-end: 0;
+      }
     }
   }
 }
 
-.toolbar-link--admin-toolbar-tools-help::before {
-  --icon: #{icon('tool')};
+// Beta 1
+.admin-toolbar__content .toolbar-block:nth-last-child(n+2)::after {
+  margin-block-start: calc(var(--gin-spacing-s) - var(--gin-spacing-xxs));
+  padding-block-start: calc(var(--gin-spacing-xs) + var(--gin-spacing-xxs));
+  content: "";
+  display: block;
+  border-block-start: 1px solid var(--gin-border-color-table);
 }
 
-.toolbar-link--system-themes-page::before {
-  --icon: #{icon('appearance')};
-}
-
-.toolbar-link--blocks::before {
-  --icon: #{icon('blocks')};
-}
-
-.toolbar-link--bookmarks::before {
-  --icon: #{icon('bookmarks')};
-}
-
-.toolbar-link--system-admin-config::before {
-  --icon: #{icon('config')};
-}
-
-.toolbar-link--content::before {
-  --icon: #{icon('content')};
-}
-
-.toolbar-link--create::before {
-  --icon: #{icon('create')};
-}
-
-.toolbar-link--system-modules-list::before {
-  --icon: #{icon('extend-new')};
-}
-
-.toolbar-link--files::before {
-  --icon: #{icon('files')};
-}
-
-.toolbar-link--help::before {
-  --icon: #{icon('help')};
-}
-
-.toolbar-link--media::before {
-  --icon: #{icon('media')};
-}
-
-.toolbar-link--entity-user-collection::before {
-  --icon: #{icon('people-new')};
-}
-
-.toolbar-link--system-admin-reports::before {
-  --icon: #{icon('reports')};
-}
-
-.toolbar-link--system-admin-structure::before {
-  --icon: #{icon('structure')};
-}
-
-.toolbar-link--sidebar-toggle[aria-expanded=false]::before,
-.toolbar-link--sidebar-toggle[aria-expanded=true]::before {
-  --icon: #{icon('chevron-down')};
-}
-
-.toolbar-link--user::before {
-  --icon: #{icon('user')};
-}
+@import "../helpers/toolbar-icons";
 
 // -------------
 // Secondary nav
@@ -445,11 +450,7 @@ button.toolbar-link--sidebar-toggle {
   }
 
   .toolbar-tray .menu-item + .menu-item {
-    border-left: none;
-  }
-
-  .toolbar-secondary .toolbar-bar .toolbar-id--toolbar-icon-user {
-    margin-right: -1em;
+    border-inline-start: none;
   }
 }
 

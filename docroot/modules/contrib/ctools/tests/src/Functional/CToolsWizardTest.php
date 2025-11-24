@@ -33,23 +33,23 @@ class CToolsWizardTest extends BrowserTestBase {
       'one' => 'test',
     ];
     $this->drupalGet('ctools/wizard');
-    $this->submitForm($edit, $this->t('Next'));
+    $this->submitForm($edit, 'Next');
     // Redirected to the second step.
     $this->assertSession()->pageTextContains('Form Two');
     $this->assertSession()->pageTextContains('Dynamic value submitted: Xylophone');
     // Check that $operations['two']['values'] worked.
     $this->assertSession()->pageTextContains('Zebra');
     // Hit previous to make sure our form value are preserved.
-    $this->submitForm([], $this->t('Previous'));
+    $this->submitForm([], 'Previous');
     // Check the known form values.
     $this->assertSession()->fieldValueEquals('one', 'test');
     $this->assertSession()->pageTextContains('Xylophone');
     // Goto next step again and finish this wizard.
-    $this->submitForm([], $this->t('Next'));
+    $this->submitForm([], 'Next');
     $edit = [
       'two' => 'Second test',
     ];
-    $this->submitForm($edit, $this->t('Finish'));
+    $this->submitForm($edit, 'Finish');
     // Check that the wizard finished properly.
     $this->assertSession()->pageTextContains('Value One: test');
     $this->assertSession()->pageTextContains('Value Two: Second test');
@@ -66,7 +66,7 @@ class CToolsWizardTest extends BrowserTestBase {
       'one' => 'wrong',
     ];
     $this->drupalGet('ctools/wizard');
-    $this->submitForm($edit, $this->t('Next'));
+    $this->submitForm($edit, 'Next');
     // We're still on the first form and the error is present.
     $this->assertSession()->pageTextContains('Form One');
     $this->assertSession()->pageTextContains('Cannot set the value to "wrong".');
@@ -75,13 +75,13 @@ class CToolsWizardTest extends BrowserTestBase {
       'one' => 'magic',
     ];
     $this->drupalGet('ctools/wizard');
-    $this->submitForm($edit, $this->t('Next'));
+    $this->submitForm($edit, 'Next');
     // Redirected to the second step.
     $this->assertSession()->pageTextContains('Form Two');
     $edit = [
       'two' => 'Second test',
     ];
-    $this->submitForm($edit, $this->t('Finish'));
+    $this->submitForm($edit, 'Finish');
     // Check that the magic value triggered our submit callback.
     $this->assertSession()->pageTextContains('Value One: Abraham');
     $this->assertSession()->pageTextContains('Value Two: Second test');
@@ -103,19 +103,19 @@ class CToolsWizardTest extends BrowserTestBase {
       'id' => 'test123',
       'label' => 'Test Config Entity 123',
     ];
-    $this->submitForm($edit, $this->t('Next'));
+    $this->submitForm($edit, 'Next');
 
     // Submit the first step.
     $edit = [
       'one' => 'The first bit',
     ];
-    $this->submitForm($edit, $this->t('Next'));
+    $this->submitForm($edit, 'Next');
 
     // Submit the second step.
     $edit = [
       'two' => 'The second bit',
     ];
-    $this->submitForm($edit, $this->t('Finish'));
+    $this->submitForm($edit, 'Finish');
 
     // Now we should be looking at the list of entities.
     $this->assertSession()->addressEquals('admin/structure/ctools_wizard_test_config_entity');
@@ -132,12 +132,12 @@ class CToolsWizardTest extends BrowserTestBase {
     $this->assertSession()->responseContains('Value from one: The first bit');
     $this->drupalGet($previous);
     // Change the value for 'one'.
-    $this->submitForm(['one' => 'New value'], $this->t('Next'));
+    $this->submitForm(['one' => 'New value'], 'Next');
     $this->assertSession()->fieldValueEquals('two', 'The second bit');
-    $this->submitForm([], $this->t('Next'));
+    $this->submitForm([], 'Next');
     // Make sure we get the additional step because the entity exists.
     $this->assertSession()->pageTextContains('This step only shows if the entity is already existing!');
-    $this->submitForm([], $this->t('Finish'));
+    $this->submitForm([], 'Finish');
 
     // Edit the entity again and make sure the change stuck.
     $this->assertSession()->addressEquals('admin/structure/ctools_wizard_test_config_entity');

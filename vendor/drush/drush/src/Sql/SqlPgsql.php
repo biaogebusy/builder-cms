@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Sql;
 
 use Drush\Drush;
@@ -8,11 +10,11 @@ define('PSQL_SHOW_TABLES', "SELECT tablename FROM pg_tables WHERE schemaname='pu
 
 class SqlPgsql extends SqlBase
 {
-    public $queryExtra = "--no-align --field-separator=\"\t\" --pset tuples_only=on";
+    public string $queryExtra = "--no-align --field-separator=\"\t\" --pset tuples_only=on";
 
-    public $queryFile = "--file";
+    public string $queryFile = "--file";
 
-    private $password_file = null;
+    private ?string $password_file = null;
 
     private function createPasswordFile()
     {
@@ -31,7 +33,7 @@ class SqlPgsql extends SqlBase
             array_walk($pgpass_parts, function (&$part) {
                   // The order of the replacements is important so that backslashes are
                   // not replaced twice.
-                  $part = str_replace(['\\', ':'], ['\\\\', '\:'], $part);
+                  $part = str_replace(['\\', ':'], ['\\\\', '\:'], (string)$part);
             });
             $pgpass_contents = implode(':', $pgpass_parts);
             $this->password_file = drush_save_data_to_temp_file($pgpass_contents);
@@ -42,7 +44,7 @@ class SqlPgsql extends SqlBase
 
     public function command(): string
     {
-        return 'psql -q';
+        return 'psql -q ON_ERROR_STOP=1 ';
     }
 
     public function getEnv(): array
@@ -79,6 +81,25 @@ class SqlPgsql extends SqlBase
         return $this->paramsToOptions($parameters);
     }
 
+    public function createdb(bool $quoted = false): ?bool
+    {
+        $db_spec_original = $this->getDbSpec();
+        $return = parent::createdb($quoted);
+        $this->setDbSpec($db_spec_original);
+        $this->alwaysQuery("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+        return $return;
+    }
+
+    public function drop(array $tables): ?bool
+    {
+        $return = true;
+        if ($tables) {
+            $sql = 'DROP TABLE ' . implode(', ', $tables) . ' CASCADE';
+            $return = $this->query($sql);
+        }
+        return $return;
+    }
+
     public function createdbSql($dbname, $quoted = false): string
     {
         if ($quoted) {
@@ -98,15 +119,17 @@ class SqlPgsql extends SqlBase
         unset($db_spec_no_db['database']);
         $sql_no_db = new SqlPgsql($db_spec_no_db, $this->getOptions());
         $query = "SELECT 1 AS result FROM pg_database WHERE datname='$database'";
-        $process = Drush::shell($sql_no_db->connect() . ' -t -c ' . $query, null, $this->getEnv());
+        $process = Drush::shell($sql_no_db->connect() . ' -t -c ' . escapeshellarg($query), null, $this->getEnv());
         $process->setSimulated(false);
         $process->run();
-        return $process->isSuccessful();
+
+        return $process->isSuccessful()
+            && trim($process->getOutput()) === '1';
     }
 
     public function queryFormat($query)
     {
-        if (strtolower($query) == 'show tables;') {
+        if (strtolower($query) === 'show tables;') {
             return PSQL_SHOW_TABLES;
         }
         return $query;
@@ -114,7 +137,7 @@ class SqlPgsql extends SqlBase
 
     public function listTables(): array
     {
-        $return = $this->alwaysQuery(PSQL_SHOW_TABLES);
+        $this->alwaysQuery(PSQL_SHOW_TABLES);
         $tables = explode(PHP_EOL, trim($this->getProcess()->getOutput()));
         return array_filter($tables);
     }

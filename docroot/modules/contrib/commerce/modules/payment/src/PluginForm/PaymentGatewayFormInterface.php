@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
-use Drupal\commerce_payment\Entity\EntityWithPaymentGatewayInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\commerce_payment\Entity\EntityWithPaymentGatewayInterface;
 
 /**
  * Defines the interface for payment gateway plugin forms.

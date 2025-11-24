@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools;
 
 use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
@@ -13,39 +15,27 @@ class SourceFilter extends \FilterIterator implements MigrateSourceInterface {
 
   /**
    * Whether to filter the source IDs.
-   *
-   * @var bool
    */
-  protected $filterSourceIds;
+  protected bool $filterSourceIds;
 
   /**
    * List of specific source IDs to import.
    *
    * The accept() method removes an item from this when it successfully filters
    * a value.
-   *
-   * @var array
    */
-  protected $idList;
-
-  /**
-   * SourceFilter constructor.
-   *
-   * @param \Drupal\migrate\Plugin\MigrateSourceInterface $source
-   *   The ID map.
-   * @param array $id_list
-   *   The id list to use in the filter.
-   */
-  public function __construct(MigrateSourceInterface $source, array $id_list) {
+  public function __construct(
+    MigrateSourceInterface $source,
+    protected array $idList,
+  ) {
     parent::__construct($source);
-    $this->idList = $id_list;
     $this->filterSourceIds = !empty($this->idList);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function accept() {
+  public function accept(): bool {
     // No idlist filtering, don't filter.
     if (!$this->filterSourceIds) {
       return TRUE;
@@ -70,10 +60,9 @@ class SourceFilter extends \FilterIterator implements MigrateSourceInterface {
   /**
    * Gets the remaining ID list.
    *
-   * @return array
-   *   An array of the the IDs which were not used by the filter.
+   *   An array of the IDs which were not used by the filter.
    */
-  public function getRemainingIdList() {
+  public function getRemainingIdList(): array {
     return $this->idList;
   }
 
@@ -94,7 +83,7 @@ class SourceFilter extends \FilterIterator implements MigrateSourceInterface {
   /**
    * {@inheritdoc}
    */
-  public function __toString() {
+  public function __toString(): string {
     return $this->getInnerIterator()->__toString();
   }
 
@@ -115,7 +104,7 @@ class SourceFilter extends \FilterIterator implements MigrateSourceInterface {
   /**
    * {@inheritdoc}
    */
-  public function count() {
+  public function count(): int {
     return $this->getInnerIterator()->count();
   }
 

@@ -2,7 +2,7 @@
 
 namespace Drupal\content_lock\Form;
 
-use Drupal\content_lock\ContentLock\ContentLock;
+use Drupal\content_lock\ContentLock\ContentLockInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormBase;
@@ -43,14 +43,14 @@ class EntityBreakLockForm extends FormBase {
   /**
    * EntityBreakLockForm constructor.
    *
-   * @param \Drupal\content_lock\ContentLock\ContentLock $contentLock
+   * @param \Drupal\content_lock\ContentLock\ContentLockInterface $contentLock
    *   Content lock service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   Request stack service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   Language manager service.
    */
-  public function __construct(ContentLock $contentLock, RequestStack $requestStack, LanguageManagerInterface $language_manager) {
+  public function __construct(ContentLockInterface $contentLock, RequestStack $requestStack, LanguageManagerInterface $language_manager) {
     $this->lockService = $contentLock;
     $this->request = $requestStack->getCurrentRequest();
     $this->languageManager = $language_manager;
@@ -78,10 +78,10 @@ class EntityBreakLockForm extends FormBase {
 
     $this->lockService->release($entity_id, $langcode, $form_op, NULL, $entity_type);
     if ($form_state->get('translation_lock')) {
-      $this->messenger()->addStatus($this->t('Lock broken. Anyone can now edit this content translation.'));
+      $this->messenger()->addStatus($this->t('Unlocked. Anyone can now edit this content translation.'));
     }
     else {
-      $this->messenger()->addStatus($this->t('Lock broken. Anyone can now edit this content.'));
+      $this->messenger()->addStatus($this->t('Unlocked. Anyone can now edit this content.'));
     }
 
     // Redirect URL to the request destination or the canonical entity view.

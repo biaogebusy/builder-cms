@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\editor\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -41,9 +43,7 @@ class EditorSecurityTest extends BrowserTestBase {
   protected static $sampleContentSecuredEmbedAllowed = '<p>Hello, Dumbo Octopus!</p>alert(0)<embed type="image/svg+xml" src="image.svg" />';
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter', 'editor', 'editor_test', 'node'];
 
@@ -228,7 +228,7 @@ class EditorSecurityTest extends BrowserTestBase {
    *
    * Tests 8 scenarios. Tests only with a text editor that is not XSS-safe.
    */
-  public function testInitialSecurity() {
+  public function testInitialSecurity(): void {
     $expected = [
       [
         'node_id' => 1,
@@ -304,7 +304,7 @@ class EditorSecurityTest extends BrowserTestBase {
    * format and contains a <script> tag to the Full HTML text format, the
    * <script> tag would be executed. Unless we apply appropriate filtering.
    */
-  public function testSwitchingSecurity() {
+  public function testSwitchingSecurity(): void {
     $expected = [
       [
         'node_id' => 1,
@@ -430,15 +430,15 @@ class EditorSecurityTest extends BrowserTestBase {
   /**
    * Tests the standard text editor XSS filter being overridden.
    */
-  public function testEditorXssFilterOverride() {
+  public function testEditorXssFilterOverride(): void {
     // First: the Standard text editor XSS filter.
     $this->drupalLogin($this->normalUser);
     $this->drupalGet('node/2/edit');
     $this->assertSession()->fieldValueEquals('edit-body-0-value', self::$sampleContentSecured);
 
-    // Enable editor_test.module's hook_editor_xss_filter_alter() implementation
+    // Enable editor_test's hook_editor_xss_filter_alter() implementation
     // to alter the text editor XSS filter class being used.
-    \Drupal::state()->set('editor_test_editor_xss_filter_alter_enabled', TRUE);
+    \Drupal::keyValue('editor_test')->set('editor_xss_filter_alter_enabled', TRUE);
 
     // First: the Insecure text editor XSS filter.
     $this->drupalGet('node/2/edit');

@@ -2,15 +2,18 @@
 
 namespace Drupal\devel\EventSubscriber;
 
+use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
-use Drupal\Core\Messenger\MessengerTrait;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Theme\Registry;
 use Drupal\Core\Url;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -19,35 +22,36 @@ use Symfony\Component\HttpKernel\KernelEvents;
 class ThemeInfoRebuildSubscriber implements EventSubscriberInterface {
 
   use StringTranslationTrait;
-  use MessengerTrait;
 
   /**
    * Internal flag for handle user notification.
-   *
-   * @var string
    */
-  protected $notificationFlag = 'devel.rebuild_theme_warning';
+  protected string $notificationFlag = 'devel.rebuild_theme_warning';
 
   /**
    * The devel config.
-   *
-   * @var \Drupal\Core\Config\Config
    */
-  protected $config;
+  protected Config $config;
 
   /**
    * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
    */
-  protected $account;
+  protected AccountProxyInterface $account;
 
   /**
    * The theme handler.
-   *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
    */
-  protected $themeHandler;
+  protected ThemeHandlerInterface $themeHandler;
+
+  /**
+   * The messenger.
+   */
+  protected MessengerInterface $messenger;
+
+  /**
+   * The theme registry.
+   */
+  protected Registry $themeRegistry;
 
   /**
    * Constructs a ThemeInfoRebuildSubscriber object.
@@ -58,23 +62,40 @@ class ThemeInfoRebuildSubscriber implements EventSubscriberInterface {
    *   The current user.
    * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
    *   The theme handler.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The translation manager.
+   * @param \Drupal\Core\Theme\Registry $theme_registry
+   *   The theme registry.
    */
-  public function __construct(ConfigFactoryInterface $config, AccountProxyInterface $account, ThemeHandlerInterface $theme_handler) {
+  public function __construct(
+    ConfigFactoryInterface $config,
+    AccountProxyInterface $account,
+    ThemeHandlerInterface $theme_handler,
+    MessengerInterface $messenger,
+    TranslationInterface $string_translation,
+    Registry $theme_registry,
+  ) {
     $this->config = $config->get('devel.settings');
     $this->account = $account;
     $this->themeHandler = $theme_handler;
+    $this->messenger = $messenger;
+    $this->stringTranslation = $string_translation;
+    $this->themeRegistry = $theme_registry;
   }
 
   /**
    * Forces the system to rebuild the theme registry.
    *
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
    *   The event to process.
    */
-  public function rebuildThemeInfo(GetResponseEvent $event) {
+  public function rebuildThemeInfo(RequestEvent $event): void {
     if ($this->config->get('rebuild_theme')) {
       // Update the theme registry.
-      drupal_theme_rebuild();
+      $this->themeRegistry->reset();
+
       // Refresh theme data.
       $this->themeHandler->refreshInfo();
       // Resets the internal state of the theme handler and clear the 'system
@@ -96,13 +117,12 @@ class ThemeInfoRebuildSubscriber implements EventSubscriberInterface {
    *   The request.
    */
   protected function triggerWarningIfNeeded(Request $request) {
-    if ($this->account && $this->account->hasPermission('access devel information')) {
+    if ($this->account->hasPermission('access devel information')) {
       $session = $request->getSession();
-      if ($session && !$session->has($this->notificationFlag)) {
+      if (!$session->has($this->notificationFlag)) {
         $session->set($this->notificationFlag, TRUE);
         $message = $this->t('The theme information is being rebuilt on every request. Remember to <a href=":url">turn off</a> this feature on production websites.', [':url' => Url::fromRoute('devel.admin_settings')->toString()]);
-        $this->messenger()->addWarning($message);
-
+        $this->messenger->addWarning($message);
       }
     }
   }
@@ -110,7 +130,7 @@ class ThemeInfoRebuildSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Set high priority value to start as early as possible.
     $events[KernelEvents::REQUEST][] = ['rebuildThemeInfo', 256];
     return $events;

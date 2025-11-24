@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\relationship;
 
+use Drupal\views\Attribute\ViewsRelationship;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\relationship\RelationshipPluginBase;
@@ -10,9 +11,8 @@ use Drupal\views\Plugin\views\relationship\RelationshipPluginBase;
  * Views relationship plugin for datasources.
  *
  * @ingroup views_relationship_handlers
- *
- * @ViewsRelationship("search_api")
  */
+#[ViewsRelationship('search_api')]
 class SearchApiRelationship extends RelationshipPluginBase {
 
   /**

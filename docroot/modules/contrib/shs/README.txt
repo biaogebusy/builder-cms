@@ -33,7 +33,7 @@ properly.
     Force users to select items from the deepest level.
 
 
--- INTERGRATION WITH OTHER MODULES --
+-- INTEGRATION WITH OTHER MODULES --
 
  * Views (Drupal core)
    - You are able to use the Simple hierarchical select widget as an exposed

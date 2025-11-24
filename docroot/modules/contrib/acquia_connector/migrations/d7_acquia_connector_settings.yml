@@ -1,45 +1,21 @@
 id: d7_acquia_connector_settings
-label: 'Acquia Connector Configurations'
+label: 'Acquia Connector Settings'
 migration_tags:
   - Drupal 7
   - Configuration
 source:
-  plugin: variable
+  plugin: acquia_connector_settings_v3
   variables:
     - acquia_agent_debug
-    - acquia_subscription_name
     - acquia_spi_cron_interval
+    - acquia_spi_cron_interval_override
     - acquia_agent_hide_signup_messages
-    - acquia_spi_server
-    - acquia_spi_ssl_override
-    - acquia_agent_verify_peer
-    - acquia_spi_admin_priv
-    - acquia_spi_send_node_user
-    - acquia_spi_send_watchdog
-    - acquia_dynamic_banner
-    - acquia_spi_set_variables_override
-    - acquia_spi_set_variables_automatic
-    - acquia_spi_ignored_set_variables
-    - acquia_spi_saved_variables
-  source_module:
-    - acquia_spi
-    - acquia_agent
+  source_module: acquia_agent
 process:
-  subscription_name: acquia_subscription_name
   debug: acquia_agent_debug
+  cron_interval: acquia_spi_cron_interval
+  cron_interval_override: acquia_spi_cron_interval_override
   hide_signup_messages: acquia_agent_hide_signup_messages
-  spi/server: acquia_spi_server
-  spi/ssl_override: acquia_spi_ssl_override
-  spi/ssl_verify: acquia_agent_verify_peer
-  spi/admin_priv: acquia_spi_admin_priv
-  spi/send_node_user: acquia_spi_send_node_user
-  spi/send_watchdog: acquia_spi_send_watchdog
-  spi/dynamic_banner: acquia_dynamic_banner
-  spi/set_variables_override: acquia_spi_set_variables_override
-  spi/set_variables_automatic: acquia_spi_set_variables_automatic
-  spi/ignored_set_variables: acquia_spi_ignored_set_variables
-  spi/saved_variables: acquia_spi_saved_variables
-  spi/cron_interval: acquia_spi_cron_interval
 destination:
   plugin: config
   config_name: acquia_connector.settings

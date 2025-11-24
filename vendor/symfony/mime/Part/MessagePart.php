@@ -21,7 +21,7 @@ use Symfony\Component\Mime\RawMessage;
  */
 class MessagePart extends DataPart
 {
-    private $message;
+    private RawMessage $message;
 
     public function __construct(RawMessage $message)
     {
@@ -58,5 +58,17 @@ class MessagePart extends DataPart
     public function bodyToIterable(): iterable
     {
         return $this->message->toIterable();
+    }
+
+    public function __serialize(): array
+    {
+        return ['message' => $this->message];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->message = $data['message'] ?? $data["\0".self::class."\0message"];
+
+        $this->__construct($this->message);
     }
 }

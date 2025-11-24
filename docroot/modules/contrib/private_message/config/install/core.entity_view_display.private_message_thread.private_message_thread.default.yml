@@ -16,12 +16,12 @@ content:
     settings:
       display_type: entity
       entity_display_mode: private_message_author
-    third_party_settings: {  }
+    third_party_settings: {}
   private_message_form:
     weight: 2
     region: content
-    settings: {  }
-    third_party_settings: {  }
+    settings: {}
+    third_party_settings: {}
   private_messages:
     type: private_message_thread_message_formatter
     weight: 1
@@ -32,6 +32,8 @@ content:
       ajax_previous_load_count: 5
       ajax_refresh_rate: 20
       message_order: asc
-    third_party_settings: {  }
+      message_insert_speed: 300
+      message_insert_style: slide
+    third_party_settings: {}
 hidden:
   last_message: true

@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional;
 
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\layout_builder\Traits\EnableLayoutBuilderTrait;
 
 /**
  * Tests functionality of the entity view display with regard to Layout Builder.
@@ -10,6 +14,8 @@ use Drupal\Tests\BrowserTestBase;
  * @group layout_builder
  */
 class LayoutDisplayTest extends BrowserTestBase {
+
+  use EnableLayoutBuilderTrait;
 
   /**
    * {@inheritdoc}
@@ -42,17 +48,14 @@ class LayoutDisplayTest extends BrowserTestBase {
   /**
    * Tests the interaction between multiple view modes.
    */
-  public function testMultipleViewModes() {
+  public function testMultipleViewModes(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
     $field_ui_prefix = 'admin/structure/types/manage/bundle_with_section_field/display';
 
     // Enable Layout Builder for the default view modes, and overrides.
-    $this->drupalGet("$field_ui_prefix/default");
-    $page->checkField('layout[enabled]');
-    $page->pressButton('Save');
-    $page->checkField('layout[allow_custom]');
-    $page->pressButton('Save');
+    $display = LayoutBuilderEntityViewDisplay::load('node.bundle_with_section_field.default');
+    $this->enableLayoutBuilder($display);
 
     $this->drupalGet('node/1');
     $assert_session->pageTextNotContains('Powered by Drupal');
@@ -78,12 +81,8 @@ class LayoutDisplayTest extends BrowserTestBase {
     $page->pressButton('Save');
 
     // Enable and disable Layout Builder for the new view mode.
-    $this->drupalGet("$field_ui_prefix/new");
-    $page->checkField('layout[enabled]');
-    $page->pressButton('Save');
-    $page->uncheckField('layout[enabled]');
-    $page->pressButton('Save');
-    $page->pressButton('Confirm');
+    $this->enableLayoutBuilderFromUi('bundle_with_section_field', 'new', FALSE);
+    $this->disableLayoutBuilderFromUi('bundle_with_section_field', 'new');
 
     // The node using the default view mode still contains its overrides.
     $this->drupalGet('node/1');

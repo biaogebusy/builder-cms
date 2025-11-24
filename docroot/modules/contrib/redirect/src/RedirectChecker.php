@@ -51,7 +51,7 @@ class RedirectChecker {
   /**
    * Determines if redirect may be performed.
    *
-   * @param Request $request
+   * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request object.
    * @param string $route_name
    *   The current route name.
@@ -80,7 +80,7 @@ class RedirectChecker {
       // Do not redirect if this is other than GET request.
       $can_redirect = FALSE;
     }
-    elseif (!$this->account->hasPermission('access site in maintenance mode') && ($this->state->get('system.maintenance_mode') || defined('MAINTENANCE_MODE'))) {
+    elseif (($this->state->get('system.maintenance_mode') || defined('MAINTENANCE_MODE')) && !$this->account->hasPermission('access site in maintenance mode')) {
       // Do not redirect in offline or maintenance mode.
       $can_redirect = FALSE;
     }

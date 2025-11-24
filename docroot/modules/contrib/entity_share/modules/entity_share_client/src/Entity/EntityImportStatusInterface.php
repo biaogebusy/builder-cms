@@ -14,7 +14,7 @@ interface EntityImportStatusInterface extends ContentEntityInterface {
   /**
    * Denotes the default entity import policy.
    */
-  const IMPORT_POLICY_DEFAULT = 'default';
+  public const IMPORT_POLICY_DEFAULT = 'default';
 
   /**
    * Returns the last import time.

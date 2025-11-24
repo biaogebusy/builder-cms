@@ -138,6 +138,8 @@ class OrderType extends CommerceBundleEntityBase implements OrderTypeInterface {
     if ($this->numberPattern) {
       return NumberPattern::load($this->numberPattern);
     }
+
+    return NULL;
   }
 
   /**

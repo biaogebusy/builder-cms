@@ -13,7 +13,7 @@ use Drupal\page_manager\Form\LayoutBuilderForm;
  */
 function page_manager_entity_type_build(array &$entity_types) {
   if (_page_manager_is_layout_builder_enabled()) {
-    /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+    /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
     $entity_types['page_variant']
       ->setHandlerClass('storage', LayoutBuilderStorage::class)
       ->setFormClass('layout_builder', LayoutBuilderForm::class);

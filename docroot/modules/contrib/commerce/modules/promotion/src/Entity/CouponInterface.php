@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_promotion\Entity;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Provides an interface for defining coupon entities.
@@ -138,7 +138,7 @@ interface CouponInterface extends ContentEntityInterface, EntityChangedInterface
    * @param string $store_timezone
    *   The store timezone. E.g. "Europe/Berlin".
    *
-   * @return \Drupal\Core\Datetime\DrupalDateTime
+   * @return \Drupal\Core\Datetime\DrupalDateTime|null
    *   The coupon start date/time.
    */
   public function getStartDate($store_timezone = 'UTC');
@@ -167,7 +167,7 @@ interface CouponInterface extends ContentEntityInterface, EntityChangedInterface
    * @param string $store_timezone
    *   The store timezone. E.g. "Europe/Berlin".
    *
-   * @return \Drupal\Core\Datetime\DrupalDateTime
+   * @return \Drupal\Core\Datetime\DrupalDateTime|null
    *   The coupon end date/time.
    */
   public function getEndDate($store_timezone = 'UTC');
@@ -180,7 +180,7 @@ interface CouponInterface extends ContentEntityInterface, EntityChangedInterface
    *
    * @return $this
    */
-  public function setEndDate(DrupalDateTime $end_date = NULL);
+  public function setEndDate(?DrupalDateTime $end_date = NULL);
 
   /**
    * Checks whether the coupon is available for the given order.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional\Views;
 
 use Drupal\taxonomy\Entity\Vocabulary;
@@ -70,7 +72,7 @@ class TaxonomyVocabularyArgumentTest extends TaxonomyTestBase {
    *
    * @see Drupal\taxonomy\Plugin\views\argument\VocabularyVid
    */
-  public function testTermWithVocabularyArgument() {
+  public function testTermWithVocabularyArgument(): void {
     $this->drupalGet('test_argument_taxonomy_vocabulary/' . $this->vocabularies[0]->id());
     // First term should be present.
     $this->assertSession()->pageTextContains($this->terms[0]->label());

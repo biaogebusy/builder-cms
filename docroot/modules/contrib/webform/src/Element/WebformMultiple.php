@@ -145,7 +145,7 @@ class WebformMultiple extends FormElement {
       $number_of_empty_items = (int) $element['#empty_items'];
       $number_of_items = $number_of_default_values + $number_of_empty_items;
 
-      // Make sure number of items is greated than min items.
+      // Make sure number of items is greater than min items.
       $min_items = (int) $element['#min_items'];
       $number_of_items = ($number_of_items < $min_items) ? $min_items : $number_of_items;
 

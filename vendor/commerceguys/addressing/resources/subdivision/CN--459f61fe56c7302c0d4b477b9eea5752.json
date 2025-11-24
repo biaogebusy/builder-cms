@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Xi'an Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baqiao Qu": {
+			"local_name": "灞桥区"
+		},
+		"Beilin Qu": {
+			"local_name": "碑林区"
+		},
+		"Gaoling Xian": {
+			"local_name": "高陵县"
+		},
+		"Hu Xian": {
+			"local_name": "户县"
+		},
+		"Lantian Xian": {
+			"local_name": "蓝田县"
+		},
+		"Lianhu Qu": {
+			"local_name": "莲湖区"
+		},
+		"Lintong Qu": {
+			"local_name": "临潼区"
+		},
+		"Weiyang Qu": {
+			"local_name": "未央区"
+		},
+		"Xincheng Qu": {
+			"local_name": "新城区"
+		},
+		"Yanliang Qu": {
+			"local_name": "阎良区"
+		},
+		"Yanta Qu": {
+			"local_name": "雁塔区"
+		},
+		"Chang'an Qu": {
+			"local_name": "长安区"
+		},
+		"Zhouzhi Xian": {
+			"local_name": "周至县"
+		}
+	}
+}

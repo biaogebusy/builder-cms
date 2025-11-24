@@ -65,6 +65,11 @@ information, see
    downloaded without a file association.
 9. Navigate to the path of the View Page to generate the report.
 
+## Important note for batch usage
+When using batch mode, it is important to sort the view on a unique identifier,
+such as nid or uid, to provide consistent results.
+See [#3120563](https://www.drupal.org/project/views_data_export/issues/3120563#comment-15738506)
+for background info.
 
 ## Maintainers
 

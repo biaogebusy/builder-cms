@@ -5,6 +5,8 @@
  * Defines a numeric range field type.
  */
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 /**
  * Implements hook_theme().
  */
@@ -35,4 +37,24 @@ function range_theme() {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_field_info_alter().
+ *
+ * Backwards field settings compatibility for the Drupal version < 10.2.
+ */
+function range_field_info_alter(array &$info): void {
+  // Allow module to work with the older versions of Drupal.
+  if (version_compare(\Drupal::VERSION, '10.1.9999', '<=')) {
+    foreach (['decimal', 'float', 'integer'] as $key) {
+      $field_type = 'range_' . $key;
+      $info[$field_type]['category'] = new TranslatableMarkup('Numeric range');
+      $info[$field_type]['description'] = match ($key) {
+        'decimal' => new TranslatableMarkup('This field stores a fixed decimal range in the database.'),
+        'float' => new TranslatableMarkup('This field stores a float range in the database.'),
+        'integer' => new TranslatableMarkup('This field stores an integer range in the database.'),
+      };
+    }
+  }
 }

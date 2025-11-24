@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentManagerInterface;
@@ -21,7 +23,7 @@ class CommentPagerTest extends CommentTestBase {
   /**
    * Confirms comment paging works correctly with flat and threaded comments.
    */
-  public function testCommentPaging() {
+  public function testCommentPaging(): void {
     $this->drupalLogin($this->adminUser);
 
     // Set comment variables.
@@ -37,6 +39,14 @@ class CommentPagerTest extends CommentTestBase {
     $comments[] = $this->postComment($node, $this->randomMachineName(), $this->randomMachineName(), TRUE);
 
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_FLAT, 'Comment paging changed.');
+
+    // Set "Comments per page" as zero and verify that all comments are appearing
+    // on the page.
+    $this->setCommentsPerPage(0);
+    $this->drupalGet('node/' . $node->id());
+    $this->assertTrue($this->commentExists($comments[0]), 'Comment 1 appears on page.');
+    $this->assertTrue($this->commentExists($comments[1]), 'Comment 2 appears on page.');
+    $this->assertTrue($this->commentExists($comments[2]), 'Comment 3 appears on page.');
 
     // Set comments to one per page so that we are able to test paging without
     // needing to insert large numbers of comments.
@@ -92,6 +102,10 @@ class CommentPagerTest extends CommentTestBase {
     $this->setCommentsPerPage(0);
     $this->drupalGet('node/' . $node->id(), ['query' => ['page' => 0]]);
     $this->assertFalse($this->commentExists($reply2, TRUE), 'Threaded mode works correctly when comments per page is 0.');
+    // Test that all main comments are appearing in the threaded mode.
+    $this->assertTrue($this->commentExists($comments[0]), 'Comment 1 appears on page.');
+    $this->assertTrue($this->commentExists($comments[1]), 'Comment 2 appears on page.');
+    $this->assertTrue($this->commentExists($comments[2]), 'Comment 3 appears on page.');
 
     $this->drupalLogout();
   }
@@ -99,7 +113,7 @@ class CommentPagerTest extends CommentTestBase {
   /**
    * Confirms comment paging works correctly with flat and threaded comments.
    */
-  public function testCommentPermalink() {
+  public function testCommentPermalink(): void {
     $this->drupalLogin($this->adminUser);
 
     // Set comment variables.
@@ -131,7 +145,7 @@ class CommentPagerTest extends CommentTestBase {
   /**
    * Tests comment ordering and threading.
    */
-  public function testCommentOrderingThreading() {
+  public function testCommentOrderingThreading(): void {
     $this->drupalLogin($this->adminUser);
 
     // Set comment variables.
@@ -226,13 +240,13 @@ class CommentPagerTest extends CommentTestBase {
     foreach ($comment_anchors as $anchor) {
       $result_order[] = substr($anchor->getAttribute('id'), 8);
     }
-    $this->assertEquals($expected_cids, $result_order, new FormattableMarkup('Comment order: expected @expected, returned @returned.', ['@expected' => implode(',', $expected_cids), '@returned' => implode(',', $result_order)]));
+    $this->assertEquals($expected_cids, $result_order, sprintf('Comment order: expected %s, returned %s.', implode(',', $expected_cids), implode(',', $result_order)));
   }
 
   /**
    * Tests calculation of first page with new comment.
    */
-  public function testCommentNewPageIndicator() {
+  public function testCommentNewPageIndicator(): void {
     $this->drupalLogin($this->adminUser);
 
     // Set comment variables.
@@ -292,7 +306,7 @@ class CommentPagerTest extends CommentTestBase {
     foreach ($expected_pages as $new_replies => $expected_page) {
       $returned_page = \Drupal::entityTypeManager()->getStorage('comment')
         ->getNewCommentPageNumber($node->get('comment')->comment_count, $new_replies, $node, 'comment');
-      $this->assertSame($expected_page, $returned_page, new FormattableMarkup('Flat mode, @new replies: expected page @expected, returned page @returned.', ['@new' => $new_replies, '@expected' => $expected_page, '@returned' => $returned_page]));
+      $this->assertSame($expected_page, $returned_page, "Flat mode, $new_replies replies: expected page $expected_page, returned page $returned_page.");
     }
 
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Switched to threaded mode.');
@@ -317,14 +331,14 @@ class CommentPagerTest extends CommentTestBase {
     foreach ($expected_pages as $new_replies => $expected_page) {
       $returned_page = \Drupal::entityTypeManager()->getStorage('comment')
         ->getNewCommentPageNumber($node->get('comment')->comment_count, $new_replies, $node, 'comment');
-      $this->assertEquals($expected_page, $returned_page, new FormattableMarkup('Threaded mode, @new replies: expected page @expected, returned page @returned.', ['@new' => $new_replies, '@expected' => $expected_page, '@returned' => $returned_page]));
+      $this->assertEquals($expected_page, $returned_page, "Threaded mode, $new_replies replies: expected page $expected_page, returned page $returned_page.");
     }
   }
 
   /**
    * Confirms comment paging works correctly with two pagers.
    */
-  public function testTwoPagers() {
+  public function testTwoPagers(): void {
     // Add another field to article content-type.
     $this->addDefaultCommentField('node', 'article', 'comment_2');
     // Set default to display comment list with unique pager id.
@@ -432,7 +446,7 @@ class CommentPagerTest extends CommentTestBase {
       $url_target = $this->getAbsoluteUrl($urls[$index]->getAttribute('href'));
       return $this->drupalGet($url_target);
     }
-    $this->fail(new FormattableMarkup('Link %label does not exist on @url_before', ['%label' => $xpath, '@url_before' => $url_before]), 'Browser');
+    $this->fail(new FormattableMarkup('Link %label does not exist on @url_before', ['%label' => $xpath, '@url_before' => $url_before]));
     return FALSE;
   }
 

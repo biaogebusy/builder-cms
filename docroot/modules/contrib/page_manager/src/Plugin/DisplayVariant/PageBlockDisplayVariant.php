@@ -3,8 +3,8 @@
 namespace Drupal\page_manager\Plugin\DisplayVariant;
 
 use Drupal\Component\Render\HtmlEscapedText;
-use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManager;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -109,7 +109,7 @@ class PageBlockDisplayVariant extends BlockDisplayVariant implements PluginWizar
   }
 
   /**
-   * #pre_render callback for building the regions.
+   * Callback for building #pre_render regions.
    */
   public function buildRegions(array $build) {
     $cacheability = CacheableMetadata::createFromRenderArray($build)
@@ -178,7 +178,7 @@ class PageBlockDisplayVariant extends BlockDisplayVariant implements PluginWizar
   }
 
   /**
-   * #pre_render callback for building a block.
+   * Callback for building a #pre_render block.
    *
    * Renders the content using the provided block plugin, if there is no
    * content, aborts rendering, and makes sure the block won't be rendered.
@@ -235,6 +235,20 @@ class PageBlockDisplayVariant extends BlockDisplayVariant implements PluginWizar
       '#description' => $this->t('Configure the page title that will be used for this display.'),
       '#default_value' => $this->configuration['page_title'] ?: '',
     ];
+
+    // Add the token browser.
+    if ($this->moduleHandler->moduleExists('token')) {
+      $form['page_title']['#description'] = [
+        'text' => [
+          '#markup' => $form['page_title']['#description'],
+        ],
+        'token_tree_link' => [
+          '#theme' => 'token_tree_link',
+          '#prefix' => ' ',
+          '#token_types' => array_keys($this->getContextAsTokenData()),
+        ],
+      ];
+    }
 
     $form['uuid'] = [
       '#type' => 'value',
@@ -293,7 +307,7 @@ class PageBlockDisplayVariant extends BlockDisplayVariant implements PluginWizar
     // Token replace only escapes replacement values, ensure a consistent
     // behavior by also escaping the input and then returning it as a Markup
     // object to avoid double escaping.
-    // @todo: Simplify this when core provides an API for this in
+    // @todo Simplify this when core provides an API for this in
     //   https://www.drupal.org/node/2580723.
     $title = (string) $this->token->replace(new HtmlEscapedText($page_title), $data);
     return Markup::create($title);
@@ -334,7 +348,7 @@ class PageBlockDisplayVariant extends BlockDisplayVariant implements PluginWizar
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $vars = parent::__sleep();
 
     // Gathered contexts objects should not be serialized.

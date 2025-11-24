@@ -24,3 +24,20 @@ administer private message module:
   title: 'Administer private message module'
   description: 'Allows administrators to manage all parts of the One Page Private Message module'
   restrict access: true
+
+add private message ban entities:
+  title: 'Create new Private Message Ban entities'
+
+administer private message ban entities:
+  title: 'Administer Private Message Ban entities'
+  description: 'Allow to access the administration form to configure Private Message Ban entities.'
+  restrict access: true
+
+delete private message ban entities:
+  title: 'Delete Private Message Ban entities'
+
+edit private message ban entities:
+  title: 'Edit Private Message Ban entities'
+
+view private message ban entities:
+  title: 'View Private Message Ban entities'

@@ -11,6 +11,9 @@ views.field.views_bulk_operations_bulk_form:
     form_step:
       type: boolean
       label: 'Display configuration form on a separate page'
+    ajax_loader:
+      type: boolean
+      label: 'Show throbber on VBO ajax petitions.'
     buttons:
       type: boolean
       label: 'Display action options as buttons'
@@ -33,5 +36,9 @@ views.field.views_bulk_operations_bulk_form:
             type: string
             label: 'Action plugin ID'
           preconfiguration:
-            label: 'Preliminary configuration array for the plugin'
-            type: ignore
+            label: 'Configuration array for the plugin'
+            type: views_bulk_operations.action_config.[%parent.action_id]
+
+views_bulk_operations.action_config.*:
+  type: views_bulk_operations_action_config
+  label: 'Default'

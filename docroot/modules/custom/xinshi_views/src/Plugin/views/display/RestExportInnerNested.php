@@ -37,7 +37,7 @@ class RestExportInnerNested extends RestExport {
       $style = $this->plugins['style'] ?? [];
       $style = current($style);
       switch ($style->getPluginId()) {
-        case 'serializer';
+        case 'serializer':
           $this->parseJsonDecode($results);
           break;
         case 'xinshi_pager_serializer':
@@ -47,7 +47,6 @@ class RestExportInnerNested extends RestExport {
           break;
       }
     } catch (\Exception $exception) {
-
     }
     // Convert back to JSON.
     $build['#markup'] = json_encode($results);
@@ -79,7 +78,7 @@ class RestExportInnerNested extends RestExport {
 
 
   private function parseJsonDecode(&$result) {
-    foreach ($result as $property => $value) {
+    foreach ($result as $property => &$value) {
       // Check if the field can be decoded using PHP's json_decode().
       if (is_object($value) && $str = json_encode($value)) {
         $objs = json_decode($str, TRUE);
@@ -93,6 +92,14 @@ class RestExportInnerNested extends RestExport {
                 $value->{$key} = $obj;
               }
             }
+          }
+        }
+      } elseif (is_array($value)) {
+        // Recursively process array values
+        foreach ($value as $key => $obj) {
+          $obj = json_decode(htmlspecialchars_decode($obj), TRUE);
+          if (is_array($obj)) {
+            $value[$key] = $obj;
           }
         }
       }

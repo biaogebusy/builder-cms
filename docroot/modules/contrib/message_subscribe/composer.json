@@ -6,16 +6,12 @@
     "homepage": "https://drupal.org/project/message_subscribe",
     "support": {
         "issues": "https://drupal.org/project/issues/message_subscribe",
-        "irc": "irc://irc.freenode.org/drupal",
         "source": "https://cgit.drupalcode.org/message_subscribe"
     },
     "require": {
       "drupal/flag": "^4.0",
       "drupal/message": "^1.0",
       "drupal/message_notify": "^1.0"
-    },
-    "require-dev": {
-      "drupal/og": "^1.0"
     },
     "minimum-stability": "dev"
 }

@@ -218,6 +218,7 @@ abstract class WidgetBase extends PluginBase implements WidgetInterface, Contain
       $form['auto_select'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Automatically submit selection'),
+        '#description' => $this->t('If enabled, selection column is hidden and click on row will actually add the item into selection display. Currently only multistep display supports this functionality.'),
         '#default_value' => $this->configuration['auto_select'],
       ];
     }

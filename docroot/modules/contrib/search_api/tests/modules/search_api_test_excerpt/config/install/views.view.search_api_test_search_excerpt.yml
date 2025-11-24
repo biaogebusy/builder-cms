@@ -15,7 +15,7 @@ display:
         type: none
         options: {  }
       cache:
-        type: none
+        type: search_api_none
         options: {  }
       query:
         type: search_api_query
@@ -135,6 +135,7 @@ display:
             decimal: .
             separator: ','
             format_plural: false
+            # cspell:disable-next-line
             format_plural_string: !!binary MQNAY291bnQ=
             prefix: ''
             suffix: ''

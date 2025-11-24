@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -27,7 +29,7 @@ class BlockAddTest extends WebDriverTestBase {
   /**
    * Tests the AJAX for the theme selector.
    */
-  public function testBlockAddThemeSelector() {
+  public function testBlockAddThemeSelector(): void {
     \Drupal::service('theme_installer')->install(['claro']);
 
     $this->drupalLogin($this->drupalCreateUser([
@@ -40,11 +42,10 @@ class BlockAddTest extends WebDriverTestBase {
     $assert_session->selectExists('Theme')->selectOption('claro');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->selectExists('Region')->selectOption('pre_content');
-    $assert_session->assertWaitOnAjaxRequest();
     // Switch to a theme that doesn't contain the region selected above.
     $assert_session->selectExists('Theme')->selectOption('stark');
     $assert_session->assertWaitOnAjaxRequest();
-    $assert_session->pageTextNotContains('An illegal choice has been detected. Please contact the site administrator.');
+    $assert_session->pageTextNotContains('The submitted value Pre-content in the Region element is not allowed.');
     $assert_session->optionExists('Region', '- Select -');
   }
 

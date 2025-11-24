@@ -32,6 +32,12 @@ chosen.settings:
     allow_single_deselect:
       type: boolean
       label: 'Allow deselect on single selects.'
+    allow_mobile:
+      type: boolean
+      label: 'Allow mobile devices.'
+    add_helper_buttons:
+      type: boolean
+      label: 'Add "none" and "all" buttons.'
     disabled_themes:
       type: sequence
       label: 'Disable the default Chosen theme for the following themes'

@@ -1,8 +1,8 @@
 services:
+  _defaults:
+    autoconfigure: true
   migrate.plugin_event_subscriber:
     class: Drupal\migrate\Plugin\PluginEventSubscriber
-    tags:
-      - { name: event_subscriber }
   cache.migrate:
     class: Drupal\Core\Cache\CacheBackendInterface
     tags:
@@ -14,7 +14,13 @@ services:
     arguments: [source, '@container.namespaces', '@cache.discovery', '@module_handler']
   plugin.manager.migrate.process:
     class: Drupal\migrate\Plugin\MigratePluginManager
-    arguments: [process, '@container.namespaces', '@cache.discovery', '@module_handler', 'Drupal\migrate\Annotation\MigrateProcessPlugin']
+    arguments:
+      - process
+      - '@container.namespaces'
+      - '@cache.discovery'
+      - '@module_handler'
+      - 'Drupal\migrate\Attribute\MigrateProcess'
+      - 'Drupal\migrate\Annotation\MigrateProcessPlugin'
   plugin.manager.migrate.destination:
     class: Drupal\migrate\Plugin\MigrateDestinationPluginManager
     arguments: [destination, '@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager']
@@ -30,9 +36,13 @@ services:
   plugin.manager.migration:
     class: Drupal\migrate\Plugin\MigrationPluginManager
     arguments: ['@module_handler', '@cache.discovery_migration', '@language_manager']
+  Drupal\migrate\Plugin\MigrationPluginManagerInterface: '@plugin.manager.migration'
+  Drupal\migrate\MigrateBuildDependencyInterface: '@plugin.manager.migration'
   migrate.lookup:
     class: Drupal\migrate\MigrateLookup
     arguments: ['@plugin.manager.migration']
+  Drupal\migrate\MigrateLookupInterface: '@migrate.lookup'
   migrate.stub:
     class: Drupal\migrate\MigrateStub
     arguments: ['@plugin.manager.migration']
+  Drupal\migrate\MigrateStubInterface: '@migrate.stub'

@@ -341,7 +341,7 @@ trait WebformBrowserTestTrait {
       return $actions_element['#submit__label'];
     }
 
-    return t('Submit');
+    return 'Submit';
   }
 
   /**

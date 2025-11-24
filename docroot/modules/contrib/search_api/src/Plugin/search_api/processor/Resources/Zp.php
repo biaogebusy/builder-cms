@@ -12,9 +12,11 @@ class Zp implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{2029}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

@@ -1,29 +1,35 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Service;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements service:path-processor command.
- */
-final class PathProcessor extends ModuleGenerator {
-
-  protected string $name = 'service:path-processor';
-  protected string $description = 'Generates a path processor service';
-  protected string $alias = 'path-processor';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/service/path-processor';
+#[Generator(
+  name: 'service:path-processor',
+  description: 'Generates a path processor service',
+  aliases: ['path-processor'],
+  templatePath: Application::TEMPLATE_PATH . '/Service/_path-processor',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class PathProcessor extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['class'] = $this->ask('Class', 'PathProcessor{machine_name|camelize}');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['class'] = $ir->askClass(default: 'PathProcessor{machine_name|camelize}');
+    $vars['services'] = $ir->askServices();
 
-    $this->addFile('src/PathProcessor/{class}.php', 'path-processor');
-    $this->addServicesFile()->template('services');
+    $assets->addFile('src/PathProcessor/{class}.php', 'path-processor.twig');
+    $assets->addServicesFile()->template('services.twig');
   }
 
 }

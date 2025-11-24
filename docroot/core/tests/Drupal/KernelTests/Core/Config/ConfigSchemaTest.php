@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\Core\Config\FileStorage;
@@ -11,6 +13,7 @@ use Drupal\Core\Config\Schema\Undefined;
 use Drupal\Core\TypedData\Plugin\DataType\StringData;
 use Drupal\Core\TypedData\Type\IntegerInterface;
 use Drupal\Core\TypedData\Type\StringInterface;
+use Drupal\image\ImageEffectInterface;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -21,9 +24,7 @@ use Drupal\KernelTests\KernelTestBase;
 class ConfigSchemaTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -45,7 +46,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests the basic metadata retrieval layer.
    */
-  public function testSchemaMapping() {
+  public function testSchemaMapping(): void {
     // Nonexistent configuration key will have Undefined as metadata.
     $this->assertFalse(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.no_such_key'));
     $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.no_such_key');
@@ -58,43 +59,50 @@ class ConfigSchemaTest extends KernelTestBase {
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for nonexistent configuration.');
 
     // Configuration file without schema will return Undefined as well.
-    $this->assertFalse(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.noschema'));
-    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.noschema');
+    $this->assertFalse(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.no_schema'));
+    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.no_schema');
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for configuration with no schema.');
 
     // Configuration file with only some schema.
-    $this->assertTrue(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.someschema'));
-    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.someschema');
+    $this->assertTrue(\Drupal::service('config.typed')->hasConfigSchema('config_schema_test.some_schema'));
+    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.some_schema');
     $expected = [];
     $expected['label'] = 'Schema test data';
     $expected['class'] = Mapping::class;
-    $expected['mapping']['langcode']['type'] = 'string';
-    $expected['mapping']['langcode']['label'] = 'Language code';
+    $expected['mapping']['langcode']['type'] = 'langcode';
+    $expected['mapping']['langcode']['requiredKey'] = FALSE;
     $expected['mapping']['_core']['type'] = '_core_config_info';
-    $expected['mapping']['testitem'] = ['label' => 'Test item'];
-    $expected['mapping']['testlist'] = ['label' => 'Test list'];
-    $expected['type'] = 'config_schema_test.someschema';
+    $expected['mapping']['_core']['requiredKey'] = FALSE;
+    $expected['mapping']['test_item'] = ['label' => 'Test item'];
+    $expected['mapping']['test_list'] = ['label' => 'Test list'];
+    $expected['type'] = 'config_schema_test.some_schema';
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['constraints'] = [
+      'ValidKeys' => '<infer>',
+      'LangcodeRequiredIfTranslatableValues' => NULL,
+    ];
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for configuration with only some schema.');
 
     // Check type detection on elements with undefined types.
-    $config = \Drupal::service('config.typed')->get('config_schema_test.someschema');
-    $definition = $config->get('testitem')->getDataDefinition()->toArray();
+    $config = \Drupal::service('config.typed')->get('config_schema_test.some_schema');
+    $definition = $config->get('test_item')->getDataDefinition()->toArray();
     $expected = [];
     $expected['label'] = 'Test item';
     $expected['class'] = Undefined::class;
     $expected['type'] = 'undefined';
     $expected['definition_class'] = '\Drupal\Core\TypedData\DataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['requiredKey'] = TRUE;
     $this->assertEquals($expected, $definition, 'Automatic type detected for a scalar is undefined.');
-    $definition = $config->get('testlist')->getDataDefinition()->toArray();
+    $definition = $config->get('test_list')->getDataDefinition()->toArray();
     $expected = [];
     $expected['label'] = 'Test list';
     $expected['class'] = Undefined::class;
     $expected['type'] = 'undefined';
     $expected['definition_class'] = '\Drupal\Core\TypedData\DataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['requiredKey'] = TRUE;
     $this->assertEquals($expected, $definition, 'Automatic type detected for a list is undefined.');
     $definition = $config->get('test_no_schema')->getDataDefinition()->toArray();
     $expected = [];
@@ -115,13 +123,19 @@ class ConfigSchemaTest extends KernelTestBase {
       'type' => 'text',
     ];
     $expected['mapping']['langcode'] = [
-      'label' => 'Language code',
-      'type' => 'string',
+      'type' => 'langcode',
     ];
+    $expected['mapping']['langcode']['requiredKey'] = FALSE;
     $expected['mapping']['_core']['type'] = '_core_config_info';
+    $expected['mapping']['_core']['requiredKey'] = FALSE;
     $expected['type'] = 'system.maintenance';
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['constraints'] = [
+      'ValidKeys' => '<infer>',
+      'FullyValidatable' => NULL,
+      'LangcodeRequiredIfTranslatableValues' => NULL,
+    ];
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for system.maintenance');
 
     // Mixed schema with ignore elements.
@@ -131,10 +145,11 @@ class ConfigSchemaTest extends KernelTestBase {
     $expected['class'] = Mapping::class;
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['mapping']['langcode'] = [
-      'type' => 'string',
-      'label' => 'Language code',
+      'type' => 'langcode',
     ];
+    $expected['mapping']['langcode']['requiredKey'] = FALSE;
     $expected['mapping']['_core']['type'] = '_core_config_info';
+    $expected['mapping']['_core']['requiredKey'] = FALSE;
     $expected['mapping']['label'] = [
       'label' => 'Label',
       'type' => 'label',
@@ -149,10 +164,14 @@ class ConfigSchemaTest extends KernelTestBase {
     ];
     $expected['mapping']['weight'] = [
       'label' => 'Weight',
-      'type' => 'integer',
+      'type' => 'weight',
     ];
     $expected['type'] = 'config_schema_test.ignore';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['constraints'] = [
+      'ValidKeys' => '<infer>',
+      'LangcodeRequiredIfTranslatableValues' => NULL,
+    ];
 
     $this->assertEquals($expected, $definition);
 
@@ -164,6 +183,7 @@ class ConfigSchemaTest extends KernelTestBase {
     $expected['class'] = Ignore::class;
     $expected['definition_class'] = '\Drupal\Core\TypedData\DataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['requiredKey'] = TRUE;
     $this->assertEquals($expected, $definition);
     $definition = \Drupal::service('config.typed')->get('config_schema_test.ignore')->get('indescribable')->getDataDefinition()->toArray();
     $expected['label'] = 'Indescribable';
@@ -176,29 +196,36 @@ class ConfigSchemaTest extends KernelTestBase {
     $expected['class'] = Mapping::class;
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
-    $expected['mapping']['name']['type'] = 'string';
+    $expected['mapping']['name']['type'] = 'machine_name';
     $expected['mapping']['uuid']['type'] = 'uuid';
     $expected['mapping']['uuid']['label'] = 'UUID';
-    $expected['mapping']['langcode']['type'] = 'string';
-    $expected['mapping']['langcode']['label'] = 'Language code';
+    $expected['mapping']['langcode']['type'] = 'langcode';
     $expected['mapping']['status']['type'] = 'boolean';
     $expected['mapping']['status']['label'] = 'Status';
     $expected['mapping']['dependencies']['type'] = 'config_dependencies';
     $expected['mapping']['dependencies']['label'] = 'Dependencies';
-    $expected['mapping']['name']['type'] = 'string';
-    $expected['mapping']['label']['type'] = 'label';
+    $expected['mapping']['label']['type'] = 'required_label';
     $expected['mapping']['label']['label'] = 'Label';
     $expected['mapping']['effects']['type'] = 'sequence';
     $expected['mapping']['effects']['sequence']['type'] = 'mapping';
     $expected['mapping']['effects']['sequence']['mapping']['id']['type'] = 'string';
+    $expected['mapping']['effects']['sequence']['mapping']['id']['constraints'] = [
+      'PluginExists' => [
+        'manager' => 'plugin.manager.image.effect',
+        'interface' => ImageEffectInterface::class,
+      ],
+    ];
     $expected['mapping']['effects']['sequence']['mapping']['data']['type'] = 'image.effect.[%parent.id]';
-    $expected['mapping']['effects']['sequence']['mapping']['weight']['type'] = 'integer';
+    $expected['mapping']['effects']['sequence']['mapping']['weight']['type'] = 'weight';
     $expected['mapping']['effects']['sequence']['mapping']['uuid']['type'] = 'uuid';
     $expected['mapping']['third_party_settings']['type'] = 'sequence';
     $expected['mapping']['third_party_settings']['label'] = 'Third party settings';
     $expected['mapping']['third_party_settings']['sequence']['type'] = '[%parent.%parent.%type].third_party.[%key]';
+    $expected['mapping']['third_party_settings']['requiredKey'] = FALSE;
     $expected['mapping']['_core']['type'] = '_core_config_info';
+    $expected['mapping']['_core']['requiredKey'] = FALSE;
     $expected['type'] = 'image.style.*';
+    $expected['constraints'] = ['ValidKeys' => '<infer>'];
 
     $this->assertEquals($expected, $definition);
 
@@ -217,6 +244,7 @@ class ConfigSchemaTest extends KernelTestBase {
     $expected['mapping']['upscale']['type'] = 'boolean';
     $expected['mapping']['upscale']['label'] = 'Upscale';
     $expected['type'] = 'image.effect.image_scale';
+    $expected['constraints'] = ['ValidKeys' => '<infer>'];
 
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for image.effect.image_scale');
 
@@ -225,6 +253,10 @@ class ConfigSchemaTest extends KernelTestBase {
     $definition = $effects->get('bddf0d06-42f9-4c75-a700-a33cafa25ea0')->get('data')->getDataDefinition()->toArray();
     // This should be the schema for image.effect.image_scale, reuse previous one.
     $expected['type'] = 'image.effect.image_scale';
+    $expected['mapping']['width']['requiredKey'] = TRUE;
+    $expected['mapping']['height']['requiredKey'] = TRUE;
+    $expected['mapping']['upscale']['requiredKey'] = TRUE;
+    $expected['requiredKey'] = TRUE;
 
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for the first effect of image.style.medium');
 
@@ -237,74 +269,83 @@ class ConfigSchemaTest extends KernelTestBase {
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
     $expected['mapping'] = [
-      'integer' => ['type' => 'integer'],
-      'string' => ['type' => 'string'],
+      'integer' => ['type' => 'integer', 'requiredKey' => TRUE],
+      'string' => ['type' => 'string', 'requiredKey' => TRUE],
     ];
+    $expected['constraints'] = ['ValidKeys' => '<infer>'];
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for config_test.dynamic.third_party:third_party_settings.config_schema_test');
 
     // More complex, several level deep test.
-    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.someschema.somemodule.section_one.subsection');
-    // This should be the schema of config_schema_test.someschema.somemodule.*.*.
+    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.some_schema.some_module.section_one.subsection');
+    // This should be the schema of config_schema_test.some_schema.some_module.*.*.
     $expected = [];
     $expected['label'] = 'Schema multiple filesystem marker test';
     $expected['class'] = Mapping::class;
-    $expected['mapping']['langcode']['type'] = 'string';
-    $expected['mapping']['langcode']['label'] = 'Language code';
+    $expected['mapping']['langcode']['type'] = 'langcode';
+    $expected['mapping']['langcode']['requiredKey'] = FALSE;
     $expected['mapping']['_core']['type'] = '_core_config_info';
-    $expected['mapping']['testid']['type'] = 'string';
-    $expected['mapping']['testid']['label'] = 'ID';
-    $expected['mapping']['testdescription']['type'] = 'text';
-    $expected['mapping']['testdescription']['label'] = 'Description';
-    $expected['type'] = 'config_schema_test.someschema.somemodule.*.*';
+    $expected['mapping']['_core']['requiredKey'] = FALSE;
+    $expected['mapping']['test_id']['type'] = 'string';
+    $expected['mapping']['test_id']['label'] = 'ID';
+    $expected['mapping']['test_description']['type'] = 'text';
+    $expected['mapping']['test_description']['label'] = 'Description';
+    $expected['type'] = 'config_schema_test.some_schema.some_module.*.*';
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
+    $expected['constraints'] = [
+      'ValidKeys' => '<infer>',
+      'LangcodeRequiredIfTranslatableValues' => NULL,
+    ];
 
-    $this->assertEquals($expected, $definition, 'Retrieved the right metadata for config_schema_test.someschema.somemodule.section_one.subsection');
+    $this->assertEquals($expected, $definition, 'Retrieved the right metadata for config_schema_test.some_schema.some_module.section_one.subsection');
 
-    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.someschema.somemodule.section_two.subsection');
+    $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.some_schema.some_module.section_two.subsection');
     // The other file should have the same schema.
-    $this->assertEquals($expected, $definition, 'Retrieved the right metadata for config_schema_test.someschema.somemodule.section_two.subsection');
+    $this->assertEquals($expected, $definition, 'Retrieved the right metadata for config_schema_test.some_schema.some_module.section_two.subsection');
   }
 
   /**
    * Tests metadata retrieval with several levels of %parent indirection.
    */
-  public function testSchemaMappingWithParents() {
-    $config_data = \Drupal::service('config.typed')->get('config_schema_test.someschema.with_parents');
+  public function testSchemaMappingWithParents(): void {
+    $config_data = \Drupal::service('config.typed')->get('config_schema_test.some_schema.with_parents');
 
     // Test fetching parent one level up.
     $entry = $config_data->get('one_level');
-    $definition = $entry->get('testitem')->getDataDefinition()->toArray();
+    $definition = $entry->get('test_item')->getDataDefinition()->toArray();
     $expected = [
-      'type' => 'config_schema_test.someschema.with_parents.key_1',
+      'type' => 'config_schema_test.some_schema.with_parents.key_1',
       'label' => 'Test item nested one level',
       'class' => StringData::class,
       'definition_class' => '\Drupal\Core\TypedData\DataDefinition',
       'unwrap_for_canonical_representation' => TRUE,
+      'requiredKey' => TRUE,
     ];
     $this->assertEquals($expected, $definition);
 
     // Test fetching parent two levels up.
     $entry = $config_data->get('two_levels');
-    $definition = $entry->get('wrapper')->get('testitem')->getDataDefinition()->toArray();
+    $definition = $entry->get('wrapper')->get('test_item')->getDataDefinition()->toArray();
     $expected = [
-      'type' => 'config_schema_test.someschema.with_parents.key_2',
+      'type' => 'config_schema_test.some_schema.with_parents.key_2',
       'label' => 'Test item nested two levels',
       'class' => StringData::class,
       'definition_class' => '\Drupal\Core\TypedData\DataDefinition',
       'unwrap_for_canonical_representation' => TRUE,
+      'requiredKey' => TRUE,
     ];
     $this->assertEquals($expected, $definition);
 
     // Test fetching parent three levels up.
     $entry = $config_data->get('three_levels');
-    $definition = $entry->get('wrapper_1')->get('wrapper_2')->get('testitem')->getDataDefinition()->toArray();
+    $definition = $entry->get('wrapper_1')->get('wrapper_2')->get('test_item')->getDataDefinition()->toArray();
     $expected = [
-      'type' => 'config_schema_test.someschema.with_parents.key_3',
+      'type' => 'config_schema_test.some_schema.with_parents.key_3',
       'label' => 'Test item nested three levels',
       'class' => StringData::class,
       'definition_class' => '\Drupal\Core\TypedData\DataDefinition',
       'unwrap_for_canonical_representation' => TRUE,
+      'requiredKey' => TRUE,
     ];
     $this->assertEquals($expected, $definition);
   }
@@ -312,7 +353,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests metadata applied to configuration objects.
    */
-  public function testSchemaData() {
+  public function testSchemaData(): void {
     // Try a simple property.
     $meta = \Drupal::service('config.typed')->get('system.site');
     $property = $meta->get('page')->get('front');
@@ -340,19 +381,29 @@ class ConfigSchemaTest extends KernelTestBase {
     // Now let's try something more complex, with nested objects.
     $wrapper = \Drupal::service('config.typed')->get('image.style.large');
     $effects = $wrapper->get('effects');
-    $this->assertCount(1, $effects->toArray(), 'Got an array with effects for image.style.large data');
-    $uuid = key($effects->getValue());
-    $effect = $effects->get($uuid)->getElements();
-    $this->assertFalse($effect['data']->isEmpty(), 'Got data for the image scale effect from metadata.');
-    $this->assertSame('image_scale', $effect['id']->getValue(), 'Got data for the image scale effect from metadata.');
-    $this->assertInstanceOf(IntegerInterface::class, $effect['data']->get('width'));
-    $this->assertEquals(480, $effect['data']->get('width')->getValue(), 'Got the right value for the scale effect width.');
+    $this->assertCount(2, $effects->toArray(), 'Got an array with effects for image.style.large data');
+    foreach ($effects->toArray() as $uuid => $definition) {
+      $effect = $effects->get($uuid)->getElements();
+      if ($definition['id'] == 'image_scale') {
+        $this->assertFalse($effect['data']->isEmpty(), 'Got data for the image scale effect from metadata.');
+        $this->assertSame('image_scale', $effect['id']->getValue(), 'Got data for the image scale effect from metadata.');
+        $this->assertInstanceOf(IntegerInterface::class, $effect['data']->get('width'));
+        $this->assertEquals(480, $effect['data']->get('width')->getValue(), 'Got the right value for the scale effect width.');
+      }
+      if ($definition['id'] == 'image_convert') {
+        $this->assertFalse($effect['data']->isEmpty(), 'Got data for the image convert effect from metadata.');
+        $this->assertSame('image_convert', $effect['id']->getValue(), 'Got data for the image convert effect from metadata.');
+        $this->assertSame('webp', $effect['data']->get('extension')->getValue(), 'Got the right value for the convert effect extension.');
+      }
+    }
   }
 
   /**
    * Tests configuration value data type enforcement using schemas.
+   *
+   * @group legacy
    */
-  public function testConfigSaveWithSchema() {
+  public function testConfigSaveWithSchema(): void {
     $untyped_values = [
       // Test a custom type.
       'config_schema_test_integer' => '1',
@@ -372,6 +423,7 @@ class ConfigSchemaTest extends KernelTestBase {
       ],
       'sequence' => [1, 0, 1],
       'sequence_bc' => [1, 0, 1],
+      'sequence_bc_root' => [['id' => 'foo', 'value' => 0], ['id' => 'bar', 'value' => 1]],
       // Not in schema and therefore should be left untouched.
       'not_present_in_schema' => TRUE,
     ];
@@ -394,13 +446,19 @@ class ConfigSchemaTest extends KernelTestBase {
       ],
       'sequence' => [TRUE, FALSE, TRUE],
       'sequence_bc' => [TRUE, FALSE, TRUE],
+      'sequence_bc_root' => [['id' => 'foo', 'value' => FALSE], ['id' => 'bar', 'value' => TRUE]],
       'not_present_in_schema' => TRUE,
     ];
 
     // Save config which has a schema that enforces types.
-    $this->config('config_schema_test.schema_data_types')
+    $this->expectDeprecation("The definition for the 'config_schema_test.schema_data_types.sequence_bc' sequence declares the type of its items in a way that is deprecated in drupal:8.0.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/2442603");
+    $config_object = $this->config('config_schema_test.schema_data_types');
+    $config_object
       ->setData($untyped_to_typed)
       ->save();
+    // Ensure the schemaWrapper property is reset after saving to prevent a
+    // memory leak.
+    $this->assertNull((new \ReflectionObject($config_object))->getProperty('schemaWrapper')->getValue($config_object));
     $this->assertSame($typed_values, $this->config('config_schema_test.schema_data_types')->get());
 
     // Save config which does not have a schema that enforces types.
@@ -423,7 +481,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Test configuration value data type enforcement using schemas.
    */
-  public function testConfigSaveMappingSort() {
+  public function testConfigSaveMappingSort(): void {
     // Top level map sorting.
     $data = [
       'foo' => '1',
@@ -441,7 +499,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests configuration sequence sorting using schemas.
    */
-  public function testConfigSaveWithSequenceSorting() {
+  public function testConfigSaveWithSequenceSorting(): void {
     $data = [
       'keyed_sort' => [
         'b' => '1',
@@ -511,7 +569,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests fallback to a greedy wildcard.
    */
-  public function testSchemaFallback() {
+  public function testSchemaFallback(): void {
     $definition = \Drupal::service('config.typed')->getDefinition('config_schema_test.wildcard_fallback.something');
     // This should be the schema of config_schema_test.wildcard_fallback.*.
     $expected = [];
@@ -519,14 +577,19 @@ class ConfigSchemaTest extends KernelTestBase {
     $expected['class'] = Mapping::class;
     $expected['definition_class'] = '\Drupal\Core\TypedData\MapDataDefinition';
     $expected['unwrap_for_canonical_representation'] = TRUE;
-    $expected['mapping']['langcode']['type'] = 'string';
-    $expected['mapping']['langcode']['label'] = 'Language code';
+    $expected['mapping']['langcode']['type'] = 'langcode';
+    $expected['mapping']['langcode']['requiredKey'] = FALSE;
     $expected['mapping']['_core']['type'] = '_core_config_info';
-    $expected['mapping']['testid']['type'] = 'string';
-    $expected['mapping']['testid']['label'] = 'ID';
-    $expected['mapping']['testdescription']['type'] = 'text';
-    $expected['mapping']['testdescription']['label'] = 'Description';
+    $expected['mapping']['_core']['requiredKey'] = FALSE;
+    $expected['mapping']['test_id']['type'] = 'string';
+    $expected['mapping']['test_id']['label'] = 'ID';
+    $expected['mapping']['test_description']['type'] = 'text';
+    $expected['mapping']['test_description']['label'] = 'Description';
     $expected['type'] = 'config_schema_test.wildcard_fallback.*';
+    $expected['constraints'] = [
+      'ValidKeys' => '<infer>',
+      'LangcodeRequiredIfTranslatableValues' => NULL,
+    ];
 
     $this->assertEquals($expected, $definition, 'Retrieved the right metadata for config_schema_test.wildcard_fallback.something');
 
@@ -541,7 +604,7 @@ class ConfigSchemaTest extends KernelTestBase {
    *
    * @see \Drupal\Core\Config\TypedConfigManager::getFallbackName()
    */
-  public function testColonsInSchemaTypeDetermination() {
+  public function testColonsInSchemaTypeDetermination(): void {
     $tests = \Drupal::service('config.typed')->get('config_schema_test.plugin_types')->get('tests')->getElements();
     $definition = $tests[0]->getDataDefinition()->toArray();
     $this->assertEquals('test.plugin_types.boolean', $definition['type']);
@@ -572,7 +635,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests hook_config_schema_info_alter().
    */
-  public function testConfigSchemaInfoAlter() {
+  public function testConfigSchemaInfoAlter(): void {
     /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typed_config */
     $typed_config = \Drupal::service('config.typed');
     $typed_config->clearCachedDefinitions();
@@ -616,7 +679,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests saving config when the type is wrapped by a dynamic type.
    */
-  public function testConfigSaveWithWrappingSchema() {
+  public function testConfigSaveWithWrappingSchema(): void {
     $untyped_values = [
       'tests' => [
         [
@@ -647,7 +710,7 @@ class ConfigSchemaTest extends KernelTestBase {
   /**
    * Tests dynamic config schema type with multiple sub-key references.
    */
-  public function testConfigSaveWithWrappingSchemaDoubleBrackets() {
+  public function testConfigSaveWithWrappingSchemaDoubleBrackets(): void {
     $untyped_values = [
       'tests' => [
         [
@@ -676,6 +739,12 @@ class ConfigSchemaTest extends KernelTestBase {
     \Drupal::configFactory()->getEditable('wrapping.config_schema_test.double_brackets')
       ->setData($untyped_values)
       ->save();
+    // TRICKY: https://www.drupal.org/project/drupal/issues/2663410 introduced a
+    // bug that made TypedConfigManager sensitive to cache pollution. Saving
+    // config triggers validation, which in turn triggers that cache pollution
+    // bug. This is a work-around.
+    // @todo Remove in https://www.drupal.org/project/drupal/issues/3400181
+    \Drupal::service('config.typed')->clearCachedDefinitions();
     $this->assertSame($typed_values, \Drupal::config('wrapping.config_schema_test.double_brackets')->get());
 
     $tests = \Drupal::service('config.typed')->get('wrapping.config_schema_test.double_brackets')->get('tests')->getElements();
@@ -709,6 +778,13 @@ class ConfigSchemaTest extends KernelTestBase {
     \Drupal::configFactory()->getEditable('wrapping.config_schema_test.double_brackets')
       ->setData($untyped_values)
       ->save();
+    // TRICKY: https://www.drupal.org/project/drupal/issues/2663410 introduced a
+    // bug that made TypedConfigManager sensitive to cache pollution. Saving
+    // config in a test triggers the schema checking and validation logic from
+    // \Drupal\Core\Config\Development\ConfigSchemaChecker , which in turn
+    // triggers that cache pollution bug. This is a work-around.
+    // @todo Remove in https://www.drupal.org/project/drupal/issues/3400181
+    \Drupal::service('config.typed')->clearCachedDefinitions();
     $this->assertSame($typed_values, \Drupal::config('wrapping.config_schema_test.double_brackets')->get());
 
     $tests = \Drupal::service('config.typed')->get('wrapping.config_schema_test.double_brackets')->get('tests')->getElements();
@@ -735,6 +811,13 @@ class ConfigSchemaTest extends KernelTestBase {
     \Drupal::configFactory()->getEditable('wrapping.config_schema_test.double_brackets')
       ->setData($typed_values)
       ->save();
+    // TRICKY: https://www.drupal.org/project/drupal/issues/2663410 introduced a
+    // bug that made TypedConfigManager sensitive to cache pollution. Saving
+    // config in a test triggers the schema checking and validation logic from
+    // \Drupal\Core\Config\Development\ConfigSchemaChecker , which in turn
+    // triggers that cache pollution bug. This is a work-around.
+    // @todo Remove in https://www.drupal.org/project/drupal/issues/3400181
+    \Drupal::service('config.typed')->clearCachedDefinitions();
     $tests = \Drupal::service('config.typed')->get('wrapping.config_schema_test.double_brackets')->get('tests')->getElements();
     $definition = $tests[0]->getDataDefinition()->toArray();
     $this->assertEquals('wrapping.test.double_brackets.*||test.double_brackets.cat.dog', $definition['type']);
@@ -755,12 +838,39 @@ class ConfigSchemaTest extends KernelTestBase {
     \Drupal::configFactory()->getEditable('wrapping.config_schema_test.other_double_brackets')
       ->setData($typed_values)
       ->save();
+    // TRICKY: https://www.drupal.org/project/drupal/issues/2663410 introduced a
+    // bug that made TypedConfigManager sensitive to cache pollution. Saving
+    // config in a test triggers the schema checking and validation logic from
+    // \Drupal\Core\Config\Development\ConfigSchemaChecker , which in turn
+    // triggers that cache pollution bug. This is a work-around.
+    // @todo Remove in https://www.drupal.org/project/drupal/issues/3400181
+    \Drupal::service('config.typed')->clearCachedDefinitions();
     $tests = \Drupal::service('config.typed')->get('wrapping.config_schema_test.other_double_brackets')->get('tests')->getElements();
     $definition = $tests[0]->getDataDefinition()->toArray();
     // Check that definition type is a merge of the expected types.
     $this->assertEquals('wrapping.test.other_double_brackets.*||test.double_brackets.cat:*.*', $definition['type']);
     // Check that breed was inherited from parent definition.
-    $this->assertEquals(['type' => 'string'], $definition['mapping']['breed']);
+    $this->assertEquals([
+      'type' => 'string',
+      'requiredKey' => TRUE,
+    ], $definition['mapping']['breed']);
+  }
+
+  /**
+   * @group legacy
+   */
+  public function testLangcodeRequiredIfTranslatableValuesConstraintError(): void {
+    $config = \Drupal::configFactory()->getEditable('config_test.foo');
+
+    $config
+      ->set('broken_langcode_required.foo', 'bar')
+      ->save();
+
+    $this->expectDeprecation('The LangcodeRequiredIfTranslatableValues constraint can only be applied to the root object being validated, using the \'config_object\' schema type on \'config_test.foo::broken_langcode_required\' is deprecated in drupal:10.3.0 and will trigger a \LogicException in drupal:11.0.0. See https://www.drupal.org/node/3459863');
+    $violations = \Drupal::service('config.typed')->createFromNameAndData($config->getName(), $config->get())
+      ->validate();
+
+    $this->assertCount(0, $violations);
   }
 
 }

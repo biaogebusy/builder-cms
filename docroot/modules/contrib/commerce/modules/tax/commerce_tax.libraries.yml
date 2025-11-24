@@ -1,11 +1,9 @@
 tax_number:
-  version: VERSION
   css:
     theme:
       css/commerce_tax.tax_number.css: {}
 
 resources:
-  version: VERSION
   css:
     theme:
       css/commerce_tax.resources.css: {}

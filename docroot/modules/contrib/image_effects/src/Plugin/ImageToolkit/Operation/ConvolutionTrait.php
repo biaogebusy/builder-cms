@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation;
 
 /**
@@ -14,12 +16,15 @@ trait ConvolutionTrait {
     return [
       'kernel' => [
         'description' => 'The convolution kernel matrix.',
+        'type' => 'array',
       ],
       'divisor' => [
         'description' => 'Typically the matrix entries sum (normalization).',
+        'type' => 'float',
       ],
       'offset' => [
         'description' => 'This value is added to the division result.',
+        'type' => 'float',
       ],
     ];
   }
@@ -28,20 +33,20 @@ trait ConvolutionTrait {
    * {@inheritdoc}
    */
   protected function validateArguments(array $arguments) {
+    $arguments = ArgumentsTypeValidator::validate($this->arguments(), $arguments);
+
     // Ensure convolution parameters are valid.
-    foreach ($arguments['kernel'] as $row) {
+    $kernel = [];
+    foreach ($arguments['kernel'] as $i => $row) {
       foreach ($row as $kernel_entry) {
         if (!is_numeric($kernel_entry)) {
-          throw new \InvalidArgumentException("Invalid kernel entry ('{$arguments['divisor']}') specified for the image 'convolution' operation");
+          throw new \InvalidArgumentException("Invalid kernel entry ('{$kernel_entry}') specified for the image 'convolution' operation");
         }
+        $kernel[$i][] = (float) $kernel_entry;
       }
     }
-    if (!is_numeric($arguments['divisor'])) {
-      throw new \InvalidArgumentException("Invalid divisor ('{$arguments['divisor']}') specified for the image 'convolution' operation");
-    }
-    if (!is_numeric($arguments['offset'])) {
-      throw new \InvalidArgumentException("Invalid offset ('{$arguments['offset']}') specified for the image 'convolution' operation");
-    }
+    $arguments['kernel'] = $kernel;
+
     return $arguments;
   }
 

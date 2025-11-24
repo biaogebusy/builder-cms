@@ -1,7 +1,7 @@
 name: Message example
 type: module
 description: "Example message for working with the message module."
-core_version_requirement: ^9.2 || ^10
+core_version_requirement: ^9.2 || ^10 || ^11
 package: Message
 dependencies:
   - message:message
@@ -9,7 +9,7 @@ dependencies:
   - drupal:node
   - drupal:comment
 
-# Information added by Drupal.org packaging script on 2024-03-10
-version: '8.x-1.5'
+# Information added by Drupal.org packaging script on 2025-02-16
+version: '8.x-1.8'
 project: 'message'
-datestamp: 1710105162
+datestamp: 1739744269

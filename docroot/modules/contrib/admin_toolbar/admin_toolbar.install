@@ -14,3 +14,76 @@ function admin_toolbar_update_8001() {
   // Rebuilding the route cache.
   \Drupal::service("router.builder")->rebuild();
 }
+
+/**
+ * Add menu_depth param into the config.
+ *
+ * @see https://www.drupal.org/project/admin_toolbar/issues/3200542
+ */
+function admin_toolbar_update_8002() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('admin_toolbar.settings');
+  if (empty($config->get('menu_depth'))) {
+    $config->set('menu_depth', 4);
+    $config->save(TRUE);
+  }
+}
+
+/**
+ * Uninstall Admin Toolbar Links Access Filter for Drupal 10.3+.
+ *
+ * @see https://www.drupal.org/project/admin_toolbar/issues/3463291
+ */
+function admin_toolbar_update_8003() {
+  if (version_compare(\Drupal::VERSION, '10.3.0', '>=')) {
+    /** @var \Drupal\Core\Extension\ModuleInstallerInterface $module_installer */
+    $module_installer = \Drupal::service('module_installer');
+    $module_installer->uninstall(['admin_toolbar_links_access_filter']);
+  }
+}
+
+/**
+ * Move the 'hoverintent_functionality' configuration to 'admin_toolbar'.
+ */
+function admin_toolbar_update_8004() {
+  // If the 'hoverintent_functionality' is set in the config
+  // 'admin_toolbar_tools.settings' copy it to the 'admin_toolbar.settings'.
+  /** @var \Drupal\Core\Config\Config $admin_toolbar_tools_config */
+  $admin_toolbar_tools_config = \Drupal::service('config.factory')
+    ->getEditable('admin_toolbar_tools.settings');
+
+  // Define the default values for the added configuration variables.
+  $hoverintent_behavior_config_default = [
+    'enabled' => TRUE,
+    'timeout' => 500,
+  ];
+
+  // If there is a value in the old config, move it to the new config.
+  if (!$admin_toolbar_tools_config->isNew()) {
+    $hoverintent_functionality = (bool) $admin_toolbar_tools_config->get('hoverintent_functionality');
+    // Move 'hoverintent_functionality' to the 'admin_toolbar.settings'.
+    $hoverintent_behavior_config_default['enabled'] = $hoverintent_functionality;
+    // Remove the 'hoverintent_functionality' configuration from the
+    // 'admin_toolbar_tools.settings'.
+    $admin_toolbar_tools_config->clear('hoverintent_functionality')
+      ->save(TRUE);
+  }
+
+  // If the admin_toolbar_tools config is new, it means that the module was
+  // not installed and therefore had no value for the config.
+  \Drupal::service('config.factory')
+    ->getEditable('admin_toolbar.settings')
+    ->set('hoverintent_behavior', $hoverintent_behavior_config_default)
+    ->save(TRUE);
+
+}
+
+/**
+ * Disable the 'toggle_shortcut' feature by default.
+ */
+function admin_toolbar_update_8005() {
+  \Drupal::service('config.factory')
+    ->getEditable('admin_toolbar.settings')
+    ->set('enable_toggle_shortcut', FALSE)
+    ->save(TRUE);
+}

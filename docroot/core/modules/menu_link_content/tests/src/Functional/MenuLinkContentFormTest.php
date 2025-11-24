@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Functional;
 
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class MenuLinkContentFormTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'menu_link_content',
@@ -58,7 +58,7 @@ class MenuLinkContentFormTest extends BrowserTestBase {
   /**
    * Tests the 'link to any page' permission for a restricted page.
    */
-  public function testMenuLinkContentFormLinkToAnyPage() {
+  public function testMenuLinkContentFormLinkToAnyPage(): void {
     $menu_link = MenuLinkContent::create([
       'title' => 'Menu link test',
       'provider' => 'menu_link_content',
@@ -72,6 +72,9 @@ class MenuLinkContentFormTest extends BrowserTestBase {
     $this->drupalGet('/admin/structure/menu/item/' . $menu_link->id() . '/edit');
     $this->assertSession()->statusCodeEquals(200);
 
+    // Test that other menus are available when editing existing menu link.
+    $this->assertSession()->optionExists('edit-menu-parent', 'main:');
+
     $this->drupalLogin($this->basicUser);
 
     $this->drupalGet('/admin/structure/menu/item/' . $menu_link->id() . '/edit');
@@ -81,8 +84,10 @@ class MenuLinkContentFormTest extends BrowserTestBase {
   /**
    * Tests the MenuLinkContentForm class.
    */
-  public function testMenuLinkContentForm() {
+  public function testMenuLinkContentForm(): void {
     $this->drupalGet('admin/structure/menu/manage/admin/add');
+    // Test that other menus are not available when creating a new menu link.
+    $this->assertSession()->optionNotExists('edit-menu-parent', 'main:');
     $option = $this->assertSession()->optionExists('edit-menu-parent', 'admin:');
     $this->assertTrue($option->isSelected());
     // Test that the field description is present.
@@ -98,13 +103,33 @@ class MenuLinkContentFormTest extends BrowserTestBase {
   /**
    * Tests validation for the MenuLinkContentForm class.
    */
-  public function testMenuLinkContentFormValidation() {
+  public function testMenuLinkContentFormValidation(): void {
     $this->drupalGet('admin/structure/menu/manage/admin/add');
     $this->submitForm([
       'title[0][value]' => 'Test page',
       'link[0][uri]' => '<test>',
     ], 'Save');
     $this->assertSession()->pageTextContains('Manually entered paths should start with one of the following characters: / ? #');
+  }
+
+  /**
+   * Tests the operations links alter related functional for menu_link_content.
+   */
+  public function testMenuLinkContentOperationsLink(): void {
+    \Drupal::service('module_installer')->install(['menu_operations_link_test']);
+    $menu_link = MenuLinkContent::create([
+      'title' => 'Menu link test',
+      'provider' => 'menu_link_content',
+      'menu_name' => 'main',
+      'link' => ['uri' => 'internal:/user/login'],
+    ]);
+    $menu_link->save();
+
+    // When we are on the listing page, we should be able to see the altered
+    // values by alter hook in the operations link menu.
+    $this->drupalGet('/admin/structure/menu/manage/main');
+    $this->assertSession()->linkExists('Altered Edit Title');
+    $this->assertSession()->linkExists('Custom Home');
   }
 
 }

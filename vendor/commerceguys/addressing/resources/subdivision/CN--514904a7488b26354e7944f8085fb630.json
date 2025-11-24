@@ -1,0 +1,41 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JX",
+		"Yichun shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Fengcheng Shi": {
+			"local_name": "丰城市"
+		},
+		"Fengxin Xian": {
+			"local_name": "奉新县"
+		},
+		"Gao'an Shi": {
+			"local_name": "高安市"
+		},
+		"Jing'an Xian": {
+			"local_name": "靖安县"
+		},
+		"Shanggao Xian": {
+			"local_name": "上高县"
+		},
+		"Tonggu Xian": {
+			"local_name": "铜鼓县"
+		},
+		"Wanzai Xian": {
+			"local_name": "万载县"
+		},
+		"Yifeng Xian": {
+			"local_name": "宜丰县"
+		},
+		"Yuanzhou Qu": {
+			"local_name": "袁州区"
+		},
+		"Zhangshu Shi": {
+			"local_name": "樟树市"
+		}
+	}
+}

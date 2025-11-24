@@ -77,6 +77,10 @@
 	"BIF": {
 		"name": "burundiske franc"
 	},
+	"XCG": {
+		"name": "Caribbean guilder",
+		"symbol": "Cg."
+	},
 	"KYD": {
 		"name": "caymanske dollar"
 	},
@@ -213,9 +217,6 @@
 	"CRC": {
 		"name": "kostarikanske colón"
 	},
-	"CUC": {
-		"name": "kubanske konvertible pesos"
-	},
 	"CUP": {
 		"name": "kubanske pesos"
 	},
@@ -281,9 +282,6 @@
 	},
 	"NAD": {
 		"name": "namibiske dollar"
-	},
-	"ANG": {
-		"name": "nederlandske antillegylden"
 	},
 	"NPR": {
 		"name": "nepalske rupiar"
@@ -374,10 +372,7 @@
 		"name": "seychelliske rupiar"
 	},
 	"SLE": {
-		"name": "sierraleonske leonar"
-	},
-	"SLL": {
-		"name": "sierraleonske leonar (1964—2022)"
+		"name": "sierraleonsk leone"
 	},
 	"SGD": {
 		"name": "singaporske dollar"
@@ -469,8 +464,5 @@
 	},
 	"ZMW": {
 		"name": "zambiske kwacha"
-	},
-	"ZWL": {
-		"name": "zimbabwisk dollar (2009)"
 	}
 }

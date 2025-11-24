@@ -15,26 +15,24 @@ use Drupal\Core\Url;
  * Implements hook_help().
  */
 function module_filter_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.module_filter':
-      $output = '';
-      $output .= '<p>';
-      $output .= t('The modules list page can become quite big when dealing with a fairly large site or even just a dev site meant for testing new and various modules being considered.');
-      $output .= '</p>';
-      $output .= '<p>';
-      $output .= t('What this module aims to accomplish is the ability to quickly find the module you are looking for without having to rely on the browsers search feature which more times than not shows you the module name in the -Required by- or -Depends on- sections of the various modules or even some other location on the page like a menu item.');
-      $output .= '</p>';
-      $output .= '<p>';
-      $output .= t('See the <a href=":project_page">project page on Drupal.org</a> for more details.', [':project_page' => 'https://www.drupal.org/project/module_filter']);
+  if ($route_name == 'help.page.module_filter') {
+    $output = '<p>';
+    $output .= t('The modules list page can become quite big when dealing with a fairly large site or even just a dev site meant for testing new and various modules being considered.');
+    $output .= '</p>';
+    $output .= '<p>';
+    $output .= t('What this module aims to accomplish is the ability to quickly find the module you are looking for without having to rely on the browsers search feature which more times than not shows you the module name in the -Required by- or -Depends on- sections of the various modules or even some other location on the page like a menu item.');
+    $output .= '</p>';
+    $output .= '<p>';
+    $output .= t('See the <a href=":project_page">project page on Drupal.org</a> for more details.', [':project_page' => 'https://www.drupal.org/project/module_filter']);
 
-      return $output;
+    return $output;
   }
 }
 
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function module_filter_form_system_modules_alter(&$form, FormStateInterface $form_state, $form_id) {
+function module_filter_form_system_modules_alter(&$form, FormStateInterface $form_state, $form_id): void {
   $request_object = \Drupal::request();
   $config = \Drupal::config('module_filter.settings');
 
@@ -127,7 +125,7 @@ function module_filter_form_system_modules_alter(&$form, FormStateInterface $for
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function module_filter_form_system_modules_confirm_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function module_filter_form_system_modules_confirm_form_alter(&$form, FormStateInterface $form_state, $form_id): void {
   $request_object = \Drupal::request();
   $form['filters']['text'] = [
     '#type' => 'value',
@@ -139,7 +137,7 @@ function module_filter_form_system_modules_confirm_form_alter(&$form, FormStateI
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function module_filter_form_system_modules_uninstall_alter(&$form, FormStateInterface $form_state, $form_id) {
+function module_filter_form_system_modules_uninstall_alter(&$form, FormStateInterface $form_state, $form_id): void {
   $request_object = \Drupal::request();
   // Remove the 'system/drupal.system.modules' library if it is attached, and
   // replace it with this module's 'module_filter/modules.uninstall' library.
@@ -160,7 +158,7 @@ function module_filter_form_system_modules_uninstall_alter(&$form, FormStateInte
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function module_filter_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state, $form_id) {
+function module_filter_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state, $form_id): void {
   $config = \Drupal::config('module_filter.settings');
   if (!$config->get('enabled_filters.permissions')) {
     return;
@@ -195,8 +193,8 @@ function module_filter_form_user_admin_permissions_alter(&$form, FormStateInterf
 /**
  * Implements hook_theme_registry_alter().
  */
-function module_filter_theme_registry_alter(&$theme_registry) {
-  // We need to alter the system-modules-details template so we can add
+function module_filter_theme_registry_alter(&$theme_registry): void {
+  // We need to alter the system-modules-details template, so we can add
   // applicable requires and required-by classes.
   $theme_registry['system_modules_details']['path'] = \Drupal::service('extension.list.module')->getPath('module_filter') . '/templates';
 }
@@ -204,8 +202,9 @@ function module_filter_theme_registry_alter(&$theme_registry) {
 /**
  * Implements hook_preprocess_HOOK().
  */
-function module_filter_preprocess_system_modules_details(&$variables) {
-  $display_path = \Drupal::config('module_filter.settings')->get('path');
+function module_filter_preprocess_system_modules_details(&$variables): void {
+  $settings = \Drupal::config('module_filter.settings');
+  $display_path = $settings->get('path');
   if ($display_path) {
     foreach ($variables['modules'] as &$module) {
       // Get the module id from parents.
@@ -218,12 +217,16 @@ function module_filter_preprocess_system_modules_details(&$variables) {
       }
     }
   }
+
+  if ($settings->get('descriptions_show')) {
+    $variables['descriptions_show'] = 'open';
+  }
 }
 
 /**
  * Form submit callback to track recently enabled modules.
  */
-function module_filter_system_modules_recent_enabled_submit($form, FormStateInterface $form_state) {
+function module_filter_system_modules_recent_enabled_submit($form, FormStateInterface $form_state): void {
   $state = \Drupal::state();
   $recent = $state->get('module_filter.recent') ?: [];
 
@@ -254,7 +257,7 @@ function module_filter_system_modules_recent_enabled_submit($form, FormStateInte
 /**
  * Form submit callback for remembering the filter value.
  */
-function module_filter_system_modules_redirect_submit($form, FormStateInterface $form_state) {
+function module_filter_system_modules_redirect_submit($form, FormStateInterface $form_state): void {
   if ($text = $form_state->getValue('text')) {
     /** @var \Drupal\Core\Url $route_name */
     $route_name = ($redirect = $form_state->getRedirect()) ? $redirect->getRouteName() : 'system.modules_list';

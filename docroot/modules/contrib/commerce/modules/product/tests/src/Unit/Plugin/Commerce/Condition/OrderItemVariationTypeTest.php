@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_product\Unit\Plugin\Commerce\Condition;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_product\Plugin\Commerce\Condition\OrderItemVariationType;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_product\Plugin\Commerce\Condition\OrderItemVariationType

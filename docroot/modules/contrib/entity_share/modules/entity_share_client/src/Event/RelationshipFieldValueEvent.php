@@ -4,15 +4,15 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Event;
 
-use Symfony\Contracts\EventDispatcher\Event;
 use Drupal\Core\Field\FieldItemListInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Defines a RelationshipFieldValueEvent event.
  */
 class RelationshipFieldValueEvent extends Event {
 
-  const EVENT_NAME = 'entity_share_client.relationship_field_value';
+  public const EVENT_NAME = 'entity_share_client.relationship_field_value';
 
   /**
    * A FieldItemList object.

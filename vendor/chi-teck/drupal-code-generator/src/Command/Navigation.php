@@ -1,11 +1,15 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command;
 
-use DrupalCodeGenerator\IOAwareInterface;
-use DrupalCodeGenerator\IOAwareTrait;
+use DrupalCodeGenerator\InputOutput\DefaultOptions;
+use DrupalCodeGenerator\InputOutput\IOAwareInterface;
+use DrupalCodeGenerator\InputOutput\IOAwareTrait;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,6 +19,7 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 /**
  * Implements navigation command.
  */
+#[AsCommand(name: 'navigation')]
 final class Navigation extends Command implements IOAwareInterface, LoggerAwareInterface {
 
   use IOAwareTrait;
@@ -22,15 +27,11 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
 
   /**
    * Menu tree.
-   *
-   * @var array
    */
   private array $menuTree = [];
 
   /**
    * Menu labels.
-   *
-   * @var array
    */
   private array $labels = [
     'misc:d7' => 'Drupal 7',
@@ -41,7 +42,7 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
   /**
    * {@inheritdoc}
    */
-  protected function configure() {
+  protected function configure(): void {
 
     // As the navigation is default command the help should be relevant to the
     // entire DCG application.
@@ -56,7 +57,8 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
       ->setName('navigation')
       ->setDescription('Command line code generator')
       ->setHelp($help)
-      ->setHidden(TRUE);
+      ->setHidden();
+    DefaultOptions::apply($this);
   }
 
   /**
@@ -74,12 +76,17 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
 
     // Build the menu structure.
     $this->menuTree = [];
-    foreach ($this->getApplication()->all() as $command) {
-      if ($command instanceof GeneratorInterface && !$command->isHidden()) {
-        self::arraySetNestedValue($this->menuTree, \explode(':', $command->getName()));
+    if (!$application = $this->getApplication()) {
+      throw new \LogicException('Navigation command cannot work without application');
+    }
+    foreach ($application->all() as $command) {
+      if ($command instanceof LabelInterface && !$command->isHidden()) {
+        /** @var string $command_name */
+        $command_name = $command->getName();
+        self::arraySetNestedValue($this->menuTree, \explode(':', $command_name));
         // Collect command labels.
         if ($label = $command->getLabel()) {
-          $this->labels[$command->getName()] = $label;
+          $this->labels[$command_name] = $label;
         }
       }
     }
@@ -94,7 +101,10 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
    */
   protected function execute(InputInterface $input, OutputInterface $output): int {
     if ($command_name = $this->selectGenerator($input, $output)) {
-      return $this->getApplication()
+      if (!$application = $this->getApplication()) {
+        throw new \LogicException('Navigation command cannot work without application');
+      }
+      return $application
         ->find($command_name)
         ->run($input, $output);
     }
@@ -102,17 +112,10 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
   }
 
   /**
-   * Returns a generator selected by the user from a multilevel console menu.
+   * Selects a generator.
    *
-   * @param \Symfony\Component\Console\Input\InputInterface $input
-   *   Input instance.
-   * @param \Symfony\Component\Console\Output\OutputInterface $output
-   *   Output instance.
-   * @param array $menu_trail
-   *   (Optional) Menu trail.
-   *
-   * @return string|null
-   *   Generator name or null if user decided to exit the navigation.
+   * Returns a generator selected by the user from a multilevel console menu or
+   * null if user decided to exit the navigation.
    */
   private function selectGenerator(InputInterface $input, OutputInterface $output, array $menu_trail = []): ?string {
 
@@ -149,9 +152,9 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
     $answer_label = $this->getHelper('question')->ask($input, $output, $question);
     $answer = \array_search($answer_label, $choices);
 
-    if ($answer == '..') {
+    if ($answer === '..') {
       // Exit the application if a user selected zero on the top menu level.
-      if (\count($menu_trail) == 0) {
+      if (\count($menu_trail) === 0) {
         return NULL;
       }
       // Level up.
@@ -166,7 +169,7 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
   }
 
   /**
-   * Sort multi-dimensional array by keys.
+   * Sort multidimensional array by keys.
    *
    * @param array $array
    *   An array being sorted.
@@ -183,9 +186,7 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
   /**
    * Sets the property to true in nested array.
    *
-   * @param array $array
-   *   A reference to the array to modify.
-   * @param array $parents
+   * @psalm-param list<string> $parents
    *   An array of parent keys, starting with the outermost key.
    *
    * @see https://api.drupal.org/api/drupal/includes!common.inc/function/drupal_array_set_nested_value/7
@@ -196,6 +197,8 @@ final class Navigation extends Command implements IOAwareInterface, LoggerAwareI
       if (isset($ref) && !\is_array($ref)) {
         $ref = [];
       }
+      // @todo Fix this.
+      /** @psalm-suppress PossiblyNullArrayAccess */
       $ref = &$ref[$parent];
     }
     $ref ??= TRUE;

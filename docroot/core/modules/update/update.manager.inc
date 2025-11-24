@@ -6,7 +6,7 @@
  *
  * This allows site administrators with the 'administer software updates'
  * permission to either upgrade existing projects, or download and install new
- * ones, so long as the killswitch setting ('allow_authorize_operations') is
+ * ones, so long as the kill switch setting ('allow_authorize_operations') is
  * not FALSE.
  *
  * To install new code, the administrator is prompted for either the URL of an
@@ -36,9 +36,11 @@
  * root.
  */
 
-use Drupal\Core\Url;
 use Drupal\Core\File\Exception\FileException;
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\Exception\InvalidStreamWrapperException;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\Url;
+use Psr\Http\Client\ClientExceptionInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -191,7 +193,7 @@ function update_manager_archive_extract($file, $directory) {
  * @param string $project
  *   The short name of the project to download.
  * @param string $archive_file
- *   The filename of the unextracted archive.
+ *   The filename of the un-extracted archive.
  * @param string $directory
  *   The directory that the archive was extracted into.
  *
@@ -211,8 +213,8 @@ function update_manager_archive_verify($project, $archive_file, $directory) {
  * @param $url
  *   The URL of the file on the server.
  *
- * @return string
- *   Path to local file.
+ * @return string|false
+ *   Path to local file, or FALSE if it could not be retrieved.
  */
 function update_manager_file_get($url) {
   $parsed_url = parse_url($url);
@@ -227,7 +229,17 @@ function update_manager_file_get($url) {
   $local = $cache_directory . '/' . \Drupal::service('file_system')->basename($parsed_url['path']);
 
   if (!file_exists($local) || update_delete_file_if_stale($local)) {
-    return system_retrieve_file($url, $local, FALSE, FileSystemInterface::EXISTS_REPLACE);
+    try {
+      $data = (string) \Drupal::httpClient()->get($url)->getBody();
+      return \Drupal::service('file_system')->saveData($data, $local, FileExists::Replace);
+    }
+    catch (ClientExceptionInterface $exception) {
+      \Drupal::messenger()->addError(t('Failed to fetch file due to error "%error"', ['%error' => $exception->getMessage()]));
+    }
+    catch (FileException | InvalidStreamWrapperException $e) {
+      \Drupal::messenger()->addError(t('Failed to save file due to error "%error"', ['%error' => $e->getMessage()]));
+    }
+    return FALSE;
   }
   else {
     return $local;

@@ -2,6 +2,7 @@
 
 namespace Drupal\video_embed_field\Plugin\video_embed_field\Provider;
 
+use Drupal\Core\Url;
 use Drupal\video_embed_field\ProviderPluginBase;
 
 /**
@@ -17,7 +18,7 @@ class YouTube extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function renderEmbedCode($width, $height, $autoplay) {
+  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE) {
     $embed_code = [
       '#type' => 'video_embed_iframe',
       '#provider' => 'youtube',
@@ -26,14 +27,21 @@ class YouTube extends ProviderPluginBase {
         'autoplay' => $autoplay,
         'start' => $this->getTimeIndex(),
         'rel' => '0',
+        // Video needs to be muted if autoplay is set.
+        'mute' => $autoplay,
       ],
       '#attributes' => [
         'width' => $width,
         'height' => $height,
         'frameborder' => '0',
         'allowfullscreen' => 'allowfullscreen',
+        'referrerpolicy' => 'strict-origin-when-cross-origin',
       ],
     ];
+    $title = $this->getName($title_format, $use_title_fallback);
+    if (isset($title)) {
+      $embed_code['#attributes']['title'] = $title;
+    }
     if ($language = $this->getLanguagePreference()) {
       $embed_code['#query']['cc_lang_pref'] = $language;
     }
@@ -59,12 +67,12 @@ class YouTube extends ProviderPluginBase {
   /**
    * Extract the language preference from the URL for use in closed captioning.
    *
-   * @return string|FALSE
+   * @return string|false
    *   The language preference if one exists or FALSE if one could not be found.
    */
   protected function getLanguagePreference() {
     preg_match('/[&\?]hl=(?<language>[a-z\-]*)/', $this->getInput(), $matches);
-    return isset($matches['language']) ? $matches['language'] : FALSE;
+    return $matches['language'] ?? FALSE;
   }
 
   /**
@@ -87,8 +95,31 @@ class YouTube extends ProviderPluginBase {
    * {@inheritdoc}
    */
   public static function getIdFromInput($input) {
-    preg_match('/^https?:\/\/(www\.)?((?!.*list=)youtube\.com\/watch\?.*v=|youtu\.be\/)(?<id>[0-9A-Za-z_-]*)/', $input, $matches);
-    return isset($matches['id']) ? $matches['id'] : FALSE;
+    preg_match('/^https?:\/\/(www\.)?((?!.*list=)youtube\.com\/(watch\?.*v=|live\/|embed\/|shorts\/)|youtu\.be\/)(?<id>[0-9A-Za-z_-]*)/', $input, $matches);
+    return $matches['id'] ?? FALSE;
+  }
+
+  /**
+   * Get the Youtube oembed data.
+   *
+   * @return array|null
+   *   An array of data from the oembed endpoint or NULL if download failed.
+   */
+  protected function oEmbedData(): ?array {
+    $normalized_url = sprintf('https://www.youtube.com/watch?v=%s', $this->videoId);
+    $oembed_url = Url::fromUri('https://www.youtube.com/oembed', ['query' => ['url' => $normalized_url]]);
+    return $this->downloadJsonData($oembed_url->toString());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getName($title_format = NULL, $use_title_fallback = TRUE) {
+    return $this->formatTitle(
+      $this->oEmbedData()['title'] ?? NULL,
+      $title_format,
+      $use_title_fallback
+    );
   }
 
 }

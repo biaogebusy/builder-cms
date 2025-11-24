@@ -1,25 +1,29 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command;
 
 use DrupalCodeGenerator\Application;
+use DrupalCodeGenerator\Asset\Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\GeneratorType;
 use DrupalCodeGenerator\Utils;
+use DrupalCodeGenerator\Validator\Required;
+use DrupalCodeGenerator\Validator\RequiredMachineName;
 
-/**
- * Implements field command.
- */
-final class Field extends ModuleGenerator {
-
-  protected string $name = 'field';
-  protected string $description = 'Generates a field';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/field';
+#[Generator(
+  name: 'field',
+  description: 'Generates a field',
+  templatePath: Application::TEMPLATE_PATH . '/_field',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Field extends BaseGenerator {
 
   /**
    * Field sub-types.
-   *
-   * @var array
    */
-  private array $subTypes = [
+  private const SUB_TYPES = [
     'boolean' => [
       'label' => 'Boolean',
       'list' => FALSE,
@@ -104,10 +108,8 @@ final class Field extends ModuleGenerator {
 
   /**
    * Date types.
-   *
-   * @var array
    */
-  protected array $dateTypes = [
+  private const DATE_TYPES = [
     'date' => 'Date only',
     'datetime' => 'Date and time',
   ];
@@ -115,25 +117,29 @@ final class Field extends ModuleGenerator {
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
+  protected function generate(array &$vars, Assets $assets): void {
 
-    $this->collectDefault($vars);
+    $ir = $this->createInterviewer($vars);
 
-    $vars['field_label'] = $this->ask('Field label', 'Example', '::validateRequired');
-    $vars['field_id'] = $this->ask('Field ID', '{machine_name}_{field_label|h2m}', '::validateRequiredMachineName');
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
 
-    $subfield_count_validator = static function ($value) {
-      if (!\is_numeric($value) || \intval($value) != $value || $value <= 0) {
+    $vars['field_label'] = $ir->ask('Field label', 'Example', new Required());
+    $vars['field_id'] = $ir->ask('Field ID', '{machine_name}_{field_label|h2m}', new RequiredMachineName());
+
+    $subfield_count_validator = static function (mixed $value): int {
+      if (!(\is_int($value) || \ctype_digit($value)) || (int) $value <= 0) {
         throw new \UnexpectedValueException('The value should be greater than zero.');
       }
-      return $value;
+      return (int) $value;
     };
 
-    $vars['subfield_count'] = $this->ask('How many sub-fields would you like to create?', '3', $subfield_count_validator);
+    $vars['subfield_count'] = $ir->ask('How many sub-fields would you like to create?', '3', $subfield_count_validator);
 
-    $type_choice_keys = \array_keys($this->subTypes);
-    $type_choice_labels = \array_column($this->subTypes, 'label');
-    $type_choices = \array_combine($type_choice_keys, $type_choice_labels);
+    $type_choices = \array_combine(
+      \array_keys(self::SUB_TYPES),
+      \array_column(self::SUB_TYPES, 'label'),
+    );
 
     // Indicates that at least one of sub-fields needs Random component.
     $vars['random'] = FALSE;
@@ -161,23 +167,27 @@ final class Field extends ModuleGenerator {
     $vars['formatter_class'] = '{field_label|camelize}DefaultFormatter';
 
     for ($i = 1; $i <= $vars['subfield_count']; $i++) {
-      $this->io->writeln(\sprintf('<fg=green>%s</>', \str_repeat('–', 50)));
+      $this->io()->writeln(\sprintf('<fg=green>%s</>', \str_repeat('–', 50)));
 
       $subfield = new \stdClass();
 
-      $subfield->name = $this->ask("Label for sub-field #$i", "Value $i");
-      $subfield->machineName = $this->ask("Machine name for sub-field #$i", Utils::human2machine($subfield->name));
-      $type = $this->choice("Type of sub-field #$i", $type_choices, 'Text');
+      $subfield->name = $ir->ask("Label for sub-field #$i", "Value $i");
+      $subfield->machineName = $ir->ask(
+        "Machine name for sub-field #$i",
+        Utils::human2machine($subfield->name),
+        new RequiredMachineName(),
+      );
+      /** @var string $type */
+      $type = $ir->choice("Type of sub-field #$i", $type_choices, 'Text');
 
-      if ($type == 'datetime') {
-        $subfield->dateType = $this->choice("Date type for sub-field #$i", $this->dateTypes, 'Date only');
-      }
+      $subfield->dateType = $type === 'datetime' ?
+        $ir->choice("Date type for sub-field #$i", self::DATE_TYPES, 'Date only') : NULL;
 
-      $definition = $this->subTypes[$type];
+      $definition = self::SUB_TYPES[$type];
       if ($definition['list']) {
-        $subfield->list = $this->confirm("Limit allowed values for sub-field #$i?", FALSE);
+        $subfield->list = $ir->confirm("Limit allowed values for sub-field #$i?", FALSE);
       }
-      $subfield->required = $this->confirm("Make sub-field #$i required?", FALSE);
+      $subfield->required = $ir->confirm("Make sub-field #$i required?", FALSE);
 
       // Build sub-field vars.
       $vars['subfields'][$i] = [
@@ -185,15 +195,15 @@ final class Field extends ModuleGenerator {
         'machine_name' => $subfield->machineName,
         'type' => $type,
         'data_type' => $definition['data_type'],
-        'list' => !empty($subfield->list),
+        'list' => $subfield->list ?? FALSE,
         'allowed_values_method' => 'allowed' . Utils::camelize($subfield->name, TRUE) . 'Values',
         'required' => $subfield->required,
         'link' => $definition['link'],
       ];
-      if (isset($subfield->dateType)) {
+      if ($subfield->dateType) {
         $vars['subfields'][$i]['date_type'] = $subfield->dateType;
         // Back to date type ID.
-        $vars['subfields'][$i]['date_storage_format'] = $subfield->dateType == 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:s';
+        $vars['subfields'][$i]['date_storage_format'] = $subfield->dateType === 'date' ? 'Y-m-d' : 'Y-m-d\TH:i:s';
       }
 
       if ($definition['random']) {
@@ -212,7 +222,7 @@ final class Field extends ModuleGenerator {
         $vars['required'] = TRUE;
       }
 
-      if ($type == 'email') {
+      if ($type === 'email') {
         $vars['email'] = TRUE;
       }
 
@@ -220,42 +230,42 @@ final class Field extends ModuleGenerator {
         $vars['link'] = TRUE;
       }
 
-      if ($type == 'datetime') {
+      if ($type === 'datetime') {
         $vars['datetime'] = TRUE;
       }
 
     }
 
-    $this->io->writeln(\sprintf('<fg=green>%s</>', \str_repeat('–', 50)));
+    $this->io()->writeln(\sprintf('<fg=green>%s</>', \str_repeat('–', 50)));
 
-    $vars['storage_settings'] = $this->confirm('Would you like to create field storage settings form?', FALSE);
-    $vars['instance_settings'] = $this->confirm('Would you like to create field instance settings form?', FALSE);
-    $vars['widget_settings'] = $this->confirm('Would you like to create field widget settings form?', FALSE);
-    $vars['formatter_settings'] = $this->confirm('Would you like to create field formatter settings form?', FALSE);
-    $vars['table_formatter'] = $this->confirm('Would you like to create table formatter?', FALSE);
-    $vars['key_value_formatter'] = $this->confirm('Would you like to create key-value formatter?', FALSE);
+    $vars['storage_settings'] = $ir->confirm('Would you like to create field storage settings form?', FALSE);
+    $vars['instance_settings'] = $ir->confirm('Would you like to create field instance settings form?', FALSE);
+    $vars['widget_settings'] = $ir->confirm('Would you like to create field widget settings form?', FALSE);
+    $vars['formatter_settings'] = $ir->confirm('Would you like to create field formatter settings form?', FALSE);
+    $vars['table_formatter'] = $ir->confirm('Would you like to create table formatter?', FALSE);
+    $vars['key_value_formatter'] = $ir->confirm('Would you like to create key-value formatter?', FALSE);
 
-    $this->addFile('src/Plugin/Field/FieldType/{type_class}.php', 'type');
+    $assets->addFile('src/Plugin/Field/FieldType/{type_class}.php', 'type.twig');
 
-    $this->addFile('src/Plugin/Field/FieldWidget/{widget_class}.php', 'widget');
+    $assets->addFile('src/Plugin/Field/FieldWidget/{widget_class}.php', 'widget.twig');
 
-    $this->addFile('src/Plugin/Field/FieldFormatter/{formatter_class}.php', 'default-formatter');
+    $assets->addFile('src/Plugin/Field/FieldFormatter/{formatter_class}.php', 'default-formatter.twig');
 
-    $this->addSchemaFile()->template('schema');
+    $assets->addSchemaFile()->template('schema.twig');
 
-    $this->addFile('{machine_name}.libraries.yml', 'libraries')
+    $assets->addFile('{machine_name}.libraries.yml', 'libraries.twig')
       ->appendIfExists();
 
-    $this->addFile('css/{field_id|u2h}-widget.css', 'widget-css');
+    $assets->addFile('css/{field_id|u2h}-widget.css', 'widget-css.twig');
 
     if ($vars['table_formatter']) {
       $vars['table_formatter_class'] = '{field_label|camelize}TableFormatter';
-      $this->addFile('src/Plugin/Field/FieldFormatter/{table_formatter_class}.php', '/table-formatter');
+      $assets->addFile('src/Plugin/Field/FieldFormatter/{table_formatter_class}.php', '/table-formatter.twig');
     }
 
     if ($vars['key_value_formatter']) {
       $vars['key_value_formatter_class'] = '{field_label|camelize}KeyValueFormatter';
-      $this->addFile('src/Plugin/Field/FieldFormatter/{key_value_formatter_class}.php', 'key-value-formatter');
+      $assets->addFile('src/Plugin/Field/FieldFormatter/{key_value_formatter_class}.php', 'key-value-formatter.twig');
     }
 
   }

@@ -1,4 +1,4 @@
-// cSpell:words apos
+// cspell:ignore apos
 
 /**
  * HTML builder that converts document fragments into strings.
@@ -36,6 +36,9 @@ export default class DrupalHtmlBuilder {
       'track',
       'wbr',
     ];
+
+    // @see https://html.spec.whatwg.org/multipage/syntax.html#raw-text-elements
+    this.rawTags = ['script', 'style'];
   }
 
   /**
@@ -61,6 +64,8 @@ export default class DrupalHtmlBuilder {
       this._appendElement(node);
     } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
       this._appendChildren(node);
+    } else if (node.nodeType === Node.COMMENT_NODE) {
+      this._appendComment(node);
     }
   }
 
@@ -139,7 +144,28 @@ export default class DrupalHtmlBuilder {
     const container = doc.createElement('p');
     container.textContent = node.textContent;
 
-    this._append(container.innerHTML);
+    if (
+      node.parentElement &&
+      this.rawTags.includes(node.parentElement.tagName.toLowerCase())
+    ) {
+      this._append(container.textContent);
+    } else {
+      this._append(container.innerHTML);
+    }
+  }
+
+  /**
+   * Appends a comment to the value.
+   *
+   * @param {DocumentFragment} node
+   *  A document fragment to be appended to the value.
+   *
+   * @private
+   */
+  _appendComment(node) {
+    this._append('<!--');
+    this._append(node.textContent);
+    this._append('-->');
   }
 
   /**

@@ -70,7 +70,7 @@ class RecentlyReadRelationship extends RelationshipPluginBase {
     AccountProxy $currentUser,
     KillSwitch $killSwitch,
     CachedStorage $cachedStorage,
-    SessionManager $sessionManager
+    SessionManager $sessionManager,
   ) {
     parent::__construct($configuration, $pluginId, $pluginDefinition);
 
@@ -83,12 +83,12 @@ class RecentlyReadRelationship extends RelationshipPluginBase {
   /**
    * RecentlyReadRelationship create function.
    */
-  public static function create(ContainerInterface $container, array $configuration, $pluginId, $pluginDefinition) {
-    return new static(
+  public static function create(ContainerInterface $container, array $configuration, $pluginId, $pluginDefinition): RecentlyReadRelationship {
+    return new self(
       $configuration,
       $pluginId,
       $pluginDefinition,
-    // Load the service required to construct this class.
+      // Load the service required to construct this class.
       $container->get('current_user'),
       $container->get('page_cache_kill_switch'),
       $container->get('config.storage'),
@@ -99,7 +99,7 @@ class RecentlyReadRelationship extends RelationshipPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function defineOptions() {
+  public function defineOptions(): array {
     $options = parent::defineOptions();
     $options['bundles'] = ['default' => []];
     return $options;
@@ -108,7 +108,7 @@ class RecentlyReadRelationship extends RelationshipPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
     parent::buildOptionsForm($form, $form_state);
 
     $entity_type = $this->definition['recently_read_type'];
@@ -135,7 +135,7 @@ class RecentlyReadRelationship extends RelationshipPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function query() {
+  public function query(): void {
     parent::query();
     $this->ensureMyTable();
     // Get base table and entity_type from relationship.

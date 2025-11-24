@@ -3,11 +3,12 @@
 namespace Drupal\acquia_connector\Controller;
 
 use Drupal\acquia_connector\Subscription;
-use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Access\AccessResultAllowed;
-use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Checks the current status of the Acquia Service.
@@ -15,14 +16,61 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class StatusController extends ControllerBase {
 
   /**
-   * Menu callback for 'admin/config/system/acquia-agent/refresh-status'.
+   * Acquia Subscription Service.
+   *
+   * @var \Drupal\acquia_connector\Subscription
+   */
+  protected $subscription;
+
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * WebhooksSettingsForm constructor.
+   *
+   * @param \Drupal\acquia_connector\Subscription $subscription
+   *   The event dispatcher.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   */
+  public function __construct(Subscription $subscription, RequestStack $request_stack, ModuleHandlerInterface $module_handler) {
+    $this->subscription = $subscription;
+    $this->requestStack = $request_stack;
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('acquia_connector.subscription'),
+      $container->get('request_stack'),
+      $container->get('module_handler')
+    );
+  }
+
+  /**
+   * Menu callback for 'admin/config/services/acquia-agent/refresh-status'.
    */
   public function refresh() {
     // Refresh subscription information, so we are sure about our update status.
     // We send a heartbeat here so that all of our status information gets
     // updated locally via the return data.
-    $subscription = new Subscription();
-    $subscription->update();
+    $this->subscription->getSubscription(TRUE);
 
     // Return to the setting pages (or destination).
     return $this->redirect('system.status');
@@ -34,16 +82,11 @@ class StatusController extends ControllerBase {
    * Used by Acquia uptime monitoring.
    */
   public function json() {
-    // We don't want this page cached.
-    \Drupal::service('page_cache_kill_switch')->trigger();
-
-    $performance_config = $this->config('system.performance');
-
     $data = [
       'version' => '1.0',
       'data' => [
         'maintenance_mode' => (bool) $this->state()->get('system.maintenance_mode'),
-        'cache' => $performance_config->get('cache.page.use_internal'),
+        'cache' => $this->moduleHandler->moduleExists('page_cache'),
         'block_cache' => FALSE,
       ],
     ];
@@ -55,25 +98,26 @@ class StatusController extends ControllerBase {
    * Access callback for json() callback.
    */
   public function access() {
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
+    assert($request !== NULL);
     $nonce = $request->get('nonce', FALSE);
     $connector_config = $this->config('acquia_connector.settings');
 
     // If we don't have all the query params, leave now.
     if (!$nonce) {
-      return AccessResultForbidden::forbidden();
+      return AccessResult::forbidden('Missing nonce.');
     }
 
-    $sub_data = $this->state()->get('acquia_subscription_data');
-    $sub_uuid = $this->getIdFromSub($sub_data);
+    $sub_data = $this->subscription->getSubscription();
+    if (empty($sub_data['uuid'])) {
+      return AccessResult::forbidden('Missing application UUID.');
+    }
+    $sub_uuid = $sub_data['uuid'];
 
-    if (!empty($sub_uuid)) {
-      $expected_hash = hash('sha1', "{$sub_uuid}:{$nonce}");
-
-      // If the generated hash matches the hash from $_GET['key'], we're good.
-      if ($request->get('key', FALSE) === $expected_hash) {
-        return AccessResultAllowed::allowed();
-      }
+    $expected_hash = hash('sha1', "{$sub_uuid}:{$nonce}");
+    // If the generated hash matches the hash from $_GET['key'], we're good.
+    if ($request->get('key', FALSE) === $expected_hash) {
+      return AccessResult::allowed();
     }
 
     // Log the request if validation failed and debug is enabled.
@@ -90,32 +134,7 @@ class StatusController extends ControllerBase {
       $this->getLogger('acquia_agent')->notice('Site status request: @data', ['@data' => var_export($info, TRUE)]);
     }
 
-    return AccessResultForbidden::forbidden();
-  }
-
-  /**
-   * Gets the subscription UUID from subscription data.
-   *
-   * @param array $sub_data
-   *   An array of subscription data.
-   *
-   * @see acquia_agent_settings('acquia_subscription_data')
-   *
-   * @return string
-   *   The UUID taken from the subscription data.
-   */
-  public function getIdFromSub(array $sub_data) {
-    if (!empty($sub_data['uuid'])) {
-      return $sub_data['uuid'];
-    }
-
-    // Otherwise, get this form the sub url.
-    $url = UrlHelper::parse($sub_data['href']);
-    $parts = explode('/', $url['path']);
-    // Remove '/dashboard'.
-    array_pop($parts);
-
-    return end($parts);
+    return AccessResult::forbidden('Could not validate key.');
   }
 
 }

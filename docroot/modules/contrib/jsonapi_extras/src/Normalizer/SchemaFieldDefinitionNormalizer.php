@@ -33,7 +33,7 @@ class SchemaFieldDefinitionNormalizer extends SchemataJsonSchemaFieldDefinitionN
   /**
    * {@inheritdoc}
    */
-  public function normalize($field_definition, $format = NULL, array $context = []) {
+  public function normalize($field_definition, $format = NULL, array $context = []): array|bool|string|int|float|null|\ArrayObject {
     assert($field_definition instanceof FieldDefinitionInterface);
     $normalized = parent::normalize($field_definition, $format, $context);
 

@@ -2,16 +2,17 @@
 
 namespace Drupal\redis\Queue;
 
-use Drupal\redis\ClientFactory;
-
 /**
  * Defines the queue factory for the Redis backend.
  */
 class ReliableQueueRedisFactory extends QueueRedisFactory {
 
   /**
-   * Queue implementation class namespace prefix.
+   * {@inheritdoc}
    */
-  const CLASS_NAMESPACE = ClientFactory::REDIS_IMPL_RELIABLE_QUEUE;
+  public function get($name) {
+    $settings = $this->settings->get('redis_queue_' . $name, ['reserve_timeout' => NULL]);
+    return new ReliableRedisQueue($name, $settings, $this->clientFactory->getClient());
+  }
 
 }

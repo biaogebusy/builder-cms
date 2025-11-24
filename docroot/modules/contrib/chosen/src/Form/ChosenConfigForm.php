@@ -34,21 +34,11 @@ class ChosenConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ThemeHandler $themeHandler, MessengerInterface $messenger) {
-    parent::__construct($config_factory);
-    $this->themeHandler = $themeHandler;
-    $this->messenger = $messenger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('theme_handler'),
-      $container->get('messenger')
-    );
+    $instance = parent::create($container);
+    $instance->themeHandler = $container->get('theme_handler');
+    $instance->messenger = $container->get('messenger');
+    return $instance;
   }
 
   /**
@@ -89,7 +79,7 @@ class ChosenConfigForm extends ConfigFormBase {
     $form['minimum_single'] = [
       '#type' => 'select',
       '#title' => $this->t('Minimum number of options for single select'),
-      '#options' => array_merge(['0' => t('Always apply')], range(1, 25)),
+      '#options' => array_merge(['0' => $this->t('Always apply')], range(1, 25)),
       '#default_value' => $chosen_conf->get('minimum_single'),
       '#description' => $this->t('The minimum number of options to apply Chosen for single select fields. Example : choosing 10 will only apply Chosen if the number of options is greater or equal to 10.'),
     ];
@@ -97,7 +87,7 @@ class ChosenConfigForm extends ConfigFormBase {
     $form['minimum_multiple'] = [
       '#type' => 'select',
       '#title' => $this->t('Minimum number of options for multi select'),
-      '#options' => array_merge(['0' => t('Always apply')], range(1, 25)),
+      '#options' => array_merge(['0' => $this->t('Always apply')], range(1, 25)),
       '#default_value' => $chosen_conf->get('minimum_multiple'),
       '#description' => $this->t('The minimum number of options to apply Chosen for multi select fields. Example : choosing 10 will only apply Chosen if the number of options is greater or equal to 10.'),
     ];
@@ -105,7 +95,7 @@ class ChosenConfigForm extends ConfigFormBase {
     $form['disable_search_threshold'] = [
       '#type' => 'select',
       '#title' => $this->t('Minimum number to show Search on Single Select'),
-      '#options' => array_merge(['0' => t('Always apply')], range(1, 25)),
+      '#options' => array_merge(['0' => $this->t('Always apply')], range(1, 25)),
       '#default_value' => $chosen_conf->get('disable_search_threshold'),
       '#description' => $this->t('The minimum number of options to apply Chosen search box. Example : choosing 10 will only apply Chosen search if the number of options is greater or equal to 10.'),
     ];
@@ -136,7 +126,7 @@ class ChosenConfigForm extends ConfigFormBase {
     $form['jquery_selector'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Apply Chosen to the following elements'),
-      '#description' => $this->t('A comma-separated list of jQuery selectors to apply Chosen to, such as <code>select#edit-operation, select#edit-type</code> or <code>.chosen-select</code>. Defaults to <code>select</code> to apply Chosen to all <code>&lt;select&gt;</code> elements.'),
+      '#description' => $this->t('A comma-separated list of selectors to apply Chosen to, such as <code>select#edit-operation, select#edit-type</code> or <code>.chosen-select</code>. Defaults to <code>select</code> to apply Chosen to all <code>&lt;select&gt;</code> elements.'),
       '#default_value' => $chosen_conf->get('jquery_selector'),
     ];
 
@@ -168,6 +158,20 @@ class ChosenConfigForm extends ConfigFormBase {
       '#description' => $this->t('Enable or disable the deselect on single selects. Requires an empty default option.'),
     ];
 
+    $form['options']['allow_mobile'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Allow mobile devices'),
+      '#default_value' => $chosen_conf->get('allow_mobile'),
+      '#description' => $this->t('Enable or disable the mobile user agents.'),
+    ];
+
+    $form['options']['add_helper_buttons'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Add "none" and "all" buttons.'),
+      '#default_value' => $chosen_conf->get('add_helper_buttons'),
+      '#description' => $this->t('Add "none" and "all" buttons next to the chosen widget.'),
+    ];
+
     $form['theme_options'] = [
       '#type' => 'details',
       '#title' => $this->t('Chosen per theme options'),
@@ -178,7 +182,7 @@ class ChosenConfigForm extends ConfigFormBase {
     $default_disabled_themes = is_array($default_disabled_themes) ? $default_disabled_themes : [];
     $form['theme_options']['disabled_themes'] = [
       '#type' => 'checkboxes',
-      '#title' => t('Disable the default Chosen theme for the following themes'),
+      '#title' => $this->t('Disable the default Chosen theme for the following themes'),
       '#options' => $this->chosen_enabled_themes_options(),
       '#default_value' => $default_disabled_themes,
       '#description' => $this->t('Enable or disable the default Chosen CSS file. Select a theme if it contains custom styles for Chosen replacements.'),
@@ -247,6 +251,8 @@ class ChosenConfigForm extends ConfigFormBase {
       ->set('search_contains', $form_state->getValue('search_contains'))
       ->set('disable_search', $form_state->getValue('disable_search'))
       ->set('allow_single_deselect', $form_state->getValue('allow_single_deselect'))
+      ->set('allow_mobile', $form_state->getValue('allow_mobile'))
+      ->set('add_helper_buttons', $form_state->getValue('add_helper_buttons'))
       ->set('disabled_themes', $form_state->getValue('disabled_themes'))
       ->set('chosen_include', $form_state->getValue('chosen_include'))
       ->set('placeholder_text_multiple', $form_state->getValue('placeholder_text_multiple'))

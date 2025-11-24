@@ -18,7 +18,7 @@
 
 #coffee-form #coffee-results a .description {
   color: var(--gin-color-text-light);
-  padding-top: var(--gin-spacing-xxs);
+  padding-block-start: var(--gin-spacing-xxs);
 }
 
 #coffee-form #coffee-results a:hover, #coffee-form #coffee-results a.ui-state-active {

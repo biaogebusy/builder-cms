@@ -19,7 +19,7 @@ class DropDown extends WidgetSelectorBase {
   /**
    * {@inheritdoc}
    */
-  public function getForm(array &$form = [], FormStateInterface &$form_state = NULL) {
+  public function getForm(array &$form = [], ?FormStateInterface &$form_state = NULL) {
     // Set a wrapper container for us to replace the form on ajax call.
     $form['#prefix'] = '<div id="entity-browser-form">';
     $form['#suffix'] = '</div>';

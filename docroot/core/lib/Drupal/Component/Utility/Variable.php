@@ -57,7 +57,7 @@ class Variable {
         // Don't export keys if the array is non associative.
         $export_keys = array_values($var) != $var;
         foreach ($var as $key => $value) {
-          $output .= '  ' . ($export_keys ? static::export($key) . ' => ' : '') . static::export($value, '  ', FALSE) . ",\n";
+          $output .= '  ' . ($export_keys ? static::export($key) . ' => ' : '') . static::export($value, '  ') . ",\n";
         }
         $output .= ')';
       }
@@ -66,7 +66,7 @@ class Variable {
       $output = $var ? 'TRUE' : 'FALSE';
     }
     elseif (is_string($var)) {
-      if (strpos($var, "\n") !== FALSE || strpos($var, "'") !== FALSE) {
+      if (str_contains($var, "\n") || str_contains($var, "'")) {
         // If the string contains a line break or a single quote, use the
         // double quote export mode. Encode backslash, dollar symbols, and
         // double quotes and transform some common control characters.

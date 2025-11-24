@@ -4,7 +4,7 @@ shs.form:
     theme:
       css/shs.form.css: {}
   js:
-    js/shs.js: {weight: -1}
+    js/shs.js: {}
     # Models.
     js/models/AppModel.js: {}
     js/models/ContainerModel.js: {}

@@ -2,10 +2,10 @@
 
 namespace Drupal\field_permissions\Plugin\migrate\process;
 
+use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
-use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
 
 /**
  * Migration plugin for field permission settings.

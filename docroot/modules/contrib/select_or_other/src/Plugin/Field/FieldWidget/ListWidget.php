@@ -104,7 +104,7 @@ class ListWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  protected function getOptions(FieldableEntityInterface $entity = NULL) {
+  protected function getOptions(?FieldableEntityInterface $entity = NULL) {
     $options = [];
 
     if ($entity) {

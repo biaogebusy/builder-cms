@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -23,7 +25,7 @@ class FocusFirstCommandTest extends WebDriverTestBase {
   /**
    * Tests AjaxFocusFirstCommand on a page.
    */
-  public function testFocusFirst() {
+  public function testFocusFirst(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 

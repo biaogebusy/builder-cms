@@ -2,8 +2,11 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
@@ -12,16 +15,15 @@ use Drupal\Core\TypedData\DataDefinition;
  * URIs are not length limited by RFC 2616, but we need to provide a sensible
  * default. There is a de-facto limit of 2000 characters in browsers and other
  * implementors, so we go with 2048.
- *
- * @FieldType(
- *   id = "uri",
- *   label = @Translation("URI"),
- *   description = @Translation("An entity field containing a URI."),
- *   no_ui = TRUE,
- *   default_formatter = "uri_link",
- *   default_widget = "uri",
- * )
  */
+#[FieldType(
+  id: "uri",
+  label: new TranslatableMarkup("URI"),
+  description: new TranslatableMarkup("An entity field containing a URI."),
+  default_widget: "uri",
+  default_formatter: "uri_link",
+  no_ui: TRUE,
+)]
 class UriItem extends StringItem {
 
   /**
@@ -77,8 +79,18 @@ class UriItem extends StringItem {
    * {@inheritdoc}
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
-    $values = parent::generateSampleValue($field_definition);
-    $suffix_length = $field_definition->getSetting('max_length') - 7;
+    $random = new Random();
+
+    $max_length = $field_definition->getSetting('max_length');
+    $min_length = min(10, $max_length);
+
+    // The random value is generated multiple times to create a slight
+    // preference towards values that are closer to the minimum length of the
+    // string.
+    $length = mt_rand($min_length, mt_rand($min_length, mt_rand($min_length, $max_length)));
+    $values['value'] = $random->word($length);
+
+    $suffix_length = $max_length - 7;
     foreach ($values as $key => $value) {
       $values[$key] = 'http://' . mb_substr($value, 0, $suffix_length);
     }

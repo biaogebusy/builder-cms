@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -10,9 +12,7 @@ use Drupal\KernelTests\KernelTestBase;
 class FileSystemRequirementsTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system'];
 
@@ -32,7 +32,7 @@ class FileSystemRequirementsTest extends KernelTestBase {
   /**
    * Tests if settings are set, there are not warnings.
    */
-  public function testSettingsExist() {
+  public function testSettingsExist(): void {
     $this->setSetting('file_temp_path', $this->randomMachineName());
     $requirements = $this->checkSystemRequirements();
     $this->assertArrayNotHasKey('temp_directory', $requirements);

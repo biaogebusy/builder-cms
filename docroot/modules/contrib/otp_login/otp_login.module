@@ -116,7 +116,7 @@ function otp_login_cron() {
     $mobile_number = $data[$user_value]['otp_user_data']['mobile_number'];
     $lastotptime = $data[$user_value]['otp_user_data']['last_otp_time'];
     $sessions = $data[$user_value]['otp_user_data']['sessions'];
-    $user_otp_time = array_column($data[$user_value]['otp_user_data']['otps'], 'otp_time');
+    $user_otp_time = array_column($data[$user_value]['otp_user_data']['otps'] ?? [], 'otp_time');
     foreach ($user_otp_time as $key => $value) {
       $time_diff = ($current_time - $value) / 60;
       if ($time_diff > $otp_expire_value) {

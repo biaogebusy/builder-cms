@@ -75,12 +75,12 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     $storage = $this->container->get('entity_type.manager')->getStorage('sms_result');
     $saved = $storage->load($result->id());
     /** @var \Drupal\sms\Entity\SmsMessageResult $saved */
-    $this->assertEquals($result->getCreditsBalance(), $saved->getCreditsBalance());
-    $this->assertEquals($result->getCreditsUsed(), $saved->getCreditsUsed());
-    $this->assertEquals($result->getError(), $saved->getError());
-    $this->assertEquals($result->getErrorMessage(), $saved->getErrorMessage());
-    $this->assertEquals($result->getReports()[0]->getRecipient(), $saved->getReports()[0]->getRecipient());
-    $this->assertEquals($result->uuid(), $saved->uuid());
+    static::assertEquals($result->getCreditsBalance(), $saved->getCreditsBalance());
+    static::assertEquals($result->getCreditsUsed(), $saved->getCreditsUsed());
+    static::assertEquals($result->getError(), $saved->getError());
+    static::assertEquals($result->getErrorMessage(), $saved->getErrorMessage());
+    static::assertEquals($result->getReports()[0]->getRecipient(), $saved->getReports()[0]->getRecipient());
+    static::assertEquals($result->uuid(), $saved->uuid());
   }
 
   /**
@@ -106,7 +106,7 @@ final class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
    */
   public function testGetReportsNoReport(): void {
     $result = SmsMessageResult::create();
-    $this->assertEquals([], $result->getReports());
+    static::assertEquals([], $result->getReports());
   }
 
 }

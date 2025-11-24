@@ -21,7 +21,7 @@ class FakeDataGenerator {
    *
    * @var null
    */
-  protected static $defaultTimezone = NULL;
+  protected static $defaultTimezone;
 
   /**
    * The list of words to select from.
@@ -48,7 +48,7 @@ class FakeDataGenerator {
     'ducimus', 'qui', 'blanditiis', 'praesentium', 'laudantium', 'totam',
     'rem', 'voluptatum', 'deleniti', 'atque', 'corrupti', 'quos',
     'dolores', 'et', 'quas', 'molestias', 'excepturi', 'sint',
-    'occaecati', 'cupiditate', 'non', 'provident', 'sed', 'ut',
+    'cupiditate', 'non', 'provident', 'sed', 'ut',
     'perspiciatis', 'unde', 'omnis', 'iste', 'natus', 'error',
     'similique', 'sunt', 'in', 'culpa', 'qui', 'officia', 'deserunt',
     'mollitia', 'animi', 'id', 'est', 'laborum', 'et', 'dolorum', 'fuga',
@@ -92,14 +92,14 @@ class FakeDataGenerator {
    * @see http://php.net/manual/en/function.date-default-timezone-get.php
    */
   public static function dateTimeBetween($startDate = '-30 years', $endDate = 'now', $timezone = NULL) {
-    $startTimestamp = $startDate instanceof \DateTime ? $startDate->getTimestamp() : strtotime($startDate);
+    $startTimestamp = $startDate instanceof \DateTime ? $startDate->getTimestamp() : \strtotime($startDate);
     $endTimestamp = static::getMaxTimestamp($endDate);
 
     if ($startTimestamp > $endTimestamp) {
       throw new \InvalidArgumentException('Start date must be anterior to end date.');
     }
 
-    $timestamp = mt_rand($startTimestamp, $endTimestamp);
+    $timestamp = \mt_rand($startTimestamp, $endTimestamp);
 
     return static::setTimezone(
       new \DateTime('@' . $timestamp),
@@ -131,7 +131,7 @@ class FakeDataGenerator {
       $nbSentences = self::randomizeNbElements($nbSentences);
     }
 
-    return implode(' ', static::sentences($nbSentences));
+    return \implode(' ', static::sentences($nbSentences));
   }
 
   /**
@@ -155,7 +155,7 @@ class FakeDataGenerator {
       $paragraphs[] = static::paragraph();
     }
 
-    return $asText ? implode("\n\n", $paragraphs) : $paragraphs;
+    return $asText ? \implode("\n\n", $paragraphs) : $paragraphs;
   }
 
   /**
@@ -165,7 +165,7 @@ class FakeDataGenerator {
    *   A random digit.
    */
   public static function randomDigit() {
-    return mt_rand(0, 9);
+    return \mt_rand(0, 9);
   }
 
   /**
@@ -175,7 +175,7 @@ class FakeDataGenerator {
    *   A random digit.
    */
   public static function randomDigitNotNull() {
-    return mt_rand(1, 9);
+    return \mt_rand(1, 9);
   }
 
   /**
@@ -206,11 +206,11 @@ class FakeDataGenerator {
    * @param bool $allowDuplicates
    *   Allow elements to be picked several times. Defaults to false.
    *
-   * @return array
-   *   New array with $count elements from $array.
-   *
    * @throws \LengthException
    *   When requesting more elements than provided.
+   *
+   * @return array
+   *   New array with $count elements from $array.
    */
   public static function randomElements(array $array = ['a', 'b', 'c'], $count = 1, $allowDuplicates = FALSE) {
     $traversables = [];
@@ -223,11 +223,11 @@ class FakeDataGenerator {
 
     $arr = \count($traversables) ? $traversables : $array;
 
-    $allKeys = array_keys($arr);
+    $allKeys = \array_keys($arr);
     $numKeys = \count($allKeys);
 
     if (!$allowDuplicates && $numKeys < $count) {
-      throw new \LengthException(sprintf('Cannot get %d elements, only %d in array', $count, $numKeys));
+      throw new \LengthException(\sprintf('Cannot get %d elements, only %d in array', $count, $numKeys));
     }
 
     $highKey = $numKeys - 1;
@@ -235,7 +235,7 @@ class FakeDataGenerator {
     $numElements = 0;
 
     while ($numElements < $count) {
-      $num = mt_rand(0, $highKey);
+      $num = \mt_rand(0, $highKey);
 
       if (!$allowDuplicates) {
         if (isset($keys[$num])) {
@@ -285,7 +285,7 @@ class FakeDataGenerator {
       $max = $tmp;
     }
 
-    return round($min + mt_rand() / mt_getrandmax() * ($max - $min), $nbMaxDecimals);
+    return \round($min + \mt_rand() / \mt_getrandmax() * ($max - $min), $nbMaxDecimals);
   }
 
   /**
@@ -313,15 +313,15 @@ class FakeDataGenerator {
     }
     $max = 10 ** $nbDigits - 1;
 
-    if ($max > mt_getrandmax()) {
+    if ($max > \mt_getrandmax()) {
       throw new \InvalidArgumentException('randomNumber() can only generate numbers up to mt_getrandmax()');
     }
 
     if ($strict) {
-      return mt_rand(10 ** ($nbDigits - 1), $max);
+      return \mt_rand(10 ** ($nbDigits - 1), $max);
     }
 
-    return mt_rand(0, $max);
+    return \mt_rand(0, $max);
   }
 
   /**
@@ -348,9 +348,9 @@ class FakeDataGenerator {
     }
 
     $words = static::words($nbWords);
-    $words[0] = ucwords($words[0]);
+    $words[0] = \ucwords($words[0]);
 
-    return implode(' ', $words) . '.';
+    return \implode(' ', $words) . '.';
   }
 
   /**
@@ -373,7 +373,7 @@ class FakeDataGenerator {
       $sentences[] = static::sentence();
     }
 
-    return $asText ? implode(' ', $sentences) : $sentences;
+    return $asText ? \implode(' ', $sentences) : $sentences;
   }
 
   /**
@@ -411,18 +411,18 @@ class FakeDataGenerator {
         $size += \strlen($word);
       }
 
-      array_pop($text);
+      \array_pop($text);
     }
 
     if ($type === 'word') {
       // Capitalize first letter.
-      $text[0] = ucwords($text[0]);
+      $text[0] = \ucwords($text[0]);
 
       // End sentence with full stop.
       $text[\count($text) - 1] .= '.';
     }
 
-    return implode('', $text);
+    return \implode('', $text);
   }
 
   /**
@@ -437,7 +437,7 @@ class FakeDataGenerator {
    * @example 1061306726
    */
   public static function unixTime($max = 'now') {
-    return mt_rand(0, static::getMaxTimestamp($max));
+    return \mt_rand(0, static::getMaxTimestamp($max));
   }
 
   /**
@@ -472,7 +472,7 @@ class FakeDataGenerator {
       $words[] = static::word();
     }
 
-    return $asText ? implode(' ', $words) : $words;
+    return $asText ? \implode(' ', $words) : $words;
   }
 
   /**
@@ -485,7 +485,7 @@ class FakeDataGenerator {
    *   The max timestamp.
    */
   protected static function getMaxTimestamp($max = 'now') {
-    if (is_numeric($max)) {
+    if (\is_numeric($max)) {
       return (int) $max;
     }
 
@@ -493,7 +493,7 @@ class FakeDataGenerator {
       return $max->getTimestamp();
     }
 
-    return strtotime(empty($max) ? 'now' : $max);
+    return \strtotime(empty($max) ? 'now' : $max);
   }
 
   /**
@@ -506,7 +506,7 @@ class FakeDataGenerator {
    *   A randomized number.
    */
   protected static function randomizeNbElements($nbElements) {
-    return (int) ($nbElements * mt_rand(60, 140) / 100) + 1;
+    return (int) ($nbElements * \mt_rand(60, 140) / 100) + 1;
   }
 
   /**
@@ -519,7 +519,7 @@ class FakeDataGenerator {
    *   The found timezone.
    */
   private static function resolveTimezone($timezone) {
-    return ($timezone === NULL) ? ((static::$defaultTimezone === NULL) ? date_default_timezone_get() : static::$defaultTimezone) : $timezone;
+    return ($timezone === NULL) ? ((static::$defaultTimezone === NULL) ? \date_default_timezone_get() : static::$defaultTimezone) : $timezone;
   }
 
   /**

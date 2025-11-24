@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\shortcut\Kernel\Migrate\d7;
 
 use Drupal\shortcut\Entity\ShortcutSet;
@@ -14,9 +16,7 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 class MigrateShortcutSetTest extends MigrateDrupal7TestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'link',
@@ -40,9 +40,9 @@ class MigrateShortcutSetTest extends MigrateDrupal7TestBase {
   /**
    * Tests the shortcut set migration.
    */
-  public function testShortcutSetMigration() {
+  public function testShortcutSetMigration(): void {
     $this->assertEntity('default', 'Default', 2);
-    $this->assertEntity('shortcut_set_2', 'Alternative shortcut set', 2);
+    $this->assertEntity('shortcut-set-2', 'Alternative shortcut set', 2);
   }
 
   /**

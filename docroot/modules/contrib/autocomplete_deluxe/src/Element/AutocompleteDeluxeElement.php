@@ -5,14 +5,14 @@ namespace Drupal\autocomplete_deluxe\Element;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\CompositeFormElementTrait;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Provides an Autocomplete Deluxe Form API element.
  *
  * @FormElement("autocomplete_deluxe")
  */
-class AutocompleteDeluxeElement extends FormElement {
+class AutocompleteDeluxeElement extends FormElementBase {
 
   use CompositeFormElementTrait;
 
@@ -77,9 +77,6 @@ class AutocompleteDeluxeElement extends FormElement {
 
     $element['#after_build'][] = [get_called_class(), 'afterBuild'];
 
-    // Set default options for multiple values.
-    $element['#multiple'] = $element['#multiple'] ?? FALSE;
-
     // Add label_display and label variables to template.
     $element['label'] = ['#theme' => 'form_element_label'];
     $element['label'] += array_intersect_key(
@@ -99,22 +96,23 @@ class AutocompleteDeluxeElement extends FormElement {
       '#type' => 'textfield',
       '#size' => $element['#size'] ?? '',
       '#attributes' => [
-        'class' => ['autocomplete-deluxe-form'],
         'id' => $html_id,
+        'aria-label' => $element['#title'] ?? '',
       ],
       '#default_value' => '',
       '#description' => $element['#description'] ?? '',
     ];
 
-    // Add autcomplete deluxe container only if element is enabled.
+    // Add autocomplete deluxe container and class only if element is enabled.
     if (!$element_disabled) {
       $element['textfield']['#prefix'] = '<div class="autocomplete-deluxe-container">';
       $element['textfield']['#suffix'] = '</div>';
+      $element['textfield']['#attributes']['class'][] = 'autocomplete-deluxe-form';
     }
 
     $js_settings[$html_id] = [
       'input_id' => $html_id,
-      'multiple' => $element['#multiple'],
+      'cardinality' => $element['#cardinality'],
       'required' => $element['#required'],
       'limit' => $element['#limit'] ?? 10,
       'min_length' => $element['#min_length'] ?? 0,
@@ -138,22 +136,17 @@ class AutocompleteDeluxeElement extends FormElement {
         $default_value = '';
       }
 
-      if ($element['#multiple']) {
-        $element['value_field'] = [
-          '#type' => 'textfield',
-          '#attributes' => [
-            'class' => ['autocomplete-deluxe-value-field'],
-          ],
-          '#default_value' => $default_value,
-          '#prefix' => '<div class="autocomplete-deluxe-value-container">',
-          '#suffix' => '</div>',
-          '#description' => $element['#description'] ?? '',
-        ];
-        $element['textfield']['#attributes']['style'] = ['display: none'];
-      }
-      else {
-        $element['textfield']['#default_value'] = $element['#default_value'] ?? '';
-      }
+      $element['value_field'] = [
+        '#type' => 'textfield',
+        '#attributes' => [
+          'class' => ['autocomplete-deluxe-value-field'],
+        ],
+        '#default_value' => $default_value,
+        '#prefix' => '<div class="autocomplete-deluxe-value-container">',
+        '#suffix' => '</div>',
+        '#description' => $element['#description'] ?? '',
+      ];
+      $element['textfield']['#attributes']['style'] = ['display: none'];
 
       $js_settings[$html_id] += [
         'type' => 'ajax',
@@ -198,12 +191,22 @@ class AutocompleteDeluxeElement extends FormElement {
 
     if (isset($element['value_field'])) {
       $element['#value'] = trim($element['#value']);
-      // Replace all cases of double double quotes and one or more spaces with a
-      // comma. This will allow us to keep entries in double quotes.
-      $element['#value'] = preg_replace('/"" +""/', ',', $element['#value']);
+
+      // Replace all cases of (2 or) 3 quotes with 1 double quote.
+      $element['#value'] = preg_replace('/^"{2,3}|"{2,3}$/', '"', $element['#value']);
+      $element['#value'] = preg_replace('/"{2,3} +"/', '" "', $element['#value']);
+      $element['#value'] = preg_replace('/" +"{2,3}/', '" "', $element['#value']);
+
+      // Make comma delimited.
+      $element['#value'] = preg_replace('/" +"/', '","', $element['#value']);
+
+      if (substr($element['#value'], 0, 3) == '","') {
+        $element['#value'] = substr($element['#value'], 2); 
+      }
+
       // Remove the double quotes at the beginning and the end from the first
       // and the last term.
-      $element['#value'] = substr($element['#value'], 2, strlen($element['#value']) - 4);
+      $element['#value'] = '"' . trim($element['#value'], '"') . '"';
 
       unset($element['value_field']['#maxlength']);
     }

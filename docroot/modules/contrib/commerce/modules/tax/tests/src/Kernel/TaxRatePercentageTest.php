@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_tax\Kernel;
 
-use Drupal\commerce_price\Price;
-use Drupal\commerce_tax\TaxRatePercentage;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_price\Price;
+use Drupal\commerce_tax\TaxRatePercentage;
 
 /**
  * @coversDefaultClass \Drupal\commerce_tax\TaxRatePercentage

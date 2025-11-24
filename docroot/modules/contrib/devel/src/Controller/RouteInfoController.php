@@ -19,50 +19,31 @@ class RouteInfoController extends ControllerBase {
 
   /**
    * The route provider.
-   *
-   * @var \Drupal\Core\Routing\RouteProviderInterface
    */
-  protected $routeProvider;
+  protected RouteProviderInterface $routeProvider;
 
   /**
    * The router service.
-   *
-   * @var \Symfony\Component\Routing\RouterInterface
    */
-  protected $router;
+  protected RouterInterface $router;
 
   /**
    * The dumper service.
-   *
-   * @var \Drupal\devel\DevelDumperManagerInterface
    */
-  protected $dumper;
-
-  /**
-   * RouterInfoController constructor.
-   *
-   * @param \Drupal\Core\Routing\RouteProviderInterface $provider
-   *   The route provider.
-   * @param \Symfony\Component\Routing\RouterInterface $router
-   *   The router service.
-   * @param \Drupal\devel\DevelDumperManagerInterface $dumper
-   *   The dumper service.
-   */
-  public function __construct(RouteProviderInterface $provider, RouterInterface $router, DevelDumperManagerInterface $dumper) {
-    $this->routeProvider = $provider;
-    $this->router = $router;
-    $this->dumper = $dumper;
-  }
+  protected DevelDumperManagerInterface $dumper;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('router.route_provider'),
-      $container->get('router.no_access_checks'),
-      $container->get('devel.dumper')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->routeProvider = $container->get('router.route_provider');
+    $instance->router = $container->get('router.no_access_checks');
+    $instance->dumper = $container->get('devel.dumper');
+    $instance->messenger = $container->get('messenger');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
@@ -71,7 +52,7 @@ class RouteInfoController extends ControllerBase {
    * @return array
    *   A render array as expected by the renderer.
    */
-  public function routeList() {
+  public function routeList(): array {
     $headers = [
       $this->t('Route Name'),
       $this->t('Path'),
@@ -100,7 +81,7 @@ class RouteInfoController extends ControllerBase {
       // We cannot resolve routes with dynamic parameters from route path. For
       // these routes we pass the route name.
       // @see ::routeItem()
-      if (strpos($route->getPath(), '{') !== FALSE) {
+      if (str_contains($route->getPath(), '{')) {
         $parameters = ['query' => ['route_name' => $route_name]];
       }
       else {
@@ -160,7 +141,7 @@ class RouteInfoController extends ControllerBase {
    * @return array
    *   A render array as expected by the renderer.
    */
-  public function routeDetail(Request $request, RouteMatchInterface $route_match) {
+  public function routeDetail(Request $request, RouteMatchInterface $route_match): array {
     $route = NULL;
 
     // Get the route object from the path query string if available.
@@ -168,8 +149,8 @@ class RouteInfoController extends ControllerBase {
       try {
         $route = $this->router->match($path);
       }
-      catch (\Exception $e) {
-        $this->messenger()->addWarning($this->t("Unable to load route for url '%url'", ['%url' => $path]));
+      catch (\Exception) {
+        $this->messenger->addWarning($this->t("Unable to load route for url '%url'", ['%url' => $path]));
       }
     }
 
@@ -179,8 +160,8 @@ class RouteInfoController extends ControllerBase {
       try {
         $route = $this->routeProvider->getRouteByName($route_name);
       }
-      catch (\Exception $e) {
-        $this->messenger()->addWarning($this->t("Unable to load route '%name'", ['%name' => $route_name]));
+      catch (\Exception) {
+        $this->messenger->addWarning($this->t("Unable to load route '%name'", ['%name' => $route_name]));
       }
     }
 

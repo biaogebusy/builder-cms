@@ -25,9 +25,6 @@ class PathProcessorTest implements InboundPathProcessorInterface, OutboundPathPr
       }
     }
 
-    // Rewrite community/ to forum/.
-    $path = preg_replace('@^/community(.*)@', '/forum$1', $path);
-
     if ($path == '/url-alter-test/bar') {
       $path = '/url-alter-test/foo';
     }
@@ -37,7 +34,7 @@ class PathProcessorTest implements InboundPathProcessorInterface, OutboundPathPr
   /**
    * {@inheritdoc}
    */
-  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     // Rewrite user/uid to user/username.
     if (preg_match('!^/user/([0-9]+)(/.*)?!', $path, $matches)) {
       if ($account = User::load($matches[1])) {
@@ -54,8 +51,7 @@ class PathProcessorTest implements InboundPathProcessorInterface, OutboundPathPr
       $options['query']['foo'] = 'bar';
     }
 
-    // Rewrite forum/ to community/.
-    return preg_replace('@^/forum(.*)@', '/community$1', $path);
+    return $path;
   }
 
 }

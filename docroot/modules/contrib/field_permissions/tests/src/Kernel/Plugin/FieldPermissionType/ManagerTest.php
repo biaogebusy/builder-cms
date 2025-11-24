@@ -28,6 +28,7 @@ class ManagerTest extends KernelTestBase {
     'field_permissions',
     'field_permissions_test',
     'system',
+    'text',
     'user',
   ];
 
@@ -51,7 +52,6 @@ class ManagerTest extends KernelTestBase {
   public function setUp():void {
     parent::setUp();
 
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('entity_test');
 
@@ -70,7 +70,7 @@ class ManagerTest extends KernelTestBase {
     $entity = EntityTest::create();
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'test_foo',
-      'type' => 'text',
+      'type' => 'string',
       'entity_type' => 'entity_test',
     ]);
     $plugin = $this->fieldPermissionTypeManager->createInstance('test_access', [], $field_storage);

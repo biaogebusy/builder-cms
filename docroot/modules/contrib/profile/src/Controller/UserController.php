@@ -95,6 +95,19 @@ class UserController extends ControllerBase {
   }
 
   /**
+   * Builds a page title for the add form for a given profile type.
+   *
+   * @param \Drupal\profile\Entity\ProfileTypeInterface $profile_type
+   *   The profile type.
+   *
+   * @return string
+   *   The page title for the add form.
+   */
+  public function addFormTitle(ProfileTypeInterface $profile_type) {
+    return (string) $this->t('Add @profile_type', ['@profile_type' => $profile_type->getDisplayLabel() ?: $profile_type->label()]);
+  }
+
+  /**
    * Builds the edit form.
    *
    * @param \Drupal\profile\Entity\ProfileInterface $profile

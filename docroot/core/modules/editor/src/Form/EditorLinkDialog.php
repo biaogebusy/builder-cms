@@ -13,9 +13,21 @@ use Drupal\Core\Ajax\CloseModalDialogCommand;
 /**
  * Provides a link dialog for text editors.
  *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
+ * replacement.
+ *
+ * @see https://www.drupal.org/node/3291493
+ *
  * @internal
  */
 class EditorLinkDialog extends FormBase {
+
+  /**
+   * Constructs a form object for link dialog.
+   */
+  public function __construct() {
+    @trigger_error(__NAMESPACE__ . '\EditorLinkDialog is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3291493', E_USER_DEPRECATED);
+  }
 
   /**
    * {@inheritdoc}
@@ -36,7 +48,7 @@ class EditorLinkDialog extends FormBase {
    *
    * @return array
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Editor $editor = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Editor $editor = NULL) {
     // The default values are set directly from \Drupal::request()->request,
     // provided by the editor plugin opening the dialog.
     $user_input = $form_state->getUserInput();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\FunctionalJavascript;
 
 use Drupal\Tests\diff\Functional\CoreVersionUiTestTrait;
@@ -149,6 +151,7 @@ class DiffLocaleTest extends DiffTestBase {
     $french_node->setTitle('french_revision_2');
     $french_node->setNewRevision(TRUE);
     $french_node->save();
+    $revision5 = $french_node->getRevisionId();
 
     // Compare first two revisions.
     $this->drupalGet('node/' . $node->id() . '/revisions/view/' . $revision1 . '/' . $revision2 . '/split_fields');
@@ -164,6 +167,12 @@ class DiffLocaleTest extends DiffTestBase {
 
     // There shouldn't be other differences in the current language.
     $this->assertSession()->linkNotExists('Next change');
+
+    // Attempt to visit with a valid revision but for the wrong language.
+    $this->drupalGet('node/' . $node->id() . '/revisions/view/' . $revision5 . '/' . $revision1 . '/split_fields');
+    $diffs = $this->getSession()->getPage()->findAll('xpath', '//span[@class="diffchange"]');
+    $this->assertEquals($diffs[0]->getText(), 'english_revision_2');
+    $this->assertEquals($diffs[1]->getText(), 'english_revision_0');
   }
 
   /**

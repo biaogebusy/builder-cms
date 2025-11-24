@@ -2,25 +2,24 @@
 
 namespace Drupal\commerce_tax\Plugin\Field\FieldFormatter;
 
-use Drupal\commerce\UrlData;
-use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\commerce\UrlData;
+use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 
 /**
  * Plugin implementation of the 'commerce_tax_number_default' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_tax_number_default",
- *   label = @Translation("Default"),
- *   field_types = {
- *     "commerce_tax_number"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_tax_number_default",
+  label: new TranslatableMarkup("Default"),
+  field_types: ["commerce_tax_number"],
+)]
 class TaxNumberDefaultFormatter extends FormatterBase {
 
   /**

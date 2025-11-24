@@ -1255,6 +1255,10 @@ class OptionsLimitWebformHandler extends WebformHandlerBase implements WebformOp
   protected function getOptionsReached(array $limits) {
     $element_key = $this->configuration['element_key'];
     $webform_submission = $this->getWebformSubmission();
+    if (!$webform_submission) {
+      return [];
+    }
+
     $element_values = (array) $webform_submission->getElementOriginalData($element_key) ?: [];
     $reached = [];
     foreach ($limits as $option_value => $limit) {

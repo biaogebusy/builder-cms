@@ -2,8 +2,8 @@
 
 namespace Drupal\jsonapi_include\EventSubscriber;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Cache\CacheableResponseInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\jsonapi\Routing\Routes;
 use Drupal\jsonapi_include\JsonapiParseInterface;
@@ -88,7 +88,7 @@ class ResponseSubscriber implements EventSubscriberInterface {
       return;
     }
     $route_defaults = $this->routeMatch->getRouteObject()->getDefaults();
-    if (Routes::isJsonApiRequest($route_defaults) || !empty($route_defaults['_is_jsonapi'])) {
+    if (Routes::isJsonApiRequest($route_defaults) || !empty($route_defaults[Routes::JSON_API_ROUTE_FLAG_KEY])) {
       $response = $event->getResponse();
       if ($response instanceof CacheableResponseInterface) {
         $response->getCacheableMetadata()->addCacheContexts(['url.query_args:jsonapi_include']);

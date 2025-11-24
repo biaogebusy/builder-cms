@@ -39,8 +39,11 @@
           <td style="font-size: 30px; padding-bottom: 30px">{{ 'Order Confirmation'|t }}</td>
         </tr>
         <tr>
-          <td style="font-weight: bold; padding-top:15px; padding-bottom: 15px; text-align: left; border-top: 1px solid #cccccc; border-bottom: 1px solid #cccccc">
-            {{ 'Order #@number details:'|t({'@number': order_entity.getOrderNumber}) }}
+          <td style="padding-top:15px; padding-bottom: 15px; text-align: left; border-top: 1px solid #cccccc; border-bottom: 1px solid #cccccc">
+            <div><span style="font-weight: bold;">{{ 'Order number:'|t }}</span> {{ order_entity.getOrderNumber }}</div>
+            {% if (order_entity.getPlacedTime) %}
+              <div style="margin-top: 5px;"><span style="font-weight: bold;">{{ 'Order date:'|t }}</span> {{ order_entity.getPlacedTime|format_date('short') }}</div>
+            {% endif %}
           </td>
         </tr>
         <tr>
@@ -67,7 +70,7 @@
         <tr>
           <td>
             {% if (billing_information or shipping_information) %}
-            <table style="width: 100%; padding-top:15px; padding-bottom: 15px; text-align: left; border-top: 1px solid #cccccc; border-bottom: 1px solid #cccccc">
+            <table style="width: 100%; padding-top:15px; padding-bottom: 15px; text-align: left; border-top: 1px solid #cccccc; border-bottom: 1px solid #cccccc;">
               <tbody>
               <tr>
                 {% if shipping_information %}
@@ -77,7 +80,7 @@
                   <td style="padding-top: 5px; font-weight: bold;">{{ 'Billing Information'|t }}</td>
                 {% endif %}
               </tr>
-              <tr>
+              <tr style="vertical-align: top;">
                 {% if shipping_information %}
                   <td>
                     {% block shipping_information %}
@@ -133,6 +136,22 @@
             </p>
           </td>
         </tr>
+        {% if order_entity.getCustomerComments %}
+          <tr>
+            <td>
+              <table style="width: 100%; padding-top:15px; padding-bottom: 15px; text-align: left; border-top: 1px solid #cccccc; ">
+                <tbody>
+                <tr>
+                  <td style="padding-top: 5px; font-weight: bold;">{{ 'Customer comments'|t }}</td>
+                </tr>
+                <tr>
+                  <td><p>{{ order_entity.getCustomerComments|raw }}</p></td>
+                </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        {% endif %}
         <tr>
           <td>
             {% block additional_information %}

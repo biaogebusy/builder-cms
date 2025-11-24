@@ -2,24 +2,29 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Defines the 'decimal' field type.
- *
- * @FieldType(
- *   id = "decimal",
- *   label = @Translation("Number (decimal)"),
- *   description = @Translation("This field stores a number in the database in a fixed decimal format."),
- *   category = @Translation("Number"),
- *   default_widget = "number",
- *   default_formatter = "number_decimal"
- * )
  */
+#[FieldType(
+  id: "decimal",
+  label: new TranslatableMarkup("Number (decimal)"),
+  description: [
+    new TranslatableMarkup("Ideal for exact counts and measures (prices, temperatures, distances, volumes, etc.)"),
+    new TranslatableMarkup("Stores a number in the database in a fixed decimal format"),
+    new TranslatableMarkup("For example, 12.34 km or € when used for further detailed calculations (such as summing many of these)"),
+  ],
+  category: "number",
+  weight: -30,
+  default_widget: "number",
+  default_formatter: "number_decimal"
+)]
 class DecimalItem extends NumericItemBase {
 
   /**
@@ -36,7 +41,7 @@ class DecimalItem extends NumericItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties['value'] = DataDefinition::create('string')
+    $properties['value'] = DataDefinition::create('decimal')
       ->setLabel(new TranslatableMarkup('Decimal value'))
       ->setRequired(TRUE);
 
@@ -69,7 +74,7 @@ class DecimalItem extends NumericItemBase {
       '#type' => 'number',
       '#title' => $this->t('Precision'),
       '#min' => 10,
-      '#max' => ini_get('precision') < 10 ? 10 : ini_get('precision'),
+      '#max' => 32,
       '#default_value' => $settings['precision'],
       '#description' => $this->t('The total number of digits to store in the database, including those to the right of the decimal.'),
       '#disabled' => $has_data,
@@ -79,7 +84,7 @@ class DecimalItem extends NumericItemBase {
       '#type' => 'number',
       '#title' => $this->t('Scale', [], ['context' => 'decimal places']),
       '#min' => 0,
-      '#max' => ini_get('precision'),
+      '#max' => 10,
       '#default_value' => $settings['scale'],
       '#description' => $this->t('The number of digits to the right of the decimal.'),
       '#disabled' => $has_data,
@@ -91,32 +96,12 @@ class DecimalItem extends NumericItemBase {
   /**
    * {@inheritdoc}
    */
-  public function getConstraints() {
-    $constraint_manager = \Drupal::typedDataManager()->getValidationConstraintManager();
-    $constraints = parent::getConstraints();
-
-    $constraints[] = $constraint_manager->create('ComplexData', [
-      'value' => [
-        'Regex' => [
-          'pattern' => '/^[+-]?((\d+(\.\d*)?)|(\.\d+))$/i',
-        ],
-      ],
-    ]);
-
-    return $constraints;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $element = parent::fieldSettingsForm($form, $form_state);
     $settings = $this->getSettings();
 
-    // Convert to string, for consistent and lossless processing.
-    $step = number_format(pow(0.1, $settings['scale']), $settings['scale'], '.', '');
-    $element['min']['#step'] = $step;
-    $element['max']['#step'] = $step;
+    $element['min']['#step'] = pow(0.1, $settings['scale']);
+    $element['max']['#step'] = pow(0.1, $settings['scale']);
 
     return $element;
   }

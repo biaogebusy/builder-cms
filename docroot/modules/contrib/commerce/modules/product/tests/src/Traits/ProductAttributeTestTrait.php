@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_product\Traits;
 
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductVariationTypeInterface;
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 

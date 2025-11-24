@@ -14,7 +14,7 @@ class RecentlyReadStorageSchema extends SqlContentEntityStorageSchema {
   /**
    * {@inheritdoc}
    */
-  protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE) {
+  protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE): array {
     $schema = parent::getEntitySchema($entity_type, $reset);
     $schema['recently_read']['indexes'] += [
       'session_id' => ['session_id'],
@@ -26,7 +26,7 @@ class RecentlyReadStorageSchema extends SqlContentEntityStorageSchema {
   /**
    * {@inheritdoc}
    */
-  protected function getSharedTableFieldSchema(FieldStorageDefinitionInterface $storage_definition, $table_name, array $column_mapping) {
+  protected function getSharedTableFieldSchema(FieldStorageDefinitionInterface $storage_definition, $table_name, array $column_mapping): array {
     $schema = parent::getSharedTableFieldSchema($storage_definition, $table_name, $column_mapping);
     $field_name = $storage_definition->getName();
 

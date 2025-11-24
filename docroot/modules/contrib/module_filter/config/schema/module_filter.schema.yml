@@ -8,6 +8,9 @@ module_filter.settings:
     path:
       type: boolean
       label: 'Show module path in modules list'
+    descriptions_show:
+      type: boolean
+      label: 'Always show description details'
     enabled_filters:
       type: mapping
       label: 'Enabled filters'

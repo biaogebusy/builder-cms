@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
-use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\FontOperationTrait;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\TextOverlayTrait;
+use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD2 text overlay operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_text_overlay",
- *   toolkit = "gd",
- *   operation = "text_overlay",
- *   label = @Translation("Text overlay"),
- *   description = @Translation("Overlays a given text into the image.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_text_overlay',
+  toolkit: 'gd',
+  operation: 'text_overlay',
+  label: new TranslatableMarkup('Text overlay'),
+  description: new TranslatableMarkup('Overlays a given text into the image.'),
+)]
 class TextOverlay extends GDImageToolkitOperationBase {
 
   use FontOperationTrait;
@@ -40,7 +43,7 @@ class TextOverlay extends GDImageToolkitOperationBase {
       $shadow = TRUE;
     }
     if ($outline || $shadow) {
-      $stroke_color = $this->allocateColorFromRgba($arguments['font_stroke_color']);
+      $stroke_color = $this->allocateColorFromRgba($this->getToolkit()->getImage(), $arguments['font_stroke_color']);
       if ($outline) {
         $stroke_x_pos = $arguments['basepoint'][0];
         $stroke_y_pos = $arguments['basepoint'][1];
@@ -60,7 +63,7 @@ class TextOverlay extends GDImageToolkitOperationBase {
       for ($c1 = ($stroke_x_pos - abs($stroke_left)); $c1 <= ($stroke_x_pos + abs($stroke_right)); $c1++) {
         for ($c2 = ($stroke_y_pos - abs($stroke_top)); $c2 <= ($stroke_y_pos + abs($stroke_bottom)); $c2++) {
           $bg = $this->imagettftextWrapper(
-            $this->getToolkit()->getResource(),
+            $this->getToolkit()->getImage(),
             $arguments['font_size'],
             -$arguments['font_angle'],
             $c1,
@@ -78,12 +81,12 @@ class TextOverlay extends GDImageToolkitOperationBase {
 
     // Overlays the text.
     $this->imagettftextWrapper(
-      $this->getToolkit()->getResource(),
+      $this->getToolkit()->getImage(),
       $arguments['font_size'],
       -$arguments['font_angle'],
       $arguments['basepoint'][0],
       $arguments['basepoint'][1],
-      $this->allocateColorFromRgba($arguments['font_color']),
+      $this->allocateColorFromRgba($this->getToolkit()->getImage(), $arguments['font_color']),
       $font_file,
       $arguments['text']
     );

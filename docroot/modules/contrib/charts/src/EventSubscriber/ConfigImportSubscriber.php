@@ -2,12 +2,12 @@
 
 namespace Drupal\charts\EventSubscriber;
 
-use Drupal\charts\ChartManager;
-use Drupal\charts\DependenciesCalculatorTrait;
-use Drupal\charts\TypeManager;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\ConfigImporterEvent;
 use Drupal\Core\Config\StorageTransformEvent;
+use Drupal\charts\ChartManager;
+use Drupal\charts\DependenciesCalculatorTrait;
+use Drupal\charts\TypeManager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**

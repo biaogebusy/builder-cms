@@ -4,10 +4,13 @@ namespace Drupal\page_manager_ui\Wizard;
 
 use Drupal\Core\Display\ContextAwareVariantInterface;
 use Drupal\ctools\Plugin\PluginWizardInterface;
-use Drupal\page_manager_ui\Form\PageVariantContextsForm;
 use Drupal\page_manager_ui\Form\PageVariantConfigureForm;
+use Drupal\page_manager_ui\Form\PageVariantContextsForm;
 use Drupal\page_manager_ui\Form\PageVariantSelectionForm;
 
+/**
+ * Page Manager - Add Page Wizard Class.
+ */
 class PageAddWizard extends PageWizardBase {
 
   /**

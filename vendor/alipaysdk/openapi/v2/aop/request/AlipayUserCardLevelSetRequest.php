@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.user.card.level.set request
  *
  * @author auto create
- * @since 1.0, 2023-01-11 08:56:39
+ * @since 1.0, 2025-08-14 12:07:37
  */
 class AlipayUserCardLevelSetRequest
 {

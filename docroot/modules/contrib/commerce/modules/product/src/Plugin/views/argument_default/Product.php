@@ -2,21 +2,22 @@
 
 namespace Drupal\commerce_product\Plugin\views\argument_default;
 
-use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default argument plugin to extract a product.
- *
- * @ViewsArgumentDefault(
- *   id = "product",
- *   title = @Translation("Product ID from URL")
- * )
  */
+#[ViewsArgumentDefault(
+  id: "product",
+  title: new TranslatableMarkup("Product ID from URL"),
+)]
 class Product extends ArgumentDefaultPluginBase implements CacheableDependencyInterface {
 
   /**

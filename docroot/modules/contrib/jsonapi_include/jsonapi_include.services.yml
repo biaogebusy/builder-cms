@@ -10,3 +10,4 @@ services:
       - [setRouteMatch, ['@current_route_match']]
   jsonapi_include.parse:
     class: Drupal\jsonapi_include\JsonapiParse
+    arguments: ['@request_stack']

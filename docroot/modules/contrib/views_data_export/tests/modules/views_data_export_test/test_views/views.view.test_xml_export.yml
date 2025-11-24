@@ -1,0 +1,346 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - rest
+    - user
+    - node
+id: test_xml_export
+label: 'Test serialize display entity rows to XML'
+module: views_data_export
+description: ''
+tag: ''
+base_table: node_field_data
+base_field: nid
+core: 8.x
+display:
+  default:
+    display_plugin: default
+    id: default
+    display_title: Master
+    position: 0
+    display_options:
+      access:
+        type: perm
+        options:
+          perm: 'access content'
+      cache:
+        type: tag
+        options: { }
+      query:
+        type: views_query
+        options:
+          disable_sql_rewrite: false
+          distinct: false
+          replica: false
+          query_comment: ''
+          query_tags: { }
+      exposed_form:
+        type: basic
+        options:
+          submit_button: Apply
+          reset_button: false
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          expose_sort_order: true
+          sort_asc_label: Asc
+          sort_desc_label: Desc
+      pager:
+        type: mini
+        options:
+          items_per_page: 10
+          offset: 0
+          id: 0
+          total_pages: null
+          expose:
+            items_per_page: false
+            items_per_page_label: 'Items per page'
+            items_per_page_options: '5, 10, 25, 50'
+            items_per_page_options_all: false
+            items_per_page_options_all_label: '- All -'
+            offset: false
+            offset_label: Offset
+          tags:
+            previous: â€¹â€¹
+            next: â€ºâ€º
+      style:
+        type: default
+        options:
+          grouping: { }
+          row_class: ''
+          default_row_class: true
+          uses_fields: false
+      row:
+        type: fields
+        options:
+          inline: { }
+          separator: ''
+          hide_empty: false
+          default_field_elements: true
+      fields:
+        title:
+          id: title
+          table: node_field_data
+          field: title
+          entity_type: node
+          entity_field: title
+          label: ''
+          alter:
+            alter_text: false
+            make_link: false
+            absolute: false
+            trim: false
+            word_boundary: false
+            ellipsis: false
+            strip_tags: false
+            html: false
+          hide_empty: false
+          empty_zero: false
+          settings:
+            link_to_entity: false
+          plugin_id: field
+          relationship: none
+          group_type: group
+          admin_label: ''
+          exclude: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_alter_empty: true
+          click_sort_column: value
+          type: string
+          group_column: value
+          group_columns: { }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+      filters:
+        status:
+          value: '1'
+          table: node_field_data
+          field: status
+          plugin_id: boolean
+          entity_type: node
+          entity_field: status
+          id: status
+          expose:
+            operator: ''
+          group: 1
+      sorts:
+        created:
+          id: created
+          table: node_field_data
+          field: created
+          order: DESC
+          entity_type: node
+          entity_field: created
+          plugin_id: date
+          relationship: none
+          group_type: group
+          admin_label: ''
+          exposed: false
+          expose:
+            label: ''
+          granularity: second
+      header: { }
+      footer: { }
+      empty: { }
+      relationships: { }
+      arguments: { }
+      display_extenders: { }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url.query_args
+        - 'user.node_grants:view'
+        - user.permissions
+      tags: { }
+  xml_defaults:
+    display_plugin: data_export
+    id: xml_defaults
+    display_title: serializer
+    position: null
+    display_options:
+      path: test/data_export/xml/defaults
+      filename: something.xml
+      style:
+        type: data_export
+        options:
+          formats:
+            json: xml
+      displays:
+        page_1: page_1
+        default: '0'
+  xml_change_node_names:
+    display_plugin: data_export
+    id: xml_change_node_names
+    display_title: xml
+    position: null
+    display_options:
+      path: test/data_export/xml/change_node_names
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            root_node_name: nodes
+            item_node_name: node
+      displays:
+        page_1: page_1
+        default: '0'
+  xml_no_encoding:
+    display_plugin: data_export
+    id: xml_no_encoding
+    display_title: xml
+    position: null
+    display_options:
+      path: test/data_export/xml/no_encoding
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            encoding: ''
+      displays:
+        page_1: page_1
+        default: '0'
+  xml_utf8_encoding:
+    display_plugin: data_export
+    id: xml_utf8_encoding
+    display_title: xml
+    position: null
+    display_options:
+      path: test/data_export/xml/utf8_encoding
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            encoding: UTF-8
+      displays:
+        page_1: page_1
+        default: '0'
+  page_1:
+    display_plugin: page
+    id: page_1
+    display_title: page
+    position: null
+    display_options:
+      defaults:
+        access: false
+        style: false
+        row: false
+      style:
+        type: default
+      row:
+        type: entity:node
+      path: test/data_export/page
+
+  batched_no_encoding:
+    display_plugin: data_export
+    id: batched_no_encoding
+    display_title: 'Data export'
+    position: 2
+    display_options:
+      display_extenders: { }
+      path: test/data_export/xml/batched/no_encoding
+      filename: test_1
+      automatic_download: false
+      redirect_path: ''
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            encoding: ''
+      export_method: batch
+      export_batch_size: 3
+      store_in_public_file_directory: true
+      redirect_to_display: none
+      custom_redirect_path: false
+      include_query_params: false
+
+  batched_utf8_encoding:
+    display_plugin: data_export
+    id: batched_utf8_encoding
+    display_title: 'Data export'
+    position: 3
+    display_options:
+      display_extenders: { }
+      path: test/data_export/xml/batched/utf8_encoding
+      filename: test_1
+      automatic_download: false
+      redirect_path: ''
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            encoding: UTF-8
+      export_method: batch
+      export_batch_size: 3
+      store_in_public_file_directory: true
+      redirect_to_display: none
+      custom_redirect_path: false
+      include_query_params: false
+
+  format_output:
+    display_plugin: data_export
+    id: format_output
+    display_title: xml
+    position: null
+    display_options:
+      path: test/data_export/xml/pretty_printing
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            format_output: true
+      displays:
+        page_1: page_1
+        default: '0'
+
+  batched_format_output:
+    display_plugin: data_export
+    id: batched_format_output
+    display_title: 'Data export'
+    position: null
+    display_options:
+      display_extenders: { }
+      path: test/data_export/xml/batched/pretty_printing
+      filename: test_1
+      automatic_download: false
+      redirect_path: ''
+      style:
+        type: data_export
+        options:
+          formats:
+            xml: xml
+          xml_settings:
+            format_output: true
+      export_method: batch
+      export_batch_size: 1
+      store_in_public_file_directory: true
+      redirect_to_display: none
+      custom_redirect_path: false
+      include_query_params: false

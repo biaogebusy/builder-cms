@@ -3,13 +3,13 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
  * Provides a form element for a submit button with an image.
- *
- * @FormElement("image_button")
  */
+#[FormElement('image_button')]
 class ImageButton extends Submit {
 
   /**
@@ -45,8 +45,8 @@ class ImageButton extends Submit {
         // in the same spot for its name, with '_x'.
         $input = $form_state->getUserInput();
         foreach (explode('[', $element['#name']) as $element_name) {
-          // chop off the ] that may exist.
-          if (substr($element_name, -1) == ']') {
+          // Chop off the ] that may exist.
+          if (str_ends_with($element_name, ']')) {
             $element_name = substr($element_name, 0, -1);
           }
 

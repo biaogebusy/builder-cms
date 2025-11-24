@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\syslog\Kernel\Migrate\d7;
 
 use Drupal\Tests\SchemaCheckTestTrait;
@@ -15,9 +17,7 @@ class MigrateSyslogConfigsTest extends MigrateDrupal7TestBase {
   use SchemaCheckTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['syslog'];
 
@@ -33,7 +33,7 @@ class MigrateSyslogConfigsTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of syslog variables to syslog.settings.yml.
    */
-  public function testSyslogSettings() {
+  public function testSyslogSettings(): void {
     $config = $this->config('syslog.settings');
     // 8 == LOG_USER
     $this->assertSame(8, $config->get('facility'));

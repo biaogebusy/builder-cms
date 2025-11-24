@@ -7,6 +7,8 @@ use Drupal\commerce_order\Entity\OrderItemInterface;
 
 /**
  * Defines the interface for availability checkers.
+ *
+ * Interface for services tagged as 'commerce_order.availability_checker'.
  */
 interface AvailabilityCheckerInterface {
 

@@ -2,10 +2,12 @@
 
 namespace Drupal\Tests\autologout\Kernel;
 
-use Drupal\autologout\Form\AutologoutSettingsForm;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
+use Drupal\autologout\Form\AutologoutSettingsForm;
+use Drupal\user\RoleInterface;
 
 /**
  * Tests the settings form.
@@ -17,6 +19,7 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 class SettingsFormTest extends KernelTestBase {
 
   use UserCreationTrait;
+  use StringTranslationTrait;
 
   /**
    * Modules to enable.
@@ -58,6 +61,13 @@ class SettingsFormTest extends KernelTestBase {
   protected $settingsForm;
 
   /**
+   * The EntityTypeManager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -68,6 +78,7 @@ class SettingsFormTest extends KernelTestBase {
     $this->installConfig('autologout');
 
     $this->configFactory = $this->container->get('config.factory');
+    $this->entityTypeManager = $this->container->get('entity_type.manager');
     $this->userData = $this->container->get('user.data');
     $this->privilegedUser = $this->createUser(['change own logout threshold']);
   }
@@ -78,7 +89,8 @@ class SettingsFormTest extends KernelTestBase {
   public function testSettingsForm() {
     $form_builder = $this->container->get('form_builder');
     $settings = $this->configFactory->getEditable('autologout.settings');
-    $roles = user_roles();
+    $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
+    unset($roles[RoleInterface::ANONYMOUS_ID]);
     $settings->set('max_timeout', 1000)->save();
 
     // Test that it is possible to set a value above the max_timeout threshold.
@@ -118,9 +130,9 @@ class SettingsFormTest extends KernelTestBase {
     $form_builder->submitForm(AutologoutSettingsForm::class, $form_state);
     $form_errors = $form_state->getErrors();
     $this->assertCount(1, $form_errors);
-    $this->assertEquals(
+    $this->assertSame(
       'The timeout must be an integer greater than or equal to 60 and less then or equal to <em class="placeholder">2000</em>.',
-      $form_errors['timeout']);
+      (string) $form_errors['timeout']);
 
     // Test that it's impossible to set max_timeout to greater than 2147483.
     $form_state->setValues([
@@ -140,9 +152,9 @@ class SettingsFormTest extends KernelTestBase {
     $form_builder->submitForm(AutologoutSettingsForm::class, $form_state);
     $form_errors = $form_state->getErrors();
     $this->assertCount(1, $form_errors);
-    $this->assertEquals(
+    $this->assertSame(
       'The max timeout must be an integer lower than or equal to <em class="placeholder">2147483</em>.',
-      $form_errors['max_timeout']);
+      (string) $form_errors['max_timeout']);
 
     // Test that out of range values are picked up.
     $form_state->setValues([
@@ -163,7 +175,7 @@ class SettingsFormTest extends KernelTestBase {
     $form_errors = $form_state->getErrors();
     $this->assertCount(1, $form_errors);
     $this->assertEquals(
-      t('%role role timeout must be an integer greater than 60, less then <em class="placeholder">2000</em> or 0 to disable autologout for that role.',
+      $this->t('%role role timeout must be an integer greater than 60, less then <em class="placeholder">2000</em> or 0 to disable autologout for that role.',
         ['%role' => key($roles)]
       ),
       $form_errors['table][' . key($roles) . '][timeout']);
@@ -211,7 +223,7 @@ class SettingsFormTest extends KernelTestBase {
     $user_settings = $this->container->get('user.data');
     $uid = $this->privilegedUser->id();
     $role_settings = $this->configFactory
-      ->getEditable('autologout.role.' . key(user_roles()));
+      ->getEditable('autologout.role.' . key($this->entityTypeManager->getStorage('user_role')->loadMultiple()));
 
     // Default used if no role is specified.
     $settings->set('timeout', 100)

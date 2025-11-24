@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.transport.offlinepay.trade.settle request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:29:08
+ * @since 1.0, 2024-12-09 16:06:17
  */
 class AlipayCommerceTransportOfflinepayTradeSettleRequest
 {

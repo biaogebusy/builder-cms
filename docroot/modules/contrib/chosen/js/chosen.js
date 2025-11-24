@@ -2,40 +2,15 @@
  * @file
  * Attaches behaviors for the Chosen module.
  */
-
-(function($, Drupal, drupalSettings, once) {
+(function(Drupal, drupalSettings, once) {
   'use strict';
 
-  // Temporal workaround while  https://github.com/harvesthq/chosen/issues/515
-  // is fixed. This fix was taken from:
-  // https://github.com/harvesthq/chosen/issues/515#issuecomment-104602031
-  $.fn.oldChosen = $.fn.chosen;
-  $.fn.chosen = function(options) {
-    var select = $(this)
-      , is_creating_chosen = !!options;
-
-    if (is_creating_chosen && select.css('position') === 'absolute') {
-      // if we are creating a chosen and the select already has the appropriate styles added
-      // we remove those (so that the select hasn't got a crazy width), then create the chosen
-      // then we re-add them later
-      select.removeAttr('style');
-    }
-
-    var ret = select.oldChosen(options);
-
-    // only act if the select has display: none, otherwise chosen is unsupported (iPhone, etc)
-    if (is_creating_chosen && select.css('display') === 'none') {
-      // https://github.com/harvesthq/chosen/issues/515#issuecomment-33214050
-      // only do this if we are initializing chosen (no params, or object params) not calling a method
-      select.attr('style','display:visible; position:absolute; width:0px; height: 0px; clip:rect(0,0,0,0)');
-      select.attr('tabindex', -1);
-    }
-    return ret;
-  };
-
   // Update Chosen elements when state has changed.
-  $(document).on('state:disabled', 'select', function (e) {
-    $(e.target).trigger('chosen:updated');
+  document.addEventListener('state:disabled', function(e) {
+    if (e.target && e.target.matches('select')) {
+      const event = new Event('chosen:updated', { bubbles: true, cancelable: true });
+      e.target.dispatchEvent(event);
+    }
   });
 
   Drupal.behaviors.chosen = {
@@ -68,7 +43,21 @@
        *
        * @type {string}
        */
-      selector: 'select:visible'
+      selector: 'select:visible',
+
+      /**
+       * Minimum options for single and multiple selects.
+       * These may be defined in drupalSettings.chosen.
+       */
+      minimum_single: 0,
+      minimum_multiple: 0,
+
+      /**
+       * Other default options for Chosen.
+       */
+      options: {},
+      minimum_width: 0,
+      use_relative_width: false,
     },
 
     /**
@@ -76,7 +65,34 @@
      */
     attach: function(context, settings) {
       this.settings = this.getSettings(settings);
-      $(once('chosen', this.getElements(context))).each(function (i, element) {
+      const elements = this.getElements(context);
+      // Use Drupal's once function to process elements only once
+      once('chosen', elements).forEach(function(element) {
+        // If inside a Drupal dialog, resize the dialog on open & close event.
+        if (element.closest('#drupal-modal')) {
+          element.addEventListener('chosen:showing_dropdown', (e) => {
+            const nextElement = element.nextElementSibling;
+            if (nextElement) {
+              const chosenDrop = nextElement.querySelector('.chosen-drop');
+              if (chosenDrop) {
+                chosenDrop.style.position = 'static';
+                const event = new Event('dialogContentResize', { bubbles: true, cancelable: true });
+                element.dispatchEvent(event);
+              }
+            }
+          });
+          element.addEventListener('chosen:hiding_dropdown', (e) => {
+            const nextElement = element.nextElementSibling;
+            if (nextElement) {
+              const chosenDrop = nextElement.querySelector('.chosen-drop');
+              if (chosenDrop) {
+                chosenDrop.style.position = '';
+                const event = new Event('dialogContentResize', { bubbles: true, cancelable: true });
+                element.dispatchEvent(event);
+              }
+            }
+          });
+        }
         this.createChosen(element);
       }.bind(this));
     },
@@ -84,73 +100,157 @@
     /**
      * Creates a Chosen instance for a specific element.
      *
-     * @param {jQuery|HTMLElement} element
+     * @param {HTMLElement} element
      *   The element.
      */
     createChosen: function(element) {
-      var $element = $(element);
-      $element.chosen(this.getElementOptions($element));
+      const options = this.getElementOptions(element);
+      element.chosen(options);
+
+      if (options.add_helper_buttons || element.hasAttribute('chosen_add_helper_buttons')) {
+        if (element.hasAttribute('multiple')) {
+          const allButton = document.createElement('button');
+          allButton.type = 'button';
+          allButton.className = 'button chosen-helper-btn';
+          allButton.textContent = 'All';
+          allButton.addEventListener('click', function() {
+            Array.from(element.options).forEach(function(option) {
+              option.selected = true;
+            });
+            const event = new Event('chosen:updated', { bubbles: true, cancelable: true });
+            element.dispatchEvent(event);
+          });
+
+          const noneButton = document.createElement('button');
+          noneButton.type = 'button';
+          noneButton.className = 'button chosen-helper-btn';
+          noneButton.textContent = 'None';
+          noneButton.addEventListener('click', function() {
+            Array.from(element.options).forEach(function(option) {
+              option.selected = false;
+            });
+            const event = new Event('chosen:updated', { bubbles: true, cancelable: true });
+            element.dispatchEvent(event);
+          });
+
+          element.parentNode.appendChild(allButton);
+          element.parentNode.appendChild(noneButton);
+        }
+      }
     },
 
     /**
      * Filter out elements that should not be converted into Chosen.
      *
-     * @param {jQuery|HTMLElement} element
+     * @param {HTMLElement} element
      *   The element.
      *
      * @return {boolean}
      *   TRUE if the element should stay, FALSE otherwise.
      */
-    filterElements: function (element) {
-      var $element = $(element);
-
+    filterElements: function(element) {
       // Remove elements that should be ignored completely.
-      if ($element.is(this.settings.ignoreSelector)) {
+      if (element.matches(this.settings.ignoreSelector)) {
         return false;
       }
 
       // Zero value means no minimum.
-      var minOptions = $element.attr('multiple') ? this.settings.minimum_multiple : this.settings.minimum_single;
-      return !minOptions || $element.find('option').length >= minOptions;
+      const minOptions = element.hasAttribute('multiple') ? this.settings.minimum_multiple : this.settings.minimum_single;
+      return !minOptions || element.querySelectorAll('option').length >= minOptions;
+    },
+
+    /**
+     * Checks if the element is visible.
+     *
+     * @param {HTMLElement} el
+     *   A DOM element to check visibility for.
+     * @return {boolean}
+     *   True if the element is visible, false otherwise.
+     */
+    isVisible: function(el) {
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    },
+
+    /**
+     * Parses the selector to handle :visible manually.
+     *
+     * @param {string} selector
+     *   A CSS selector string that may contain :visible.
+     * @return {Array}
+     *   An array of elements that match the selector and are visible (if :visible is present).
+     */
+    getVisibleElements: function(context, selector) {
+      const selectors = selector.split(',').map(s => s.trim());
+      let elements = [];
+
+      selectors.forEach(s => {
+        const hasVisibleFilter = s.includes(':visible');
+        const cleanSelector = s.replace(':visible', '').trim();
+
+        if (!cleanSelector) {
+          return;
+        }
+
+        let selectedElements;
+        try {
+          selectedElements = Array.from(context.querySelectorAll(cleanSelector));
+        } catch (error) {
+          return;
+        }
+
+        if (hasVisibleFilter) {
+          selectedElements = selectedElements.filter(this.isVisible);
+        }
+
+        elements = elements.concat(selectedElements);
+      });
+
+      return elements;
     },
 
     /**
      * Retrieves the elements that should be converted into Chosen instances.
      *
-     * @param {jQuery|Element} context
-     *   A DOM Element, Document, or jQuery object to use as context.
+     * @param {HTMLElement|Document} context
+     *   A DOM Element or Document to use as context.
      * @param {string} [selector]
      *   A selector to use, defaults to the default selector in the settings.
      */
-    getElements: function (context, selector) {
-      var $context = $(context || document);
-      var $elements = $context.find(selector || this.settings.selector);
+    getElements: function(context, selector) {
+      context = context || document;
+      let elements = this.getVisibleElements(context, selector || this.settings.selector);
 
       // Remove elements that should not be converted into Chosen.
-      $elements = $elements.filter(function(i, element) {
+      elements = elements.filter(function(element) {
         return this.filterElements(element);
       }.bind(this));
 
       // Add elements that have explicitly opted in to Chosen.
-      $elements = $elements.add($context.find(this.settings.optedInSelector));
+      const optedInElements = Array.from(context.querySelectorAll(this.settings.optedInSelector));
 
-      return $elements;
+      // Combine elements and opted-in elements, avoiding duplicates.
+      optedInElements.forEach(function(element) {
+        if (!elements.includes(element)) {
+          elements.push(element);
+        }
+      });
+
+      return elements;
     },
 
     /**
      * Retrieves options used to create a Chosen instance based on an element.
      *
-     * @param {jQuery|HTMLElement} element
+     * @param {HTMLElement} element
      *   The element to process.
      *
      * @return {Object}
      *   The options object used to instantiate a Chosen instance with.
      */
-    getElementOptions: function (element) {
-      var $element = $(element);
-      var options = $.extend({}, this.settings.options);
-      var dimension;
-      var width;
+    getElementOptions: function(element) {
+      const options = Object.assign({}, this.settings.options);
+      let dimension;
+      let width;
 
       // The width default option is considered the minimum width, so this
       // must be evaluated for every option.
@@ -159,26 +259,26 @@
         // we need to handle width calculations separately.
         if (this.settings.use_relative_width) {
           dimension = '%';
-          width = ($element.width() / $element.parent().width() * 100).toPrecision(5);
-        }
-        else {
+          const elementWidth = element.getBoundingClientRect().width;
+          const parentWidth = element.parentNode.getBoundingClientRect().width;
+          width = ((elementWidth / parentWidth) * 100).toPrecision(5);
+        } else {
           dimension = 'px';
-          width = $element.width();
+          width = element.getBoundingClientRect().width;
         }
 
         if (width < this.settings.minimum_width) {
           options.width = this.settings.minimum_width + dimension;
-        }
-        else {
+        } else {
           options.width = width + dimension;
         }
       }
 
       // Some field widgets have cardinality, so we must respect that.
       // @see \Drupal\chosen\ChosenFormRender::preRenderSelect()
-      var cardinality;
-      if ($element.attr('multiple') && (cardinality = $element.data('cardinality'))) {
-        options.max_selected_options = cardinality;
+      const cardinality = element.dataset.cardinality;
+      if (element.hasAttribute('multiple') && cardinality) {
+        options.max_selected_options = parseInt(cardinality);
       }
 
       return options;
@@ -190,10 +290,44 @@
      * @param {Object} [settings]
      *   Passed Drupal settings object, if any.
      */
-    getSettings: function (settings) {
-      return $.extend(true, {}, this.settings, settings && settings.chosen || drupalSettings.chosen);
-    }
+    getSettings: function(settings) {
+      // Deep merge the settings
+      return this.deepMerge({}, this.settings, (settings && settings.chosen) || drupalSettings.chosen || {});
+    },
 
-};
+    /**
+     * Deep merges multiple objects into the first object.
+     * This function is used instead of Object.assign to handle nested objects.
+     *
+     * @param {Object} target
+     *   The target object to merge properties into.
+     * @param {...Object} sources
+     *   The source objects from which to copy properties.
+     * @return {Object}
+     *   The target object.
+     */
+    deepMerge: function(target, ...sources) {
+      if (!sources.length) return target;
+      const source = sources.shift();
 
-})(jQuery, Drupal, drupalSettings, once);
+      if (typeof target !== 'object' || typeof source !== 'object') {
+        return target;
+      }
+
+      for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+          if (typeof source[key] === 'object') {
+            if (!target[key]) Object.assign(target, { [key]: {} });
+            this.deepMerge(target[key], source[key]);
+          } else {
+            Object.assign(target, { [key]: source[key] });
+          }
+        }
+      }
+
+      return this.deepMerge(target, ...sources);
+    },
+
+  };
+
+})(Drupal, drupalSettings, once);

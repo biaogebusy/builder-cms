@@ -43,7 +43,7 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
   /**
    * {@inheritdoc}
    */
-  public static function createInstance($definition, $name = NULL, TraversableTypedDataInterface $parent = NULL) {
+  public static function createInstance($definition, $name = NULL, ?TraversableTypedDataInterface $parent = NULL) {
     return new static($definition, $name, $parent);
   }
 
@@ -61,7 +61,7 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
    *
    * @see \Drupal\Core\TypedData\TypedDataManager::create()
    */
-  public function __construct(DataDefinitionInterface $definition, $name = NULL, TypedDataInterface $parent = NULL) {
+  public function __construct(DataDefinitionInterface $definition, $name = NULL, ?TypedDataInterface $parent = NULL) {
     $this->definition = $definition;
     $this->parent = $parent;
     $this->name = $name;
@@ -144,7 +144,7 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
   /**
    * {@inheritdoc}
    */
-  public function setContext($name = NULL, TraversableTypedDataInterface $parent = NULL) {
+  public function setContext($name = NULL, ?TraversableTypedDataInterface $parent = NULL) {
     $this->parent = $parent;
     $this->name = $name;
   }
@@ -175,7 +175,11 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
       // The property path of this data object is the parent's path appended
       // by this object's name.
       $prefix = $this->parent->getPropertyPath();
-      return (strlen($prefix) ? $prefix . '.' : '') . $this->name;
+      // Variables in double quotes used to leverage fast string concatenation.
+      // In PHP 7+ concatenation with variable inside string is the fastest.
+      // @see https://blog.blackfire.io/php-7-performance-improvements-encapsed-strings-optimization.html
+      // This is being done because the code can run in the critical path.
+      return $prefix !== '' ? "{$prefix}.{$this->name}" : $this->name;
     }
     // If no parent is set, this is the root of the data tree. Thus the property
     // path equals the name of this data object.

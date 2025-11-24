@@ -3,7 +3,7 @@
  * ALIPAY API: ssdata.dataservice.risk.content.verify request
  *
  * @author auto create
- * @since 1.0, 2023-08-24 22:35:52
+ * @since 1.0, 2025-08-13 14:42:42
  */
 class SsdataDataserviceRiskContentVerifyRequest
 {

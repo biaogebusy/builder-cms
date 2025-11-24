@@ -3,6 +3,7 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 
 /**
  * Provides a form element for a set of checkboxes.
@@ -15,12 +16,12 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * Usage example:
  * @code
- * $form['favorites']['colors'] = array(
+ * $form['favorites']['colors'] = [
  *   '#type' => 'checkboxes',
- *   '#options' => array('blue' => $this->t('Blue'), 'red' => $this->t('Red')),
+ *   '#options' => ['blue' => $this->t('Blue'), 'red' => $this->t('Red')],
  *   '#title' => $this->t('Which colors do you like?'),
  *   ...
- * );
+ * ];
  * @endcode
  *
  * Element properties may be set on single option items as follows.
@@ -31,10 +32,9 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @see \Drupal\Core\Render\Element\Radios
  * @see \Drupal\Core\Render\Element\Checkbox
- *
- * @FormElement("checkboxes")
  */
-class Checkboxes extends FormElement {
+#[FormElement('checkboxes')]
+class Checkboxes extends FormElementBase {
 
   use CompositeFormElementTrait;
 

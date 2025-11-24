@@ -13,8 +13,8 @@ use Drupal\language\ContentLanguageSettingsInterface;
  *
  * @ConfigEntityType(
  *   id = "language_content_settings",
- *   label = @Translation("Content Language Settings"),
- *   label_collection = @Translation("Content Language Settings"),
+ *   label = @Translation("Content language settings"),
+ *   label_collection = @Translation("Content language settings"),
  *   label_singular = @Translation("content language setting"),
  *   label_plural = @Translation("content languages settings"),
  *   label_count = @PluralTranslation(
@@ -33,7 +33,10 @@ use Drupal\language\ContentLanguageSettingsInterface;
  *     "default_langcode",
  *     "language_alterable",
  *   },
- *   list_cache_tags = { "rendered" }
+ *   list_cache_tags = { "rendered" },
+ *   constraints = {
+ *     "ImmutableProperties" = {"id", "target_entity_type_id", "target_bundle"},
+ *   },
  * )
  */
 class ContentLanguageSettings extends ConfigEntityBase implements ContentLanguageSettingsInterface {
@@ -212,6 +215,27 @@ class ContentLanguageSettings extends ConfigEntityBase implements ContentLanguag
     $this->addDependency($bundle_config_dependency['type'], $bundle_config_dependency['name']);
 
     return $this;
+  }
+
+  /**
+   * Returns all valid values for the `default_langcode` property.
+   *
+   * @return string[]
+   *   All possible valid default langcodes. This includes all langcodes in the
+   *   standard list of human languages, along with special langcodes like
+   *   `site_default`, `current_interface` and `authors_default`.
+   *
+   * @see \Drupal\language\Element\LanguageConfiguration::getDefaultOptions()
+   * @see \Drupal\Core\TypedData\Plugin\DataType\LanguageReference::getAllValidLangcodes()
+   */
+  public static function getAllValidDefaultLangcodes(): array {
+    $language_manager = \Drupal::service('language_manager');
+    return array_unique([
+      ...array_keys($language_manager->getLanguages(LanguageInterface::STATE_ALL)),
+      LanguageInterface::LANGCODE_SITE_DEFAULT,
+      'current_interface',
+      'authors_default',
+    ]);
   }
 
 }

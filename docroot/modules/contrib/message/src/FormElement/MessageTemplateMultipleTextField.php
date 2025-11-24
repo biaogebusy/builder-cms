@@ -46,16 +46,23 @@ class MessageTemplateMultipleTextField {
    * @param string $langcode
    *   The language of the message. Used for the message translation form.
    */
-  public function __construct(MessageTemplate $entity, $callback, $langcode = '') {
+  public function __construct(MessageTemplate $entity, $callback, $langcode) {
     $this->entity = $entity;
     $this->callback = $callback;
-    $this->langcode = $langcode ? $langcode : \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $this->langcode = $langcode;
   }
 
   /**
    * Return the message text element.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param bool $has_token_module
+   *   Whether the token module is enabled.
    */
-  public function textField(&$form, FormStateInterface $form_state, $text = []) {
+  public function textField(&$form, FormStateInterface $form_state, $has_token_module = FALSE) {
     // Creating the container.
     $form['text'] = [
       '#type' => 'container',
@@ -70,10 +77,10 @@ class MessageTemplateMultipleTextField {
       '#suffix' => '</div>',
     ];
 
-    if (\Drupal::moduleHandler()->moduleExists('token')) {
+    if ($has_token_module) {
       $form['token_tree'] = [
         '#theme' => 'token_tree_link',
-        '#token_types' => 'all',
+        '#token_types' => ['message'],
         '#show_restricted' => TRUE,
         '#theme_wrappers' => ['form_element'],
       ];
@@ -90,18 +97,17 @@ class MessageTemplateMultipleTextField {
       ],
     ];
 
-    // Building the multiple form element; Adding first the the form existing
-    // text.
+    // Building the multiple form element; Adding first the form existing text.
     $start_key = 0;
     foreach ($this->entity->get('text') as $item) {
       $form['text'][$start_key] = $this->singleElement($start_key, $item);
       $start_key++;
     }
 
-    // Increase number of elements if requested, or none exist.
+    // Increase the number of elements if requested, or none exist.
     $trigger_element = $form_state->getTriggeringElement();
     if (!empty($trigger_element['#add_more']) || !$start_key) {
-      $form['text'][] = $this->singleElement($start_key + 1, ['value' => '']);
+      $form['text'][] = $this->singleElement($start_key, ['value' => '']);
     }
   }
 
@@ -129,8 +135,7 @@ class MessageTemplateMultipleTextField {
       '#type' => 'weight',
       '#title' => t('Weight for row @number', ['@number' => $delta + 1]),
       '#title_display' => 'invisible',
-      // Note: this 'delta' is the FAPI #type 'weight' element's property.
-      '#delta' => $delta,
+      '#delta' => count($this->entity->get('text')),
       '#default_value' => $delta,
     ];
 

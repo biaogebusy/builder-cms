@@ -21,7 +21,9 @@
 
 .shepherd-element:focus {
   outline: 2px dotted transparent;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 5px #26a769;
+  box-shadow:
+    0 0 0 2px var(--color-white),
+    0 0 0 5px var(--color-focus);
 }
 
 /* Mobile */
@@ -32,7 +34,7 @@
   }
 }
 
-.shepherd-arrow:before {
+.shepherd-arrow::before {
   background: none;
 }
 
@@ -42,28 +44,28 @@
   border: solid 14px rgba(0, 0, 0, 0.8);
 }
 
-.shepherd-element[data-popper-placement^=top] > .shepherd-arrow {
+.shepherd-element[data-popper-placement^="top"] > .shepherd-arrow {
   bottom: -1.75rem;
   border-right-color: transparent;
   border-bottom-color: transparent;
   border-left-color: transparent;
 }
 
-.shepherd-element[data-popper-placement^=bottom] > .shepherd-arrow {
+.shepherd-element[data-popper-placement^="bottom"] > .shepherd-arrow {
   top: -1.75rem;
   border-top-color: transparent;
   border-right-color: transparent;
   border-left-color: transparent;
 }
 
-.shepherd-element[data-popper-placement^=left] > .shepherd-arrow {
+.shepherd-element[data-popper-placement^="left"] > .shepherd-arrow {
   right: -1.75rem;
   border-top-color: transparent;
   border-right-color: transparent; /* LTR */
   border-bottom-color: transparent;
 }
 
-.shepherd-element[data-popper-placement^=right] > .shepherd-arrow {
+.shepherd-element[data-popper-placement^="right"] > .shepherd-arrow {
   left: -1.75rem;
   border-top-color: transparent;
   border-bottom-color: transparent;
@@ -75,7 +77,7 @@
 }
 
 .shepherd-text a {
-  color: #ffd23f;
+  color: var(--color-sunglow);
 }
 
 .shepherd-cancel-icon {
@@ -96,5 +98,7 @@
 
 .shepherd-content *:focus {
   outline: 2px dotted transparent;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 5px #26a769;
+  box-shadow:
+    0 0 0 2px var(--color-white),
+    0 0 0 5px var(--color-focus);
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Annotation;
 
 use Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery;
@@ -30,7 +32,7 @@ class AnnotatedClassDiscoveryCachedTest extends TestCase {
    *
    * @covers ::getDefinitions
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     // Path to the classes which we'll discover and parse annotation.
     $discovery_path = __DIR__ . '/Fixtures';
     // File path that should be discovered within that directory.
@@ -46,7 +48,6 @@ class AnnotatedClassDiscoveryCachedTest extends TestCase {
 
     // Gain access to the file cache so we can change it.
     $ref_file_cache = new \ReflectionProperty($discovery, 'fileCache');
-    $ref_file_cache->setAccessible(TRUE);
     /** @var \Drupal\Component\FileCache\FileCacheInterface $file_cache */
     $file_cache = $ref_file_cache->getValue($discovery);
     // The file cache is keyed by the file path, and we'll add some known

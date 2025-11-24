@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldType;
 
-use Drupal\commerce\Event\CommerceEvents;
-use Drupal\commerce\Event\ReferenceablePluginTypesEvent;
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\commerce\Event\CommerceEvents;
+use Drupal\commerce\Event\ReferenceablePluginTypesEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -61,7 +61,7 @@ class PluginItemDeriver extends DeriverBase implements ContainerDeriverInterface
       $this->derivatives[$plugin_type] = [
         'plugin_type' => $plugin_type,
         'label' => $label,
-        'category' => $this->t('Plugin'),
+        'category' => 'plugin',
       ] + $base_plugin_definition;
     }
 

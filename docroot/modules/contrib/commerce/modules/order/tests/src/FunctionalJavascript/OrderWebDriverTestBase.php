@@ -36,6 +36,7 @@ abstract class OrderWebDriverTestBase extends CommerceWebDriverTestBase {
       'administer commerce_order',
       'administer commerce_order_type',
       'access commerce_order overview',
+      'unlock orders',
     ], parent::getAdministratorPermissions());
   }
 

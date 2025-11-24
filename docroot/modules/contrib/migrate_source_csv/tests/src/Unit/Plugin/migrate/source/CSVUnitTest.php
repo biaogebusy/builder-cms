@@ -197,7 +197,7 @@ EOD;
    * @return array
    *   The test case.
    */
-  public function iteratorDataProvider(): array {
+  public static function iteratorDataProvider(): array {
     $data['non standard'] = [
       'configuration' => [
         'ids' => ['ids'],
@@ -352,7 +352,7 @@ EOD;
    * @return array
    *   The test case.
    */
-  public function idsDataProvider(): array {
+  public static function idsDataProvider(): array {
     $data['ids'] = [
       'configuration' => [
         'ids' => [
@@ -394,7 +394,7 @@ EOD;
    * @return array
    *   The test case.
    */
-  public function fieldsDataProvider(): array {
+  public static function fieldsDataProvider(): array {
     $data['no fields'] = [
       'configuration' => [
         'ids' => ['id'],

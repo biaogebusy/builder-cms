@@ -218,7 +218,19 @@ class ProfileFormWidget extends WidgetBase implements ContainerFactoryPluginInte
    * Process callback: Adds the widget's submit handler.
    */
   public static function attachSubmit(array $form, FormStateInterface $form_state) {
-    $form['actions']['submit']['#submit'][] = [static::class, 'saveProfiles'];
+    // Ensure that our save function runs in between ::submitForm which
+    // generates the entity and ::save which stores the user.
+    $submitFormIndex = array_search('::submitForm', $form['actions']['submit']['#submit'], TRUE);
+    if ($submitFormIndex !== -1) {
+      $form['actions']['submit']['#submit'] = array_merge(
+        array_slice($form['actions']['submit']['#submit'], 0, $submitFormIndex + 1),
+        [[static::class, 'saveProfiles']],
+        array_slice($form['actions']['submit']['#submit'], $submitFormIndex + 1),
+      );
+    }
+    else {
+      $form['actions']['submit']['#submit'][] = [static::class, 'saveProfiles'];
+    }
     return $form;
   }
 
@@ -268,18 +280,18 @@ class ProfileFormWidget extends WidgetBase implements ContainerFactoryPluginInte
    *   The current state of the form.
    */
   public static function saveProfiles(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\Core\Session\AccountInterface $account */
+    /** @var \Drupal\user\UserInterface $account */
     $account = $form_state->getFormObject()->getEntity();
     if (!$account) {
       return;
     }
     $profiles = $form_state->get('profiles');
+    /** @var \Drupal\profile\ProfileUserSyncer $profile_user_syncer */
+    $profile_user_syncer = \Drupal::service('profile.user_syncer');
     foreach ($profiles as $profile_list) {
       foreach ($profile_list as $profile) {
         assert($profile instanceof ProfileInterface);
-        $profile->setOwnerId($account->id());
-        $profile->setPublished();
-        $profile->save();
+        $profile_user_syncer->saveProfile($account, $profile);
       }
     }
   }

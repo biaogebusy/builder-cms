@@ -28,6 +28,7 @@ class AddressField extends ProcessPluginBase {
       'sorting_code' => '',
       'address_line1' => $value['thoroughfare'],
       'address_line2' => $value['premise'],
+      'address_line3' => '',
       'organization' => $value['organisation_name'],
     ];
     if (!empty($value['first_name']) || !empty($value['last_name'])) {

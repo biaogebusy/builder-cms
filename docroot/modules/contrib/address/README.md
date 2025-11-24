@@ -14,9 +14,9 @@ If your site is [managed via Composer](https://www.drupal.org/node/2718229), use
 Composer to download the module, which will also download the required library:
 
    ```sh
-   composer require "drupal/address ~1.0"
+   composer require "drupal/address ~2.0"
    ```
-~1.0 downloads the latest release, use 1.x-dev to get the -dev release instead.
+~2.0 downloads the latest release, use 2.x-dev to get the -dev release instead.
 Use ```composer update drupal/address --with-dependencies``` to update to a new
 release.
 

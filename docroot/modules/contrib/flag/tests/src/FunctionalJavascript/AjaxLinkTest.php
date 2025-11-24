@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -88,7 +90,11 @@ class AjaxLinkTest extends WebDriverTestBase {
     ]);
 
     // A test flag.
-    $this->flag = $this->createFlag('node', ['article'], 'ajax_link');
+    $this->flag = $this->createFlagFromArray([
+      'link_type' => 'ajax_link',
+      'flag_message' => 'Otters fascinate me.',
+      'unflag_message' => 'No more otters.',
+    ]);
     $this->flagService = $this->container->get('flag');
 
     $this->webUser = $this->createUser([
@@ -111,6 +117,7 @@ class AjaxLinkTest extends WebDriverTestBase {
     $node_path = '/node/' . $this->node->id();
     $this->drupalGet($node_path);
     $session = $this->getSession();
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
     // Verify initially flag link is on the page.
@@ -134,9 +141,10 @@ class AjaxLinkTest extends WebDriverTestBase {
 
     $unflag_link->click();
 
-    // Verfy unflag message appears.
+    // Verify unflag message appears.
     $unflag_message = $this->flag->getMessage('unflag');
-    $p_flash2 = $this->assertSession()->waitForElementVisible('css', 'p.js-flag-message');
+    $p_flash2 = $assert_session
+      ->waitForElementVisible('xpath', '//p[@class="js-flag-message" and contains(text(), "' . $unflag_message . '")]');
     $this->assertEquals($unflag_message, $p_flash2->getText(), 'DOM update(3): The unflag message is flashed.');
 
     $assert_session->assertNoElementAfterWait('css', 'p.js-flag-message');

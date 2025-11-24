@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
-use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\ScaleAndSmartCropTrait;
+use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines Imagemagick Scale and Smart Crop operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_scale_and_smart_crop",
- *   toolkit = "imagemagick",
- *   operation = "scale_and_smart_crop",
- *   label = @Translation("Scale and Smart Crop"),
- *   description = @Translation("Similar to Scale And Crop, but preserves the portion of the image with the most entropy.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_scale_and_smart_crop',
+  toolkit: 'imagemagick',
+  operation: 'scale_and_smart_crop',
+  label: new TranslatableMarkup('Scale and Smart Crop'),
+  description: new TranslatableMarkup('Similar to Scale And Crop, but preserves the portion of the image with the most entropy.'),
+)]
 class ScaleAndSmartCrop extends ImagemagickImageToolkitOperationBase {
 
   use ScaleAndSmartCropTrait;

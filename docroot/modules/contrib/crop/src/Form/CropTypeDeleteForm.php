@@ -2,49 +2,20 @@
 
 namespace Drupal\crop\Form;
 
-use Drupal\Core\Entity\EntityConfirmFormBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for crop type deletion.
  */
-class CropTypeDeleteForm extends EntityConfirmFormBase {
-
-  /**
-   * String translation manager.
-   *
-   * @var \Drupal\Core\StringTranslation\TranslationInterface
-   */
-  protected $translation;
-
-  /**
-   * Constructs a new CropTypeDeleteForm object.
-   *
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
-   *   The string translation manager.
-   */
-  public function __construct(TranslationInterface $string_translation) {
-    $this->translation = $string_translation;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('string_translation')
-    );
-  }
+class CropTypeDeleteForm extends EntityDeleteForm {
 
   /**
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return t('Are you sure you want to delete the crop type %type?', ['%type' => $this->entity->label()]);
+    return $this->t('Are you sure you want to delete the crop type %type?', ['%type' => $this->entity->label()]);
   }
 
   /**
@@ -58,7 +29,7 @@ class CropTypeDeleteForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getConfirmText() {
-    return t('Delete');
+    return $this->t('Delete');
   }
 
   /**
@@ -74,7 +45,7 @@ class CropTypeDeleteForm extends EntityConfirmFormBase {
       $form['#title'] = $this->getQuestion();
       $form['description'] = [
         '#prefix' => '<p>',
-        '#markup' => $this->translation->formatPlural($count, '%type is used by 1 piece of content on your site. You can not remove this content type until you have removed all of the %type content.', '%type is used by @count pieces of content on your site. You may not remove %type until you have removed all of the %type content.', ['%type' => $this->entity->label()]),
+        '#markup' => $this->formatPlural($count, '%type is used by 1 piece of content on your site. You can not remove this content type until you have removed all of the %type content.', '%type is used by @count pieces of content on your site. You may not remove %type until you have removed all of the %type content.', ['%type' => $this->entity->label()]),
         '#suffix' => '</p>',
       ];
       return $form;

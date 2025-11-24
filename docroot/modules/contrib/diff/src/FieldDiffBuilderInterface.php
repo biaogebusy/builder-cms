@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
@@ -38,7 +40,7 @@ interface FieldDiffBuilderInterface extends PluginFormInterface, ConfigurableInt
    *   means that a field is either empty or no properties need to be compared
    *   for that field.
    */
-  public function build(FieldItemListInterface $field_items);
+  public function build(FieldItemListInterface $field_items): mixed;
 
   /**
    * Returns if the plugin can be used for the provided field.
@@ -49,6 +51,6 @@ interface FieldDiffBuilderInterface extends PluginFormInterface, ConfigurableInt
    * @return bool
    *   TRUE if the plugin can be used, FALSE otherwise.
    */
-  public static function isApplicable(FieldStorageDefinitionInterface $field_definition);
+  public static function isApplicable(FieldStorageDefinitionInterface $field_definition): bool;
 
 }

@@ -25,11 +25,11 @@ function views_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.views':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Views module provides a back end to fetch information from content, user accounts, taxonomy terms, and other entities from the database and present it to the user as a grid, HTML list, table, unformatted list, etc. The resulting displays are known generally as <em>views</em>.') . '</p>';
       $output .= '<p>' . t('For more information, see the <a href=":views">online documentation for the Views module</a>.', [':views' => 'https://www.drupal.org/documentation/modules/views']) . '</p>';
-      $output .= '<p>' . t('In order to create and modify your own views using the administration and configuration user interface, you will need to enable either the Views UI module in core or a contributed module that provides a user interface for Views. See the <a href=":views-ui">Views UI module help page</a> for more information.', [':views-ui' => (\Drupal::moduleHandler()->moduleExists('views_ui')) ? Url::fromRoute('help.page', ['name' => 'views_ui'])->toString() : '#']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<p>' . t('In order to create and modify your own views using the administration and configuration user interface, you will need to install either the Views UI module in core or a contributed module that provides a user interface for Views. See the <a href=":views-ui">Views UI module help page</a> for more information.', [':views-ui' => (\Drupal::moduleHandler()->moduleExists('views_ui')) ? Url::fromRoute('help.page', ['name' => 'views_ui'])->toString() : '#']) . '</p>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Adding functionality to administrative pages') . '</dt>';
       $output .= '<dd>' . t('The Views module adds functionality to some core administration pages. For example, <em>admin/content</em> uses Views to filter and sort content. With Views uninstalled, <em>admin/content</em> is more limited.') . '</dd>';
@@ -90,7 +90,13 @@ function views_theme($existing, $type, $theme, $path) {
 
   // Our extra version of pager
   $hooks['views_mini_pager'] = $base + [
-    'variables' => ['tags' => [], 'quantity' => 9, 'element' => 0, 'parameters' => []],
+    'variables' => [
+      'tags' => [],
+      'quantity' => 9,
+      'element' => 0,
+      'pagination_heading_level' => 'h4',
+      'parameters' => [],
+    ],
   ];
 
   $variables = [
@@ -121,6 +127,7 @@ function views_theme($existing, $type, $theme, $path) {
       'tags' => [],
       'quantity' => 9,
       'element' => 0,
+      'pagination_heading_level' => 'h4',
       'parameters' => [],
     ],
   ];
@@ -162,7 +169,7 @@ function views_theme($existing, $type, $theme, $path) {
       // For each theme registration, we have a base directory to check for the
       // templates folder. This will be relative to the root of the given module
       // folder, so we always need a module definition.
-      // @todo: watchdog or exception?
+      // @todo Watchdog or exception?
       if (!isset($def['provider']) || !$module_handler->moduleExists($def['provider'])) {
         continue;
       }
@@ -198,18 +205,12 @@ function views_theme($existing, $type, $theme, $path) {
         }
       }
 
-      // If there is no theme function for the given theme definition, it must
-      // be a template file. By default this file is located in the /templates
+      // By default any templates for a module are located in the /templates
       // directory of the module's folder. If a module wants to define its own
       // location it has to set register_theme of the plugin to FALSE and
       // implement hook_theme() by itself.
-      if (!function_exists('theme_' . $def['theme'])) {
-        $hooks[$def['theme']]['path'] .= '/templates';
-        $hooks[$def['theme']]['template'] = Html::cleanCssIdentifier($def['theme']);
-      }
-      else {
-        $hooks[$def['theme']]['function'] = 'theme_' . $def['theme'];
-      }
+      $hooks[$def['theme']]['path'] .= '/templates';
+      $hooks[$def['theme']]['template'] = Html::cleanCssIdentifier($def['theme']);
     }
   }
 
@@ -362,7 +363,7 @@ function views_theme_suggestions_container_alter(array &$suggestions, array $var
  * @see \Drupal\views\Plugin\Block\ViewsBlock::addContextualLinks()
  * @see template_preprocess_views_view()
  */
-function views_add_contextual_links(&$render_element, $location, $display_id, array $view_element = NULL) {
+function views_add_contextual_links(&$render_element, $location, $display_id, ?array $view_element = NULL) {
   if (!isset($view_element)) {
     $view_element = $render_element;
   }
@@ -809,21 +810,6 @@ function views_local_tasks_alter(&$local_tasks) {
   $container = \Drupal::getContainer();
   $local_task = ViewsLocalTask::create($container, 'views_view');
   $local_task->alterLocalTasks($local_tasks);
-}
-
-/**
- * Implements hook_ENTITY_TYPE_delete().
- */
-function views_view_delete(EntityInterface $entity) {
-  // Rebuild the routes in case there is a routed display.
-  $executable = Views::executableFactory()->get($entity);
-  $executable->initDisplay();
-  foreach ($executable->displayHandlers as $display) {
-    if ($display->getRoutedDisplay()) {
-      \Drupal::service('router.builder')->setRebuildNeeded();
-      break;
-    }
-  }
 }
 
 /**

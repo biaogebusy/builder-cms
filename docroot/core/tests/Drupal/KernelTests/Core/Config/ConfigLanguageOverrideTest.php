@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -13,9 +15,7 @@ use Drupal\KernelTests\KernelTestBase;
 class ConfigLanguageOverrideTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'user',
@@ -36,7 +36,7 @@ class ConfigLanguageOverrideTest extends KernelTestBase {
   /**
    * Tests locale override based on language.
    */
-  public function testConfigLanguageOverride() {
+  public function testConfigLanguageOverride(): void {
     // The language module implements a config factory override object that
     // overrides configuration when the Language module is enabled. This test ensures that
     // English overrides work.
@@ -76,6 +76,9 @@ class ConfigLanguageOverrideTest extends KernelTestBase {
     \Drupal::configFactory()->getEditable('config_test.foo')
       ->set('value', ['key' => 'original'])
       ->set('label', 'Original')
+      // `label` is translatable, hence a `langcode` is required.
+      // @see \Drupal\Core\Config\Plugin\Validation\Constraint\LangcodeRequiredIfTranslatableValuesConstraint
+      ->set('langcode', 'en')
       ->save();
     \Drupal::languageManager()
       ->getLanguageConfigOverride('de', 'config_test.foo')

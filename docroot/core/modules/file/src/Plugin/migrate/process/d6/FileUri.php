@@ -2,17 +2,15 @@
 
 namespace Drupal\file\Plugin\migrate\process\d6;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 
 /**
  * Process the file URL into a D8 compatible URL.
- *
- * @MigrateProcessPlugin(
- *   id = "file_uri"
- * )
  */
+#[MigrateProcess('file_uri')]
 class FileUri extends ProcessPluginBase {
 
   /**
@@ -27,7 +25,7 @@ class FileUri extends ProcessPluginBase {
     [$filepath, $file_directory_path, $temp_directory_path, $is_public] = $value;
 
     // Specific handling using $temp_directory_path for temporary files.
-    if (substr($filepath, 0, strlen($temp_directory_path)) === $temp_directory_path) {
+    if (str_starts_with($filepath, $temp_directory_path)) {
       $uri = preg_replace('/^' . preg_quote($temp_directory_path, '/') . '/', '', $filepath);
       return 'temporary://' . ltrim($uri, '/');
     }

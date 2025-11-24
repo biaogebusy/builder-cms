@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestSite;
 
 use Drupal\TestSite\Commands\TestSiteInstallCommand;
@@ -21,7 +23,7 @@ class TestSiteApplication extends Application {
   /**
    * {@inheritdoc}
    */
-  protected function getDefaultCommands() {
+  protected function getDefaultCommands(): array {
     $default_commands = parent::getDefaultCommands();
     $default_commands[] = new TestSiteInstallCommand();
     $default_commands[] = new TestSiteTearDownCommand();

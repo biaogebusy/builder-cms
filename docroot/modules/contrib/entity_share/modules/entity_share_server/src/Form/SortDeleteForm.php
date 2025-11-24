@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to delete a sort on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SortDeleteForm extends SortBaseForm {
 

@@ -4,10 +4,10 @@ namespace Drupal\Tests\commerce_store\Functional;
 
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Datetime\Entity\DateFormat;
+use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 
 /**
  * Tests the commerce_store_datetime formatter and widget.
@@ -176,6 +176,7 @@ class StoreDateTimeTest extends CommerceBrowserTestBase {
     ])->save();
 
     $this->drupalGet($entity->toUrl('canonical'));
+    // cspell:disable-next-line
     $this->assertSession()->pageTextContains('2019-10-31 12:15:30 AEDT');
 
     // Confirm that changing the timezone does not change the value.
@@ -188,13 +189,16 @@ class StoreDateTimeTest extends CommerceBrowserTestBase {
     // Confirm that the site timezone is used if there is no store.
     $this->store->delete();
     $this->drupalGet($entity->toUrl('canonical'));
+    // cspell:disable-next-line
     $this->assertSession()->pageTextContains('2019-10-31 12:15:30 AEDT');
 
     // Confirm that the "fallback" date format is used if the specified one
     // is missing.
     $date_format->delete();
     $this->drupalGet($entity->toUrl('canonical'));
-    $this->assertSession()->pageTextContains('10/31/2019 - 12:15');
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = $this->container->get('date.formatter');
+    $this->assertSession()->pageTextContains($date_formatter->format($date->getTimestamp(), 'fallback', '', 'UTC'));
   }
 
 }

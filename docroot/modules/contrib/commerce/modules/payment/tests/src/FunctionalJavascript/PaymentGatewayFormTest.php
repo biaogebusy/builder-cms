@@ -2,9 +2,10 @@
 
 namespace Drupal\Tests\commerce_payment\FunctionalJavascript;
 
-use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\Core\Url;
 use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
+use Drupal\commerce_payment\Entity\PaymentGateway;
+use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 
 /**
  * Tests the payment gateway form.
@@ -60,21 +61,18 @@ class PaymentGatewayFormTest extends CommerceWebDriverTestBase {
     $this->assertSession()->fieldExists('Name');
     $this->assertSession()->fieldExists('API key');
 
-    $page = $this->getSession()->getPage();
-    $page->fillField('label', 'My onsite name');
+    $this->getSession()->getPage()->fillField('label', 'My onsite name');
     $page->fillField('configuration[example_onsite][api_key]', 'MyAPIKey');
+    // The following line is a hack, but for whatever reason the machine name
+    // isn't set properly and the usual hacks didn't work.
+    $this->getSession()->evaluateScript("jQuery('input[name=\"id\"]').val('my_onsite_name')");
     $this->submitForm([], 'Save');
-    // machine_id causes an issue I could not solve. Tried the same way as
-    // NumberPatternTest does it, it did not work. This ugliness below however
-    // does.
-    $page->fillField('id', 'my_onsite_name');
-    $this->submitForm([], 'Save');
-
     $this->drupalGet('admin/commerce/config/payment-gateways');
 
     $entity_type_manager = $this->container->get('entity_type.manager');
     /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $onsite_payment_gateway */
     $onsite_payment_gateway = $entity_type_manager->getStorage('commerce_payment_gateway')->load('my_onsite_name');
+    $this->assertInstanceOf(PaymentGatewayInterface::class, $onsite_payment_gateway);
     $this->assertEquals('MyAPIKey', $onsite_payment_gateway->getPluginConfiguration()['api_key']);
     $this->assertEquals('My onsite name', $onsite_payment_gateway->label());
     $this->assertEquals('test', $onsite_payment_gateway->getPlugin()->getMode());

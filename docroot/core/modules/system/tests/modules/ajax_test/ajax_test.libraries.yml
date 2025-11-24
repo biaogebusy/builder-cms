@@ -42,7 +42,6 @@ command_promise:
     - core/jquery
     - core/drupal
     - core/drupal.ajax
-    - core/es6-promise
 
 global_events:
   js:

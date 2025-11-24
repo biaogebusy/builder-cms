@@ -15,7 +15,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "address_zone",
  *   label = @Translation("Zone"),
  *   description = @Translation("An entity field containing a zone"),
- *   category = @Translation("Address"),
+ *   category = "address",
  *   list_class = "\Drupal\address\Plugin\Field\FieldType\ZoneItemList",
  *   default_widget = "address_zone_default",
  *   default_formatter = "address_zone_default",

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\File;
 
 use Drupal\Core\File\Exception\FileException;
@@ -31,7 +33,7 @@ class FileSystemTest extends UnitTestCase {
   /**
    * The stream wrapper manager.
    *
-   * @var \Drupal\Core\StreamWrapper\StreamWrapperInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $streamWrapperManager;
 
@@ -43,14 +45,13 @@ class FileSystemTest extends UnitTestCase {
 
     $settings = new Settings([]);
     $this->streamWrapperManager = $this->createMock(StreamWrapperManagerInterface::class);
-    $this->logger = $this->createMock('Psr\Log\LoggerInterface');
-    $this->fileSystem = new FileSystem($this->streamWrapperManager, $settings, $this->logger);
+    $this->fileSystem = new FileSystem($this->streamWrapperManager, $settings);
   }
 
   /**
    * @covers ::chmod
    */
-  public function testChmodFile() {
+  public function testChmodFile(): void {
     vfsStream::setup('dir');
     vfsStream::create(['test.txt' => 'asdf']);
     $uri = 'vfs://dir/test.txt';
@@ -64,7 +65,7 @@ class FileSystemTest extends UnitTestCase {
   /**
    * @covers ::chmod
    */
-  public function testChmodDir() {
+  public function testChmodDir(): void {
     vfsStream::setup('dir');
     vfsStream::create(['nested_dir' => []]);
     $uri = 'vfs://dir/nested_dir';
@@ -78,17 +79,15 @@ class FileSystemTest extends UnitTestCase {
   /**
    * @covers ::chmod
    */
-  public function testChmodUnsuccessful() {
+  public function testChmodUnsuccessful(): void {
     vfsStream::setup('dir');
-    $this->logger->expects($this->once())
-      ->method('error');
     $this->assertFalse($this->fileSystem->chmod('vfs://dir/test.txt'));
   }
 
   /**
    * @covers ::unlink
    */
-  public function testUnlink() {
+  public function testUnlink(): void {
     vfsStream::setup('dir');
     vfsStream::create(['test.txt' => 'asdf']);
     $uri = 'vfs://dir/test.txt';
@@ -107,11 +106,11 @@ class FileSystemTest extends UnitTestCase {
    *
    * @dataProvider providerTestBasename
    */
-  public function testBasename($uri, $expected, $suffix = NULL) {
+  public function testBasename($uri, $expected, $suffix = NULL): void {
     $this->assertSame($expected, $this->fileSystem->basename($uri, $suffix));
   }
 
-  public function providerTestBasename() {
+  public static function providerTestBasename() {
     $data = [];
     $data[] = [
       'public://nested/dir',
@@ -152,7 +151,7 @@ class FileSystemTest extends UnitTestCase {
    *
    * @covers ::createFilename
    */
-  public function testInvalidUTF8() {
+  public function testInvalidUTF8(): void {
     vfsStream::setup('dir');
     // cspell:disable-next-line
     $filename = "a\xFFsdf\x80€" . '.txt';

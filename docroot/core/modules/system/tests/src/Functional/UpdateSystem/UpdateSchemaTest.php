@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Database\Database;
@@ -55,7 +57,7 @@ class UpdateSchemaTest extends BrowserTestBase {
   /**
    * Tests that update hooks are properly run.
    */
-  public function testUpdateHooks() {
+  public function testUpdateHooks(): void {
     $connection = Database::getConnection();
 
     /** @var \Drupal\Core\Update\UpdateHookRegistry $update_registry */

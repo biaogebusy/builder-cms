@@ -6,6 +6,8 @@ use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\Routing\Access\AccessInterface as RoutingAccessInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Utility\CallableResolver;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -21,11 +23,11 @@ use Symfony\Component\Routing\Route;
 class CustomAccessCheck implements RoutingAccessInterface {
 
   /**
-   * The controller resolver.
+   * The callable resolver.
    *
-   * @var \Drupal\Core\Controller\ControllerResolverInterface
+   * @var \Drupal\Core\Utility\CallableResolver
    */
-  protected $controllerResolver;
+  protected CallableResolver $callableResolver;
 
   /**
    * The arguments resolver.
@@ -37,13 +39,17 @@ class CustomAccessCheck implements RoutingAccessInterface {
   /**
    * Constructs a CustomAccessCheck instance.
    *
-   * @param \Drupal\Core\Controller\ControllerResolverInterface $controller_resolver
-   *   The controller resolver.
+   * @param \Drupal\Core\Utility\CallableResolver|\Drupal\Core\Controller\ControllerResolverInterface $callable_resolver
+   *   The callable resolver.
    * @param \Drupal\Core\Access\AccessArgumentsResolverFactoryInterface $arguments_resolver_factory
    *   The arguments resolver factory.
    */
-  public function __construct(ControllerResolverInterface $controller_resolver, AccessArgumentsResolverFactoryInterface $arguments_resolver_factory) {
-    $this->controllerResolver = $controller_resolver;
+  public function __construct(ControllerResolverInterface|CallableResolver $callable_resolver, AccessArgumentsResolverFactoryInterface $arguments_resolver_factory) {
+    if ($callable_resolver instanceof ControllerResolverInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() with an argument of ControllerResolverInterface is deprecated in drupal:10.3.0 and is removed in drupal:11.0.0. Use \Drupal\Core\Utility\CallableResolver instead. See https://www.drupal.org/node/3397706', E_USER_DEPRECATED);
+      $callable_resolver = \Drupal::service('callable_resolver');
+    }
+    $this->callableResolver = $callable_resolver;
     $this->argumentsResolverFactory = $arguments_resolver_factory;
   }
 
@@ -56,20 +62,23 @@ class CustomAccessCheck implements RoutingAccessInterface {
    *   The route match object to be checked.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The account being checked.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Optional, a request. Only supply this parameter when checking the
+   *   incoming request.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(Route $route, RouteMatchInterface $route_match, AccountInterface $account) {
+  public function access(Route $route, RouteMatchInterface $route_match, AccountInterface $account, ?Request $request = NULL) {
     try {
-      $callable = $this->controllerResolver->getControllerFromDefinition($route->getRequirement('_custom_access'));
+      $callable = $this->callableResolver->getCallableFromDefinition($route->getRequirement('_custom_access'));
     }
     catch (\InvalidArgumentException $e) {
       // The custom access controller method was not found.
       throw new \BadMethodCallException(sprintf('The "%s" method is not callable as a _custom_access callback in route "%s"', $route->getRequirement('_custom_access'), $route->getPath()));
     }
 
-    $arguments_resolver = $this->argumentsResolverFactory->getArgumentsResolver($route_match, $account);
+    $arguments_resolver = $this->argumentsResolverFactory->getArgumentsResolver($route_match, $account, $request);
     $arguments = $arguments_resolver->getArguments($callable);
 
     return call_user_func_array($callable, $arguments);

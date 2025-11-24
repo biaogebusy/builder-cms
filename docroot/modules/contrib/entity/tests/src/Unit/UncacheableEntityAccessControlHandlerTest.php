@@ -19,6 +19,7 @@ use Drupal\entity\UncacheableEntityPermissionProvider;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\EntityOwnerInterface;
 use Prophecy\Argument;
+use Prophecy\Prophet;
 
 /**
  * @coversDefaultClass \Drupal\entity\UncacheableEntityAccessControlHandler
@@ -76,27 +77,28 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
    * @return array
    *   A list of testAccess method arguments.
    */
-  public function accessProvider() {
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+  public static function accessProvider() {
+    $prophet = new Prophet();
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->id()->willReturn('green_entity');
     $entity_type->getAdminPermission()->willReturn('administer green_entity');
     $entity_type->hasHandlerClass('permission_provider')->willReturn(TRUE);
     $entity_type->getHandlerClass('permission_provider')->willReturn(UncacheableEntityPermissionProvider::class);
-    $entity = $this->buildMockEntity($entity_type->reveal(), 6);
+    $entity = static::buildMockEntity($entity_type->reveal(), 6);
 
     $data = [];
     // Admin permission.
-    $admin_user = $this->buildMockUser(5, 'administer green_entity');
+    $admin_user = static::buildMockUser(5, 'administer green_entity');
     $data[] = [$entity->reveal(), 'view', $admin_user->reveal(), TRUE];
     $data[] = [$entity->reveal(), 'update', $admin_user->reveal(), TRUE];
     $data[] = [$entity->reveal(), 'duplicate', $admin_user->reveal(), TRUE];
     $data[] = [$entity->reveal(), 'delete', $admin_user->reveal(), TRUE];
 
     // View, update, duplicate, delete permissions, entity without an owner.
-    $second_entity = $this->buildMockEntity($entity_type->reveal());
+    $second_entity = static::buildMockEntity($entity_type->reveal());
     foreach (['view', 'update', 'duplicate', 'delete'] as $operation) {
-      $first_user = $this->buildMockUser(6, $operation . ' green_entity');
-      $second_user = $this->buildMockUser(7, 'access content');
+      $first_user = static::buildMockUser(6, $operation . ' green_entity');
+      $second_user = static::buildMockUser(7, 'access content');
 
       $data[] = [$second_entity->reveal(), $operation, $first_user->reveal(), TRUE];
       $data[] = [$second_entity->reveal(), $operation, $second_user->reveal(), FALSE];
@@ -105,9 +107,9 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
     // View, update, duplicate, delete permissions.
     foreach (['view', 'update', 'duplicate', 'delete'] as $operation) {
       // Owner, non-owner, user with "any" permission.
-      $first_user = $this->buildMockUser(6, $operation . ' own green_entity');
-      $second_user = $this->buildMockUser(7, $operation . ' own green_entity');
-      $third_user = $this->buildMockUser(8, $operation . ' any green_entity');
+      $first_user = static::buildMockUser(6, $operation . ' own green_entity');
+      $second_user = static::buildMockUser(7, $operation . ' own green_entity');
+      $third_user = static::buildMockUser(8, $operation . ' any green_entity');
 
       $data[] = [$entity->reveal(), $operation, $first_user->reveal(), TRUE];
       $data[] = [$entity->reveal(), $operation, $second_user->reveal(), FALSE];
@@ -115,15 +117,15 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
     }
 
     // Per bundle and unpublished view permissions.
-    $first_user = $this->buildMockUser(11, 'view any first green_entity');
-    $second_user = $this->buildMockUser(12, 'view own first green_entity');
-    $third_user = $this->buildMockUser(13, 'view own unpublished green_entity');
+    $first_user = static::buildMockUser(11, 'view any first green_entity');
+    $second_user = static::buildMockUser(12, 'view own first green_entity');
+    $third_user = static::buildMockUser(13, 'view own unpublished green_entity');
 
-    $first_entity = $this->buildMockEntity($entity_type->reveal(), 9999, 'first');
-    $second_entity = $this->buildMockEntity($entity_type->reveal(), 12, 'first');
-    $third_entity = $this->buildMockEntity($entity_type->reveal(), 9999, 'second');
-    $fourth_entity = $this->buildMockEntity($entity_type->reveal(), 10, 'second');
-    $fifth_entity = $this->buildMockEntity($entity_type->reveal(), 13, 'first', FALSE);
+    $first_entity = static::buildMockEntity($entity_type->reveal(), 9999, 'first');
+    $second_entity = static::buildMockEntity($entity_type->reveal(), 12, 'first');
+    $third_entity = static::buildMockEntity($entity_type->reveal(), 9999, 'second');
+    $fourth_entity = static::buildMockEntity($entity_type->reveal(), 10, 'second');
+    $fifth_entity = static::buildMockEntity($entity_type->reveal(), 13, 'first', FALSE);
 
     // The first user can view the two entities of bundle "first".
     $data[] = [$first_entity->reveal(), 'view', $first_user->reveal(), TRUE];
@@ -157,29 +159,29 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
    * @return array
    *   A list of testCreateAccess method arguments.
    */
-  public function createAccessProvider() {
+  public static function createAccessProvider() {
     $data = [];
-
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $prophet = new Prophet();
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->id()->willReturn('green_entity');
     $entity_type->getAdminPermission()->willReturn('administer green_entity');
     $entity_type->hasHandlerClass('permission_provider')->willReturn(TRUE);
     $entity_type->getHandlerClass('permission_provider')->willReturn(UncacheableEntityPermissionProvider::class);
 
     // User with the admin permission.
-    $account = $this->buildMockUser('6', 'administer green_entity');
+    $account = static::buildMockUser('6', 'administer green_entity');
     $data[] = [$entity_type->reveal(), NULL, $account->reveal(), TRUE];
 
     // Ordinary user.
-    $account = $this->buildMockUser('6', 'create green_entity');
+    $account = static::buildMockUser('6', 'create green_entity');
     $data[] = [$entity_type->reveal(), NULL, $account->reveal(), TRUE];
 
     // Ordinary user, entity with a bundle.
-    $account = $this->buildMockUser('6', 'create first_bundle green_entity');
+    $account = static::buildMockUser('6', 'create first_bundle green_entity');
     $data[] = [$entity_type->reveal(), 'first_bundle', $account->reveal(), TRUE];
 
     // User with no permissions.
-    $account = $this->buildMockUser('6', 'access content');
+    $account = static::buildMockUser('6', 'access content');
     $data[] = [$entity_type->reveal(), NULL, $account->reveal(), FALSE];
 
     return $data;
@@ -200,9 +202,10 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
    * @return \Prophecy\Prophecy\ObjectProphecy
    *   The entity mock.
    */
-  protected function buildMockEntity(EntityTypeInterface $entity_type, $owner_id = NULL, $bundle = NULL, $published = NULL) {
+  protected static function buildMockEntity(EntityTypeInterface $entity_type, $owner_id = NULL, $bundle = NULL, $published = NULL) {
     $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
-    $entity = $this->prophesize(ContentEntityInterface::class);
+    $prophet = new Prophet();
+    $entity = $prophet->prophesize(ContentEntityInterface::class);
     if (isset($published)) {
       $entity->willImplement(EntityPublishedInterface::class);
     }
@@ -242,8 +245,9 @@ class UncacheableEntityAccessControlHandlerTest extends UnitTestCase {
    * @return \Prophecy\Prophecy\ObjectProphecy
    *   The user mock.
    */
-  protected function buildMockUser($uid, $permission) {
-    $account = $this->prophesize(AccountInterface::class);
+  protected static function buildMockUser($uid, $permission) {
+    $prophet = new Prophet();
+    $account = $prophet->prophesize(AccountInterface::class);
     $account->id()->willReturn($uid);
     $account->hasPermission($permission)->willReturn(TRUE);
     $account->hasPermission(Argument::any())->willReturn(FALSE);

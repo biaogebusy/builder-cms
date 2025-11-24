@@ -3,8 +3,8 @@
 namespace Drupal\Tests\metatag_mobile\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\metatag\Functional\MetatagHelperTrait;
-use Drupal\user\Entity\User;
 
 /**
  * Verify that the configured defaults load as intended.
@@ -14,7 +14,13 @@ use Drupal\user\Entity\User;
 class TestCoreTagRemoval extends BrowserTestBase {
 
   // Contains helper methods.
+  use FieldUiTestTrait;
   use MetatagHelperTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -30,6 +36,8 @@ class TestCoreTagRemoval extends BrowserTestBase {
 
   /**
    * Use the full install profile, with the full theme.
+   *
+   * @var string
    */
   protected $profile = 'standard';
 
@@ -43,23 +51,13 @@ class TestCoreTagRemoval extends BrowserTestBase {
     $this->loginUser1();
 
     // Add the Metatag field to the content type.
-    $this->drupalGet('admin/structure/types/manage/page/fields/add-field');
-    $this->assertSession()->statusCodeEquals(200);
-    $edit = [
-      'label' => 'Metatag',
-      'field_name' => 'metatag',
-      'new_storage_type' => 'metatag',
-    ];
-    $this->submitForm($edit, 'Save and continue');
-    $this->submitForm([], 'Save field settings');
-    $this->assertSession()->statusCodeEquals(200);
+    $this->fieldUIAddNewField('admin/structure/types/manage/page', 'metatag', 'Metatag', 'metatag');
   }
-
 
   /**
    * Verify that core's duplicate meta tags are removed.
    */
-  public function testCoreTagRemoval() {
+  public function testRemovalCoreTag() {
     // Create a node that does not override core's meta tags.
     $this->drupalGet('node/add/page');
     $this->assertSession()->statusCodeEquals(200);

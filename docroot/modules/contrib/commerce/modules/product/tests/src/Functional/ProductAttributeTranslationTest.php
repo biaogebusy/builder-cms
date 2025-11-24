@@ -5,6 +5,8 @@ namespace Drupal\Tests\commerce_product\Functional;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\views\Tests\ViewTestData;
 
+// cspell:ignore Couleur Bleu Rouge Noir
+
 /**
  * Tests translating product attributes and their values.
  *
@@ -50,7 +52,7 @@ class ProductAttributeTranslationTest extends ProductBrowserTestBase {
     // Add the French language.
     $edit = ['predefined_langcode' => 'fr'];
     $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm($edit, $this->t('Add language'));
+    $this->submitForm($edit, (string) $this->t('Add language'));
     \Drupal::languageManager()->reset();
   }
 
@@ -89,7 +91,7 @@ class ProductAttributeTranslationTest extends ProductBrowserTestBase {
       'enable_value_translation' => TRUE,
     ];
     $this->drupalGet('admin/commerce/product-attributes/manage/color');
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
 
     // Translate the attribute and its values to French.
     $this->drupalGet('admin/commerce/product-attributes/manage/color/translate/fr/add');
@@ -100,7 +102,7 @@ class ProductAttributeTranslationTest extends ProductBrowserTestBase {
       'values[' . $red_value->id() . '][translation][name][0][value]' => 'Rouge',
       // Leave the second value untouched.
     ];
-    $this->submitForm($edit, $this->t('Save translation'));
+    $this->submitForm($edit, (string) $this->t('Save translation'));
 
     \Drupal::entityTypeManager()->getStorage('commerce_product_attribute')->resetCache();
     \Drupal::entityTypeManager()->getStorage('commerce_product_attribute_value')->resetCache();
@@ -149,7 +151,7 @@ class ProductAttributeTranslationTest extends ProductBrowserTestBase {
       'enable_value_translation' => TRUE,
     ];
     $this->drupalGet('admin/commerce/product-attributes/manage/color');
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
 
     // Translate the English values to French.
     $red_value_en = $red_value->addTranslation('fr', ['name' => 'Rouge']);

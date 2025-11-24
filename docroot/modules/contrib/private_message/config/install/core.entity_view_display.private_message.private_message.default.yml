@@ -26,15 +26,15 @@ content:
         past_format: '@interval ago'
         granularity: 2
         refresh: 60
-    third_party_settings: {  }
+    third_party_settings: {}
     type: timestamp
   message:
     label: hidden
     type: text_default
     weight: 2
     region: content
-    settings: {  }
-    third_party_settings: {  }
+    settings: {}
+    third_party_settings: {}
   owner:
     label: inline
     type: entity_reference_entity_view
@@ -43,10 +43,10 @@ content:
     settings:
       view_mode: private_message_author
       link: false
-    third_party_settings: {  }
+    third_party_settings: {}
   timestamp:
     weight: 0
     region: content
-    settings: {  }
-    third_party_settings: {  }
-hidden: {  }
+    settings: {}
+    third_party_settings: {}
+hidden: {}

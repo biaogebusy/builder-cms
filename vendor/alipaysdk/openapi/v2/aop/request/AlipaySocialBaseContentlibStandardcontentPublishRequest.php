@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.social.base.contentlib.standardcontent.publish request
  *
  * @author auto create
- * @since 1.0, 2024-03-28 10:21:58
+ * @since 1.0, 2025-08-05 14:58:36
  */
 class AlipaySocialBaseContentlibStandardcontentPublishRequest
 {

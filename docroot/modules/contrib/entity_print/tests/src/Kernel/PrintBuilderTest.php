@@ -60,7 +60,7 @@ class PrintBuilderTest extends KernelTestBase {
   /**
    * Provides a data provider for testOutputtedFilename().
    */
-  public function outputtedFileDataProvider() {
+  public static function outputtedFileDataProvider() {
     return [
       'PDF file' => ['testprintengine', 'myfile.pdf'],
       'Word doc file' => ['test_word_print_engine', 'myfile.docx'],
@@ -121,7 +121,7 @@ class PrintBuilderTest extends KernelTestBase {
 
     // Print builder generates a filename for us.
     $uri = $builder->savePrintable([$node], $print_engine);
-    $this->assertRegExp('#public://(.*)\.pdf#', $uri);
+    $this->assertMatchesRegularExpression('#public://(.*)\.pdf#', $uri);
 
     $filename = $this->randomMachineName() . 'pdf';
     $uri = $builder->savePrintable([$node], $print_engine, 'public', $filename);

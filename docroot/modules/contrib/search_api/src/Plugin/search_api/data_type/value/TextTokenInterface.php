@@ -5,7 +5,7 @@ namespace Drupal\search_api\Plugin\search_api\data_type\value;
 /**
  * Provides an interface for text tokens.
  */
-interface TextTokenInterface {
+interface TextTokenInterface extends \Stringable {
 
   /**
    * Retrieves the text value of this token.

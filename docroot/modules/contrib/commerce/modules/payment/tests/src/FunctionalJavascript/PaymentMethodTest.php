@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_payment\FunctionalJavascript;
 
-use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
+use Drupal\commerce_payment\Entity\PaymentMethod;
 
 /**
  * Tests the payment method UI.
@@ -107,6 +107,59 @@ class PaymentMethodTest extends CommerceWebDriverTestBase {
     $payment_method = PaymentMethod::load(1);
     $this->assertEquals($payment_method->getPaymentGateway()->getPluginId(), 'test_onsite');
     $this->assertEquals($payment_method->getPaymentGateway()->id(), 'onsite_2');
+  }
+
+  /**
+   * Tests the payment method mark as default operation link.
+   */
+  public function testSettingPaymentMethodAsDefault() {
+    $default_address = [
+      'country_code' => 'US',
+      'administrative_area' => 'SC',
+      'locality' => 'Greenville',
+      'postal_code' => '29616',
+      'address_line1' => '9 Drupal Ave',
+      'given_name' => 'Bryan',
+      'family_name' => 'Centarro',
+    ];
+    $profile = $this->createEntity('profile', [
+      'type' => 'customer',
+      'uid' => $this->user->id(),
+      'address' => $default_address,
+    ]);
+
+    $payment_method1 = $this->createEntity('commerce_payment_method', [
+      'uid' => $this->user->id(),
+      'type' => 'credit_card',
+      'payment_gateway' => $this->paymentGateway->id(),
+      'card_type' => 'visa',
+      'card_number' => '1111',
+      'billing_profile' => $profile,
+      'remote_id' => 789,
+      'reusable' => TRUE,
+      'expires' => strtotime($this->futureYear() . '/03/24'),
+    ]);
+    $payment_method1->setBillingProfile($profile);
+    $payment_method1->save();
+
+    $payment_method2 = $this->createEntity('commerce_payment_method', [
+      'uid' => $this->user->id(),
+      'type' => 'credit_card',
+      'payment_gateway' => $this->paymentGateway->id(),
+      'card_type' => 'visa',
+      'card_number' => '9999',
+      'billing_profile' => $profile,
+      'remote_id' => 123,
+      'reusable' => TRUE,
+      'expires' => strtotime($this->futureYear() . '/03/24'),
+    ]);
+    $payment_method2->setBillingProfile($profile);
+    $payment_method2->save();
+
+    $this->drupalGet($this->collectionUrl);
+    $this->assertSession()->pageTextContains('Visa ending in 1111 (Default)');
+    $this->getSession()->getPage()->clickLink('Mark as default');
+    $this->assertSession()->pageTextContains('Visa ending in 9999 (Default)');
   }
 
 }

@@ -2,32 +2,18 @@
 
 namespace Drupal\commerce_cart\EventSubscriber;
 
-use Drupal\Core\Messenger\MessengerInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Drupal\commerce_cart\Event\CartEntityAddEvent;
-use Drupal\commerce_cart\Event\CartEvents;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
+use Drupal\commerce_cart\Event\CartEntityAddEvent;
+use Drupal\commerce_cart\Event\CartEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CartEventSubscriber implements EventSubscriberInterface {
 
   use StringTranslationTrait;
-
-  /**
-   * The messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
 
   /**
    * Constructs a new CartEventSubscriber object.
@@ -36,19 +22,21 @@ class CartEventSubscriber implements EventSubscriberInterface {
    *   The messenger.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(MessengerInterface $messenger, TranslationInterface $string_translation, EntityTypeManagerInterface $entity_type_manager) {
-    $this->messenger = $messenger;
+  public function __construct(
+    protected MessengerInterface $messenger,
+    TranslationInterface $string_translation,
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {
     $this->stringTranslation = $string_translation;
-    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       CartEvents::CART_ENTITY_ADD => 'displayAddToCartMessage',
     ];

@@ -32,10 +32,10 @@ trait DatabaseTestsTrait {
       $schema->addPrimaryKey($table, []);
       $this->assertTrue(FALSE, $message);
     }
-    catch (SchemaObjectExistsException $e) {
+    catch (SchemaObjectExistsException) {
       $this->assertTrue(TRUE, $message);
     }
-    catch (\Exception $e) {
+    catch (\Exception) {
       // Trying to create a primary key with an empty fields list will probably
       // still throw an exception, so we catch that as well.
       $this->assertTrue(FALSE, $message);

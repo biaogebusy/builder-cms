@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_payment\Entity;
 
-use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\user\EntityOwnerInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\profile\Entity\ProfileInterface;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Defines the interface for payment methods.
@@ -100,12 +100,12 @@ interface PaymentMethodInterface extends ContentEntityInterface, EntityChangedIn
   /**
    * Sets whether this is the user's default payment method.
    *
-   * @param bool $default
+   * @param bool $is_default
    *   Whether this is the user's default payment method.
    *
    * @return $this
    */
-  public function setDefault($default);
+  public function setDefault($is_default);
 
   /**
    * Gets whether the payment method has expired.

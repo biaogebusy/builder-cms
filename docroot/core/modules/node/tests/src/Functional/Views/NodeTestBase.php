@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
@@ -17,7 +19,7 @@ abstract class NodeTestBase extends ViewTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE, $modules = ['node_test_views']) {
+  protected function setUp($import_test_views = TRUE, $modules = ['node_test_views']): void {
     parent::setUp($import_test_views, $modules);
   }
 

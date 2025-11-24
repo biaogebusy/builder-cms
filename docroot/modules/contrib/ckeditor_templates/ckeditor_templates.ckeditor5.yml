@@ -1,0 +1,23 @@
+ckeditor_templates_plugin:
+  ckeditor5:
+    plugins:
+      - ckeditorTemplates.CKEditorTemplates
+    config:
+      ckeditorTemplates:
+        openDialog:
+          func:
+            name: Drupal.ckeditor5.openDialog
+            invoke: false
+        dialogSettings:
+          height: 75%
+          dialogClass: ckeditor-templates-widget-modal
+          title: Content Templates
+  drupal:
+    label: Templates
+    elements: false
+    library: ckeditor_templates/ckeditor5.templates.dialog
+    admin_library: ckeditor_templates/ckeditor5.templates.admin
+    class: Drupal\ckeditor_templates\Plugin\CKEditor5Plugin\CKEditorTemplatesDialog
+    toolbar_items:
+      ckeditorTemplates:
+        label: Templates

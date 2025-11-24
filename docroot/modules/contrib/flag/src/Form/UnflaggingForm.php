@@ -67,7 +67,7 @@ class UnflaggingForm extends FlagConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    \Drupal::service('flag')->unflag($this->flag, $this->entity);
+    $this->flagService->unflag($this->flag, $this->entity);
   }
 
 }

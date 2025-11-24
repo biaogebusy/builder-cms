@@ -89,7 +89,7 @@ abstract class FieldFormatterEntityEmbedDisplayBase extends EntityEmbedDisplayBa
   /**
    * {@inheritdoc}
    */
-  public function access(AccountInterface $account = NULL) {
+  public function access(?AccountInterface $account = NULL) {
     return parent::access($account)->andIf($this->isApplicableFieldFormatter());
   }
 
@@ -143,6 +143,11 @@ abstract class FieldFormatterEntityEmbedDisplayBase extends EntityEmbedDisplayBa
     // to render later. So for now we manually fix that.
     // @todo Investigate why this is needed.
     show($build[0]);
+
+    // Refresh the entity reference stored in the context. This is necessary in
+    // Drupal 10.5+ and 11.2+ since the entity might have been cloned during the
+    // call to viewElements().
+    $this->setContextValue('entity', $items->entity);
     return $build[0];
   }
 

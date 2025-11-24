@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
 
 /**
@@ -41,7 +43,7 @@ class CommentApproveLinkTest extends CommentTestBase {
   /**
    * Tests that "approve comment" link exists and works as expected.
    */
-  public function testCommentApproveLink() {
+  public function testCommentApproveLink(): void {
     $this->drupalLogin($this->drupalCreateUser(['administer comments']));
     // Set the comment status to unpublished.
     $this->comment->setUnpublished();

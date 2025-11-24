@@ -2,15 +2,15 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\LanguageFilter;
 
 /**
  * Defines a filter for filtering on the language of items.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_language")
  */
+#[ViewsFilter('search_api_language')]
 class SearchApiLanguage extends LanguageFilter {
 
   use SearchApiFilterTrait;

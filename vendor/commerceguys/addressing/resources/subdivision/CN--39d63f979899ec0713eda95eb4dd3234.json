@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HE",
+		"Hengshui Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anping Xian": {
+			"local_name": "安平县"
+		},
+		"Fucheng Xian": {
+			"local_name": "阜城县"
+		},
+		"Gucheng Xian": {
+			"local_name": "故城县"
+		},
+		"Jizhou Shi": {
+			"local_name": "冀州市"
+		},
+		"Jing Xian": {
+			"local_name": "景县"
+		},
+		"Raoyang Xian": {
+			"local_name": "饶阳县"
+		},
+		"Shenzhou Shi": {
+			"local_name": "深州市"
+		},
+		"Taocheng Qu": {
+			"local_name": "桃城区"
+		},
+		"Wuqiang Xian": {
+			"local_name": "武强县"
+		},
+		"Wuyi Xian": {
+			"local_name": "武邑县"
+		},
+		"Zaoqiang Xian": {
+			"local_name": "枣强县"
+		}
+	}
+}

@@ -3,6 +3,7 @@
 }
 
 #toolbar-item-workbench-tray .toolbar-icon:before {
+  inset-inline-start: var(--gin-spacing-s);
   background: var(--gin-icon-color);
   background-image: none;
   -webkit-mask-size: var(--gin-icon-size-toolbar) var(--gin-icon-size-toolbar);
@@ -11,14 +12,6 @@
           mask-repeat: no-repeat;
   -webkit-mask-position: center center;
           mask-position: center center;
-}
-
-[dir="ltr"] #toolbar-item-workbench-tray .toolbar-icon:before {
-  left: var(--gin-spacing-s);
-}
-
-[dir="rtl"] #toolbar-item-workbench-tray .toolbar-icon:before {
-  right: var(--gin-spacing-s);
 }
 
 #toolbar-item-workbench-tray .toolbar-icon:hover:before, #toolbar-item-workbench-tray .toolbar-icon.is-active:before {

@@ -75,7 +75,7 @@ class EntityDataDefinition extends ComplexDataDefinitionBase implements EntityDa
           $this->propertyDefinitions = [];
         }
         else {
-          // @todo: Add support for handling multiple bundles.
+          // @todo Add support for handling multiple bundles.
           // See https://www.drupal.org/node/2169813.
           $bundles = $this->getBundles();
           if (is_array($bundles) && count($bundles) == 1) {
@@ -138,7 +138,7 @@ class EntityDataDefinition extends ComplexDataDefinitionBase implements EntityDa
   /**
    * {@inheritdoc}
    */
-  public function setBundles(array $bundles = NULL) {
+  public function setBundles(?array $bundles = NULL) {
     if (isset($bundles)) {
       $this->addConstraint('Bundle', $bundles);
     }

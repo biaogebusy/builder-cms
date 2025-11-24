@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
 use Drupal\Component\Render\MarkupInterface;
@@ -49,7 +51,7 @@ class FieldApiDataTest extends ViewsKernelTestBase {
    *
    * We check data structure for both node and node revision tables.
    */
-  public function testViewsData() {
+  public function testViewsData(): void {
     $field_storage_string = FieldStorageConfig::create([
       'field_name' => 'field_string',
       'entity_type' => 'node',
@@ -64,8 +66,14 @@ class FieldApiDataTest extends ViewsKernelTestBase {
     ]);
     $field_storage_string_long->save();
 
-    NodeType::create(['type' => 'page'])->save();
-    NodeType::create(['type' => 'article'])->save();
+    NodeType::create([
+      'type' => 'page',
+      'name' => 'Page',
+    ])->save();
+    NodeType::create([
+      'type' => 'article',
+      'name' => 'Article',
+    ])->save();
 
     // Attach the field to nodes.
     FieldConfig::create([
@@ -156,7 +164,10 @@ class FieldApiDataTest extends ViewsKernelTestBase {
     $this->assertEquals('GiraffeA&quot; label (field_string)', $data[$current_table][$field_storage_string->getName() . '_value']['title']);
 
     // Attach the same field to a different bundle with a different label.
-    NodeType::create(['type' => 'news'])->save();
+    NodeType::create([
+      'type' => 'news',
+      'name' => 'News',
+    ])->save();
     FieldConfig::create([
       'field_name' => $field_storage_string->getName(),
       'entity_type' => 'node',
@@ -200,13 +211,19 @@ class FieldApiDataTest extends ViewsKernelTestBase {
   /**
    * Tests filtering entries with different translatability.
    */
-  public function testEntityFieldFilter() {
-    NodeType::create(['type' => 'bundle1'])->save();
-    NodeType::create(['type' => 'bundle2'])->save();
+  public function testEntityFieldFilter(): void {
+    NodeType::create([
+      'type' => 'bundle1',
+      'name' => 'Bundle One',
+    ])->save();
+    NodeType::create([
+      'type' => 'bundle2',
+      'name' => 'Bundle Two',
+    ])->save();
 
     // Create some example content.
-    ConfigurableLanguage::create(['id' => 'es'])->save();
-    ConfigurableLanguage::create(['id' => 'fr'])->save();
+    ConfigurableLanguage::createFromLangcode('es')->save();
+    ConfigurableLanguage::createFromLangcode('fr')->save();
 
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'bundle1')
       ->setDefaultLangcode('es')

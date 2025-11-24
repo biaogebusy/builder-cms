@@ -41,6 +41,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
   /**
    * {@inheritdoc}
    */
+  #[\ReturnTypeWillChange]
   public function offsetExists($offset) {
     trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     return isset($this->wrappedArray[$offset]);
@@ -49,6 +50,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
   /**
    * {@inheritdoc}
    */
+  #[\ReturnTypeWillChange]
   public function offsetGet($offset) {
     trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     return $this->wrappedArray[$offset];
@@ -57,6 +59,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
   /**
    * {@inheritdoc}
    */
+  #[\ReturnTypeWillChange]
   public function offsetSet($offset, $value) {
     trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     $this->wrappedArray[$offset] = $value;
@@ -65,6 +68,7 @@ class ArrayDeprecationWrapper implements \ArrayAccess, RenderableInterface {
   /**
    * {@inheritdoc}
    */
+  #[\ReturnTypeWillChange]
   public function offsetUnset($offset) {
     trigger_error($this->deprecationWarning, E_USER_DEPRECATED);
     unset($this->wrappedArray[$offset]);

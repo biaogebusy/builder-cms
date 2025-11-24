@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Unit;
 
 use Drupal\comment\CommentStatistics;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Tests\UnitTestCase;
 
@@ -45,12 +48,14 @@ class CommentStatisticsUnitTest extends UnitTestCase {
    *
    * @var int
    */
-  protected $calls_to_fetch;
+  protected $callsToFetch;
 
   /**
    * Sets up required mocks and the CommentStatistics service under test.
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->statement = $this->getMockBuilder('Drupal\sqlite\Driver\Database\sqlite\Statement')
       ->disableOriginalConstructor()
       ->getMock();
@@ -65,11 +70,11 @@ class CommentStatisticsUnitTest extends UnitTestCase {
 
     $this->select->expects($this->any())
       ->method('fields')
-      ->will($this->returnSelf());
+      ->willReturnSelf();
 
     $this->select->expects($this->any())
       ->method('condition')
-      ->will($this->returnSelf());
+      ->willReturnSelf();
 
     $this->select->expects($this->any())
       ->method('execute')
@@ -83,7 +88,7 @@ class CommentStatisticsUnitTest extends UnitTestCase {
       ->method('select')
       ->willReturn($this->select);
 
-    $this->commentStatistics = new CommentStatistics($this->database, $this->createMock('Drupal\Core\Session\AccountInterface'), $this->createMock(EntityTypeManagerInterface::class), $this->createMock('Drupal\Core\State\StateInterface'), $this->database);
+    $this->commentStatistics = new CommentStatistics($this->database, $this->createMock('Drupal\Core\Session\AccountInterface'), $this->createMock(EntityTypeManagerInterface::class), $this->createMock('Drupal\Core\State\StateInterface'), $this->createMock(TimeInterface::class), $this->database);
   }
 
   /**
@@ -94,8 +99,8 @@ class CommentStatisticsUnitTest extends UnitTestCase {
    * @group Drupal
    * @group Comment
    */
-  public function testRead() {
-    $this->calls_to_fetch = 0;
+  public function testRead(): void {
+    $this->callsToFetch = 0;
     $results = $this->commentStatistics->read(['1' => 'boo', '2' => 'foo'], 'snafus');
     $this->assertEquals(['something', 'something-else'], $results);
   }
@@ -108,8 +113,8 @@ class CommentStatisticsUnitTest extends UnitTestCase {
    *   other calls to function.
    */
   public function fetchObjectCallback() {
-    $this->calls_to_fetch++;
-    switch ($this->calls_to_fetch) {
+    $this->callsToFetch++;
+    switch ($this->callsToFetch) {
       case 1:
         return 'something';
 

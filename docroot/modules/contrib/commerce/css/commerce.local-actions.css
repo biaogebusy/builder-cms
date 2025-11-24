@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Commerce local actions styling.
+ */
+
+.local-actions .commerce-inbox-action-link-wrapper .button {
+  display: -webkit-box;
+  display: flex;
+  -ms-flex-pack: justify;
+  align-items: center;
+  justify-content: space-between;
+  -webkit-column-gap: 0.25rem;
+  -moz-column-gap: 0.25rem;
+  column-gap: 0.25rem;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  -webkit-box-pack: justify;
+}
+
+.local-actions .commerce-inbox-action-link-wrapper .button::before {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  content: "";
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 1em;
+  mask-size: 1em;
+  -webkit-mask-image: var(--commerce-icon--envelope-fill);
+  mask-image: var(--commerce-icon--envelope-fill);
+}
+
+/* Pushes the action to the opposite side of the page. */
+.local-actions .commerce-inbox-action-link-wrapper {
+  float: right;
+}
+
+[dir="rtl"] .local-actions .commerce-inbox-action-link-wrapper {
+  float: left;
+}

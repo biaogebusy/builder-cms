@@ -7,11 +7,12 @@
     "homepage": "https://www.drupal.org/project/drupal",
     "license": "GPL-2.0-or-later",
     "require": {
-        "php": ">=7.3.0",
-        "doctrine/annotations": "^1.13",
-        "drupal/core-file-cache": "^9.5",
-        "drupal/core-plugin": "^9.5",
-        "drupal/core-utility": "^9.5"
+        "php": ">=8.1.0",
+        "doctrine/annotations": "^1.14",
+        "drupal/core-class-finder": "^10.5",
+        "drupal/core-file-cache": "^10.5",
+        "drupal/core-plugin": "^10.5",
+        "drupal/core-utility": "^10.5"
     },
     "autoload": {
         "psr-4": {

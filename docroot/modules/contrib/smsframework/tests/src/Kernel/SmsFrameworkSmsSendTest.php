@@ -46,9 +46,9 @@ final class SmsFrameworkSmsSendTest extends SmsFrameworkKernelBase {
    * See `sms.gateway.log.yml`.
    */
   public function testGatewayInstall(): void {
-    $this->assertEquals(
+    static::assertEquals(
       [LogGateway::PLUGIN_ID],
-      array_keys(SmsGateway::loadMultiple())
+      array_keys(SmsGateway::loadMultiple()),
     );
   }
 
@@ -76,7 +76,7 @@ final class SmsFrameworkSmsSendTest extends SmsFrameworkKernelBase {
 
         $message_counts[$i]++;
         foreach ($gateways as $k => $gateway2) {
-          $this->assertCount($message_counts[$k], $this->getTestMessages($gateway2));
+          static::assertCount($message_counts[$k], $this->getTestMessages($gateway2));
         }
       }
     }
@@ -96,9 +96,9 @@ final class SmsFrameworkSmsSendTest extends SmsFrameworkKernelBase {
       ->setGateway($test_gateway2);
 
     $sms_messages = $this->defaultSmsProvider->send($sms_message);
-    $this->assertTrue($sms_messages[0]->getResult() instanceof SmsMessageResultInterface, 'Message successfully sent.');
-    $this->assertCount(0, $this->getTestMessages($test_gateway1), 'Message not sent to the default gateway.');
-    $this->assertCount(1, $this->getTestMessages($test_gateway2), 'Message sent to the specified gateway.');
+    static::assertTrue($sms_messages[0]->getResult() instanceof SmsMessageResultInterface, 'Message successfully sent.');
+    static::assertCount(0, $this->getTestMessages($test_gateway1), 'Message not sent to the default gateway.');
+    static::assertCount(1, $this->getTestMessages($test_gateway2), 'Message sent to the specified gateway.');
   }
 
 }

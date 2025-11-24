@@ -7,28 +7,32 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Plugin\PluginFormTrait;
+use Drupal\search_api\Processor\ConfigurablePropertyInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Query\ResultSetInterface;
+use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
+use function implode;
 
 /**
  * Adds a highlighted excerpt to results and highlights returned fields.
  *
  * This processor won't run for queries with the "basic" processing level set.
- *
- * @SearchApiProcessor(
- *   id = "highlight",
- *   label = @Translation("Highlight"),
- *   description = @Translation("Adds a highlighted excerpt to results and highlights returned fields."),
- *   stages = {
- *     "pre_index_save" = 0,
- *     "postprocess_query" = 0,
- *   }
- * )
  */
+#[SearchApiProcessor(
+  id: 'highlight',
+  label: new TranslatableMarkup('Highlight'),
+  description: new TranslatableMarkup('Adds a highlighted excerpt to results and highlights returned fields.'),
+  stages: [
+    'pre_index_save' => 0,
+    'postprocess_query' => 0,
+  ],
+)]
 class Highlight extends ProcessorPluginBase implements PluginFormInterface {
 
   use LoggerTrait;
@@ -66,11 +70,13 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     if (!isset(static::$boundary)) {
+      // cspell:disable
       $cjk = '\x{1100}-\x{11FF}\x{3040}-\x{309F}\x{30A1}-\x{318E}' .
         '\x{31A0}-\x{31B7}\x{31F0}-\x{31FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FCF}' .
         '\x{A000}-\x{A48F}\x{A4D0}-\x{A4FD}\x{A960}-\x{A97F}\x{AC00}-\x{D7FF}' .
         '\x{F900}-\x{FAFF}\x{FF21}-\x{FF3A}\x{FF41}-\x{FF5A}\x{FF66}-\x{FFDC}' .
         '\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}';
+      // cspell:enable
       static::$boundary = '(?:(?<=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . '])|(?=[' . Unicode::PREG_CLASS_WORD_BOUNDARY . $cjk . ']))';
       static::$split = '/[' . Unicode::PREG_CLASS_WORD_BOUNDARY . ']+/iu';
     }
@@ -245,7 +251,8 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
   public function postprocessSearchResults(ResultSetInterface $results) {
     $query = $results->getQuery();
     if (!$results->getResultCount()
-      || $query->getProcessingLevel() != QueryInterface::PROCESSING_FULL) {
+      || $query->getProcessingLevel() != QueryInterface::PROCESSING_FULL
+      || $query->hasTag('search_api_skip_processor_highlight')) {
       return;
     }
 
@@ -286,30 +293,32 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    */
   protected function addExcerpts(array $results, array $fulltext_fields, array $keys) {
     $items = $this->getFulltextFields($results, $fulltext_fields);
+    $index = $this->getIndex();
+    $indexed_fields = $index->getFields();
     foreach ($items as $item_id => $item) {
       if (!$item) {
         continue;
       }
-      // We call array_merge() using call_user_func_array() to prevent having to
-      // use it in a loop because it is a resource greedy construction.
-      // @see https://github.com/kalessil/phpinspectionsea/blob/master/docs/performance.md#slow-array-function-used-in-loop
-      $text = call_user_func_array('array_merge', array_values($item));
+
+      // Prepare structured field data instead of concatenating everything.
+      $field_data = [];
+      foreach ($item as $field_id => $values) {
+        $indexed_field = $indexed_fields[$field_id] ?? NULL;
+        $field_data[] = [
+          'field_id' => $field_id,
+          'values' => $values,
+        ];
+      }
+
       $item_keys = $keys;
 
       // If the backend already did highlighting and told us the exact keys it
       // found in the item's text values, we can use those for our own
       // highlighting. This will help us take stemming, transliteration, etc.
       // into account properly.
-      $highlighted_keys = $results[$item_id]->getExtraData('highlighted_keys');
-      if ($highlighted_keys) {
-        $item_keys = array_unique(array_merge($keys, $highlighted_keys));
-      }
+      $item_keys = $results[$item_id]->getExtraData('highlighted_keys') ?: $item_keys;
 
-      // @todo This is pretty poor handling for the borders between different
-      //   values/fields. Better would be to pass an array and have proper
-      //   handling of this in createExcerpt(), ensuring that no snippet goes
-      //   across multiple values/fields.
-      $results[$item_id]->setExcerpt($this->createExcerpt(implode($this->getEllipses()[1], $text), $item_keys));
+      $results[$item_id]->setExcerpt($this->createExcerptForFields($field_data, $item_keys));
     }
   }
 
@@ -371,20 +380,63 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    *   Field values extracted from the result items' fulltext fields, keyed by
    *   item ID, field ID and then numeric indices.
    */
-  protected function getFulltextFields(array $result_items, array $fulltext_fields = NULL, $load = TRUE) {
+  protected function getFulltextFields(array $result_items, ?array $fulltext_fields = NULL, $load = TRUE) {
     // All the index's fulltext fields, grouped by datasource.
     $fields_by_datasource = [];
     foreach ($this->index->getFields() as $field_id => $field) {
       if (isset($fulltext_fields) && !in_array($field_id, $fulltext_fields)) {
         continue;
       }
+
+      // For configurable properties, append the field ID to be able to discern
+      // multiple versions of the same property (e.g., multiple aggregated
+      // fields, aggregating different base properties).
+      $path = $field->getPropertyPath();
+      try {
+        $property = $field->getDataDefinition();
+        if ($property instanceof ConfigurablePropertyInterface) {
+          $path .= '|' . $field_id;
+        }
+      }
+      catch (SearchApiException $e) {
+        $this->logException($e);
+      }
+
       if ($this->getDataTypeHelper()->isTextType($field->getType())) {
-        $fields_by_datasource[$field->getDatasourceId()][$field->getPropertyPath()] = $field_id;
+        $fields_by_datasource[$field->getDatasourceId()][$path] = $field_id;
       }
     }
 
     return $this->getFieldsHelper()
       ->extractItemValues($result_items, $fields_by_datasource, $load);
+  }
+
+  /**
+   * Filters out empty values from an array while preserving keys.
+   *
+   * @param array $values
+   *   The input array that may contain empty values.
+   *
+   * @return array
+   *   The filtered array with empty values removed. Keys are preserved, and any
+   *   non-empty nested arrays are processed recursively.
+   */
+  protected function filterEmptyValuesPreserveKeys(array $values): array {
+    $filtered = [];
+
+    foreach ($values as $key => $value) {
+      if (is_array($value)) {
+        $nested = $this->filterEmptyValuesPreserveKeys($value);
+        if (!empty($nested)) {
+          $filtered[$key] = $nested;
+        }
+      }
+      elseif ($value !== '' && $value !== NULL) {
+        $filtered[$key] = $value;
+      }
+    }
+
+    return $filtered;
   }
 
   /**
@@ -453,12 +505,13 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
   }
 
   /**
-   * Returns snippets from a piece of text, with certain keywords highlighted.
+   * Returns snippets from structured data, with certain keywords highlighted.
    *
-   * Largely copied from search_excerpt().
+   * This method properly handles borders between different values/fields to
+   * ensure that no snippet goes across multiple values/fields.
    *
-   * @param string $text
-   *   The text to extract fragments from.
+   * @param list<array{'field_id': string, 'values': array}> $field_data
+   *   Array of field data.
    * @param array $keys
    *   The search keywords entered by the user.
    *
@@ -466,7 +519,163 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
    *   A string containing HTML for the excerpt. Or NULL if no excerpt could be
    *   created.
    */
-  protected function createExcerpt($text, array $keys) {
+  protected function createExcerptForFields(array $field_data, array $keys): ?string {
+    $excerpt_length = (int) $this->configuration['excerpt_length'];
+    if (!$field_data || !$excerpt_length) {
+      return NULL;
+    }
+
+    // Process each field to collect snippets.
+    $excerpt_parts = [];
+    $found_snippets = [];
+    $total_length = 0;
+    foreach ($field_data as $field_info) {
+      if ($total_length >= $excerpt_length) {
+        break;
+      }
+
+      $this->processFieldValues(
+        $field_info,
+        $keys,
+        $excerpt_length,
+        $this->calculateContextLength($excerpt_length),
+        $found_snippets,
+        $total_length,
+      );
+    }
+
+    // Handle fallback if no snippets were found.
+    if (!$excerpt_parts && !$found_snippets) {
+      if ($this->configuration['excerpt_always']) {
+        return $this->createFallbackExcerpt($field_data, $excerpt_length);
+      }
+      return NULL;
+    }
+
+    // Build and return the final excerpt.
+    return $this->buildFinalExcerpt($found_snippets, $excerpt_parts, $keys);
+  }
+
+  /**
+   * Processes field values to extract text snippets based on provided criteria.
+   *
+   * @param array{'field_id': string, 'values': array} $field_info
+   *   An associative array containing information about the field.
+   * @param array $keys
+   *   An array of keywords to search for within the field values.
+   * @param int $excerpt_length
+   *   The maximum length of the excerpt to be generated.
+   * @param int $context_length
+   *   The length of the context to include around each keyword match.
+   * @param array &$found_snippets
+   *   A reference to an array where extracted snippets will be stored.
+   * @param int &$total_length
+   *   A reference to the total length counter for the generated excerpts, which
+   *   gets updated during processing.
+   */
+  protected function processFieldValues(
+    array $field_info,
+    array $keys,
+    int $excerpt_length,
+    int $context_length,
+    array &$found_snippets,
+    int &$total_length,
+  ): void {
+    $field_id = $field_info['field_id'];
+    $values = $field_info['values'];
+
+    foreach ($values as $value_index => $value) {
+      if ($total_length >= $excerpt_length) {
+        break;
+      }
+
+      if ($value === NULL) {
+        continue;
+      }
+
+      $text = $this->prepareTextForExcerpt($value);
+      if (!$text) {
+        continue;
+      }
+
+      $remaining_length = $excerpt_length - $total_length;
+      $ranges = $this->findKeywordRanges($text, $keys, $context_length, $remaining_length);
+
+      if (!empty($ranges)) {
+        $value_snippets = $this->extractSnippets($text, $ranges, $field_id, $value_index);
+        foreach ($value_snippets as $snippet) {
+          $found_snippets[] = $snippet;
+          $total_length += mb_strlen(strip_tags($snippet['text']));
+          if ($total_length >= $excerpt_length) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Builds the final excerpt from collected snippets and parts.
+   *
+   * @param list<array{'text': string, 'field_id': string, 'value_index': int}> $found_snippets
+   *   An array of snippets found during content processing.
+   * @param array<string, list<string>> $excerpt_parts
+   *   An associative array that groups field IDs to their respective snippets.
+   * @param list<string> $keys
+   *   A list of keywords or phrases to be highlighted within the snippets.
+   *
+   * @return string|null
+   *   The final excerpt, or NULL if no snippets are available.
+   */
+  protected function buildFinalExcerpt(array $found_snippets, array $excerpt_parts, array $keys): ?string {
+    // Apply highlighting to found snippets.
+    foreach ($found_snippets as $snippet) {
+      $excerpt_parts[$snippet['field_id']][] = $this->highlightField($snippet['text'], $keys, FALSE);
+    }
+
+    if (!$excerpt_parts) {
+      return NULL;
+    }
+
+    // Combine field snippets.
+    $ellipses = $this->getEllipses();
+    $excerpt = array_map(
+      fn ($field_snippets) => implode($ellipses[1], $field_snippets),
+      $excerpt_parts,
+    );
+
+    return $ellipses[0] . implode($ellipses[1], $excerpt) . $ellipses[2];
+  }
+
+  /**
+   * Calculates the context length for the given excerpt length.
+   *
+   * @param int $excerpt_length
+   *   The length of the excerpt.
+   *
+   * @return int
+   *   The calculated context length.
+   */
+  protected function calculateContextLength(int $excerpt_length): int {
+    // Get the set excerpt length from the configuration. If the length is too
+    // small, only use one fragment.
+    $context_length = (int) (round($excerpt_length / 4) - 3);
+    if ($context_length < 32) {
+      $context_length = (int) (round($excerpt_length / 2) - 1);
+    }
+    return $context_length;
+  }
+
+  /**
+   * Prepares text for excerpt creation, cleans HTML and normalizing whitespace.
+   *
+   * @param string $text
+   *   The raw text to prepare.
+   *
+   * @return string
+   *   The cleaned text.
+   */
+  protected function prepareTextForExcerpt(string $text): string {
     // Remove HTML tags <script> and <style> with all of their contents.
     $text = preg_replace('#<(style|script).*?>.*?</\1>#is', ' ', $text);
 
@@ -475,168 +684,249 @@ class Highlight extends ProcessorPluginBase implements PluginFormInterface {
     $text = Html::decodeEntities($text);
     $text = preg_replace('/\s+/', ' ', $text);
     $text = trim($text, ' ');
-    $text_length = mb_strlen($text);
 
-    // Try to reach the requested excerpt length with about two fragments (each
-    // with a keyword and some context).
+    return $text;
+  }
+
+  /**
+   * Finds keyword ranges within a text string.
+   *
+   * @param string $text
+   *   The text to search in.
+   * @param list<string> $keys
+   *   The search keywords.
+   * @param int $context_length
+   *   The context length around keywords.
+   * @param int $max_length
+   *   Maximum length to extract.
+   *
+   * @return array<int, int>
+   *   Array of ranges with start positions as keys and end positions as values.
+   */
+  protected function findKeywordRanges(string $text, array $keys, int $context_length, int $max_length): array {
     $ranges = [];
     $length = 0;
     $look_start = [];
     $remaining_keys = $keys;
+    $text_length = mb_strlen($text);
 
-    // Get the set excerpt length from the configuration. If the length is too
-    // small, only use one fragment.
-    $excerpt_length = $this->configuration['excerpt_length'];
-    $context_length = round($excerpt_length / 4) - 3;
-    if ($context_length < 32) {
-      $context_length = round($excerpt_length / 2) - 1;
-    }
-
-    // If the text or the excerpt length are empty for some reason, we cannot
-    // provide an excerpt. Bail early in that case.
-    if (!$text || !$excerpt_length) {
-      return NULL;
-    }
-
-    while ($length < $excerpt_length && !empty($remaining_keys)) {
+    while ($length < $max_length && !empty($remaining_keys)) {
       $found_keys = [];
       foreach ($remaining_keys as $key) {
-        if ($length >= $excerpt_length) {
+        if ($length >= $max_length) {
           break;
         }
 
-        // Remember where we last found $key, in case we are coming through a
-        // second time.
         if (!isset($look_start[$key])) {
           $look_start[$key] = 0;
         }
 
-        // See if we can find $key after where we found it the last time. Since
-        // we are requiring a match on a word boundary, make sure $text starts
-        // and ends with a space.
-        $matches = [];
+        $found_position = $this->findKeywordPosition($text, $key, $look_start[$key]);
 
-        if (!$this->configuration['highlight_partial']) {
-          $found_position = FALSE;
-          $regex = '/' . static::$boundary . preg_quote($key, '/') . static::$boundary . '/iu';
-          // $look_start contains the position as character offset, while
-          // preg_match() takes a byte offset.
-          $offset = $look_start[$key];
-          if ($offset > 0) {
-            $offset = strlen(mb_substr(' ' . $text, 0, $offset));
-          }
-          if (preg_match($regex, ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $offset)) {
-            $found_position = $matches[0][1];
-            // Convert the byte position into a multi-byte character position.
-            $found_position = mb_strlen(substr(" $text", 0, $found_position));
-          }
-        }
-        else {
-          $found_position = mb_stripos($text, $key, $look_start[$key], 'UTF-8');
-        }
         if ($found_position !== FALSE) {
           $look_start[$key] = $found_position + 1;
-          // Keep track of which keys we found this time, in case we need to
-          // pass through again to find more text.
           $found_keys[] = $key;
 
-          // Locate a space before and after this match, leaving some context on
-          // each end.
-          if ($found_position > $context_length) {
-            $before = mb_strpos($text, ' ', $found_position - $context_length);
-            if ($before !== FALSE) {
-              ++$before;
-            }
-            // If we can’t find a space anywhere within the context length, just
-            // settle for a non-space.
-            if ($before === FALSE || $before > $found_position) {
-              $before = $found_position - $context_length;
-            }
-          }
-          else {
-            $before = 0;
-          }
-          if ($before !== FALSE && $before <= $found_position) {
-            if ($text_length > $found_position + $context_length) {
-              $after = mb_strrpos(mb_substr($text, 0, $found_position + $context_length), ' ', $found_position);
-            }
-            else {
-              $after = $text_length;
-            }
-            if ($after !== FALSE && $after > $found_position) {
-              if ($before < $after) {
-                // Save this range.
-                $ranges[$before] = $after;
-                $length += $after - $before;
-              }
-            }
+          // Calculate context boundaries.
+          $before = $this->findContextStart($text, $found_position, $context_length);
+          $after = $this->findContextEnd($text, $found_position, $context_length, $text_length);
+
+          if ($before !== FALSE && $after !== FALSE && $before < $after) {
+            $ranges[$before] = $after;
+            $length += $after - $before;
           }
         }
       }
-      // Next time through this loop, only look for keys we found this time,
-      // if any.
       $remaining_keys = $found_keys;
     }
 
-    $ellipses = $this->getEllipses();
+    return $ranges;
+  }
 
-    // If no keys are given or no keys match the excerpt, either return an
-    // excerpt from the beginning (if "excerpt_always" is enabled) or nothing.
-    if (!$ranges) {
-      if ($this->configuration['excerpt_always']) {
-        $snippet = mb_substr($text, 0, $excerpt_length);
-        $pos = mb_strrpos($snippet, ' ');
-        if ($pos > $excerpt_length / 2) {
-          $snippet = mb_substr($snippet, 0, $pos);
-        }
-        return trim($snippet) . $ellipses[2];
+  /**
+   * Finds the position of a keyword in text.
+   *
+   * @param string $text
+   *   The text to search in.
+   * @param string $key
+   *   The keyword to find.
+   * @param int $start_offset
+   *   The starting position for the search.
+   *
+   * @return int|false
+   *   The position of the keyword or FALSE if not found.
+   */
+  protected function findKeywordPosition(string $text, string $key, int $start_offset): false|int {
+    if (!$this->configuration['highlight_partial']) {
+      $regex = '/' . static::$boundary . preg_quote($key, '/') . static::$boundary . '/iu';
+      $offset = $start_offset;
+      if ($offset > 0) {
+        $offset = strlen(mb_substr(' ' . $text, 0, $offset));
       }
-
-      return NULL;
+      $matches = [];
+      if (preg_match($regex, ' ' . $text . ' ', $matches, PREG_OFFSET_CAPTURE, $offset)) {
+        $found_position = $matches[0][1];
+        return mb_strlen(substr(" $text", 0, $found_position));
+      }
+      return FALSE;
     }
+    return mb_stripos($text, $key, $start_offset, 'UTF-8');
+  }
 
-    // Sort the text ranges by starting position.
+  /**
+   * Finds the start position for context around a keyword.
+   *
+   * @param string $text
+   *   The text.
+   * @param int $found_position
+   *   The position where the keyword was found.
+   * @param int $context_length
+   *   The desired context length.
+   *
+   * @return false|int
+   *   The start position for context.
+   */
+  protected function findContextStart(string $text, int $found_position, int $context_length): false|int {
+    if ($found_position > $context_length) {
+      $before = mb_strpos($text, ' ', $found_position - $context_length);
+      if ($before !== FALSE) {
+        ++$before;
+      }
+      if ($before === FALSE || $before > $found_position) {
+        return $found_position - $context_length;
+      }
+      return $before;
+    }
+    return 0;
+  }
+
+  /**
+   * Finds the end position for context around a keyword.
+   *
+   * @param string $text
+   *   The text.
+   * @param int $found_position
+   *   The position where the keyword was found.
+   * @param int $context_length
+   *   The desired context length.
+   * @param int $text_length
+   *   The total text length.
+   *
+   * @return false|int
+   *   The end position for context.
+   */
+  protected function findContextEnd(string $text, int $found_position, int $context_length, int $text_length): false|int {
+    if ($text_length > $found_position + $context_length) {
+      return mb_strrpos(mb_substr($text, 0, $found_position + $context_length), ' ', $found_position);
+    }
+    return $text_length;
+  }
+
+  /**
+   * Extracts snippets from text based on found ranges.
+   *
+   * @param string $text
+   *   The text to extract from.
+   * @param array $ranges
+   *   The ranges to extract.
+   * @param string $field_id
+   *   The field ID this text belongs to.
+   * @param int $value_index
+   *   The value index within the field.
+   *
+   * @return array
+   *   Array of snippet data.
+   */
+  protected function extractSnippets(string $text, array $ranges, string $field_id, int $value_index): array {
+    // Sort ranges and collapse overlapping ones.
     ksort($ranges);
-
-    // Collapse overlapping text ranges into one. The sorting makes it O(n).
     $new_ranges = [];
     $working_from = $working_to = NULL;
+
     foreach ($ranges as $this_from => $this_to) {
       if ($working_from === NULL) {
-        // This is the first time through this loop: initialize.
         $working_from = $this_from;
         $working_to = $this_to;
         continue;
       }
       if ($this_from <= $working_to) {
-        // The ranges overlap: combine them.
         $working_to = max($working_to, $this_to);
       }
       else {
-        // The ranges do not overlap: save the working range and start a new
-        // one.
         $new_ranges[$working_from] = $working_to;
         $working_from = $this_from;
         $working_to = $this_to;
       }
     }
-    // Save the remaining working range.
     $new_ranges[$working_from] = $working_to;
 
-    // Fetch text within the combined ranges we found.
-    $out = [];
+    // Extract text snippets.
+    $snippets = [];
     foreach ($new_ranges as $from => $to) {
-      $out[] = Html::escape(mb_substr($text, $from, $to - $from));
-    }
-    if (!$out) {
-      return NULL;
+      $snippet_text = Html::escape(mb_substr($text, $from, $to - $from));
+      $snippets[] = [
+        'text' => $snippet_text,
+        'field_id' => $field_id,
+        'value_index' => $value_index,
+      ];
     }
 
-    $excerpt = $ellipses[0] . implode($ellipses[1], $out) . $ellipses[2];
+    return $snippets;
+  }
 
-    // Since we stripped the tags at the beginning, highlighting doesn't need to
-    // handle HTML anymore.
-    return $this->highlightField($excerpt, $keys, FALSE);
+  /**
+   * Fallback excerpt when no keywords are found but excerpt_always is enabled.
+   *
+   * @param array $field_data
+   *   The field data array.
+   * @param int $excerpt_length
+   *   The desired excerpt length.
+   *
+   * @return string|null
+   *   The fallback excerpt.
+   */
+  protected function createFallbackExcerpt(array $field_data, int $excerpt_length): ?string {
+    $ellipses = $this->getEllipses();
+
+    // Take text from the first available field/value.
+    foreach ($field_data as $field_info) {
+      foreach ($field_info['values'] as $value) {
+        if ($value === NULL) {
+          continue;
+        }
+
+        $text = $this->prepareTextForExcerpt($value);
+        if ($text) {
+          $snippet = mb_substr($text, 0, $excerpt_length);
+          $pos = mb_strrpos($snippet, ' ');
+          if ($pos > $excerpt_length / 2) {
+            $snippet = mb_substr($snippet, 0, $pos);
+          }
+          return trim($snippet) . $ellipses[2];
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Returns snippets from a piece of text, with certain keywords highlighted.
+   *
+   * Should not be called anymore, the stub is present only for backwards
+   * compatibility.
+   *
+   * @param string $text
+   *   The text to extract fragments from.
+   * @param array $keys
+   *   The search keywords entered by the user.
+   *
+   * @throws \Drupal\search_api\SearchApiException
+   *   Thrown always.
+   */
+  protected function createExcerpt($text, array $keys) {
+    // @todo Remove for version 2.0.0.
+    throw new SearchApiException('This method has been removed.');
   }
 
   /**

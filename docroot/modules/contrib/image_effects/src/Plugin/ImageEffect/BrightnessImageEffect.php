@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Adjust image brightness.
- *
- * @ImageEffect(
- *   id = "image_effects_brightness",
- *   label = @Translation("Brightness"),
- *   description = @Translation("Adjust image brightness.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_brightness',
+  label: new TranslatableMarkup('Brightness'),
+  description: new TranslatableMarkup('Adjust image brightness.'),
+)]
 class BrightnessImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**

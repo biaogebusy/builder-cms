@@ -85,11 +85,10 @@ function commerce_tax_post_update_3(&$sandbox = NULL) {
 
     $query = $store_storage
       ->getQuery()
-      ->accessCheck(FALSE)
       ->exists('address.country_code')
       // Update only stores which have no tax registration set.
       ->notExists('tax_registrations');
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->accessCheck(FALSE)->count()->execute();
     $sandbox['current_count'] = 0;
 
     if (empty($sandbox['total_count'])) {
@@ -99,11 +98,10 @@ function commerce_tax_post_update_3(&$sandbox = NULL) {
 
   $query = $store_storage->getQuery();
   $query
-    ->accessCheck(FALSE)
     ->exists('address.country_code')
     ->notExists('tax_registrations')
     ->range($sandbox['current_count'], 25);
-  $result = $query->execute();
+  $result = $query->accessCheck(FALSE)->execute();
 
   if (empty($result)) {
     $sandbox['#finished'] = 1;

@@ -2,6 +2,7 @@
 
 namespace Drupal\ajax_test\Controller;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Ajax\CloseDialogCommand;
@@ -134,6 +135,36 @@ class AjaxTestController {
         ];
       }
     }
+    return $build;
+  }
+
+  /**
+   * Returns a render array of links that directly Drupal.ajax().
+   *
+   * @return array
+   *   Renderable array of AJAX response contents.
+   */
+  public function insertLinksTableWrapper(): array {
+    $build['links'] = [
+      'ajax_target' => [
+        '#markup' => '<div class="ajax-target-wrapper"><table><tbody id="ajax-target"></tbody></table></div>',
+      ],
+      'links' => [
+        '#theme' => 'links',
+        '#attached' => ['library' => ['ajax_test/ajax_insert']],
+      ],
+    ];
+
+    $build['links']['links']['#links']['table-row'] = [
+      'title' => 'Link table-row',
+      'url' => Url::fromRoute('ajax_test.ajax_render_types', ['type' => 'table-row']),
+      'attributes' => [
+        'class' => ['ajax-insert'],
+        'data-method' => 'html',
+        'data-effect' => 'none',
+      ],
+    ];
+
     return $build;
   }
 
@@ -333,6 +364,7 @@ class AjaxTestController {
       'comment-not-wrapped' => '<!-- COMMENT --><div class="comment-not-wrapped">comment-not-wrapped</div>',
       'svg' => '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="0" y="0" height="10" width="10" fill="green"></rect></svg>',
       'empty' => '',
+      'table-row' => '<tr><td>table-row</td></tr>',
     ];
     $render_multiple_root = [
       'mixed' => ' foo <!-- COMMENT -->  foo bar<div class="a class"><p>some string</p></div> additional not wrapped strings, <!-- ANOTHER COMMENT --> <p>final string</p>',
@@ -385,6 +417,111 @@ class AjaxTestController {
     $response = new AjaxResponse();
     $response->addCommand(new HtmlCommand('#test_global_events_log', ''));
     return $response;
+  }
+
+  /**
+   * Callback to provide an exception via Ajax.
+   *
+   * @throws \Exception
+   *   The expected exception.
+   */
+  public function throwException() {
+    throw new \Exception('This is an exception.');
+  }
+
+  /**
+   * Provides an Ajax link for the exception.
+   *
+   * @return array
+   *   The Ajax link.
+   */
+  public function exceptionLink() {
+    return [
+      '#type' => 'link',
+      '#url' => Url::fromRoute('ajax_test.throw_exception'),
+      '#title' => 'Ajax Exception',
+      '#attributes' => [
+        'class' => ['use-ajax'],
+      ],
+      '#attached' => [
+        'library' => [
+          'core/drupal.ajax',
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Provides an Ajax link used with different HTTP methods.
+   *
+   * @return array
+   *   The AJAX link.
+   */
+  public function httpMethods(): array {
+    return [
+      '#type' => 'link',
+      '#title' => 'Link',
+      '#url' => Url::fromRoute('ajax_test.http_methods.dialog'),
+      '#attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => Json::encode(['width' => 800]),
+        // Use this state var to change the HTTP method in tests.
+        // @see \Drupal\FunctionalJavascriptTests\Ajax\DialogTest::testHttpMethod()
+        'data-ajax-http-method' => \Drupal::state()->get('ajax_test.http_method', 'POST'),
+      ],
+      '#attached' => [
+        'library' => [
+          'core/drupal.dialog.ajax',
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Provides a modal dialog to test links with different HTTP methods.
+   *
+   * @return array
+   *   The render array.
+   */
+  public function httpMethodsDialog(): array {
+    return ['#markup' => 'Modal dialog contents'];
+  }
+
+  /**
+   * Provides an Ajax link that open in dialog.
+   *
+   * @return array
+   *   The AJAX link.
+   */
+  public function linkPageDialog(): array {
+    return [
+      '#type' => 'link',
+      '#title' => 'Modal link',
+      '#url' => Url::fromRoute('ajax_test.link_page.dialog_contents'),
+      '#attributes' => [
+        'class' => [
+          'use-ajax',
+        ],
+        'data-dialog-type' => 'dialog',
+      ],
+      '#attached' => [
+        'library' => [
+          'core/drupal.dialog.ajax',
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Provides a title to the page.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function linkPageDialogTitle(): string {
+    $title = 'Dialog link page title';
+    return $title;
   }
 
 }

@@ -4,15 +4,15 @@ namespace Drupal\views\Plugin\views\area;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\style\DefaultSummary;
 
 /**
  * Views area handler to display some configurable result summary.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("result")
  */
+#[ViewsArea("result")]
 class Result extends AreaPluginBase {
 
   /**
@@ -60,7 +60,7 @@ class Result extends AreaPluginBase {
    * {@inheritdoc}
    */
   public function query() {
-    if (strpos($this->options['content'], '@total') !== FALSE) {
+    if (str_contains($this->options['content'], '@total')) {
       $this->view->get_total_rows = TRUE;
     }
   }
@@ -78,7 +78,7 @@ class Result extends AreaPluginBase {
     // Calculate the page totals.
     $current_page = (int) $this->view->getCurrentPage() + 1;
     $per_page = (int) $this->view->getItemsPerPage();
-    // @TODO: Maybe use a possible is views empty functionality.
+    // @todo Maybe use a possible is views empty functionality.
     // Not every view has total_rows set, use view->result instead.
     $total = $this->view->total_rows ?? count($this->view->result);
     $label = Html::escape($this->view->storage->label());

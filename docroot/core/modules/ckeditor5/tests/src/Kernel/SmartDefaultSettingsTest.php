@@ -1,8 +1,10 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\Kernel;
+
+// cspell:ignore arta codesnippet
 
 use Drupal\ckeditor5\HTMLRestrictions;
 use Drupal\Component\Render\FormattableMarkup;
@@ -15,7 +17,7 @@ use Drupal\Tests\SchemaCheckTestTrait;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * @covers \Drupal\ckeditor5\SmartDefaultSettings::computeSmartDefaultSettings()
+ * @covers \Drupal\ckeditor5\SmartDefaultSettings::computeSmartDefaultSettings
  * @group ckeditor5
  * @internal
  */
@@ -77,6 +79,8 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     'views',
     'dblog',
     'help',
+    'editor_test',
+    'ckeditor_test',
   ];
 
   /**
@@ -108,7 +112,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           ],
         ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
     Editor::create([
       'format' => 'minimal_ckeditor_wrong_allowed_html',
       'editor' => 'ckeditor',
@@ -127,26 +131,25 @@ class SmartDefaultSettingsTest extends KernelTestBase {
         ],
         'plugins' => [],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
 
     FilterFormat::create(
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/filter.format.full_html.yml')
-    )
-      ->setSyncing(TRUE)
-      ->save();
+    )->save();
+
     Editor::create(
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.full_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $basic_html_format = Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/filter.format.basic_html.yml');
-    FilterFormat::create($basic_html_format)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format)->save();
     Editor::create(
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     FilterFormat::create(
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/filter.format.restricted_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $basic_html_format_without_image_uploads = $basic_html_format;
     $basic_html_format_without_image_uploads['name'] .= ' (without image uploads)';
@@ -156,7 +159,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
       ['format' => 'basic_html_without_image_uploads']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setImageUploadSettings(['status' => FALSE])->setSyncing(TRUE)->save();
+    )->setImageUploadSettings(['status' => FALSE])->save();
 
     $allowed_html_parents = ['filters', 'filter_html', 'settings', 'allowed_html'];
     $current_value = NestedArray::getValue($basic_html_format, $allowed_html_parents);
@@ -165,58 +168,58 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     $basic_html_format_without_h4_h6['name'] .= ' (without H4 and H6)';
     $basic_html_format_without_h4_h6['format'] = 'basic_html_without_h4_h6';
     NestedArray::setValue($basic_html_format_without_h4_h6, $allowed_html_parents, $new_value);
-    FilterFormat::create($basic_html_format_without_h4_h6)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_without_h4_h6)->save();
     Editor::create(
       ['format' => 'basic_html_without_h4_h6']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $new_value = str_replace(['<h2 id> ', '<h3 id> ', '<h4 id> ', '<h5 id> ', '<h6 id> '], '', $current_value);
     $basic_html_format_without_headings = $basic_html_format;
     $basic_html_format_without_headings['name'] .= ' (without H*)';
     $basic_html_format_without_headings['format'] = 'basic_html_without_headings';
     NestedArray::setValue($basic_html_format_without_headings, $allowed_html_parents, $new_value);
-    FilterFormat::create($basic_html_format_without_headings)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_without_headings)->save();
     Editor::create(
       ['format' => 'basic_html_without_headings']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $basic_html_format_with_pre = $basic_html_format;
     $basic_html_format_with_pre['name'] .= ' (with <pre>)';
     $basic_html_format_with_pre['format'] = 'basic_html_with_pre';
     NestedArray::setValue($basic_html_format_with_pre, $allowed_html_parents, $current_value . ' <pre>');
-    FilterFormat::create($basic_html_format_with_pre)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_pre)->save();
     Editor::create(
       ['format' => 'basic_html_with_pre']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $basic_html_format_with_h1 = $basic_html_format;
     $basic_html_format_with_h1['name'] .= ' (with <h1>)';
     $basic_html_format_with_h1['format'] = 'basic_html_with_h1';
     NestedArray::setValue($basic_html_format_with_h1, $allowed_html_parents, $current_value . ' <h1>');
-    FilterFormat::create($basic_html_format_with_h1)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_h1)->save();
     Editor::create(
       ['format' => 'basic_html_with_h1']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $new_value = str_replace('<p>', '<p class="text-align-center text-align-justify">', $current_value);
     $basic_html_format_with_alignable_p = $basic_html_format;
     $basic_html_format_with_alignable_p['name'] .= ' (with alignable paragraph support)';
     $basic_html_format_with_alignable_p['format'] = 'basic_html_with_alignable_p';
     NestedArray::setValue($basic_html_format_with_alignable_p, $allowed_html_parents, $new_value);
-    FilterFormat::create($basic_html_format_with_alignable_p)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_alignable_p)->save();
     Editor::create(
       ['format' => 'basic_html_with_alignable_p']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $basic_html_format_with_media_embed = $basic_html_format;
     $basic_html_format_with_media_embed['name'] .= ' (with Media Embed support)';
@@ -225,7 +228,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     $basic_html_format_with_media_embed['filters']['media_embed'] = ['status' => TRUE];
     $new_value = $current_value . ' <drupal-media data-entity-type data-entity-uuid data-align data-caption alt>';
     NestedArray::setValue($basic_html_format_with_media_embed, $allowed_html_parents, $new_value);
-    FilterFormat::create($basic_html_format_with_media_embed)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_media_embed)->save();
     $basic_html_editor_with_media_embed = Editor::create(
       ['format' => 'basic_html_with_media_embed']
       +
@@ -236,7 +239,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     // pre-existing toolbar item group labeled "Media".
     $settings['toolbar']['rows'][0][3]['items'][] = 'DrupalMediaLibrary';
     $basic_html_editor_with_media_embed->setSettings($settings);
-    $basic_html_editor_with_media_embed->setSyncing(TRUE)->save();
+    $basic_html_editor_with_media_embed->save();
 
     $basic_html_format_with_media_embed_view_mode_invalid = $basic_html_format_with_media_embed;
     $basic_html_format_with_media_embed_view_mode_invalid['name'] = ' (with Media Embed support, view mode enabled but no view modes configured)';
@@ -244,7 +247,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     $current_value_media_embed = NestedArray::getValue($basic_html_format_with_media_embed, $allowed_html_parents);
     $new_value = str_replace('<drupal-media data-entity-type data-entity-uuid data-align data-caption alt>', '<drupal-media data-entity-type data-entity-uuid data-align data-caption alt data-view-mode>', $current_value_media_embed);
     NestedArray::setValue($basic_html_format_with_media_embed_view_mode_invalid, $allowed_html_parents, $new_value);
-    FilterFormat::create($basic_html_format_with_media_embed_view_mode_invalid)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_media_embed_view_mode_invalid)->save();
     $basic_html_editor_with_media_embed_view_mode_enabled_no_view_modes_configured = Editor::create(
       ['format' => 'basic_html_with_media_embed_view_mode_enabled_no_view_modes_configured']
       +
@@ -255,24 +258,24 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     // pre-existing toolbar item group labeled "Media".
     $settings['toolbar']['rows'][0][3]['items'][] = 'DrupalMediaLibrary';
     $basic_html_editor_with_media_embed_view_mode_enabled_no_view_modes_configured->setSettings($settings);
-    $basic_html_editor_with_media_embed_view_mode_enabled_no_view_modes_configured->setSyncing(TRUE)->save();
+    $basic_html_editor_with_media_embed_view_mode_enabled_no_view_modes_configured->save();
 
     $new_value = str_replace('<img src alt height width data-entity-type data-entity-uuid data-align data-caption>', '<img src alt height width data-*>', $current_value);
     $basic_html_format_with_any_data_attr = $basic_html_format;
     $basic_html_format_with_any_data_attr['name'] .= ' (with any data-* attribute on images)';
     $basic_html_format_with_any_data_attr['format'] = 'basic_html_with_any_data_attr';
     NestedArray::setValue($basic_html_format_with_any_data_attr, $allowed_html_parents, $new_value);
-    FilterFormat::create($basic_html_format_with_any_data_attr)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_any_data_attr)->save();
     Editor::create(
       ['format' => 'basic_html_with_any_data_attr']
       +
       Yaml::parseFile('core/modules/ckeditor5/tests/fixtures/ckeditor4_config/editor.editor.basic_html.yml')
-    )->setSyncing(TRUE)->save();
+    )->save();
 
     $basic_html_format_with_media_embed_view_mode_enabled_two_view_modes_configured = $basic_html_format_with_media_embed_view_mode_invalid;
     $basic_html_format_with_media_embed_view_mode_enabled_two_view_modes_configured['name'] = ' (with Media Embed support, view mode enabled and two view modes configured )';
     $basic_html_format_with_media_embed_view_mode_enabled_two_view_modes_configured['format'] = 'basic_html_with_media_embed_view_mode_enabled_two_view_modes_configured';
-    FilterFormat::create($basic_html_format_with_media_embed_view_mode_enabled_two_view_modes_configured)->setSyncing(TRUE)->save();
+    FilterFormat::create($basic_html_format_with_media_embed_view_mode_enabled_two_view_modes_configured)->save();
     $basic_html_editor_with_media_embed_view_mode_enabled_two_view_modes_configured = Editor::create(
       ['format' => 'basic_html_with_media_embed_view_mode_enabled_two_view_modes_configured']
       +
@@ -283,21 +286,21 @@ class SmartDefaultSettingsTest extends KernelTestBase {
     // pre-existing toolbar item group labeled "Media".
     $settings['toolbar']['rows'][0][3]['items'][] = 'DrupalMediaLibrary';
     $basic_html_editor_with_media_embed_view_mode_enabled_two_view_modes_configured->setSettings($settings);
-    $basic_html_editor_with_media_embed_view_mode_enabled_two_view_modes_configured->setSyncing(TRUE)->save();
+    $basic_html_editor_with_media_embed_view_mode_enabled_two_view_modes_configured->save();
     EntityViewMode::create([
       'id' => 'media.view_mode_1',
       'targetEntityType' => 'media',
       'status' => TRUE,
       'enabled' => TRUE,
       'label' => 'View Mode 1',
-    ])->setSyncing(TRUE)->save();
+    ])->save();
     EntityViewMode::create([
       'id' => 'media.view_mode_2',
       'targetEntityType' => 'media',
       'status' => TRUE,
       'enabled' => TRUE,
       'label' => 'View Mode 2',
-    ])->setSyncing(TRUE)->save();
+    ])->save();
     $filter_format = FilterFormat::load('basic_html_with_media_embed_view_mode_enabled_two_view_modes_configured');
     $filter_format->setFilterConfig('media_embed', [
       'status' => TRUE,
@@ -309,7 +312,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           'view_mode_2' => 'view_mode_2',
         ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
 
     $filter_plugin_manager = $this->container->get('plugin.manager.filter');
     FilterFormat::create([
@@ -321,12 +324,12 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           'settings' => $filter_plugin_manager->getDefinition('filter_html')['settings'],
         ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
 
     FilterFormat::create([
       'format' => 'cke4_plugins_with_settings',
       'name' => 'All CKEditor 4 core plugins with settings',
-    ])->setSyncing(TRUE)->save();
+    ])->save();
     Editor::create([
       'format' => 'cke4_plugins_with_settings',
       'editor' => 'ckeditor',
@@ -366,7 +369,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           ],
         ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
 
     FilterFormat::create([
       'format' => 'cke4_stylescombo_span',
@@ -379,7 +382,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           ] + $filter_plugin_manager->getDefinition('filter_html')['settings'],
         ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
     Editor::create([
       'format' => 'cke4_stylescombo_span',
       'editor' => 'ckeditor',
@@ -402,12 +405,12 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           ],
         ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
 
     FilterFormat::create([
       'format' => 'cke4_contrib_plugins_now_in_core',
       'name' => 'All CKEditor 4 contrib plugins now in core',
-    ])->setSyncing(TRUE)->save();
+    ])->save();
     Editor::create([
       'format' => 'cke4_contrib_plugins_now_in_core',
       'editor' => 'ckeditor',
@@ -423,11 +426,52 @@ class SmartDefaultSettingsTest extends KernelTestBase {
                 ],
               ],
             ],
+            1 => [
+              [
+                'name' => 'Contributed modules providing buttons with settings',
+                'items' => [
+                  // @see https://www.drupal.org/project/codesnippet
+                  'CodeSnippet',
+                ],
+              ],
+            ],
           ],
         ],
-        'plugins' => [],
+        'plugins' => [
+          'codesnippet' => [
+            'highlight_style' => 'arta',
+            'highlight_languages' => [
+              'cs' => 'cs',
+              'cpp' => 'cpp',
+              'coffeescript' => 'coffeescript',
+              'css' => 'css',
+              'diff' => 'diff',
+              'html' => 'html',
+              'http' => 'http',
+              'ini' => 'ini',
+              'java' => 'java',
+              'javascript' => 'javascript',
+              'json' => 'json',
+              'makefile' => 'makefile',
+              'markdown' => 'markdown',
+              'nginx' => 'nginx',
+              'objectivec' => 'objectivec',
+              'perl' => 'perl',
+              'php' => 'php',
+              'python' => 'python',
+              'ruby' => 'ruby',
+              'sql' => 'sql',
+              'vbscript' => 'vbscript',
+              'xhtml' => 'xhtml',
+              'xml' => 'xml',
+              // These 2 languages have been disabled.
+              'apache' => 0,
+              'bash' => 0,
+            ],
+          ],
+        ],
       ],
-    ])->setSyncing(TRUE)->save();
+    ])->save();
   }
 
   /**
@@ -498,11 +542,22 @@ class SmartDefaultSettingsTest extends KernelTestBase {
 
     // Ensure that the result of ::computeSmartDefaultSettings() always complies
     // with the config schema.
+    // TRICKY: because we're validating using `editor.editor.*` as the config
+    // name, TextEditorObjectDependentValidatorTrait will load the stored filter
+    // format. That has not yet been updated at this point, so in order for
+    // validation to pass, it must first be saved.
+    // @see \Drupal\ckeditor5\Plugin\Validation\Constraint\TextEditorObjectDependentValidatorTrait::createTextEditorObjectFromContext()
+    // @todo Remove this work-around in https://www.drupal.org/project/drupal/issues/3231354
+    $updated_text_editor->getFilterFormat()->save();
     $this->assertConfigSchema(
       $this->typedConfig,
       $updated_text_editor->getConfigDependencyName(),
       $updated_text_editor->toArray()
     );
+
+    // Save this to ensure the config export order is applied.
+    // @see \Drupal\Core\Config\StorableConfigBase::castValue()
+    $updated_text_editor->save();
 
     // We should now have the expected data in the Editor config entity.
     $this->assertSame('ckeditor5', $updated_text_editor->getEditor());
@@ -595,7 +650,7 @@ class SmartDefaultSettingsTest extends KernelTestBase {
    * @return \Generator
    *   Test scenarios.
    */
-  public function provider() {
+  public static function provider() {
     $basic_html_test_case = [
       'format_id' => 'basic_html',
       'filters_to_drop' => [],
@@ -637,8 +692,11 @@ class SmartDefaultSettingsTest extends KernelTestBase {
             'allow_resize' => TRUE,
           ],
           'ckeditor5_list' => [
-            'reversed' => FALSE,
-            'startIndex' => TRUE,
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
           ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => [
@@ -788,7 +846,13 @@ class SmartDefaultSettingsTest extends KernelTestBase {
             ],
           ],
           'ckeditor5_imageResize' => ['allow_resize' => TRUE],
-          'ckeditor5_list' => ['reversed' => FALSE, 'startIndex' => TRUE],
+          'ckeditor5_list' => [
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
+          ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => array_values(array_diff(
               $basic_html_test_case['expected_ckeditor5_settings']['plugins']['ckeditor5_sourceEditing']['allowed_tags'],
@@ -830,7 +894,13 @@ class SmartDefaultSettingsTest extends KernelTestBase {
             ],
           ],
           'ckeditor5_imageResize' => ['allow_resize' => TRUE],
-          'ckeditor5_list' => ['reversed' => FALSE, 'startIndex' => TRUE],
+          'ckeditor5_list' => [
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
+          ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => $basic_html_test_case['expected_ckeditor5_settings']['plugins']['ckeditor5_sourceEditing']['allowed_tags'],
           ],
@@ -864,7 +934,13 @@ class SmartDefaultSettingsTest extends KernelTestBase {
         ],
         'plugins' => [
           'ckeditor5_imageResize' => ['allow_resize' => TRUE],
-          'ckeditor5_list' => ['reversed' => FALSE, 'startIndex' => TRUE],
+          'ckeditor5_list' => [
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
+          ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => array_values(array_diff(
               $basic_html_test_case['expected_ckeditor5_settings']['plugins']['ckeditor5_sourceEditing']['allowed_tags'],
@@ -899,7 +975,26 @@ class SmartDefaultSettingsTest extends KernelTestBase {
             ['codeBlock'],
           ),
         ],
-        'plugins' => $basic_html_test_case['expected_ckeditor5_settings']['plugins'],
+        'plugins' => [
+          'ckeditor5_codeBlock' => [
+            'languages' => [
+              ['label' => 'Plain text', 'language' => 'plaintext'],
+              ['label' => 'C', 'language' => 'c'],
+              ['label' => 'C#', 'language' => 'cs'],
+              ['label' => 'C++', 'language' => 'cpp'],
+              ['label' => 'CSS', 'language' => 'css'],
+              ['label' => 'Diff', 'language' => 'diff'],
+              ['label' => 'HTML', 'language' => 'html'],
+              ['label' => 'Java', 'language' => 'java'],
+              ['label' => 'JavaScript', 'language' => 'javascript'],
+              ['label' => 'PHP', 'language' => 'php'],
+              ['label' => 'Python', 'language' => 'python'],
+              ['label' => 'Ruby', 'language' => 'ruby'],
+              ['label' => 'TypeScript', 'language' => 'typescript'],
+              ['label' => 'XML', 'language' => 'xml'],
+            ],
+          ],
+        ] + $basic_html_test_case['expected_ckeditor5_settings']['plugins'],
       ],
       'expected_superset' => '<code class="language-*">',
       'expected_fundamental_compatibility_violations' => $basic_html_test_case['expected_fundamental_compatibility_violations'],
@@ -931,12 +1026,12 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           ),
         ],
         'plugins' => array_merge(
-          $basic_html_test_case['expected_ckeditor5_settings']['plugins'],
           [
             'ckeditor5_alignment' => [
               'enabled_alignments' => ['center', 'justify'],
             ],
           ],
+          $basic_html_test_case['expected_ckeditor5_settings']['plugins'],
         ),
       ],
       'expected_superset' => implode(' ', [
@@ -1133,6 +1228,13 @@ class SmartDefaultSettingsTest extends KernelTestBase {
               'heading6',
             ],
           ],
+          'ckeditor5_list' => [
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
+          ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => [
               '<cite>',
@@ -1149,10 +1251,6 @@ class SmartDefaultSettingsTest extends KernelTestBase {
               '<h5 id>',
               '<h6 id>',
             ],
-          ],
-          'ckeditor5_list' => [
-            'reversed' => FALSE,
-            'startIndex' => TRUE,
           ],
         ],
       ],
@@ -1207,10 +1305,29 @@ class SmartDefaultSettingsTest extends KernelTestBase {
             'heading',
             'codeBlock',
             '|',
+            'showBlocks',
             'sourceEditing',
           ],
         ],
         'plugins' => [
+          'ckeditor5_codeBlock' => [
+            'languages' => [
+              ['label' => 'Plain text', 'language' => 'plaintext'],
+              ['label' => 'C', 'language' => 'c'],
+              ['label' => 'C#', 'language' => 'cs'],
+              ['label' => 'C++', 'language' => 'cpp'],
+              ['label' => 'CSS', 'language' => 'css'],
+              ['label' => 'Diff', 'language' => 'diff'],
+              ['label' => 'HTML', 'language' => 'html'],
+              ['label' => 'Java', 'language' => 'java'],
+              ['label' => 'JavaScript', 'language' => 'javascript'],
+              ['label' => 'PHP', 'language' => 'php'],
+              ['label' => 'Python', 'language' => 'python'],
+              ['label' => 'Ruby', 'language' => 'ruby'],
+              ['label' => 'TypeScript', 'language' => 'typescript'],
+              ['label' => 'XML', 'language' => 'xml'],
+            ],
+          ],
           'ckeditor5_heading' => [
             'enabled_headings' => [
               'heading2',
@@ -1224,8 +1341,11 @@ class SmartDefaultSettingsTest extends KernelTestBase {
             'allow_resize' => TRUE,
           ],
           'ckeditor5_list' => [
-            'reversed' => TRUE,
-            'startIndex' => TRUE,
+            'properties' => [
+              'reversed' => TRUE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
           ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => [],
@@ -1268,6 +1388,13 @@ class SmartDefaultSettingsTest extends KernelTestBase {
               'heading6',
             ],
           ],
+          'ckeditor5_list' => [
+            'properties' => [
+              'reversed' => FALSE,
+              'startIndex' => TRUE,
+            ],
+            'multiBlock' => TRUE,
+          ],
           'ckeditor5_sourceEditing' => [
             'allowed_tags' => [
               '<cite>',
@@ -1284,10 +1411,6 @@ class SmartDefaultSettingsTest extends KernelTestBase {
               '<h5 id>',
               '<h6 id>',
             ],
-          ],
-          'ckeditor5_list' => [
-            'reversed' => FALSE,
-            'startIndex' => TRUE,
           ],
         ],
       ],
@@ -1375,17 +1498,17 @@ class SmartDefaultSettingsTest extends KernelTestBase {
           ],
         ],
         'plugins' => [
+          'ckeditor5_sourceEditing' => [
+            'allowed_tags' => [
+              '<span>',
+            ],
+          ],
           'ckeditor5_style' => [
             'styles' => [
               [
                 'label' => 'Llama span',
                 'element' => '<span class="llama">',
               ],
-            ],
-          ],
-          'ckeditor5_sourceEditing' => [
-            'allowed_tags' => [
-              '<span>',
             ],
           ],
         ],
@@ -1411,9 +1534,39 @@ class SmartDefaultSettingsTest extends KernelTestBase {
         'toolbar' => [
           'items' => [
             'code',
+            '|',
+            'codeBlock',
           ],
         ],
-        'plugins' => [],
+        'plugins' => [
+          'ckeditor5_codeBlock' => [
+            'languages' => [
+              ['label' => 'cs', 'language' => 'cs'],
+              ['label' => 'cpp', 'language' => 'cpp'],
+              ['label' => 'coffeescript', 'language' => 'coffeescript'],
+              ['label' => 'css', 'language' => 'css'],
+              ['label' => 'diff', 'language' => 'diff'],
+              ['label' => 'html', 'language' => 'html'],
+              ['label' => 'http', 'language' => 'http'],
+              ['label' => 'ini', 'language' => 'ini'],
+              ['label' => 'java', 'language' => 'java'],
+              ['label' => 'javascript', 'language' => 'javascript'],
+              ['label' => 'json', 'language' => 'json'],
+              ['label' => 'makefile', 'language' => 'makefile'],
+              ['label' => 'markdown', 'language' => 'markdown'],
+              ['label' => 'nginx', 'language' => 'nginx'],
+              ['label' => 'objectivec', 'language' => 'objectivec'],
+              ['label' => 'perl', 'language' => 'perl'],
+              ['label' => 'php', 'language' => 'php'],
+              ['label' => 'python', 'language' => 'python'],
+              ['label' => 'ruby', 'language' => 'ruby'],
+              ['label' => 'sql', 'language' => 'sql'],
+              ['label' => 'vbscript', 'language' => 'vbscript'],
+              ['label' => 'xhtml', 'language' => 'xhtml'],
+              ['label' => 'xml', 'language' => 'xml'],
+            ],
+          ],
+        ],
       ],
       'expected_superset' => '',
       'expected_fundamental_compatibility_violations' => [],

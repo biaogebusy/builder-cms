@@ -2,18 +2,18 @@
 
 namespace Drupal\commerce_cart;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_cart\Event\CartOrderItemAddEvent;
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\Entity\OrderItemInterface;
-use Drupal\commerce_cart\Event\CartEvents;
 use Drupal\commerce_cart\Event\CartEmptyEvent;
 use Drupal\commerce_cart\Event\CartEntityAddEvent;
+use Drupal\commerce_cart\Event\CartEvents;
+use Drupal\commerce_cart\Event\CartOrderItemAddEvent;
 use Drupal\commerce_cart\Event\CartOrderItemRemoveEvent;
 use Drupal\commerce_cart\Event\CartOrderItemUpdateEvent;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_price\Calculator;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Default implementation of the cart manager.
@@ -31,33 +31,21 @@ class CartManager implements CartManagerInterface {
   protected $orderItemStorage;
 
   /**
-   * The order item matcher.
-   *
-   * @var \Drupal\commerce_cart\OrderItemMatcherInterface
-   */
-  protected $orderItemMatcher;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
    * Constructs a new CartManager object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\commerce_cart\OrderItemMatcherInterface $order_item_matcher
+   * @param \Drupal\commerce_cart\OrderItemMatcherInterface $orderItemMatcher
    *   The order item matcher.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, OrderItemMatcherInterface $order_item_matcher, EventDispatcherInterface $event_dispatcher) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    protected OrderItemMatcherInterface $orderItemMatcher,
+    protected EventDispatcherInterface $eventDispatcher,
+  ) {
     $this->orderItemStorage = $entity_type_manager->getStorage('commerce_order_item');
-    $this->orderItemMatcher = $order_item_matcher;
-    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**

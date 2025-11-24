@@ -24,7 +24,7 @@ display:
         type: none
         options: {  }
       cache:
-        type: none
+        type: search_api_none
         options: {  }
       query:
         type: search_api_query
@@ -240,7 +240,7 @@ display:
     display_plugin: page
     id: tag
     display_title: Tag
-    position: 1
+    position: 2
     display_options:
       display_extenders: {  }
       path: search-api-test-search-view-caching-tag
@@ -262,13 +262,39 @@ display:
     display_plugin: page
     id: time
     display_title: Time
-    position: 1
+    position: 3
     display_options:
       display_extenders: {  }
       path: search-api-test-search-view-caching-time
       display_description: ''
       cache:
         type: search_api_time
+        options:
+          results_lifespan: 3600
+          results_lifespan_custom: 0
+          output_lifespan: 3600
+          output_lifespan_custom: 0
+      defaults:
+        cache: false
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+      tags: {  }
+  time_tag:
+    display_plugin: page
+    id: time_tag
+    display_title: Time/Tag
+    position: 4
+    display_options:
+      display_extenders: {  }
+      path: search-api-test-search-view-caching-time-tag
+      display_description: ''
+      cache:
+        type: search_api_time_tag
         options:
           results_lifespan: 3600
           results_lifespan_custom: 0

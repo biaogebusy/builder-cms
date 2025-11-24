@@ -2,9 +2,9 @@
 
 namespace Drupal\flag\Plugin\ActionLink;
 
-use Drupal\flag\FlagInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
+use Drupal\flag\FlagInterface;
 
 /**
  * Provides the Confirm Form link type.
@@ -21,7 +21,7 @@ class ConfirmForm extends FormEntryTypeBase {
    * {@inheritdoc}
    */
   public function getUrl($action, FlagInterface $flag, EntityInterface $entity) {
-    switch($action) {
+    switch ($action) {
       case 'flag':
         return Url::fromRoute('flag.confirm_flag', [
           'flag' => $flag->id(),

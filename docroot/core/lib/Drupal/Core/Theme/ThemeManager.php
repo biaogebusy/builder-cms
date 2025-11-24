@@ -3,7 +3,6 @@
 namespace Drupal\Core\Theme;
 
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\StackedRouteMatchInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -91,7 +90,7 @@ class ThemeManager implements ThemeManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getActiveTheme(RouteMatchInterface $route_match = NULL) {
+  public function getActiveTheme(?RouteMatchInterface $route_match = NULL) {
     if (!isset($this->activeTheme)) {
       $this->initTheme($route_match);
     }
@@ -183,6 +182,9 @@ class ThemeManager implements ThemeManagerInterface {
     }
 
     $info = $theme_registry->get($hook);
+    if (isset($info['deprecated'])) {
+      @trigger_error($info['deprecated'], E_USER_DEPRECATED);
+    }
 
     // If a renderable array is passed as $variables, then set $variables to
     // the arguments expected by the theme function.
@@ -191,7 +193,7 @@ class ThemeManager implements ThemeManagerInterface {
       $variables = [];
       if (isset($info['variables'])) {
         foreach (array_keys($info['variables']) as $name) {
-          if (isset($element["#$name"]) || array_key_exists("#$name", $element)) {
+          if (\array_key_exists("#$name", $element)) {
             $variables[$name] = $element["#$name"];
           }
         }
@@ -215,34 +217,7 @@ class ThemeManager implements ThemeManagerInterface {
       'theme_hook_original' => $original_hook,
     ];
 
-    // Set base hook for later use. For example if '#theme' => 'node__article'
-    // is called, we run hook_theme_suggestions_node_alter() rather than
-    // hook_theme_suggestions_node__article_alter(), and also pass in the base
-    // hook as the last parameter to the suggestions alter hooks.
-    if (isset($info['base hook'])) {
-      $base_theme_hook = $info['base hook'];
-    }
-    else {
-      $base_theme_hook = $hook;
-    }
-
-    // Invoke hook_theme_suggestions_HOOK().
-    $suggestions = $this->moduleHandler->invokeAll('theme_suggestions_' . $base_theme_hook, [$variables]);
-    // If the theme implementation was invoked with a direct theme suggestion
-    // like '#theme' => 'node__article', add it to the suggestions array before
-    // invoking suggestion alter hooks.
-    if (isset($info['base hook'])) {
-      $suggestions[] = $hook;
-    }
-
-    // Invoke hook_theme_suggestions_alter() and
-    // hook_theme_suggestions_HOOK_alter().
-    $hooks = [
-      'theme_suggestions',
-      'theme_suggestions_' . $base_theme_hook,
-    ];
-    $this->moduleHandler->alter($hooks, $suggestions, $variables, $base_theme_hook);
-    $this->alter($hooks, $suggestions, $variables, $base_theme_hook);
+    $suggestions = $this->buildThemeHookSuggestions($hook, $info['base hook'] ?? '', $variables);
 
     // Check if each suggestion exists in the theme registry, and if so,
     // use it instead of the base hook. For example, a function may use
@@ -256,8 +231,7 @@ class ThemeManager implements ThemeManagerInterface {
       }
     }
 
-    // Include a file if the theme function or variable preprocessor is held
-    // elsewhere.
+    // Include a file if the variable preprocessor is held elsewhere.
     if (!empty($info['includes'])) {
       foreach ($info['includes'] as $include_file) {
         include_once $this->root . '/' . $include_file;
@@ -307,84 +281,119 @@ class ThemeManager implements ThemeManagerInterface {
       }
     }
 
-    // Generate the output using either a function or a template.
-    $output = '';
-    if (isset($info['function'])) {
-      if (function_exists($info['function'])) {
-        // Theme functions do not render via the theme engine, so the output is
-        // not autoescaped. However, we can only presume that the theme function
-        // has been written correctly and that the markup is safe.
-        $output = Markup::create($info['function']($variables));
-      }
-    }
-    else {
-      $render_function = 'twig_render_template';
-      $extension = '.html.twig';
+    // Generate the output using a template.
+    $render_function = 'twig_render_template';
+    $extension = '.html.twig';
 
-      // The theme engine may use a different extension and a different
-      // renderer.
-      $theme_engine = $active_theme->getEngine();
-      if (isset($theme_engine)) {
-        if ($info['type'] != 'module') {
-          if (function_exists($theme_engine . '_render_template')) {
-            $render_function = $theme_engine . '_render_template';
-          }
-          $extension_function = $theme_engine . '_extension';
-          if (function_exists($extension_function)) {
-            $extension = $extension_function();
-          }
+    // The theme engine may use a different extension and a different
+    // renderer.
+    $theme_engine = $active_theme->getEngine();
+    if (isset($theme_engine)) {
+      if ($info['type'] != 'module') {
+        if (function_exists($theme_engine . '_render_template')) {
+          $render_function = $theme_engine . '_render_template';
+        }
+        $extension_function = $theme_engine . '_extension';
+        if (function_exists($extension_function)) {
+          $extension = $extension_function();
         }
       }
-
-      // In some cases, a template implementation may not have had
-      // template_preprocess() run (for example, if the default implementation
-      // is a function, but a template overrides that default implementation).
-      // In these cases, a template should still be able to expect to have
-      // access to the variables provided by template_preprocess(), so we add
-      // them here if they don't already exist. We don't want the overhead of
-      // running template_preprocess() twice, so we use the 'directory' variable
-      // to determine if it has already run, which while not completely
-      // intuitive, is reasonably safe, and allows us to save on the overhead of
-      // adding some new variable to track that.
-      if (!isset($variables['directory'])) {
-        $default_template_variables = [];
-        template_preprocess($default_template_variables, $hook, $info);
-        $variables += $default_template_variables;
-      }
-      if (!isset($default_attributes)) {
-        $default_attributes = new Attribute();
-      }
-      foreach (['attributes', 'title_attributes', 'content_attributes'] as $key) {
-        if (isset($variables[$key]) && !($variables[$key] instanceof Attribute)) {
-          if ($variables[$key]) {
-            $variables[$key] = new Attribute($variables[$key]);
-          }
-          else {
-            // Create empty attributes.
-            $variables[$key] = clone $default_attributes;
-          }
-        }
-      }
-
-      // Render the output using the template file.
-      $template_file = $info['template'] . $extension;
-      if (isset($info['path'])) {
-        $template_file = $info['path'] . '/' . $template_file;
-      }
-      // Add the theme suggestions to the variables array just before rendering
-      // the template for backwards compatibility with template engines.
-      $variables['theme_hook_suggestions'] = $suggestions;
-      // For backwards compatibility, pass 'theme_hook_suggestion' on to the
-      // template engine. This is only set when calling a direct suggestion like
-      // '#theme' => 'menu__shortcut_default' when the template exists in the
-      // current theme.
-      if (isset($theme_hook_suggestion)) {
-        $variables['theme_hook_suggestion'] = $theme_hook_suggestion;
-      }
-      $output = $render_function($template_file, $variables);
     }
 
+    // In some cases, a template implementation may not have had
+    // template_preprocess() run (for example, if the default implementation
+    // is a function, but a template overrides that default implementation).
+    // In these cases, a template should still be able to expect to have
+    // access to the variables provided by template_preprocess(), so we add
+    // them here if they don't already exist. We don't want the overhead of
+    // running template_preprocess() twice, so we use the 'directory' variable
+    // to determine if it has already run, which while not completely
+    // intuitive, is reasonably safe, and allows us to save on the overhead of
+    // adding some new variable to track that.
+    if (!isset($variables['directory'])) {
+      $default_template_variables = [];
+      template_preprocess($default_template_variables, $hook, $info);
+      $variables += $default_template_variables;
+    }
+    if (!isset($default_attributes)) {
+      $default_attributes = new Attribute();
+    }
+    foreach (['attributes', 'title_attributes', 'content_attributes'] as $key) {
+      if (isset($variables[$key]) && !($variables[$key] instanceof Attribute)) {
+        if ($variables[$key]) {
+          $variables[$key] = new Attribute($variables[$key]);
+        }
+        else {
+          // Create empty attributes.
+          $variables[$key] = clone $default_attributes;
+        }
+      }
+    }
+
+    // Render the output using the template file.
+    $template_file = $info['template'] . $extension;
+    if (isset($info['path'])) {
+      $template_file = $info['path'] . '/' . $template_file;
+    }
+    // Add the theme suggestions to the variables array just before rendering
+    // the template for backwards compatibility with template engines.
+    $variables['theme_hook_suggestions'] = $suggestions;
+    // For backwards compatibility, pass 'theme_hook_suggestion' on to the
+    // template engine. This is only set when calling a direct suggestion like
+    // '#theme' => 'menu__shortcut_default' when the template exists in the
+    // current theme.
+    if (isset($theme_hook_suggestion)) {
+      $variables['theme_hook_suggestion'] = $theme_hook_suggestion;
+    }
+    $output = $render_function($template_file, $variables);
     return ($output instanceof MarkupInterface) ? $output : (string) $output;
+  }
+
+  /**
+   * Builds theme hook suggestions for a theme hook with variables.
+   *
+   * @param string $hook
+   *   Theme hook that was called.
+   * @param string $info_base_hook
+   *   Theme registry info for $hook['base hook'] key or empty string.
+   * @param array $variables
+   *   Theme variables that were passed along with the call.
+   *
+   * @return string[]
+   *   Suggested theme hook names to use instead of $hook, in the order of
+   *   ascending specificity.
+   *   The caller will pick the last of those suggestions that has a known theme
+   *   registry entry.
+   *
+   * @internal
+   *   This method may change at any time. It is not for use outside this class.
+   */
+  protected function buildThemeHookSuggestions(string $hook, string $info_base_hook, array &$variables): array {
+    // Set base hook for later use. For example if '#theme' => 'node__article'
+    // is called, we run hook_theme_suggestions_node_alter() rather than
+    // hook_theme_suggestions_node__article_alter(), and also pass in the base
+    // hook as the last parameter to the suggestions alter hooks.
+    $base_theme_hook = $info_base_hook ?: $hook;
+
+    // Invoke hook_theme_suggestions_HOOK().
+    $suggestions = $this->moduleHandler->invokeAll('theme_suggestions_' . $base_theme_hook, [$variables]);
+    // If the theme implementation was invoked with a direct theme suggestion
+    // like '#theme' => 'node__article', add it to the suggestions array before
+    // invoking suggestion alter hooks.
+    if ($info_base_hook) {
+      $suggestions[] = $hook;
+    }
+
+    // Invoke hook_theme_suggestions_alter() and
+    // hook_theme_suggestions_HOOK_alter().
+    $hooks = [
+      'theme_suggestions',
+      'theme_suggestions_' . $base_theme_hook,
+    ];
+    $this->moduleHandler->alter($hooks, $suggestions, $variables, $base_theme_hook);
+    $this->alter($hooks, $suggestions, $variables, $base_theme_hook);
+
+    return $suggestions;
   }
 
   /**
@@ -393,7 +402,7 @@ class ThemeManager implements ThemeManagerInterface {
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
    */
-  protected function initTheme(RouteMatchInterface $route_match = NULL) {
+  protected function initTheme(?RouteMatchInterface $route_match = NULL) {
     // Determine the active theme for the theme negotiator service. This includes
     // the default theme as well as really specific ones like the ajax base theme.
     if (!$route_match) {
@@ -427,7 +436,7 @@ class ThemeManager implements ThemeManagerInterface {
       }
     }
 
-    $theme_keys = array_keys($theme->getBaseThemeExtensions());
+    $theme_keys = array_reverse(array_keys($theme->getBaseThemeExtensions()));
     $theme_keys[] = $theme->getName();
     $functions = [];
     foreach ($theme_keys as $theme_key) {

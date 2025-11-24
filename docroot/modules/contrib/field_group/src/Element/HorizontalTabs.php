@@ -4,7 +4,7 @@ namespace Drupal\field_group\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a render element for horizontal tabs.
@@ -14,7 +14,7 @@ use Drupal\Core\Render\Element\RenderElement;
  *
  * @FormElement("horizontal_tabs")
  */
-class HorizontalTabs extends RenderElement {
+class HorizontalTabs extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -130,7 +130,7 @@ class HorizontalTabs extends RenderElement {
       $element['#default_tab'] = $form_state->getValue($name . '__active_tab');
     }
 
-    $displayed_tab = isset($element['#default_tab']) ? $element['#default_tab'] : '';
+    $displayed_tab = $element['#default_tab'] ?? '';
 
     // The JavaScript stores the currently selected tab in this hidden
     // field so that the active tab can be restored the next time the

@@ -24,7 +24,7 @@ class MessageCreateTest extends MessageTestBase {
   public function setUp():void {
     parent::setUp();
 
-    $this->user = $this->drupalcreateuser();
+    $this->user = $this->drupalCreateUser();
   }
 
   /**

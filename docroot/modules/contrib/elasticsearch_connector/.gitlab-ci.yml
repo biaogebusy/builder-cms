@@ -1,0 +1,99 @@
+################
+# GitLabCI template for Drupal projects.
+#
+# This template is designed to give any Contrib maintainer everything they need to test, without requiring modification.
+# It is also designed to keep up to date with Core Development automatically through the use of include files that can be centrally maintained.
+# As long as you include the project, ref and three files below, any future updates added by the Drupal Association will be used in your
+# pipelines automatically. However, you can modify this template if you have additional needs for your project.
+# The full documentation is on https://project.pages.drupalcode.org/gitlab_templates/
+################
+
+# For information on alternative values for 'ref' see https://project.pages.drupalcode.org/gitlab_templates/info/templates-version/
+# To test a Drupal 7 project, change the first include filename from .main.yml to .main-d7.yml
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - "/includes/include.drupalci.main.yml"
+      - "/includes/include.drupalci.variables.yml"
+      - "/includes/include.drupalci.workflows.yml"
+
+################
+# Pipeline configuration variables are defined with default values and descriptions in the file
+# https://git.drupalcode.org/project/gitlab_templates/-/blob/main/includes/include.drupalci.variables.yml
+# Uncomment the lines below if you want to override any of the variables. The following is just an example.
+################
+# variables:
+#   SKIP_ESLINT: '1'
+#   OPT_IN_TEST_NEXT_MAJOR: '1'
+#   _CURL_TEMPLATES_REF: 'main'
+variables:
+  # Concurrent PHPUnit tests seem to cause 503/404 errors on tests.
+  #_PHPUNIT_CONCURRENT: '1'
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+  OPT_IN_TEST_CURRENT: '1'
+  OPT_IN_TEST_NEXT_MAJOR: '0'
+  RUN_JOB_UPGRADE_STATUS: '0'
+
+# Define an 'elasticsearch' service, running ElasticSearch 8.
+# See also:
+# - https://git.drupalcode.org/project/data_pipelines/-/blob/1.x/.gitlab-ci.yml
+# - https://git.drupalcode.org/project/search_api_opensearch/-/blob/2.x/.gitlab-ci.yml
+.with-elasticsearch: &with-elasticsearch
+  - alias: elasticsearch
+    # Note that the Container Image below is built from the Dockerfile at
+    # https://github.com/elastic/dockerfiles/blob/v8.14.1/elasticsearch/Dockerfile
+    # @todo Use latest tag, see https://www.drupal.org/project/elasticsearch_connector/issues/3427060
+    name: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    # In the following command:
+    # - The "echo -Xms1024m >> /usr/share/elasticsearch/config/jvm.options" line
+    #   sets the minimum JVM Heap Size to 1024m.
+    # - The "echo -Xmx1024m >> /usr/share/elasticsearch/config/jvm.options" line
+    #   sets the maximum JVM Heap Size to 1024m.
+    # - The "/usr/local/bin/docker-entrypoint.sh elasticsearch <arguments>" is
+    #   a custom script built into the container to start ElasticSearch and
+    #   manage it while it runs. It requires 'elasticsearch' as its first
+    #   argument, or else it will not pass the <arguments> along to the
+    #   ElasticSearch binary.
+    # - The '-Ediscovery.type=single-node' argument tells ElasticSearch that it
+    #   is the only instance in its cluster. This argument is necessary because
+    #   we only need 1 ElasticSearch cluster instance to perform tests. And
+    #   without this argument, ElasticSearch will refuse to start until other
+    #   ElasticSearch instances connect to it.
+    # - The '-Enetwork.host=elasticsearch' argument tells ElasticSearch which
+    #   HTTP Host header value to respond to. This argument is necessary,
+    #   because we want ElasticSearch to respond to connections when the
+    #   'phpunit' container (and Drupal module test configuration) refers to it
+    #   by the 'elasticsearch' hostname (i.e.: the alias for this service). To
+    #   change this, we would need to change both the service alias above, and
+    #   the test module configuration at
+    #   /tests/modules/elasticsearch_test/config/install/elasticsearch_connector.cluster.elasticsearch_server.yml
+    # - The '-Expack.security.enabled=false' argument tells ElasticSearch that
+    #   it is okay to respond to HTTP connections. Using HTTP in a test
+    #   environment is easier than trying obtain an HTTPS certificate for the
+    #   'elasicsearch' service, only to throw it away at the end of the test
+    #   run, or to self-sign an HTTPS certificate and get the other containers
+    #   in this test environment to trust it.
+    command:
+      - /bin/bash
+      - -c
+      - echo -Xms1024m >> /usr/share/elasticsearch/config/jvm.options && echo -Xmx1024m >> /usr/share/elasticsearch/config/jvm.options && /usr/local/bin/docker-entrypoint.sh elasticsearch -Ediscovery.type=single-node -Enetwork.host=elasticsearch -Expack.security.enabled=false
+
+phpunit:
+  extends: .phpunit-base
+  services:
+    - !reference [.with-database]
+    - !reference [.with-chrome]
+    - !reference [.with-elasticsearch]
+  before_script:
+    # Wait up to 60 s (1 minute) for the 'elasticsearch' service to be ready.
+    # Note that, at time-of-writing (git.drupalcode.org/project/gitlab_templates
+    # commit 59efbfe), the 'phpunit' job does not have a 'before_script', so we
+    # are safe to set it here.
+    #
+    # But, the 'phpunit (next major)' job _does_ have a 'before_script', so we
+    # will need to merge the two 'before_script' definitions if we start to use
+    # that job.
+    - timeout 60 bash -c 'while [[ "$(curl --no-progress-meter -o /dev/null -w ''%{http_code}'' elasticsearch:9200)" != "200" ]]; do sleep 5; done'
+    # Then ask ElasticSearch for a health report.
+    - curl --no-progress-meter -X GET elasticsearch:9200/_health_report?pretty=true

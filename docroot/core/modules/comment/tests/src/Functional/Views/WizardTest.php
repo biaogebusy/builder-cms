@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
 
 use Drupal\comment\Tests\CommentTestTrait;
@@ -17,9 +19,7 @@ class WizardTest extends WizardTestBase {
   use CommentTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'comment'];
 
@@ -41,10 +41,10 @@ class WizardTest extends WizardTestBase {
   /**
    * Tests adding a view of comments.
    */
-  public function testCommentWizard() {
+  public function testCommentWizard(): void {
     $view = [];
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['show[wizard_key]'] = 'comment';
     $view['page[create]'] = TRUE;
     $view['page[path]'] = $this->randomMachineName(16);
@@ -73,7 +73,7 @@ class WizardTest extends WizardTestBase {
     }
     $this->assertEquals($expected_options, $actual_options);
 
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $this->submitForm($view, 'Save and edit');
     // Verify that the view saving was successful and the browser got redirected
     // to the edit page.

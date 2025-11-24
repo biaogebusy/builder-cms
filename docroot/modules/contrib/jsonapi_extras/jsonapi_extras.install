@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Module installation file.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Config\ConfigFactoryInterface;
+
+/**
+ * Set config validation setting to false for existing install.
+ */
+function jsonapi_extras_update_9001() {
+  $config_factory = \Drupal::service('config.factory');
+  assert($config_factory instanceof ConfigFactoryInterface);
+  $editable_config = $config_factory->getEditable('jsonapi_extras.settings');
+  $editable_config->set('validate_configuration_integrity', FALSE);
+  // Since the schema changes may not be there yet, we need to trust the data.
+  $editable_config->save(TRUE);
+}

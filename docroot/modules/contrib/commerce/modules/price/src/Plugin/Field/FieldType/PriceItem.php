@@ -2,25 +2,29 @@
 
 namespace Drupal\commerce_price\Plugin\Field\FieldType;
 
-use Drupal\commerce_price\Price;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\commerce_price\Price;
 
 /**
  * Plugin implementation of the 'commerce_price' field type.
  *
- * @FieldType(
- *   id = "commerce_price",
- *   label = @Translation("Price"),
- *   description = @Translation("Stores a decimal number and a three letter currency code."),
- *   category = @Translation("Commerce"),
- *   default_widget = "commerce_price_default",
- *   default_formatter = "commerce_price_default",
- * )
+ * @property string $number
+ * @property string $currency_code
  */
+#[FieldType(
+  id: "commerce_price",
+  label: new TranslatableMarkup("Price"),
+  description: new TranslatableMarkup("Stores a decimal number and a three letter currency code."),
+  category: "commerce",
+  default_widget: "commerce_price_default",
+  default_formatter: "commerce_price_default",
+)]
 class PriceItem extends FieldItemBase {
 
   /**
@@ -37,6 +41,8 @@ class PriceItem extends FieldItemBase {
 
     $properties['formatted'] = DataDefinition::create('formatted_price')
       ->setLabel(t('Formatted price'))
+      ->setComputed(TRUE)
+      ->setInternal(FALSE)
       ->setRequired(FALSE);
 
     return $properties;

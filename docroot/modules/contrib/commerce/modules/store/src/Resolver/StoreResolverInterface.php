@@ -4,6 +4,8 @@ namespace Drupal\commerce_store\Resolver;
 
 /**
  * Defines the interface for store resolvers.
+ *
+ * Interface for services tagged as 'commerce_store.store_resolver'.
  */
 interface StoreResolverInterface {
 

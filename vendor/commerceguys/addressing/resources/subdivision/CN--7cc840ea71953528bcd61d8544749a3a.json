@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HB",
+		"Xianning Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chibi Shi": {
+			"local_name": "赤壁市"
+		},
+		"Chongyang Xian": {
+			"local_name": "崇阳县"
+		},
+		"Jiayu Xian": {
+			"local_name": "嘉鱼县"
+		},
+		"Tongcheng Xian": {
+			"local_name": "通城县"
+		},
+		"Tongshan Xian": {
+			"local_name": "通山县"
+		},
+		"Xian'an Qu": {
+			"local_name": "咸安区"
+		}
+	}
+}

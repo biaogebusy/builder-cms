@@ -39,14 +39,14 @@ class LanguageInterfaceContext implements EventSubscriberInterface {
     $contexts = $this->contextRepository->getRuntimeContexts(['@language.current_language_context:language_interface']);
     $context = reset($contexts);
     if ($context !== FALSE) {
-       $event->getPage()->addContext('language_interface', $context);
+      $event->getPage()->addContext('language_interface', $context);
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[PageManagerEvents::PAGE_CONTEXT][] = 'onPageContext';
 
     return $events;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mysql\Kernel\mysql;
 
 use Drupal\Core\Database\Database;
@@ -9,6 +11,7 @@ use Drupal\KernelTests\Core\Database\DriverSpecificDatabaseTestBase;
  * Tests the sequences API.
  *
  * @group Database
+ * @group legacy
  */
 class NextIdTest extends DriverSpecificDatabaseTestBase {
 
@@ -24,7 +27,20 @@ class NextIdTest extends DriverSpecificDatabaseTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', 'sequences');
+
+    $table_specification = [
+      'description' => 'Stores IDs.',
+      'fields' => [
+        'value' => [
+          'description' => 'The value of the sequence.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ],
+      ],
+      'primary key' => ['value'],
+    ];
+    $this->connection->schema()->createTable('sequences', $table_specification);
   }
 
   /**
@@ -32,7 +48,10 @@ class NextIdTest extends DriverSpecificDatabaseTestBase {
    *
    * @see \Drupal\mysql\Driver\Database\mysql\Connection::__destruct()
    */
-  public function testDbNextIdClosedConnection() {
+  public function testDbNextIdClosedConnection(): void {
+    $this->expectDeprecation('Drupal\Core\Database\Connection::nextId() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Modules should use instead the keyvalue storage for the last used id. See https://www.drupal.org/node/3349345');
+    $this->expectDeprecation('Drupal\mysql\Driver\Database\mysql\Connection::nextIdDelete() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Modules should use instead the keyvalue storage for the last used id. See https://www.drupal.org/node/3349345');
+
     // Create an additional connection to test closing the connection.
     $connection_info = Database::getConnectionInfo();
     Database::addConnectionInfo('default', 'next_id', $connection_info['default']);

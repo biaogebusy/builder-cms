@@ -2,17 +2,17 @@
 
 namespace Drupal\devel_generate\Plugin\DevelGenerate;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\devel_generate\DevelGenerateBase;
 use Drupal\taxonomy\TermInterface;
-use Drush\Utils\StringUtils;
+use Drupal\taxonomy\TermStorageInterface;
+use Drupal\taxonomy\VocabularyStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -30,110 +30,71 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *     "minimum_depth" = 1,
  *     "maximum_depth" = 4,
  *     "kill" = FALSE,
- *   }
+ *   },
+ *   dependencies = {
+ *     "taxonomy",
+ *   },
  * )
  */
 class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPluginInterface {
 
   /**
    * The vocabulary storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $vocabularyStorage;
+  protected VocabularyStorageInterface $vocabularyStorage;
 
   /**
    * The term storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $termStorage;
+  protected TermStorageInterface $termStorage;
 
   /**
    * Database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
    */
-  protected $database;
+  protected Connection $database;
 
   /**
    * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * The language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $languageManager;
+  protected LanguageManagerInterface $languageManager;
 
   /**
    * The content translation manager.
-   *
-   * @var \Drupal\content_translation\ContentTranslationManagerInterface
    */
-  protected $contentTranslationManager;
-
-  /**
-   * Constructs a new TermDevelGenerate object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $vocabulary_storage
-   *   The vocabulary storage.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $term_storage
-   *   The term storage.
-   * @param \Drupal\Core\Database\Connection $database
-   *   Database connection.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager.
-   * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
-   *   The content translation manager service.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityStorageInterface $vocabulary_storage, EntityStorageInterface $term_storage, Connection $database, ModuleHandlerInterface $module_handler, LanguageManagerInterface $language_manager, ContentTranslationManagerInterface $content_translation_manager = NULL) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->vocabularyStorage = $vocabulary_storage;
-    $this->termStorage = $term_storage;
-    $this->database = $database;
-    $this->moduleHandler = $module_handler;
-    $this->languageManager = $language_manager;
-    $this->contentTranslationManager = $content_translation_manager;
-  }
+  protected ?ContentTranslationManagerInterface $contentTranslationManager;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $entity_type_manager = $container->get('entity_type.manager');
-    return new static(
-      $configuration, $plugin_id, $plugin_definition,
-      $entity_type_manager->getStorage('taxonomy_vocabulary'),
-      $entity_type_manager->getStorage('taxonomy_term'),
-      $container->get('database'),
-      $container->get('module_handler'),
-      $container->get('language_manager'),
-      $container->has('content_translation.manager') ? $container->get('content_translation.manager') : NULL
-    );
+
+    // @phpstan-ignore ternary.alwaysTrue (False positive)
+    $content_translation_manager = $container->has('content_translation.manager') ? $container->get('content_translation.manager') : NULL;
+
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->vocabularyStorage = $entity_type_manager->getStorage('taxonomy_vocabulary');
+    $instance->termStorage = $entity_type_manager->getStorage('taxonomy_term');
+    $instance->database = $container->get('database');
+    $instance->contentTranslationManager = $content_translation_manager;
+
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
     $options = [];
     foreach ($this->vocabularyStorage->loadMultiple() as $vocabulary) {
       $options[$vocabulary->id()] = $vocabulary->label();
     }
+
     // Sort by vocabulary label.
     asort($options);
     // Set default to 'tags' only if it exists as a vocabulary.
@@ -193,16 +154,17 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
   /**
    * {@inheritdoc}
    */
-  public function generateElements(array $values) {
+  protected function generateElements(array $values): void {
     $new_terms = $this->generateTerms($values);
     if (!empty($new_terms['terms'])) {
       $this->setMessage($this->formatPlural($new_terms['terms'], 'Created 1 new term', 'Created @count new terms'));
 
       // Helper function to format the number of terms and the list of terms.
-      $format_terms_func = function ($data, $level) {
+      $format_terms_func = function (array $data, $level) {
         if ($data['total'] > 10) {
           $data['terms'][] = '...';
         }
+
         return $this->formatPlural($data['total'],
           '1 new term at level @level (@terms)',
           '@count new terms at level @level (@terms)',
@@ -221,6 +183,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       }
 
     }
+
     if ($new_terms['terms_translations'] > 0) {
       $this->setMessage($this->formatPlural($new_terms['terms_translations'], 'Created 1 term translation', 'Created @count term translations'));
     }
@@ -235,13 +198,14 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
    * @return int
    *   The number of terms deleted.
    */
-  protected function deleteVocabularyTerms(array $vids) {
+  protected function deleteVocabularyTerms(array $vids): int {
     $tids = $this->vocabularyStorage->getToplevelTids($vids);
     $terms = $this->termStorage->loadMultiple($tids);
     $total_deleted = 0;
     foreach ($vids as $vid) {
       $total_deleted += count($this->termStorage->loadTree($vid));
     }
+
     $this->termStorage->delete($terms);
     return $total_deleted;
   }
@@ -255,7 +219,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
    * @return array
    *   Information about the created terms.
    */
-  protected function generateTerms(array $parameters) {
+  protected function generateTerms(array $parameters): array {
     $info = [
       'terms' => 0,
       'terms_translations' => 0,
@@ -286,17 +250,18 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       $info['vocabs'][$vid] = $this->vocabularyStorage->load($vid)->label();
       // Initialise the nested array for this vocabulary.
       $all_parents[$vid] = ['top_level' => [], 'lower_levels' => []];
-      for ($depth = 1; $depth < $max_depth; $depth++) {
-        $query = \Drupal::entityQuery('taxonomy_term')->condition('vid', $vid);
+      $ids = [];
+      for ($depth = 1; $depth < $max_depth; ++$depth) {
+        $query = $this->termStorage->getQuery()->accessCheck(FALSE)->condition('vid', $vid);
         if ($depth == 1) {
           // For the top level the parent id must be zero.
           $query->condition('parent', 0);
         }
         else {
           // For lower levels use the $ids array obtained in the previous loop.
-          // phpcs:ignore DrupalPractice.CodeAnalysis.VariableAnalysis.UndefinedVariable
           $query->condition('parent', $ids, 'IN');
         }
+
         $ids = $query->execute();
 
         if (empty($ids)) {
@@ -313,6 +278,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
           $all_parents[$vid]['lower_levels'] += array_fill_keys($ids, $depth);
         }
       }
+
       // No top-level parents will have been found above when the minimum depth
       // is 1 so add a record for that data here.
       if ($min_depth == 1) {
@@ -324,14 +290,14 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       }
     }
 
-    if (empty($vocabs)) {
-      // There are no available parents at the required depth in any vocabulary
+    if ($vocabs === []) {
+      // There are no available parents at the required depth in any vocabulary,
       // so we cannot create any new terms.
       throw new \Exception(sprintf('Invalid minimum depth %s because there are no terms in any vocabulary at depth %s', $min_depth, $min_depth - 1));
     }
 
     // Insert new data:
-    for ($i = 1; $i <= $parameters['num']; $i++) {
+    for ($i = 1; $i <= $parameters['num']; ++$i) {
       // Select a vocabulary at random.
       $vid = array_rand($vocabs);
 
@@ -350,14 +316,15 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
         'weight' => mt_rand(0, 10),
         'vid' => $vid,
         'parent' => [$parent],
+        // Give hook implementations access to the parameters used for generation.
+        'devel_generate' => $parameters,
       ];
       if (isset($parameters['add_language'])) {
         $values['langcode'] = $this->getLangcode($parameters['add_language']);
       }
-      $term = $this->termStorage->create($values);
 
-      // Give hook implementations access to the parameters used for generation.
-      $term->devel_generate = $parameters;
+      /** @var \Drupal\taxonomy\TermInterface $term */
+      $term = $this->termStorage->create($values);
 
       // Populate all fields with sample values.
       $this->populateFields($term);
@@ -375,7 +342,7 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       }
 
       // Store data about the newly generated term.
-      $info['terms']++;
+      ++$info['terms'];
       @$info[$vid][$depth]['total']++;
       // List only the first 10 new terms at each vocab/level.
       if (!isset($info[$vid][$depth]['terms']) || count($info[$vid][$depth]['terms']) < 10) {
@@ -399,14 +366,17 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
    * @return int
    *   Number of translations added.
    */
-  protected function generateTermTranslation(array $translate_language, TermInterface $term) {
+  protected function generateTermTranslation(array $translate_language, TermInterface $term): int {
     if (is_null($this->contentTranslationManager)) {
       return 0;
     }
+
     if (!$this->contentTranslationManager->isEnabled('taxonomy_term', $term->bundle())) {
       return 0;
     }
-    if ($term->langcode == LanguageInterface::LANGCODE_NOT_SPECIFIED || $term->langcode == LanguageInterface::LANGCODE_NOT_APPLICABLE) {
+
+    if ($term->get('langcode')->getLangcode() === LanguageInterface::LANGCODE_NOT_SPECIFIED
+      || $term->get('langcode')->getLangcode() === LanguageInterface::LANGCODE_NOT_APPLICABLE) {
       return 0;
     }
 
@@ -415,32 +385,35 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
     $skip_languages = [
       LanguageInterface::LANGCODE_NOT_SPECIFIED,
       LanguageInterface::LANGCODE_NOT_APPLICABLE,
-      $term->langcode->value,
+      $term->get('langcode')->getLangcode(),
     ];
     foreach ($translate_language as $langcode) {
       if (in_array($langcode, $skip_languages)) {
         continue;
       }
+
       $translation_term = $term->addTranslation($langcode);
       $translation_term->setName($term->getName() . ' (' . $langcode . ')');
       $this->populateFields($translation_term);
       $translation_term->save();
-      $num_translations++;
+      ++$num_translations;
     }
+
     return $num_translations;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateDrushParams(array $args, array $options = []) {
+  public function validateDrushParams(array $args, array $options = []): array {
     // Get default settings from the annotated command definition.
     $defaultSettings = $this->getDefaultSettings();
 
-    $bundles = StringUtils::csvToarray($options['bundles']);
+    $bundles = self::csvToarray($options['bundles']);
     if (count($bundles) < 1) {
       throw new \Exception(dt('Please provide a vocabulary machine name (--bundles).'));
     }
+
     foreach ($bundles as $bundle) {
       // Verify that each bundle is a valid vocabulary id.
       if (!$this->vocabularyStorage->load($bundle)) {
@@ -467,13 +440,13 @@ class TermDevelGenerate extends DevelGenerateBase implements ContainerFactoryPlu
       'minimum_depth' => $minimum_depth,
       'maximum_depth' => $maximum_depth,
     ];
-    $add_language = StringUtils::csvToArray($options['languages']);
+    $add_language = self::csvToArray($options['languages']);
     // Intersect with the enabled languages to make sure the language args
     // passed are actually enabled.
     $valid_languages = array_keys($this->languageManager->getLanguages(LanguageInterface::STATE_ALL));
     $values['add_language'] = array_intersect($add_language, $valid_languages);
 
-    $translate_language = StringUtils::csvToArray($options['translations']);
+    $translate_language = self::csvToArray($options['translations']);
     $values['translate_language'] = array_intersect($translate_language, $valid_languages);
     return $values;
   }

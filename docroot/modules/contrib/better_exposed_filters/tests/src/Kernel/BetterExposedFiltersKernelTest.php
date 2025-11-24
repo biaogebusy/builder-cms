@@ -45,6 +45,8 @@ class BetterExposedFiltersKernelTest extends BetterExposedFiltersKernelTestBase 
 
   /**
    * Tests moving sorts, filters and pager options into secondary fieldset.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function testSecondaryOptions() {
     $view = Views::getView('bef_test');

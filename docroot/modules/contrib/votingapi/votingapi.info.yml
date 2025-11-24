@@ -6,7 +6,7 @@ core_version_requirement: ^9.2 || ^10
 
 configure: votingapi.admin_settings
 
-# Information added by Drupal.org packaging script on 2023-03-22
-version: '8.x-3.0-beta4'
+# Information added by Drupal.org packaging script on 2024-08-25
+version: '8.x-3.0-beta5'
 project: 'votingapi'
-datestamp: 1679526724
+datestamp: 1724557649

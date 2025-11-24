@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Core\TypedData\DataDefinition;
@@ -26,6 +28,8 @@ class PrimitiveDataNormalizerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->normalizer = new PrimitiveDataNormalizer();
   }
 
@@ -33,14 +37,14 @@ class PrimitiveDataNormalizerTest extends UnitTestCase {
    * @covers ::supportsNormalization
    * @dataProvider dataProviderPrimitiveData
    */
-  public function testSupportsNormalization($primitive_data, $expected) {
+  public function testSupportsNormalization($primitive_data, $expected): void {
     $this->assertTrue($this->normalizer->supportsNormalization($primitive_data));
   }
 
   /**
    * @covers ::supportsNormalization
    */
-  public function testSupportsNormalizationFail() {
+  public function testSupportsNormalizationFail(): void {
     // Test that an object not implementing PrimitiveInterface fails.
     $this->assertFalse($this->normalizer->supportsNormalization(new \stdClass()));
   }
@@ -49,14 +53,14 @@ class PrimitiveDataNormalizerTest extends UnitTestCase {
    * @covers ::normalize
    * @dataProvider dataProviderPrimitiveData
    */
-  public function testNormalize($primitive_data, $expected) {
+  public function testNormalize($primitive_data, $expected): void {
     $this->assertSame($expected, $this->normalizer->normalize($primitive_data));
   }
 
   /**
    * Data provider for testNormalize().
    */
-  public function dataProviderPrimitiveData() {
+  public static function dataProviderPrimitiveData() {
     $data = [];
 
     $definition = DataDefinition::createFromDataType('string');

@@ -2,7 +2,7 @@ type: module
 name: Database Search Defaults
 description: Enable this module for a best-practice default setup of Search API with the Database backend. After installation it is recommended to uninstall this module again for performance reasons. The provided configuration will not be removed.
 package: Search
-core_version_requirement: ^9.2 || ^10.0
+core_version_requirement: ^10.2 || ^11
 dependencies:
   - drupal:comment
   - drupal:field
@@ -13,7 +13,7 @@ dependencies:
   - drupal:views
   - search_api:search_api_db
 
-# Information added by Drupal.org packaging script on 2023-10-15
-version: '8.x-1.30'
+# Information added by Drupal.org packaging script on 2025-11-01
+version: '8.x-1.40'
 project: 'search_api'
-datestamp: 1697366294
+datestamp: 1762030918

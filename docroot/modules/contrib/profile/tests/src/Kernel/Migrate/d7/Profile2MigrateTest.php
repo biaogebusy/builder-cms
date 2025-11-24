@@ -98,7 +98,7 @@ class Profile2MigrateTest extends MigrateDrupal7TestBase {
       ->getStorage('profile')
       ->loadByUser(User::load(3), 'test_profile_type');
 
-    // Make sure proiles and field exist and have the expected values.
+    // Make sure profiles and field exist and have the expected values.
     $this->assertNotNull($odo_test);
     $this->assertNotNull($bob_test);
     $this->assertTrue($odo_test->hasField('field_test_profile_phone'));

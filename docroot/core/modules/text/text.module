@@ -18,9 +18,9 @@ function text_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.text':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Text module allows you to create short and long text fields with optional summaries. See the <a href=":field">Field module help</a> and the <a href=":field_ui">Field UI help</a> pages for general information on fields and how to create and manage them. For more information, see the <a href=":text_documentation">online documentation for the Text module</a>.', [':field' => Url::fromRoute('help.page', ['name' => 'field'])->toString(), ':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#', ':text_documentation' => 'https://www.drupal.org/documentation/modules/text']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Managing and displaying text fields') . '</dt>';
       $output .= '<dd>' . t('The <em>settings</em> and <em>display</em> of the text field can be configured separately. See the <a href=":field_ui">Field UI help</a> for more information on how to manage fields and their display.', [':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#']) . '</dd>';
@@ -104,12 +104,12 @@ function text_summary($text, $format = NULL, $size = NULL) {
 
   // Store the actual length of the UTF8 string -- which might not be the same
   // as $size.
-  $max_rpos = strlen($summary);
+  $max_right_pos = strlen($summary);
 
   // How much to cut off the end of the summary so that it doesn't end in the
   // middle of a paragraph, sentence, or word.
   // Initialize it to maximum in order to find the minimum.
-  $min_rpos = $max_rpos;
+  $min_right_pos = $max_right_pos;
 
   // Store the reverse of the summary. We use strpos on the reversed needle and
   // haystack for speed and convenience.
@@ -138,16 +138,16 @@ function text_summary($text, $format = NULL, $size = NULL) {
     // Look for each break point, starting at the end of the summary.
     foreach ($points as $point => $offset) {
       // The summary is already reversed, but the break point isn't.
-      $rpos = strpos($reversed, strrev($point));
-      if ($rpos !== FALSE) {
-        $min_rpos = min($rpos + $offset, $min_rpos);
+      $right_pos = strpos($reversed, strrev($point));
+      if ($right_pos !== FALSE) {
+        $min_right_pos = min($right_pos + $offset, $min_right_pos);
       }
     }
 
     // If a break point was found in this group, slice and stop searching.
-    if ($min_rpos !== $max_rpos) {
+    if ($min_right_pos !== $max_right_pos) {
       // Don't slice with length 0. Length must be <0 to slice from RHS.
-      $summary = ($min_rpos === 0) ? $summary : substr($summary, 0, 0 - $min_rpos);
+      $summary = ($min_right_pos === 0) ? $summary : substr($summary, 0, 0 - $min_right_pos);
       break;
     }
   }

@@ -61,14 +61,14 @@ class ChartTypeSupportTest extends ChartsKernelTestBase {
    * @return array[]
    *   The chart types test cases.
    */
-  public function provideChartTypesData(): array {
+  public static function provideChartTypesData(): array {
     return [
       // Asserting that a chart type that is not a valid plugin chart type will
       // throw a plugin not found exception during discovery.
       'chart type plugin does not exist' => [
         'not_supported',
         PluginNotFoundException::class,
-        'The "not_supported" plugin does not exist. Valid plugin IDs for Drupal\charts\TypeManager are: area, bar, bubble, column, donut, gauge, line, pie, scatter, spline',
+        'The "not_supported" plugin does not exist. Valid plugin IDs for Drupal\charts\TypeManager are: area, arearange, bar, boxplot, bubble, candlestick, column, donut, gauge, heatmap, line, pie, scatter, spline',
       ],
       // Asserting that a chart type not supported by a chart library plugin
       // will throw a logic exception.

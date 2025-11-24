@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockManager;
@@ -10,15 +9,16 @@ use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\Condition\ConditionManager;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
-use Drupal\Core\Form\FormState;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\ctools\Plugin\BlockPluginCollection;
 use Drupal\page_manager\PageInterface;
 use Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
@@ -31,6 +31,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 class PageBlockDisplayVariantTest extends UnitTestCase {
 
   use ProphecyTrait;
+
   /**
    * Tests the build() method when a block is empty.
    *
@@ -150,6 +151,7 @@ class PageBlockDisplayVariantTest extends UnitTestCase {
     $condition_manager = $this->prophesize(ConditionManager::class);
 
     $variant_plugin = $this->getMockBuilder(PageBlockDisplayVariant::class)
+      // phpcs:ignore
       ->setConstructorArgs([['page_title' => $page_title, 'uuid' => 'UUID'], 'test', [], $context_handler->reveal(), $account->reveal(), $uuid_generator->reveal(), $token, $block_manager->reveal(), $condition_manager->reveal(), $module_handler->reveal()])
       ->onlyMethods(['renderPageTitle'])
       ->getMock();

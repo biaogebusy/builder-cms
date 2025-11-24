@@ -1,18 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Theme;
 
 /**
  * Tests Stable 9's library overrides.
  *
  * @group Theme
+ * @group #slow
  */
 class Stable9LibraryOverrideTest extends StableLibraryOverrideTestBase {
 
   /**
+   * A list of libraries to skip checking, in the format extension/library_name.
+   *
+   * @var string[]
+   */
+  protected $librariesToSkip = [
+    'core/drupal.dialog.off_canvas',
+    'layout_builder/drupal.layout_builder',
+    'views/views.responsive-grid',
+    'field_ui/drupal.field_ui.manage_fields',
+    'comment/drupal.comment-icon',
+    'file/drupal.file-icon',
+    'text/drupal.text-icon',
+    'link/drupal.link-icon',
+    'media/drupal.media-icon',
+    'options/drupal.options-icon',
+    'telephone/drupal.telephone-icon',
+    // This library will be changed in https://www.drupal.org/i/3096017.
+    'workspaces/drupal.workspaces.toolbar',
+    // This library will be removed in https://www.drupal.org/i/3207233.
+    'workspaces/drupal.workspaces.overview',
+  ];
+
+  /**
    * {@inheritdoc}
    */
-  protected static $modules = ['system', 'user', 'path_alias'];
+  protected static $modules = ['system', 'user'];
 
   /**
    * {@inheritdoc}
@@ -33,7 +59,7 @@ class Stable9LibraryOverrideTest extends StableLibraryOverrideTestBase {
   /**
    * Ensures that Stable 9 overrides all relevant core library assets.
    */
-  public function testStable9LibraryOverrides() {
+  public function testStable9LibraryOverrides(): void {
     // First get the clean library definitions with no active theme.
     $libraries_before = $this->getAllLibraries();
     $libraries_before = $this->removeVendorAssets($libraries_before);
@@ -52,7 +78,7 @@ class Stable9LibraryOverrideTest extends StableLibraryOverrideTestBase {
           continue;
         }
         // Skip internal libraries.
-        if (substr($library_name, 0, 9) === 'internal.') {
+        if (str_starts_with($library_name, 'internal.')) {
           continue;
         }
         $library_after = $libraries_after[$extension][$library_name];

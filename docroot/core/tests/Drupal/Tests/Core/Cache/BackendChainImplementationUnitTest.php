@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Cache;
 
+use Drupal\Component\Datetime\Time;
 use Drupal\Core\Cache\BackendChain;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\MemoryBackend;
@@ -50,9 +53,10 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
     parent::setUp();
 
     // Set up three memory backends to be used in the chain.
-    $this->firstBackend = new MemoryBackend();
-    $this->secondBackend = new MemoryBackend();
-    $this->thirdBackend = new MemoryBackend();
+    $time = new Time();
+    $this->firstBackend = new MemoryBackend($time);
+    $this->secondBackend = new MemoryBackend($time);
+    $this->thirdBackend = new MemoryBackend($time);
 
     // Set an initial fixed dataset for all testing. The next three data
     // collections will test two edge cases (last backend has the data, and
@@ -86,7 +90,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests the get feature.
    */
-  public function testGet() {
+  public function testGet(): void {
     $cached = $this->chain->get('t123');
     $this->assertNotFalse($cached, 'Got key that is on all backends');
     $this->assertSame(1231, $cached->data, 'Got the key from the backend 1');
@@ -103,7 +107,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests the get multiple feature.
    */
-  public function testGetMultiple() {
+  public function testGetMultiple(): void {
     $cids = ['t123', 't23', 't3', 't4'];
 
     $ret = $this->chain->getMultiple($cids);
@@ -121,7 +125,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests that set will propagate.
    */
-  public function testSet() {
+  public function testSet(): void {
     $this->chain->set('test', 123);
 
     $cached = $this->firstBackend->get('test');
@@ -140,7 +144,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests that delete will propagate.
    */
-  public function testDelete() {
+  public function testDelete(): void {
     $this->chain->set('test', 5);
 
     $cached = $this->firstBackend->get('test');
@@ -163,7 +167,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Ensure get values propagation to previous backends.
    */
-  public function testGetHasPropagated() {
+  public function testGetHasPropagated(): void {
     $this->chain->get('t23');
     $cached = $this->firstBackend->get('t23');
     $this->assertNotFalse($cached, 'Test 2 has been propagated to the first backend');
@@ -178,7 +182,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Ensure get multiple values propagation to previous backends.
    */
-  public function testGetMultipleHasPropagated() {
+  public function testGetMultipleHasPropagated(): void {
     $cids = ['t3', 't23'];
     $this->chain->getMultiple($cids);
 
@@ -197,7 +201,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests that the delete all operation is propagated to all chained backends.
    */
-  public function testDeleteAllPropagation() {
+  public function testDeleteAllPropagation(): void {
     // Set both expiring and permanent keys.
     $this->chain->set('test1', 1, Cache::PERMANENT);
     $this->chain->set('test2', 3, time() + 1000);
@@ -214,7 +218,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests that the delete tags operation is propagated to all chained backends.
    */
-  public function testDeleteTagsPropagation() {
+  public function testDeleteTagsPropagation(): void {
     // Create two cache entries with the same tag and tag value.
     $this->chain->set('test_cid_clear1', 'foo', Cache::PERMANENT, ['test_tag:2']);
     $this->chain->set('test_cid_clear2', 'foo', Cache::PERMANENT, ['test_tag:2']);
@@ -290,7 +294,7 @@ class BackendChainImplementationUnitTest extends UnitTestCase {
   /**
    * Tests that removing bin propagates to all backends.
    */
-  public function testRemoveBin() {
+  public function testRemoveBin(): void {
     $chain = new BackendChain();
     for ($i = 0; $i < 3; $i++) {
       $backend = $this->createMock('Drupal\Core\Cache\CacheBackendInterface');

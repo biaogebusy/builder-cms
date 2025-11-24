@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -21,10 +21,10 @@ use Symfony\Component\Console\Input\InputOption;
  */
 class FilterOptions
 {
-    private $filter = false;
-    private $pattern;
-    private $insensitive;
-    private $invert;
+    private bool $filter = false;
+    private ?string $pattern = null;
+    private bool $insensitive = false;
+    private bool $invert = false;
 
     /**
      * Get input option definitions for filtering.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Tests\BrowserTestBase;
@@ -22,7 +24,7 @@ class UpdatePathNewDependencyTest extends BrowserTestBase {
   /**
    * Tests that a module can add services that depend on new modules.
    */
-  public function testUpdateNewDependency() {
+  public function testUpdateNewDependency(): void {
     // The new_dependency_test before the update is just an empty info.yml file.
     // The code of the new_dependency_test module is after the update and
     // contains the dependency on the new_dependency_test_with_service module.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Rest;
 
 use Drupal\Core\Field\Entity\BaseFieldOverride;
@@ -44,6 +46,7 @@ abstract class BaseFieldOverrideResourceTestBase extends ConfigEntityResourceTes
       'field_name' => 'promote',
       'entity_type' => 'node',
       'bundle' => 'camelids',
+      'label' => 'Promote to front page',
     ]);
     $entity->save();
 
@@ -68,7 +71,7 @@ abstract class BaseFieldOverrideResourceTestBase extends ConfigEntityResourceTes
       'field_name' => 'promote',
       'field_type' => 'boolean',
       'id' => 'node.camelids.promote',
-      'label' => NULL,
+      'label' => 'Promote to front page',
       'langcode' => 'en',
       'required' => FALSE,
       'settings' => [

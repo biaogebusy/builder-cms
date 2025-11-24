@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
 use Drupal\node\NodeInterface;
@@ -18,7 +20,7 @@ class MigrateNodeRevisionTest extends MigrateDrupal7TestBase {
   /**
    * The entity storage for node.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\RevisionableStorageInterface
    */
   protected $nodeStorage;
 
@@ -77,7 +79,7 @@ class MigrateNodeRevisionTest extends MigrateDrupal7TestBase {
   protected function getFileMigrationInfo() {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
-      'size' => '3620',
+      'size' => 3620,
       'base_path' => 'public://',
       'plugin_id' => 'd7_file',
     ];
@@ -111,7 +113,7 @@ class MigrateNodeRevisionTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migration of node revisions with translated nodes.
    */
-  public function testNodeRevisions() {
+  public function testNodeRevisions(): void {
     $this->assertRevision(1, 'en', 'An English Node', NULL, 1441032132);
     $this->assertRevision(2, 'en', 'The thing about Deep Space 9 (1st rev)', 'DS9 1st rev', 1564543588);
     $this->assertRevision(4, 'is', 'is - The thing about Firefly (1st rev)', 'is - Firefly 1st rev', 1478755274);

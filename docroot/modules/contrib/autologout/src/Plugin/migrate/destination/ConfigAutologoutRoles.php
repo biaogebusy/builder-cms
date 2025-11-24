@@ -9,7 +9,7 @@ use Drupal\migrate\Row;
  * Autologout Configuration Migration.
  *
  * @MigrateDestination(
- *   id = "config:autologout"
+ *   id = "config:autologout",
  * )
  */
 class ConfigAutologoutRoles extends Config {

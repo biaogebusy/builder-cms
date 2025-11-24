@@ -47,11 +47,11 @@ class FieldPermissionsUserTest extends FieldPermissionsTestBase {
   public function testUserFieldPermissions() {
 
     $this->drupalLogin($this->adminUser);
-    // Compila il campo per l'utente admin.
+    // Fill in the field for the admin user.
     $this->checkUserFieldEdit($this->adminUser);
     $this->drupalLogout();
 
-    // Controllo che si visibile ad altri utenti.
+    // Control that it is visible to other users.
     $this->drupalLogin($this->limitedUser);
     $this->assertUserFieldAccess($this->adminUser);
     $this->drupalLogout();
@@ -186,7 +186,7 @@ class FieldPermissionsUserTest extends FieldPermissionsTestBase {
    */
   protected function checkUserViewEditOwnField() {
     $permission = [];
-    // AGGIUNGE I PERMESSI DI VIEW_OWN. all'utente limitato.
+    // Adds 'view own' permission to the limited user.
     $this->drupalLogin($this->webUser);
     $perm = ['view own ' . $this->fieldName];
     $permission = $this->grantCustomPermissions($this->limitUserRole, $perm, $permission);
@@ -208,7 +208,7 @@ class FieldPermissionsUserTest extends FieldPermissionsTestBase {
     $this->assertUserEditFieldNoAccess($this->limitedUser);
     $this->drupalLogout();
 
-    // AGGIUNGE I PERMESSI DI EDIT_OWN to limitUserRole.
+    // Add 'edit own' permission to limitUserRole.
     $this->drupalLogin($this->webUser);
     $permission = $this->grantCustomPermissions($this->limitUserRole, ['edit own ' . $this->fieldName], $permission);
     $this->setUserFieldPermission(FieldPermissionTypeInterface::ACCESS_CUSTOM, $permission);
@@ -231,7 +231,7 @@ class FieldPermissionsUserTest extends FieldPermissionsTestBase {
   protected function checkUserViewEditField() {
 
     $permission = [];
-    // AGGIUNGE I PERMESSI DI VIEW_OWN. all'utente limitato.
+    // Adds VIEW_OWN permission to the restricted user.
     $this->drupalLogin($this->webUser);
     $perm = ['view ' . $this->fieldName];
     $permission = $this->grantCustomPermissions($this->webUserRole, $perm, $permission);
@@ -255,11 +255,11 @@ class FieldPermissionsUserTest extends FieldPermissionsTestBase {
     $this->drupalLogout();
 
     $this->drupalLogin($this->limitedUser);
-    // Controlla il perofilo dell'utente admin e non deve vedere il campo.
+    // Check the admin user's profile and should not see the field.
     $this->assertUserFieldNoAccess($this->adminUser);
-    // Compila il campo per l'utente Limited.
+    // Fill in the field for Limited user.
     $this->checkUserFieldEdit($this->limitedUser);
-    // Controlla che sia visibile.
+    // Check that it is visible.
     $this->assertUserFieldAccess($this->limitedUser);
     $this->drupalLogout();
 

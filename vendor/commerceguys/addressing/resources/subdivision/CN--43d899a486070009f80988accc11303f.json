@@ -1,0 +1,24 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"QH",
+		"Haibei Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Gangca Xian": {
+			"local_name": "刚察县"
+		},
+		"Haiyan Xian": {
+			"local_name": "海晏县"
+		},
+		"Menyuan Xian": {
+			"local_code": "门源回族自治县",
+			"local_name": "门源县"
+		},
+		"Qilian Xian": {
+			"local_name": "祁连县"
+		}
+	}
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Unit\Query;
 
 use Drupal\Core\Cache\Context\CacheContextsManager;
@@ -35,7 +37,7 @@ class EntityConditionTest extends UnitTestCase {
    * @covers ::createFromQueryParameter
    * @dataProvider queryParameterProvider
    */
-  public function testCreateFromQueryParameter($case) {
+  public function testCreateFromQueryParameter($case): void {
     $condition = EntityCondition::createFromQueryParameter($case);
     $this->assertEquals($case['path'], $condition->field());
     $this->assertEquals($case['value'], $condition->value());
@@ -47,7 +49,7 @@ class EntityConditionTest extends UnitTestCase {
   /**
    * Data provider for testDenormalize.
    */
-  public function queryParameterProvider() {
+  public static function queryParameterProvider() {
     return [
       [['path' => 'some_field', 'value' => NULL, 'operator' => '=']],
       [['path' => 'some_field', 'operator' => '=', 'value' => 'some_string']],
@@ -73,7 +75,7 @@ class EntityConditionTest extends UnitTestCase {
    * @covers ::validate
    * @dataProvider validationProvider
    */
-  public function testValidation($input, $exception) {
+  public function testValidation($input, $exception): void {
     if ($exception) {
       $this->expectException(get_class($exception));
       $this->expectExceptionMessage($exception->getMessage());
@@ -85,7 +87,7 @@ class EntityConditionTest extends UnitTestCase {
   /**
    * Data provider for testValidation.
    */
-  public function validationProvider() {
+  public static function validationProvider() {
     return [
       [['path' => 'some_field', 'value' => 'some_value'], NULL],
       [

@@ -7,6 +7,7 @@
 
 use Drupal\Core\Database\Database;
 use Drupal\taxonomy\TermInterface;
+use Drupal\shs\Plugin\views\filter\SearchApiShsTaxonomyIndexTid;
 
 /**
  * List all javascript classes used to create models and views in the widget.
@@ -140,6 +141,14 @@ function shs_views_plugins_filter_alter(array &$plugins) {
   foreach (['taxonomy_index_tid', 'taxonomy_index_tid_depth'] as $plugin) {
     if (isset($plugins[$plugin])) {
       $plugins[$plugin]['class'] = $plugins['shs_' . $plugin]['class'];
+    }
+  }
+
+  // If search_api is installed, change its taxonomy_index_tid filter override
+  // to use shs override.
+  if (\Drupal::moduleHandler()->moduleExists('search_api')) {
+    if (!empty($plugins['search_api_term'])) {
+      $plugins['search_api_term']['class'] = SearchApiShsTaxonomyIndexTid::class;
     }
   }
 }

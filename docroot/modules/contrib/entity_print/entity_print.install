@@ -121,20 +121,6 @@ function entity_print_update_8102() {
 }
 
 /**
- * Upgrade the permissions inline with the more granular permissions.
- */
-function entity_print_update_8101() {
-  $roles = user_roles();
-  foreach ($roles as $role) {
-    if ($role->hasPermission('entity print access')) {
-      $role->grantPermission('bypass entity print access');
-      $role->revokePermission('entity print access');
-      $role->save();
-    }
-  }
-}
-
-/**
  * Standardize configuration keys for page size and orientation.
  */
 function entity_print_update_8201() {
@@ -153,4 +139,11 @@ function entity_print_update_8201() {
     }
     $print_engine_config->save(TRUE);
   }
+}
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function entity_print_update_last_removed() {
+  return 8101;
 }

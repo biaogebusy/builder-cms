@@ -19,10 +19,12 @@ class MessageTemplateDestination extends EntityConfigBase {
    * {@inheritdoc}
    */
   protected function updateEntity(EntityInterface $entity, Row $row) {
-    parent::updateEntity($entity, $row);
+    $ret = parent::updateEntity($entity, $row);
     if ($row->getDestinationProperty('text')) {
       $entity->set('text', $row->getDestinationProperty('text'));
     }
+
+    return $ret;
   }
 
 }

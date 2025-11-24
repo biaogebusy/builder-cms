@@ -2,8 +2,8 @@
 
 namespace Drupal\menu_item_extras\Service;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Menu\MenuLinkInterface;
 use Drupal\menu_link_content\MenuLinkContentInterface;
 

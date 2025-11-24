@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\path\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
+
+// cspell:ignore furchtbar
 
 /**
  * Tests loading and storing data using PathItem.
@@ -15,9 +19,7 @@ use Drupal\node\Entity\NodeType;
 class PathItemTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'path',
@@ -41,8 +43,10 @@ class PathItemTest extends KernelTestBase {
 
     $this->installSchema('node', ['node_access']);
 
-    $node_type = NodeType::create(['type' => 'foo']);
-    $node_type->save();
+    NodeType::create([
+      'type' => 'foo',
+      'name' => 'Foo',
+    ])->save();
 
     $this->installConfig(['language']);
     ConfigurableLanguage::createFromLangcode('de')->save();
@@ -51,7 +55,7 @@ class PathItemTest extends KernelTestBase {
   /**
    * Tests creating, loading, updating and deleting aliases through PathItem.
    */
-  public function testPathItem() {
+  public function testPathItem(): void {
     /** @var \Drupal\path_alias\AliasRepositoryInterface $alias_repository */
     $alias_repository = \Drupal::service('path_alias.repository');
 

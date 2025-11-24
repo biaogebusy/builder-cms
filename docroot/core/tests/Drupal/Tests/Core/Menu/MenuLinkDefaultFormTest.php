@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Menu;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Menu\Form\MenuLinkDefaultForm;
 use Drupal\Core\Menu\MenuLinkDefault;
@@ -14,17 +17,19 @@ use Drupal\Tests\UnitTestCase;
 /**
  * @coversDefaultClass \Drupal\Core\Menu\Form\MenuLinkDefaultForm
  * @group Menu
+ * @runTestsInSeparateProcesses
  */
 class MenuLinkDefaultFormTest extends UnitTestCase {
 
   /**
    * @covers ::extractFormValues
    */
-  public function testExtractFormValues() {
+  public function testExtractFormValues(): void {
     $menu_link_manager = $this->prophesize(MenuLinkManagerInterface::class);
     $menu_parent_form_selector = $this->prophesize(MenuParentFormSelectorInterface::class);
     $module_handler = $this->prophesize(ModuleHandlerInterface::class);
-    $menu_link_form = new MenuLinkDefaultForm($menu_link_manager->reveal(), $menu_parent_form_selector->reveal(), $this->getStringTranslationStub(), $module_handler->reveal());
+    $module_extension_list = $this->prophesize(ModuleExtensionList::class);
+    $menu_link_form = new MenuLinkDefaultForm($menu_link_manager->reveal(), $menu_parent_form_selector->reveal(), $this->getStringTranslationStub(), $module_handler->reveal(), $module_extension_list->reveal());
 
     $static_override = $this->prophesize(StaticMenuLinkOverridesInterface::class);
     $menu_link = new MenuLinkDefault([], 'my_plugin_id', [], $static_override->reveal());

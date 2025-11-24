@@ -2,10 +2,14 @@ enable_notifications: true
 notify_by_default: true
 notify_when_using: 'no'
 number_of_seconds_considered_away: 120
-hide_form_filter_tips: false
 hide_recipient_field_when_prefilled: false
 create_message_label: 'Create Private Message'
 save_message_label: 'Send'
+ban_mode: 'passive'
+ban_message: 'User is unable to receive your message'
+ban_label: 'Block'
+unban_label: 'Unblock'
+ban_page_label: 'Block / Unblock users'
 autofocus_enable: true
 keys_send: 'Enter, 13'
 remove_css: false

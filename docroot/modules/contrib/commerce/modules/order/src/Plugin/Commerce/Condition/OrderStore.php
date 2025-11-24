@@ -2,24 +2,25 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
-use Drupal\commerce\EntityUuidMapperInterface;
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\EntityUuidMapperInterface;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the store condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_store",
- *   label = @Translation("Store", context = "Commerce"),
- *   display_label = @Translation("Store", context = "Commerce"),
- *   category = @Translation("Order", context = "Commerce"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommerceCondition(
+  id: "order_store",
+  label: new TranslatableMarkup("Store", [], ["context" => "Commerce"]),
+  entity_type: "commerce_order",
+  display_label: new TranslatableMarkup("Store", [], ["context" => "Commerce"]),
+  category: new TranslatableMarkup("Order", [], ["context" => "Commerce"]),
+)]
 class OrderStore extends ConditionBase implements ContainerFactoryPluginInterface {
 
   /**

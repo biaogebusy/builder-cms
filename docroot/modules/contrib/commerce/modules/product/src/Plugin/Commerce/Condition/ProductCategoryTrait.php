@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_product\Plugin\Commerce\Condition;
 
-use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_product\Entity\ProductInterface;
 
 /**
  * Provides common configuration for the product category conditions.

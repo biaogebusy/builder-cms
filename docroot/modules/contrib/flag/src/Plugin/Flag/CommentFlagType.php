@@ -68,5 +68,5 @@ class CommentFlagType extends EntityFlagType {
     return $permissions;
   }
 
-  // TODO: actionAccess for parent_owner permissions.
+  // @todo actionAccess for parent_owner permissions.
 }

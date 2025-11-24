@@ -2,56 +2,25 @@
 
 namespace Drupal\Tests\config_ignore\Functional;
 
-use Drupal\config_ignore\Plugin\ConfigFilter\IgnoreFilter;
+use Drupal\config_test\ConfigTestInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Test functionality of config_ignore module.
  *
- * @package Drupal\Tests\config_ignore\Functional
- *
  * @group config_ignore
- * @runTestsInSeparateProcesses
- * @preserveGlobalState disabled
  */
 class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
 
   use StringTranslationTrait;
 
   /**
-   * Verify that the Sync. table gets update with appropriate ignore actions.
+   * {@inheritdoc}
    */
-  public function testSyncTableUpdate() {
-
-    $this->config('system.site')->set('name', 'Test import')->save();
-    $this->config('system.date')->set('first_day', '0')->save();
-    $this->config('config_ignore.settings')->set('ignored_config_entities', ['system.site'])->save();
-
-    $this->doExport();
-
-    // Login with a user that has permission to sync. config.
-    $this->drupalLogin($this->drupalCreateUser(['synchronize configuration']));
-
-    // Change the site name, which is supposed to look as an ignored change
-    // in on the sync. page.
-    $this->config('system.site')->set('name', 'Test import with changed title')->save();
-    $this->config('system.date')->set('first_day', '1')->save();
-
-    // Validate that the sync. table informs the user that the config will be
-    // ignored.
-    $this->drupalGet('admin/config/development/configuration');
-    $this->assertSession()->linkExists('Config Ignore Settings');
-    /** @var \Behat\Mink\Element\NodeElement[] $table_content */
-    $table_content = $this->xpath('//table[@id="edit-ignored"]//td');
-
-    $table_values = [];
-    foreach ($table_content as $item) {
-      $table_values[] = $item->getHtml();
-    }
-
-    $this->assertTrue(in_array('system.site', $table_values));
-    $this->assertFalse(in_array('system.date', $table_values));
-  }
+  protected static $modules = [
+    'config',
+    'config_test',
+  ];
 
   /**
    * Verify that the settings form works.
@@ -65,11 +34,28 @@ class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
     ];
 
     $this->drupalGet('admin/config/development/configuration/ignore');
-    $this->submitForm($edit, $this->t('Save configuration'));
+    $this->submitForm($edit, (string) $this->t('Save configuration'));
 
     $settings = $this->config('config_ignore.settings')->get('ignored_config_entities');
 
     $this->assertEquals(['config.test_01', 'config.test_02'], $settings);
+  }
+
+  /**
+   * Verify that the config sync form loads after ignore settings are saved.
+   *
+   * Also installs core field module.
+   */
+  public function testSynchronizeForm() {
+    $this->container->get('module_installer')->install(['field']);
+    $this->drupalLogin($this->drupalCreateUser(['import configuration', 'synchronize configuration']));
+    $edit = [
+      'ignored_config_entities' => "system.site" . "\r\n" . "'system.menu.*'",
+    ];
+    $this->drupalGet('admin/config/development/configuration/ignore');
+    $this->submitForm($edit, (string) $this->t('Save configuration'));
+    $this->drupalGet('admin/config/development/configuration');
+    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**
@@ -102,7 +88,7 @@ class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
     $this->config('system.site')->set('name', 'Test import')->save();
 
     // Set the system.site:name to be ignored upon config import.
-    $this->config('config_ignore.settings')->set('ignored_config_entities', ['system.' . IgnoreFilter::INCLUDE_SUFFIX])->save();
+    $this->config('config_ignore.settings')->set('ignored_config_entities', ['system.*'])->save();
 
     $this->doExport();
 
@@ -124,7 +110,7 @@ class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
     $this->config('system.site')->set('name', 'Test import')->save();
 
     // Set the system.site:name to be (force-) imported upon config import.
-    $settings = [IgnoreFilter::FORCE_EXCLUSION_PREFIX . 'system.site'];
+    $settings = ['~system.site'];
     $this->config('config_ignore.settings')->set('ignored_config_entities', $settings)->save();
 
     $this->doExport();
@@ -148,7 +134,7 @@ class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
     $this->config('system.site')->set('name', 'Test import')->save();
 
     // Set the system.site:name to be (force-) imported upon config import.
-    $settings = ['system.' . IgnoreFilter::INCLUDE_SUFFIX, IgnoreFilter::FORCE_EXCLUSION_PREFIX . 'system.site'];
+    $settings = ['system.*', '~system.site'];
     $this->config('config_ignore.settings')->set('ignored_config_entities', $settings)->save();
 
     $this->doExport();
@@ -194,6 +180,32 @@ class ConfigIgnoreTest extends ConfigIgnoreBrowserTestBase {
     $this->assertEquals('Changed title', $this->config('system.site')->get('name'));
     $this->assertEquals('Test slogan', $this->config('system.site')->get('slogan'));
     $this->assertEquals('/new-ignore', $this->config('system.site')->get('page.front'));
+  }
+
+  /**
+   * Tests config in active storage is not deleted if it should be ignored.
+   */
+  public function testImportMissingConfig() {
+    // Ignore a config entity.
+    $this->config('config_ignore.settings')->set('ignored_config_entities', ['config_test.*'])->save();
+
+    // Export the current state.
+    $this->doExport();
+
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $config_test_storage */
+    $config_test_storage = $this->container->get('entity_type.manager')->getStorage('config_test');
+
+    /** @var \Drupal\config_test\ConfigTestInterface $entity */
+    $entity = $config_test_storage->create([
+      'id' => 'foo',
+      'label' => 'Foo',
+    ]);
+    $entity->save();
+
+    $this->doImport();
+
+    $loaded_entity = $config_test_storage->load($entity->id());
+    $this->assertInstanceOf(ConfigTestInterface::class, $loaded_entity);
   }
 
 }

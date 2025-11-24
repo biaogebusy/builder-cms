@@ -3,7 +3,7 @@
  * Secondary navigation styling.
  */
 
-@import "../../base/variables.pcss.css";
+@import "../../base/media-queries.pcss.css";
 
 .secondary-nav {
   letter-spacing: 0.02em;
@@ -42,18 +42,19 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: var(--sp2);
   text-decoration: none;
   color: inherit;
 
-  &:after {
+  &::after {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     height: 0;
     content: "";
-    transition: opacity 0.2s, transform 0.2s;
+    transition:
+      opacity 0.2s,
+      transform 0.2s;
     transform: translateY(5px);
     opacity: 0;
     /* Intentionally not using CSS logical properties. */
@@ -61,7 +62,7 @@
   }
 
   &:hover {
-    &:after {
+    &::after {
       transform: translateY(0);
       opacity: 0.8;
     }
@@ -76,7 +77,7 @@ body:not(.is-always-mobile-nav) {
       margin-inline-start: var(--sp);
       padding-inline-start: var(--sp2);
 
-      &:before {
+      &::before {
         position: absolute;
         inset-block-start: 50%;
         inset-inline-start: 0;
@@ -84,7 +85,7 @@ body:not(.is-always-mobile-nav) {
         height: var(--sp2);
         content: "";
         transform: translateY(-50%);
-        background-color: var(--color--gray-70);
+        background-color: var(--color--gray-90);
       }
     }
 
@@ -96,16 +97,17 @@ body:not(.is-always-mobile-nav) {
       &:focus {
         position: relative;
         outline: 0;
+        padding-block: var(--sp0-5);
 
-        &:before {
+        &::before {
           position: absolute;
           top: 50%;
           left: 50%;
           width: calc(100% + var(--sp));
-          height: var(--sp3);
+          height: 100%;
           content: "";
           transform: translate(-50%, -50%);
-          border: solid 2px var(--color--blue-50);
+          border: solid 2px var(--color--primary-50);
           border-radius: 4px;
         }
       }

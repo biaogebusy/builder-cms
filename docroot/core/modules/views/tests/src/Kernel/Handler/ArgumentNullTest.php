@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -26,7 +28,7 @@ class ArgumentNullTest extends ViewsKernelTestBase {
     return $data;
   }
 
-  public function testAreaText() {
+  public function testAreaText(): void {
     // Test validation
     $view = Views::getView('test_view');
     $view->setDisplay();
@@ -45,7 +47,7 @@ class ArgumentNullTest extends ViewsKernelTestBase {
     // Make sure that the argument is not validated yet.
     unset($view->argument['null']->argument_validated);
     $this->assertTrue($view->argument['null']->validateArgument(26));
-    // test must_not_be option.
+    // Test must_not_be option.
     unset($view->argument['null']->argument_validated);
     $view->argument['null']->options['must_not_be'] = TRUE;
     $this->assertFalse($view->argument['null']->validateArgument(26), 'must_not_be returns FALSE, if there is an argument');

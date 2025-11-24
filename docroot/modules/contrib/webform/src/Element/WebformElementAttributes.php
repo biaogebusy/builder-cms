@@ -98,7 +98,7 @@ class WebformElementAttributes extends FormElement {
 
     // Custom options.
     $element['custom'] = [
-      '#type' => 'texfield',
+      '#type' => 'textfield',
       '#placeholder' => t('Enter custom classes…'),
       '#states' => [
         'visible' => [

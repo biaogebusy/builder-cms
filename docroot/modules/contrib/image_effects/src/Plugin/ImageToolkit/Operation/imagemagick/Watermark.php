@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
-use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\WatermarkTrait;
+use Drupal\imagemagick\PackageSuite;
+use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines ImageMagick Watermark operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_watermark",
- *   toolkit = "imagemagick",
- *   operation = "watermark",
- *   label = @Translation("Watermark"),
- *   description = @Translation("Add watermark image effect.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_watermark',
+  toolkit: 'imagemagick',
+  operation: 'watermark',
+  label: new TranslatableMarkup('Watermark'),
+  description: new TranslatableMarkup('Add watermark image effect.'),
+)]
 class Watermark extends ImagemagickImageToolkitOperationBase {
 
   use WatermarkTrait;
@@ -27,7 +31,7 @@ class Watermark extends ImagemagickImageToolkitOperationBase {
     // Watermark image local path.
     $local_path = $arguments['watermark_image']->getToolkit()->ensureSourceLocalPath();
     if ($local_path !== '') {
-      $image_path = $this->escapeArgument($local_path);
+      $image_path = $local_path;
     }
     else {
       $source_path = $arguments['watermark_image']->getToolkit()->getSource();
@@ -43,24 +47,48 @@ class Watermark extends ImagemagickImageToolkitOperationBase {
     $y = $arguments['y_offset'] >= 0 ? ('+' . $arguments['y_offset']) : $arguments['y_offset'];
 
     // Compose it with the destination.
-    switch ($this->getToolkit()->getExecManager()->getPackage()) {
-      case 'imagemagick':
-        if ($arguments['opacity'] == 100) {
-          $op = "-gravity None {$image_path} -geometry {$w}x{$h}!{$x}{$y} -compose src-over -composite";
-        }
-        else {
-          $op = "-gravity None {$image_path} -geometry {$w}x{$h}!{$x}{$y} -compose blend -define compose:args={$arguments['opacity']} -composite";
-        }
+    switch ($this->getToolkit()->getExecManager()->getPackageSuite()) {
+      case PackageSuite::Graphicsmagick:
+        // @todo see if GraphicsMagick can support opacity setting.
+        $op = [
+          "-draw",
+          "image Over {$arguments['x_offset']},{$arguments['y_offset']} {$w},{$h} {$local_path}",
+        ];
         break;
 
-      case 'graphicsmagick':
-        // @todo see if GraphicsMagick can support opacity setting.
-        $op = "-draw 'image Over {$arguments['x_offset']},{$arguments['y_offset']} {$w},{$h} {$image_path}'";
+      case PackageSuite::Imagemagick:
+      default:
+        if ($arguments['opacity'] == 100) {
+          $op = [
+            "-gravity",
+            "None",
+            $image_path,
+            "-geometry",
+            "{$w}x{$h}!{$x}{$y}",
+            "-compose",
+            "src-over",
+            "-composite",
+          ];
+        }
+        else {
+          $op = [
+            "-gravity",
+            "None",
+            $image_path,
+            "-geometry",
+            "{$w}x{$h}!{$x}{$y}",
+            "-compose",
+            "blend",
+            "-define",
+            "compose:args={$arguments['opacity']}",
+            "-composite",
+          ];
+        }
         break;
 
     }
 
-    $this->addArgument($op);
+    $this->addArguments($op);
     return TRUE;
   }
 

@@ -17,11 +17,11 @@ class Number extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable($filter = NULL, array $filter_options = []) {
-    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
+    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $handler */
     $is_applicable = FALSE;
 
-    if (is_a($filter, 'Drupal\views\Plugin\views\filter\NumericFilter')) {
+    if (is_a($handler, 'Drupal\views\Plugin\views\filter\NumericFilter')) {
       $is_applicable = TRUE;
     }
 
@@ -31,7 +31,7 @@ class Number extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return parent::defaultConfiguration() + [
       'min' => NULL,
       'max' => NULL,
@@ -41,7 +41,7 @@ class Number extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     unset($form['advanced']['placeholder_text']);
@@ -65,7 +65,7 @@ class Number extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     // Set the number field.
     $field_id = $this->getExposedFilterFieldId();
 

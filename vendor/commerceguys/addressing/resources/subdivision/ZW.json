@@ -1,0 +1,45 @@
+{
+	"country_code": "ZW",
+	"subdivisions": {
+		"BU": {
+			"code": "BU",
+			"name": "Bulawayo"
+		},
+		"HA": {
+			"code": "HA",
+			"name": "Harare"
+		},
+		"MA": {
+			"code": "MA",
+			"name": "Manicaland"
+		},
+		"MC": {
+			"code": "MC",
+			"name": "Mashonaland Central"
+		},
+		"ME": {
+			"code": "ME",
+			"name": "Mashonaland East"
+		},
+		"MW": {
+			"code": "MW",
+			"name": "Mashonaland West"
+		},
+		"MV": {
+			"code": "MV",
+			"name": "Masvingo"
+		},
+		"MN": {
+			"code": "MN",
+			"name": "Matabeleland North"
+		},
+		"MS": {
+			"code": "MS",
+			"name": "Matabeleland South"
+		},
+		"MI": {
+			"code": "MI",
+			"name": "Midlands"
+		}
+	}
+}

@@ -148,6 +148,7 @@ class TokenMenuTest extends TokenTestBase {
       'administer nodes',
       'administer content types',
       'access administration pages',
+      'administer site configuration'
     ]));
     // Setup node type menu options.
     $edit = [

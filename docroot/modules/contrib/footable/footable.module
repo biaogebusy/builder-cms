@@ -11,38 +11,6 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\footable\Entity\FooTableBreakpoint;
 
 /**
- * Implements hook_theme().
- */
-function footable_theme($existing, $type, $theme, $path) {
-  return [
-    'footable' => [
-      'base hook' => 'table',
-    ],
-  ];
-}
-
-/**
- * Implements hook_preprocess_views_ui_style_plugin_table().
- *
- * Removes the responsive values from the Views UI plugin table.
- */
-function footable_preprocess_views_ui_style_plugin_table(&$variables) {
-  if (isset($variables['form']['footable'], $variables['table']['#rows'])) {
-    array_pop($variables['table']['#header']);
-
-    $lastRow = end($variables['table']['#rows']);
-    foreach ($variables['table']['#rows'] as &$row) {
-      if ($row !== $lastRow) {
-        array_pop($row);
-        continue;
-      }
-
-      unset($row['colspan']);
-    }
-  }
-}
-
-/**
  * Display a view as a FooTable style.
  *
  * @see template_preprocess_views_view_table()
@@ -73,7 +41,7 @@ function template_preprocess_views_view_footable(&$variables) {
     $info = FieldStorageConfig::loadByName($field_handler->getEntityType(), $field_handler->field);
 
     // Get column type.
-    if ($info && $info->getType() === 'datetime') {
+    if ($info && $info->getType() == 'datetime') {
       $variables['header'][$field]['attributes']['data-type'] = 'date';
     }
     elseif (!empty($field_handler->last_render) && is_numeric($field_handler->last_render)) {
@@ -97,7 +65,8 @@ function template_preprocess_views_view_footable(&$variables) {
     // Sorting.
     if (!empty($options['footable']['component']['sorting']['enabled'])) {
       $variables['header'][$field]['content'] = Html::escape(!empty($field_handler) ? $field_handler->label() : '');
-      unset($variables['header'][$field]['url'], $variables['header'][$field]['sort_indicator']);
+      unset($variables['header'][$field]['url']);
+      unset($variables['header'][$field]['sort_indicator']);
 
       if (empty($options['info'][$field]['sortable']) || !$field_handler->clickSortable()) {
         $variables['header'][$field]['attributes']['data-sortable'] = 'false';
@@ -149,7 +118,7 @@ function template_preprocess_views_view_footable(&$variables) {
   $variables['attributes']['data-toggle-column'] = $options['footable']['toggle_column'];
 
   // Add Bootstrap configuration.
-  if ($config->get('plugin_type') === 'bootstrap') {
+  if ($config->get('footable_plugin_type') == 'bootstrap') {
     if (!empty($options['footable']['bootstrap']['striped'])) {
       $variables['attributes']['class'][] = 'table-striped';
     }
@@ -201,7 +170,7 @@ function template_preprocess_views_view_footable(&$variables) {
   $variables['attributes']['data-breakpoints'] = Json::encode($breakpoints);
 
   // Add FooTable plugin files and calling script.
-  $library = $config->get('plugin_type') . '_' . $config->get('plugin_compression');
+  $library = $config->get('footable_plugin_type') . '_' . $config->get('footable_plugin_compression');
   $variables['view']->element['#attached']['library'][] = 'footable/footable';
   $variables['view']->element['#attached']['library'][] = 'footable/footable_' . $library;
 }

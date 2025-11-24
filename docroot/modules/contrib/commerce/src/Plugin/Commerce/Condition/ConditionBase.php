@@ -4,8 +4,8 @@ namespace Drupal\commerce\Plugin\Commerce\Condition;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\PluginBase;
 
 /**
  * Provides the base class for conditions.
@@ -81,6 +81,13 @@ abstract class ConditionBase extends PluginBase implements ConditionInterface {
    */
   public function getDisplayLabel() {
     return $this->pluginDefinition['display_label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription(): ?string {
+    return $this->pluginDefinition['description'];
   }
 
   /**

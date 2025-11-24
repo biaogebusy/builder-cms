@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\media\Entity\Media;
@@ -60,7 +62,7 @@ class MediaBulkFormTest extends MediaFunctionalTestBase {
   /**
    * Tests the media bulk form.
    */
-  public function testBulkForm() {
+  public function testBulkForm(): void {
     $session = $this->getSession();
     $page = $session->getPage();
     $assert_session = $this->assertSession();

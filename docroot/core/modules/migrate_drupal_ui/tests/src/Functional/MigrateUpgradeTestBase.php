@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
 use Drupal\Core\Database\Database;
@@ -46,7 +48,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->createMigrationConnection();
     $this->sourceDatabase = Database::getConnection('default', 'migrate_drupal_ui');
@@ -82,7 +84,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
     $default_db = Database::getConnection()->getKey();
     Database::setActiveConnection($this->sourceDatabase->getKey());
 
-    if (substr($path, -3) == '.gz') {
+    if (str_ends_with($path, '.gz')) {
       $path = 'compress.zlib://' . $path;
     }
     require $path;
@@ -99,8 +101,8 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
     $connection_info = Database::getConnectionInfo('default')['default'];
     if ($connection_info['driver'] === 'sqlite') {
       // Create database file in the test site's public file directory so that
-      // \Drupal\simpletest\TestBase::restoreEnvironment() will delete this once
-      // the test is complete.
+      // \Drupal\Tests\BrowserTestBase::cleanupEnvironment() will delete this
+      // once the test is complete.
       $file = $this->publicFilesDirectory . '/' . $this->testId . '-migrate.db.sqlite';
       touch($file);
       $connection_info['database'] = $file;
@@ -108,9 +110,9 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
     }
     else {
       $prefix = $connection_info['prefix'];
-      // Simpletest uses fixed length prefixes. Create a new prefix for the
+      // Test databases use fixed length prefixes. Create a new prefix for the
       // source database. Adding to the end of the prefix ensures that
-      // \Drupal\simpletest\TestBase::restoreEnvironment() will remove the
+      // \Drupal\Tests\BrowserTestBase::cleanupEnvironment() will remove the
       // additional tables.
       $connection_info['prefix'] = $prefix . '0';
     }
@@ -121,7 +123,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function tearDown() {
+  protected function tearDown(): void {
     Database::removeConnection('migrate_drupal_ui');
     parent::tearDown();
   }
@@ -188,7 +190,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
       $session->pageTextContains($label);
     }
     $session->pageTextContainsOnce('content items');
-    $session->pageTextContains('There is translated content of these types:');
+    $session->pageTextContains('Check whether there is translated content of these types:');
   }
 
   /**
@@ -203,7 +205,7 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
    *
    * @throws \Behat\Mink\Exception\ExpectationException
    */
-  protected function assertReviewForm(array $available_paths = NULL, array $missing_paths = NULL) {
+  protected function assertReviewForm(?array $available_paths = NULL, ?array $missing_paths = NULL) {
     $session = $this->assertSession();
     $session->pageTextContains('What will be upgraded?');
 
@@ -298,9 +300,11 @@ abstract class MigrateUpgradeTestBase extends BrowserTestBase {
 
     // Use the driver connection form to get the correct options out of the
     // database settings. This supports all of the databases we test against.
-    $drivers = drupal_get_database_types();
-    $form = $drivers[$driver]->getFormOptions($connection_options);
+    $drivers = Database::getDriverList()->getInstallableList();
+    $form = $drivers[$driver]->getInstallTasks()->getFormOptions($connection_options);
     $connection_options = array_intersect_key($connection_options, $form + $form['advanced_options']);
+    // Remove isolation_level since that option is not configurable in the UI.
+    unset($connection_options['isolation_level']);
     $edit = [
       $driver => $connection_options,
       'source_private_file_path' => $this->getSourceBasePath(),

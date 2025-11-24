@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.pay.app.xuanyitest.query request
  *
  * @author auto create
- * @since 1.0, 2022-10-26 20:07:03
+ * @since 1.0, 2024-08-30 11:22:07
  */
 class AlipayPayAppXuanyitestQueryRequest
 {

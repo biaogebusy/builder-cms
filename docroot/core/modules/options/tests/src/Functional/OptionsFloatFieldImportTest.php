@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Functional;
 
 use Drupal\field\Entity\FieldConfig;
@@ -14,9 +16,7 @@ use Drupal\Tests\field\Functional\FieldTestBase;
 class OptionsFloatFieldImportTest extends FieldTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
@@ -55,7 +55,7 @@ class OptionsFloatFieldImportTest extends FieldTestBase {
   /**
    * Tests that importing list_float fields works.
    */
-  public function testImport() {
+  public function testImport(): void {
     $field_name = 'field_options_float';
     $type = 'options_install_test';
 
@@ -65,15 +65,20 @@ class OptionsFloatFieldImportTest extends FieldTestBase {
     $field_storage = FieldStorageConfig::loadByName('node', $field_name);
     $this->assertSame($array = ['0' => 'Zero', '0.5' => 'Point five'], $field_storage->getSetting('allowed_values'));
 
-    $admin_path = 'admin/structure/types/manage/' . $type . '/fields/node.' . $type . '.' . $field_name . '/storage';
+    $admin_path = 'admin/structure/types/manage/' . $type . '/fields/node.' . $type . '.' . $field_name;
 
     // Export active config to sync.
     $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
 
     // Set the active to not use dots in the allowed values key names.
-    $edit = ['settings[allowed_values]' => "0|Zero\n1|One"];
+    $edit = [
+      'field_storage[subform][settings][allowed_values][table][0][item][key]' => 0,
+      'field_storage[subform][settings][allowed_values][table][0][item][label]' => 'Zero',
+      'field_storage[subform][settings][allowed_values][table][1][item][key]' => 1,
+      'field_storage[subform][settings][allowed_values][table][1][item][label]' => 'One',
+    ];
     $this->drupalGet($admin_path);
-    $this->submitForm($edit, 'Save field settings');
+    $this->submitForm($edit, 'Save');
     $field_storage = FieldStorageConfig::loadByName('node', $field_name);
     $this->assertSame($array = ['0' => 'Zero', '1' => 'One'], $field_storage->getSetting('allowed_values'));
 

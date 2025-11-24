@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Routing;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +30,7 @@ class MockMatcher implements RequestMatcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function matchRequest(Request $request) {
+  public function matchRequest(Request $request): array {
     $matcher = $this->matcher;
     return $matcher($request);
   }

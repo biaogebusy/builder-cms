@@ -36,7 +36,7 @@ abstract class TestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('local_tasks_block');
   }
@@ -51,7 +51,7 @@ abstract class TestBase extends BrowserTestBase {
       $multiple = $field['cardinality'] !== 1;
       $required = $field['required'];
 
-      // First test empty behaviour. Only single select boxes should always have
+      // First test empty behavior. Only single select boxes should always have
       // an empty value.
       if ($select_type === 'select_or_other_select' && !$multiple) {
         if ($required) {
@@ -66,7 +66,7 @@ abstract class TestBase extends BrowserTestBase {
         $this->assertSession()->pageTextNotContains('- None -');
       }
 
-      // Test non-empty behaviour. Once again only single cardinality elements
+      // Test non-empty behavior. Once again only single cardinality elements
       // should have empty options to allow for the removal of values if the
       // field is not required.
       if ($other_option !== '') {

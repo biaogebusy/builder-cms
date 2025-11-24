@@ -2,9 +2,7 @@
 
 namespace Drupal\charts_google\Plugin\chart\Library;
 
-use Drupal\charts\Element\Chart as ChartElement;
-use Drupal\charts\Plugin\chart\Library\ChartBase;
-use Drupal\charts\TypeManager;
+use Drupal\charts\Attribute\Chart;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -12,37 +10,35 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\charts\Element\Chart as ChartElement;
+use Drupal\charts\Plugin\chart\Library\ChartBase;
+use Drupal\charts\TypeManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Define a concrete class for a Chart.
- *
- * @Chart(
- *   id = "google",
- *   name = @Translation("Google"),
- *   types = {
- *     "area",
- *     "bar",
- *     "bubble",
- *     "column",
- *     "donut",
- *     "gauge",
- *     "line",
- *     "pie",
- *     "scatter",
- *     "spline",
- *   },
- * )
+ * The 'Google' chart type attribute.
  */
+#[Chart(
+  id: "google",
+  name: new TranslatableMarkup("Google"),
+  types: [
+    "area",
+    "bar",
+    "boxplot",
+    "bubble",
+    "candlestick",
+    "column",
+    "donut",
+    "gauge",
+    "line",
+    "pie",
+    "scatter",
+    "spline",
+  ]
+)]
 class Google extends ChartBase implements ContainerFactoryPluginInterface {
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
 
   /**
    * The element info manager.
@@ -75,8 +71,7 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
    *   The chart type manager.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, ElementInfoManagerInterface $element_info, TypeManager $chart_type_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->moduleHandler = $module_handler;
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler);
     $this->elementInfo = $element_info;
     $this->chartTypeManager = $chart_type_manager;
   }
@@ -188,6 +183,8 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
     $types = [
       'area' => 'AreaChart',
       'bar' => 'BarChart',
+      'boxplot' => 'LineChart',
+      'candlestick' => 'CandlestickChart',
       'column' => 'ColumnChart',
       'line' => 'LineChart',
       'spline' => 'SplineChart',
@@ -352,11 +349,11 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
         else {
           $axis_keys = !$chart_type['axis_inverted'] ? ['vAxes', $axis_index] : ['hAxis'];
         }
-        $axis_drilldown = &$chart_definition['options'];
+        $axis_drill_down = &$chart_definition['options'];
         foreach ($axis_keys as $axis_key) {
-          $axis_drilldown = &$axis_drilldown[$axis_key];
+          $axis_drill_down = &$axis_drill_down[$axis_key];
         }
-        $axis_drilldown = $axis;
+        $axis_drill_down = $axis;
       }
     }
 
@@ -414,10 +411,10 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
           $chart_definition['data'][0][$series_number + 1] = $element[$key]['#title'];
         }
         foreach ($element[$key]['#data'] as $index => $data_value) {
-          // Nested array values typically used for scatter charts. This weird
-          // approach leaves columns empty in order to make arbitrary pairings.
-          // See https://developers.google.com/chart/interactive/docs/gallery/scatterchart#Data_Format
           if (is_array($data_value)) {
+            // Nested array values typically used for scatter charts. This weird
+            // approach leaves columns empty to make arbitrary pairings.
+            // See https://developers.google.com/chart/interactive/docs/gallery/scatterchart#Data_Format
             if ($chart_type['id'] === 'scatter') {
               $chart_definition['data'][] = [
                 0 => $data_value[0],
@@ -431,6 +428,9 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
                 $series_number + 2 => $data_value[1],
                 $series_number + 3 => $data_value[2],
               ];
+            }
+            elseif (in_array($chart_type['id'], ['boxplot', 'candlestick'])) {
+              $chart_definition['data'][$index + 1] = [$chart_definition['data'][$index + 1][0], ...$data_value];
             }
             else {
               if (!empty($data_value['color']) && (in_array($chart_type['id'], [
@@ -463,6 +463,9 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
         }
         $series['pointSize'] = !empty($element['#data_markers']) ? 3 : 0;
         $series['visibleInLegend'] = $element[$key]['#show_in_legend'];
+        if (!empty($element[$key]['#connect_nulls'])) {
+          $series['interpolateNulls'] = TRUE;
+        }
 
         // Labels only supported on pies.
         $series['pieSliceText'] = $element[$key]['#show_labels'] ? 'label' : 'none';
@@ -561,21 +564,66 @@ class Google extends ChartBase implements ContainerFactoryPluginInterface {
       ];
     }
     else {
+      if (!isset($data[0])) {
+        $data[0] = [];
+      }
       array_unshift($data[0], '');
     }
     // Ensure consistent column count.
     $column_count = count($data[0]);
     $new_data = [];
-    foreach ($data as $row => $values) {
-      for ($n = 0; $n < $column_count; $n++) {
-        if (!empty(array_values($values))) {
-          $temp = array_values($values);
-          $new_data[$row][$n] = $temp[$n] ?? NULL;
+
+    // For candlestick and boxplot charts, ensure the data is a numerically
+    // indexed array.
+    if (in_array($chart_type['id'], ['boxplot', 'candlestick'])) {
+      $temp_data = [];
+
+      if ($chart_type['id'] === 'candlestick') {
+        // Create a proper header row as an array.
+        $temp_data[] = [
+          $data[0][1] ?? new TranslatableMarkup('Candlestick'),
+          new TranslatableMarkup('Low'),
+          new TranslatableMarkup('Open'),
+          new TranslatableMarkup('Close'),
+          new TranslatableMarkup('High'),
+        ];
+      }
+      else {
+        // Create a proper header row as an array.
+        $temp_data[] = [
+          $data[0][1] ?? new TranslatableMarkup('Boxplot'),
+          new TranslatableMarkup('Min'),
+          new TranslatableMarkup('First Quartile'),
+          new TranslatableMarkup('Median'),
+          new TranslatableMarkup('Third Quartile'),
+          new TranslatableMarkup('Max'),
+        ];
+      }
+
+      // Add each data row in sequence, ensuring they are arrays (not objects).
+      for ($i = 1; $i <= count($data) - 1; $i++) {
+        if (isset($data[$i])) {
+          // Make sure data is a real array, not an object with numeric keys.
+          $temp_data[] = array_values((array) $data[$i]);
         }
       }
-      ksort($new_data[$row]);
+
+      $chart_definition['data'] = $temp_data;
+
+      return $chart_definition;
     }
-    ksort($new_data);
+    else {
+      foreach ($data as $row => $values) {
+        for ($n = 0; $n < $column_count; $n++) {
+          if (!empty(array_values($values))) {
+            $temp = array_values($values);
+            $new_data[$row][$n] = $temp[$n] ?? NULL;
+          }
+        }
+        ksort($new_data[$row]);
+      }
+      ksort($new_data);
+    }
 
     $chart_definition['data'] = $new_data;
 

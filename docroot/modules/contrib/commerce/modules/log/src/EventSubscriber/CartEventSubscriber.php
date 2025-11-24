@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_log\EventSubscriber;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_cart\Event\CartEntityAddEvent;
 use Drupal\commerce_cart\Event\CartEvents;
 use Drupal\commerce_cart\Event\CartOrderItemRemoveEvent;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CartEventSubscriber implements EventSubscriberInterface {
@@ -30,7 +30,7 @@ class CartEventSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       CartEvents::CART_ENTITY_ADD => ['onCartEntityAdd', -100],
       CartEvents::CART_ORDER_ITEM_REMOVE => ['onCartOrderItemRemove', -100],

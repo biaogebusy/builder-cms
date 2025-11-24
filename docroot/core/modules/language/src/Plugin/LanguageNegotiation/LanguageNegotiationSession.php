@@ -4,24 +4,28 @@ namespace Drupal\language\Plugin\LanguageNegotiation;
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\language\Attribute\LanguageNegotiation;
 use Drupal\language\LanguageNegotiationMethodBase;
 use Drupal\language\LanguageSwitcherInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Identify language from a request/session parameter.
- *
- * @LanguageNegotiation(
- *   id = Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationSession::METHOD_ID,
- *   weight = -6,
- *   name = @Translation("Session"),
- *   description = @Translation("Language from a request/session parameter."),
- *   config_route_name = "language.negotiation_session"
- * )
  */
-class LanguageNegotiationSession extends LanguageNegotiationMethodBase implements OutboundPathProcessorInterface, LanguageSwitcherInterface {
+#[LanguageNegotiation(
+  id: LanguageNegotiationSession::METHOD_ID,
+  name: new TranslatableMarkup('Session'),
+  weight: -6,
+  description: new TranslatableMarkup("Language from a request/session parameter."),
+  config_route_name: 'language.negotiation_session'
+)]
+class LanguageNegotiationSession extends LanguageNegotiationMethodBase implements OutboundPathProcessorInterface, LanguageSwitcherInterface, ContainerFactoryPluginInterface {
 
   /**
    * Flag used to determine whether query rewriting is active.
@@ -45,21 +49,50 @@ class LanguageNegotiationSession extends LanguageNegotiationMethodBase implement
   protected $queryValue;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
    * The language negotiation method id.
    */
   const METHOD_ID = 'language-session';
 
   /**
+   * Constructs a LanguageNegotiationSession object.
+   *
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   */
+  public function __construct(RequestStack $request_stack) {
+    $this->requestStack = $request_stack;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function getLangcode(Request $request = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $container->get('request_stack')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLangcode(?Request $request = NULL) {
     $config = $this->config->get('language.negotiation')->get('session');
-    $param = $config['parameter'];
-    $langcode = $request && $request->query->get($param) ? $request->query->get($param) : NULL;
-    if (!$langcode && isset($_SESSION[$param])) {
-      $langcode = $_SESSION[$param];
+    if (($param = $config['parameter']) && $request) {
+      if ($request->query->has($param)) {
+        return $request->query->get($param);
+      }
+      if ($request->getSession()->has($param)) {
+        return $request->getSession()->get($param);
+      }
     }
-    return $langcode;
+    return NULL;
   }
 
   /**
@@ -73,7 +106,7 @@ class LanguageNegotiationSession extends LanguageNegotiationMethodBase implement
       $languages = $this->languageManager->getLanguages();
       if ($this->currentUser->isAuthenticated() && isset($languages[$langcode])) {
         $config = $this->config->get('language.negotiation')->get('session');
-        $_SESSION[$config['parameter']] = $langcode;
+        $this->requestStack->getCurrentRequest()->getSession()->set($config['parameter'], $langcode);
       }
     }
   }
@@ -81,7 +114,7 @@ class LanguageNegotiationSession extends LanguageNegotiationMethodBase implement
   /**
    * {@inheritdoc}
    */
-  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     if ($request) {
       // The following values are not supposed to change during a single page
       // request processing.
@@ -129,7 +162,7 @@ class LanguageNegotiationSession extends LanguageNegotiationMethodBase implement
     parse_str($request->getQueryString() ?? '', $query);
     $config = $this->config->get('language.negotiation')->get('session');
     $param = $config['parameter'];
-    $language_query = $_SESSION[$param] ?? $this->languageManager->getCurrentLanguage($type)->getId();
+    $language_query = $request->getSession()->has($param) ? $request->getSession()->get($param) : $this->languageManager->getCurrentLanguage($type)->getId();
 
     foreach ($this->languageManager->getNativeLanguages() as $language) {
       $langcode = $language->getId();

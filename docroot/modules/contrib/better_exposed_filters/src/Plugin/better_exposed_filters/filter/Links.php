@@ -2,8 +2,8 @@
 
 namespace Drupal\better_exposed_filters\Plugin\better_exposed_filters\filter;
 
-use Drupal\better_exposed_filters\BetterExposedFiltersHelper;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\better_exposed_filters\BetterExposedFiltersHelper;
 
 /**
  * Default widget implementation.
@@ -18,7 +18,7 @@ class Links extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return parent::defaultConfiguration() + [
       'select_all_none' => FALSE,
     ];
@@ -27,7 +27,7 @@ class Links extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
     $filter = $this->handler;
 
@@ -48,7 +48,7 @@ class Links extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
     $filter = $this->handler;
     $field_id = $this->getExposedFilterFieldId();

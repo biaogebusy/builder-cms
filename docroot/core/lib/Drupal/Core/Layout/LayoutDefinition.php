@@ -65,6 +65,7 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $theme_hook;
 
   /**
@@ -95,6 +96,7 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
    *
    * @see \Drupal\Core\Layout\Icon\IconBuilderInterface::build()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $icon_map;
 
   /**
@@ -116,6 +118,7 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $default_region;
 
   /**
@@ -129,7 +132,7 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
    * LayoutDefinition constructor.
    *
    * @param array $definition
-   *   An array of values from the annotation.
+   *   An array of values from the attribute.
    */
   public function __construct(array $definition) {
     // If there are context definitions in the plugin definition, they should

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin;
 
 /**
@@ -15,9 +17,9 @@ interface ImageEffectsFontSelectorPluginInterface extends ImageEffectsPluginBase
    * @param string $uri
    *   The URI of the font file.
    *
-   * @return string
+   * @return string|null
    *   The description of the font.
    */
-  public function getDescription($uri);
+  public function getDescription(string $uri): ?string;
 
 }

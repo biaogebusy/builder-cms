@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_layout\Kernel;
 
 use Drupal\field_layout\Entity\FieldLayoutEntityViewDisplay;
@@ -19,6 +21,7 @@ class FieldLayoutEntityDisplayTest extends KernelTestBase {
     'field_layout',
     'entity_test',
     'field_layout_test',
+    'field_test',
     'system',
   ];
 
@@ -26,7 +29,7 @@ class FieldLayoutEntityDisplayTest extends KernelTestBase {
    * @covers ::preSave
    * @covers ::calculateDependencies
    */
-  public function testPreSave() {
+  public function testPreSave(): void {
     // Create an entity display with one hidden and one visible field.
     $entity_display = FieldLayoutEntityViewDisplay::create([
       'targetEntityType' => 'entity_test',
@@ -34,7 +37,7 @@ class FieldLayoutEntityDisplayTest extends KernelTestBase {
       'mode' => 'default',
       'status' => TRUE,
       'content' => [
-        'foo' => ['type' => 'visible'],
+        'foo' => ['type' => 'field_no_settings'],
         'name' => ['type' => 'hidden', 'region' => 'content'],
       ],
       'hidden' => [
@@ -60,7 +63,7 @@ class FieldLayoutEntityDisplayTest extends KernelTestBase {
       'mode' => 'default',
       'content' => [
         'foo' => [
-          'type' => 'visible',
+          'type' => 'field_no_settings',
         ],
       ],
       'hidden' => [
@@ -99,7 +102,7 @@ class FieldLayoutEntityDisplayTest extends KernelTestBase {
     ];
     // The field was moved to the default region.
     $expected['content']['foo'] = [
-      'type' => 'visible',
+      'type' => 'field_no_settings',
       'region' => 'main',
       'weight' => -4,
       'settings' => [],
@@ -110,11 +113,11 @@ class FieldLayoutEntityDisplayTest extends KernelTestBase {
     // After saving, the dependencies have been updated.
     $entity_display->save();
     $expected['dependencies']['module'] = [
-      'dependency_from_annotation',
-      'dependency_from_calculateDependencies',
       'entity_test',
       'field_layout',
       'field_layout_test',
+      'layout_discovery',
+      'system',
     ];
     $this->assertEntityValues($expected, $entity_display->toArray());
 

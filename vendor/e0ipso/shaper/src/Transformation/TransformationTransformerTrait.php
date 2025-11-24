@@ -9,7 +9,7 @@ trait TransformationTransformerTrait {
   /**
    * {@inheritdoc}
    */
-  public function transform($data, Context $context = NULL) {
+  public function transform($data, ?Context $context = NULL) {
     if (!isset($context)) {
       $context = new Context();
     }

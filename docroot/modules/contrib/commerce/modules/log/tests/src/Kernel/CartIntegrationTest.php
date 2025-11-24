@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
+use Drupal\Tests\commerce_cart\Kernel\CartKernelTestBase;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
-use Drupal\Tests\commerce_cart\Kernel\CartKernelTestBase;
 
 /**
  * Tests integration with cart events.

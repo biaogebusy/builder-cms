@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime_range\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -54,11 +56,10 @@ class SeparatorTranslationTest extends KernelTestBase {
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('user');
     $this->installConfig(['system']);
-    $this->installSchema('system', ['sequences']);
 
     // Add a datetime range field.
     $this->fieldStorage = FieldStorageConfig::create([
-      'field_name' => mb_strtolower($this->randomMachineName()),
+      'field_name' => $this->randomMachineName(),
       'entity_type' => 'entity_test',
       'type' => 'daterange',
       'settings' => ['datetime_type' => DateTimeItem::DATETIME_TYPE_DATE],
@@ -92,7 +93,7 @@ class SeparatorTranslationTest extends KernelTestBase {
   /**
    * Tests the translation of the range separator.
    */
-  public function testSeparatorTranslation() {
+  public function testSeparatorTranslation(): void {
     // Create an entity.
     $entity = EntityTest::create([
       'name' => $this->randomString(),

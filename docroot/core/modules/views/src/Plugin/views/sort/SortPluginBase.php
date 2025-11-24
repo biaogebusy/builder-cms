@@ -13,8 +13,8 @@ use Drupal\views\Plugin\views\HandlerBase;
  * Plugins that handle sorting for Views.
  *
  * Sort handlers extend \Drupal\views\Plugin\views\sort:SortPluginBase. They
- * must be annotated with \Drupal\views\Annotation\ViewsSort annotation, and
- * they must be in plugin directory Plugin\views\sort.
+ * must be attributed with the \Drupal\views\Attribute\ViewsSort attribute,
+ * and they must be in plugin directory Plugin\views\sort.
  *
  * @ingroup views_plugins
  * @see plugin_api
@@ -68,8 +68,8 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
       default:
         return $this->t('asc');
 
-      case 'DESC';
-      case 'desc';
+      case 'DESC':
+      case 'desc':
         return $this->t('desc');
     }
   }
@@ -230,7 +230,7 @@ abstract class SortPluginBase extends HandlerBase implements CacheableDependency
       'expose',
       'field_identifier',
     ]);
-    if (!preg_match('/^[a-zA-z][a-zA-Z0-9_~.\-]*$/', $field_identifier)) {
+    if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_~.\-]*$/', $field_identifier)) {
       $form_state->setErrorByName('expose][field_identifier', $this->t('This identifier has illegal characters.'));
       return;
     }

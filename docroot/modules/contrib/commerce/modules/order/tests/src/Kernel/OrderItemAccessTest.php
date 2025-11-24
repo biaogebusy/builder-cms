@@ -43,22 +43,22 @@ class OrderItemAccessTest extends OrderKernelTestBase {
     $order->save();
     $order_item = $this->reloadEntity($order_item);
 
-    $account = $this->createUser([], ['access administration pages']);
+    $account = $this->createUser(['access administration pages']);
     $this->assertFalse($order_item->access('view', $account));
     $this->assertFalse($order_item->access('update', $account));
     $this->assertFalse($order_item->access('delete', $account));
 
-    $account = $this->createUser([], ['view commerce_order']);
+    $account = $this->createUser(['view commerce_order']);
     $this->assertTrue($order_item->access('view', $account));
     $this->assertFalse($order_item->access('update', $account));
     $this->assertFalse($order_item->access('delete', $account));
 
-    $account = $this->createUser([], ['update default commerce_order']);
+    $account = $this->createUser(['update default commerce_order']);
     $this->assertFalse($order_item->access('view', $account));
     $this->assertFalse($order_item->access('update', $account));
     $this->assertFalse($order_item->access('delete', $account));
 
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'manage test commerce_order_item',
     ]);
     $this->assertFalse($order_item->access('view', $account));
@@ -76,14 +76,14 @@ class OrderItemAccessTest extends OrderKernelTestBase {
     $this->assertFalse($order_item->access('update', $account));
     $this->assertFalse($order_item->access('delete', $account));
 
-    $account = $this->createUser([], ['administer commerce_order']);
+    $account = $this->createUser(['administer commerce_order']);
     $this->assertTrue($order_item->access('view', $account));
     $this->assertTrue($order_item->access('update', $account));
     $this->assertTrue($order_item->access('delete', $account));
 
     // Broken order reference.
     $order_item->set('order_id', '999');
-    $account = $this->createUser([], ['manage test commerce_order_item']);
+    $account = $this->createUser(['manage test commerce_order_item']);
     $this->assertFalse($order_item->access('view', $account));
     $this->assertFalse($order_item->access('update', $account));
     $this->assertFalse($order_item->access('delete', $account));
@@ -95,13 +95,13 @@ class OrderItemAccessTest extends OrderKernelTestBase {
   public function testCreateAccess() {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('commerce_order_item');
 
-    $account = $this->createUser([], ['access content']);
+    $account = $this->createUser(['access content']);
     $this->assertFalse($access_control_handler->createAccess('test', $account));
 
-    $account = $this->createUser([], ['administer commerce_order']);
+    $account = $this->createUser(['administer commerce_order']);
     $this->assertTrue($access_control_handler->createAccess('test', $account));
 
-    $account = $this->createUser([], ['manage test commerce_order_item']);
+    $account = $this->createUser(['manage test commerce_order_item']);
     $this->assertTrue($access_control_handler->createAccess('test', $account));
   }
 

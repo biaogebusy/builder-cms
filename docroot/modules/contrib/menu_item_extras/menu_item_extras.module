@@ -5,15 +5,15 @@
  * Manage fields for the menu items.
  */
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Url;
 use Drupal\menu_item_extras\Entity\MenuItemExtrasMenuLinkContent;
 use Drupal\menu_item_extras\Utility\Utility;
-use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
@@ -206,9 +206,10 @@ function menu_item_extras_theme_suggestions_menu_levels(array $variables) {
 }
 
 /**
- * Implements hook_theme_suggestions_HOOK_alter().
+ * Implements hook_theme_suggestions_HOOK().
  */
-function menu_item_extras_theme_suggestions_menu_alter(array &$suggestions, array $variables) {
+function menu_item_extras_theme_suggestions_menu(array $variables): array {
+  $suggestions = [];
   if (isset($variables['menu_name'])) {
     $menu_name = $variables['menu_name'];
     /** @var \Drupal\menu_item_extras\Utility\Utility $utility */
@@ -229,6 +230,8 @@ function menu_item_extras_theme_suggestions_menu_alter(array &$suggestions, arra
       }
     }
   }
+
+  return $suggestions;
 }
 
 /**
@@ -251,6 +254,9 @@ function menu_item_extras_form_menu_link_content_form_alter(array &$form, FormSt
   /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $entity */
   $entity = $form_object->getEntity();
   $bundle = $entity->bundle();
+  if ($entity->bundle() == 'menu_link_content') {
+    $bundle = $entity->get('menu_name')->getString();
+  }
   foreach ($form['menu_parent']['#options'] as $option_id => $option) {
     if (strpos($option_id, $bundle) !== 0) {
       unset($form['menu_parent']['#options'][$option_id]);

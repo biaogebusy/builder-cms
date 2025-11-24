@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional;
 
 use Drupal\field\Entity\FieldConfig;
@@ -17,9 +19,7 @@ class ReEnableModuleFieldTest extends BrowserTestBase {
   use CronRunTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'field',
@@ -52,7 +52,7 @@ class ReEnableModuleFieldTest extends BrowserTestBase {
    *
    * @see field_system_info_alter()
    */
-  public function testReEnabledField() {
+  public function testReEnabledField(): void {
     // Add a telephone field to the article content type.
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'field_telephone',

@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_store\Functional;
 
-use Drupal\commerce_store\Entity\StoreType;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
+use Drupal\commerce_store\Entity\StoreType;
 
 /**
  * Tests the store type UI.
@@ -66,7 +66,7 @@ class StoreTypeTest extends CommerceBrowserTestBase {
       'label' => 'Online2',
       'id' => 'online2',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Online2 store type.');
 
     // Confirm that the original store type is unchanged.

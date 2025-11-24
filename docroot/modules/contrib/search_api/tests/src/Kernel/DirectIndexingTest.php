@@ -8,12 +8,14 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Provides tests for the "index_directly" functionality.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class DirectIndexingTest extends KernelTestBase {
 
   use PostRequestIndexingTrait;
@@ -131,9 +133,39 @@ class DirectIndexingTest extends KernelTestBase {
     $this->assertEquals(2, $tracker_1->getTotalItemsCount());
     $this->assertEquals(1, $tracker_1->getIndexedItemsCount());
 
+    // Simulate a page request during which the entity is first marked as
+    // updated and then as deleted. The entity should now have been removed from
+    // both the tracker and the server.
+    $this->checkUpdateDeleteRequest($index_1, $entity);
+
     // An exception should be thrown if you try to stop batch tracking again.
     $this->expectException(SearchApiException::class);
     $index_1->stopBatchTracking();
+  }
+
+  /**
+   * Checks page requests where an item is first updated than ignored.
+   *
+   * This specifically targets cases where the item is not deleted, but
+   * discarded from tracking in a way that lets it still be loaded.
+   *
+   * @param \Drupal\search_api\IndexInterface $index
+   * @param \Drupal\entity_test\Entity\EntityTest $entity
+   */
+  protected function checkUpdateDeleteRequest(IndexInterface $index, EntityTest $entity): void {
+    $state = \Drupal::state();
+    $key = 'search_api_test.backend.indexed.' . $index->id();
+    $datasource_id = 'entity:entity_test';
+    $item_id = $entity->id() . ':en';
+    $indexed_items = array_keys($state->get($key, []));
+    $this->assertEquals(["$datasource_id/$item_id"], $indexed_items);
+
+    $index->trackItemsUpdated($datasource_id, [$item_id]);
+    $index->trackItemsDeleted($datasource_id, [$item_id]);
+    $this->triggerPostRequestIndexing();
+
+    $indexed_items = array_keys($state->get($key, []));
+    $this->assertEquals([], $indexed_items);
   }
 
   /**

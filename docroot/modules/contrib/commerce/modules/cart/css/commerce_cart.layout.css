@@ -7,10 +7,10 @@
   display: block;
 }
 .cart-block--contents {
-  display: none;
   position: absolute;
-  overflow: hidden;
   z-index: 300;
+  display: none;
+  overflow: hidden;
 }
 .cart-block--contents__items {
   overflow-x: hidden;

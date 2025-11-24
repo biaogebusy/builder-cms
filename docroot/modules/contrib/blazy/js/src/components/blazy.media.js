@@ -22,7 +22,7 @@
   var C_IS_BODY_PLAYING = 'is-b-player-playing';
   var DATA = 'data-';
   var DATA_IFRAME_TITLE = DATA + IFRAME + '-title';
-  var DATA_URL = DATA + 'b-url data-url';
+  var DATA_URL = DATA + 'b-url';
   var C_MD_ELEMENT = MD + '__element';
   var B_INSTAGRAM = 'b-instagram';
   var C_HIDDEN = 'visually-hidden';
@@ -251,7 +251,7 @@
     var el = settings.el || settings.element;
     var $el = $(el);
     var alt = $.image.alt(el);
-    var data = $.parse($.attr(el, 'data-b-' + MD + ' data-' + MD));
+    var data = $.parse($.attr(el, 'data-b-' + MD));
     var provider = data.provider;
     var token = data.token;
     var width = $.toInt(data.width, 640);

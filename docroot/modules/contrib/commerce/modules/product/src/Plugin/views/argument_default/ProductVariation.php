@@ -2,21 +2,22 @@
 
 namespace Drupal\commerce_product\Plugin\views\argument_default;
 
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default argument plugin to extract a product variation.
- *
- * @ViewsArgumentDefault(
- *   id = "product_variation",
- *   title = @Translation("Product variation ID from URL")
- * )
  */
+#[ViewsArgumentDefault(
+  id: "product_variation",
+  title: new TranslatableMarkup("Product variation ID from URL")
+)]
 class ProductVariation extends ArgumentDefaultPluginBase implements CacheableDependencyInterface {
 
   /**

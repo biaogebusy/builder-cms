@@ -21,7 +21,7 @@ class DuplicateFieldConstraintValidator extends ConstraintValidator {
   /**
    * DuplicateFieldConstraintValidator constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager = NULL) {
+  public function __construct(?EntityTypeManagerInterface $entityTypeManager = NULL) {
     $this->entityTypeManager = $entityTypeManager ?: \Drupal::entityTypeManager();
   }
 

@@ -1,0 +1,9 @@
+xls_serialization.configuration:
+  title: Xls Serialization
+  description: 'Select if autosize column should be enabled or disabled.'
+  route_name: xls_serialization.configuration
+  parent: system.admin_config_ui
+  requirements:
+    _permission: 'administer xls serialization configuration'
+  options:
+    _admin_route: TRUE

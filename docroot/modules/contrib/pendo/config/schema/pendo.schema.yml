@@ -1,7 +1,0 @@
-pendo.settings:
-  type: config_object
-  label: 'Pendo'
-  mapping:
-    api_key:
-      type: text
-      label: 'Pendo API Key'

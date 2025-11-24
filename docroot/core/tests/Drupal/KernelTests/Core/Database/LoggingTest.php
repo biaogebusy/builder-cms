@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Log;
@@ -17,7 +19,7 @@ class LoggingTest extends DatabaseTestBase {
   /**
    * Tests that we can log the existence of a query.
    */
-  public function testEnableLogging() {
+  public function testEnableLogging(): void {
     Database::startLog('testing');
 
     $start = microtime(TRUE);
@@ -41,7 +43,7 @@ class LoggingTest extends DatabaseTestBase {
   /**
    * Tests that we can run two logs in parallel.
    */
-  public function testEnableMultiLogging() {
+  public function testEnableMultiLogging(): void {
     Database::startLog('testing1');
 
     $this->connection->query('SELECT [name] FROM {test} WHERE [age] > :age', [':age' => 25])->fetchCol();
@@ -60,7 +62,7 @@ class LoggingTest extends DatabaseTestBase {
   /**
    * Tests logging queries against multiple targets on the same connection.
    */
-  public function testEnableTargetLogging() {
+  public function testEnableTargetLogging(): void {
     // Clone the primary credentials to a replica connection and to another fake
     // connection.
     $connection_info = Database::getConnectionInfo('default');
@@ -86,7 +88,7 @@ class LoggingTest extends DatabaseTestBase {
    * a fake target so the query should fall back to running on the default
    * target.
    */
-  public function testEnableTargetLoggingNoTarget() {
+  public function testEnableTargetLoggingNoTarget(): void {
     Database::startLog('testing1');
 
     $this->connection->query('SELECT [name] FROM {test} WHERE [age] > :age', [':age' => 25])->fetchCol();
@@ -108,7 +110,7 @@ class LoggingTest extends DatabaseTestBase {
   /**
    * Tests that we can log queries separately on different connections.
    */
-  public function testEnableMultiConnectionLogging() {
+  public function testEnableMultiConnectionLogging(): void {
     // Clone the primary credentials to a fake connection.
     // That both connections point to the same physical database is irrelevant.
     $connection_info = Database::getConnectionInfo('default');
@@ -135,7 +137,7 @@ class LoggingTest extends DatabaseTestBase {
   /**
    * Tests that getLog with a wrong key return an empty array.
    */
-  public function testGetLoggingWrongKey() {
+  public function testGetLoggingWrongKey(): void {
     $result = Database::getLog('wrong');
 
     $this->assertEquals([], $result, 'The function getLog with a wrong key returns an empty array.');
@@ -154,8 +156,13 @@ class LoggingTest extends DatabaseTestBase {
    * @covers ::findCaller
    *
    * @dataProvider providerContribDriverLog
+   *
+   * @group legacy
    */
-  public function testContribDriverLog($driver_namespace, $stack, array $expected_entry) {
+  public function testContribDriverLog($driver_namespace, $stack, array $expected_entry): void {
+    $this->expectDeprecation('Drupal\Core\Database\Log::findCaller() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use Connection::findCallerFromDebugBacktrace(). See https://www.drupal.org/node/3328053');
+    $this->expectDeprecation('Drupal\Core\Database\Log::removeDatabaseEntries() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use Connection::removeDatabaseEntriesFromDebugBacktrace(). See https://www.drupal.org/node/3328053');
+
     $mock_builder = $this->getMockBuilder(Log::class);
     $log = $mock_builder
       ->onlyMethods(['getDebugBacktrace'])
@@ -181,7 +188,7 @@ class LoggingTest extends DatabaseTestBase {
    *
    * @see ::testContribDriverLog()
    */
-  public function providerContribDriverLog() {
+  public static function providerContribDriverLog() {
     $stack = [
       [
         'file' => '/var/www/core/lib/Drupal/Core/Database/Log.php',
@@ -195,7 +202,7 @@ class LoggingTest extends DatabaseTestBase {
         ],
       ],
       [
-        'file' => '/var/www/libraries/drudbal/lib/Statement.php',
+        'file' => '/var/www/libraries/test/lib/Statement.php',
         'line' => 264,
         'function' => 'log',
         'class' => 'Drupal\\Core\\Database\\Log',
@@ -206,7 +213,7 @@ class LoggingTest extends DatabaseTestBase {
         ],
       ],
       [
-        'file' => '/var/www/libraries/drudbal/lib/Connection.php',
+        'file' => '/var/www/libraries/test/lib/Connection.php',
         'line' => 213,
         'function' => 'execute',
         'class' => 'Drupal\\Driver\\Database\\dbal\\Statement',
@@ -318,7 +325,7 @@ class LoggingTest extends DatabaseTestBase {
         [
           'class' => 'Drupal\\Driver\\Database\\dbal\\Statement',
           'function' => 'execute',
-          'file' => '/var/www/libraries/drudbal/lib/Statement.php',
+          'file' => '/var/www/libraries/test/lib/Statement.php',
           'line' => 264,
           'type' => '->',
           'args' => [

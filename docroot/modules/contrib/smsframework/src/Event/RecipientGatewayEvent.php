@@ -17,7 +17,7 @@ class RecipientGatewayEvent extends Event {
    *
    * @var string
    */
-  protected $recipient;
+  protected string $recipient;
 
   /**
    * An array of gateway doubles.
@@ -27,7 +27,7 @@ class RecipientGatewayEvent extends Event {
    *     - Key 0: SmsGatewayInterface $gateway
    *     - Key 1: int $priority
    */
-  protected $gateways = [];
+  protected array $gateways = [];
 
   /**
    * Constructs the object.
@@ -81,7 +81,7 @@ class RecipientGatewayEvent extends Event {
    */
   public function getGatewaysSorted() {
     $sorted = $this->gateways;
-    uasort($sorted, function ($a, $b) {
+    uasort($sorted, static function ($a, $b) {
       [, $priority_a] = $a;
       [, $priority_b] = $b;
       if ($priority_a == $priority_b) {

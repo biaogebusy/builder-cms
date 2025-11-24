@@ -2,11 +2,13 @@
 
 namespace Drupal\layout_builder\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\layout_builder\Field\LayoutSectionItemList;
 use Drupal\layout_builder\Section;
 
 /**
@@ -15,17 +17,16 @@ use Drupal\layout_builder\Section;
  * @internal
  *   Plugin classes are internal.
  *
- * @FieldType(
- *   id = "layout_section",
- *   label = @Translation("Layout Section"),
- *   description = @Translation("Layout Section"),
- *   list_class = "\Drupal\layout_builder\Field\LayoutSectionItemList",
- *   no_ui = TRUE,
- *   cardinality = \Drupal\Core\Field\FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED
- * )
- *
  * @property \Drupal\layout_builder\Section $section
  */
+#[FieldType(
+  id: "layout_section",
+  label: new TranslatableMarkup("Layout Section"),
+  description: new TranslatableMarkup("Layout Section"),
+  no_ui: TRUE,
+  list_class: LayoutSectionItemList::class,
+  cardinality: FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED
+)]
 class LayoutSectionItem extends FieldItemBase {
 
   /**
@@ -44,7 +45,7 @@ class LayoutSectionItem extends FieldItemBase {
    */
   public function __get($name) {
     // @todo \Drupal\Core\Field\FieldItemBase::__get() does not return default
-    //   values for uninstantiated properties. This will forcibly instantiate
+    //   values for un-instantiated properties. This will forcibly instantiate
     //   all properties with the side-effect of a performance hit, resolve
     //   properly in https://www.drupal.org/node/2413471.
     $this->getProperties();

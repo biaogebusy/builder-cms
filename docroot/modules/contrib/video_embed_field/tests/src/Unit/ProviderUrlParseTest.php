@@ -2,8 +2,17 @@
 
 namespace Drupal\Tests\video_embed_field\Unit;
 
+use Drupal\Core\Cache\DatabaseBackend;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Utility\UnroutedUrlAssembler;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\video_embed_field\Kernel\MockHttpClient;
+use Drupal\TestTools\Random;
 use Drupal\video_embed_field\Plugin\video_embed_field\Provider\Vimeo;
 use Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube;
 
@@ -13,6 +22,39 @@ use Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube;
  * @group video_embed_field
  */
 class ProviderUrlParseTest extends UnitTestCase {
+
+  /**
+   * The HTTP client.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
+  protected $httpClient;
+
+  /**
+   * {@inheritDoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $cache = $this->prophesize(DatabaseBackend::class);
+    $this->httpClient = new MockHttpClient();
+    $logger_factory = $this->prophesize(LoggerChannelFactoryInterface::class);
+    $channel = $this->prophesize(LoggerChannelInterface::class);
+    $logger_factory->get('video_embed_field')->willReturn($channel->reveal());
+    $unroutedUrlAssembler = $this->prophesize(UnroutedUrlAssembler::class);
+    $config_factory = $this->prophesize(ConfigFactoryInterface::class);
+    $config = $this->prophesize(ImmutableConfig::class);
+    $config->get('default_scheme')->willReturn('public');
+    $config_factory->get('system.file')->willReturn($config->reveal());
+
+    $container = new ContainerBuilder();
+    $container->set('cache.default', $cache->reveal());
+    $container->set('http_client', $this->httpClient);
+    $container->set('config.factory', $config_factory->reveal());
+    $container->set('logger.factory', $logger_factory->reveal());
+    $container->set('unrouted_url_assembler', $unroutedUrlAssembler->reveal());
+    \Drupal::setContainer($container);
+  }
 
   /**
    * Test URL parsing works as expected.
@@ -29,7 +71,7 @@ class ProviderUrlParseTest extends UnitTestCase {
    * @return array
    *   An array of test cases.
    */
-  public function urlsWithExpectedIds() {
+  public static function urlsWithExpectedIds() {
     return [
       // Youtube passing cases.
       'YouTube: Standard URL' => [
@@ -51,6 +93,21 @@ class ProviderUrlParseTest extends UnitTestCase {
         'Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube',
         'https://youtube.com/watch?v=fdbFV_Wup-Ssw',
         'fdbFV_Wup-Ssw',
+      ],
+      'YouTube: Embed URL' => [
+        'Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube',
+        'https://youtube.com/embed/fdbFVWupSsw',
+        'fdbFVWupSsw',
+      ],
+      'YouTube: Live URL' => [
+        'Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube',
+        'https://youtube.com/live/fdbFVWupSsw',
+        'fdbFVWupSsw',
+      ],
+      'YouTube: Shorts URL' => [
+        'Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube',
+        'https://youtube.com/shorts/fdbFVWupSsw',
+        'fdbFVWupSsw',
       ],
       'YouTube: Short URL' => [
         'Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube',
@@ -85,7 +142,7 @@ class ProviderUrlParseTest extends UnitTestCase {
       ],
       'YouTube: Malformed String' => [
         'Drupal\video_embed_field\Plugin\video_embed_field\Provider\YouTube',
-        $this->randomMachineName(),
+        Random::machineName(),
         FALSE,
       ],
       'YouTube: Playlist URL' => [
@@ -176,10 +233,15 @@ class ProviderUrlParseTest extends UnitTestCase {
         'https://vimeo.com/193517656#t=160s',
         '193517656',
       ],
+      'Vimeo: Player URL' => [
+        'Drupal\video_embed_field\Plugin\video_embed_field\Provider\Vimeo',
+        'https://player.vimeo.com/video/193517656',
+        '193517656',
+      ],
       // Vimeo failing cases.
       'Vimeo: Malformed String' => [
         'Drupal\video_embed_field\Plugin\video_embed_field\Provider\Vimeo',
-        $this->randomMachineName(),
+        Random::machineName(),
         FALSE,
       ],
       'Vimeo: Non numeric channel page' => [
@@ -191,16 +253,25 @@ class ProviderUrlParseTest extends UnitTestCase {
   }
 
   /**
-   * Test the langauge parsing feature.
+   * Test the language parsing feature.
    *
    * @dataProvider languageParseTestCases
    */
   public function testYouTubeLanguageParsing($url, $expected) {
+    $file_system = $this->createMock(FileSystemInterface::class);
     $provider = new YouTube([
       'input' => $url,
-    ], '', [], new MockHttpClient());
-    $embed = $provider->renderEmbedCode(100, 100, TRUE);
-    $language = isset($embed['#query']['cc_lang_pref']) ? $embed['#query']['cc_lang_pref'] : FALSE;
+    ], '', [
+      'title' => 'YouTube',
+    ], $this->httpClient, $file_system);
+    $embed = $provider->renderEmbedCode(
+      100,
+      100,
+      TRUE,
+      '@provider | @title',
+      TRUE
+    );
+    $language = $embed['#query']['cc_lang_pref'] ?? FALSE;
     $this->assertEquals($expected, $language);
   }
 
@@ -210,7 +281,7 @@ class ProviderUrlParseTest extends UnitTestCase {
    * @return array
    *   An array of test cases.
    */
-  public function languageParseTestCases() {
+  public static function languageParseTestCases() {
     return [
       'Simple Preference' => [
         'https://youtube.com/watch?v=fdbFV_Wup-Ssw&hl=fr',
@@ -237,10 +308,19 @@ class ProviderUrlParseTest extends UnitTestCase {
    * @dataProvider youTubeTimeIndexTestCases
    */
   public function testYouTubeTimeIndex($url, $expected) {
+    $file_system = $this->createMock(FileSystemInterface::class);
     $provider = new YouTube([
       'input' => $url,
-    ], '', [], new MockHttpClient());
-    $embed = $provider->renderEmbedCode(100, 100, TRUE);
+    ], '', [
+      'title' => 'YouTube',
+    ], $this->httpClient, $file_system);
+    $embed = $provider->renderEmbedCode(
+      100,
+      100,
+      TRUE,
+      '@provider | @title',
+      TRUE
+    );
     $this->assertEquals($expected, $embed['#query']['start']);
   }
 
@@ -250,7 +330,7 @@ class ProviderUrlParseTest extends UnitTestCase {
    * @return array
    *   An array of test cases.
    */
-  public function youTubeTimeIndexTestCases() {
+  public static function youTubeTimeIndexTestCases() {
     return [
       'Simple Timeindex' => [
         'https://www.youtube.com/watch?v=fdbFVWupSsw&t=15',
@@ -284,16 +364,19 @@ class ProviderUrlParseTest extends UnitTestCase {
   }
 
   /**
-   * Test the Vimeo time index integration.
+   * Tests the Vimeo time index integration.
    *
    * @dataProvider vimeoTimeIndexTestCases
    */
   public function testVimeoTimeIndex($url, $expected, $exception_expected = FALSE) {
     $exception_triggered = FALSE;
     try {
+      $file_system = $this->createMock(FileSystemInterface::class);
       $provider = new Vimeo([
         'input' => $url,
-      ], '', [], new MockHttpClient());
+      ], '', [
+        'title' => 'Vimeo',
+      ], $this->httpClient, $file_system);
     }
     catch (\Exception $e) {
       $exception_triggered = TRUE;
@@ -302,8 +385,14 @@ class ProviderUrlParseTest extends UnitTestCase {
     $this->assertEquals($exception_expected, $exception_triggered);
 
     if (!$exception_triggered) {
-      $embed = $provider->renderEmbedCode(100, 100, TRUE);
-      $this->assertEquals($expected, isset($embed['#fragment']) ? $embed['#fragment'] : FALSE);
+      $embed = $provider->renderEmbedCode(
+        100,
+        100,
+        TRUE,
+        '@provider | @title',
+        TRUE
+      );
+      $this->assertEquals($expected, $embed['#fragment'] ?? FALSE);
     }
   }
 
@@ -313,7 +402,7 @@ class ProviderUrlParseTest extends UnitTestCase {
    * @return array
    *   An array of test cases.
    */
-  public function vimeoTimeIndexTestCases() {
+  public static function vimeoTimeIndexTestCases() {
     return [
       'Standard time index' => [
         'https://vimeo.com/193517656#t=150s',

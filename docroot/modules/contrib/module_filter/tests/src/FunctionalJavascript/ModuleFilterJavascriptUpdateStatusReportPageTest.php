@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\module_filter\FunctionalJavascript;
 
 /**
@@ -20,7 +22,7 @@ class ModuleFilterJavascriptUpdateStatusReportPageTest extends ModuleFilterJavas
   /**
    * Tests text filtering and radio buttons on the Updates Report page.
    */
-  public function testUpdateStatusPageFiltering() {
+  public function testUpdateStatusPageFiltering(): void {
     /** @var \Drupal\Tests\WebAssert $assert */
     $assert = $this->assertSession();
 
@@ -29,7 +31,7 @@ class ModuleFilterJavascriptUpdateStatusReportPageTest extends ModuleFilterJavas
     $page = $this->getSession()->getPage();
 
     // Verify that all the modules used in this test are displayed by default.
-    // Test modules will not show on the update status page, so we use this
+    // Test modules will not show on the update status page, so we use these
     // modules dependencies instead.
     $assert->pageTextContains('Drupal core');
     $assert->pageTextContains('jQuery UI');

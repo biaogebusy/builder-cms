@@ -89,19 +89,9 @@ class VoteDeletionTest extends BrowserTestBase {
 
     // Delete a vote.
     $this->drupalGet('admin/vote/' . reset($vote_id) . '/delete');
-    $session->pageTextContains(
-      t('You are about to delete a vote by @user on @entity-type @label. This action cannot be undone.', [
-        '@user' => $vote_owner,
-        '@entity-type' => $entity_type,
-        '@label' => $label,
-      ]));
+    $session->pageTextContains('You are about to delete a vote by ' . $vote_owner . ' on ' . $entity_type . ' ' . $label . '. This action cannot be undone.');
     $this->submitForm([], 'Delete');
-    $session->pageTextContains(
-      t('The vote by @user on @entity-type @label has been deleted.', [
-        '@user' => $vote_owner,
-        '@entity-type' => $entity_type,
-        '@label' => $label,
-      ]));
+    $session->pageTextContains('The vote by ' . $vote_owner . ' on ' . $entity_type . ' ' . $label . ' has been deleted.');
 
     // Assert that the vote got deleted and other votes remain.
     $source_1_votes = $vote_storage->getUserVotes(0, 'vote', 'node', 1, 'source_1');

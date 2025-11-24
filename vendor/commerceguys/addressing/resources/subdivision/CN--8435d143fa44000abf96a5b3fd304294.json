@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JX",
+		"Ji'an Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anfu Xian": {
+			"local_name": "安福县"
+		},
+		"Ji'an Xian": {
+			"local_name": "吉安县"
+		},
+		"Jishui Xian": {
+			"local_name": "吉水县"
+		},
+		"Jizhou Qu": {
+			"local_name": "吉州区"
+		},
+		"Jinggangshan Shi": {
+			"local_name": "井冈山市"
+		},
+		"Qingyuan Qu": {
+			"local_name": "青原区"
+		},
+		"Suichuan Xian": {
+			"local_name": "遂川县"
+		},
+		"Taihe Xian": {
+			"local_name": "泰和县"
+		},
+		"Wan'an Xian": {
+			"local_name": "万安县"
+		},
+		"Xiajiang Xian": {
+			"local_name": "峡江县"
+		},
+		"Xingan Xian": {
+			"local_name": "新干县"
+		},
+		"Yongfeng Xian": {
+			"local_name": "永丰县"
+		},
+		"Yongxin Xian": {
+			"local_name": "永新县"
+		}
+	}
+}

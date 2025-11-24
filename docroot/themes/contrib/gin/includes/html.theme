@@ -17,6 +17,11 @@ function gin_preprocess_html(&$variables) {
   $gin_activated = _gin_is_active();
 
   if ($gin_activated) {
+    // Check if IMCE is active.
+    if (isset($variables['attributes']['class']) && in_array('imce-page', $variables['attributes']['class'])) {
+      return;
+    }
+
     // Get theme settings.
     /** @var \Drupal\gin\GinSettings $settings */
     $settings = \Drupal::classResolver(GinSettings::class);
@@ -46,8 +51,26 @@ function gin_preprocess_html(&$variables) {
       return;
     }
 
-    // Check for new Drupal navigation.
-    if ($toolbar === 'new') {
+    // Gin secondary toolbar.
+    if ($toolbar !== 'classic' || _gin_module_is_active('navigation')) {
+      $variables['page']['gin_secondary_toolbar'] = [
+        '#type' => 'toolbar',
+        '#access' => \Drupal::currentUser()->hasPermission('access toolbar'),
+        '#cache' => [
+          'keys' => ['toolbar_secondary'],
+          'contexts' => ['user.permissions'],
+        ],
+        '#attributes' => [
+          'id' => 'toolbar-administration-secondary',
+        ],
+      ];
+    }
+
+    // Check if Navigation module is active.
+    if (_gin_module_is_active('navigation')) {
+      $variables['attributes']['class'][] = 'gin--core-navigation';
+    }
+    elseif ($toolbar === 'new') {
       /** @var \Drupal\gin\GinNavigaton $navigation */
       $navigation = \Drupal::classResolver(GinNavigation::class);
       // Get new navigation.
@@ -60,21 +83,6 @@ function gin_preprocess_html(&$variables) {
     else {
       // Set toolbar class.
       $variables['attributes']['class'][] = 'gin--' . $toolbar . '-toolbar';
-    }
-
-    // Gin secondary toolbar.
-    if ($toolbar !== 'classic') {
-      $variables['page']['gin_secondary_toolbar'] = [
-        '#type' => 'toolbar',
-        '#access' => \Drupal::currentUser()->hasPermission('access toolbar'),
-        '#cache' => [
-          'keys' => ['toolbar_secondary'],
-          'contexts' => ['user.permissions'],
-        ],
-        '#attributes' => [
-          'id' => 'toolbar-administration-secondary',
-        ],
-      ];
     }
   }
 }

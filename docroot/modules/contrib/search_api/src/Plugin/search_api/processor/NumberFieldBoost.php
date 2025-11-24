@@ -4,22 +4,23 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
 
 /**
  * Adds a boost based on a number field value.
- *
- * @SearchApiProcessor(
- *   id = "number_field_boost",
- *   label = @Translation("Number field-based boosting"),
- *   description = @Translation("Adds a boost to indexed items based on the value of a numeric field."),
- *   stages = {
- *     "preprocess_index" = 0,
- *   }
- * )
  */
+#[SearchApiProcessor(
+  id: 'number_field_boost',
+  label: new TranslatableMarkup('Number field-based boosting'),
+  description: new TranslatableMarkup('Adds a boost to indexed items based on the value of a numeric field.'),
+  stages: [
+    'preprocess_index' => 0,
+  ],
+)]
 class NumberFieldBoost extends ProcessorPluginBase implements PluginFormInterface {
 
   use PluginFormTrait;
@@ -97,7 +98,7 @@ class NumberFieldBoost extends ProcessorPluginBase implements PluginFormInterfac
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     $ignore = Utility::formatBoostFactor(0);
-    foreach ($values['boosts'] as $field_id => $settings) {
+    foreach ($values['boosts'] ?? [] as $field_id => $settings) {
       if (!$settings['boost_factor'] || $settings['boost_factor'] === $ignore) {
         unset($values['boosts'][$field_id]);
       }
@@ -117,42 +118,22 @@ class NumberFieldBoost extends ProcessorPluginBase implements PluginFormInterfac
       foreach ($boosts as $field_id => $settings) {
         if ($field = $item->getField($field_id)) {
           if ($values = $field->getValues()) {
-            switch ($settings['aggregation']) {
-              case 'min':
-                $value = min($values);
-                break;
-
-              case 'avg':
-                $value = array_sum($values) / count($values);
-                break;
-
-              case 'sum':
-                $value = array_sum($values);
-                break;
-
-              case 'mul':
-                $value = array_product($values);
-                break;
-
-              case 'first':
-                $value = reset($values);
-                break;
-
-              case 'max':
-              default:
-                $value = max($values);
-                break;
-
-            }
+            $value = match ($settings['aggregation']) {
+              'min' => min($values),
+              'avg' => array_sum($values) / count($values),
+              'sum' => array_sum($values),
+              'mul' => array_product($values),
+              'first' => reset($values),
+              default => max($values),
+            };
             if ($value) {
               // Normalize values from dates (which are represented by UNIX
-              // timestamps) to be not too large to store in the database, and
-              // to also not be negative (in case it is a date from before
-              // 1970).
+              // timestamps) to be not too large to store in the database.
               if ($field->getType() === 'date') {
                 $value /= 1000000;
-                $value = max($value, 0);
               }
+              // Make sure the value is never negative.
+              $value = max($value, 0);
               $item->setBoost($item->getBoost() * (double) $value * (double) $settings['boost_factor']);
             }
           }

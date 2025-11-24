@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Commands;
 
 use Consolidation\AnnotatedCommand\AnnotationData;
@@ -15,31 +17,10 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class ImageEffectsCommands extends DrushCommands {
 
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  private $entityTypeManager;
-
-  /**
-   * The image effects converter.
-   *
-   * @var \Drupal\image_effects\ImageEffectsConverter
-   */
-  private $imageEffectsConverter;
-
-  /**
-   * Constructs an ImageEffectsCommands object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\image_effects\ImageEffectsConverter $image_effects_converter
-   *   The image effects converter.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ImageEffectsConverter $image_effects_converter) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->imageEffectsConverter = $image_effects_converter;
+  public function __construct(
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly ImageEffectsConverter $imageEffectsConverter,
+  ) {
   }
 
 // phpcs:disable
@@ -63,7 +44,7 @@ class ImageEffectsCommands extends DrushCommands {
    * @validate-module-enabled image
    * @validate-module-enabled image_effects
    */
-  public function convertRotate($style_names, $options = ['name-contains' => NULL, 'label-contains' => NULL, 'revert' => FALSE]) {
+  public function convertRotate(string $style_names, array $options = ['name-contains' => NULL, 'label-contains' => NULL, 'revert' => FALSE]): void {
 // phpcs:enable
     $image_style_names = $this->getImageStylesContainingRotateEffect($options['name-contains'], $options['label-contains'], $options['revert']);
 
@@ -81,7 +62,7 @@ class ImageEffectsCommands extends DrushCommands {
         $this->logger()->success(dt('Image style !style_name converted.', ['!style_name' => $style_name]));
       }
       else {
-        $this->logger()->fail(dt('Image style !style_name conversion failed.', ['!style_name' => $style_name]));
+        $this->logger()->error(dt('Image style !style_name conversion failed.', ['!style_name' => $style_name]));
       }
     }
   }
@@ -91,7 +72,7 @@ class ImageEffectsCommands extends DrushCommands {
    *
    * @hook interact image-effects:convert-rotate
    */
-  public function interactConvertRotate($input, $output) {
+  public function interactConvertRotate(InputInterface $input): void {
     $image_style_names = [];
     $choices = ['all' => 'all'];
     foreach (StringUtils::csvToArray($input->getArgument('style_names')) as $style_name) {
@@ -113,7 +94,7 @@ class ImageEffectsCommands extends DrushCommands {
    *
    * @hook init image-effects:convert-rotate
    */
-  public function initConvertRotate(InputInterface $input, AnnotationData $annotationData) {
+  public function initConvertRotate(InputInterface $input, AnnotationData $annotationData): void {
     // Needed for non-interactive calls.
     if (!$input->getArgument('style_names')) {
       $image_style_names = $this->getImageStylesContainingRotateEffect($input->getOption('name-contains'), $input->getOption('label-contains'), $input->getOption('revert'));

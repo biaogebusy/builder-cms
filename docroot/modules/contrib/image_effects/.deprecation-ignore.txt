@@ -1,0 +1,9 @@
+# This file contains patterns to be ignored while testing for use of
+# deprecated code.
+# See https://www.drupal.org/node/3285162 for more details.
+
+# Image effects for Drupal 10.3
+%Since twig\/twig 3\.(9|11|12)%
+%Since symfony\/dependency-injection 6\.4%
+%The core\/tabbable\.jquery\.shim asset library is deprecated in Drupal 10\.3\.0%
+%"Symfony\\Component\\EventDispatcher\\EventSubscriberInterface::getSubscribedEvents\(\)" might add "array" as a native return type declaration in the future\. Do the same in implementation "Drupal\\color\\EventSubscriber\\ColorConfigCacheInvalidator" now to avoid errors or add an explicit @return annotation to suppress this message\.%

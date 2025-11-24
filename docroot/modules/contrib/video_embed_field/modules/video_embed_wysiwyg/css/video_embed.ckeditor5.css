@@ -1,0 +1,17 @@
+.ck-content {
+  .video-embed-widget {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .video-embed-widget__image {
+    display: inline-block;
+    width: auto;
+  }
+
+  .video-embed-widget__summary {
+    display: inline-block;
+    width: 100%;
+  }
+}

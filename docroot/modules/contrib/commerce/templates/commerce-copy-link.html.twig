@@ -1,0 +1,17 @@
+{#
+/**
+ * @file
+ *
+ * Default commerce copy link template.
+ *
+ * Available variables:
+ * - link: The link that would be copied to clipboard.
+ * - title: Text for the title attribute.
+ *
+ * @ingroup themeable
+ */
+#}
+{{ attach_library('commerce/copy-link') }}
+{% if link %}
+  <button type="button" class="commerce-copy-link" data-link="{{ link }}" title="{{ title }}"></button>
+{% endif %}

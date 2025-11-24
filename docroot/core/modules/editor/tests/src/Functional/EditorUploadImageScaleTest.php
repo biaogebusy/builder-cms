@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\editor\Functional;
 
 use Drupal\editor\Entity\Editor;
@@ -75,7 +77,7 @@ class EditorUploadImageScaleTest extends BrowserTestBase {
   /**
    * Tests scaling of inline images.
    */
-  public function testEditorUploadImageScale() {
+  public function testEditorUploadImageScale(): void {
     // Generate testing images.
     $testing_image_list = $this->getTestFiles('image');
 

@@ -2,7 +2,6 @@
 
 namespace Drupal\blazy\Plugin\Filter;
 
-use Drupal\blazy\internals\Internals;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -135,11 +134,11 @@ abstract class TextFilterBase extends FilterBase implements ContainerFactoryPlug
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
 
-    $instance->root = Internals::root($container);
+    $instance->root = $container->getParameter('app.root');
     $instance->entityFieldManager = $container->get('entity_field.manager');
     $instance->filterManager = $container->get('plugin.manager.filter');
     $instance->admin = $container->get('blazy.admin.formatter');
@@ -245,7 +244,6 @@ abstract class TextFilterBase extends FilterBase implements ContainerFactoryPlug
         $text .= $child->ownerDocument->saveXML($child);
       }
     }
-
     return $text;
   }
 

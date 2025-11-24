@@ -15,6 +15,9 @@ use Drupal\page_manager_ui\Form\PageVariantConfigureForm;
 use Drupal\page_manager_ui\Form\PageVariantContextsForm;
 use Drupal\page_manager_ui\Form\PageVariantSelectionForm;
 
+/**
+ * PAge Manager - Page Edit Wizard Class.
+ */
 class PageEditWizard extends PageWizardBase {
 
   /**
@@ -23,7 +26,7 @@ class PageEditWizard extends PageWizardBase {
   public function getOperations($cached_values) {
     $operations = parent::getOperations($cached_values);
 
-    /** @var $page \Drupal\page_manager\Entity\Page */
+    /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
 
     if (!empty($page)) {
@@ -143,7 +146,7 @@ class PageEditWizard extends PageWizardBase {
    */
   protected function customizeForm(array $form, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    /** @var $page \Drupal\page_manager\Entity\Page */
+    /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
 
     // The page actions.
@@ -281,7 +284,7 @@ class PageEditWizard extends PageWizardBase {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function finish(array &$form, FormStateInterface $form_state) {
     // Delete any of the variants marked for deletion.
@@ -301,7 +304,11 @@ class PageEditWizard extends PageWizardBase {
    * Clears the temporary store.
    *
    * @param array $form
+   *   The Drupal Form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The Drupal Form State object.
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function clearTempstore(array &$form, FormStateInterface $form_state) {
     $this->getTempstore()->delete($this->getMachineName());

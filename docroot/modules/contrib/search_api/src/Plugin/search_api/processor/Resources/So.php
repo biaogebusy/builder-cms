@@ -12,6 +12,7 @@ class So implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{00A6}\x{00A9}\x{00AE}\x{00B0}\x{0482}\x{060E}\x{060F}' .
       '\x{06DE}\x{06E9}\x{06FD}\x{06FE}\x{07F6}\x{09FA}\x{0B70}' .
@@ -644,6 +645,7 @@ class So implements UnicodeCharacterPropertyInterface {
       '\x{1F76C}\x{1F76D}\x{1F76E}\x{1F76F}\x{1F770}\x{1F771}\x{1F772}' .
       '\x{1F773}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\entity_share_client\Functional;
 
-use Drupal\node\NodeInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\entity_share\EntityShareUtility;
 use Drupal\entity_share_client\ImportContext;
+use Drupal\node\NodeInterface;
 
 /**
  * General functional test class for metatag field.
@@ -80,7 +80,7 @@ class MetatagTest extends EntityShareClientFunctionalTestBase {
               'checker_callback' => 'getValue',
             ],
             'field_es_test_metatag' => [
-              'value' => serialize([
+              'value' => \serialize([
                 'abstract' => 'test abstract',
               ]),
               'checker_callback' => 'getValue',
@@ -127,7 +127,7 @@ class MetatagTest extends EntityShareClientFunctionalTestBase {
 
     // Load and remember the metatags of newly imported node.
     $node = $this->loadEntity('node', 'es_test');
-    $node_metatags = unserialize($node->get('field_es_test_metatag')->getValue()[0]['value']);
+    $node_metatags = Json::decode($node->get('field_es_test_metatag')->getValue()[0]['value']);
 
     // In this case even if default metatags are exposed, as the exposed data
     // is only token, it is not saved back into the field.
@@ -173,7 +173,7 @@ class MetatagTest extends EntityShareClientFunctionalTestBase {
     $this->importData();
 
     $node = $this->loadEntity('node', 'es_test');
-    $node_metatags = unserialize($node->get('field_es_test_metatag')->getValue()[0]['value']);
+    $node_metatags = Json::decode($node->get('field_es_test_metatag')->getValue()[0]['value']);
     // This node must be deleted because of next import.
     $node->delete();
 
@@ -212,7 +212,7 @@ class MetatagTest extends EntityShareClientFunctionalTestBase {
     $this->importData();
 
     $node = $this->loadEntity('node', 'es_test');
-    $node_metatags = unserialize($node->get('field_es_test_metatag')->getValue()[0]['value']);
+    $node_metatags = Json::decode($node->get('field_es_test_metatag')->getValue()[0]['value']);
 
     $this->assertEquals($expected_metatags, $node_metatags, 'The node has the expected metatags.');
   }

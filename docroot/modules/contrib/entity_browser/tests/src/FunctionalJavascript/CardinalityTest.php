@@ -151,7 +151,6 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $aragorn_checkbox->check();
     $gandolf_checkbox->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->waitForAjaxToFinish();
     $this->assertSession()->pageTextContains('You can only select up to 2 items');
     // If we change the cardinality to 1, we should have radios.
     FieldStorageConfig::load('node.field_fellowship')
@@ -162,15 +161,19 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $gollum_radio = $this->assertRadioExistsByValue('node:' . $gollum->id());
     $gollum_radio->click();
     $this->assertSession()->buttonExists('Select entities')->press();
+    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->switchToIFrame();
-    $this->waitForAjaxToFinish();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     // Assert the selected entity.
     $this->assertSession()->pageTextContains('Gollum');
     // Attempt to select more than one element.
     $this->assertSession()->buttonExists('Replace')->press();
     $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_cardinality');
-    $this->waitForAjaxToFinish();
     $gollum_radio = $this->assertRadioExistsByValue('node:' . $gollum->id());
     $gollum_radio->click();
     $gandolf_radio = $this->assertRadioExistsByValue('node:' . $gandolf->id());
@@ -187,7 +190,6 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->buttonExists('Replace')->press();
     $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_cardinality');
-    $this->waitForAjaxToFinish();
 
     // Test that cardinality setting persists when using exposed filters form,
     // When applying the exposed filters, the radios should persist.
@@ -374,9 +376,7 @@ class CardinalityTest extends EntityBrowserWebDriverTestBase {
     $open_iframe_link = $this->assertSession()
       ->elementExists('css', 'a[data-drupal-selector="edit-field-fellowship-entity-browser-entity-browser-link"]');
     $open_iframe_link->click();
-    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_cardinality');
-    $this->waitForAjaxToFinish();
   }
 
 }

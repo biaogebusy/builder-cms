@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -58,6 +60,7 @@ class FlagCountExtensionTest extends WebDriverTestBase {
       'unflag bookmark',
     ]);
 
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($auth_user);
@@ -77,11 +80,11 @@ class FlagCountExtensionTest extends WebDriverTestBase {
 
     // Observe a change in the frontpage link title.
     $bookmark_link = $assert_session->waitForLink('Remove bookmark');
-    $this->assertNotNull($bookmark_link, 'Remove bookmark is availble on the page.');
+    $this->assertNotNull($bookmark_link, 'Remove bookmark is available on the page.');
 
     // Check the view is shown correctly.
     $this->drupalGet('bookmarks');
-    $assert_session->pageTextContains($article->getTitle());
+    $this->assertSession()->pageTextContains($article->getTitle());
   }
 
 }

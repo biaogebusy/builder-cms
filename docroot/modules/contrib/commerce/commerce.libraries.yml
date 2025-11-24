@@ -1,10 +1,58 @@
+base:
+  css:
+    base:
+      css/commerce.base.css: {}
+
+admin-layout:
+  css:
+    layout:
+      css/commerce.admin-layout.css: {}
+
+dashboard:
+  css:
+    component:
+      css/commerce.management-links.css: {}
+      css/commerce.inbox.css: {}
+      css/commerce.metrics.css: {}
+      css/commerce.dashboard.css: {}
+  dependencies:
+    - commerce/base
+    - core/drupal
+    - core/once
+  js:
+    js/commerce.inbox.js: {}
+    js/commerce.management-links.js: {}
+
 conditions:
-  version: VERSION
   js:
     js/conditions.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.vertical-tabs
+    - core/jquery
 
 toolbar:
-  version: VERSION
   css:
     theme:
-      css/commerce.icons.css: {}
+      css/commerce.toolbar.css: {}
+  dependencies:
+    - commerce/base
+
+local-actions:
+  css:
+    theme:
+      css/commerce.local-actions.css: {}
+
+field-ui:
+  css:
+    theme:
+      css/commerce.field_ui.css: {}
+
+copy-link:
+  css:
+    theme:
+      css/commerce.copy-link.css: { }
+  js:
+    js/commerce.copy-link.js: { }
+  dependencies:
+    - commerce/base

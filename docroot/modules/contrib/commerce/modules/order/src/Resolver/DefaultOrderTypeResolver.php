@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_order\Resolver;
 
-use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_order\Entity\OrderItemInterface;
 
 /**
  * Returns the order type, based on order item type configuration.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -13,9 +15,7 @@ use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 class TermValidationTest extends EntityKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['taxonomy'];
 
@@ -30,7 +30,7 @@ class TermValidationTest extends EntityKernelTestBase {
   /**
    * Tests the term validation constraints.
    */
-  public function testValidation() {
+  public function testValidation(): void {
     $this->entityTypeManager->getStorage('taxonomy_vocabulary')->create([
       'vid' => 'tags',
       'name' => 'Tags',
@@ -47,7 +47,7 @@ class TermValidationTest extends EntityKernelTestBase {
     $this->assertCount(1, $violations, 'Violation found when name is too long.');
     $this->assertEquals('name.0.value', $violations[0]->getPropertyPath());
     $field_label = $term->get('name')->getFieldDefinition()->getLabel();
-    $this->assertEquals(t('%name: may not be longer than @max characters.', ['%name' => $field_label, '@max' => 255]), $violations[0]->getMessage());
+    $this->assertEquals(sprintf('%s: may not be longer than 255 characters.', $field_label), $violations[0]->getMessage());
 
     $term->set('name', NULL);
     $violations = $term->validate();

@@ -98,9 +98,8 @@ enable the module as usual.
   module should use:
   - _Color selector_ - allows to specify a UI component to select colors in the
     image effects. It can use a 'color' HTML element, or a color picker
-    provided by the Farbtastic library, or a JQuery Colorpicker (if the [_JQuery
-    Colorpicker_](https://www.drupal.org/project/jquery_colorpicker) module is
-    installed). Additional selectors may be added by other modules.
+    provided by the Farbtastic library. Additional selectors may be added by other
+    modules.
   - _Image selector_ - some effects (e.g. Watermark) require to define an image
     file to be used. This setting allows to use either a basic text field where
     the URI/path to the image can be entered, or a 'dropdown' select that will
@@ -124,10 +123,6 @@ enable the module as usual.
 
 - Use the [_Entity Clone_](https://www.drupal.org/project/entity_clone) module
   to make clones of image style configurations.
-- Install the
-  [_JQuery Colorpicker_](https://www.drupal.org/project/jquery_colorpicker)
-  module to allow using the JQuery Colorpicker widget to select colors in the
-  image effects' configuration UI.
 
 
 ## Support

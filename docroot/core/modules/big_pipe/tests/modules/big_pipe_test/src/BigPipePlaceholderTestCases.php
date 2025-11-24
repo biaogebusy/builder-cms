@@ -4,6 +4,8 @@
  * @file
  */
 
+// cspell:ignore divpiggydiv timecurrent timetime
+
 namespace Drupal\big_pipe_test;
 
 use Drupal\big_pipe\Render\BigPipeMarkup;
@@ -33,7 +35,7 @@ class BigPipePlaceholderTestCases {
    *
    * @return \Drupal\big_pipe_test\BigPipePlaceholderTestCase[]
    */
-  public static function cases(ContainerInterface $container = NULL, AccountInterface $user = NULL) {
+  public static function cases(?ContainerInterface $container = NULL, ?AccountInterface $user = NULL) {
     // Define the two types of cacheability that we expect to see. These will be
     // used in the expectations.
     $cacheability_depends_on_session_only = [
@@ -48,6 +50,7 @@ class BigPipePlaceholderTestCases {
     // 1. Real-world example of HTML placeholder.
     $status_messages = new BigPipePlaceholderTestCase(
       ['#type' => 'status_messages'],
+      // cspell:disable-next-line
       '<drupal-render-placeholder callback="Drupal\Core\Render\Element\StatusMessages::renderMessages" arguments="0" token="_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></drupal-render-placeholder>',
       [
         '#lazy_builder' => [
@@ -56,28 +59,41 @@ class BigPipePlaceholderTestCases {
         ],
       ]
     );
+    // cspell:disable-next-line
     $status_messages->bigPipePlaceholderId = 'callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA';
     $status_messages->bigPipePlaceholderRenderArray = [
-      '#markup' => '<span data-big-pipe-placeholder-id="callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></span>',
+      // cspell:disable-next-line
+      '#prefix' => '<span data-big-pipe-placeholder-id="callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA">',
+      'interface_preview' => [
+        '#theme' => 'big_pipe_interface_preview',
+        '#callback' => 'Drupal\Core\Render\Element\StatusMessages::renderMessages',
+        '#arguments' => [NULL],
+      ],
+      '#suffix' => '</span>',
       '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
       '#attached' => [
         'library' => ['big_pipe/big_pipe'],
         'drupalSettings' => [
           'bigPipePlaceholderIds' => [
+            // cspell:disable-next-line
             'callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&args%5B0%5D&token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA' => TRUE,
           ],
         ],
         'big_pipe_placeholders' => [
+          // cspell:disable-next-line
           'callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA' => $status_messages->placeholderRenderArray,
         ],
       ],
     ];
+    // cspell:disable-next-line
     $status_messages->bigPipeNoJsPlaceholder = '<span data-big-pipe-nojs-placeholder-id="callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></span>';
     $status_messages->bigPipeNoJsPlaceholderRenderArray = [
+      // cspell:disable-next-line
       '#markup' => '<span data-big-pipe-nojs-placeholder-id="callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></span>',
       '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
       '#attached' => [
         'big_pipe_nojs_placeholders' => [
+          // cspell:disable-next-line
           '<span data-big-pipe-nojs-placeholder-id="callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&amp;args%5B0%5D&amp;token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></span>' => $status_messages->placeholderRenderArray,
         ],
       ],
@@ -87,6 +103,7 @@ class BigPipePlaceholderTestCases {
         [
           'command' => 'insert',
           'method' => 'replaceWith',
+          // cspell:disable-next-line
           'selector' => '[data-big-pipe-placeholder-id="callback=Drupal%5CCore%5CRender%5CElement%5CStatusMessages%3A%3ArenderMessages&args%5B0%5D&token=_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"]',
           'data' => '<div data-drupal-messages>' . "\n" . ' <div role="contentinfo" aria-label="Status message">' . "\n" . ' <h2 class="visually-hidden">Status message</h2>' . "\n" . ' Hello from BigPipe!' . "\n" . ' </div>' . "\n" . '</div>' . "\n",
           'settings' => NULL,
@@ -154,14 +171,17 @@ class BigPipePlaceholderTestCases {
         '#markup' => BigPipeMarkup::create('<hello'),
         '#attached' => [
           'placeholders' => [
-            '<hello' => ['#lazy_builder' => ['\Drupal\big_pipe_test\BigPipeTestController::helloOrYarhar', []]],
+            '<hello' => ['#lazy_builder' => ['\Drupal\big_pipe_test\BigPipeTestController::helloOrHi', []]],
           ],
         ],
       ],
       '<hello',
       [
         '#lazy_builder' => [
-          'hello_or_yarhar',
+          // We specifically test an invalid callback here. We need to let
+          // PHPStan ignore it.
+          // @phpstan-ignore-next-line
+          'hello_or_hi',
           [],
         ],
       ]
@@ -176,9 +196,65 @@ class BigPipePlaceholderTestCases {
         ],
       ],
     ];
-    $hello->embeddedHtmlResponse = '<marquee>Yarhar llamas forever!</marquee>';
+    $hello->embeddedHtmlResponse = '<marquee>Llamas forever!</marquee>';
 
-    // 5. Edge case: non-#lazy_builder placeholder.
+    // 5. Edge case: non-#lazy_builder placeholder that calls Fiber::suspend().
+    $piggy = new BigPipePlaceholderTestCase(
+      [
+        '#markup' => BigPipeMarkup::create('<div>piggy</div>'),
+        '#attached' => [
+          'placeholders' => [
+            '<div>piggy</div>' => [
+              '#pre_render' => [
+                '\Drupal\big_pipe_test\BigPipeTestController::piggy',
+              ],
+            ],
+          ],
+        ],
+      ],
+      '<div>piggy</div>',
+      []
+    );
+    $piggy->bigPipePlaceholderId = 'divpiggydiv';
+    $piggy->bigPipePlaceholderRenderArray = [
+      '#prefix' => '<span data-big-pipe-placeholder-id="divpiggydiv">',
+      'interface_preview' => [],
+      '#suffix' => '</span>',
+      '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
+      '#attached' => [
+        'library' => ['big_pipe/big_pipe'],
+        'drupalSettings' => [
+          'bigPipePlaceholderIds' => [
+            'divpiggydiv' => TRUE,
+          ],
+        ],
+        'big_pipe_placeholders' => [
+          'divpiggydiv' => $piggy->placeholderRenderArray,
+        ],
+      ],
+    ];
+    $piggy->embeddedAjaxResponseCommands = [
+      [
+        'command' => 'insert',
+        'method' => 'replaceWith',
+        'selector' => '[data-big-pipe-placeholder-id="divpiggydiv"]',
+        'data' => '<span>This 🐷 little 🐽 piggy 🐖 stayed 🐽 at 🐷 home.</span>',
+        'settings' => NULL,
+      ],
+    ];
+    $piggy->bigPipeNoJsPlaceholder = '<span data-big-pipe-nojs-placeholder-id="divpiggydiv></span>';
+    $piggy->bigPipeNoJsPlaceholderRenderArray = [
+      '#markup' => '<span data-big-pipe-nojs-placeholder-id="divpiggydiv"></span>',
+      '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
+      '#attached' => [
+        'big_pipe_nojs_placeholders' => [
+          '<span data-big-pipe-nojs-placeholder-id="divpiggydiv"></span>' => $piggy->placeholderRenderArray,
+        ],
+      ],
+    ];
+    $piggy->embeddedHtmlResponse = '<span>This 🐷 little 🐽 piggy 🐖 stayed 🐽 at 🐷 home.</span>';
+
+    // 6. Edge case: non-#lazy_builder placeholder.
     $current_time = new BigPipePlaceholderTestCase(
       [
         '#markup' => BigPipeMarkup::create('<time>CURRENT TIME</time>'),
@@ -194,12 +270,17 @@ class BigPipePlaceholderTestCases {
       ],
       '<time>CURRENT TIME</time>',
       [
+        // We specifically test an invalid callback here. We need to let
+        // PHPStan ignore it.
+        // @phpstan-ignore-next-line
         '#pre_render' => ['current_time'],
       ]
     );
     $current_time->bigPipePlaceholderId = 'timecurrent-timetime';
     $current_time->bigPipePlaceholderRenderArray = [
-      '#markup' => '<span data-big-pipe-placeholder-id="timecurrent-timetime"></span>',
+      '#prefix' => '<span data-big-pipe-placeholder-id="timecurrent-timetime">',
+      'interface_preview' => [],
+      '#suffix' => '</span>',
       '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
       '#attached' => [
         'library' => ['big_pipe/big_pipe'],
@@ -234,34 +315,46 @@ class BigPipePlaceholderTestCases {
     ];
     $current_time->embeddedHtmlResponse = '<time datetime="1991-03-14"></time>';
 
-    // 6. Edge case: #lazy_builder that throws an exception.
+    // 7. Edge case: #lazy_builder that throws an exception.
     $exception = new BigPipePlaceholderTestCase(
       [
         '#lazy_builder' => ['\Drupal\big_pipe_test\BigPipeTestController::exception', ['llamas', 'suck']],
         '#create_placeholder' => TRUE,
       ],
+      // cspell:disable-next-line
       '<drupal-render-placeholder callback="\Drupal\big_pipe_test\BigPipeTestController::exception" arguments="0=llamas&amp;1=suck" token="uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU"></drupal-render-placeholder>',
       [
         '#lazy_builder' => ['\Drupal\big_pipe_test\BigPipeTestController::exception', ['llamas', 'suck']],
       ]
     );
+    // cspell:disable-next-line
     $exception->bigPipePlaceholderId = 'callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3Aexception&amp;args%5B0%5D=llamas&amp;args%5B1%5D=suck&amp;token=uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU';
     $exception->bigPipePlaceholderRenderArray = [
-      '#markup' => '<span data-big-pipe-placeholder-id="callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3Aexception&amp;args%5B0%5D=llamas&amp;args%5B1%5D=suck&amp;token=uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU"></span>',
+      // cspell:disable-next-line
+      '#prefix' => '<span data-big-pipe-placeholder-id="callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3Aexception&amp;args%5B0%5D=llamas&amp;args%5B1%5D=suck&amp;token=uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU">',
+      'interface_preview' => [
+        '#theme' => 'big_pipe_interface_preview',
+        '#callback' => '\Drupal\big_pipe_test\BigPipeTestController::exception',
+        '#arguments' => ['llamas', 'suck'],
+      ],
+      '#suffix' => '</span>',
       '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
       '#attached' => [
         'library' => ['big_pipe/big_pipe'],
         'drupalSettings' => [
           'bigPipePlaceholderIds' => [
+            // cspell:disable-next-line
             'callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3Aexception&args%5B0%5D=llamas&args%5B1%5D=suck&token=uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU' => TRUE,
           ],
         ],
         'big_pipe_placeholders' => [
+          // cspell:disable-next-line
           'callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3Aexception&amp;args%5B0%5D=llamas&amp;args%5B1%5D=suck&amp;token=uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU' => $exception->placeholderRenderArray,
         ],
       ],
     ];
     $exception->embeddedAjaxResponseCommands = NULL;
+    // cspell:disable-next-line
     $exception->bigPipeNoJsPlaceholder = '<span data-big-pipe-nojs-placeholder-id="callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3Aexception&amp;args%5B0%5D=llamas&amp;args%5B1%5D=suck&amp;token=uhKFNfT4eF449_W-kDQX8E5z4yHyt0-nSHUlwaGAQeU"></span>';
     $exception->bigPipeNoJsPlaceholderRenderArray = [
       '#markup' => $exception->bigPipeNoJsPlaceholder,
@@ -276,20 +369,27 @@ class BigPipePlaceholderTestCases {
 
     // cSpell:disable-next-line.
     $token = 'PxOHfS_QL-T01NjBgu7Z7I04tIwMp6La5vM-mVxezbU';
-    // 7. Edge case: response filter throwing an exception for this placeholder.
+    // 8. Edge case: response filter throwing an exception for this placeholder.
     $embedded_response_exception = new BigPipePlaceholderTestCase(
       [
         '#lazy_builder' => ['\Drupal\big_pipe_test\BigPipeTestController::responseException', []],
         '#create_placeholder' => TRUE,
       ],
-      '<drupal-render-placeholder callback="\Drupal\big_pipe_test\BigPipeTestController::responseException" arguments="" token="' . $token . ' "></drupal-render-placeholder>',
+      '<drupal-render-placeholder callback="\Drupal\big_pipe_test\BigPipeTestController::responseException" arguments token="' . $token . ' "></drupal-render-placeholder>',
       [
         '#lazy_builder' => ['\Drupal\big_pipe_test\BigPipeTestController::responseException', []],
       ]
     );
     $embedded_response_exception->bigPipePlaceholderId = 'callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3AresponseException&amp;&amp;token=' . $token;
     $embedded_response_exception->bigPipePlaceholderRenderArray = [
-      '#markup' => '<span data-big-pipe-placeholder-id="callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3AresponseException&amp;&amp;token=' . $token . '"></span>',
+      // cspell:disable-next-line
+      '#prefix' => '<span data-big-pipe-placeholder-id="callback=%5CDrupal%5Cbig_pipe_test%5CBigPipeTestController%3A%3AresponseException&amp;&amp;token=PxOHfS_QL-T01NjBgu7Z7I04tIwMp6La5vM-mVxezbU">',
+      'interface_preview' => [
+        '#theme' => 'big_pipe_interface_preview',
+        '#callback' => '\Drupal\big_pipe_test\BigPipeTestController::responseException',
+        '#arguments' => [],
+      ],
+      '#suffix' => '</span>',
       '#cache' => $cacheability_depends_on_session_and_nojs_cookie,
       '#attached' => [
         'library' => ['big_pipe/big_pipe'],
@@ -321,6 +421,7 @@ class BigPipePlaceholderTestCases {
       'html_attribute_value' => $form_action,
       'html_attribute_value_subset' => $csrf_token,
       'edge_case__invalid_html' => $hello,
+      'edge_case__html_non_lazy_builder_suspend' => $piggy,
       'edge_case__html_non_lazy_builder' => $current_time,
       'exception__lazy_builder' => $exception,
       'exception__embedded_response' => $embedded_response_exception,

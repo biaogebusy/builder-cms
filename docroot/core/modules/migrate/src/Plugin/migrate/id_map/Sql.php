@@ -2,8 +2,10 @@
 
 namespace Drupal\migrate\Plugin\migrate\id_map;
 
+use Drupal\Component\Plugin\Attribute\PluginID;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\Exception\SchemaTableKeyTooLargeException;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -29,9 +31,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * It creates one map and one message table per migration entity to store the
  * relevant information.
- *
- * @PluginID("sql")
  */
+#[PluginID('sql')]
 class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryPluginInterface, HighestIdInterface {
 
   /**
@@ -169,7 +170,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
    * @param \Drupal\migrate\Plugin\MigrationPluginManagerInterface $migration_plugin_manager
    *   The migration plugin manager.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EventDispatcherInterface $event_dispatcher, MigrationPluginManagerInterface $migration_plugin_manager = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, EventDispatcherInterface $event_dispatcher, ?MigrationPluginManagerInterface $migration_plugin_manager = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->migration = $migration;
     $this->eventDispatcher = $event_dispatcher;
@@ -181,7 +182,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
 
     // Default generated table names, limited to 63 characters.
     $machine_name = str_replace(':', '__', $this->migration->id());
-    $prefix_length = strlen($this->database->tablePrefix());
+    $prefix_length = strlen($this->database->getPrefix());
     $this->mapTableName = 'migrate_map_' . mb_strtolower($machine_name);
     $this->mapTableName = mb_substr($this->mapTableName, 0, 63 - $prefix_length);
     $this->messageTableName = 'migrate_message_' . mb_strtolower($machine_name);
@@ -197,7 +198,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -387,6 +388,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
         'not null' => TRUE,
         'default' => 0,
         'description' => 'UNIX timestamp of the last time this row was imported',
+        'size' => 'big',
       ];
       $fields['hash'] = [
         'type' => 'varchar',
@@ -423,13 +425,11 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
             ->createTable($this->mapTableName, $schema);
           break;
         }
-        catch (DatabaseException $e) {
-          $pdo_exception = $e->getPrevious();
-          $mysql_index_error = $pdo_exception instanceof \PDOException && $pdo_exception->getCode() === '42000' && $pdo_exception->errorInfo[1] === 1071;
+        catch (SchemaTableKeyTooLargeException $e) {
           $chunk_size--;
           // Rethrow the exception if the source IDs can not be in smaller
           // groups.
-          if (!$mysql_index_error || $chunk_size <= 0) {
+          if ($chunk_size <= 0) {
             throw $e;
           }
         }
@@ -590,14 +590,23 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
   public function lookupSourceId(array $destination_id_values) {
     $source_id_fields = $this->sourceIdFields();
     $query = $this->getDatabase()->select($this->mapTableName(), 'map');
+    // To allow source field names to be defined with spaces and special
+    // characters, create an alias map of column alias to source field name,
+    // since SQL column aliases do not support spaces or special characters.
+    $alias_map = [];
     foreach ($source_id_fields as $source_field_name => $id_map_field_name) {
-      $query->addField('map', $id_map_field_name, $source_field_name);
+      $alias = $query->addField('map', $id_map_field_name);
+      $alias_map[$alias] = $source_field_name;
     }
     foreach ($this->destinationIdFields() as $field_name => $destination_id) {
       $query->condition("map.$destination_id", $destination_id_values[$field_name], '=');
     }
-    $result = $query->execute();
-    return $result->fetchAssoc() ?: [];
+    $result = $query->execute()->fetchAssoc() ?: [];
+    $source_ids = [];
+    foreach ($result as $alias => $id) {
+      $source_ids[$alias_map[$alias]] = $id;
+    }
+    return $source_ids;
   }
 
   /**
@@ -698,14 +707,11 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
       $this->message->display($this->t('Could not save to map table due to missing destination id values'), 'error');
       return;
     }
-    if ($this->migration->getTrackLastImported()) {
-      $fields['last_imported'] = time();
-    }
-    $keys = [$this::SOURCE_IDS_HASH => $this->getSourceIdsHash($source_id_values)];
+    $fields['last_imported'] = time();
     // Notify anyone listening of the map row we're about to save.
     $this->eventDispatcher->dispatch(new MigrateMapSaveEvent($this, $fields), MigrateEvents::MAP_SAVE);
     $this->getDatabase()->merge($this->mapTableName())
-      ->key($keys)
+      ->key($this::SOURCE_IDS_HASH, $this->getSourceIdsHash($source_id_values))
       ->fields($fields)
       ->execute();
   }
@@ -1022,7 +1028,7 @@ class Sql extends PluginBase implements MigrateIdMapInterface, ContainerFactoryP
    * @see https://www.drupal.org/node/3277306
    */
   protected function getMigrationPluginManager() {
-    @trigger_error('deprecated in drupal:9.5.0 and is removed from drupal:11.0.0. Use $this->migrationPluginManager instead. See https://www.drupal.org/node/3277306', E_USER_DEPRECATED);
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:9.5.0 and is removed from drupal:11.0.0. Use $this->migrationPluginManager instead. See https://www.drupal.org/node/3277306', E_USER_DEPRECATED);
     return $this->migrationPluginManager;
   }
 

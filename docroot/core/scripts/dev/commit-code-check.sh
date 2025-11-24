@@ -11,8 +11,8 @@
 # - File modes.
 # - No changes to core/node_modules directory.
 # - PHPCS checks PHP and YAML files.
+# - PHPStan checks PHP files.
 # - ESLint checks JavaScript and YAML files.
-# - Checks .es6.js and .js files are equivalent.
 # - Stylelint checks CSS files.
 # - Checks .pcss.css and .css files are equivalent.
 
@@ -25,6 +25,7 @@ contains_element() {
   return 1
 }
 
+MEMORY_UNLIMITED=0
 CACHED=0
 DRUPALCI=0
 BRANCH=""
@@ -58,11 +59,21 @@ while test $# -gt 0; do
       DRUPALCI=1
       shift
       ;;
+    --memory-unlimited)
+      MEMORY_UNLIMITED=1
+      shift
+      ;;
     *)
       break
       ;;
   esac
 done
+
+memory_limit=""
+
+if [[ "$MEMORY_UNLIMITED" == "1" ]]; then
+  memory_limit="--memory-limit=-1"
+fi
 
 # Set up variables to make colored output simple. Color output is disabled on
 # DrupalCI because it is breaks reporting.
@@ -112,6 +123,10 @@ TOP_LEVEL=$($GIT rev-parse --show-toplevel)
 # This variable will be set to one when the file core/phpcs.xml.dist is changed.
 PHPCS_XML_DIST_FILE_CHANGED=0
 
+# This variable will be set to one when the files core/.phpstan-baseline.php or
+# core/phpstan.neon.dist are changed.
+PHPSTAN_DIST_FILE_CHANGED=0
+
 # This variable will be set to one when one of the eslint config file is
 # changed:
 #  - core/.eslintrc.passing.json
@@ -135,13 +150,22 @@ JAVASCRIPT_PACKAGES_CHANGED=0
 # it is used to make sure the compiled JS is valid.
 CKEDITOR5_PLUGINS_CHANGED=0
 
+# This variable will be set to when the dictionary has changed.
+CSPELL_DICTIONARY_FILE_CHANGED=0
+
 # Build up a list of absolute file names.
 ABS_FILES=
 for FILE in $FILES; do
-  ABS_FILES="$ABS_FILES $TOP_LEVEL/$FILE"
+  if [ -f "$TOP_LEVEL/$FILE" ]; then
+    ABS_FILES="$ABS_FILES $TOP_LEVEL/$FILE"
+  fi
 
   if [[ $FILE == "core/phpcs.xml.dist" ]]; then
     PHPCS_XML_DIST_FILE_CHANGED=1;
+  fi;
+
+  if [[ $FILE == "core/.phpstan-baseline.php" || $FILE == "core/phpstan.neon.dist" ]]; then
+    PHPSTAN_DIST_FILE_CHANGED=1;
   fi;
 
   if [[ $FILE == "core/.eslintrc.json" || $FILE == "core/.eslintrc.passing.json" || $FILE == "core/.eslintrc.jquery.json" ]]; then
@@ -162,6 +186,10 @@ for FILE in $FILES; do
   if [[ -f "$TOP_LEVEL/$FILE" ]] && [[ $FILE =~ \.js$ ]] && [[ $FILE =~ ^core/modules/ckeditor5/js/build || $FILE =~ ^core/modules/ckeditor5/js/ckeditor5_plugins ]]; then
     CKEDITOR5_PLUGINS_CHANGED=1;
   fi;
+
+  if [[ $FILE == "core/misc/cspell/dictionary.txt" || $FILE == "core/misc/cspell/drupal-dictionary.txt" ]]; then
+    CSPELL_DICTIONARY_FILE_CHANGED=1;
+  fi
 done
 
 # Exit early if there are no files.
@@ -199,7 +227,16 @@ if [ $DEPENDENCIES_NEED_INSTALLING -ne 0 ]; then
 fi
 
 # Check all files for spelling in one go for better performance.
-yarn run -s spellcheck --no-must-find-files -c $TOP_LEVEL/core/.cspell.json $ABS_FILES
+if [[ $CSPELL_DICTIONARY_FILE_CHANGED == "1" ]] ; then
+  printf "\nRunning spellcheck on *all* files.\n"
+  yarn run -s spellcheck:core --no-must-find-files --no-progress
+else
+  # Check all files for spelling in one go for better performance. We pipe the
+  # list files in so we obey the globs set on the spellcheck:core command in
+  # core/package.json.
+  echo "${ABS_FILES}" | tr ' ' '\n' | yarn run -s spellcheck:core --no-must-find-files --file-list stdin
+fi
+
 if [ "$?" -ne "0" ]; then
   # If there are failures set the status to a number other than 0.
   FINAL_STATUS=1
@@ -214,10 +251,34 @@ printf "\n"
 printf -- '-%.0s' {1..100}
 printf "\n"
 
+# Run PHPStan on all files on DrupalCI or when phpstan files are changed.
+# APCu is disabled to ensure that the composer classmap is not corrupted.
+if [[ $PHPSTAN_DIST_FILE_CHANGED == "1" ]] || [[ "$DRUPALCI" == "1" ]]; then
+  printf "\nRunning PHPStan on *all* files.\n"
+  php -d apc.enabled=0 -d apc.enable_cli=0 vendor/bin/phpstan analyze --no-progress --configuration="$TOP_LEVEL/core/phpstan.neon.dist" $memory_limit
+else
+  # Only run PHPStan on changed files locally.
+  printf "\nRunning PHPStan on changed files.\n"
+  php -d apc.enabled=0 -d apc.enable_cli=0 vendor/bin/phpstan analyze --no-progress --configuration="$TOP_LEVEL/core/phpstan-partial.neon" $ABS_FILES $memory_limit
+fi
+
+if [ "$?" -ne "0" ]; then
+  # If there are failures set the status to a number other than 0.
+  FINAL_STATUS=1
+  printf "\nPHPStan: ${red}failed${reset}\n"
+else
+  printf "\nPHPStan: ${green}passed${reset}\n"
+fi
+
+# Add a separator line to make the output easier to read.
+printf "\n"
+printf -- '-%.0s' {1..100}
+printf "\n"
+
 # Run PHPCS on all files on DrupalCI or when phpcs files are changed.
 if [[ $PHPCS_XML_DIST_FILE_CHANGED == "1" ]] || [[ "$DRUPALCI" == "1" ]]; then
   # Test all files with phpcs rules.
-  vendor/bin/phpcs -ps --parallel=$(nproc) --standard="$TOP_LEVEL/core/phpcs.xml.dist"
+  vendor/bin/phpcs -ps --parallel="$( (nproc || sysctl -n hw.logicalcpu || echo 4) 2>/dev/null)" --standard="$TOP_LEVEL/core/phpcs.xml.dist"
   PHPCS=$?
   if [ "$PHPCS" -ne "0" ]; then
     # If there are failures set the status to a number other than 0.
@@ -318,13 +379,8 @@ for FILE in $FILES; do
   # Ensure the file still exists (i.e. is not being deleted).
   if [ -a $FILE ]; then
     if [ ${FILE: -3} != ".sh" ]; then
-      # Ensure the file has the correct mode.
-      STAT="$(stat -f "%A" $FILE 2>/dev/null)"
-      if [ $? -ne 0 ]; then
-        STAT="$(stat -c "%a" $FILE 2>/dev/null)"
-      fi
-      if [ "$STAT" -ne "644" ]; then
-        printf "${red}check failed:${reset} file $FILE should be 644 not $STAT\n"
+      if [ -x $FILE ]; then
+        printf "${red}check failed:${reset} file $FILE should not be executable\n"
         STATUS=1
       fi
     fi
@@ -377,67 +433,18 @@ for FILE in $FILES; do
   ############################################################################
   ### JAVASCRIPT FILES
   ############################################################################
-  if [[ -f "$TOP_LEVEL/$FILE" ]] && [[ $FILE =~ \.js$ ]] && [[ ! $FILE =~ ^core/tests/Drupal/Nightwatch ]] && [[ ! $FILE =~ /tests/src/Nightwatch/ ]] && [[ ! $FILE =~ ^core/modules/ckeditor5/js/ckeditor5_plugins ]]; then
-    # Work out the root name of the JavaScript so we can ensure that the ES6
-    # version has been compiled correctly.
-    if [[ $FILE =~ \.es6\.js$ ]]; then
-      BASENAME=${FILE%.es6.js}
-      COMPILE_CHECK=1
+  if [[ -f "$TOP_LEVEL/$FILE" ]] && [[ $FILE =~ \.js$ ]]; then
+    cd "$TOP_LEVEL/core"
+    # Check the coding standards.
+    node ./node_modules/eslint/bin/eslint.js --quiet --config=.eslintrc.passing.json "$TOP_LEVEL/$FILE"
+    JSLINT=$?
+    if [ "$JSLINT" -ne "0" ]; then
+      # No need to write any output the node command will do this for us.
+      STATUS=1
     else
-      BASENAME=${FILE%.js}
-      # We only need to compile check if the .es6.js file is not also
-      # changing. This is because the compile check will occur for the
-      # .es6.js file. This might occur if the compile scripts have changed.
-      contains_element "$BASENAME.es6.js" "${FILES[@]}"
-      HASES6=$?
-      if [ "$HASES6" -ne "0" ]; then
-        COMPILE_CHECK=1
-      else
-        COMPILE_CHECK=0
-      fi
+      printf "ESLint: $FILE ${green}passed${reset}\n"
     fi
-    if [[ "$COMPILE_CHECK" == "1" ]] && [[ -f "$TOP_LEVEL/$BASENAME.es6.js" ]]; then
-      cd "$TOP_LEVEL/core"
-      yarn run build:js --check --file "$TOP_LEVEL/$BASENAME.es6.js"
-      CORRECTJS=$?
-      if [ "$CORRECTJS" -ne "0" ]; then
-        # No need to write any output the yarn run command will do this for
-        # us.
-        STATUS=1
-      fi
-      # Check the coding standards.
-      if [[ -f ".eslintrc.passing.json" ]]; then
-        node ./node_modules/eslint/bin/eslint.js --quiet --config=.eslintrc.passing.json "$TOP_LEVEL/$BASENAME.es6.js"
-        CORRECTJS=$?
-        if [ "$CORRECTJS" -ne "0" ]; then
-          # No need to write any output the node command will do this for us.
-          STATUS=1
-        fi
-      fi
-      cd $TOP_LEVEL
-    else
-      # If there is no .es6.js file then there should be unless the .js is
-      # not really Drupal's.
-      if ! [[ "$FILE" =~ ^core/assets/vendor ]] && ! [[ "$FILE" =~ ^core/modules/ckeditor5/js/build ]] && ! [[ "$FILE" =~ ^core/scripts/js ]] && ! [[ "$FILE" =~ ^core/scripts/css ]] && ! [[ "$FILE" =~ webpack.config.js$ ]] && ! [[ -f "$TOP_LEVEL/$BASENAME.es6.js" ]] && ! [[ "$FILE" =~ core/modules/ckeditor5/tests/modules/ckeditor5_test/js/build/layercake.js ]]; then
-        printf "${red}FAILURE${reset} $FILE does not have a corresponding $BASENAME.es6.js\n"
-        STATUS=1
-      fi
-    fi
-  else
-    # Check coding standards of Nightwatch files.
-    if [[ -f "$TOP_LEVEL/$FILE" ]] && [[ $FILE =~ \.js$ ]]; then
-      cd "$TOP_LEVEL/core"
-      # Check the coding standards.
-      if [[ -f ".eslintrc.passing.json" ]]; then
-        node ./node_modules/eslint/bin/eslint.js --quiet --config=.eslintrc.passing.json "$TOP_LEVEL/$FILE"
-        CORRECTJS=$?
-        if [ "$CORRECTJS" -ne "0" ]; then
-          # No need to write any output the node command will do this for us.
-          STATUS=1
-        fi
-      fi
-      cd $TOP_LEVEL
-    fi
+    cd $TOP_LEVEL
   fi
 
   ############################################################################

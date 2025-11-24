@@ -1,0 +1,16 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"CYI"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"West District": {
+			"local_name": "西區"
+		},
+		"East District": {
+			"local_name": "東區"
+		}
+	}
+}

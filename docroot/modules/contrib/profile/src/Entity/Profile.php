@@ -90,10 +90,10 @@ class Profile extends EditorialContentEntityBase implements ProfileInterface {
     $profile_type = ProfileType::load($this->bundle());
     $label = $this->t('@type #@id', [
       '@type' => $profile_type->getDisplayLabel() ?: $profile_type->label(),
-      '@id' => $this->id(),
+      '@id' => $this->id() ?? '',
     ]);
     // Allow the label to be overridden.
-    $event = new ProfileLabelEvent($this, $label);
+    $event = new ProfileLabelEvent($this, (string) $label);
     $event_dispatcher = \Drupal::service('event_dispatcher');
     $event_dispatcher->dispatch($event, ProfileEvents::PROFILE_LABEL);
     $label = $event->getLabel();
@@ -292,6 +292,7 @@ class Profile extends EditorialContentEntityBase implements ProfileInterface {
         $profiles = $storage->loadMultipleByUser($this->getOwner(), $this->bundle());
         foreach ($profiles as $profile) {
           if ($profile->id() != $this->id() && $profile->isDefault()) {
+            $profile->setSyncing($this->isSyncing());
             $profile->setDefault(FALSE);
             $profile->save();
           }

@@ -2,14 +2,9 @@
 
 namespace Drupal\video_embed_media\Plugin\media\Source;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaSourceBase;
 use Drupal\media\MediaTypeInterface;
-use Drupal\video_embed_field\ProviderManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -40,45 +35,13 @@ class VideoEmbedField extends MediaSourceBase {
   protected $mediaSettings;
 
   /**
-   * Constructs a new class instance.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Entity type manager service.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   Entity field manager service.
-   * @param \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_manager
-   *   Config field type manager service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   Config factory service.
-   * @param \Drupal\video_embed_field\ProviderManagerInterface $provider_manager
-   *   The video provider manager.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, FieldTypePluginManagerInterface $field_type_manager, ConfigFactoryInterface $config_factory, ProviderManagerInterface $provider_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $entity_field_manager, $field_type_manager, $config_factory);
-    $this->providerManager = $provider_manager;
-    $this->mediaSettings = $config_factory->get('media.settings');
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('plugin.manager.field.field_type'),
-      $container->get('config.factory'),
-      $container->get('video_embed_field.provider_manager')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->providerManager = $container->get('video_embed_field.provider_manager');
+    $instance->mediaSettings = $container->get('config.factory')->get('media.settings');
+    return $instance;
   }
 
   /**
@@ -99,7 +62,7 @@ class VideoEmbedField extends MediaSourceBase {
     switch ($attribute_name) {
       case 'default_name':
         if ($provider = $this->providerManager->loadProviderFromInput($url)) {
-          return $provider->getName();
+          return $provider->getName('@provider | @title');
         }
         return parent::getMetadata($media, 'default_name');
 
@@ -191,7 +154,7 @@ class VideoEmbedField extends MediaSourceBase {
     if ($field) {
       // Be sure that the suggested source field actually exists.
       $fields = $this->entityFieldManager->getFieldDefinitions('media', $type->id());
-      return isset($fields[$field]) ? $fields[$field] : NULL;
+      return $fields[$field] ?? NULL;
     }
     return NULL;
   }

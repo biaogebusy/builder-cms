@@ -2,6 +2,8 @@
 
 namespace Drupal\search_api_test\Plugin\search_api\processor;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Query\QueryInterface;
@@ -10,12 +12,11 @@ use Drupal\search_api_test\TestPluginTrait;
 
 /**
  * Provides a processor with dependencies, for the dependency removal tests.
- *
- * @SearchApiProcessor(
- *   id = "search_api_test",
- *   label = @Translation("Test processor"),
- * )
  */
+#[SearchApiProcessor(
+  id: 'search_api_test',
+  label: new TranslatableMarkup('Test processor'),
+)]
 class TestProcessor extends ProcessorPluginBase {
 
   use TestPluginTrait;

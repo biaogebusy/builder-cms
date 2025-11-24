@@ -53,7 +53,7 @@ class PagePlaceholderTest extends BrowserTestBase {
     $page->save();
 
     // Create a new variant.
-    /* @var $http_status_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $http_status_variant */
     $http_status_variant = PageVariant::create([
       'label' => 'HTTP status code',
       'id' => 'http_status_code',

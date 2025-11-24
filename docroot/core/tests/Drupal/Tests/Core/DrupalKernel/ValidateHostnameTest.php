@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\DrupalKernel;
 
 use Drupal\Core\DrupalKernel;
@@ -16,7 +18,7 @@ class ValidateHostnameTest extends UnitTestCase {
    * @covers ::validateHostname
    * @dataProvider providerTestValidateHostname
    */
-  public function testValidateHostname($hostname, $message, $expected = FALSE) {
+  public function testValidateHostname($hostname, $message, $expected = FALSE): void {
     $server = ['HTTP_HOST' => $hostname];
     $request = new Request([], [], [], [], [], $server);
     $validated_hostname = DrupalKernel::validateHostname($request);
@@ -26,7 +28,7 @@ class ValidateHostnameTest extends UnitTestCase {
   /**
    * Provides test data for testValidateHostname().
    */
-  public function providerTestValidateHostname() {
+  public static function providerTestValidateHostname() {
     $data = [];
 
     // Verifies that DrupalKernel::validateHostname() prevents invalid
@@ -37,7 +39,7 @@ class ValidateHostnameTest extends UnitTestCase {
     $data[] = ['security<.drupal.org:80', 'HTTP_HOST with &lt; is invalid'];
     $data[] = ['security..drupal.org:80', 'HTTP_HOST with .. is invalid'];
 
-    // Verifies hostnames that are too long, or have too many parts are
+    // Verifies host names that are too long, or have too many parts are
     // invalid.
     $data[] = [str_repeat('x', 1000) . '.security.drupal.org:80', 'HTTP_HOST with more than 1000 characters is invalid.'];
     $data[] = [str_repeat('x.', 100) . 'security.drupal.org:80', 'HTTP_HOST with more than 100 subdomains is invalid.'];
@@ -48,7 +50,7 @@ class ValidateHostnameTest extends UnitTestCase {
 
     // Verifies that using valid IP address for the hostname is allowed.
     $data[] = ['72.21.91.99:80', 'Properly formed HTTP_HOST with IPv4 address valid.', TRUE];
-    $data[] = ['2607:f8b0:4004:803::1002:80', 'Properly formed HTTP_HOST with IPv6 address valid.', TRUE];
+    $data[] = ['[2607:f8b0:4004:803::1002]:80', 'Properly formed HTTP_HOST with IPv6 address valid.', TRUE];
 
     // Verifies that the IPv6 loopback address is valid.
     $data[] = ['[::1]:80', 'HTTP_HOST containing IPv6 loopback is valid.', TRUE];

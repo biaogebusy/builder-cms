@@ -18,8 +18,11 @@
   clear: both;
   width: 100%;
   margin: 0 auto;
-  padding: 0;
   list-style: none;
+}
+
+ul.blazy.b-column {
+  padding: 0;
 }
 
 /** https://developer.mozilla.org/en-US/docs/Web/CSS/break-inside */
@@ -39,14 +42,14 @@
 .item-list > .b-column > .grid {
   margin: 0 0 1rem;
   padding: 0;
+  /* At most grids, transition is causing issues than helpful. */
+  transition: none;
 }
 
 /** Fix for broken break-inside with extremely tall grid for FF. */
-.b-column .grid__content {
-  position: relative;
+.b-column .grid__content,
+.b-column .region__content {
   display: inline-block;
-  width: 100%;
-  max-width: 100%;
   margin: 0;
   vertical-align: top;
 }

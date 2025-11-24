@@ -12,7 +12,6 @@ use Drupal\entity_print\PrintEngineException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 
 /**
  * Exception event subscriber.
@@ -47,6 +46,8 @@ class PrintEngineExceptionSubscriber implements EventSubscriberInterface {
    *   Route match service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   Entity type manager.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
    */
   public function __construct(RouteMatchInterface $routeMatch, EntityTypeManagerInterface $entityTypeManager, MessengerInterface $messenger) {
     $this->routeMatch = $routeMatch;
@@ -59,13 +60,9 @@ class PrintEngineExceptionSubscriber implements EventSubscriberInterface {
    *
    * @param \Symfony\Component\HttpKernel\Event\ExceptionEvent|\Symfony\Component\HttpKernel\Event\ExceptionEvent $event
    *   The exception event.
-   *
-   * @todo remove reference to
-   *   Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent when D9
-   *   is no longer supported and add back a type-hint for the ExceptionEvent.
    */
   public function handleException($event) {
-    assert($event instanceof \Symfony\Component\HttpKernel\Event\ExceptionEvent || $event instanceof ExceptionEvent);
+    assert($event instanceof ExceptionEvent);
     $exception = $event->getThrowable();
     if ($exception instanceof PrintEngineException) {
       $this->messenger->addError(new FormattableMarkup($exception->getPrettyMessage(), []));

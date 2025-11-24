@@ -9,7 +9,7 @@ services:
     class: Drupal\entity\EventSubscriber\EntityDuplicateSubscriber
     arguments: ['@entity.bundle_entity_duplicator']
     tags:
-    - { name: event_subscriber }
+      - { name: event_subscriber }
 
   entity.bundle_entity_duplicator:
     class: Drupal\entity\BundleEntityDuplicator

@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HL",
+		"Shuangyashan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baoqing Xian": {
+			"local_name": "宝清县"
+		},
+		"Baoshan Qu": {
+			"local_name": "宝山区"
+		},
+		"Jixian Xian": {
+			"local_name": "集贤县"
+		},
+		"Jianshan Qu": {
+			"local_name": "尖山区"
+		},
+		"Lingdong Qu": {
+			"local_name": "岭东区"
+		},
+		"Raohe Xian": {
+			"local_name": "饶河县"
+		},
+		"Sifangtai Qu": {
+			"local_name": "四方台区"
+		},
+		"Youyi Xian": {
+			"local_name": "友谊县"
+		}
+	}
+}

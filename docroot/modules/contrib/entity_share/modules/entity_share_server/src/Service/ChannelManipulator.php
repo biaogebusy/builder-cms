@@ -15,8 +15,6 @@ use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 
 /**
  * Helps to manipulate a channel.
- *
- * @package Drupal\entity_share_server\Service
  */
 class ChannelManipulator implements ChannelManipulatorInterface {
 
@@ -84,7 +82,7 @@ class ChannelManipulator implements ChannelManipulatorInterface {
     }
 
     // Add groups.
-    if (!is_null($channel->get('channel_groups'))) {
+    if ($channel->get('channel_groups') !== NULL) {
       foreach ($channel->get('channel_groups') as $group_id => $group) {
         $query['filter'][$group_id] = [
           'group' => [
@@ -99,7 +97,7 @@ class ChannelManipulator implements ChannelManipulatorInterface {
     }
 
     // Add filters.
-    if (!is_null($channel->get('channel_filters'))) {
+    if ($channel->get('channel_filters') !== NULL) {
       foreach ($channel->get('channel_filters') as $filter_id => $filter) {
         $query['filter'][$filter_id] = [
           'condition' => [
@@ -110,11 +108,11 @@ class ChannelManipulator implements ChannelManipulatorInterface {
 
         if (isset($filter['value'])) {
           // Multiple values operators.
-          if (in_array($filter['operator'], OperatorsHelper::getMultipleValuesOperators())) {
+          if (\in_array($filter['operator'], OperatorsHelper::getMultipleValuesOperators(), TRUE)) {
             $query['filter'][$filter_id]['condition']['value'] = $filter['value'];
           }
           else {
-            $query['filter'][$filter_id]['condition']['value'] = implode($filter['value']);
+            $query['filter'][$filter_id]['condition']['value'] = \implode('', $filter['value']);
           }
         }
 
@@ -125,10 +123,10 @@ class ChannelManipulator implements ChannelManipulatorInterface {
     }
 
     // Add sorts.
-    if (!is_null($channel->get('channel_sorts'))) {
+    if ($channel->get('channel_sorts') !== NULL) {
       $sorts = $channel->get('channel_sorts');
 
-      uasort($sorts, [SortArray::class, 'sortByWeightElement']);
+      \uasort($sorts, [SortArray::class, 'sortByWeightElement']);
 
       foreach ($sorts as $sort_id => $sort) {
         $query['sort'][$sort_id] = [
@@ -167,7 +165,7 @@ class ChannelManipulator implements ChannelManipulatorInterface {
     }
 
     // Get the searches from configuration.
-    if (!is_null($channel->get('channel_searches'))) {
+    if ($channel->get('channel_searches') !== NULL) {
       foreach ($channel->get('channel_searches') as $search_id => $search) {
         $search_configuration[$search_id] = [
           'path' => $search['path'],
@@ -193,7 +191,7 @@ class ChannelManipulator implements ChannelManipulatorInterface {
     if ($authorized_roles) {
       $user_roles = $user->getRoles();
       foreach ($authorized_roles as $authorized_role) {
-        if (in_array($authorized_role, $user_roles)) {
+        if (\in_array($authorized_role, $user_roles, TRUE)) {
           return TRUE;
         }
       }
@@ -205,7 +203,7 @@ class ChannelManipulator implements ChannelManipulatorInterface {
       // Load the user to ensure we have a user entity.
       /** @var \Drupal\user\UserInterface $account */
       $account = $this->entityTypeManager->getStorage('user')->load($user->id());
-      if (!is_null($account) && in_array($account->uuid(), $channel_authorized_users)) {
+      if ($account !== NULL && \in_array($account->uuid(), $channel_authorized_users, TRUE)) {
         return TRUE;
       }
     }

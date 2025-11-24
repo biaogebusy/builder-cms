@@ -24,7 +24,7 @@ class ContainerBuilder extends SymfonyContainerBuilder implements ContainerInter
   /**
    * {@inheritdoc}
    */
-  public function __construct(ParameterBagInterface $parameterBag = NULL) {
+  public function __construct(?ParameterBagInterface $parameterBag = NULL) {
     parent::__construct($parameterBag);
     $this->setResourceTracking(FALSE);
   }
@@ -35,6 +35,9 @@ class ContainerBuilder extends SymfonyContainerBuilder implements ContainerInter
    * Drupal's container builder can be used at runtime after compilation, so we
    * override Symfony's ContainerBuilder's restriction on setting services in a
    * frozen builder.
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    *
    * @todo Restrict this to synthetic services only. Ideally, the upstream
    *   ContainerBuilder class should be fixed to allow setting synthetic
@@ -67,23 +70,9 @@ class ContainerBuilder extends SymfonyContainerBuilder implements ContainerInter
 
   /**
    * {@inheritdoc}
-   */
-  public function setDefinition($id, Definition $definition): Definition {
-    $definition = parent::setDefinition($id, $definition);
-    // As of Symfony 3.4 all definitions are private by default.
-    // \Symfony\Component\DependencyInjection\Compiler\ResolvePrivatesPassOnly
-    // removes services marked as private from the container even if they are
-    // also marked as public. Drupal requires services that are public to
-    // remain in the container and not be removed.
-    if ($definition->isPublic() && $definition->isPrivate()) {
-      @trigger_error('Not marking service definitions as public is deprecated in drupal:9.2.0 and is required in drupal:10.0.0. Call $definition->setPublic(TRUE) before calling ::setDefinition(). See https://www.drupal.org/node/3194517', E_USER_DEPRECATED);
-      $definition->setPrivate(FALSE);
-    }
-    return $definition;
-  }
-
-  /**
-   * {@inheritdoc}
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function setParameter($name, $value) {
     if (strtolower($name) !== $name) {

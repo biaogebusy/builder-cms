@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock_timeout\Functional;
 
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 use Drupal\Tests\Traits\Core\CronRunTrait;
@@ -176,7 +178,7 @@ class ContentLockTimeoutTest extends BrowserTestBase {
       'content_lock_timeout_on_edit' => 1,
     ];
     $this->drupalGet('/admin/config/content/content_lock/timeout');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     $this->lockService = \Drupal::service('content_lock');
   }
@@ -217,7 +219,7 @@ class ContentLockTimeoutTest extends BrowserTestBase {
       'node[bundles][article]' => 1,
     ];
     $this->drupalGet('/admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     $this->doTestForEntity($this->article1);
   }
@@ -232,7 +234,7 @@ class ContentLockTimeoutTest extends BrowserTestBase {
       'taxonomy_term[bundles][' . $this->term1->bundle() . ']' => 1,
     ];
     $this->drupalGet('/admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     $this->doTestForEntity($this->term1);
   }
@@ -252,10 +254,8 @@ class ContentLockTimeoutTest extends BrowserTestBase {
     $this->lockContentByUser1($entity);
 
     // Content should be locked.
-    $this->drupalGet($entity->toUrl('edit-form')->toString());
-    $this->assertSession()->pageTextContains(t('This content is being edited by the user @name and is therefore locked to prevent other users changes.', [
-      '@name' => $this->user1->getDisplayName(),
-    ]));
+    $this->drupalGet($entity->toUrl('edit-form'));
+    $this->assertSession()->pageTextContains("This content is being edited by the user {$this->user1->getDisplayName()} and is therefore locked to prevent other users changes.");
 
     // Jump into future to release lock.
     \Drupal::time()->setCurrentTime(time() + 60 * 60);
@@ -264,8 +264,8 @@ class ContentLockTimeoutTest extends BrowserTestBase {
 
     // Content should be unlocked by cron.
     $this->assertNoLockOnContent($entity);
-    $this->drupalGet($entity->toUrl('edit-form')->toString());
-    $this->assertSession()->pageTextContains(t('This content is now locked against simultaneous editing.'));
+    $this->drupalGet($entity->toUrl('edit-form'));
+    $this->assertSession()->pageTextContains('This content is now locked against simultaneous editing.');
 
     $this->drupalLogout();
 
@@ -277,16 +277,14 @@ class ContentLockTimeoutTest extends BrowserTestBase {
     $this->drupalLogin($this->user2);
 
     // Content should be locked.
-    $this->drupalGet($entity->toUrl('edit-form')->toString());
-    $this->assertSession()->pageTextContains(t('This content is being edited by the user @name and is therefore locked to prevent other users changes.', [
-      '@name' => $this->user1->getDisplayName(),
-    ]));
+    $this->drupalGet($entity->toUrl('edit-form'));
+    $this->assertSession()->pageTextContains("This content is being edited by the user {$this->user1->getDisplayName()} and is therefore locked to prevent other users changes.");
 
     // Jump into the future.
     \Drupal::time()->setCurrentTime(time() + 60 * 60);
     // Lock should be release by form prepare.
-    $this->drupalGet($entity->toUrl('edit-form')->toString());
-    $this->assertSession()->pageTextContains(t('This content is now locked against simultaneous editing.'));
+    $this->drupalGet($entity->toUrl('edit-form'));
+    $this->assertSession()->pageTextContains('This content is now locked against simultaneous editing.');
   }
 
   /**

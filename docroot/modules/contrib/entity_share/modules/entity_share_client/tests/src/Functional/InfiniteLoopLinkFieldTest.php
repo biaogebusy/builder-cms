@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\entity_share_client\Functional;
 
-use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 
 /**
@@ -105,24 +104,7 @@ class InfiniteLoopLinkFieldTest extends InfiniteLoopTestBase {
    */
   protected function populateRequestService() {
     parent::populateRequestService();
-
-    // Prepare the request on the linked content.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
-    $linked_content_url = Url::fromRoute($route_name, [
-      'entity' => 'es_test_content_reference_one',
-    ])
-      ->setOption('language', $this->container->get('language_manager')->getLanguage('en'))
-      ->setOption('absolute', TRUE);
-    $this->discoverJsonApiEndpoints($linked_content_url->toString());
-
-    // Prepare the request on the linked content.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
-    $linked_content_url = Url::fromRoute($route_name, [
-      'entity' => 'es_test_content_reference_two',
-    ])
-      ->setOption('language', $this->container->get('language_manager')->getLanguage('en'))
-      ->setOption('absolute', TRUE);
-    $this->discoverJsonApiEndpoints($linked_content_url->toString());
+    $this->populateRequestServiceIndividualEntity();
   }
 
 }

@@ -35,7 +35,7 @@ function blazy_test_blazy_attach_alter(array &$load, array $settings = []) {
     $template = ['#theme' => 'blazy_test'];
     $load['drupalSettings']['blazy_test'] = [
       'options' => ['slideshow' => TRUE],
-      'container' => $manager->renderer()->renderPlain($template),
+      'container' => $manager->renderInIsolation($template),
     ];
   }
 }

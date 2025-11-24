@@ -45,7 +45,7 @@ class ModerationOptOutUnpublish extends UnpublishAction {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -80,7 +80,7 @@ class ModerationOptOutUnpublish extends UnpublishAction {
   /**
    * {@inheritdoc}
    */
-  public function access($entity, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($entity, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     if ($entity && $this->moderationInfo->isModeratedEntity($entity)) {
       $bundle_info = $this->bundleInfo->getBundleInfo($entity->getEntityTypeId());

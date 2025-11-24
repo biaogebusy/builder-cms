@@ -3,7 +3,6 @@
 namespace Drupal\commerce_store;
 
 use Drupal\commerce\CommerceContentEntityStorage;
-use Drupal\commerce_store\Entity\StoreInterface;
 
 /**
  * Defines the store storage.
@@ -15,22 +14,14 @@ class StoreStorage extends CommerceContentEntityStorage implements StoreStorageI
    */
   public function loadDefault() {
     $query = $this->getQuery();
+    $query->accessCheck(FALSE);
     $query
       ->sort('is_default', 'DESC')
       ->sort('store_id', 'DESC')
-      ->range(0, 1)
-      ->accessCheck(FALSE);
+      ->range(0, 1);
     $result = $query->execute();
 
     return $result ? $this->load(reset($result)) : NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function markAsDefault(StoreInterface $store) {
-    $store->setDefault(TRUE);
-    $store->save();
   }
 
 }

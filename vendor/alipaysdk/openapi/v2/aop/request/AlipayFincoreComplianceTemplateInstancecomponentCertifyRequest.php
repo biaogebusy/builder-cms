@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.fincore.compliance.template.instancecomponent.certify request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:28:38
+ * @since 1.0, 2025-01-10 15:57:26
  */
 class AlipayFincoreComplianceTemplateInstancecomponentCertifyRequest
 {

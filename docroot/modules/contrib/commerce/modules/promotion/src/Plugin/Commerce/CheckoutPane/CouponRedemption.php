@@ -2,23 +2,23 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\CheckoutPane;
 
-use Drupal\commerce\InlineFormManager;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
 use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the coupon redemption pane.
- *
- * @CommerceCheckoutPane(
- *   id = "coupon_redemption",
- *   label = @Translation("Coupon redemption"),
- *   default_step = "_sidebar",
- *   wrapper_element = "container",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "coupon_redemption",
+  label: new TranslatableMarkup("Coupon redemption"),
+  admin_description: new TranslatableMarkup("Provides the coupon redemption form."),
+  default_step: "_sidebar",
+  wrapper_element: "container",
+)]
 class CouponRedemption extends CheckoutPaneBase {
 
   /**
@@ -29,39 +29,19 @@ class CouponRedemption extends CheckoutPaneBase {
   protected $inlineFormManager;
 
   /**
-   * Constructs a new CouponRedemption object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface $checkout_flow
-   *   The parent checkout flow.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce\InlineFormManager $inline_form_manager
-   *   The inline form manager.
+   * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow, EntityTypeManagerInterface $entity_type_manager, InlineFormManager $inline_form_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $checkout_flow, $entity_type_manager);
-
-    $this->inlineFormManager = $inline_form_manager;
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?CheckoutFlowInterface $checkout_flow = NULL) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition, $checkout_flow);
+    $instance->inlineFormManager = $container->get('plugin.manager.commerce_inline_form');
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow = NULL) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $checkout_flow,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_inline_form')
-    );
+  public function isVisible() {
+    return $this->order->getState()->getId() === 'draft';
   }
 
   /**
@@ -77,6 +57,7 @@ class CouponRedemption extends CheckoutPaneBase {
    * {@inheritdoc}
    */
   public function buildConfigurationSummary() {
+    $parent_summary = parent::buildConfigurationSummary();
     if ($this->configuration['allow_multiple']) {
       $summary = $this->t('Allows multiple coupons: Yes');
     }
@@ -84,7 +65,7 @@ class CouponRedemption extends CheckoutPaneBase {
       $summary = $this->t('Allows multiple coupons: No');
     }
 
-    return $summary;
+    return $parent_summary ? implode('<br>', [$parent_summary, $summary]) : $summary;
   }
 
   /**
@@ -127,6 +108,10 @@ class CouponRedemption extends CheckoutPaneBase {
     ];
     $pane_form['form'] = $inline_form->buildInlineForm($pane_form['form'], $form_state);
 
+    // If the details element is used, open it if there are any applied coupons:
+    if ($this->getWrapperElement() === 'details' && !empty($this->order->get('coupons')->getValue())) {
+      $pane_form['#open'] = TRUE;
+    }
     return $pane_form;
   }
 

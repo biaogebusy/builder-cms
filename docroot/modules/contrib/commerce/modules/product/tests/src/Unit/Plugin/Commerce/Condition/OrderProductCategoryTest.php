@@ -2,17 +2,17 @@
 
 namespace Drupal\Tests\commerce_product\Unit\Plugin\Commerce\Condition;
 
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\EntityReferenceFieldItemList;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce\EntityUuidMapperInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_product\Plugin\Commerce\Condition\OrderProductCategory;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\EntityReferenceFieldItemList;
-use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_product\Plugin\Commerce\Condition\OrderProductCategory

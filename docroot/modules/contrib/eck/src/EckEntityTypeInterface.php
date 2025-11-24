@@ -43,4 +43,12 @@ interface EckEntityTypeInterface extends ConfigEntityInterface {
    */
   public function hasTitleField();
 
+  /**
+   * Determines if the entity type has a 'status' field.
+   *
+   * @return bool
+   *   True if it has one.
+   */
+  public function hasStatusField();
+
 }

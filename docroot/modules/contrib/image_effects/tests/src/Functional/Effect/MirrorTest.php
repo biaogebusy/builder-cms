@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class MirrorTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testMirrorEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testMirrorEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Test on the PNG test image.
@@ -98,7 +100,7 @@ class MirrorTest extends ImageEffectsTestBase {
       $this->assertColorsAreEqual($data['expected_colors'][3], $this->getPixelColor($image, 39, 19));
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 

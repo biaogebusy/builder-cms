@@ -72,8 +72,11 @@ class DatabaseStorage implements StorageInterface {
       ], $this->options)->fetchField();
     }
     catch (\Exception $e) {
-      // If we attempt a read without actually having the database or the table
-      // available, just return FALSE so the caller can handle it.
+      if ($this->connection->schema()->tableExists($this->table)) {
+        throw $e;
+      }
+      // If we attempt a read without actually having the table available,
+      // return false so the caller can handle it.
       return FALSE;
     }
   }
@@ -90,8 +93,11 @@ class DatabaseStorage implements StorageInterface {
       }
     }
     catch (\Exception $e) {
-      // If we attempt a read without actually having the database or the table
-      // available, just return FALSE so the caller can handle it.
+      if ($this->connection->schema()->tableExists($this->table)) {
+        throw $e;
+      }
+      // If we attempt a read without actually having the table available,
+      // return false so the caller can handle it.
     }
     return $data;
   }
@@ -100,6 +106,10 @@ class DatabaseStorage implements StorageInterface {
    * {@inheritdoc}
    */
   public function readMultiple(array $names) {
+    if (empty($names)) {
+      return [];
+    }
+
     $list = [];
     try {
       $list = $this->connection->query('SELECT [name], [data] FROM {' . $this->connection->escapeTable($this->table) . '} WHERE [collection] = :collection AND [name] IN ( :names[] )', [':collection' => $this->collection, ':names[]' => $names], $this->options)->fetchAllKeyed();
@@ -108,8 +118,11 @@ class DatabaseStorage implements StorageInterface {
       }
     }
     catch (\Exception $e) {
-      // If we attempt a read without actually having the database or the table
-      // available, just return an empty array so the caller can handle it.
+      if ($this->connection->schema()->tableExists($this->table)) {
+        throw $e;
+      }
+      // If we attempt a read without actually having the table available,
+      // return an empty array so the caller can handle it.
     }
     return $list;
   }
@@ -260,7 +273,7 @@ class DatabaseStorage implements StorageInterface {
    *   be unserialized.
    */
   public function decode($raw) {
-    $data = @unserialize($raw);
+    $data = @unserialize($raw, ['allowed_classes' => FALSE]);
     return is_array($data) ? $data : FALSE;
   }
 
@@ -277,6 +290,11 @@ class DatabaseStorage implements StorageInterface {
       return $query->execute()->fetchCol();
     }
     catch (\Exception $e) {
+      if ($this->connection->schema()->tableExists($this->table)) {
+        throw $e;
+      }
+      // If we attempt a read without actually having the table available,
+      // return an empty array so the caller can handle it.
       return [];
     }
   }
@@ -295,6 +313,11 @@ class DatabaseStorage implements StorageInterface {
         ->execute();
     }
     catch (\Exception $e) {
+      if ($this->connection->schema()->tableExists($this->table)) {
+        throw $e;
+      }
+      // If we attempt a delete without actually having the table available,
+      // return false so the caller can handle it.
       return FALSE;
     }
   }
@@ -328,6 +351,11 @@ class DatabaseStorage implements StorageInterface {
       ])->fetchCol();
     }
     catch (\Exception $e) {
+      if ($this->connection->schema()->tableExists($this->table)) {
+        throw $e;
+      }
+      // If we attempt a read without actually having the table available,
+      // return an empty array so the caller can handle it.
       return [];
     }
   }

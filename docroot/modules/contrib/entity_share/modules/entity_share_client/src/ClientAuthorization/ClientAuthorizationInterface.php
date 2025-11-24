@@ -16,7 +16,7 @@ interface ClientAuthorizationInterface extends PluginInspectionInterface, Plugin
   /**
    * The collection ID of for authorization config local storage.
    */
-  const LOCAL_STORAGE_KEY_VALUE_COLLECTION = 'entity_share_client.client_authorization';
+  public const LOCAL_STORAGE_KEY_VALUE_COLLECTION = 'entity_share_client.client_authorization';
 
   /**
    * Gets the plugin label.
@@ -52,11 +52,13 @@ interface ClientAuthorizationInterface extends PluginInspectionInterface, Plugin
    *
    * @param string $url
    *   The url to set in the client.
+   * @param string $login_path
+   *   The form login path.
    *
    * @return \GuzzleHttp\Client
    *   The HTTP client.
    */
-  public function getClient($url);
+  public function getClient($url, $login_path);
 
   /**
    * Returns the plugin data if it is set, otherwise returns NULL.

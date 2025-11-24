@@ -5,7 +5,7 @@ namespace Drupal\page_manager_ui\Form;
 use Drupal\ctools\Form\ConditionConfigure;
 
 /**
- * Configuration form for Add Variant Selection
+ * Configuration form for Add Variant Selection.
  */
 class AddVariantSelectionConfigure extends ConditionConfigure {
 

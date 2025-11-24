@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message_notify\Service;
 
 use Drupal\private_message\Entity\PrivateMessageInterface;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -15,7 +17,7 @@ class TextUtilityTest extends UnitTestCase {
   /**
    * Performs the tests for the offset argument.
    */
-  public function testOffsetArgument() {
+  public function testOffsetArgument(): void {
     $matches = [];
 
     // Character 'п' is 2 bytes long and preg_match() would start from the
@@ -33,7 +35,7 @@ class TextUtilityTest extends UnitTestCase {
   /**
    * Performs the tests for the captured offset.
    */
-  public function testCapturedOffset() {
+  public function testCapturedOffset(): void {
     $matches = [];
 
     // Character 'п' is 2 bytes long and non-unicode preg_match would return

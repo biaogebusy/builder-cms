@@ -2,23 +2,42 @@
 
 namespace Drupal\render_placeholder_message_test;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Render\RenderContext;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class RenderPlaceholderMessageTestController implements ContainerAwareInterface, TrustedCallbackInterface {
+class RenderPlaceholderMessageTestController implements TrustedCallbackInterface, ContainerInjectionInterface {
 
-  use ContainerAwareTrait;
+  /**
+   * Constructs a new RenderPlaceholderMessageTestController object.
+   *
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer service.
+   */
+  public function __construct(protected RendererInterface $renderer) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('renderer'),
+    );
+  }
 
   /**
    * @return array
    */
   public function messagesPlaceholderFirst() {
     return $this->build([
+      // cspell:disable
       '<drupal-render-placeholder callback="Drupal\Core\Render\Element\StatusMessages::renderMessages" arguments="0" token="_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></drupal-render-placeholder>',
       '<drupal-render-placeholder callback="\Drupal\render_placeholder_message_test\RenderPlaceholderMessageTestController::setAndLogMessage" arguments="0=P1" token="JBp04zOwNhYqMBgRkyBnPdma8m4l2elDnXMJ9tEsP6k"></drupal-render-placeholder>',
       '<drupal-render-placeholder callback="\Drupal\render_placeholder_message_test\RenderPlaceholderMessageTestController::setAndLogMessage" arguments="0=P2" token="JnoubSJT1l92Dm4fJw4EPsSzRsmE88H6Q1zu9-OzDh4"></drupal-render-placeholder>',
+      // cspell:enable
     ]);
   }
 
@@ -27,9 +46,11 @@ class RenderPlaceholderMessageTestController implements ContainerAwareInterface,
    */
   public function messagesPlaceholderMiddle() {
     return $this->build([
+      // cspell:disable
       '<drupal-render-placeholder callback="\Drupal\render_placeholder_message_test\RenderPlaceholderMessageTestController::setAndLogMessage" arguments="0=P1" token="JBp04zOwNhYqMBgRkyBnPdma8m4l2elDnXMJ9tEsP6k"></drupal-render-placeholder>',
       '<drupal-render-placeholder callback="Drupal\Core\Render\Element\StatusMessages::renderMessages" arguments="0" token="_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></drupal-render-placeholder>',
       '<drupal-render-placeholder callback="\Drupal\render_placeholder_message_test\RenderPlaceholderMessageTestController::setAndLogMessage" arguments="0=P2" token="JnoubSJT1l92Dm4fJw4EPsSzRsmE88H6Q1zu9-OzDh4"></drupal-render-placeholder>',
+      // cspell:enable
     ]);
   }
 
@@ -38,9 +59,11 @@ class RenderPlaceholderMessageTestController implements ContainerAwareInterface,
    */
   public function messagesPlaceholderLast() {
     return $this->build([
+      // cspell:disable
       '<drupal-render-placeholder callback="\Drupal\render_placeholder_message_test\RenderPlaceholderMessageTestController::setAndLogMessage" arguments="0=P1" token="JBp04zOwNhYqMBgRkyBnPdma8m4l2elDnXMJ9tEsP6k"></drupal-render-placeholder>',
       '<drupal-render-placeholder callback="\Drupal\render_placeholder_message_test\RenderPlaceholderMessageTestController::setAndLogMessage" arguments="0=P2" token="JnoubSJT1l92Dm4fJw4EPsSzRsmE88H6Q1zu9-OzDh4"></drupal-render-placeholder>',
       '<drupal-render-placeholder callback="Drupal\Core\Render\Element\StatusMessages::renderMessages" arguments="0" token="_HAdUpwWmet0TOTe2PSiJuMntExoshbm1kh2wQzzzAA"></drupal-render-placeholder>',
+      // cspell:enable
     ]);
   }
 
@@ -66,8 +89,7 @@ class RenderPlaceholderMessageTestController implements ContainerAwareInterface,
       '#create_placeholder' => TRUE,
     ];
 
-    /** @var \Drupal\Core\Render\RendererInterface $renderer */
-    $renderer = $this->container->get('renderer');
+    $renderer = $this->renderer;
     $renderer->executeInRenderContext(new RenderContext(), function () use (&$build, $renderer) {
       return $renderer->render($build, FALSE);
     });
@@ -91,6 +113,13 @@ class RenderPlaceholderMessageTestController implements ContainerAwareInterface,
    *   A renderable array containing the message.
    */
   public static function setAndLogMessage($message) {
+    // Ensure that messages are rendered last even when earlier placeholders
+    // suspend the Fiber, this will cause BigPipe::renderPlaceholders() to loop
+    // around all of the fibers before resuming this one, then finally rendering
+    // the messages when there are no other placeholders left.
+    if (\Fiber::getCurrent() !== NULL) {
+      \Fiber::suspend();
+    }
     // Set message.
     \Drupal::messenger()->addStatus($message);
 

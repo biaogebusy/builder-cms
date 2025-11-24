@@ -370,3 +370,19 @@ function paragraphs_library_update_8102() {
       ->save();
   }
 }
+
+/**
+ * Add the paragraphs_library module as dependency to the from_library paragraphs type.
+ */
+function paragraphs_library_update_8103() {
+  $config = \Drupal::configFactory()->getEditable('paragraphs.paragraphs_type.from_library');
+  if ($config->isNew()) {
+    return;
+  }
+
+  $dependencies = $config->get('dependencies') ?? [];
+  $dependencies['enforced']['module'][] = 'paragraphs_library';
+
+  $config->set('dependencies', $dependencies);
+  $config->save();
+}

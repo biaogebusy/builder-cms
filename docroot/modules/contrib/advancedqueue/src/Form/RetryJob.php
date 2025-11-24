@@ -53,7 +53,7 @@ class RetryJob extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, QueueInterface $advancedqueue_queue = NULL, $job_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?QueueInterface $advancedqueue_queue = NULL, $job_id = NULL) {
     $this->queue = $advancedqueue_queue;
     $this->jobId = $job_id;
     return parent::buildForm($form, $form_state);

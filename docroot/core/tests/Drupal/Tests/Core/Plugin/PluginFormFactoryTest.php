@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
@@ -44,7 +46,7 @@ class PluginFormFactoryTest extends UnitTestCase {
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstance() {
+  public function testCreateInstance(): void {
     $plugin_form = $this->prophesize(PluginFormInterface::class);
     $expected = $plugin_form->reveal();
 
@@ -61,7 +63,7 @@ class PluginFormFactoryTest extends UnitTestCase {
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstanceUsingPlugin() {
+  public function testCreateInstanceUsingPlugin(): void {
     $this->classResolver->getInstanceFromDefinition(Argument::cetera())->shouldNotBeCalled();
 
     $plugin = $this->prophesize(PluginWithFormsInterface::class)->willImplement(PluginFormInterface::class);
@@ -75,7 +77,7 @@ class PluginFormFactoryTest extends UnitTestCase {
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstanceUsingPluginWithSlashes() {
+  public function testCreateInstanceUsingPluginWithSlashes(): void {
     $this->classResolver->getInstanceFromDefinition(Argument::cetera())->shouldNotBeCalled();
 
     $plugin = $this->prophesize(PluginWithFormsInterface::class)->willImplement(PluginFormInterface::class);
@@ -89,7 +91,7 @@ class PluginFormFactoryTest extends UnitTestCase {
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstanceDefaultFallback() {
+  public function testCreateInstanceDefaultFallback(): void {
     $this->classResolver->getInstanceFromDefinition(Argument::cetera())->shouldNotBeCalled();
 
     $plugin = $this->prophesize(PluginWithFormsInterface::class)->willImplement(PluginFormInterface::class);
@@ -104,7 +106,7 @@ class PluginFormFactoryTest extends UnitTestCase {
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstancePluginAware() {
+  public function testCreateInstancePluginAware(): void {
     $plugin_form = $this->prophesize(PluginFormInterface::class)->willImplement(PluginAwareInterface::class);
 
     $expected = $plugin_form->reveal();
@@ -124,7 +126,7 @@ class PluginFormFactoryTest extends UnitTestCase {
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstanceDefinitionException() {
+  public function testCreateInstanceDefinitionException(): void {
     $this->expectException(InvalidPluginDefinitionException::class);
     $this->expectExceptionMessage('The "the_plugin_id" plugin did not specify a "anything" form class');
 
@@ -133,13 +135,13 @@ class PluginFormFactoryTest extends UnitTestCase {
     $plugin->hasFormClass('anything')->willReturn(FALSE);
 
     $form_object = $this->manager->createInstance($plugin->reveal(), 'anything');
-    $this->assertSame(NULL, $form_object);
+    $this->assertNull($form_object);
   }
 
   /**
    * @covers ::createInstance
    */
-  public function testCreateInstanceInvalidException() {
+  public function testCreateInstanceInvalidException(): void {
     $this->expectException(InvalidPluginDefinitionException::class);
     $this->expectExceptionMessage('The "the_plugin_id" plugin did not specify a valid "invalid" form class, must implement \Drupal\Core\Plugin\PluginFormInterface');
 
@@ -152,7 +154,7 @@ class PluginFormFactoryTest extends UnitTestCase {
     $plugin->getFormClass('invalid')->willReturn(get_class($expected));
 
     $form_object = $this->manager->createInstance($plugin->reveal(), 'invalid');
-    $this->assertSame(NULL, $form_object);
+    $this->assertNull($form_object);
   }
 
 }

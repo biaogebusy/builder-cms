@@ -75,3 +75,7 @@ jsonapi_extras.settings:
       type: boolean
       label: 'Disabled by default'
       description: "If activated, all resource types that don't have a matching enabled resource config will be disabled."
+    validate_configuration_integrity:
+      type: boolean
+      label: 'Validate configuration integrity'
+      description: "Enable a configuration validation step for the fields in your resources. This will ensure that new (and updated) fields also contain configuration for the corresponding resources."

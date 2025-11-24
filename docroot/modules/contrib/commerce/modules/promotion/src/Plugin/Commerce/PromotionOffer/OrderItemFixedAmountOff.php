@@ -2,19 +2,20 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_order\Adjustment;
-use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_order\Adjustment;
+use Drupal\commerce_promotion\Attribute\CommercePromotionOffer;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
 
 /**
  * Provides the percentage off offer for order items.
- *
- * @CommercePromotionOffer(
- *   id = "order_item_fixed_amount_off",
- *   label = @Translation("Fixed amount off each matching product"),
- *   entity_type = "commerce_order_item",
- * )
  */
+#[CommercePromotionOffer(
+  id: "order_item_fixed_amount_off",
+  label: new TranslatableMarkup("Fixed amount off each matching product"),
+  entity_type: "commerce_order_item"
+)]
 class OrderItemFixedAmountOff extends OrderItemPromotionOfferBase {
 
   use FixedAmountOffTrait;

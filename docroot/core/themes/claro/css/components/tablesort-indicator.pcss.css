@@ -6,51 +6,30 @@
 .tablesort {
   position: absolute;
   top: 50%;
-  right: 1rem;
-  width: 0.875rem; /* 14px */
-  height: 1rem; /* 16px */
-  margin-top: -0.5rem; /* -8px */
+  inset-inline-end: 1rem;
+  width: 14px;
+  height: var(--space-m);
+  margin-block-start: -8px;
   opacity: 0.5;
-  background: url(../../images/icons/000f33/sort--inactive--ltr.svg) no-repeat 0 50%;
+  background-image: url(../../images/icons/000f33/sort--inactive.svg);
+  background-repeat: no-repeat;
+  background-position: 0 50%;
   background-size: auto;
 
+  [dir="rtl"] & {
+    /* Horizontally flip the element. */
+    transform: scaleX(-1);
+  }
+
   @media (forced-colors: active) {
     background: linktext;
-    mask-image: url(../../images/icons/000f33/sort--inactive--ltr.svg);
+    mask-image: url(../../images/icons/000f33/sort--inactive.svg);
     mask-repeat: no-repeat;
     mask-position: 0 50%;
   }
 }
 
-/* stylelint-disable-next-line selector-type-no-unknown */
-_:-ms-fullscreen, /* Only IE 11 */
-.tablesort {
-  position: static;
-  float: right;
-  margin-top: 0.125rem; /* 2px */
-  margin-right: -1.5rem; /* -24px */
-}
-[dir="rtl"] .tablesort {
-  right: auto;
-  left: 1rem; /* 16px */
-  background-image: url(../../images/icons/000f33/sort--inactive--rtl.svg);
-
-  @media (forced-colors: active) {
-    background: linktext;
-    mask-image: url(../../images/icons/000f33/sort--inactive--rtl.svg);
-    mask-repeat: no-repeat;
-    mask-position: 0 50%;
-  }
-}
-/* stylelint-disable-next-line selector-type-no-unknown */
-_:-ms-fullscreen, /* Only IE 11 */
-[dir="rtl"] .tablesort {
-  float: left;
-  margin-right: 0;
-  margin-left: -1.5rem; /* -24px */
-}
-.tablesort--asc,
-[dir="rtl"] .tablesort--asc {
+.tablesort--asc {
   opacity: 1;
   background-image: url(../../images/icons/003ecc/sort--asc.svg);
 
@@ -59,8 +38,8 @@ _:-ms-fullscreen, /* Only IE 11 */
     mask-image: url(../../images/icons/003ecc/sort--asc.svg);
   }
 }
-.tablesort--desc,
-[dir="rtl"] .tablesort--desc {
+
+.tablesort--desc {
   opacity: 1;
   background-image: url(../../images/icons/003ecc/sort--desc.svg);
 

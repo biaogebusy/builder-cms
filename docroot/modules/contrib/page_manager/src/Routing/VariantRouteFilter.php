@@ -3,10 +3,10 @@
 namespace Drupal\page_manager\Routing;
 
 use Drupal\Component\Plugin\Exception\ContextException;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
-use Drupal\Core\Routing\Enhancer\RouteEnhancerInterface;
 use Drupal\Core\Routing\FilterInterface;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,7 +57,14 @@ class VariantRouteFilter implements FilterInterface {
    *   The current request stack.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, CurrentPathStack $current_path, RequestStack $request_stack) {
-    $this->pageVariantStorage = $entity_type_manager->getStorage('page_variant');
+    // If configuration is defined prior to install cache may need to clear.
+    try {
+      $this->pageVariantStorage = $entity_type_manager->getStorage('page_variant');
+    }
+    catch (PluginNotFoundException $e) {
+      $entity_type_manager->clearCachedDefinitions();
+      $this->pageVariantStorage = $entity_type_manager->getStorage('page_variant');
+    }
     $this->currentPath = $current_path;
     $this->requestStack = $request_stack;
   }
@@ -71,7 +78,7 @@ class VariantRouteFilter implements FilterInterface {
     $routes = $collection->all();
     // Only continue if at least one route has a page manager variant.
     if (!array_filter($routes, function (Route $route) {
-      return $route->hasDefault('page_manager_page_variant');
+      return $route->hasDefault('_page_manager_page_variant');
     })) {
       return $collection;
     }
@@ -81,7 +88,7 @@ class VariantRouteFilter implements FilterInterface {
 
     $variant_route_name = $this->getVariantRouteName($routes, $request);
     foreach ($routes as $name => $route) {
-      if (!$route->hasDefault('page_manager_page_variant')) {
+      if (!$route->hasDefault('_page_manager_page_variant')) {
         continue;
       }
 
@@ -91,7 +98,7 @@ class VariantRouteFilter implements FilterInterface {
       }
       // If the selected route is overriding another route, remove the
       // overridden route.
-      elseif ($overridden_route_name = $route->getDefault('overridden_route_name')) {
+      elseif ($overridden_route_name = $route->getDefault('_overridden_route_name')) {
         unset($routes[$overridden_route_name]);
       }
     }
@@ -100,7 +107,7 @@ class VariantRouteFilter implements FilterInterface {
     // the overridden_route_name if available.
     $result_collection = new RouteCollection();
     foreach ($routes as $name => $route) {
-      $overridden_route_name = $route->getDefault('overridden_route_name') ?: $name;
+      $overridden_route_name = $route->getDefault('_overridden_route_name') ?: $name;
       $result_collection->add($overridden_route_name, $route);
     }
     return $result_collection;
@@ -121,13 +128,13 @@ class VariantRouteFilter implements FilterInterface {
     // Store the unaltered request attributes.
     $original_attributes = $request->attributes->all();
     foreach ($routes as $name => $route) {
-      if (!$page_variant_id = $route->getDefault('page_manager_page_variant')) {
+      if (!$page_variant_id = $route->getDefault('_page_manager_page_variant')) {
         continue;
       }
 
       if ($attributes = $this->getRequestAttributes($route, $name, $request)) {
         // Use the overridden route name if available.
-        $attributes[RouteObjectInterface::ROUTE_NAME] = $route->getDefault('overridden_route_name') ?: $name;
+        $attributes[RouteObjectInterface::ROUTE_NAME] = $route->getDefault('_overridden_route_name') ?: $name;
         // Add the enhanced attributes to the request.
         $request->attributes->add($attributes);
         $this->requestStack->push($request);
@@ -137,9 +144,9 @@ class VariantRouteFilter implements FilterInterface {
           return $name;
         }
 
-        // Restore the original request attributes, this must be done in the loop
-        // or the request attributes will not be calculated correctly for the
-        // next route.
+        // Restore the original request attributes, this must be done in the
+        // loop or the request attributes will not be calculated correctly for
+        // the next route.
         $request->attributes->replace($original_attributes);
         $this->requestStack->pop();
       }
@@ -160,7 +167,7 @@ class VariantRouteFilter implements FilterInterface {
   protected function sortRoutes(array $unsorted_routes) {
     // Create a mapping of route names to their weights.
     $weights_by_key = array_map(function (Route $route) {
-      return $route->getDefault('page_manager_page_variant_weight') ?: 0;
+      return $route->getDefault('_page_manager_page_variant_weight') ?: 0;
     }, $unsorted_routes);
 
     // Create an array holding the route names to be sorted.
@@ -227,19 +234,13 @@ class VariantRouteFilter implements FilterInterface {
     $raw_attributes = RouteAttributes::extractRawAttributes($route, $name, $path);
     $attributes = NestedArray::mergeDeep($attributes, $raw_attributes);
 
-    $attributes = array_filter($attributes, function($attribute){
+    $attributes = array_filter($attributes, function ($attribute) {
       return !is_null($attribute);
     });
 
     // Run the route enhancers on the raw attributes. This performs the same
     // functionality as \Symfony\Cmf\Component\Routing\DynamicRouter::match().
     foreach ($this->getRouteEnhancers() as $enhancer) {
-      // Support the deprecated
-      // \Drupal\Core\Routing\Enhancer\RouteEnhancerInterface::applies() method.
-      if ($enhancer instanceof RouteEnhancerInterface && !$enhancer->applies($route)) {
-        continue;
-      }
-
       try {
         $attributes = $enhancer->enhance($attributes, $request);
       }

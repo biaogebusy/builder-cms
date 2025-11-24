@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\flag_event_test\EventSubscriber;
 
 use Drupal\Core\State\StateInterface;
+use Drupal\flag\Event\FlagEvents as Flag;
 use Drupal\flag\Event\FlaggingEvent;
 use Drupal\flag\Event\UnflaggingEvent;
 use Drupal\flag\FlagServiceInterface;
-use Drupal\flag\Event\FlagEvents as Flag;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -44,7 +46,7 @@ class FlagEvents implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[Flag::ENTITY_FLAGGED] = ['onFlag', 50];
     $events[Flag::ENTITY_UNFLAGGED] = ['onUnflag', 50];
     return $events;
@@ -59,7 +61,7 @@ class FlagEvents implements EventSubscriberInterface {
   public function onFlag(FlaggingEvent $event) {
     if ($flag_id = $this->state->get('flag_test.react_flag_event', FALSE)) {
       $flag = $this->flagService->getFlagById($flag_id);
-      assert('$event->getFlagging()->getFlag()->id() !== $flag->id()', 'Should not test the flagging event with the same flag that is being flagged.');
+      assert($event->getFlagging()->getFlag()->id() !== $flag->id(), 'Should not test the flagging event with the same flag that is being flagged.');
       $this->state->set('flag_test.is_flagged', $flag->isFlagged($event->getFlagging()->getFlaggable(), $event->getFlagging()->getOwner()));
     }
   }
@@ -74,7 +76,7 @@ class FlagEvents implements EventSubscriberInterface {
     if ($flag_id = $this->state->get('flag_test.react_unflag_event', FALSE)) {
       $flag = $this->flagService->getFlagById($flag_id);
       foreach ($event->getFlaggings() as $flagging) {
-        assert('$flagging->getFlag()->id() != $flag->id()', 'Should not test the unflagging event with the same flag that is being unflagged.');
+        assert($flagging->getFlag()->id() != $flag->id(), 'Should not test the unflagging event with the same flag that is being unflagged.');
         $this->state->set('flag_test.is_unflagged', $flag->isFlagged($flagging->getFlaggable(), $flagging->getOwner()));
       }
     }

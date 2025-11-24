@@ -49,7 +49,7 @@ class ProductVariationTypeTest extends ProductBrowserTestBase {
       'label' => 'Clothing',
       'orderItemType' => 'default',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Clothing product variation type.');
 
     $variation_type = ProductVariationType::load($edit['id']);
@@ -67,7 +67,7 @@ class ProductVariationTypeTest extends ProductBrowserTestBase {
       'label' => 'Default2',
       'attributes[color]' => 'color',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Default2 product variation type.');
 
     $variation_type = ProductVariationType::load('default');
@@ -81,7 +81,7 @@ class ProductVariationTypeTest extends ProductBrowserTestBase {
       'label' => 'Default2',
       'attributes[color]' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Default2 product variation type.');
 
     // Confirm that the attribute field has been deleted.
@@ -98,7 +98,7 @@ class ProductVariationTypeTest extends ProductBrowserTestBase {
       'attributes[color]' => 'color',
       'attributes[size]' => 'size',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
 
     $this->drupalGet('admin/commerce/config/product-variation-types/default/duplicate');
     $this->assertSession()->fieldValueEquals('label', 'Default');
@@ -111,7 +111,7 @@ class ProductVariationTypeTest extends ProductBrowserTestBase {
       'attributes[color]' => 'color',
       'attributes[size]' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Default2 product variation type.');
 
     // Confirm that the original variation type is unchanged.

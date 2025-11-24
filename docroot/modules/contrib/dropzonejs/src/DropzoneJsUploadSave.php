@@ -202,13 +202,38 @@ class DropzoneJsUploadSave implements DropzoneJsUploadSaveInterface {
   public function validateFile(FileInterface $file, $extensions, array $additional_validators = []) {
     $validators = $additional_validators;
 
-    if (!empty($extensions)) {
-      $validators['file_validate_extensions'] = [$extensions];
-    }
-    $validators['file_validate_name_length'] = [];
-
     // Call the validation functions specified by this function's caller.
-    return file_validate($file, $validators);
+    if (\Drupal::getContainer()->has('file.validator')) {
+
+      if (!empty($extensions)) {
+        $validators['FileExtension'] = ['extensions' => $extensions];
+      }
+      $validators['FileNameLength'] = [];
+
+      // Convert size validator, drop this when removing support for
+      // file_validate().
+      if (isset($validators['file_validate_size'][0])) {
+        $validators['FileSizeLimit'] = ['fileLimit' => $validators['file_validate_size'][0]];
+        unset($validators['file_validate_size']);
+      }
+
+      $violations = \Drupal::service('file.validator')->validate($file, $validators);
+      $errors = [];
+      foreach ($violations as $violation) {
+        $errors[] = $violation->getMessage();
+      }
+      return $errors;
+    }
+    else {
+
+      if (!empty($extensions)) {
+        $validators['file_validate_extensions'] = [$extensions];
+      }
+      $validators['file_validate_name_length'] = [];
+
+      // @phpstan-ignore-next-line
+      return file_validate($file, $validators);
+    }
   }
 
   /**

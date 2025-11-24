@@ -1,0 +1,53 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SX",
+		"Xinzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baode Xian": {
+			"local_name": "保德县"
+		},
+		"Dai Xian": {
+			"local_name": "代县"
+		},
+		"Dingxiang Xian": {
+			"local_name": "定襄县"
+		},
+		"Fanshi Xian": {
+			"local_name": "繁峙县"
+		},
+		"Hequ Xian": {
+			"local_name": "河曲县"
+		},
+		"Jingle Xian": {
+			"local_name": "静乐县"
+		},
+		"Kelan Xian": {
+			"local_name": "岢岚县"
+		},
+		"Ningwu Xian": {
+			"local_name": "宁武县"
+		},
+		"Pianguan Xian": {
+			"local_name": "偏关县"
+		},
+		"Shenchi Xian": {
+			"local_name": "神池县"
+		},
+		"Wutai Xian": {
+			"local_name": "五台县"
+		},
+		"Wuzhai Xian": {
+			"local_name": "五寨县"
+		},
+		"Xinfu Qu": {
+			"local_name": "忻府区"
+		},
+		"Yuanping Shi": {
+			"local_name": "原平市"
+		}
+	}
+}

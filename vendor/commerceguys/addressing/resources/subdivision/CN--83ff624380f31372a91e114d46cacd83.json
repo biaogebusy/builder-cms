@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Hsinchu County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baoshan Township": {
+			"local_name": "寶山鄉"
+		},
+		"Beipu Township": {
+			"local_name": "北埔鄉"
+		},
+		"Emei Township": {
+			"local_name": "峨眉鄉"
+		},
+		"Guanxi Township": {
+			"local_name": "關西鎮"
+		},
+		"Hengshan Township": {
+			"local_name": "橫山鄉"
+		},
+		"Hukou Township": {
+			"local_name": "湖口鄉"
+		},
+		"Jianshi Township": {
+			"local_name": "尖石鄉"
+		},
+		"Qionglin Township": {
+			"local_name": "芎林鄉"
+		},
+		"Wufeng Township": {
+			"local_name": "五峰鄉"
+		},
+		"Xinpu Township": {
+			"local_name": "新埔鎮"
+		},
+		"Xinfeng Township": {
+			"local_name": "新豐鄉"
+		},
+		"Zhubei City": {
+			"local_name": "竹北市"
+		},
+		"Zhudong Township": {
+			"local_name": "竹東鎮"
+		}
+	}
+}

@@ -40,12 +40,12 @@ final class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
     for ($quantity = 1; $quantity < 3; $quantity++) {
       $test_entity = $this->createEntityWithPhoneNumber($phone_number_settings, array_slice($phone_numbers, 0, $quantity));
 
-      $this->assertEquals($quantity, $this->countVerificationCodes($test_entity), 'There is ' . $quantity . ' verification code.');
+      static::assertEquals($quantity, $this->countVerificationCodes($test_entity), 'There is ' . $quantity . ' verification code.');
 
       // Ensure post-save did not create verification codes if one already
       // exists.
       $test_entity->save();
-      $this->assertEquals($quantity, $this->countVerificationCodes($test_entity), 'Additional verification codes were not created.');
+      static::assertEquals($quantity, $this->countVerificationCodes($test_entity), 'Additional verification codes were not created.');
     }
   }
 
@@ -63,16 +63,16 @@ final class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
     $this->createEntityWithPhoneNumber($phone_number_settings, $phone_numbers);
 
     $sms_message = $this->getLastTestMessage($test_gateway);
-    $this->assertTrue($sms_message instanceof SmsMessageInterface, 'SMS verification message sent.');
-    $this->assertEquals($sms_message->getRecipients(), $phone_numbers, 'Sent to correct phone number.');
+    static::assertTrue($sms_message instanceof SmsMessageInterface, 'SMS verification message sent.');
+    static::assertEquals($sms_message->getRecipients(), $phone_numbers, 'Sent to correct phone number.');
 
     $phone_verification = $this->getLastVerification();
     $data['sms_verification_code'] = $phone_verification->getCode();
     $message = \Drupal::token()->replace(
       $phone_number_settings->getVerificationMessage(),
-      $data
+      $data,
     );
-    $this->assertEquals($sms_message->getMessage(), $message, 'Sent correct message.');
+    static::assertEquals($sms_message->getMessage(), $message, 'Sent correct message.');
   }
 
   /**
@@ -89,9 +89,9 @@ final class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
       $entities[] = $this->createEntityWithPhoneNumber($phone_number_settings, $phone_numbers);
     }
 
-    $this->assertEquals(6, $this->countVerificationCodes());
+    static::assertEquals(6, $this->countVerificationCodes());
     $entities[1]->delete();
-    $this->assertEquals(4, $this->countVerificationCodes(), 'Verification codes deleted.');
+    static::assertEquals(4, $this->countVerificationCodes(), 'Verification codes deleted.');
   }
 
   /**
@@ -103,10 +103,11 @@ final class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
    * @return int
    *   Count number of verification codes.
    */
-  protected function countVerificationCodes(EntityInterface $entity = NULL): int {
+  protected function countVerificationCodes(?EntityInterface $entity = NULL): int {
     $query = \Drupal::entityTypeManager()
       ->getStorage('sms_phone_number_verification')
-      ->getQuery();
+      ->getQuery()
+      ->accessCheck(FALSE);
 
     if ($entity) {
       $query->condition('entity__target_type', $entity->getEntityTypeId());

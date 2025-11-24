@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\field\Entity\FieldConfig;
@@ -106,7 +108,7 @@ class MigrateFieldInstanceTest extends MigrateDrupal7TestBase {
   /**
    * Tests migrating D7 field instances to field_config entities.
    */
-  public function testFieldInstances() {
+  public function testFieldInstances(): void {
     $this->assertEntity('comment.comment_node_page.comment_body', 'Comment', 'text_long', TRUE, FALSE);
     $this->assertEntity('node.page.body', 'Body', 'text_with_summary', FALSE, FALSE);
     $this->assertEntity('comment.comment_node_article.comment_body', 'Comment', 'text_long', TRUE, FALSE);
@@ -150,7 +152,7 @@ class MigrateFieldInstanceTest extends MigrateDrupal7TestBase {
     $this->assertLinkFields('node.blog.field_link', DRUPAL_REQUIRED);
 
     $this->assertEntityReferenceFields('node.article.field_tags', ['tags']);
-    $this->assertEntityReferenceFields('node.forum.taxonomy_forums', ['forums']);
+    $this->assertEntityReferenceFields('node.forum.taxonomy_forums', ['sujet_de_discussion']);
     $this->assertEntityReferenceFields('node.test_content_type.field_term_reference', ['tags', 'test_vocabulary']);
 
     // Tests that fields created by the Title module are not migrated.

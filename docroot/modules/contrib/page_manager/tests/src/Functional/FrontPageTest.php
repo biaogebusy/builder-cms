@@ -68,12 +68,9 @@ class FrontPageTest extends BrowserTestBase {
       ],
     ]);
 
-    // dump(var_export($page_variant->toArray(), TRUE));
-
     $this->triggerRouterRebuild();
 
     // The title should default to "Home" on the front page.
-    // @todo This gives 404 :(
     $this->drupalGet('');
     $this->assertSession()->titleEquals('Home | Drupal');
   }

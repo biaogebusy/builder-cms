@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JX",
+		"Jingdezhen Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Changjiang Qu": {
+			"local_name": "昌江区"
+		},
+		"Fuliang Xian": {
+			"local_name": "浮梁县"
+		},
+		"Leping Shi": {
+			"local_name": "乐平市"
+		},
+		"Zhushan Qu": {
+			"local_name": "珠山区"
+		}
+	}
+}

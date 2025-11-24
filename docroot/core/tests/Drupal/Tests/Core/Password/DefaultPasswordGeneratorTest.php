@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Password;
 
 use Drupal\Core\Password\DefaultPasswordGenerator;
@@ -16,7 +18,7 @@ class DefaultPasswordGeneratorTest extends UnitTestCase {
   /**
    * @covers ::generate
    */
-  public function testGenerate() {
+  public function testGenerate(): void {
     $generator = new DefaultPasswordGenerator();
     $password = $generator->generate();
     $this->assertEquals(10, strlen($password));

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Kernel\Migrate\d6;
 
 use Drupal\filter\Plugin\migrate\process\d6\FilterFormatPermission;
@@ -20,11 +22,10 @@ class FilterFormatPermissionTest extends MigrateDrupalTestBase {
    *
    * @covers ::__construct
    */
-  public function testConfigurableFilterFormat() {
+  public function testConfigurableFilterFormat(): void {
     $migration = Migration::create($this->container, [], 'custom_migration', []);
     $filterFormatPermissionMigration = FilterFormatPermission::create($this->container, ['migration' => 'custom_filter_format'], 'custom_filter_format', [], $migration);
     $reflected_config = new \ReflectionProperty($filterFormatPermissionMigration, 'configuration');
-    $reflected_config->setAccessible(TRUE);
     $config = $reflected_config->getValue($filterFormatPermissionMigration);
     $this->assertEquals('custom_filter_format', $config['migration']);
   }

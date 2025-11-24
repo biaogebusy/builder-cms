@@ -23,7 +23,7 @@ class EntityDeleteMultipleAccessCheck implements AccessInterface {
   /**
    * The tempstore service.
    *
-   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
+   * @var \Drupal\Core\TempStore\PrivateTempStore
    */
   protected $tempStore;
 
@@ -40,7 +40,7 @@ class EntityDeleteMultipleAccessCheck implements AccessInterface {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
-   *   The tempstore service.
+   *   The tempstore factory service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack service.
    */
@@ -62,9 +62,6 @@ class EntityDeleteMultipleAccessCheck implements AccessInterface {
    *   Allowed or forbidden, neutral if tempstore is empty.
    */
   public function access(AccountInterface $account, $entity_type_id) {
-    if (!$this->requestStack->getCurrentRequest()->hasSession()) {
-      return AccessResult::neutral();
-    }
     $selection = $this->tempStore->get($account->id() . ':' . $entity_type_id);
     if (empty($selection) || !is_array($selection)) {
       return AccessResult::neutral();

@@ -84,7 +84,7 @@ abstract class Schema implements PlaceholderInterface {
   protected function getPrefixInfo($table = 'default', $add_prefix = TRUE) {
     $info = [
       'schema' => $this->defaultSchema,
-      'prefix' => $this->connection->tablePrefix($table),
+      'prefix' => $this->connection->getPrefix(),
     ];
     if ($add_prefix) {
       $table = $info['prefix'] . $table;
@@ -161,12 +161,14 @@ abstract class Schema implements PlaceholderInterface {
    *
    * @param $table
    *   The name of the table in drupal (no prefixing).
+   * @param bool $add_prefix
+   *   Boolean to indicate whether the table name needs to be prefixed.
    *
    * @return bool
    *   TRUE if the given table exists, otherwise FALSE.
    */
-  public function tableExists($table) {
-    $condition = $this->buildTableNameCondition($table);
+  public function tableExists($table, bool $add_prefix = TRUE) {
+    $condition = $this->buildTableNameCondition($table, '=', $add_prefix);
     $condition->compile($this->connection, $this);
     // Normally, we would heartily discourage the use of string
     // concatenation for conditionals like this however, we
@@ -196,9 +198,8 @@ abstract class Schema implements PlaceholderInterface {
     $condition = $this->buildTableNameCondition('%', 'LIKE');
     $condition->compile($this->connection, $this);
 
-    $individually_prefixed_tables = $this->connection->getUnprefixedTablesMap();
-    $default_prefix = $this->connection->tablePrefix();
-    $default_prefix_length = strlen($default_prefix);
+    $prefix = $this->connection->getPrefix();
+    $prefix_length = strlen($prefix);
     $tables = [];
     // Normally, we would heartily discourage the use of string
     // concatenation for conditionals like this however, we
@@ -207,17 +208,10 @@ abstract class Schema implements PlaceholderInterface {
     // Don't use {} around information_schema.tables table.
     $results = $this->connection->query("SELECT table_name AS table_name FROM information_schema.tables WHERE " . (string) $condition, $condition->arguments());
     foreach ($results as $table) {
-      // Take into account tables that have an individual prefix.
-      if (isset($individually_prefixed_tables[$table->table_name])) {
-        $prefix_length = strlen($this->connection->tablePrefix($individually_prefixed_tables[$table->table_name]));
-      }
-      elseif ($default_prefix && substr($table->table_name, 0, $default_prefix_length) !== $default_prefix) {
-        // This table name does not start the default prefix, which means that
-        // it is not managed by Drupal so it should be excluded from the result.
+      if ($prefix && substr($table->table_name, 0, $prefix_length) !== $prefix) {
+        // This table name does not start the prefix, which means that it is
+        // not managed by Drupal so it should be excluded from the result.
         continue;
-      }
-      else {
-        $prefix_length = $default_prefix_length;
       }
 
       // Remove the prefix from the returned tables.
@@ -549,20 +543,20 @@ abstract class Schema implements PlaceholderInterface {
    *
    * For example, suppose you have:
    * @code
-   * $schema['foo'] = array(
-   *   'fields' => array(
-   *     'bar' => array('type' => 'int', 'not null' => TRUE)
-   *   ),
-   *   'primary key' => array('bar')
-   * );
+   * $schema['foo'] = [
+   *   'fields' => [
+   *     'bar' => ['type' => 'int', 'not null' => TRUE]
+   *   ],
+   *   'primary key' => ['bar']
+   * ];
    * @endcode
    * and you want to change foo.bar to be type serial, leaving it as the
    * primary key. The correct sequence is:
    * @code
    * $injected_database->schema()->dropPrimaryKey('foo');
    * $injected_database->schema()->changeField('foo', 'bar', 'bar',
-   *   array('type' => 'serial', 'not null' => TRUE),
-   *   array('primary key' => array('bar')));
+   *   ['type' => 'serial', 'not null' => TRUE],
+   *   ['primary key' => ['bar'])];
    * @endcode
    *
    * The reasons for this are due to the different database engines:
@@ -613,6 +607,8 @@ abstract class Schema implements PlaceholderInterface {
    *
    * @throws \Drupal\Core\Database\SchemaObjectExistsException
    *   If the specified table already exists.
+   * @throws \BadMethodCallException
+   *   When ::createTableSql() is not implemented in the concrete driver class.
    */
   public function createTable($name, $table) {
     if ($this->tableExists($name)) {
@@ -622,6 +618,32 @@ abstract class Schema implements PlaceholderInterface {
     foreach ($statements as $statement) {
       $this->connection->query($statement);
     }
+  }
+
+  /**
+   * Generate SQL to create a new table from a Drupal schema definition.
+   *
+   * This method should be implemented in extending classes.
+   *
+   * @param string $name
+   *   The name of the table to create.
+   * @param array $table
+   *   A Schema API table definition array.
+   *
+   * @return array
+   *   An array of SQL statements to create the table.
+   *
+   * @throws \BadMethodCallException
+   *   If the method is not implemented in the concrete driver class.
+   *
+   * @todo This method is called by Schema::createTable on the abstract class, and
+   *   therefore should be defined as well on the abstract class to prevent static
+   *   analysis errors. In D11, consider changing it to an abstract method, or to
+   *   make it private for each driver, and ::createTable actually an abstract
+   *   method here for implementation in each driver.
+   */
+  protected function createTableSql($name, $table) {
+    throw new \BadMethodCallException(get_class($this) . '::createTableSql() not implemented.');
   }
 
   /**

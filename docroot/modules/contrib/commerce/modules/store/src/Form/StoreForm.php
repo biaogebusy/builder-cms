@@ -60,7 +60,7 @@ class StoreForm extends ContentEntityForm {
       '#group' => 'advanced',
       '#title' => $this->t('Authoring information'),
       '#weight' => 90,
-      'published' => [
+      'is_default' => [
         '#type' => 'html_tag',
         '#tag' => 'h3',
         '#value' => $store->isDefault() ? $this->t('Default store') : '',
@@ -135,6 +135,9 @@ class StoreForm extends ContentEntityForm {
           $form['is_default']['#disabled'] = TRUE;
         }
         else {
+          if (!$store->isPublished()) {
+            $form['is_default']['#disabled'] = TRUE;
+          }
           $form['is_default']['widget']['value']['#title'] = $this->t('Make this the default store.');
         }
       }
@@ -146,6 +149,11 @@ class StoreForm extends ContentEntityForm {
         $form['is_default']['widget']['value']['#description'] = $this->t('New carts will be assigned to this store unless a contributed module or custom code decides otherwise.');
       }
     }
+    $form['status']['#group'] = 'footer';
+    // Disallow disabling the default store.
+    if ($store->isDefault()) {
+      $form['status']['#disabled'] = TRUE;
+    }
 
     return $form;
   }
@@ -154,12 +162,14 @@ class StoreForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $status = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->messenger()->addMessage($this->t('Saved the %label store.', [
       '%label' => $this->entity->label(),
     ]));
     $form_state->setRedirect('entity.commerce_store.collection');
+
+    return $status;
   }
 
 }

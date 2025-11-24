@@ -14,31 +14,41 @@ use Drupal\flag\FlagInterface;
 /**
  * Implements hook_flag_action_access().
  */
-function message_subscribe_email_flag_action_access($action, FlagInterface $flag, AccountInterface $account, EntityInterface $flaggable = NULL) {
+function message_subscribe_email_flag_action_access($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL) {
   // The 'unflag' action is always allowed here, so only check 'flag'.
   $prefix = \Drupal::config('message_subscribe_email.settings')->get('flag_prefix') . '_';
   if ($action === 'flag' && $flaggable && $flaggable->id() && strpos($flag->id(), $prefix) === 0) {
-
+    /** @var \Drupal\flag\FlagServiceInterface $flag_service */
     $flag_service = \Drupal::service('flag');
     $request = \Drupal::request();
-    $sid = $request->hasSession() ? $request->getSession()->getId() : NULL;
+    $sid = $request->hasSession() ? $request->getSession()->get('flag.session_id') : NULL;
 
     // If the user is anonymous, force a session and session ID.
     // Copied from FlagService::populateFlaggerDefaults() and
     // FlagService::ensureSession().
-    if (empty($sid) && $account == NULL) {
+    if (empty($sid) && $account === NULL) {
       $account = \Drupal::currentUser();
     }
     if (empty($sid) && $account->isAnonymous()) {
-      // Ensure something is in $_SESSION, otherwise the session ID will
-      // not persist.
-      // @todo Replace this with something cleaner once core provides it.
-      // See https://www.drupal.org/node/2865991.
-      $_SESSION['flag'] = TRUE;
+      // @todo when https://www.drupal.org/node/2865991 is resolved,
+      // use force start session API.
+      if (!$request->hasSession()) {
+        /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface $session */
+        $session = \Drupal::service('session');
+        $request->setSession($session);
+        $session->start();
+      }
 
-      $session = \Drupal::service('session_manager');
-      $session->start();
-      $sid = $session->getId();
+      $session = $request->getSession();
+      if ($session->has('flag.session_id')) {
+        $sid = $session->get('flag.session_id');
+      }
+      else {
+        // Generate a persistent session id.
+        $sid = $flag_service->getAnonymousSessionId();
+        $session->set('flag.session_id', $sid);
+      }
+
     }
 
     // Get the other flags on that same content.

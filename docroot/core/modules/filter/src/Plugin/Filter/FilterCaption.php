@@ -4,9 +4,12 @@ namespace Drupal\filter\Plugin\Filter;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\filter\Attribute\Filter;
 use Drupal\filter\FilterPluginManager;
 use Drupal\filter\FilterProcessResult;
 use Drupal\filter\Plugin\FilterBase;
+use Drupal\filter\Plugin\FilterInterface;
 use Drupal\filter\Render\FilteredMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -14,14 +17,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides a filter to caption elements.
  *
  * When used in combination with the filter_align filter, this must run last.
- *
- * @Filter(
- *   id = "filter_caption",
- *   title = @Translation("Caption images"),
- *   description = @Translation("Uses a <code>data-caption</code> attribute on <code>&lt;img&gt;</code> tags to caption images."),
- *   type = Drupal\filter\Plugin\FilterInterface::TYPE_TRANSFORM_REVERSIBLE
- * )
  */
+#[Filter(
+  id: "filter_caption",
+  title: new TranslatableMarkup("Caption images"),
+  description: new TranslatableMarkup("Uses a <code>data-caption</code> attribute on <code>&lt;img&gt;</code> tags to caption images."),
+  type: FilterInterface::TYPE_TRANSFORM_REVERSIBLE
+)]
 class FilterCaption extends FilterBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -43,7 +45,7 @@ class FilterCaption extends FilterBase implements ContainerFactoryPluginInterfac
    * @param \Drupal\filter\FilterPluginManager $filter_manager
    *   Filter plugin manager.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FilterPluginManager $filter_manager = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ?FilterPluginManager $filter_manager = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->filterManager = $filter_manager ?: \Drupal::service('plugin.manager.filter');
   }
@@ -95,7 +97,7 @@ class FilterCaption extends FilterBase implements ContainerFactoryPluginInterfac
         // content editor from adding a new caption. To allow for this we treat
         // a raw caption value of ' ' as valid and adding the wrapping figure
         // element.
-        // @see core/modules/media/js/plugins/drupalmedia/plugin.es6.js
+        // @see core/modules/media/js/plugins/drupalmedia/plugin.js
         if (mb_strlen($caption) === 0 && $raw_caption !== ' ') {
           continue;
         }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_tools\Functional;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -10,7 +12,7 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group migrate_tools
  */
-class SourceUrlFormTest extends BrowserTestBase {
+final class SourceUrlFormTest extends BrowserTestBase {
   use StringTranslationTrait;
 
   /**
@@ -33,14 +35,14 @@ class SourceUrlFormTest extends BrowserTestBase {
    *
    * @var string
    */
-  protected $group;
+  private string $group;
 
   /**
    * The test migration id.
    *
    * @var string
    */
-  protected $migration;
+  private string $migration;
 
   /**
    * {@inheritdoc}

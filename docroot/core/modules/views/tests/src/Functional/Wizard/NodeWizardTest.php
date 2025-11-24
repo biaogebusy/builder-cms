@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Wizard;
 
 /**
@@ -18,12 +20,12 @@ class NodeWizardTest extends WizardTestBase {
   /**
    * Tests creating a view with node titles.
    */
-  public function testViewAddWithNodeTitles() {
+  public function testViewAddWithNodeTitles(): void {
     $this->drupalCreateContentType(['type' => 'article']);
 
     $view = [];
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['description'] = $this->randomMachineName(16);
     $view['page[create]'] = FALSE;
     $view['show[wizard_key]'] = 'node';

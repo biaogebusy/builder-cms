@@ -11,6 +11,7 @@ use Drupal\Core\Form\BaseFormIdInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
+use Drupal\Core\Form\WorkspaceDynamicSafeFormInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
@@ -29,12 +30,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @internal
  *   Form classes are internal.
  */
-abstract class ConfigureBlockFormBase extends FormBase implements BaseFormIdInterface {
+abstract class ConfigureBlockFormBase extends FormBase implements BaseFormIdInterface, WorkspaceDynamicSafeFormInterface {
 
   use AjaxFormHelperTrait;
   use ContextAwarePluginAssignmentTrait;
   use LayoutBuilderContextTrait;
   use LayoutRebuildTrait;
+  use WorkspaceSafeFormTrait;
 
   /**
    * The plugin being configured.
@@ -158,16 +160,13 @@ abstract class ConfigureBlockFormBase extends FormBase implements BaseFormIdInte
    * @return array
    *   The form array.
    */
-  public function doBuildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL, $delta = NULL, SectionComponent $component = NULL) {
+  public function doBuildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL, $delta = NULL, ?SectionComponent $component = NULL) {
     $this->sectionStorage = $section_storage;
     $this->delta = $delta;
     $this->uuid = $component->getUuid();
     $this->block = $component->getPlugin();
 
     $form_state->setTemporaryValue('gathered_contexts', $this->getPopulatedContexts($section_storage));
-
-    // @todo Remove once https://www.drupal.org/node/2268787 is resolved.
-    $form_state->set('block_theme', $this->config('system.theme')->get('default'));
 
     $form['#tree'] = TRUE;
     $form['settings'] = [];

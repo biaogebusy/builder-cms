@@ -2,9 +2,9 @@
 body.gin--vertical-toolbar,
 body.gin--horizontal-toolbar,
 body.gin--classic-toolbar {
-  padding-top: var(--gin-toolbar-y-offset) !important;
-  padding-left: var(--gin-toolbar-x-offset, 256px) !important;
-  margin-left: 0; // Fix for Drupal 9.3+
+  padding-block-start: var(--gin-toolbar-y-offset) !important;
+  padding-inline-start: var(--gin-toolbar-x-offset, 256px) !important;
+  margin-inline-start: 0; // Fix for Drupal 9.3+
 }
 
 .toolbar {
@@ -17,10 +17,10 @@ body.gin--classic-toolbar {
       .user-menu {
         flex-grow: 1;
         flex-shrink: 0;
-        text-align: right;
+        text-align: end;
 
         .toolbar-menu {
-          text-align: left;
+          text-align: start;
         }
       }
     }
@@ -30,7 +30,7 @@ body.gin--classic-toolbar {
     }
 
     .contextual-toolbar-tab.toolbar-tab {
-      float: right; // Set contextual to right
+      float: inline-end; // Set contextual to right
     }
 
     .toolbar-tab > .toolbar-item {
@@ -137,9 +137,8 @@ body.gin--classic-toolbar {
         $logoSize: 28px;
         $iconFill: 333333;
 
-        padding-left: 0;
-        padding-right: 0;
-        margin-left: 0;
+        padding-inline: 0;
+        margin-inline-start: 0;
         background-color: var(--gin-color-text);
         mask-image: icon('gin');
         mask-position: center center;
@@ -156,137 +155,20 @@ body.gin--classic-toolbar {
 
     .toolbar-icon-default {
       &::before {
-        padding-top: 0;
+        padding-block-start: 0;
       }
     }
 
     // Fallback icon if none is set
+    --icon: #{icon('fallback')}; /* Default icon, aka --basic */
+
     .toolbar-icon {
       &:before {
-        mask-image: icon('fallback');
+        mask-image: var(--icon);
       }
     }
 
-    // Hamburger
-    .toolbar-icon-menu {
-      &:before {
-        mask-image: icon('hamburger');
-      }
-    }
-
-    // Admin tray: Add content
-    .toolbar-icon-system-admin-content {
-      &:before {
-        mask-image: icon('content');
-      }
-    }
-
-    // Admin tray: Structure
-    .toolbar-icon-system-admin-structure {
-      &:before {
-        mask-image: icon('structure');
-      }
-    }
-
-    // Admin tray: Appearance
-    .toolbar-icon-system-themes-page {
-      &:before {
-        mask-image: icon('appearance');
-      }
-    }
-
-    // Admin tray: Extend
-    .toolbar-icon-system-modules-list {
-      &:before {
-        mask-image: icon('extend');
-      }
-    }
-
-    // Admin tray: Configuration
-    .toolbar-icon-system-admin-config {
-      &:before {
-        mask-image: icon('config');
-      }
-    }
-
-    // Admin tray: People
-    .toolbar-icon-entity-user-collection {
-      &:before {
-        mask-image: icon('people');
-      }
-    }
-
-    // Admin tray: Announcements
-    .toolbar-icon-announcements-feed-announcement,
-    .toolbar-icon-announce {
-      &:before {
-        mask-image: icon('announcement');
-      }
-    }
-
-    // Groups
-    .toolbar-icon-system-admin-group {
-      &:before {
-        mask-image: icon('group');
-      }
-    }
-
-    // Admin tray: Statistics
-    .toolbar-icon-system-admin-reports {
-      &:before {
-        mask-image: icon('reports');
-      }
-    }
-
-    // Admin tray: Help
-    .toolbar-icon-help-main,
-    .toolbar-icon-help {
-      &:before {
-        mask-image: icon('help');
-      }
-    }
-
-    // Commerce
-    .toolbar-icon-commerce-admin-commerce {
-      &:before {
-        mask-image: icon('commerce');
-      }
-    }
-
-    // Webform
-    .toolbar-icon-entity-webform-collection {
-      &:before {
-        mask-image: icon('webform');
-      }
-    }
-
-    // Admin tray: TMGMT Translation.
-    .toolbar-icon-tmgmt-admin-tmgmt {
-      &:before {
-        mask-image: icon('tmgmt');
-      }
-    }
-
-    // Admin Toolbar Language Switcher
-    .toolbar-icon-language {
-      &:before {
-        mask-image: icon('tmgmt');
-      }
-    }
-
-    // BAT
-    .toolbar-icon-bat-admin {
-      &:before {
-        mask-image: icon('bat');
-      }
-    }
-
-    // Commerce Inbox
-    .toolbar-icon-commerce-inbox {
-      &:before {
-        mask-image: icon('commerce-inbox');
-      }
-    }
+    @import "../helpers/toolbar-icons";
 
     // Back to site
     .toolbar-icon-escape-admin {
@@ -309,83 +191,11 @@ body.gin--classic-toolbar {
         mask-size: var(--gin-icon-size-toolbar-secondary) var(--gin-icon-size-toolbar-secondary);
       }
     }
-
-    // Shortcuts
-    .toolbar-icon-shortcut {
-      &:before {
-        mask-image: icon('shortcut');
-      }
-    }
-
-    // Coffee & Search
-    .toolbar-icon-coffee,
-    #toolbar-item-administration-search,
-    #admin-toolbar-mobile-search-tab .toolbar-icon {
-      &:before {
-        mask-image: icon('search');
-      }
-    }
-
-    // Devel
-    .toolbar-icon-devel {
-      &:before {
-        mask-image: icon('devel');
-      }
-    }
-
-    // Rebuild Cache Access
-    .toolbar-icon-rebuild-cache-access {
-      &:before {
-        mask-image: icon('rebuild-cache');
-      }
-    }
-
-    // Responsive Preview
-    .responsive-preview-icon {
-      &:before {
-        mask-image: icon('responsive-preview');
-      }
-    }
-
-    // User
-    .toolbar-icon-user {
-      &:before {
-        mask-image: icon('user');
-      }
-    }
-
-    // Environment
-    .toolbar-icon-environment {
-      &:before {
-        mask-image: icon('server');
-      }
-    }
-
-    // Toggle vertical
-    .toolbar-icon-toggle-vertical {
-      &:before {
-        mask-image: icon('nav-toggle-toleft');
-      }
-    }
-
-    // Toogle horizontal
-    .toolbar-icon-toggle-horizontal {
-      &:before {
-        mask-image: icon('nav-toggle-totop');
-      }
-    }
-
-    // Workbench
-    .toolbar-icon-workbench-content-tab {
-      &:before {
-        mask-image: icon('tool');
-      }
-    }
   }
 }
 
 .toolbar-horizontal .toolbar-tray {
-  border-bottom: 1px solid var(--gin-border-color);
+  border-block-end: 1px solid var(--gin-border-color);
 
   &,
   [dir=rtl] & {
@@ -433,55 +243,54 @@ body.gin--classic-toolbar {
   }
 
   .menu-item + .menu-item {
-    border-left: 0 none;
+    border-inline-start: 0 none;
 
     &:last-child {
-      border-right: 0 none;
+      border-inline-end: 0 none;
     }
   }
 }
 
 .gin--dark-mode.toolbar-horizontal .toolbar-tray {
-  border-bottom: 1px solid var(--gin-border-color-layer);
+  border-block-end: 1px solid var(--gin-border-color-layer);
 }
 
 // Fix for Admin_toolbar 2.4+: Remove white borders added by the admin_toolbar module
 .toolbar .toolbar-tray-horizontal {
   ul ul li.menu-item:first-child {
-    border-top: 0;
+    border-block-start: 0;
   }
 
   .menu-item:last-child {
-    border-left: 0;
-    border-right: 0;
+    border-inline: 0;
   }
 }
 
 .toolbar .toolbar-tray-vertical {
   box-shadow: none;
-  border-right: 1px solid var(--gin-border-color);
+  border-inline-end: 1px solid var(--gin-border-color);
   background: var(--gin-bg-layer);
 
   .menu-item + .menu-item {
-    border-top: 1px solid var(--gin-border-color-layer);
+    border-block-start: 1px solid var(--gin-border-color-layer);
   }
 
   .menu-item + .menu-item__spacer {
-    border-top: 0 none;
+    border-block-start: 0 none;
   }
 
   .menu-item .toolbar-menu,
   .menu-item:last-child {
-    border-bottom: 0 none;
+    border-block-end: 0 none;
   }
 
   // Custom logo
   .menu-item .toolbar-logo {
-    padding-left: var(--gin-spacing-m);
+    padding-inline-start: var(--gin-spacing-m);
   }
 
   .level-1.menu-item:last-child {
-    border-bottom: 1px solid var(--gin-border-color-layer);
+    border-block-end: 1px solid var(--gin-border-color-layer);
   }
 
   .level-2 .toolbar-menu {
@@ -524,9 +333,8 @@ body.gin--classic-toolbar {
       &.menu-item {
         .menu-item {
           background: transparent;
-          border-left: none;
-          border-right: none;
-          border-bottom: 0 none;
+          border-inline: none;
+          border-block-end: 0 none;
         }
 
         &--expanded {
@@ -569,8 +377,8 @@ body.gin--classic-toolbar {
     content: "";
     display: block;
     position: absolute;
-    right: 0;
-    top: 18px;
+    inset-inline-end: 0;
+    inset-block-start: 18px;
     width: 16px;
     height: 16px;
     background-color: var(--gin-color-disabled);
@@ -595,9 +403,8 @@ body.gin--classic-toolbar {
 .toolbar .toolbar-tray-vertical .toolbar-menu a,
 .toolbar .toolbar-tray-vertical .toolbar-menu span {
   display: block;
-  padding-left: 3.25em;
-  padding-top: 1.5em;
-  padding-bottom: 1.5em;
+  padding-inline-start: 3.25em;
+  padding-block: 1.5em;
 
   &:visited,
   &:hover,
@@ -656,13 +463,12 @@ body.gin--classic-toolbar {
 }
 
 .toolbar.toolbar-secondary .toolbar-bar .toolbar-tab > .toolbar-icon.toolbar-icon-edit.toolbar-item::before {
-  left: .55rem;
+  inset-inline-start: .55rem;
 }
 
 // Custom logo
 #toolbar-item-administration-tray .toolbar-logo {
-  padding-top: var(--gin-spacing-xs);
-  padding-bottom: var(--gin-spacing-xs);
+  padding-block: var(--gin-spacing-xs);
 
   img {
     max-width: 100px;
@@ -679,9 +485,9 @@ body.gin--classic-toolbar {
   min-width: unset;
 
   &.icon-user {
-    padding-left: 0;
-    margin-left: var(--gin-spacing-xs);
-    margin-top: 2px;
+    padding-inline-start: 0;
+    margin-inline-start: var(--gin-spacing-xs);
+    margin-block-start: 2px;
   }
 }
 
@@ -711,7 +517,7 @@ body.gin--classic-toolbar {
 #admin-toolbar-search-input {
   color: var(--gin-color-text);
   width: 245px;
-  padding-left: calc(var(--gin-spacing-xl) + var(--gin-spacing-xs));
+  padding-inline-start: calc(var(--gin-spacing-xl) + var(--gin-spacing-xs));
   background-color: #fff;
   border: 1px solid var(--gin-border-color);
   border-radius: 25px;
@@ -742,8 +548,8 @@ body.gin--classic-toolbar {
     width: var(--gin-icon-size-toolbar-secondary);
     height: var(--gin-icon-size-toolbar-secondary);
     position: absolute;
-    top: 11px;
-    left: var(--gin-spacing-m);
+    inset-block-start: 11px;
+    inset-inline-start: var(--gin-spacing-m);
     background-color: var(--gin-icon-color);
     mask-image: icon('search');
     mask-size: 100% 100%;
@@ -763,8 +569,7 @@ body.gin--classic-toolbar {
   box-shadow: var(--gin-shadow-l2);
 
   &.ui-widget-content {
-    padding-top: var(--gin-spacing-xs);
-    padding-bottom: var(--gin-spacing-xs);
+    padding-block: var(--gin-spacing-xs);
     border: 0 none;
     overflow-y: auto;
   }
@@ -798,23 +603,23 @@ body.gin--classic-toolbar {
 // admin_toolbar 3.3.1 fix
 .toolbar-tray-horizontal .toolbar-menu .level-1 > .toolbar-box .toolbar-icon.toolbar-handle {
   position: absolute;
-  right: .5rem;
-  top: 1.1875rem;
+  inset-inline-end: .5rem;
+  inset-block-start: 1.1875rem;
   width: 1rem;
   height: 1rem;
   padding: 0;
 
   &::before {
-    top: 0;
-    left: 0;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     mask-size: 12px 12px;
   }
 }
 
 .toolbar-tray-horizontal .level-1 .menu-item--expanded > .toolbar-box .toolbar-handle {
   position: absolute;
-  top: 0;
-  right: 0;
+  inset-block-start: 0;
+  inset-inline-end: 0;
   width: 39px;
   height: 100%;
   padding: 0;
@@ -835,12 +640,11 @@ body.gin--classic-toolbar {
 
 // Drupal 10.1 Toolbar loading overrides
 .toolbar-loading #toolbar-item-administration-tray {
-  border-right: 0;
+  border-inline-end: 0;
   background-color: transparent;
 
   .menu-item + .menu-item {
-    border-left: 0;
-    border-right: 0;
+    border-inline: 0;
   }
 }
 

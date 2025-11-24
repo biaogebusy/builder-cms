@@ -5,9 +5,19 @@ media_entity_instagram.settings:
     facebook_app_id:
       type: string
       label: 'Facebook App ID'
+      constraints:
+        NotBlank: []
+        Regex:
+          pattern: '/^\d+$/'
+          message: 'The Facebook App ID must be a number.'
     facebook_app_secret:
       type: string
       label: 'Facebook App secret'
+      constraints:
+        NotBlank: []
+        Regex:
+          pattern: '/^[a-f0-9]{32}$/'
+          message: 'The Facebook App secret must be a 32-character hexadecimal string.'
 
 field.formatter.settings.instagram_embed:
   type: mapping

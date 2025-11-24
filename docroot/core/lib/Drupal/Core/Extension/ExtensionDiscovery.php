@@ -4,7 +4,7 @@ namespace Drupal\Core\Extension;
 
 use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Core\DrupalKernel;
-use Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator;
+use Drupal\Core\Extension\Discovery\RecursiveExtensionFilterCallback;
 use Drupal\Core\Site\Settings;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -54,7 +54,7 @@ class ExtensionDiscovery {
    *
    * @see http://php.net/manual/functions.user-defined.php
    */
-  const PHP_FUNCTION_PATTERN = '/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/';
+  const PHP_FUNCTION_PATTERN = '/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/';
 
   /**
    * Previously discovered files keyed by origin directory and extension type.
@@ -103,7 +103,7 @@ class ExtensionDiscovery {
    * @param string $site_path
    *   The path to the site.
    */
-  public function __construct(string $root, $use_file_cache = TRUE, array $profile_directories = NULL, string $site_path = NULL) {
+  public function __construct(string $root, $use_file_cache = TRUE, ?array $profile_directories = NULL, ?string $site_path = NULL) {
     $this->root = $root;
     $this->fileCache = $use_file_cache ? FileCacheFactory::get('extension_discovery') : NULL;
     $this->profileDirectories = $profile_directories;
@@ -158,25 +158,25 @@ class ExtensionDiscovery {
     }
 
     // Search the core directory.
-    $searchdirs[static::ORIGIN_CORE] = 'core';
+    $search_dirs[static::ORIGIN_CORE] = 'core';
 
     // Search the legacy sites/all directory.
-    $searchdirs[static::ORIGIN_SITES_ALL] = 'sites/all';
+    $search_dirs[static::ORIGIN_SITES_ALL] = 'sites/all';
 
     // Search for contributed and custom extensions in top-level directories.
     // The scan uses a list of extension types to limit recursion to the
     // expected extension type specific directory names only.
-    $searchdirs[static::ORIGIN_ROOT] = '';
+    $search_dirs[static::ORIGIN_ROOT] = '';
 
-    // Simpletest uses the regular built-in multi-site functionality of Drupal
-    // for running web tests. As a consequence, extensions of the parent site
+    // Tests use the regular built-in multi-site functionality of Drupal for
+    // running web tests. As a consequence, extensions of the parent site
     // located in a different site-specific directory are not discovered in a
     // test site environment, because the site directories are not the same.
     // Therefore, add the site directory of the parent site to the search paths,
     // so that contained extensions are still discovered.
     // @see \Drupal\Core\Test\FunctionalTestSetupTrait::prepareSettings().
     if ($parent_site = Settings::get('test_parent_site')) {
-      $searchdirs[static::ORIGIN_PARENT_SITE] = $parent_site;
+      $search_dirs[static::ORIGIN_PARENT_SITE] = $parent_site;
     }
 
     // Find the site-specific directory to search. Since we are using this
@@ -184,10 +184,10 @@ class ExtensionDiscovery {
     // at install time. Therefore Kernel service is not always available, but is
     // preferred.
     if (\Drupal::hasService('kernel')) {
-      $searchdirs[static::ORIGIN_SITE] = \Drupal::getContainer()->getParameter('site.path');
+      $search_dirs[static::ORIGIN_SITE] = \Drupal::getContainer()->getParameter('site.path');
     }
     else {
-      $searchdirs[static::ORIGIN_SITE] = $this->sitePath ?: DrupalKernel::findSitePath(Request::createFromGlobals());
+      $search_dirs[static::ORIGIN_SITE] = $this->sitePath ?: DrupalKernel::findSitePath(Request::createFromGlobals());
     }
 
     // Unless an explicit value has been passed, manually check whether we are
@@ -199,7 +199,7 @@ class ExtensionDiscovery {
     }
 
     $files = [];
-    foreach ($searchdirs as $dir) {
+    foreach ($search_dirs as $dir) {
       // Discover all extensions in the directory, unless we did already.
       if (!isset(static::$files[$this->root][$dir][$include_tests])) {
         static::$files[$this->root][$dir][$include_tests] = $this->scanDirectory($dir, $include_tests);
@@ -214,7 +214,7 @@ class ExtensionDiscovery {
     // installation profiles.
     $files = $this->filterByProfileDirectories($files);
     // Sort the discovered extensions by their originating directories.
-    $origin_weights = array_flip($searchdirs);
+    $origin_weights = array_flip($search_dirs);
     $files = $this->sort($files, $origin_weights);
 
     // Process and return the list of extensions keyed by extension name.
@@ -228,7 +228,24 @@ class ExtensionDiscovery {
    */
   public function setProfileDirectoriesFromSettings() {
     $this->profileDirectories = [];
-    if ($profile = \Drupal::installProfile()) {
+    // This method may be called by the database system early in bootstrap
+    // before the container is initialized. In that case, the parameter is not
+    // accessible yet, hence return.
+    if (!\Drupal::hasContainer() || !\Drupal::getContainer()->hasParameter('install_profile')) {
+      return $this;
+    }
+
+    $profile = \Drupal::installProfile();
+    // If $profile is FALSE then we need to add a fake directory as a profile
+    // directory in order to filter out profile provided modules. This ensures
+    // that, after uninstalling a profile, a site cannot install modules
+    // contained in an install profile. During installation $profile will be
+    // NULL, so we need to discover all modules and profiles.
+    if ($profile === FALSE) {
+      // cspell:ignore CNKDSIUSYFUISEFCB
+      $this->profileDirectories[] = '_does_not_exist_profile_CNKDSIUSYFUISEFCB';
+    }
+    elseif ($profile) {
       $this->profileDirectories[] = \Drupal::service('extension.list.profile')->getPath($profile);
     }
     return $this;
@@ -254,7 +271,7 @@ class ExtensionDiscovery {
    *
    * @return $this
    */
-  public function setProfileDirectories(array $paths = NULL) {
+  public function setProfileDirectories(?array $paths = NULL) {
     $this->profileDirectories = $paths;
     return $this;
   }
@@ -274,13 +291,13 @@ class ExtensionDiscovery {
     }
 
     $all_files = array_filter($all_files, function ($file) {
-      if (strpos($file->subpath, 'profiles') !== 0) {
+      if (!str_starts_with($file->subpath, 'profiles')) {
         // This extension doesn't belong to a profile, ignore it.
         return TRUE;
       }
 
       foreach ($this->profileDirectories as $profile_path) {
-        if (strpos($file->getPath(), $profile_path) === 0) {
+        if (str_starts_with($file->getPath(), $profile_path)) {
           // Parent profile found.
           return TRUE;
         }
@@ -309,7 +326,7 @@ class ExtensionDiscovery {
     foreach ($all_files as $key => $file) {
       // If the extension does not belong to a profile, just apply the weight
       // of the originating directory.
-      if (strpos($file->subpath, 'profiles') !== 0) {
+      if (!str_starts_with($file->subpath, 'profiles')) {
         $origins[$key] = $weights[$file->origin];
         $profiles[$key] = NULL;
       }
@@ -323,7 +340,7 @@ class ExtensionDiscovery {
       else {
         // Apply the weight of the originating profile directory.
         foreach ($this->profileDirectories as $weight => $profile_path) {
-          if (strpos($file->getPath(), $profile_path) === 0) {
+          if (str_starts_with($file->getPath(), $profile_path)) {
             $origins[$key] = static::ORIGIN_PROFILE;
             $profiles[$key] = $weight;
             continue 2;
@@ -382,7 +399,7 @@ class ExtensionDiscovery {
    *   are associative arrays of \Drupal\Core\Extension\Extension objects, keyed
    *   by absolute path name.
    *
-   * @see \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterIterator
+   * @see \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterCallback
    */
   protected function scanDirectory($dir, $include_tests) {
     $files = [];
@@ -418,8 +435,8 @@ class ExtensionDiscovery {
     // Important: Without a RecursiveFilterIterator, RecursiveDirectoryIterator
     // would recurse into the entire filesystem directory tree without any kind
     // of limitations.
-    $filter = new RecursiveExtensionFilterIterator($directory_iterator, $ignore_directories);
-    $filter->acceptTests($include_tests);
+    $callback = new RecursiveExtensionFilterCallback($ignore_directories, $include_tests);
+    $filter = new \RecursiveCallbackFilterIterator($directory_iterator, [$callback, 'accept']);
 
     // The actual recursive filesystem scan is only invoked by instantiating the
     // RecursiveIteratorIterator.

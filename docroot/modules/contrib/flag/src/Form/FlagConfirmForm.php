@@ -46,7 +46,7 @@ class FlagConfirmForm extends FlagConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    \Drupal::service('flag')->flag($this->flag, $this->entity);
+    $this->flagService->flag($this->flag, $this->entity);
   }
 
 }

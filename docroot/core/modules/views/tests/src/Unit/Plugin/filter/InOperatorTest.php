@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\filter;
 
 use Drupal\Tests\UnitTestCase;
@@ -14,7 +16,7 @@ class InOperatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidate() {
+  public function testValidate(): void {
     $definition = [
       'title' => 'Is InOperator Test',
       'group' => 'Test',

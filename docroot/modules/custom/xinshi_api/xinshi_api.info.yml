@@ -1,13 +1,12 @@
 name: 'XINSHI Builder Api'
 type: module
 description: 'Open api for xinshi builder.'
-core: 8.x
-core_version_requirement: '^8 || ^9'
+core_version_requirement: ^9 || ^10 || ^11
 configure: xinshi_api.settings
 dependencies:
   - drupal:rest
   - drupal:views
 package: "XINSHI"
 # Information added by Drupal.org packaging script on 2020-09-03
-version: '1.0'
+version: '1.1'
 project: 'xinshi_api'

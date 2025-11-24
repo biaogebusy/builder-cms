@@ -8,6 +8,8 @@ use Drupal\profile\Entity\ProfileInterface;
 
 /**
  * Defines the interface for tax rate resolvers.
+ *
+ * Interface for services tagged as 'commerce_tax.tax_rate_resolver'.
  */
 interface TaxRateResolverInterface {
 

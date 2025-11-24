@@ -23,7 +23,7 @@ class EntityEmbedDisplayManagerTest extends BrowserTestBase {
     'node',
     'file',
     'image',
-    'ckeditor',
+    'ckeditor5',
     'entity_embed',
   ];
 
@@ -86,9 +86,9 @@ class EntityEmbedDisplayManagerTest extends BrowserTestBase {
 
     // Resize the test image so that it will be scaled down during token
     // replacement.
-    $this->image1 = $this->container->get('image.factory')->get('public://example1.png');
-    $this->image1->resize(500, 500);
-    $this->image1->save();
+    $image1 = $this->container->get('image.factory')->get('public://example1.png');
+    $image1->resize(500, 500);
+    $image1->save();
 
     $this->image = $this->container->get('entity_type.manager')
       ->getStorage('file')

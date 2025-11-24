@@ -69,6 +69,9 @@ function autosave_form_schema() {
       ],
     ],
     'primary key' => ['form_id', 'form_session_id', 'entity_type_id', 'entity_id', 'langcode', 'uid', 'timestamp'],
+    'indexes' => [
+      'entity_type_id__entity_id' => ['entity_type_id', 'entity_id'],
+    ],
   ];
 
   return $schema;
@@ -107,5 +110,45 @@ function autosave_form_update_8002() {
   if ($config->get('only_on_form_change') === NULL) {
     $config->set('only_on_form_change', FALSE);
     $config->save(TRUE);
+  }
+}
+
+/**
+ * Add the settings for entity create forms to the settings config.
+ */
+function autosave_form_update_8003() {
+  $config = \Drupal::configFactory()->getEditable('autosave_form.settings');
+  if ($config->get('allowed_new') === NULL) {
+    $config->set('allowed_new', TRUE);
+    $config->save(TRUE);
+  }
+}
+
+/**
+ * Adds an index to optimize deletion of entities.
+ *
+ * @see \Drupal\autosave_form\Storage\AutosaveEntityFormStorageInterface::purgeAutosavedEntityState
+ */
+function autosave_form_update_8004() {
+  $schema = \Drupal::database()->schema();
+
+  $spec = [
+    'fields' => [
+      'entity_type_id' => [
+        'type' => 'varchar_ascii',
+        'length' => EntityTypeInterface::ID_MAX_LENGTH,
+        'not null' => TRUE,
+      ],
+      'entity_id' => [
+        'type' => 'varchar_ascii',
+        'length' => EntityTypeInterface::ID_MAX_LENGTH,
+        'not null' => TRUE,
+      ],
+    ],
+  ];
+
+  $fields = ['entity_type_id', 'entity_id'];
+  if (!$schema->indexExists(AutosaveEntityFormStorageInterface::AUTOSAVE_ENTITY_FORM_TABLE, 'entity_type_id__entity_id')) {
+    $schema->addIndex(AutosaveEntityFormStorageInterface::AUTOSAVE_ENTITY_FORM_TABLE, 'entity_type_id__entity_id', $fields, $spec);
   }
 }

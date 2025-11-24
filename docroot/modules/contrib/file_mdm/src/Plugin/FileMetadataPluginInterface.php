@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm\Plugin;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
@@ -17,7 +19,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return array
    *   An associative array with the default configuration.
    */
-  public static function defaultConfiguration();
+  public static function defaultConfiguration(): array;
 
   /**
    * Sets the URI of the file.
@@ -30,7 +32,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @throws \Drupal\file_mdm\FileMetadataException
    *   If no URI is specified.
    */
-  public function setUri($uri);
+  public function setUri(string $uri): static;
 
   /**
    * Gets the URI of the file.
@@ -38,7 +40,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return string
    *   The URI of the file.
    */
-  public function getUri();
+  public function getUri(): string;
 
   /**
    * Sets the local filesystem path to the file.
@@ -52,7 +54,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    *
    * @return $this
    */
-  public function setLocalTempPath($temp_path);
+  public function setLocalTempPath(string $temp_path): static;
 
   /**
    * Gets the local filesystem path to the file.
@@ -64,7 +66,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return string
    *   The local filesystem path to the file.
    */
-  public function getLocalTempPath();
+  public function getLocalTempPath(): string;
 
   /**
    * Sets the hash used to reference the URI by the metadata manager.
@@ -77,19 +79,19 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @throws \Drupal\file_mdm\FileMetadataException
    *   If no hash is specified.
    */
-  public function setHash($hash);
+  public function setHash(string $hash): static;
 
   /**
    * Returns a list of metadata keys supported by the plugin.
    *
-   * @param mixed $options
+   * @param array $options
    *   (optional) Allows specifying additional options to control the list of
    *   metadata keys returned.
    *
    * @return array
    *   A simple array of metadata keys supported.
    */
-  public function getSupportedKeys($options = NULL);
+  public function getSupportedKeys(array $options = NULL): array;
 
   /**
    * Checks if file metadata has been already loaded.
@@ -97,7 +99,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata is loaded, FALSE otherwise.
    */
-  public function isMetadataLoaded();
+  public function isMetadataLoaded(): int|bool;
 
   /**
    * Loads file metadata from an in-memory object/array.
@@ -108,7 +110,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata was loaded successfully, FALSE otherwise.
    */
-  public function loadMetadata($metadata);
+  public function loadMetadata(mixed $metadata): bool;
 
   /**
    * Loads file metadata from the file at URI/local path.
@@ -119,7 +121,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @throws \Drupal\file_mdm\FileMetadataException
    *   In case there were significant errors reading from file.
    */
-  public function loadMetadataFromFile();
+  public function loadMetadataFromFile(): bool;
 
   /**
    * Loads file metadata from a cache entry.
@@ -130,12 +132,12 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @throws \Drupal\file_mdm\FileMetadataException
    *   In case of significant errors.
    */
-  public function loadMetadataFromCache();
+  public function loadMetadataFromCache(): bool;
 
   /**
    * Gets a metadata element.
    *
-   * @param mixed|null $key
+   * @param mixed $key
    *   A key to determine the metadata element to be returned. If NULL, the
    *   entire metadata will be returned.
    *
@@ -143,7 +145,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    *   The value of the element specified by $key. If $key is NULL, the entire
    *   metadata.
    */
-  public function getMetadata($key = NULL);
+  public function getMetadata(mixed $key = NULL): mixed;
 
   /**
    * Sets a metadata element.
@@ -156,7 +158,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata was changed successfully, FALSE otherwise.
    */
-  public function setMetadata($key, $value);
+  public function setMetadata(mixed $key, mixed $value): bool;
 
   /**
    * Removes a metadata element.
@@ -167,7 +169,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata was removed successfully, FALSE otherwise.
    */
-  public function removeMetadata($key);
+  public function removeMetadata(mixed $key): bool;
 
   /**
    * Determines if plugin is capable of writing metadata to files.
@@ -175,7 +177,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if plugin can save data to files, FALSE otherwise.
    */
-  public function isSaveToFileSupported();
+  public function isSaveToFileSupported(): bool;
 
   /**
    * Saves metadata to file at URI.
@@ -183,7 +185,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata was saved successfully, FALSE otherwise.
    */
-  public function saveMetadataToFile();
+  public function saveMetadataToFile(): bool;
 
   /**
    * Caches metadata for file at URI.
@@ -196,7 +198,7 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata was saved successfully, FALSE otherwise.
    */
-  public function saveMetadataToCache(array $tags = []);
+  public function saveMetadataToCache(array $tags = []): bool;
 
   /**
    * Removes cached metadata for file at URI.
@@ -206,6 +208,6 @@ interface FileMetadataPluginInterface extends ContainerFactoryPluginInterface, P
    * @return bool
    *   TRUE if metadata was removed, FALSE otherwise.
    */
-  public function deleteCachedMetadata();
+  public function deleteCachedMetadata(): bool;
 
 }

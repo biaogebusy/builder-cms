@@ -11,17 +11,17 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\entity_share\EntityShareUtility;
+use Drupal\entity_share_client\Exception\JsonApiDenormalizingException;
 use Drupal\entity_share_client\ImportContext;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 /**
  * Class ImportService.
  *
  * This class is responsible to handle import from ImportContext.
- *
- * @package Drupal\entity_share_client\Service
  */
 class ImportService implements ImportServiceInterface {
 
@@ -142,7 +142,7 @@ class ImportService implements ImportServiceInterface {
         'finished' => '\Drupal\entity_share_client\ImportBatchHelper::importUrlBatchFinished',
       ];
 
-      batch_set($batch);
+      \batch_set($batch);
     }
     else {
       return $this->importFromUrl($prepared_url);
@@ -169,7 +169,7 @@ class ImportService implements ImportServiceInterface {
       $url_uuid = $this->runtimeImportContext->getChannelUrlUuid();
       $response = $this->jsonApiRequest('GET', $url_uuid);
 
-      if (is_null($response)) {
+      if ($response === NULL) {
         $this->logger->error('An error occurred while requesting the UUID URL for the remote website @remote_id and channel @channel_id', $log_variables);
         $this->messenger->addError($this->t('An error occurred while requesting the UUID URL for the remote website @remote_id and channel @channel_id', $log_variables));
         return;
@@ -182,7 +182,7 @@ class ImportService implements ImportServiceInterface {
         $this->messenger->addError($this->t('An error occurred while requesting the UUID URL for the remote website @remote_id and channel @channel_id', $log_variables));
         return;
       }
-      elseif (!isset($json['meta']['count'])) {
+      if (!isset($json['meta']['count'])) {
         $this->logger->error('There is no count of the number of entities to import for the remote website @remote_id and channel @channel_id', $log_variables);
         $this->messenger->addError($this->t('There is no count of the number of entities to import for the remote website @remote_id and channel @channel_id', $log_variables));
         return;
@@ -209,7 +209,7 @@ class ImportService implements ImportServiceInterface {
     // So we remove 1.
     $operations = [];
     if ($channel_count >= $step) {
-      $offsets = range(0, $channel_count - 1, $step);
+      $offsets = \range(0, $channel_count - 1, $step);
       foreach ($offsets as $offset) {
         $parsed_url['query']['page']['offset'] = $offset;
         $query = UrlHelper::buildQuery($parsed_url['query']);
@@ -235,7 +235,7 @@ class ImportService implements ImportServiceInterface {
       'finished' => '\Drupal\entity_share_client\ImportBatchHelper::importUrlBatchFinished',
     ];
 
-    batch_set($batch);
+    \batch_set($batch);
   }
 
   /**
@@ -243,7 +243,7 @@ class ImportService implements ImportServiceInterface {
    */
   public function importFromUrl(string $url) {
     $response = $this->jsonApiRequest('GET', $url);
-    if (is_null($response)) {
+    if ($response === NULL) {
       return [];
     }
     $json = Json::decode((string) $response->getBody());
@@ -276,6 +276,8 @@ class ImportService implements ImportServiceInterface {
         $import_processor->prepareImportableEntityData($this->runtimeImportContext, $entity_data);
       }
 
+      // Get the entity to work with. Whether existing or new, this is already
+      // saved and so has an ID.
       $processed_entity = $this->getProcessedEntity($entity_data);
       $imported_entity_ids[$processed_entity->uuid()] = $processed_entity->id();
 
@@ -288,10 +290,9 @@ class ImportService implements ImportServiceInterface {
       if ($this->runtimeImportContext->isEntityTranslationImported($processed_entity_langcode, $processed_entity_uuid)) {
         continue;
       }
-      else {
-        // Store data to prevent the entity of being re-imported.
-        $this->runtimeImportContext->addImportedEntity($processed_entity_langcode, $processed_entity_uuid);
-      }
+
+      // Store data to prevent the entity of being re-imported.
+      $this->runtimeImportContext->addImportedEntity($processed_entity_langcode, $processed_entity_uuid);
 
       foreach ($this->importProcessors[ImportProcessorInterface::STAGE_PROCESS_ENTITY] as $import_processor) {
         $import_processor->processEntity($this->runtimeImportContext, $processed_entity, $entity_data);
@@ -321,7 +322,7 @@ class ImportService implements ImportServiceInterface {
     $log_variables['@import_config_id'] = $import_config_id;
 
     // Prepare import processors.
-    if (is_null($import_config_id)) {
+    if ($import_config_id === NULL) {
       $this->logger->error('No import config ID provided.');
       $this->messenger->addError($this->t('No import config ID provided.'));
       return FALSE;
@@ -335,7 +336,7 @@ class ImportService implements ImportServiceInterface {
       $this->logger->error('Impossible to load the import config with the ID: @import_config_id', $log_variables);
       $this->messenger->addError($this->t('Impossible to load the import config with the ID: @import_config_id', $log_variables));
     }
-    if (is_null($import_config)) {
+    if ($import_config === NULL) {
       $this->logger->error('Impossible to load the import config with the ID: @import_config_id', $log_variables);
       $this->messenger->addError($this->t('Impossible to load the import config with the ID: @import_config_id', $log_variables));
       return FALSE;
@@ -353,7 +354,7 @@ class ImportService implements ImportServiceInterface {
       $this->messenger->addError($this->t('Impossible to load the remote website with the ID: @remote_id', $log_variables));
     }
     // Check that the remote exists.
-    if (is_null($remote)) {
+    if ($remote === NULL) {
       return FALSE;
     }
     $this->runtimeImportContext->setRemote($remote);
@@ -413,13 +414,15 @@ class ImportService implements ImportServiceInterface {
    *   JSON:API data for an entity.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
-   *   The entity to be processed.
+   *   The entity to be processed. This is either:
+   *   - An existing entity, loaded from the UUID in the given JSON:API data.
+   *   - A newly created entity. This has been saved, and so already had an ID.
    */
   protected function getProcessedEntity(array $entity_data) {
     // @todo Avoid duplicated code (and duplicate execution?) with
     // DefaultDataProcessor.
     $field_mappings = $this->runtimeImportContext->getFieldMappings();
-    $parsed_type = explode('--', $entity_data['type']);
+    $parsed_type = \explode('--', $entity_data['type']);
     $entity_type_id = $parsed_type[0];
     $entity_bundle = $parsed_type[1];
     $entity_storage = $this->entityTypeManager->getStorage($entity_type_id);
@@ -451,7 +454,19 @@ class ImportService implements ImportServiceInterface {
     // denormalization processes. Especially those created for JSON:API
     // Extras.
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $remote_entity = $this->jsonapiHelper->extractEntity($entity_data);
+    try {
+      $remote_entity = $this->jsonapiHelper->extractEntity($entity_data);
+    }
+    catch (UnprocessableEntityHttpException $e) {
+      throw new JsonApiDenormalizingException(
+        sprintf("Error denormalizing JSONAPI for entity of type '%s' with UUID uuid %s, with message '%s'.",
+          $entity_type_id,
+          $data_uuid,
+          $e->getMessage(),
+        ),
+        previous: $e,
+      );
+    }
 
     // New entity.
     if (empty($existing_entities)) {
@@ -464,7 +479,7 @@ class ImportService implements ImportServiceInterface {
     // Existing entity.
     else {
       /** @var \Drupal\Core\Entity\ContentEntityInterface $existing_entity */
-      $existing_entity = array_shift($existing_entities);
+      $existing_entity = \array_shift($existing_entities);
 
       if ($existing_entity->language()->isLocked()) {
         // The existing entity was in an untranslatable language like "und",
@@ -480,8 +495,8 @@ class ImportService implements ImportServiceInterface {
         // Need to set those field values now with the denormalized remote
         // entity, so that we have data processed by denormalization processes.
         // For example, JSON:API extras field enhancers plugins.
-        foreach (array_keys($entity_data['attributes']) as $field_public_name) {
-          $field_internal_name = array_search($field_public_name, $field_mappings[$entity_type_id][$entity_bundle]);
+        foreach (\array_keys($entity_data['attributes']) as $field_public_name) {
+          $field_internal_name = \array_search($field_public_name, $field_mappings[$entity_type_id][$entity_bundle], TRUE);
           if ($field_internal_name && $existing_translation->hasField($field_internal_name)) {
             $existing_translation->set(
               $field_internal_name,
@@ -502,6 +517,20 @@ class ImportService implements ImportServiceInterface {
       }
     }
     return $processed_entity;
+  }
+
+  /**
+   * Resets the runtime import context.
+   *
+   * This is needed for Kernel tests.
+   *
+   * @see https://www.drupal.org/project/entity_share/issues/3504757
+   *
+   * @internal
+   */
+  public function resetRuntimeImportContext(): void {
+    $this->runtimeImportContext = new RuntimeImportContext();
+    $this->importProcessors = [];
   }
 
 }

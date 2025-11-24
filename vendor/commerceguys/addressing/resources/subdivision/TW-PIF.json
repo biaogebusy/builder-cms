@@ -1,0 +1,109 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"PIF"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Jiuru Township": {
+			"local_name": "九如鄉"
+		},
+		"Sandimen Township": {
+			"local_name": "三地門鄉"
+		},
+		"Neipu Township": {
+			"local_name": "內埔鄉"
+		},
+		"Zhutian Township": {
+			"local_name": "竹田鄉"
+		},
+		"Mudan Township": {
+			"local_name": "牡丹鄉"
+		},
+		"Checheng Township": {
+			"local_name": "車城鄉"
+		},
+		"Ligang Township": {
+			"local_name": "里港鄉"
+		},
+		"Jiadong Township": {
+			"local_name": "佳冬鄉"
+		},
+		"Laiyi Township": {
+			"local_name": "來義鄉"
+		},
+		"Donggang Township": {
+			"local_name": "東港鎮"
+		},
+		"Fangshan Township": {
+			"local_name": "枋山鄉"
+		},
+		"Fangliao Township": {
+			"local_name": "枋寮鄉"
+		},
+		"Linbian Township": {
+			"local_name": "林邊鄉"
+		},
+		"Changzhi Township": {
+			"local_name": "長治鄉"
+		},
+		"Nanzhou Township": {
+			"local_name": "南州鄉"
+		},
+		"Pingtung City": {
+			"local_name": "屏東市"
+		},
+		"Hengchun Township": {
+			"local_name": "恆春鎮"
+		},
+		"Chunri Township": {
+			"local_name": "春日鄉"
+		},
+		"Kanding Township": {
+			"local_name": "崁頂鄉"
+		},
+		"Taiwu Township": {
+			"local_name": "泰武鄉"
+		},
+		"Liuqiu Township": {
+			"local_name": "琉球鄉"
+		},
+		"Gaoshu Township": {
+			"local_name": "高樹鄉"
+		},
+		"Xinpi Township": {
+			"local_name": "新埤鄉"
+		},
+		"Xinyuan Township": {
+			"local_name": "新園鄉"
+		},
+		"Shizi Township": {
+			"local_name": "獅子鄉"
+		},
+		"Wandan Township": {
+			"local_name": "萬丹鄉"
+		},
+		"Wanluan Township": {
+			"local_name": "萬巒鄉"
+		},
+		"Manzhou Township": {
+			"local_name": "滿洲鄉"
+		},
+		"Majia Township": {
+			"local_name": "瑪家鄉"
+		},
+		"Chaozhou Township": {
+			"local_name": "潮州鎮"
+		},
+		"Wutai Township": {
+			"local_name": "霧台鄉"
+		},
+		"Linluo Township": {
+			"local_name": "麟洛鄉"
+		},
+		"Yanpu Township": {
+			"local_name": "鹽埔鄉"
+		}
+	}
+}

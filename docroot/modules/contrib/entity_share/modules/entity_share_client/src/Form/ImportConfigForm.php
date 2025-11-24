@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\entity_share\EntityShareInterface;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface;
 use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginManager;
 use Drupal\entity_share_client\Service\ImportConfigManipulatorInterface;
@@ -70,9 +71,9 @@ class ImportConfigForm extends EntityForm {
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
-      '#maxlength' => 255,
+      '#maxlength' => (int) 255,
       '#default_value' => $import_config->label(),
-      '#description' => $this->t("Label for the Import config."),
+      '#description' => $this->t('Label for the Import config.'),
       '#required' => TRUE,
     ];
 
@@ -91,17 +92,17 @@ class ImportConfigForm extends EntityForm {
       '#description' => $this->t("The JSON:API's page limit option to limit the number of entities per page."),
       '#default_value' => $import_config->get('import_maxsize'),
       '#min' => 1,
-      '#max' => 50,
+      '#max' => EntityShareInterface::JSON_API_PAGER_SIZE_MAX,
       '#required' => TRUE,
     ];
 
     // Retrieve lists of all processors, and the stages and weights they have.
     if (!$form_state->has('processors')) {
       $all_processors = $this->getAllProcessors();
-      $sort_processors = function (ImportProcessorInterface $processor_a, ImportProcessorInterface $processor_b) {
-        return strnatcasecmp($processor_a->label(), $processor_b->label());
+      $sort_processors = static function (ImportProcessorInterface $processor_a, ImportProcessorInterface $processor_b) {
+        return \strnatcasecmp($processor_a->label(), $processor_b->label());
       };
-      uasort($all_processors, $sort_processors);
+      \uasort($all_processors, $sort_processors);
       $form_state->set('processors', $all_processors);
     }
     else {
@@ -112,7 +113,7 @@ class ImportConfigForm extends EntityForm {
     /** @var \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface[][] $processors_by_stage */
     $processors_by_stage = [];
     foreach ($all_processors as $processor_id => $processor) {
-      foreach (array_keys($stages) as $stage) {
+      foreach (\array_keys($stages) as $stage) {
         if ($processor->supportsStage($stage)) {
           $processors_by_stage[$stage][$processor_id] = $processor;
         }
@@ -185,7 +186,7 @@ class ImportConfigForm extends EntityForm {
       foreach ($processors as $processor_id => $processor) {
         $processor_weights[$processor_id] = $processor->getWeight($stage);
       }
-      asort($processor_weights);
+      \asort($processor_weights);
 
       foreach ($processor_weights as $processor_id => $weight) {
         $processor = $processors[$processor_id];
@@ -197,7 +198,7 @@ class ImportConfigForm extends EntityForm {
           '#type' => 'weight',
           '#title' => $this->t('Weight for processor %title', ['%title' => $processor->label()]),
           '#title_display' => 'invisible',
-          '#delta' => 50,
+          '#delta' => (int) 50,
           '#default_value' => $weight,
           '#parents' => ['processors', $processor_id, 'weights', $stage],
           '#attributes' => [
@@ -251,7 +252,7 @@ class ImportConfigForm extends EntityForm {
     $processors = $this->getAllProcessors();
 
     // Iterate over all processors that have a form and are enabled.
-    foreach (array_keys(array_filter($values['status'])) as $processor_id) {
+    foreach (\array_keys(\array_filter($values['status'])) as $processor_id) {
       $processor = $processors[$processor_id];
       if ($processor instanceof PluginFormInterface) {
         $processor_form_state = SubformState::createForSubform($form['settings'][$processor_id], $form, $form_state);
@@ -319,13 +320,12 @@ class ImportConfigForm extends EntityForm {
     $import_config = $this->entity;
     $processors = $this->importConfigManipulator->getImportProcessors($import_config);
 
-    foreach (array_keys($this->importProcessorPluginManager->getDefinitions()) as $name) {
+    foreach (\array_keys($this->importProcessorPluginManager->getDefinitions()) as $name) {
       if (isset($processors[$name])) {
         continue;
       }
-      else {
-        $processors[$name] = $this->importProcessorPluginManager->createInstance($name);
-      }
+
+      $processors[$name] = $this->importProcessorPluginManager->createInstance($name);
     }
 
     return $processors;

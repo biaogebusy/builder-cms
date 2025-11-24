@@ -15,6 +15,7 @@ entity.commerce_order.collection:
   route_name: 'entity.commerce_order.collection'
   parent: 'commerce.admin_commerce'
   description: 'Manage your orders.'
+  weight: -30
 
 entity.commerce_order_type.collection:
   title: 'Order types'

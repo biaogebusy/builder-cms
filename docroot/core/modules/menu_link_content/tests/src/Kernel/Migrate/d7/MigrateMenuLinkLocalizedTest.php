@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel\Migrate\d7;
 
 use Drupal\Tests\menu_link_content\Kernel\Migrate\MigrateMenuLinkTestTrait;
@@ -44,7 +46,7 @@ class MigrateMenuLinkLocalizedTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of menu link localized translations.
    */
-  public function testMenuLinkLocalized() {
+  public function testMenuLinkLocalized(): void {
     // A translate and localize menu, menu-test-menu.
     $this->assertEntity(468, 'en', 'Yahoo', 'menu-test-menu', 'english description', TRUE, FALSE, ['attributes' => ['title' => 'english description'], 'alter' => TRUE], 'http://yahoo.com', 0);
     $this->assertEntity(468, 'fr', 'fr - Yahoo', 'menu-test-menu', 'fr - description', TRUE, FALSE, ['attributes' => ['title' => 'english description'], 'alter' => TRUE], 'http://yahoo.com', 0);

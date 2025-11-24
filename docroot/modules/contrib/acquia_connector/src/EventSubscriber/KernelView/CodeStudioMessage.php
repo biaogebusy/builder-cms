@@ -41,7 +41,7 @@ class CodeStudioMessage implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[KernelEvents::VIEW][] = ['onViewRenderArray'];
+    $events[KernelEvents::VIEW][] = ['onViewRenderArray', 100];
     return $events;
   }
 
@@ -87,7 +87,7 @@ class CodeStudioMessage implements EventSubscriberInterface {
    */
   protected function isOdeEnvironment($ah_env) {
     // CDEs (formerly 'ODEs') can be 'ode1', 'ode2', ...
-    return (preg_match('/^ode\d*$/', (string) $ah_env));
+    return (preg_match('/^ode\d*$/', $ah_env));
   }
 
 }

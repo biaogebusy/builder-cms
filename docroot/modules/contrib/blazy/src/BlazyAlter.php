@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\internals\Internals;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Field\FormatterInterface;
+use Drupal\blazy\internals\Internals;
 use Drupal\editor\Entity\Editor;
 
 /**
@@ -29,7 +29,7 @@ class BlazyAlter {
   public static function configSchemaInfoAlter(
     array &$definitions,
     $formatter = 'blazy_base',
-    array $settings = []
+    array $settings = [],
   ): void {
     if (isset($definitions[$formatter])) {
       $mappings = &$definitions[$formatter]['mapping'];
@@ -43,21 +43,10 @@ class BlazyAlter {
         // Seems double is ignored, and causes a missing schema, unlike float.
         $type = gettype($value);
         $type = $type == 'double' ? 'float' : $type;
-        $mappings[$key]['type'] = $key == 'breakpoints' ? 'mapping' : (is_array($value) ? 'sequence' : $type);
+        $mappings[$key]['type'] = is_array($value) ? 'sequence' : $type;
 
         if (!is_array($value)) {
           $mappings[$key]['label'] = Unicode::ucfirst(str_replace('_', ' ', $key));
-        }
-      }
-
-      // @todo remove custom breakpoints anytime before 3.x as per #3105243.
-      if (isset($mappings['breakpoints'])) {
-        foreach (['xs', 'sm', 'md', 'lg', 'xl'] as $breakpoint) {
-          $mappings['breakpoints']['mapping'][$breakpoint]['type'] = 'mapping';
-          foreach (['breakpoint', 'width', 'image_style'] as $item) {
-            $mappings['breakpoints']['mapping'][$breakpoint]['mapping'][$item]['type']  = 'string';
-            $mappings['breakpoints']['mapping'][$breakpoint]['mapping'][$item]['label'] = Unicode::ucfirst(str_replace('_', ' ', $item));
-          }
         }
       }
     }
@@ -67,12 +56,19 @@ class BlazyAlter {
    * Implements hook_library_info_alter().
    */
   public static function libraryInfoAlter(&$libraries, $extension): void {
+    static $bajax;
+
     // @todo remove if core changed, right below core/drupal for being generic,
     // and dependency-free and a dependency for many other generic ones.
     // @todo watch out for core @todo to remove drupal namespace for debounce.
     $debounce = 'drupal.debounce';
-    if ($extension === 'core' && isset($libraries[$debounce])) {
-      $libraries[$debounce]['js']['misc/debounce.js'] = ['weight' => -16];
+    if ($extension === 'core') {
+      if (isset($libraries[$debounce])) {
+        $libraries[$debounce]['js']['misc/debounce.js'] = ['weight' => -16];
+      }
+      if (!isset($bajax) && isset($libraries['drupal.ajax'])) {
+        $bajax = TRUE;
+      }
     }
 
     if ($extension === 'media' && isset($libraries['oembed.frame'])) {
@@ -109,6 +105,11 @@ class BlazyAlter {
           $libraries['dblazy']['dependencies'][] = 'blazy/dompurify';
         }
       }
+
+      // Add blazy/bio.ajax only if both core drupal.ajax and blazy exist.
+      if (isset($bajax) && isset($libraries['load'])) {
+        $libraries['load']['dependencies'][] = 'blazy/bio.ajax';
+      }
     }
   }
 
@@ -138,8 +139,7 @@ class BlazyAlter {
 
       // Plugins extending dBlazy.
       foreach (BlazyDefault::plugins() as $id) {
-        // @todo remove css + dom post sub-module updates at 2.18+.
-        $base = ['eventify', 'viewport', 'dataset', 'css', 'dom'];
+        $base = ['eventify', 'viewport', 'dataset'];
         $base = in_array($id, $base);
         $deps = $base ? ['blazy/dblazy', 'blazy/base'] : ['blazy/xlazy'];
         if ($id == 'xlazy') {
@@ -152,10 +152,6 @@ class BlazyAlter {
         }
         $weight = $base ? -5.6 : -5.5;
 
-        // @todo remove, integrated into dblazy since 2.17.
-        if ($id == 'dom') {
-          $weight = -5.9;
-        }
         $common = ['minified' => TRUE, 'weight' => $weight];
         $libraries[$id] = [
           'js' => [
@@ -269,10 +265,22 @@ class BlazyAlter {
    * its options via [data-splidebox] to the correct container, etc., and avoid
    * duplicating injections at both embedded Blazy formatter and Blazy Grid view
    * style. And the same principle applies to all sub-modules.
+   *
+   * Warning! Do not alter configurable settings like use_theme_field here, it
+   * caused 2.16 chaotic markups with Views embedded blazy formatters.
    */
-  public static function blazySettingsAlter(array &$build, $items): void {
+  public static function blazySettingsAlter(array &$build, $object): void {
     $settings = &$build['#settings'];
     $blazies  = $settings['blazies'];
+
+    // Adds bio.ajax to fix product variation AJAX within BigPipe.
+    // Views AJAX will automatically work, however to support other non-views
+    // AJAX, add more conditions to your custom hook_blazy_settings_alter.
+    if ($type = $blazies->get('field.entity_type')) {
+      if ($type == 'commerce_product_variation') {
+        $blazies->set('use.ajax', TRUE);
+      }
+    }
 
     // Sniffs for Views to allow block__no_wrapper, views_no_wrapper, etc.
     $function = 'views_get_current_view';
@@ -285,9 +293,6 @@ class BlazyAlter {
       $display   = $style ? $style->displayHandler->getPluginId() : '';
       $plugin_id = $style ? $style->getPluginId() : '';
 
-      // Not needed, can be just accessed via $blazies directly:
-      // $field = $blazies->get('field', []);
-      // $field['count'] = $blazies->get('count');
       // Only eat what we can chew:
       $data = Internals::getViewFieldData($view);
       $current = [
@@ -300,28 +305,11 @@ class BlazyAlter {
         'name'        => $name,
         'plugin_id'   => $plugin_id,
         'view_mode'   => $view_mode,
-        // 'formatter' => $field,
       ];
 
       // Collects view info for the embedded Blazy, and this is not a view.
       $blazies->set('view', $current, TRUE)
         ->set('is.view', FALSE);
-
-      // @todo remove when Blazy has use_theme_field option. This is so to avoid
-      // emptiness when enabling Views `Display all values in the same row`, and
-      // Blazy is embedded inside sub-modules.
-      // @fixme this breaks theme_field() item wrappers when embedded as Views.
-      // Fixing one problem breaks others thingies, doh.
-      /*
-      if ($name = $blazies->get('field.name')) {
-      if ($field = ($view->field[$name] ?? NULL)) {
-      $options = $field->options ?? [];
-      if (!empty($options['group_rows'])) {
-      $settings['use_theme_field'] = TRUE;
-      }
-      }
-      }
-       */
     }
   }
 

@@ -3,6 +3,8 @@
 namespace Drupal\field_group\Plugin\field_group\FieldGroupFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Render\Markup;
 use Drupal\field_group\FieldGroupFormatterBase;
 
 /**
@@ -27,7 +29,7 @@ class Fieldset extends FieldGroupFormatterBase {
 
     $element += [
       '#type' => 'fieldset',
-      '#title' => $this->getLabel(),
+      '#title' => $this->getSetting('label_as_html') ? Markup::create(Xss::filterAdmin($this->getLabel())) : Markup::create(Html::escape($this->getLabel())),
       '#attributes' => [],
       '#description' => $this->getSetting('description'),
       '#description_display' => 'after',

@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\responsive_image\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
+use Drupal\Tests\field_ui\Traits\FieldUiJSTestTrait;
 
 /**
  * Tests the responsive image field UI.
@@ -12,15 +15,15 @@ use Drupal\responsive_image\Entity\ResponsiveImageStyle;
  */
 class ResponsiveImageFieldUiTest extends WebDriverTestBase {
 
+  use FieldUiJSTestTrait;
+
   /**
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
@@ -36,7 +39,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
    *
    * @var string
    */
-  protected $type;
+  protected string $type;
 
   /**
    * {@inheritdoc}
@@ -56,7 +59,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
     $this->drupalLogin($admin_user);
 
     // Create content type, with underscores.
-    $type_name = strtolower($this->randomMachineName(8)) . '_test';
+    $type_name = $this->randomMachineName(8) . '_test';
     $type = $this->drupalCreateContentType([
       'name' => $type_name,
       'type' => $type_name,
@@ -67,30 +70,13 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
   /**
    * Tests formatter settings.
    */
-  public function testResponsiveImageFormatterUi() {
+  public function testResponsiveImageFormatterUi(): void {
     $manage = 'admin/structure/types/manage/' . $this->type;
-    $add_field = $manage . '/fields/add-field';
     $manage_display = $manage . '/display';
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
-    // Create a field, and a node with some data for the field.
-    // Create the field.
-    $this->drupalGet($add_field);
-
-    $page = $this->getSession()->getPage();
-    $storage_type = $page->findField('edit-new-storage-type');
-    $storage_type->setValue('image');
-
-    // Set the label.
-    $label = $page->findField('edit-label');
-    $label->setValue('Image');
-
-    // Wait for the machine name.
-    $assert_session->waitForElementVisible('css', '[name="label"] + * .machine-name-value');
-
-    // Save the current page.
-    $save_button = $page->findButton('Save and continue');
-    $save_button->click();
+    $this->fieldUIAddNewFieldJS('admin/structure/types/manage/' . $this->type, 'image', 'Image', 'image');
 
     // Display the "Manage display" page.
     $this->drupalGet($manage_display);
@@ -102,7 +88,7 @@ class ResponsiveImageFieldUiTest extends WebDriverTestBase {
     $field_image_type->setValue('responsive_image');
 
     $summary_text = $assert_session->waitForElement('xpath', $this->cssSelectToXpath('#field-image .ajax-new-content .field-plugin-summary'));
-    $this->assertEquals('Select a responsive image style.', $summary_text->getText());
+    $this->assertEquals('Select a responsive image style. Loading attribute: lazy', $summary_text->getText());
 
     $page->pressButton('Save');
     $assert_session->responseContains("Select a responsive image style.");

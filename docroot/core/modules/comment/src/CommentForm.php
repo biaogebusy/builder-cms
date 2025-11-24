@@ -16,6 +16,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -74,10 +75,17 @@ class CommentForm extends ContentEntityForm {
    *   The entity type bundle service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The entity field manager service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface|null $entity_field_manager
+   *   (optional) The entity field manager service.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, AccountInterface $current_user, RendererInterface $renderer, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL, EntityFieldManagerInterface $entity_field_manager = NULL) {
+  public function __construct(
+    EntityRepositoryInterface $entity_repository,
+    AccountInterface $current_user,
+    RendererInterface $renderer,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info,
+    TimeInterface $time,
+    ?EntityFieldManagerInterface $entity_field_manager = NULL,
+  ) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
@@ -242,7 +250,7 @@ class CommentForm extends ContentEntityForm {
       '#access' => $is_admin,
     ];
 
-    return parent::form($form, $form_state, $comment);
+    return parent::form($form, $form_state);
   }
 
   /**
@@ -286,7 +294,7 @@ class CommentForm extends ContentEntityForm {
       $comment->setCreatedTime($form_state->getValue('date')->getTimestamp());
     }
     else {
-      $comment->setCreatedTime(REQUEST_TIME);
+      $comment->setCreatedTime($this->time->getRequestTime());
     }
     // Empty author ID should revert to anonymous.
     $author_id = $form_state->getValue('uid');
@@ -313,7 +321,7 @@ class CommentForm extends ContentEntityForm {
     // Validate the comment's subject. If not specified, extract from comment
     // body.
     if (trim($comment->getSubject()) == '') {
-      if ($comment->hasField('comment_body')) {
+      if ($comment->hasField('comment_body') && !$comment->comment_body->isEmpty()) {
         // The body may be in any format, so:
         // 1) Filter it into HTML
         // 2) Strip out all HTML tags
@@ -323,7 +331,7 @@ class CommentForm extends ContentEntityForm {
       }
       // Edge cases where the comment body is populated only by HTML tags will
       // require a default subject.
-      if ($comment->getSubject() == '') {
+      if (trim($comment->getSubject()) == '') {
         $comment->setSubject($this->t('(No subject)'));
       }
     }
@@ -372,6 +380,7 @@ class CommentForm extends ContentEntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $comment = $this->entity;
     $entity = $comment->getCommentedEntity();
+    $is_new = $this->entity->isNew();
     $field_name = $comment->getFieldName();
     $uri = $entity->toUrl();
     $logger = $this->logger('comment');
@@ -381,20 +390,12 @@ class CommentForm extends ContentEntityForm {
       $form_state->setValue('cid', $comment->id());
 
       // Add a log entry.
-      $logger->notice('Comment posted: %subject.', [
+      $logger->info('Comment posted: %subject.', [
         '%subject' => $comment->getSubject(),
         'link' => Link::fromTextAndUrl(t('View'), $comment->toUrl()->setOption('fragment', 'comment-' . $comment->id()))->toString(),
       ]);
-
-      // Explain the approval queue if necessary.
-      if (!$comment->isPublished()) {
-        if (!$this->currentUser->hasPermission('administer comments')) {
-          $this->messenger()->addStatus($this->t('Your comment has been queued for review by site administrators and will be published after approval.'));
-        }
-      }
-      else {
-        $this->messenger()->addStatus($this->t('Your comment has been posted.'));
-      }
+      // Add an appropriate message upon submitting the comment form.
+      $this->messenger()->addStatus($this->getStatusMessage($comment, $is_new));
       $query = [];
       // Find the current display page for this comment.
       $field_definition = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle())[$field_name];
@@ -412,6 +413,30 @@ class CommentForm extends ContentEntityForm {
       // Redirect the user to the entity they are commenting on.
     }
     $form_state->setRedirectUrl($uri);
+  }
+
+  /**
+   * Gets an appropriate status message when a comment is saved.
+   *
+   * @param \Drupal\comment\CommentInterface $comment
+   *   The comment being saved.
+   * @param bool $is_new
+   *   TRUE if a new comment is created. $comment->isNew() cannot be used here
+   *   because the comment has already been saved by the time the message is
+   *   rendered.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   A translatable string containing the appropriate status message.
+   */
+  protected function getStatusMessage(CommentInterface $comment, bool $is_new): TranslatableMarkup {
+    if (!$comment->isPublished() && !$this->currentUser->hasPermission('administer comments')) {
+      return $this->t('Your comment has been queued for review by site administrators and will be published after approval.');
+    }
+    // Check whether the comment is new or not.
+    if ($is_new) {
+      return $this->t('Your comment has been posted.');
+    }
+    return $this->t('Your comment has been updated.');
   }
 
 }

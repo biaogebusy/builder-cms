@@ -36,9 +36,9 @@ class WebformElementScaleTest extends WebformElementBrowserTestBase {
     // Check processing.
     $this->drupalGet('/webform/test_element_scale');
     $edit = [
-      'scale' => 1,
-      'scale_required' => 1,
-      'scale_text' => 2,
+      'scale' => '1',
+      'scale_required' => '1',
+      'scale_text' => '2',
     ];
     $this->submitForm($edit, 'Submit');
     $assert_session->responseContains("scale: '1'

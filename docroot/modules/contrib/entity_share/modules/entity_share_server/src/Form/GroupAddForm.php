@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to add a group on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class GroupAddForm extends GroupBaseForm {
 
@@ -53,7 +51,7 @@ class GroupAddForm extends GroupBaseForm {
     $channel = $this->entity;
     $channel_groups = $channel->get('channel_groups');
 
-    if (is_null($channel_groups)) {
+    if ($channel_groups === NULL) {
       $channel_groups = [];
     }
     $channel_groups[$form_state->getValue('group_id')] = [

@@ -21,7 +21,7 @@ class PermissionsGeneratorTest extends UnitTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->sut = $this->createNewSubjectUnderTest();
@@ -46,7 +46,7 @@ class PermissionsGeneratorTest extends UnitTestBase {
    * @test
    */
   public function generatesNoPermissionsIfNoEntityTypesAreDefined() {
-    $this->assertArrayEquals([], $this->sut->entityPermissions());
+    $this->assertSame([], $this->sut->entityPermissions());
   }
 
   /**

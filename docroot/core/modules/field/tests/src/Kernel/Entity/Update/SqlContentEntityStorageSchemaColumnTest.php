@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Entity\Update;
 
+use Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface;
 use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
+use Drupal\Core\State\StateInterface;
 use Drupal\entity_test\Entity\EntityTestRev;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -49,14 +53,14 @@ class SqlContentEntityStorageSchemaColumnTest extends KernelTestBase {
    *
    * @var \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface
    */
-  protected $entityDefinitionUpdateManager;
+  protected EntityDefinitionUpdateManagerInterface $entityDefinitionUpdateManager;
 
   /**
    * The state object.
    *
    * @var \Drupal\Core\State\StateInterface
    */
-  protected $state;
+  protected StateInterface $state;
 
   /**
    * {@inheritdoc}
@@ -86,7 +90,7 @@ class SqlContentEntityStorageSchemaColumnTest extends KernelTestBase {
 
     // Create an entity with field data.
     $this->entity = EntityTestRev::create([
-      'user_id' => mt_rand(1, 10),
+      'user_id' => 2,
       'name' => $this->randomMachineName(),
       $field_name => $this->randomString(),
     ]);
@@ -96,7 +100,7 @@ class SqlContentEntityStorageSchemaColumnTest extends KernelTestBase {
   /**
    * Tests that column-level schema changes are detected for fields with data.
    */
-  public function testColumnUpdate() {
+  public function testColumnUpdate(): void {
     // Change the field type in the stored schema.
     $schema = \Drupal::keyValue('entity.storage_schema.sql')->get('entity_test_rev.field_schema_data.test');
     $schema['entity_test_rev__test']['fields']['test_value']['type'] = 'varchar_ascii';
@@ -107,6 +111,24 @@ class SqlContentEntityStorageSchemaColumnTest extends KernelTestBase {
     $this->expectException(FieldStorageDefinitionUpdateForbiddenException::class);
     $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
     $field_storage_definition = $entity_definition_update_manager->getFieldStorageDefinition('test', 'entity_test_rev');
+    $entity_definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
+  }
+
+  /**
+   * Tests that schema changes are updated for fields with data with the flag.
+   */
+  public function testColumnUpdateWithFlag(): void {
+    // Change the field type in the stored schema.
+    $schema = \Drupal::keyValue('entity.storage_schema.sql')->get('entity_test_rev.field_schema_data.test');
+    $schema['entity_test_rev__test']['fields']['test_value']['type'] = 'varchar_ascii';
+    \Drupal::keyValue('entity.storage_schema.sql')->set('entity_test_rev.field_schema_data.test', $schema);
+
+    // Now attempt to run automatic updates. It should succeed if the
+    // column_changes_handled flag is passed.
+    $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+    $field_storage_definition = $entity_definition_update_manager->getFieldStorageDefinition('test', 'entity_test_rev');
+    // Provide the flag to allow schema updates.
+    $field_storage_definition->setSetting('column_changes_handled', TRUE);
     $entity_definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
   }
 

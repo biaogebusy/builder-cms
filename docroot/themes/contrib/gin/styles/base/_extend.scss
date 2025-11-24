@@ -5,11 +5,11 @@
 }
 
 .package-listing {
-  margin-top: var(--gin-spacing-m);
+  margin-block-start: var(--gin-spacing-m);
 }
 
 .claro-details__summary {
-  padding-left: 2.75rem;
+  padding-inline-start: 2.75rem;
 }
 
 .claro-details.claro-details--package-listing,
@@ -29,7 +29,8 @@
 .claro-details__wrapper,
 .claro-details__wrapper.claro-details__wrapper--package-listing,
 .claro-details__wrapper.claro-details__wrapper--system-status-report {
-  margin: var(--gin-spacing-m) calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
+  margin-block: var(--gin-spacing-m);
+  margin-inline: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
 }
 
 .claro-details__wrapper--accordion,
@@ -44,5 +45,5 @@
 }
 
 .module-list__module {
-  border-bottom: 1px solid var(--gin-border-color);
+  border-block-end: 1px solid var(--gin-border-color);
 }

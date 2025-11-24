@@ -1,51 +1,62 @@
 .gin-table-scroll-wrapper {
-  overflow: auto;
+  clear: both;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 240px;
-  margin-top: calc(var(--gin-spacing-xs) * -1);
-  margin-bottom: -240px;
+  margin-block-start: calc(var(--gin-spacing-xs) * -1);
+}
+
+table.gin--sticky-table-header {
+  visibility: hidden;
+  z-index: 97;
+  position: sticky;
+  inset-block-start: calc(var(--gin-toolbar-y-offset) + var(--gin-height-sticky) - 1px);
+  width: auto !important;
+  margin-block-start: calc(var(--gin-spacing-xs) * -1);
+  overflow: hidden;
+
+  tr {
+    display: block;
+    width: max-content;
+  }
+}
+
+.gin-horizontal-scroll-shadow {
+  background-image:
+    linear-gradient(to right, var(--gin-bg-layer), var(--gin-bg-layer)),
+    linear-gradient(to right, var(--gin-bg-layer), var(--gin-bg-layer)),
+    linear-gradient(to right, rgba(0, 0, 0, .125), rgba(255, 255, 255, 0)),
+    linear-gradient(to left, rgba(0, 0, 0, .125), rgba(255, 255, 255, 0));
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-color: var(--gin-bg-layer);
+  background-size: 24px 100%, 24px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 
 table.sticky-header {
-  visibility: hidden;
-  z-index: 98;
-  position: fixed;
-  left: auto !important;
-  top: calc(var(--gin-toolbar-y-offset) + var(--gin-sticky-offset)) !important;
+  inset-inline-start: auto !important;
+  min-width: 100%;
+  max-width: fit-content;
   background: transparent;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    width: 1.5rem;
-    height: 100%;
+table.position-sticky,
+table.sticky-header {
+  thead {
+    position: static;
   }
 
-  &::before {
-    left: calc(var(--gin-spacing-l) * -1);
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--gin-bg-layer));
-  }
+  &.--is-processed thead {
+    pointer-events: none;
 
-  &::after {
-    right: calc(var(--gin-spacing-l) * -1);
-    background: linear-gradient(90deg, var(--gin-bg-layer), rgba(255, 255, 255, 0));
-  }
+    tr {
+      border-color: transparent;
 
-  .--is-sticky & {
-    box-shadow: 0 10px 20px -16px rgba(0, 0, 0, .4);
-
-    @include mq(medium) {
-      visibility: visible !important;
-    }
-
-    thead tr {
-      border-bottom: none;
-    }
-
-    th {
-      background: var(--gin-bg-layer);
+      .sortable-heading.is-active > a::before {
+        display: none;
+      }
     }
   }
 }
@@ -56,7 +67,7 @@ table {
     border-radius: var(--gin-border-m);
 
     tr {
-      border-bottom: 2px solid var(--gin-border-color-table-header);
+      border-block-end: 2px solid var(--gin-border-color-table-header);
 
       &:hover {
         background: transparent;
@@ -81,7 +92,7 @@ table {
 
   tbody {
     tr {
-      border-bottom: 1px solid var(--gin-border-color-table);
+      border-block-end: 1px solid var(--gin-border-color-table);
     }
 
     td {
@@ -91,13 +102,14 @@ table {
   }
 
   tr,
+  tr:focus-within,
   .draggable-table.tabledrag-disabled tr {
     color: var(--gin-color-text);
     background-color: transparent;
 
     &:hover {
       color: var(--gin-color-text);
-      background: var(--gin-bg-item-hover);
+      background: var(--gin-bg-item);
     }
 
     &.selected:hover {
@@ -111,7 +123,7 @@ table {
     }
 
     td {
-      background-color: var(--gin-color-primary-light);
+      background-color: var(--gin-bg-item-hover);
     }
   }
 
@@ -135,7 +147,7 @@ table {
   padding: var(--gin-spacing-xs) var(--gin-spacing-m);
 
   > a::before {
-    bottom: -1px;
+    inset-block-end: -2px;
   }
 
   > a::after {
@@ -149,13 +161,26 @@ table {
     }
   }
 
+  &.is-active > a::before,
+  > a:hover::before {
+    width: 100%;
+    inset-inline-start: 0;
+  }
+
+  > a:hover::before {
+    border-block-end-width: 3px;
+  }
+
   &.is-active > a {
     &, &:hover, &:active {
       color: var(--gin-color-primary-active);
     }
 
     &::before {
-      border-bottom: .1875rem solid var(--gin-color-primary-active);
+      background-color: var(--gin-bg-item);
+      border-start-start-radius: var(--gin-border-s);
+      border-start-end-radius: var(--gin-border-s);
+      border-block-end: .1875rem solid var(--gin-color-primary-active);
     }
   }
 }
@@ -187,15 +212,15 @@ table {
 }
 
 .field-plugin-settings-edit-wrapper {
-  float: right;
+  float: inline-end;
 
   + a {
-    float: left;
+    float: inline-start;
   }
 }
 
 .region-title {
-  border-bottom: 2px solid var(--gin-color-text);
+  border-block-end: 2px solid var(--gin-color-text);
 }
 
 td.webform-has-field-suffix > .form-item > .form-element {
@@ -205,8 +230,9 @@ td.webform-has-field-suffix > .form-item > .form-element {
 
 .field-multiple-table {
   th {
-    padding: var(--gin-spacing-xs) var(--gin-spacing-m) var(--gin-spacing-xs) var(--gin-spacing-l);
-    border-bottom: 0;
+    padding-block: var(--gin-spacing-xs);
+    padding-inline: var(--gin-spacing-l) var(--gin-spacing-m);
+    border-block-end: 0;
     background: transparent;
 
     &.th__order {
@@ -216,24 +242,23 @@ td.webform-has-field-suffix > .form-item > .form-element {
   }
 
   thead {
-    position: relative;
-    z-index: 0;
-
-    &::after {
-      content: "";
-      z-index: -1;
-      display: block;
-      width: 100%;
-      height: 100%;
+    th {
       background: var(--gin-bg-header);
-      position: absolute;
-      top: 0;
-      left: 0;
-      border-radius: var(--gin-border-m);
+
+      &:first-of-type {
+        border-start-start-radius: var(--gin-border-m);
+        border-end-start-radius: var(--gin-border-m);
+      }
+    }
+
+    &:not(:has(th:last-of-type:not([style*="display: none"]))) th:nth-last-of-type(2),
+    th:last-of-type:not([style*="display: none"]) {
+      border-start-end-radius: var(--gin-border-m);
+      border-end-end-radius: var(--gin-border-m);
     }
 
     tr {
-      border-bottom: 0;
+      border-block-end: 0;
     }
 
     .field-label .label,
@@ -250,12 +275,17 @@ td.webform-has-field-suffix > .form-item > .form-element {
   }
 
   tr .form-item:not(:last-of-type) {
-    margin-bottom: var(--gin-spacing-m);
+    margin-block-end: var(--gin-spacing-m);
+  }
+
+  // Fixes paragraphs extending beyond layout
+  .ck.ck-toolbar.ck-toolbar_grouping>.ck-toolbar__items {
+    flex-wrap: wrap;
   }
 }
 
 .gin-layer-wrapper .views-table {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 table td.field-plugin-summary-cell {
@@ -263,5 +293,5 @@ table td.field-plugin-summary-cell {
 }
 
 table .views-field.views-field-operations {
-  text-align: right;
+  text-align: end;
 }

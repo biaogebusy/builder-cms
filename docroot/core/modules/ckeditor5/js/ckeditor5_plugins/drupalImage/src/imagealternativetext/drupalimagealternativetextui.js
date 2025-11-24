@@ -1,11 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies */
-/* cspell:words drupalimagealternativetextui contextualballoon componentfactory imagealternativetextformview missingalternativetextview imagetextalternativeui imagealternativetext */
+/* cspell:ignore drupalimagealternativetextui contextualballoon componentfactory imagealternativetextformview missingalternativetextview imagetextalternativeui imagealternativetext */
 
 /**
  * @module drupalImage/imagealternativetext/drupalimagealternativetextui
  */
 
-import { Plugin, icons } from 'ckeditor5/src/core';
+import { Plugin } from 'ckeditor5/src/core';
+import { IconLowVision } from '@ckeditor/ckeditor5-icons';
 import {
   ButtonView,
   ContextualBalloon,
@@ -144,7 +145,7 @@ export default class DrupalImageAlternativeTextUi extends Plugin {
 
       view.set({
         label: Drupal.t('Change image alternative text'),
-        icon: icons.lowVision,
+        icon: IconLowVision,
         tooltip: true,
       });
 

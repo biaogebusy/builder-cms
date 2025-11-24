@@ -2,19 +2,21 @@
 
 namespace Drupal\file\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'file_table' formatter.
- *
- * @FieldFormatter(
- *   id = "file_table",
- *   label = @Translation("Table of files"),
- *   field_types = {
- *     "file"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'file_table',
+  label: new TranslatableMarkup('Table of files'),
+  field_types: [
+    'file',
+  ],
+)]
 class TableFormatter extends DescriptionAwareFileFormatterBase {
 
   /**
@@ -39,7 +41,7 @@ class TableFormatter extends DescriptionAwareFileFormatterBase {
               ],
             ],
           ],
-          ['data' => format_size($file->getSize())],
+          ['data' => $file->getSize() !== NULL ? ByteSizeMarkup::create($file->getSize()) : $this->t('Unknown')],
         ];
       }
 

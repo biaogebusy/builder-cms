@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\Entity\CommentType;
@@ -19,9 +21,7 @@ class CommentEntityTest extends CommentTestBase {
   use TaxonomyTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -67,7 +67,7 @@ class CommentEntityTest extends CommentTestBase {
   /**
    * Tests CSS classes on comments.
    */
-  public function testEntityChanges() {
+  public function testEntityChanges(): void {
     $this->drupalLogin($this->webUser);
     // Create a new node.
     $term = $this->createTerm($this->vocab, ['uid' => $this->webUser->id()]);

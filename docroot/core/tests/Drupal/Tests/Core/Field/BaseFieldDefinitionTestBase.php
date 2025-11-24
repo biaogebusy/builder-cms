@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Field;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldTypeCategoryManagerInterface;
 use Drupal\Core\Field\FieldTypePluginManager;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\Tests\UnitTestCase;
@@ -23,7 +26,7 @@ abstract class BaseFieldDefinitionTestBase extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // getModuleAndPath() returns an array of the module name and directory.
@@ -38,11 +41,13 @@ abstract class BaseFieldDefinitionTestBase extends UnitTestCase {
       ->with($module_name)
       ->willReturn(TRUE);
     $typed_data_manager = $this->createMock(TypedDataManagerInterface::class);
+    $field_type_category_manager = $this->createMock(FieldTypeCategoryManagerInterface::class);
     $plugin_manager = new FieldTypePluginManager(
       $namespaces,
       $this->createMock('Drupal\Core\Cache\CacheBackendInterface'),
       $module_handler,
-      $typed_data_manager
+      $typed_data_manager,
+      $field_type_category_manager,
     );
 
     $container = new ContainerBuilder();

@@ -3,7 +3,7 @@
  * Powered by block specific styles.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .block-system-powered-by-block {
   letter-spacing: 0.02em;
@@ -29,10 +29,7 @@
     width: 0.875rem; /* 14 */
     height: 1.1875rem; /* 19 */
     vertical-align: top;
-
-    & path {
-      fill: currentColor;
-    }
+    fill: currentColor;
   }
 }
 

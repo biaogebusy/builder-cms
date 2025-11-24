@@ -16,6 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Hook handler for the form_alter() hook.
  */
 class FormAlterHookHandler implements ContainerInjectionInterface {
+
   use StringTranslationTrait;
 
   /**
@@ -96,7 +97,7 @@ class FormAlterHookHandler implements ContainerInjectionInterface {
     $operation = $entity_form->getOperation();
 
     // Check the operation.
-    if ($operation != 'default' && !in_array($operation, $this::LOCKED_OPERATIONS)) {
+    if ($operation != 'default' && !\in_array($operation, $this::LOCKED_OPERATIONS, TRUE)) {
       return;
     }
 

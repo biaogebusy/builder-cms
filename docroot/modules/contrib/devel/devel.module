@@ -36,9 +36,8 @@ use Drupal\devel\ToolbarHandler;
 function devel_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.devel':
-      $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Devel module provides a suite of modules containing fun for module developers and themers. For more information, see the <a href=":url">online documentation for the Devel module</a>.', [':url' => 'https://www.drupal.org/docs/8/modules/devel']) . '</p>';
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Devel module provides a suite of modules containing fun for module developers and themers. For more information, see the <a href=":url">online documentation for the Devel module</a>.', [':url' => 'https://www.drupal.org/docs/contributed-modules/devel']) . '</p>';
       $output .= '<h3>' . t('Uses') . '</h3>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Inspecting Service Container') . '</dt>';
@@ -52,19 +51,13 @@ function devel_help($route_name, RouteMatchInterface $route_match) {
 
     case 'devel.container_info.service':
     case 'devel.container_info.parameter':
-      $output = '';
-      $output .= '<p>' . t('Displays Services and Parameters registered in the Service Container. For more informations on the Service Container, see the <a href=":url">Symfony online documentation</a>.', [':url' => 'http://symfony.com/doc/current/service_container.html']) . '</p>';
-      return $output;
+      return '<p>' . t('Displays Services and Parameters registered in the Service Container. For more informations on the Service Container, see the <a href=":url">Symfony online documentation</a>.', [':url' => 'http://symfony.com/doc/current/service_container.html']) . '</p>';
 
     case 'devel.route_info':
-      $output = '';
-      $output .= '<p>' . t('Displays registered routes for the site. For a complete overview of the routing system, see the <a href=":url">online documentation</a>.', [':url' => 'https://www.drupal.org/docs/8/api/routing-system']) . '</p>';
-      return $output;
+      return '<p>' . t('Displays registered routes for the site. For a complete overview of the routing system, see the <a href=":url">online documentation</a>.', [':url' => 'https://www.drupal.org/docs/drupal-apis/routing-system']) . '</p>';
 
     case 'devel.event_info':
-      $output = '';
-      $output .= '<p>' . t('Displays events and listeners registered in the event dispatcher. For a complete overview of the event system, see the <a href=":url">Symfony online documentation</a>.', [':url' => 'http://symfony.com/doc/current/components/event_dispatcher.html']) . '</p>';
-      return $output;
+      return '<p>' . t('Displays events and listeners registered in the event dispatcher. For a complete overview of the event system, see the <a href=":url">Symfony online documentation</a>.', [':url' => 'http://symfony.com/doc/current/components/event_dispatcher.html']) . '</p>';
 
     case 'devel.reinstall':
       $output = '<p>' . t('<strong>Warning</strong> - will delete your module tables and configuration.') . '</p>';
@@ -75,13 +68,10 @@ function devel_help($route_name, RouteMatchInterface $route_match) {
       return '<p>' . t('Here are the contents of your <code>$_SESSION</code> variable.') . '</p>';
 
     case 'devel.state_system_page':
-      return '<p>' . t('This is a list of state variables and their values. For more information read online documentation of <a href=":documentation">State API in Drupal 8</a>.', [':documentation' => "https://www.drupal.org/developing/api/8/state"]) . '</p>';
+      return '<p>' . t('This is a list of state variables and their values. For more information read online documentation of <a href=":documentation">State API in Drupal 8</a>.', [':documentation' => "https://www.drupal.org/docs/develop/drupal-apis/state-api"]) . '</p>';
 
     case 'devel.layout_info':
-      $output = '';
-      $output .= '<p>' . t('Displays layouts available to the site. For a complete overview of the layout system, see the <a href=":url">Layout API documentation</a>.', [':url' => 'https://www.drupal.org/docs/8/api/layout-api']) . '</p>';
-      return $output;
-
+      return '<p>' . t('Displays layouts available to the site. For a complete overview of the layout system, see the <a href=":url">Layout API documentation</a>.', [':url' => 'https://www.drupal.org/docs/drupal-apis/layout-api']) . '</p>';
   }
 }
 
@@ -89,7 +79,7 @@ function devel_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_entity_type_alter().
  */
 function devel_entity_type_alter(array &$entity_types) {
-  return \Drupal::service('class_resolver')
+  Drupal::service('class_resolver')
     ->getInstanceFromDefinition(EntityTypeInfo::class)
     ->entityTypeAlter($entity_types);
 }
@@ -98,7 +88,7 @@ function devel_entity_type_alter(array &$entity_types) {
  * Implements hook_entity_operation().
  */
 function devel_entity_operation(EntityInterface $entity) {
-  return \Drupal::service('class_resolver')
+  return Drupal::service('class_resolver')
     ->getInstanceFromDefinition(EntityTypeInfo::class)
     ->entityOperation($entity);
 }
@@ -107,7 +97,7 @@ function devel_entity_operation(EntityInterface $entity) {
  * Implements hook_toolbar().
  */
 function devel_toolbar() {
-  return \Drupal::service('class_resolver')
+  return Drupal::service('class_resolver')
     ->getInstanceFromDefinition(ToolbarHandler::class)
     ->toolbar();
 }
@@ -117,7 +107,7 @@ function devel_toolbar() {
  */
 function devel_menu_links_discovered_alter(&$links) {
   // Conditionally add the Layouts info menu link.
-  if (\Drupal::moduleHandler()->moduleExists('layout_discovery')) {
+  if (Drupal::moduleHandler()->moduleExists('layout_discovery')) {
     $links['devel.layout_info'] = [
       'title' => new TranslatableMarkup('Layouts Info'),
       'route_name' => 'devel.layout_info',
@@ -131,7 +121,7 @@ function devel_menu_links_discovered_alter(&$links) {
  * Implements hook_local_tasks_alter().
  */
 function devel_local_tasks_alter(&$local_tasks) {
-  if (\Drupal::moduleHandler()->moduleExists('toolbar')) {
+  if (Drupal::moduleHandler()->moduleExists('toolbar')) {
     $local_tasks['devel.toolbar.settings_form'] = [
       'title' => 'Toolbar Settings',
       'base_route' => 'devel.admin_settings',
@@ -145,12 +135,12 @@ function devel_local_tasks_alter(&$local_tasks) {
 /**
  * Sets message.
  */
-function devel_set_message($msg, $type = NULL) {
+function devel_set_message($msg, ?string $type = NULL) {
   if (function_exists('drush_log')) {
     drush_log($msg, $type);
   }
   else {
-    \Drupal::messenger()->addMessage($msg, $type, TRUE);
+    Drupal::messenger()->addMessage($msg, $type, TRUE);
   }
 }
 
@@ -158,7 +148,7 @@ function devel_set_message($msg, $type = NULL) {
  * Gets error handlers.
  */
 function devel_get_handlers() {
-  $error_handlers = \Drupal::config('devel.settings')->get('error_handlers');
+  $error_handlers = Drupal::config('devel.settings')->get('error_handlers');
   if (!empty($error_handlers)) {
     unset($error_handlers[DEVEL_ERROR_HANDLER_NONE]);
   }
@@ -187,7 +177,7 @@ function devel_set_handler($handlers) {
  *   The level of the error raised.
  * @param string $message
  *   The error message.
- * @param string $filename
+ * @param string|null $filename
  *   (optional) The filename that the error was raised in.
  * @param int $line
  *   (optional) The line number the error was raised at.
@@ -195,9 +185,9 @@ function devel_set_handler($handlers) {
  *   (optional) An array that points to the active symbol table at the point the
  *   error occurred.
  */
-function backtrace_error_handler($error_level, $message, $filename = NULL, $line = NULL, array $context = NULL) {
+function backtrace_error_handler($error_level, $message, ?string $filename = NULL, $line = NULL, ?array $context = NULL) {
   // Hide stack trace and parameters from unqualified users.
-  if (!\Drupal::currentUser()->hasPermission('access devel information')) {
+  if (!Drupal::currentUser()->hasPermission('access devel information')) {
     // Do what core does in bootstrap.inc and errors.inc.
     // (We need to duplicate the core code here rather than calling it
     // to avoid having the backtrace_error_handler() on top of the call stack.)
@@ -261,29 +251,35 @@ function backtrace_error_handler($error_level, $message, $filename = NULL, $line
     // (This is Drupal's error_level, which is different from $error_level,
     // and we purposely ignore the difference between _SOME and _ALL,
     // see #970688!)
-    if (\Drupal::config('system.logging')->get('error_level') != 'hide') {
+    if (Drupal::config('system.logging')->get('error_level') != 'hide') {
       $error_handlers = devel_get_handlers();
       if (!empty($error_handlers[DEVEL_ERROR_HANDLER_STANDARD])) {
-        \Drupal::messenger()->addMessage($msg, ($severity_level <= RfcLogLevel::NOTICE ? MessengerInterface::TYPE_ERROR : MessengerInterface::TYPE_WARNING), TRUE);
+        Drupal::messenger()
+          ->addMessage($msg, ($severity_level <= RfcLogLevel::NOTICE ? MessengerInterface::TYPE_ERROR : MessengerInterface::TYPE_WARNING), TRUE);
       }
       if (!empty($error_handlers[DEVEL_ERROR_HANDLER_BACKTRACE_KINT])) {
-        print kpr(ddebug_backtrace(TRUE, 1), TRUE, $msg);
+        $input = ddebug_backtrace(return: TRUE, pop: 1);
+        print Drupal::service('devel.dumper')
+          ->dumpOrExport(input: $input, name: $msg);
       }
       if (!empty($error_handlers[DEVEL_ERROR_HANDLER_BACKTRACE_DPM])) {
-        dpm(ddebug_backtrace(TRUE, 1), $msg, 'warning');
+        $input = ddebug_backtrace(return: TRUE, pop: 1);
+        Drupal::service('devel.dumper')
+          ->message(input: $input, name: $msg, type: MessengerInterface::TYPE_WARNING);
       }
     }
 
-    \Drupal::logger('php')->log($severity_level, $msg);
+    Drupal::logger('php')->log($severity_level, $msg);
   }
 }
 
 /**
  * Implements hook_page_attachments_alter().
  */
-function devel_page_attachments_alter(&$page) {
-  if (\Drupal::currentUser()->hasPermission('access devel information') && \Drupal::config('devel.settings')->get('page_alter')) {
-    dpm($page, 'page');
+function devel_page_attachments_alter(array &$attachments): void {
+  if (Drupal::currentUser()->hasPermission('access devel information')
+    && Drupal::config('devel.settings')->get('page_alter')) {
+    Drupal::service('devel.dumper')->message(input: $attachments, name: 'attachments');
   }
 }
 
@@ -294,15 +290,15 @@ function devel_page_attachments_alter(&$page) {
  *
  * @param mixed $input
  *   The variable to dump.
- * @param string $name
+ * @param string|null $name
  *   (optional) The label to output before variable, defaults to NULL.
  * @param string $plugin_id
  *   (optional) The plugin ID, defaults to NULL.
  *
  * @see \Drupal\devel\DevelDumperManager::dump()
  */
-function devel_dump($input, $name = NULL, $plugin_id = NULL) {
-  \Drupal::service('devel.dumper')->dump($input, $name, $plugin_id);
+function devel_dump($input, ?string $name = NULL, $plugin_id = NULL) {
+  Drupal::service('devel.dumper')->dump($input, $name, $plugin_id);
 }
 
 /**
@@ -312,7 +308,7 @@ function devel_dump($input, $name = NULL, $plugin_id = NULL) {
  *
  * @param mixed $input
  *   The variable to dump.
- * @param string $name
+ * @param string|null $name
  *   (optional) The label to output before variable, defaults to NULL.
  * @param string $plugin_id
  *   (optional) The plugin ID, defaults to NULL.
@@ -322,8 +318,8 @@ function devel_dump($input, $name = NULL, $plugin_id = NULL) {
  *
  * @see \Drupal\devel\DevelDumperManager::export()
  */
-function devel_export($input, $name = NULL, $plugin_id = NULL) {
-  return \Drupal::service('devel.dumper')->export($input, $name, $plugin_id);
+function devel_export($input, ?string $name = NULL, $plugin_id = NULL) {
+  return Drupal::service('devel.dumper')->export($input, $name, $plugin_id);
 }
 
 /**
@@ -333,17 +329,18 @@ function devel_export($input, $name = NULL, $plugin_id = NULL) {
  *
  * @param mixed $input
  *   The variable to dump.
- * @param string $name
+ * @param string|null $name
  *   (optional) The label to output before variable, defaults to NULL.
  * @param string $type
  *   (optional) The message's type. Defaults to 'status'.
- * @param string $plugin_id
+ * @param string|null $plugin_id
  *   (optional) The plugin ID, defaults to NULL.
  *
  * @see \Drupal\devel\DevelDumperManager::message()
  */
-function devel_message($input, $name = NULL, $type = 'status', $plugin_id = NULL) {
-  \Drupal::service('devel.dumper')->message($input, $name, $type, $plugin_id);
+function devel_message(mixed $input, ?string $name = NULL, string $type = MessengerInterface::TYPE_STATUS, ?string $plugin_id = NULL): void {
+  Drupal::service('devel.dumper')
+    ->message(input: $input, name: $name, type: $type, plugin_id: $plugin_id);
 }
 
 /**
@@ -353,7 +350,7 @@ function devel_message($input, $name = NULL, $type = 'status', $plugin_id = NULL
  *
  * @param mixed $input
  *   The variable to log to the drupal_debug.txt log file.
- * @param string $name
+ * @param string|null $name
  *   (optional) If set, a label to output before $data in the log file.
  * @param string $plugin_id
  *   (optional) The plugin ID, defaults to NULL.
@@ -363,8 +360,8 @@ function devel_message($input, $name = NULL, $type = 'status', $plugin_id = NULL
  *
  * @see \Drupal\devel\DevelDumperManager::debug()
  */
-function devel_debug($input, $name = NULL, $plugin_id = NULL) {
-  return \Drupal::service('devel.dumper')->debug($input, $name, $plugin_id);
+function devel_debug($input, ?string $name = NULL, $plugin_id = NULL) {
+  return Drupal::service('devel.dumper')->debug($input, $name, $plugin_id);
 }
 
 /**
@@ -376,7 +373,7 @@ function devel_debug($input, $name = NULL, $plugin_id = NULL) {
  */
 function dfb() {
   $args = func_get_args();
-  \Drupal::service('devel.dumper')->dump($args, NULL, 'firephp');
+  Drupal::service('devel.dumper')->dump($args, NULL, 'firephp');
 }
 
 /**
@@ -387,23 +384,7 @@ function dfb() {
  * @see \Drupal\devel\DevelDumperManager::dump()
  */
 function dfbt($label) {
-  \Drupal::service('devel.dumper')->dump(FirePHP::TRACE, $label, 'firephp');
-}
-
-if (!function_exists('dd')) {
-
-  /**
-   * Wrapper for DevelDumperManager::debug().
-   *
-   * @deprecated in devel:8.x-2.0 and is removed from devel:5.0.0.
-   *   Symfony added dd() as a function, introduced with Drupal 8.6.
-   *   Use the Devel ddm() function instead.
-   * @see https://www.drupal.org/project/devel/issues/2999892
-   */
-  function dd($data, $label = NULL) {
-    return \Drupal::service('devel.dumper')->debug($data, $label, 'default');
-  }
-
+  Drupal::service('devel.dumper')->dump(FirePHP::TRACE, $label, 'firephp');
 }
 
 if (!function_exists('ddm')) {
@@ -413,62 +394,8 @@ if (!function_exists('ddm')) {
    *
    * @see \Drupal\devel\DevelDumperManager::debug()
    */
-  function ddm($data, $label = NULL) {
-    return \Drupal::service('devel.dumper')->debug($data, $label, 'default');
-  }
-
-}
-
-if (!function_exists('kint')) {
-
-  /**
-   * Prints passed argument(s) using Kint debug tool.
-   *
-   * Wrapper for DevelDumperManager::dump().
-   *
-   * @see \Drupal\devel\DevelDumperManager::dump()
-   */
-  function kint() {
-    $args = func_get_args();
-    if (count($args) == 1) {
-      // Pass a single argument directly, which works for any plug-in.
-      $args = $args[0];
-      $name = NULL;
-    }
-    else {
-      // Pass an array marked with a special name. The kint plug-in expands the
-      // arguments and prints each separately.
-      $name = '__ARGS__';
-    }
-
-    return \Drupal::service('devel.dumper')->dump($args, $name, 'kint');
-  }
-
-}
-
-if (!function_exists('ksm')) {
-
-  /**
-   * Prints passed argument(s) to the 'message' area of the page.
-   *
-   * Wrapper for DevelDumperManager::message().
-   *
-   * @see \Drupal\devel\DevelDumperManager::message()
-   */
-  function ksm() {
-    $args = func_get_args();
-    if (count($args) == 1) {
-      // Pass a single argument directly, which works for any plug-in.
-      $args = $args[0];
-      $name = NULL;
-    }
-    else {
-      // Pass an array marked with a special name. The kint plug-in expands the
-      // arguments and prints each separately.
-      $name = '__ARGS__';
-    }
-
-    return \Drupal::service('devel.dumper')->message($args, $name, MessengerInterface::TYPE_STATUS, 'kint');
+  function ddm($data, ?string $label = NULL) {
+    return Drupal::service('devel.dumper')->debug($data, $label, 'default');
   }
 
 }
@@ -482,18 +409,22 @@ if (!function_exists('ksm')) {
  *
  * @param mixed $input
  *   An arbitrary value to output.
- * @param string $name
+ * @param string|null $name
  *   Optional name for identifying the output.
  * @param string $type
  *   Optional message type see MessengerInterface, defaults to TYPE_STATUS.
+ * @param bool $load_dependencies
+ *   Optional load dependencies if an entity is passed.
  *
- * @return input
+ * @return mixed
  *   The unaltered input value.
  *
  * @see \Drupal\devel\DevelDumperManager::message()
  */
-function dpm($input, $name = NULL, $type = MessengerInterface::TYPE_STATUS) {
-  \Drupal::service('devel.dumper')->message($input, $name, $type);
+function dpm(mixed $input, ?string $name = NULL, string $type = MessengerInterface::TYPE_STATUS, bool $load_dependencies = FALSE): mixed {
+  Drupal::service('devel.dumper')
+    ->message(input: $input, name: $name, type: $type, load_references: $load_dependencies);
+
   return $input;
 }
 
@@ -506,46 +437,41 @@ function dpm($input, $name = NULL, $type = MessengerInterface::TYPE_STATUS) {
  *
  * @param mixed $input
  *   An arbitrary value to output.
- * @param string $name
+ * @param string|null $name
  *   Optional name for identifying the output.
+ * @param bool $load_dependencies
+ *   Optional load dependencies if an entity is passed.
  *
  * @return mixed
  *   The unaltered input value.
  *
  * @see \Drupal\devel\DevelDumperManager::message()
  */
-function dvm($input, $name = NULL) {
-  \Drupal::service('devel.dumper')->message($input, $name, MessengerInterface::TYPE_STATUS, 'drupal_variable');
+function dvm(mixed $input, ?string $name = NULL, bool $load_dependencies = FALSE): mixed {
+  Drupal::service('devel.dumper')
+    ->message(input: $input, name: $name, plugin_id: 'drupal_variable', load_references: $load_dependencies);
+
   return $input;
 }
 
 /**
  * An alias for dpm(), for historic reasons.
  */
-function dsm($input, $name = NULL) {
-  return dpm($input, $name);
+function dsm($input, ?string $name = NULL, $load_dependencies = FALSE) {
+  Drupal::service('devel.dumper')
+    ->message(input: $input, name: $name, load_references: $load_dependencies);
 }
 
 /**
  * Wrapper for DevelDumperManager::dumpOrExport().
  *
- * An alias for the devel.dumper service. Saves carpal tunnel syndrome.
+ * An alias for the 'devel.dumper' service. Saves carpal tunnel syndrome.
  *
  * @see \Drupal\devel\DevelDumperManager::dumpOrExport()
  */
-function dpr($input, $export = FALSE, $name = NULL) {
-  return \Drupal::service('devel.dumper')->dumpOrExport($input, $name, $export, 'default');
-}
-
-/**
- * Wrapper for DevelDumperManager::dumpOrExport().
- *
- * An alias for devel_dump(). Saves carpal tunnel syndrome.
- *
- * @see \Drupal\devel\DevelDumperManager::dumpOrExport()
- */
-function kpr($input, $export = FALSE, $name = NULL) {
-  return \Drupal::service('devel.dumper')->dumpOrExport($input, $name, $export);
+function dpr($input, $export = FALSE, ?string $name = NULL) {
+  return Drupal::service('devel.dumper')
+    ->dumpOrExport(input: $input, name: $name, export: $export, plugin_id: 'default');
 }
 
 /**
@@ -555,8 +481,9 @@ function kpr($input, $export = FALSE, $name = NULL) {
  *
  * @see \Drupal\devel\DevelDumperManager::dumpOrExport()
  */
-function dvr($input, $export = FALSE, $name = NULL) {
-  return \Drupal::service('devel.dumper')->dumpOrExport($input, $name, $export, 'drupal_variable');
+function dvr($input, $export = FALSE, ?string $name = NULL) {
+  return Drupal::service('devel.dumper')
+    ->dumpOrExport(input: $input, name: $name, export: $export, plugin_id: 'drupal_variable');
 }
 
 /**
@@ -566,7 +493,7 @@ function dargs($always = TRUE) {
   static $printed;
   if ($always || !$printed) {
     $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-    print kpr($bt[1]['args'], TRUE);
+    print Drupal::service('devel.dumper')->dumpOrExport(input: $bt[1]['args']);
     $printed = TRUE;
   }
 }
@@ -579,20 +506,20 @@ function dargs($always = TRUE) {
  * @param bool $return
  *   Whether to return the string. Default is FALSE, meaning to print it
  *   and return $query instead.
- * @param string $name
+ * @param string|null $name
  *   Optional name for identifying the output.
  *
  * @return object|string
  *   The $query object, or the query string if $return was TRUE.
  */
-function dpq($query, $return = FALSE, $name = NULL) {
-  if (\Drupal::currentUser()->hasPermission('access devel information')) {
+function dpq($query, $return = FALSE, ?string $name = NULL) {
+  if (Drupal::currentUser()->hasPermission('access devel information')) {
     if (method_exists($query, 'preExecute')) {
       $query->preExecute();
     }
     $sql = (string) $query;
     $quoted = [];
-    $database = \Drupal::database();
+    $database = Drupal::database();
     foreach ((array) $query->arguments() as $key => $val) {
       $quoted[$key] = is_null($val) ? 'NULL' : $database->quote($val);
     }
@@ -600,7 +527,8 @@ function dpq($query, $return = FALSE, $name = NULL) {
     if ($return) {
       return $sql;
     }
-    dpm($sql, $name);
+
+    Drupal::service('devel.dumper')->message(input: $sql, name: $name);
   }
   return ($return ? NULL : $query);
 }
@@ -616,7 +544,8 @@ function dpq($query, $return = FALSE, $name = NULL) {
 function devel_render() {
   $args = func_get_args();
   // #pre_render and #post_render pass the rendered $element as last argument.
-  kpr(end($args));
+  Drupal::service('devel.dumper')
+    ->dumpOrExport(input: end($args), export: FALSE);
   // #pre_render and #post_render expect the first argument to be returned.
   return reset($args);
 }
@@ -633,65 +562,81 @@ function devel_render() {
  * @param int $options
  *   Options (treated as a bit mask) to pass on to PHP's debug_backtrace().
  *
- * @return string|null
+ * @return array|null
  *   The formatted backtrace, if requested, or NULL.
  *
  * @see http://php.net/manual/en/function.debug-backtrace.php
  */
-function ddebug_backtrace($return = FALSE, $pop = 0, $options = DEBUG_BACKTRACE_PROVIDE_OBJECT) {
-  if (\Drupal::currentUser()->hasPermission('access devel information')) {
-    $backtrace = debug_backtrace($options);
-    while ($pop-- > 0) {
-      array_shift($backtrace);
-    }
-    $counter = count($backtrace);
-    $path = $backtrace[$counter - 1]['file'];
-    $path = substr($path, 0, strlen($path) - 10);
-    $paths[$path] = strlen($path) + 1;
-    $paths[DRUPAL_ROOT] = strlen(DRUPAL_ROOT) + 1;
-    $nbsp = "\xC2\xA0";
-
-    // Show message if error_level is ERROR_REPORTING_DISPLAY_SOME or higher.
-    // (This is Drupal's error_level, which is different from $error_level,
-    // and we purposely ignore the difference between _SOME and _ALL,
-    // see #970688!)
-    if (\Drupal::config('system.logging')->get('error_level') != 'hide') {
-      while (!empty($backtrace)) {
-        $call = [];
-        if (isset($backtrace[0]['file'])) {
-          $call['file'] = $backtrace[0]['file'];
-          foreach ($paths as $path => $len) {
-            if (strpos($backtrace[0]['file'], $path) === 0) {
-              $call['file'] = substr($backtrace[0]['file'], $len);
-            }
-          }
-          $call['file'] .= ':' . $backtrace[0]['line'];
-        }
-        if (isset($backtrace[1])) {
-          if (isset($backtrace[1]['class'])) {
-            $function = $backtrace[1]['class'] . $backtrace[1]['type'] . $backtrace[1]['function'] . '()';
-          }
-          else {
-            $function = $backtrace[1]['function'] . '()';
-          }
-          $backtrace[1] += ['args' => []];
-          foreach ($backtrace[1]['args'] as $key => $value) {
-            $call['args'][$key] = $value;
-          }
-        }
-        else {
-          $function = 'main()';
-          $call['args'] = $_GET;
-        }
-        $nicetrace[($counter <= 10 ? $nbsp : '') . --$counter . ': ' . $function] = $call;
-        array_shift($backtrace);
-      }
-      if ($return) {
-        return $nicetrace;
-      }
-      kpr($nicetrace);
-    }
+function ddebug_backtrace(bool $return = FALSE, int $pop = 0, int $options = DEBUG_BACKTRACE_PROVIDE_OBJECT): ?array {
+  if (Drupal::currentUser()
+    ->hasPermission('access devel information') === FALSE) {
+    return NULL;
   }
+
+  $backtrace = debug_backtrace($options);
+  while ($pop-- > 0) {
+    array_shift($backtrace);
+  }
+  $counter = count($backtrace);
+  $path = $backtrace[$counter - 1]['file'];
+  $path = substr($path, 0, strlen($path) - 10);
+  $paths[$path] = strlen($path) + 1;
+  $paths[DRUPAL_ROOT] = strlen(DRUPAL_ROOT) + 1;
+  $nbsp = "\xC2\xA0";
+
+  // Show message if error_level is ERROR_REPORTING_DISPLAY_SOME or higher.
+  // (This is Drupal's error_level, which is different from $error_level,
+  // and we purposely ignore the difference between _SOME and _ALL,
+  // see #970688!)
+  if (Drupal::config('system.logging')
+    ->get('error_level') === ERROR_REPORTING_HIDE) {
+    return NULL;
+  }
+
+  $nicetrace = [];
+  while (!empty($backtrace)) {
+    $call = [];
+    if (isset($backtrace[0]['file'])) {
+      $call['file'] = $backtrace[0]['file'];
+      foreach ($paths as $path => $len) {
+        if (strpos($backtrace[0]['file'], $path) === 0) {
+          $call['file'] = substr($backtrace[0]['file'], $len);
+        }
+      }
+      $call['file'] .= ':' . $backtrace[0]['line'];
+    }
+
+    if (isset($backtrace[1])) {
+      if (isset($backtrace[1]['class'])) {
+        $function = $backtrace[1]['class'] . $backtrace[1]['type'] . $backtrace[1]['function'] . '()';
+      }
+      else {
+        $function = $backtrace[1]['function'] . '()';
+      }
+
+      $backtrace[1] += ['args' => []];
+      foreach ($backtrace[1]['args'] as $key => $value) {
+        $call['args'][$key] = $value;
+      }
+    }
+    else {
+      $function = 'main()';
+      $requestStack = Drupal::service('request_stack');
+      $call['args'] = $requestStack->getCurrentRequest()->query->all();
+    }
+
+    $nicetrace[($counter <= 10 ? $nbsp : '') . --$counter . ': ' . $function] = $call;
+    array_shift($backtrace);
+  }
+
+  if ($return) {
+    return $nicetrace;
+  }
+
+  Drupal::service('devel.dumper')
+    ->dumpOrExport(input: $nicetrace, export: FALSE);
+
+  return NULL;
 }
 
 /**
@@ -703,7 +648,8 @@ function ddebug_backtrace($return = FALSE, $pop = 0, $options = DEBUG_BACKTRACE_
  * @see \Drupal\user\Form\UserPermissionsForm::buildForm()
  */
 function devel_form_user_admin_permissions_alter(&$form, FormStateInterface $form_state) {
-  if (\Drupal::currentUser()->hasPermission('access devel information') && \Drupal::config('devel.settings')->get('raw_names')) {
+  if (Drupal::currentUser()->hasPermission('access devel information')
+    && Drupal::config('devel.settings')->get('raw_names')) {
     foreach (Element::children($form['permissions']) as $key) {
       if (isset($form['permissions'][$key][0])) {
         $form['permissions'][$key][0]['#wrapper_attributes']['title'] = $key;
@@ -724,7 +670,9 @@ function devel_form_user_admin_permissions_alter(&$form, FormStateInterface $for
  * @see theme_system_modules_details()
  */
 function devel_form_system_modules_alter(&$form, FormStateInterface $form_state) {
-  if (\Drupal::currentUser()->hasPermission('access devel information') && \Drupal::config('devel.settings')->get('raw_names', FALSE) && isset($form['modules']) && is_array($form['modules'])) {
+  if (Drupal::currentUser()->hasPermission('access devel information')
+    && Drupal::config('devel.settings')->get('raw_names')
+    && isset($form['modules']) && is_array($form['modules'])) {
     foreach (Element::children($form['modules']) as $group) {
       if (is_array($form['modules'][$group])) {
         foreach (Element::children($form['modules'][$group]) as $key) {
@@ -743,6 +691,7 @@ function devel_form_system_modules_alter(&$form, FormStateInterface $form_state)
  * Makes debugging entity query much easier.
  *
  * Example usage:
+ *
  * @code
  * $query = \Drupal::entityQuery('node');
  * $query->condition('status', NODE_PUBLISHED);
@@ -753,6 +702,8 @@ function devel_form_system_modules_alter(&$form, FormStateInterface $form_state)
 function devel_query_debug_alter(AlterableInterface $query) {
   if (!$query->hasTag('debug-semaphore')) {
     $query->addTag('debug-semaphore');
+
+    // @phpstan-ignore-next-line
     dpq($query);
   }
 }

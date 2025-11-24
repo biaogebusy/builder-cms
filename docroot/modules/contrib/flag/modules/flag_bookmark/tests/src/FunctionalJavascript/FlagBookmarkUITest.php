@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag_bookmark\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -47,6 +49,7 @@ class FlagBookmarkUITest extends WebDriverTestBase {
       'unflag bookmark',
     ]);
 
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
     $this->drupalLogin($auth_user);
@@ -57,7 +60,7 @@ class FlagBookmarkUITest extends WebDriverTestBase {
 
     // Observe a change in the frontpage link title.
     $bookmark_link = $assert_session->waitForLink('Remove bookmark');
-    $this->assertNotNull($bookmark_link, 'Remove bookmark is availble on the page.');
+    $this->assertNotNull($bookmark_link, 'Remove bookmark is available on the page.');
 
     // Check the view is shown correctly.
     $this->drupalGet('bookmarks');
@@ -87,25 +90,27 @@ class FlagBookmarkUITest extends WebDriverTestBase {
     $flag_service->flag($bookmark_flag, $articles[0]);
     $flag_service->flag($bookmark_flag, $articles[1]);
 
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
     $this->drupalGet('bookmarks');
     $page = $this->getSession()->getPage();
 
+    // Check bulk actions.
+    $assert_session->optionExists('action', 'Delete flagging');
     // Confirm both articles appear in the table.
-    $assert_session->pageTextContains('Delete flagging');
     $assert_session->pageTextContains($articles[0]->label());
     $assert_session->pageTextContains($articles[1]->label());
 
-    // Select all bookmarks and perform bulk delete.
+    // Select action, select all bookmarks and perform bulk delete.
+    $page->selectFieldOption('action', 'Delete flagging');
     $page
       ->find('css', 'input[title="Select all rows in this table"]')
       ->check();
     $page->pressButton('Apply to selected items');
 
     // Assert that the bookmark table has become empty.
-    $empty_form = $assert_session
-      ->waitForElementVisible('css', "form:contains('No bookmarks available.')");
+    $empty_form = $assert_session->waitForElementVisible('css', "form:contains('No bookmarks available.')");
     $this->assertNotNull($empty_form, 'Flagging form is empty.');
     $assert_session->pageTextNotContains($articles[0]->label());
     $assert_session->pageTextNotContains($articles[1]->label());

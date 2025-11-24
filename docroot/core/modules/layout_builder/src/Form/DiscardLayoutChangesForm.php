@@ -4,6 +4,7 @@ namespace Drupal\layout_builder\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceDynamicSafeFormInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -15,7 +16,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @internal
  *   Form classes are internal.
  */
-class DiscardLayoutChangesForm extends ConfirmFormBase {
+class DiscardLayoutChangesForm extends ConfirmFormBase implements WorkspaceDynamicSafeFormInterface {
+
+  use WorkspaceSafeFormTrait;
 
   /**
    * The layout tempstore repository.
@@ -79,13 +82,13 @@ class DiscardLayoutChangesForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return $this->sectionStorage->getRedirectUrl();
+    return $this->sectionStorage->getLayoutBuilderUrl();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
     $this->sectionStorage = $section_storage;
     // Mark this as an administrative page for JavaScript ("Back to site" link).
     $form['#attached']['drupalSettings']['path']['currentPathIsAdmin'] = TRUE;
@@ -100,7 +103,7 @@ class DiscardLayoutChangesForm extends ConfirmFormBase {
 
     $this->messenger->addMessage($this->t('The changes to the layout have been discarded.'));
 
-    $form_state->setRedirectUrl($this->getCancelUrl());
+    $form_state->setRedirectUrl($this->sectionStorage->getRedirectUrl());
   }
 
 }

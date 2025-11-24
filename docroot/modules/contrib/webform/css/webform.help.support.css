@@ -54,11 +54,11 @@
 .webform-help-support__item-icon--contribute:before {
   background-image: url(../icons/cccccc/drupal.svg);
 }
+.webform-help-support__item-icon--join:before {
+  background-image: url(../icons/cccccc/drupal-association.svg);
+}
 .webform-help-support__item-icon--fund:before {
   background-image: url(../icons/cccccc/webform.svg);
-}
-.webform-help-support__item-icon--contact:before {
-  background-image: url(../icons/cccccc/person.svg);
 }
 
 .webform-help-support__item-details {

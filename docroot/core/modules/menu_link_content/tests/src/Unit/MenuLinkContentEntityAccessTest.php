@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Unit;
 
 use Drupal\Core\Access\AccessManagerInterface;
@@ -25,7 +27,7 @@ class MenuLinkContentEntityAccessTest extends UnitTestCase {
    *
    * @covers ::checkAccess
    */
-  public function testUnrecognizedOperation() {
+  public function testUnrecognizedOperation(): void {
     $entityType = $this->createMock(EntityTypeInterface::class);
     $accessManager = $this->createMock(AccessManagerInterface::class);
     $moduleHandler = $this->createMock(ModuleHandlerInterface::class);

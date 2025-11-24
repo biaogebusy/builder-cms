@@ -3,11 +3,11 @@
 namespace Drupal\Tests\commerce_order\Unit\Plugin\Commerce\Condition;
 
 use CommerceGuys\Addressing\Address;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Plugin\Commerce\Condition\OrderBillingAddress;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\profile\Entity\ProfileInterface;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_order\Plugin\Commerce\Condition\OrderBillingAddress
@@ -62,11 +62,31 @@ class OrderBillingAddressTest extends UnitTestCase {
     $condition = new OrderBillingAddress([
       'zone' => [
         'territories' => [
+          ['country_code' => 'US', 'administrative_area' => 'CA'],
+        ],
+      ],
+      'operator' => 'not in',
+    ], 'order_billing_address', ['entity_type' => 'commerce_order', 'profile_scope' => 'billing']);
+    $this->assertTrue($condition->evaluate($order));
+
+    $condition = new OrderBillingAddress([
+      'zone' => [
+        'territories' => [
           ['country_code' => 'US', 'administrative_area' => 'SC'],
         ],
       ],
     ], 'order_billing_address', ['entity_type' => 'commerce_order', 'profile_scope' => 'billing']);
     $this->assertTrue($condition->evaluate($order));
+
+    $condition = new OrderBillingAddress([
+      'zone' => [
+        'territories' => [
+          ['country_code' => 'US', 'administrative_area' => 'SC'],
+        ],
+      ],
+      'operator' => 'not in',
+    ], 'order_billing_address', ['entity_type' => 'commerce_order', 'profile_scope' => 'billing']);
+    $this->assertFalse($condition->evaluate($order));
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Plugin\Scaffold\Integration;
 
 use PHPUnit\Framework\TestCase;
@@ -18,7 +20,7 @@ class ScaffoldFileCollectionTest extends TestCase {
   /**
    * @covers ::__construct
    */
-  public function testCreate() {
+  public function testCreate(): void {
     $fixtures = new Fixtures();
     $locationReplacements = $fixtures->getLocationReplacements();
     $scaffold_file_fixtures = [

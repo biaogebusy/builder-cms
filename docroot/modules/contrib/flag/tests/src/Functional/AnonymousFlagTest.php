@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Url;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\flag\Entity\Flag;
 use Drupal\flag\Entity\Flagging;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
 
 /**
+ * Anonymous Flag Test.
+ *
  * @group flag
  */
 class AnonymousFlagTest extends BrowserTestBase {
@@ -27,11 +31,15 @@ class AnonymousFlagTest extends BrowserTestBase {
   protected static $modules = ['system', 'user', 'node', 'flag'];
 
   /**
+   * Node.
+   *
    * @var \Drupal\node\Entity\Node
    */
   protected $node;
 
   /**
+   * Flag.
+   *
    * @var \Drupal\flag\Entity\Flag
    */
   protected $flag;

@@ -1,0 +1,20 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/Asset/AssetCollector.php
+
+		-
+			message: """
+				#^Fetching deprecated class constant EXISTS_REPLACE of interface Drupal\\\\Core\\\\File\\\\FileSystemInterface\\:
+				in drupal\\:10\\.3\\.0 and is removed from drupal\\:12\\.0\\.0\\. Use
+				\\\\Drupal\\\\Core\\\\File\\\\FileExists\\:\\:Replace instead\\.$#
+			"""
+			count: 1
+			path: src/PrintBuilder.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/PrintBuilder.php

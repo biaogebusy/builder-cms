@@ -23,6 +23,7 @@ use Twig\Node\Expression\ConstantExpression;
 use Twig\Node\Node;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
+use Twig\Runtime\EscaperRuntime;
 
 /**
  * A class providing Drupal Twig extensions.
@@ -83,15 +84,11 @@ class TwigExtension extends AbstractExtension {
    * @param \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator
    *   The file URL generator.
    */
-  public function __construct(RendererInterface $renderer, UrlGeneratorInterface $url_generator, ThemeManagerInterface $theme_manager, DateFormatterInterface $date_formatter, FileUrlGeneratorInterface $file_url_generator = NULL) {
+  public function __construct(RendererInterface $renderer, UrlGeneratorInterface $url_generator, ThemeManagerInterface $theme_manager, DateFormatterInterface $date_formatter, FileUrlGeneratorInterface $file_url_generator) {
     $this->renderer = $renderer;
     $this->urlGenerator = $url_generator;
     $this->themeManager = $theme_manager;
     $this->dateFormatter = $date_formatter;
-    if (!$file_url_generator) {
-      @trigger_error('Calling TwigExtension::__construct() without the $file_url_generator argument is deprecated in drupal:9.3.0 and will be required in drupal:10.0.0. See https://www.drupal.org/node/2940031.', E_USER_DEPRECATED);
-      $file_url_generator = \Drupal::service('file_url_generator');
-    }
     $this->fileUrlGenerator = $file_url_generator;
   }
 
@@ -144,9 +141,14 @@ class TwigExtension extends AbstractExtension {
       // CSS class and ID filters.
       new TwigFilter('clean_class', '\Drupal\Component\Utility\Html::getClass'),
       new TwigFilter('clean_id', '\Drupal\Component\Utility\Html::getId'),
+      new TwigFilter('clean_unique_id', '\Drupal\Component\Utility\Html::getUniqueId'),
+      new TwigFilter('add_class', [$this, 'addClass']),
+      new TwigFilter('set_attribute', [$this, 'setAttribute']),
       // This filter will render a renderable array to use the string results.
       new TwigFilter('render', [$this, 'renderVar']),
       new TwigFilter('format_date', [$this->dateFormatter, 'format']),
+      // Add new theme hook suggestions directly from a Twig template.
+      new TwigFilter('add_suggestion', [$this, 'suggestThemeHook']),
     ];
   }
 
@@ -156,9 +158,18 @@ class TwigExtension extends AbstractExtension {
   public function getNodeVisitors() {
     // The node visitor is needed to wrap all variables with
     // render_var -> TwigExtension->renderVar() function.
-    return [
+    $visitors = [
       new TwigNodeVisitor(),
+      new TwigNodeVisitorCheckDeprecations(),
     ];
+    if (\in_array('__toString', TwigSandboxPolicy::getMethodsAllowedOnAllObjects(), TRUE)) {
+      // When __toString is an allowed method, there is no point in running
+      // \Twig\Extension\SandboxExtension::ensureToStringAllowed, so we add a
+      // node visitor to remove any CheckToStringNode nodes added by the
+      // sandbox extension.
+      $visitors[] = new RemoveCheckToStringNodeVisitor();
+    }
+    return $visitors;
   }
 
   /**
@@ -389,9 +400,6 @@ class TwigExtension extends AbstractExtension {
    *
    * Replacement function for Twig's escape filter.
    *
-   * Note: This function should be kept in sync with
-   * theme_render_and_autoescape().
-   *
    * @param \Twig\Environment $env
    *   A Twig Environment instance.
    * @param mixed $arg
@@ -410,9 +418,6 @@ class TwigExtension extends AbstractExtension {
    * @throws \Exception
    *   When $arg is passed as an object which does not implement __toString(),
    *   RenderableInterface or toString().
-   *
-   * @todo Refactor this to keep it in sync with theme_render_and_autoescape()
-   *   in https://www.drupal.org/node/2575065
    */
   public function escapeFilter(Environment $env, $arg, $strategy = 'html', $charset = NULL, $autoescape = FALSE) {
     // Check for a numeric zero int or float.
@@ -465,7 +470,7 @@ class TwigExtension extends AbstractExtension {
       if ($strategy == 'html') {
         return Html::escape($return);
       }
-      return twig_escape_filter($env, $return, $strategy, $charset, $autoescape);
+      return $env->getRuntime(EscaperRuntime::class)->escape($arg, $strategy, $charset, $autoescape);
     }
 
     // This is a normal render array, which is safe by definition, with
@@ -610,15 +615,18 @@ class TwigExtension extends AbstractExtension {
   /**
    * Creates an Attribute object.
    *
-   * @param array $attributes
-   *   (optional) An associative array of key-value pairs to be converted to
-   *   HTML attributes.
+   * @param Attribute|array $attributes
+   *   (optional) An existing attribute object or an associative array of
+   *   key-value pairs to be converted to HTML attributes.
    *
    * @return \Drupal\Core\Template\Attribute
    *   An attributes object that has the given attributes.
    */
-  public function createAttribute(array $attributes = []) {
-    return new Attribute($attributes);
+  public function createAttribute(Attribute|array $attributes = []) {
+    if (\is_array($attributes)) {
+      return new Attribute($attributes);
+    }
+    return $attributes;
   }
 
   /**
@@ -655,6 +663,137 @@ class TwigExtension extends AbstractExtension {
       unset($filtered_element[$key]);
     }
     return $filtered_element;
+  }
+
+  /**
+   * Adds a theme suggestion to the element.
+   *
+   * @param array|null $element
+   *   A theme element render array.
+   * @param string|\Stringable $suggestion
+   *   The theme suggestion part to append to the existing theme hook(s).
+   *
+   * @return array|null
+   *   The element with the full theme suggestion added as the highest priority.
+   */
+  public function suggestThemeHook(?array $element, string|\Stringable $suggestion): ?array {
+    // Make sure we have a valid theme element render array.
+    if (empty($element['#theme'])) {
+      // Throw assertion for render arrays that contain more than just metadata
+      // (e.g., don't assert on empty field content).
+      assert(array_diff_key($element ?? [], [
+        '#cache' => TRUE,
+        '#weight' => TRUE,
+        '#attached' => TRUE,
+      ]) === [], 'Invalid target for the "|add_suggestion" Twig filter; element does not have a "#theme" key.');
+      return $element;
+    }
+
+    // Replace dashes with underscores to support suggestions that match the
+    // target template name rather than the underlying theme hook.
+    $suggestion = str_replace('-', '_', $suggestion);
+
+    // Transform the theme hook to a format that supports multiple suggestions.
+    if (!is_iterable($element['#theme'])) {
+      $element['#theme'] = [$element['#theme']];
+    }
+
+    // Add _new_ suggestions for each existing theme hook. Simply modifying the
+    // existing items (appending to each theme hook instead of adding new ones)
+    // would cause the original hooks to be unavailable as fallbacks.
+    //
+    // Start with the lowest priority theme hook.
+    foreach (array_reverse($element['#theme']) as $theme_hook) {
+      // Add new suggestions to the front (highest priority).
+      array_unshift($element['#theme'], $theme_hook . '__' . $suggestion);
+    }
+
+    // Reset the "#printed" flag to make sure the content gets rendered with the
+    // new suggestion in place.
+    unset($element['#printed']);
+
+    // Add a cache key to prevent using render cache from before the suggestion
+    // was added. If there are no cache keys already set, don't add one, as that
+    // would enable caching on this element where there wasn't any before.
+    if (isset($element['#cache']['keys'])) {
+      $element['#cache']['keys'][] = $suggestion;
+    }
+
+    return $element;
+  }
+
+  /**
+   * Triggers a deprecation error if a variable is deprecated.
+   *
+   * @param array $context
+   *   A Twig context array.
+   * @param array $used_variables
+   *   The names of the variables used in a template.
+   *
+   * @see \Drupal\Core\Template\TwigNodeCheckDeprecations
+   */
+  public function checkDeprecations(array $context, array $used_variables): void {
+    if (!isset($context['deprecations'])) {
+      return;
+    }
+
+    foreach ($used_variables as $name) {
+      if (isset($context['deprecations'][$name]) && \array_key_exists($name, $context)) {
+        @trigger_error($context['deprecations'][$name], E_USER_DEPRECATED);
+      }
+    }
+  }
+
+  /**
+   * Adds a value into the class attributes of a given element.
+   *
+   * Assumes element is an array.
+   *
+   * @param array $element
+   *   A render element.
+   * @param string[]|string ...$classes
+   *   The class(es) to add to the element. Arguments can include string keys
+   *   directly, or arrays of string keys.
+   *
+   * @return array
+   *   The element with the given class(es) in attributes.
+   */
+  public function addClass(array $element, ...$classes): array {
+    $attributes = new Attribute($element['#attributes'] ?? []);
+    $attributes->addClass(...$classes);
+    $element['#attributes'] = $attributes->toArray();
+
+    // Make sure element gets rendered again.
+    unset($element['#printed']);
+
+    return $element;
+  }
+
+  /**
+   * Sets an attribute on a given element.
+   *
+   * Assumes the element is an array.
+   *
+   * @param array $element
+   *   A render element.
+   * @param string $name
+   *   The attribute name.
+   * @param mixed $value
+   *   (optional) The attribute value.
+   *
+   * @return array
+   *   The element with the given sanitized attribute's value.
+   */
+  public function setAttribute(array $element, string $name, mixed $value = NULL): array {
+    $element['#attributes'] = AttributeHelper::mergeCollections(
+      $element['#attributes'] ?? [],
+      new Attribute([$name => $value])
+    );
+
+    // Make sure element gets rendered again.
+    unset($element['#printed']);
+
+    return $element;
   }
 
 }

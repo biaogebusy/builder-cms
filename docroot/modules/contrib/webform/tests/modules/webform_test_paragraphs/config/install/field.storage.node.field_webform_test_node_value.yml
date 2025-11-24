@@ -3,7 +3,7 @@ status: true
 dependencies:
   module:
     - node
-  enfourced:
+  enforced:
     module:
       - webform_test_paragraphs
 id: node.field_webform_test_node_value

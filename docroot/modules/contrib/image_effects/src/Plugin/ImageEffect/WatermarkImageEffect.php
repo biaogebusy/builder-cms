@@ -1,46 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageFactory;
 use Drupal\Core\Image\ImageInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 use Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface;
+use Drupal\image_effects\Plugin\ImageSelectorPluginManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Adds watermark image.
- *
- * @ImageEffect(
- *   id = "image_effects_watermark",
- *   label = @Translation("Watermark"),
- *   description = @Translation("Add watermark image effect.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_watermark',
+  label: new TranslatableMarkup('Watermark'),
+  description: new TranslatableMarkup('Add watermark image effect.'),
+)]
 class WatermarkImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   use AnchorTrait;
 
   /**
-   * The image factory service.
-   *
-   * @var \Drupal\Core\Image\ImageFactory
-   */
-  protected $imageFactory;
-
-  /**
-   * The image selector plugin.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface
-   */
-  protected $imageSelector;
-
-  /**
-   * Constructs an WatermarkImageEffect object.
+   * WatermarkImageEffect constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -50,15 +40,20 @@ class WatermarkImageEffect extends ConfigurableImageEffectBase implements Contai
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
-   * @param \Drupal\Core\Image\ImageFactory $image_factory
+   * @param \Drupal\Core\Image\ImageFactory $imageFactory
    *   The image factory service.
-   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface $image_selector
+   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface $imageSelector
    *   The image selector plugin.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, LoggerInterface $logger, ImageFactory $image_factory, ImageEffectsPluginBaseInterface $image_selector) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    LoggerInterface $logger,
+    protected readonly ImageFactory $imageFactory,
+    protected readonly ImageEffectsPluginBaseInterface $imageSelector,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
-    $this->imageFactory = $image_factory;
-    $this->imageSelector = $image_selector;
   }
 
   /**
@@ -71,7 +66,7 @@ class WatermarkImageEffect extends ConfigurableImageEffectBase implements Contai
       $plugin_definition,
       $container->get('logger.factory')->get('image'),
       $container->get('image.factory'),
-      $container->get('plugin.manager.image_effects.image_selector')->getPlugin()
+      $container->get(ImageSelectorPluginManager::class)->getPlugin()
     );
   }
 
@@ -197,7 +192,10 @@ class WatermarkImageEffect extends ConfigurableImageEffectBase implements Contai
     // Get the watermark image object.
     $watermark_image = $this->imageFactory->get($this->configuration['watermark_image']);
     if (!$watermark_image->isValid()) {
-      $this->logger->error('Image watermark failed using the %toolkit toolkit on %path', ['%toolkit' => $image->getToolkitId(), '%path' => $this->configuration['watermark_image']]);
+      $this->logger->error('Image watermark failed using the %toolkit toolkit on %path', [
+        '%toolkit' => $image->getToolkitId(),
+        '%path' => $this->configuration['watermark_image'],
+      ]);
       return FALSE;
     }
 
@@ -220,7 +218,7 @@ class WatermarkImageEffect extends ConfigurableImageEffectBase implements Contai
 
     // Calculate position of watermark on source image based on placement
     // option.
-    list($x, $y) = explode('-', $this->configuration['placement']);
+    [$x, $y] = explode('-', $this->configuration['placement']);
     $x_pos = ImageUtility::getKeywordOffset($x, $image->getWidth(), $watermark_width);
     $y_pos = ImageUtility::getKeywordOffset($y, $image->getHeight(), $watermark_height);
 

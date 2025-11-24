@@ -55,7 +55,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
    */
   public function testNoAccess() {
     foreach (['view', 'update', 'delete'] as $operation) {
-      $user = $this->createUser([], ['access content']);
+      $user = $this->createUser(['access content']);
       $conditions = $this->handler->getConditions($operation, $user);
       $this->assertEquals(0, $conditions->count());
       $this->assertEquals(['user.permissions'], $conditions->getCacheContexts());
@@ -68,7 +68,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
    */
   public function testAdmin() {
     foreach (['view', 'update', 'delete'] as $operation) {
-      $user = $this->createUser([], ['administer entity_test_enhanced_with_owner']);
+      $user = $this->createUser(['administer entity_test_enhanced_with_owner']);
       $conditions = $this->handler->getConditions($operation, $user);
       $this->assertEquals(0, $conditions->count());
       $this->assertEquals(['user.permissions'], $conditions->getCacheContexts());
@@ -81,7 +81,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
    */
   public function testView() {
     // Any permission.
-    $user = $this->createUser([], ['view any entity_test_enhanced_with_owner']);
+    $user = $this->createUser(['view any entity_test_enhanced_with_owner']);
     $conditions = $this->handler->getConditions('view', $user);
     $expected_conditions = [
       new Condition('status', '1'),
@@ -92,7 +92,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
     $this->assertFalse($conditions->isAlwaysFalse());
 
     // Own permission.
-    $user = $this->createUser([], ['view own entity_test_enhanced_with_owner']);
+    $user = $this->createUser(['view own entity_test_enhanced_with_owner']);
     $conditions = $this->handler->getConditions('view', $user);
     $expected_conditions = [
       new Condition('user_id', $user->id()),
@@ -105,7 +105,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
     $this->assertFalse($conditions->isAlwaysFalse());
 
     // Any permission for the first bundle, own permission for the second.
-    $user = $this->createUser([], [
+    $user = $this->createUser([
       'view any first entity_test_enhanced_with_owner',
       'view own second entity_test_enhanced_with_owner',
     ]);
@@ -127,7 +127,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
     $this->assertFalse($conditions->isAlwaysFalse());
 
     // View own unpublished permission.
-    $user = $this->createUser([], ['view own unpublished entity_test_enhanced_with_owner']);
+    $user = $this->createUser(['view own unpublished entity_test_enhanced_with_owner']);
     $conditions = $this->handler->buildConditions('view', $user);
     $expected_conditions = [
       new Condition('user_id', $user->id()),
@@ -139,7 +139,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
     $this->assertFalse($conditions->isAlwaysFalse());
 
     // Both view any and view own unpublished permissions.
-    $user = $this->createUser([], [
+    $user = $this->createUser([
       'view any entity_test_enhanced_with_owner',
       'view own unpublished entity_test_enhanced_with_owner',
     ]);
@@ -163,7 +163,7 @@ class UncacheableQueryAccessHandlerTest extends EntityKernelTestBase {
   public function testUpdateDuplicateDelete() {
     foreach (['update', 'duplicate', 'delete'] as $operation) {
       // Any permission for the first bundle, own permission for the second.
-      $user = $this->createUser([], [
+      $user = $this->createUser([
         "$operation any first entity_test_enhanced_with_owner",
         "$operation own second entity_test_enhanced_with_owner",
       ]);

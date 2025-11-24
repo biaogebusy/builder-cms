@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Component\Utility\NestedArray;
@@ -10,65 +12,40 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageFactory;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Utility\Token;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 use Drupal\image_effects\Component\PositionedRectangle;
+use Drupal\image_effects\Plugin\FontSelectorPluginManager;
 use Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface;
+use Drupal\token\TreeBuilderInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Overlays text on the image, defining text font, size and positioning.
- *
- * @ImageEffect(
- *   id = "image_effects_text_overlay",
- *   label = @Translation("Text overlay"),
- *   description = @Translation("Overlays text on the image, defining text font, size and positioning.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_text_overlay',
+  label: new TranslatableMarkup('Text overlay'),
+  description: new TranslatableMarkup('Overlays text on the image, defining text font, size and positioning.'),
+)]
 class TextOverlayImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**
    * Stores information about image and text wrapper.
    *
-   * @var int[]
+   * @var array<string, int>
    */
-  protected $info = [
+  protected array $info = [
     'image_xpos' => 0,
     'image_ypos' => 0,
   ];
 
   /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The Image factory.
-   *
-   * @var \Drupal\Core\Image\ImageFactory
-   */
-  protected $imageFactory;
-
-  /**
-   * The font selector plugin.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface
-   */
-  protected $fontSelector;
-
-  /**
-   * The token resolution service.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected $token;
-
-  /**
-   * Constructs a TextOverlayImageEffect object.
+   * TextOverlayImageEffect constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -78,21 +55,26 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
-   * @param \Drupal\Core\Image\ImageFactory $image_factory
+   * @param \Drupal\Core\Image\ImageFactory $imageFactory
    *   The image factory service.
-   * @param \Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface $font_selector_plugin
+   * @param \Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface $fontSelector
    *   The font selector plugin.
-   * @param \Drupal\Core\Utility\Token $token_service
+   * @param \Drupal\Core\Utility\Token $token
    *   The token resolution service.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler service.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, LoggerInterface $logger, ImageFactory $image_factory, ImageEffectsFontSelectorPluginInterface $font_selector_plugin, Token $token_service, ModuleHandlerInterface $module_handler) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    LoggerInterface $logger,
+    protected ImageFactory $imageFactory,
+    protected ImageEffectsFontSelectorPluginInterface $fontSelector,
+    protected Token $token,
+    protected ModuleHandlerInterface $moduleHandler,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
-    $this->imageFactory = $image_factory;
-    $this->fontSelector = $font_selector_plugin;
-    $this->token = $token_service;
-    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -105,7 +87,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
       $plugin_definition,
       $container->get('logger.channel.image_effects'),
       $container->get('image.factory'),
-      $container->get('plugin.manager.image_effects.font_selector')->getPlugin(),
+      $container->get(FontSelectorPluginManager::class)->getPlugin(),
       $container->get('token'),
       $container->get('module_handler')
     );
@@ -127,7 +109,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    * @return \Drupal\token\TreeBuilderInterface|null
    *   The token.tree_builder service if available, NULL otherwise.
    */
-  protected function getTokenTreeBuilder() {
+  protected function getTokenTreeBuilder(): ?TreeBuilderInterface {
     return \Drupal::hasService('token.tree_builder') ? \Drupal::service('token.tree_builder') : NULL;
   }
 
@@ -192,7 +174,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
 
     if ($this->getTextimageFactory()) {
       // Preview effect.
-      list($success, $preview) = $this->buildPreviewRender($this->configuration);
+      [$success, $preview] = $this->buildPreviewRender($this->configuration);
       $form['preview'] = [
         '#type'   => 'item',
         '#title' => $this->t('Preview'),
@@ -550,7 +532,10 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
         'right-bottom' => $this->t('Bottom right'),
       ],
       '#theme' => 'image_anchor',
-      '#default_value' => implode('-', [$this->configuration['layout']['x_pos'], $this->configuration['layout']['y_pos']]),
+      '#default_value' => implode('-', [
+        $this->configuration['layout']['x_pos'],
+        $this->configuration['layout']['y_pos'],
+      ]),
       '#description' => $this->t('Position of the text on the underlying image.'),
     ];
     $form['layout']['position']['x_offset'] = [
@@ -652,7 +637,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    * Preview Ajax callback.
    */
   public function processAjaxPreview($form, FormStateInterface $form_state) {
-    list($success, $preview) = $this->buildPreviewRender($form_state->getValue(['data', 'ajax_config']));
+    [$success, $preview] = $this->buildPreviewRender($form_state->getValue(['data', 'ajax_config']));
     $preview_render = [
       '#theme' => 'image_effects_text_overlay_preview',
       '#success' => $success,
@@ -674,7 +659,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
     // adjusted or a different way to access nested keys will be available.
     // @codingStandardsIgnoreStart
     // Get x-y position from the anchor element.
-    list($x_pos, $y_pos) = explode('-', $form_state->getValue(['layout', 'position', 'placement']));
+    [$x_pos, $y_pos] = explode('-', $form_state->getValue(['layout', 'position', 'placement']));
 
     $this->configuration = [
       'font'   => [
@@ -725,7 +710,10 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
     // Save the updated configuration in a FormState value to enable Ajax
     // preview generation.
     $form_state->setValue(['ajax_config'], $this->configuration);
-    $form_state->setValue(['ajax_config', 'preview_bar', 'debug_visuals'], $form_state->getValue(['preview_bar', 'debug_visuals']));
+    $form_state->setValue(
+      ['ajax_config', 'preview_bar', 'debug_visuals'],
+      $form_state->getValue(['preview_bar', 'debug_visuals']),
+    );
   }
 
   /**
@@ -798,7 +786,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
       $this->info['frame_left'] = 0;
 
       // Check wrapper image overflowing the original image.
-      if ($this->canvasResizeNeeded($wrapper)) {
+      if ($this->canvasResizeNeeded($wrapper, $this->info)) {
         // Apply set_canvas, transparent background.
         $data = [
           'width' => $this->info['image_width'],
@@ -887,6 +875,9 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
     // Dimensions are potentially affected only if the effect is set to
     // autoextend the background image in case of wrapper overflow. Also,
     // current dimensions must be known.
@@ -901,7 +892,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
       }
 
       // Checks if resizing needed.
-      if ($this->canvasResizeNeeded($wrapper)) {
+      if ($this->canvasResizeNeeded($wrapper, $this->info)) {
         $dimensions['width'] = $this->info['image_width'];
         $dimensions['height'] = $this->info['image_height'];
       }
@@ -917,7 +908,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    * @return string
    *   The text after alteration by modules.
    */
-  public function getAlteredText($text) {
+  public function getAlteredText(string $text): string {
     $this->moduleHandler->alter('image_effects_text_overlay_text', $text, $this);
     return $text;
   }
@@ -928,7 +919,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    * This is separated from ::applyEffect() so that it can also be used
    * by the ::transformDimensions() method.
    */
-  protected function getTextWrapper() {
+  protected function getTextWrapper(): ?ImageInterface {
     // If the effect is executed outside of the context of Textimage
     // (e.g. by the core Image module), then the text_string has not been
     // pre-processed to translate tokens or apply text conversion. Do it here.
@@ -974,7 +965,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
       'text_align'                 => $this->configuration['text']['align'],
       'text_line_spacing'          => $this->configuration['text']['line_spacing'],
       'text_string'                => $this->configuration['text_string'],
-      'debug_visuals'              => isset($this->configuration['debug_visuals']) ? $this->configuration['debug_visuals'] : FALSE,
+      'debug_visuals'              => $this->configuration['debug_visuals'] ?? FALSE,
       'canvas_width'               => $this->info['image_width'],
       'canvas_height'              => $this->info['image_height'],
     ]);
@@ -987,13 +978,13 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    *
    * When wrapper overflows the original image, and autoextent is set on.
    */
-  protected function canvasResizeNeeded(ImageInterface $wrapper) {
+  protected function canvasResizeNeeded(ImageInterface $wrapper, array &$info): bool {
 
     $resized = FALSE;
 
     // Background image dimensions.
-    $image_width = $this->info['image_width'];
-    $image_height = $this->info['image_height'];
+    $image_width = $info['image_width'];
+    $image_height = $info['image_height'];
 
     // Wrapper image dimensions.
     $wrapper_width = $wrapper->getWidth();
@@ -1014,44 +1005,44 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
     //  'height' = ($wrapper_height < $image_height) ? $wrapper_height + abs($this->configuration['layout']['y_offset']) : $wrapper_height;
     // @endcode
     // @codingStandardsIgnoreEnd
-    $this->info['wrapper_xpos'] = $x_offset + $this->configuration['layout']['x_offset'];
-    $this->info['wrapper_ypos'] = $y_offset + $this->configuration['layout']['y_offset'];
+    $info['wrapper_xpos'] = $x_offset + $this->configuration['layout']['x_offset'];
+    $info['wrapper_ypos'] = $y_offset + $this->configuration['layout']['y_offset'];
 
     // If offset wrapper overflows to the left, background image
     // will be shifted to the right.
-    if ($this->info['wrapper_xpos'] < 0) {
-      $this->info['image_width'] = $image_width - $this->info['wrapper_xpos'];
-      $this->info['image_xpos'] = -$this->info['wrapper_xpos'];
-      $this->info['wrapper_xpos'] = 0;
-      $this->info['frame_left'] = $this->info['image_width'] - $image_width;
+    if ($info['wrapper_xpos'] < 0) {
+      $info['image_width'] = $image_width - $info['wrapper_xpos'];
+      $info['image_xpos'] = -$info['wrapper_xpos'];
+      $info['wrapper_xpos'] = 0;
+      $info['frame_left'] = $info['image_width'] - $image_width;
       $resized = TRUE;
     }
 
     // If offset wrapper overflows to the top, background image
     // will be shifted to the bottom.
-    if ($this->info['wrapper_ypos'] < 0) {
-      $this->info['image_height'] = $image_height - $this->info['wrapper_ypos'];
-      $this->info['image_ypos'] = -$this->info['wrapper_ypos'];
-      $this->info['wrapper_ypos'] = 0;
-      $this->info['frame_top'] = $this->info['image_height'] - $image_height;
+    if ($info['wrapper_ypos'] < 0) {
+      $info['image_height'] = $image_height - $info['wrapper_ypos'];
+      $info['image_ypos'] = -$info['wrapper_ypos'];
+      $info['wrapper_ypos'] = 0;
+      $info['frame_top'] = $info['image_height'] - $image_height;
       $resized = TRUE;
     }
 
     // If offset wrapper overflows to the right, background image
     // will be extended to the right.
-    if (($this->info['wrapper_xpos'] + $wrapper_width) > $this->info['image_width']) {
-      $tmp = $this->info['image_width'];
-      $this->info['image_width'] = $this->info['wrapper_xpos'] + $wrapper_width;
-      $this->info['frame_right'] = $this->info['image_width'] - $tmp;
+    if (($info['wrapper_xpos'] + $wrapper_width) > $info['image_width']) {
+      $tmp = $info['image_width'];
+      $info['image_width'] = $info['wrapper_xpos'] + $wrapper_width;
+      $info['frame_right'] = $info['image_width'] - $tmp;
       $resized = TRUE;
     }
 
     // If offset wrapper overflows to the bottom, background image
     // will be extended to the bottom.
-    if (($this->info['wrapper_ypos'] + $wrapper_height) > $this->info['image_height']) {
-      $tmp = $this->info['image_height'];
-      $this->info['image_height'] = $this->info['wrapper_ypos'] + $wrapper_height;
-      $this->info['frame_bottom'] = $this->info['image_height'] - $tmp;
+    if (($info['wrapper_ypos'] + $wrapper_height) > $info['image_height']) {
+      $tmp = $info['image_height'];
+      $info['image_height'] = $info['wrapper_ypos'] + $wrapper_height;
+      $info['frame_bottom'] = $info['image_height'] - $tmp;
       $resized = TRUE;
     }
 
@@ -1061,10 +1052,10 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
   /**
    * Get the stroke mode for the font.
    *
-   * @return string|null
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|null
    *   The stroke mode.
    */
-  protected function strokeMode() {
+  protected function strokeMode(): ?TranslatableMarkup {
     if ($this->configuration['font']['stroke_mode'] == 'outline' && ($this->configuration['font']['outline_top'] || $this->configuration['font']['outline_right'] || $this->configuration['font']['outline_bottom'] || $this->configuration['font']['outline_left'])) {
       return $this->t('Outline');
     }
@@ -1091,7 +1082,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
    *   - a render array of the preview, or markup describing the failure if
    *     the build was unsuccessful.
    */
-  protected function buildPreviewRender(array $data) {
+  protected function buildPreviewRender(array $data): array {
     // If no font file specified, nothing to preview.
     if (empty($data['font']['uri'])) {
       return [
@@ -1113,7 +1104,7 @@ class TextOverlayImageEffect extends ConfigurableImageEffectBase implements Cont
     $data['layout']['y_offset'] = 0;
     $data['layout']['overflow_action'] = 'extend';
     $data['layout']['extended_color'] = NULL;
-    $data['debug_visuals'] = isset($data['preview_bar']['debug_visuals']) ? $data['preview_bar']['debug_visuals'] : FALSE;
+    $data['debug_visuals'] = $data['preview_bar']['debug_visuals'] ?? FALSE;
     try {
       $textimage = $textimage_factory->get()
         ->setEffects([

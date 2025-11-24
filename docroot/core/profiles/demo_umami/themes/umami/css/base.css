@@ -53,8 +53,8 @@ html {
   box-sizing: border-box;
 }
 *,
-*:before,
-*:after {
+*::before,
+*::after {
   box-sizing: inherit;
   margin-top: 0; /* This allows us to ensure that items side-by-side line up nicely. */
 }
@@ -63,7 +63,7 @@ html {
   outline-width: 1px;
   outline-style: dotted;
   outline-color: #008068;
-  outline-offset: 2px; /* Not supported in IE11 but greatly improves outline visibility in newer browsers. */
+  outline-offset: 2px;
 }
 
 a {
@@ -103,14 +103,16 @@ blockquote p:last-child {
   margin-bottom: 0;
 }
 /* Small */
-@media screen and (min-width: 30rem) { /* 480px */
+@media screen and (min-width: 30rem) {
+  /* 480px */
   blockquote {
     margin: 0 1.5rem 1.28rem;
     padding: 1.5rem;
   }
 }
 /* Medium */
-@media screen and (min-width: 40rem) { /* 640px */
+@media screen and (min-width: 40rem) {
+  /* 640px */
   blockquote {
     margin: 0 2.5rem 1.28rem;
     padding: 3rem;
@@ -131,52 +133,6 @@ blockquote a:focus {
   background-color: #fdfcf9;
 }
 
-button,
-.button,
-.button[type="submit"],
-[type="reset"],
-[type="submit"] {
-  display: inline-block;
-  min-width: inherit;
-  max-width: inherit;
-  margin: 0;
-  padding: 0.7rem 1.3rem;
-  cursor: pointer;
-  transition: background-color 0.5s ease;
-  text-align: center;
-  text-decoration: none;
-  color: #fff;
-  border: 2px solid #008068;
-  border-radius: 3px;
-  background-color: #008068;
-  font-family: "Scope One", Georgia, serif;
-  font-size: 1.2rem;
-}
-button:hover,
-button:active,
-button:focus,
-.button:hover,
-.button:active,
-.button:focus {
-  transition: background-color 0.5s ease;
-  text-decoration: none;
-  color: #000;
-  border: 2px solid #008068;
-  background-color: #e6eee0;
-}
-button[disabled]:hover,
-button[disabled]:active,
-button[disabled]:focus,
-button[disabled],
-.button[disabled]:hover,
-.button[disabled]:active,
-.button[disabled]:focus,
-.button[disabled] {
-  cursor: default;
-  color: #464646;
-  background: #767775;
-}
-
 h1 {
   margin: 0 0 1.07rem 0;
   font-family: "Scope One", Georgia, serif;
@@ -184,7 +140,8 @@ h1 {
   line-height: 1.2;
 }
 /* Large */
-@media screen and (min-width: 60rem) { /* 960px */
+@media screen and (min-width: 60rem) {
+  /* 960px */
   h1 {
     font-size: 2.369rem;
   }
@@ -193,11 +150,12 @@ h1 {
 h2 {
   margin: 0 0 0.7rem 0;
   font-family: "Scope One", Georgia, serif;
-  font-size: 1.266rem;  /* +2 based on 1.125 modular scale (major second) */
+  font-size: 1.266rem; /* +2 based on 1.125 modular scale (major second) */
   line-height: 1.2;
 }
 /* Large */
-@media screen and (min-width: 60rem) { /* 960px */
+@media screen and (min-width: 60rem) {
+  /* 960px */
   h2 {
     font-size: 1.77rem;
   }
@@ -207,10 +165,11 @@ h3 {
   margin: 0 0 0.96rem 0;
   font-family: "Scope One", Georgia, serif;
   font-size: 1.125rem;
-  line-height: 1.2;/* +1 based on 1.125 modular scale (major second) */
+  line-height: 1.2; /* +1 based on 1.125 modular scale (major second) */
 }
 /* Large */
-@media screen and (min-width: 60rem) { /* 960px */
+@media screen and (min-width: 60rem) {
+  /* 960px */
   h3 {
     font-size: 1.5rem;
   }
@@ -223,7 +182,8 @@ h4 {
   line-height: 1.2;
 }
 /* Large */
-@media screen and (min-width: 60rem) { /* 960px */
+@media screen and (min-width: 60rem) {
+  /* 960px */
   h4 {
     font-size: 1.33rem;
   }
@@ -236,7 +196,8 @@ h5 {
   line-height: 1.2;
 }
 /* Large */
-@media screen and (min-width: 60rem) { /* 960px */
+@media screen and (min-width: 60rem) {
+  /* 960px */
   h5 {
     font-size: 1.25rem;
   }
@@ -249,7 +210,8 @@ h6 {
   line-height: 1.2;
 }
 /* Large */
-@media screen and (min-width: 60rem) { /* 960px */
+@media screen and (min-width: 60rem) {
+  /* 960px */
   h6 {
     font-size: 1rem;
   }
@@ -258,53 +220,6 @@ h6 {
 img {
   max-width: 100%;
   height: auto;
-}
-
-.form-select {
-  margin: 0.25rem 0;
-  color: #000;
-  border: 2px solid #767775;
-  background: #fff;
-  font-size: 1rem;
-}
-
-.form-select:focus {
-  margin-bottom: 2px;
-  border: 2px solid #00836d;
-}
-
-input {
-  min-width: 100%;
-  max-width: 100%;
-  margin: 0.25rem 0;
-  padding: 0.8rem 0.4rem;
-  color: #000;
-  border: 2px solid #767775;
-  font-size: 1rem;
-}
-input:focus {
-  border: 2px solid #008068;
-}
-input[type="checkbox"] {
-  min-width: inherit;
-  max-width: none;
-}
-
-textarea {
-  padding: 0.8rem 0.4rem;
-  color: #000;
-  border: 2px solid #767775;
-}
-textarea:focus {
-  border: 2px solid #008068;
-}
-
-label {
-  display: block;
-  margin: 0.25rem 0;
-  color: #464646;
-  font-size: 1rem;
-  font-weight: 700;
 }
 
 /**

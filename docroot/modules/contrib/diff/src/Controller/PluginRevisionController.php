@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Controller;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\RevisionableStorageInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
@@ -13,65 +17,33 @@ use Drupal\diff\DiffEntityComparison;
 use Drupal\diff\DiffLayoutManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Base class for controllers that return responses on entity revision routes.
  */
 class PluginRevisionController extends ControllerBase {
 
-  /**
-   * Wrapper object for writing/reading configuration from diff.plugins.yml.
-   *
-   * @var \Drupal\Core\Config\ImmutableConfig
-   */
-  protected $config;
-
-  /**
-   * The diff entity comparison service.
-   *
-   * @var \Drupal\diff\DiffEntityComparison
-   */
-  protected $entityComparison;
-
-  /**
-   * The field diff layout plugin manager service.
-   *
-   * @var \Drupal\diff\DiffLayoutManager
-   */
-  protected $diffLayoutManager;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
+  protected ImmutableConfig $config;
 
   /**
    * Constructs a PluginRevisionController object.
-   *
-   * @param \Drupal\diff\DiffEntityComparison $entity_comparison
-   *   The diff entity comparison service.
-   * @param \Drupal\diff\DiffLayoutManager $diff_layout_manager
-   *   The diff layout service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
    */
   public function __construct(
-    DiffEntityComparison $entity_comparison,
-    DiffLayoutManager $diff_layout_manager,
-    RequestStack $request_stack,
+    protected DiffEntityComparison $entityComparison,
+    protected DiffLayoutManager $diffLayoutManager,
+    protected RequestStack $requestStack,
   ) {
-    $this->config = $this->config('diff.settings');
-    $this->diffLayoutManager = $diff_layout_manager;
-    $this->entityComparison = $entity_comparison;
-    $this->requestStack = $request_stack;
+    /** @var \Drupal\Core\Config\ImmutableConfig $config */
+    $config = $this->config('diff.settings');
+    $this->config = $config;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('diff.entity_comparison'),
       $container->get('plugin.manager.diff.layout'),
@@ -84,20 +56,20 @@ class PluginRevisionController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $storage
    *   The entity storage manager.
-   * @param int $entity_id
+   * @param int|string $entity_id
    *   The entity to find revisions of.
    *
    * @return int[]
    *   The revision ids.
    */
-  public function getRevisionIds(EntityStorageInterface $storage, $entity_id) {
+  public function getRevisionIds(EntityStorageInterface $storage, int|string $entity_id): array {
     $result = $storage->getQuery()
       ->allRevisions()
       ->condition($storage->getEntityType()->getKey('id'), $entity_id)
       ->accessCheck(FALSE)
       ->execute();
-    $result_array = array_keys($result);
-    sort($result_array);
+    $result_array = \array_keys($result);
+    \sort($result_array);
     return $result_array;
   }
 
@@ -118,13 +90,24 @@ class PluginRevisionController extends ControllerBase {
    * @return array
    *   Table showing the diff between the two entity revisions.
    */
-  public function compareEntityRevisions(RouteMatchInterface $route_match, ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, $filter) {
+  public function compareEntityRevisions(RouteMatchInterface $route_match, ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, $filter): array {
     $entity_type_id = $left_revision->getEntityTypeId();
-    /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $route_match->getParameter($entity_type_id);
+    if (!$entity instanceof ContentEntityInterface) {
+      return [];
+    }
+    if ($entity->id() !== $left_revision->id() || $entity->id() !== $right_revision->id()) {
+      throw new NotFoundHttpException();
+    }
+    if (!$right_revision->access('view') || !$left_revision->access('view')) {
+      throw new AccessDeniedHttpException();
+    }
 
     $entity_type_id = $entity->getEntityTypeId();
     $storage = $this->entityTypeManager()->getStorage($entity_type_id);
+    if (!$storage instanceof RevisionableStorageInterface) {
+      return [];
+    }
     // Get language from the entity context.
     $langcode = $entity->language()->getId();
 
@@ -156,7 +139,7 @@ class PluginRevisionController extends ControllerBase {
     ];
 
     // Build the navigation links.
-    $build['header']['diff_navigation'] = $this->buildRevisionsNavigation($entity, $revisions_ids, $left_revision->getRevisionId(), $right_revision->getRevisionId(), $filter);
+    $build['header']['diff_navigation'] = $this->buildRevisionsNavigation($entity, $revisions_ids, (int) $left_revision->getRevisionId(), (int) $right_revision->getRevisionId(), $filter);
 
     // Build the layout filter.
     $build['controls']['diff_layout'] = [
@@ -166,15 +149,12 @@ class PluginRevisionController extends ControllerBase {
       'filter' => $this->buildLayoutNavigation($entity, $left_revision->getRevisionId(), $right_revision->getRevisionId(), $filter),
     ];
 
-    // Perform comparison only if both entity revisions loaded successfully.
-    if ($left_revision != FALSE && $right_revision != FALSE) {
-      // Build the diff comparison with the plugin.
-      if ($plugin = $this->diffLayoutManager->createInstance($filter)) {
-        $build = array_merge_recursive($build, $plugin->build($left_revision, $right_revision, $entity));
-        $build['diff']['#prefix'] = '<div class="diff-responsive-table-wrapper">';
-        $build['diff']['#suffix'] = '</div>';
-        $build['diff']['#attributes']['class'][] = 'diff-responsive-table';
-      }
+    // Build the diff comparison with the plugin.
+    if ($plugin = $this->diffLayoutManager->createInstance($filter)) {
+      $build = \array_merge_recursive($build, $plugin->build($left_revision, $right_revision, $entity));
+      $build['diff']['#prefix'] = '<div class="diff-responsive-table-wrapper">';
+      $build['diff']['#suffix'] = '</div>';
+      $build['diff']['#attributes']['class'][] = 'diff-responsive-table';
     }
 
     $build['#attached']['library'][] = 'diff/diff.general';
@@ -186,9 +166,9 @@ class PluginRevisionController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to be compared.
-   * @param int $left_revision_id
+   * @param int|string $left_revision_id
    *   Revision id of the left revision.
-   * @param int $right_revision_id
+   * @param int|string $right_revision_id
    *   Revision id of the right revision.
    * @param string $active_filter
    *   The active filter.
@@ -196,27 +176,25 @@ class PluginRevisionController extends ControllerBase {
    * @return array
    *   The layout filter.
    */
-  protected function buildLayoutNavigation(ContentEntityInterface $entity, $left_revision_id, $right_revision_id, $active_filter) {
+  protected function buildLayoutNavigation(ContentEntityInterface $entity, int|string $left_revision_id, int|string $right_revision_id, string $active_filter): array {
     $links = [];
     $layouts = $this->diffLayoutManager->getPluginOptions();
     foreach ($layouts as $key => $value) {
       $links[$key] = [
         'title' => $value,
-        'url' => $this->diffRoute($entity, $left_revision_id, $right_revision_id, $key),
+        'url' => static::diffRoute($entity, $left_revision_id, $right_revision_id, $key),
       ];
     }
 
     // Set as the first element the current filter.
     $filter = $links[$active_filter];
     unset($links[$active_filter]);
-    array_unshift($links, $filter);
+    \array_unshift($links, $filter);
 
-    $filter = [
+    return [
       '#type' => 'operations',
       '#links' => $links,
     ];
-
-    return $filter;
   }
 
   /**
@@ -236,55 +214,54 @@ class PluginRevisionController extends ControllerBase {
    * @return array
    *   The revision navigation links.
    */
-  protected function buildRevisionsNavigation(ContentEntityInterface $entity, array $revision_ids, $left_revision_id, $right_revision_id, $filter) {
-    $revisions_count = count($revision_ids);
-    $layout_options = &drupal_static(__FUNCTION__);
+  protected function buildRevisionsNavigation(ContentEntityInterface $entity, array $revision_ids, int $left_revision_id, int $right_revision_id, string $filter): array {
+    $revisions_count = \count($revision_ids);
+    $layout_options = &\drupal_static(__FUNCTION__);
     if (!isset($layout_options)) {
       $layout_options = UrlHelper::filterQueryParameters($this->requestStack->getCurrentRequest()->query->all(), ['page']);
     }
     // If there are only 2 revision return an empty row.
-    if ($revisions_count == 2) {
+    if ($revisions_count === 2) {
       return [];
     }
-    else {
-      $left_link = $right_link = '';
-      $element = [
-        '#type' => 'item',
-        '#title' => $this->t('Navigation'),
-        '#wrapper_attributes' => ['class' => 'diff-navigation'],
-      ];
-      $i = 0;
-      // Find the previous revision.
-      while ($left_revision_id > $revision_ids[$i]) {
-        $i += 1;
-      }
-      if ($i != 0) {
-        // Build the left link.
-        $left_link = Link::fromTextAndUrl($this->t('Previous change'), $this->diffRoute($entity, $revision_ids[$i - 1], $left_revision_id, $filter, $layout_options))->toString();
-      }
-      $element['left'] = [
-        '#type' => 'markup',
-        '#markup' => $left_link,
-        '#prefix' => '<div class="diff-navigation__link prev-link">',
-        '#suffix' => '</div>',
-      ];
-      // Find the next revision.
-      $i = 0;
-      while ($i < $revisions_count && $right_revision_id >= $revision_ids[$i]) {
-        $i += 1;
-      }
-      if ($revisions_count != $i && $revision_ids[$i - 1] != $revision_ids[$revisions_count - 1]) {
-        // Build the right link.
-        $right_link = Link::fromTextAndUrl($this->t('Next change'), $this->diffRoute($entity, $right_revision_id, $revision_ids[$i], $filter, $layout_options))->toString();
-      }
-      $element['right'] = [
-        '#type' => 'markup',
-        '#markup' => $right_link,
-        '#prefix' => '<div class="diff-navigation__link next-link">',
-        '#suffix' => '</div>',
-      ];
-      return $element;
+
+    $left_link = $right_link = '';
+    $element = [
+      '#type' => 'item',
+      '#title' => $this->t('Navigation'),
+      '#wrapper_attributes' => ['class' => 'diff-navigation'],
+    ];
+    $i = 0;
+    // Find the previous revision.
+    while (\array_key_exists($i, $revision_ids) && $left_revision_id > $revision_ids[$i]) {
+      ++$i;
     }
+    if ($i !== 0) {
+      // Build the left link.
+      $left_link = Link::fromTextAndUrl($this->t('Previous change'), static::diffRoute($entity, $revision_ids[$i - 1], $left_revision_id, $filter, $layout_options))->toString();
+    }
+    $element['left'] = [
+      '#type' => 'markup',
+      '#markup' => $left_link,
+      '#prefix' => '<div class="diff-navigation__link prev-link">',
+      '#suffix' => '</div>',
+    ];
+    // Find the next revision.
+    $i = 0;
+    while (\array_key_exists($i, $revision_ids) && $right_revision_id >= $revision_ids[$i]) {
+      ++$i;
+    }
+    if ($revisions_count !== $i && $revision_ids[$i - 1] !== $revision_ids[$revisions_count - 1]) {
+      // Build the right link.
+      $right_link = Link::fromTextAndUrl($this->t('Next change'), static::diffRoute($entity, $right_revision_id, $revision_ids[$i], $filter, $layout_options))->toString();
+    }
+    $element['right'] = [
+      '#type' => 'markup',
+      '#markup' => $right_link,
+      '#prefix' => '<div class="diff-navigation__link next-link">',
+      '#suffix' => '</div>',
+    ];
+    return $element;
   }
 
   /**
@@ -292,22 +269,22 @@ class PluginRevisionController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity to be compared.
-   * @param int $left_revision_id
+   * @param int|string $left_revision_id
    *   Revision id of the left revision.
-   * @param int $right_revision_id
+   * @param int|string $right_revision_id
    *   Revision id of the right revision.
-   * @param string $layout
+   * @param string|null $layout
    *   (optional) The filter/layout added to the route.
-   * @param array $layout_options
+   * @param array|null $layout_options
    *   (optional) The layout options provided by the selected layout.
    *
    * @return \Drupal\Core\Url
    *   The URL object.
    */
-  public static function diffRoute(ContentEntityInterface $entity, $left_revision_id, $right_revision_id, $layout = NULL, array $layout_options = NULL) {
+  public static function diffRoute(ContentEntityInterface $entity, int|string $left_revision_id, int|string $right_revision_id, ?string $layout = NULL, ?array $layout_options = NULL): Url {
     $entity_type_id = $entity->getEntityTypeId();
     // @todo Remove the diff.revisions_diff route so we avoid adding extra cases.
-    if ($entity->getEntityTypeId() == 'node') {
+    if ($entity->getEntityTypeId() === 'node') {
       $route_name = 'diff.revisions_diff';
     }
     else {
@@ -318,11 +295,11 @@ class PluginRevisionController extends ControllerBase {
       'left_revision' => $left_revision_id,
       'right_revision' => $right_revision_id,
     ];
-    if ($layout) {
+    if ($layout !== NULL) {
       $route_parameters['filter'] = $layout;
     }
     $options = [];
-    if ($layout_options) {
+    if ($layout_options !== NULL) {
       $options = [
         'query' => $layout_options,
       ];

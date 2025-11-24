@@ -26,6 +26,11 @@ class FieldCollection extends FieldPluginBase {
   const FIELD_COLLECTION_PREFIX_LENGTH = 6;
 
   /**
+   * Recursion counter.
+   */
+  static int $recursionCounter = 0;
+
+  /**
    * {@inheritdoc}
    */
   public function defineValueProcessPipeline(MigrationInterface $migration, $field_name, $data) {
@@ -65,6 +70,15 @@ class FieldCollection extends FieldPluginBase {
     ];
     $migration->setProcessOfProperty($field_name, $process);
 
+    // Workaround for recursion on D11+, because getMigrationDependencies()
+    // expands plugins, it will go through the deriver again, which will create
+    // a stub migration again.
+    if (static::$recursionCounter > 0) {
+      return;
+    }
+    static::$recursionCounter++;
+
+
     // Add the respective field collection migration as a dependency.
     $migration_dependency = 'd7_field_collection:' . substr($field_name, static::FIELD_COLLECTION_PREFIX_LENGTH);
     $migration_rev_dependency = 'd7_field_collection_revisions:' . substr($field_name, static::FIELD_COLLECTION_PREFIX_LENGTH);
@@ -76,6 +90,8 @@ class FieldCollection extends FieldPluginBase {
       $dependencies['required'] = array_unique(array_merge(array_values($dependencies['required']), [$migration_rev_dependency]));
       $migration->set('migration_dependencies', $dependencies);
     }
+
+    static::$recursionCounter--;
   }
 
   /**

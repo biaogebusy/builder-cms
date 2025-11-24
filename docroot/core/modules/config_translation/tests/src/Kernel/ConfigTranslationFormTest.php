@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel;
 
 use Drupal\config_translation\Form\ConfigTranslationAddForm;
@@ -27,7 +29,7 @@ class ConfigTranslationFormTest extends KernelTestBase {
   /**
    * Tests altering of the configuration translation forms.
    */
-  public function testConfigTranslationFormAlter() {
+  public function testConfigTranslationFormAlter(): void {
     $this->installConfig(['config_translation_test']);
 
     $definitions = $this->container->get('plugin.manager.config_translation.mapper')->getDefinitions();

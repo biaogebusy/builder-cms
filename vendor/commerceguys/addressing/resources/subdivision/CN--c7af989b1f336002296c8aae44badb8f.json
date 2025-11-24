@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Changde Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anxiang Xian": {
+			"local_name": "安乡县"
+		},
+		"Dingcheng Qu": {
+			"local_name": "鼎城区"
+		},
+		"Hanshou Xian": {
+			"local_name": "汉寿县"
+		},
+		"Jinshi Shi": {
+			"local_name": "津市市"
+		},
+		"Li Xian": {
+			"local_name": "澧县"
+		},
+		"Linli Xian": {
+			"local_name": "临澧县"
+		},
+		"Shimen Xian": {
+			"local_name": "石门县"
+		},
+		"Taoyuan Xian": {
+			"local_name": "桃源县"
+		},
+		"Wuling Qu": {
+			"local_name": "武陵区"
+		}
+	}
+}

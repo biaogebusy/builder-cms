@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_order\Kernel\Entity;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the order item entity.
@@ -21,6 +21,7 @@ class OrderItemTest extends OrderKernelTestBase {
    *
    * @covers ::getTitle
    * @covers ::setTitle
+   * @covers ::isTitleOverridden
    * @covers ::getQuantity
    * @covers ::setQuantity
    * @covers ::getUnitPrice
@@ -52,6 +53,9 @@ class OrderItemTest extends OrderKernelTestBase {
 
     $order_item->setTitle('My order item');
     $this->assertEquals('My order item', $order_item->getTitle());
+    $this->assertFalse($order_item->isTitleOverridden());
+    $order_item->setTitle('Overridden title', TRUE);
+    $this->assertTrue($order_item->isTitleOverridden());
 
     $this->assertEquals(1, $order_item->getQuantity());
     $order_item->setQuantity('2');

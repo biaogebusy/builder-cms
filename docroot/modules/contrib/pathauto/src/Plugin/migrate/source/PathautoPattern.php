@@ -38,7 +38,7 @@ class PathautoPattern extends DrupalSqlBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -95,7 +95,7 @@ class PathautoPattern extends DrupalSqlBase {
         $row->setSourceProperty('id', $entity_type);
         $row->setSourceProperty('label', (string) $definition->getLabel() . ' - default');
         $row->setSourceProperty('type', 'canonical_entities:' . $entity_type);
-        $row->setSourceProperty('pattern', unserialize($row->getSourceProperty('value')));
+        $row->setSourceProperty('pattern', unserialize($row->getSourceProperty('value'), ['allowed_classes' => FALSE]));
         return parent::prepareRow($row);
       }
       elseif (strpos($name, 'pathauto_' . $entity_type . '_') === 0) {
@@ -114,7 +114,7 @@ class PathautoPattern extends DrupalSqlBase {
         $row->setSourceProperty('id', $entity_type . '_' . $bundle);
         $row->setSourceProperty('label', (string) $definition->getLabel() . ' - ' . $bundles[$bundle]['label']);
         $row->setSourceProperty('type', 'canonical_entities:' . $entity_type);
-        $row->setSourceProperty('pattern', unserialize($row->getSourceProperty('value')));
+        $row->setSourceProperty('pattern', unserialize($row->getSourceProperty('value'), ['allowed_classes' => FALSE]));
 
         $selection_criteria = [
           'id' => 'entity_bundle:' . $entity_type,

@@ -10,14 +10,10 @@ For even more documentation, use the [topic command](commands/core_topic.md):
 
     $ drush topic
 
-Using the --uri option and --root options.
------------
 
-For multi-site installations, use a site alias or the --uri option to target a particular site.
+Drush needs to be told the domain of your site in order for commands to generate correct links (e.g. user:login). You may set a [DRUSH_OPTIONS_URL environment variable](using-drush-configuration.md#environment-variables) (preferred), or use the --uri option.
 
-    $ drush --uri=http://example.com pm:install
-
-If you are outside the Composer project and not using a site alias, you need to specify --root and --uri for Drush to locate and bootstrap the right Drupal site.
+    $ drush --uri=http://example.com user:login
 
 Site Aliases
 ------------

@@ -1,0 +1,54 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JX"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Fuzhou Shi": {
+			"local_name": "抚州市",
+			"has_children": true
+		},
+		"Ganzhou Shi": {
+			"local_name": "赣州市",
+			"has_children": true
+		},
+		"Ji'an Shi": {
+			"local_name": "吉安市",
+			"has_children": true
+		},
+		"Jingdezhen Shi": {
+			"local_name": "景德镇市",
+			"has_children": true
+		},
+		"Jiujiang Shi": {
+			"local_name": "九江市",
+			"has_children": true
+		},
+		"Nanchang Shi": {
+			"local_name": "南昌市",
+			"has_children": true
+		},
+		"Pingxiang Shi": {
+			"local_name": "萍乡市",
+			"has_children": true
+		},
+		"Shangrao Shi": {
+			"local_name": "上饶市",
+			"has_children": true
+		},
+		"Xinyu Shi": {
+			"local_name": "新余市",
+			"has_children": true
+		},
+		"Yichun shi": {
+			"local_name": "宜春市",
+			"has_children": true
+		},
+		"Yingtan Shi": {
+			"local_name": "鹰潭市",
+			"has_children": true
+		}
+	}
+}

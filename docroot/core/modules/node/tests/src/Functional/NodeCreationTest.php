@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\Core\Database\Database;
@@ -17,7 +19,7 @@ class NodeCreationTest extends NodeTestBase {
   use ContentTypeCreationTrait;
 
   /**
-   * Modules to enable.
+   * Modules to install.
    *
    * Enable dummy module that implements hook_ENTITY_TYPE_insert() for
    * exceptions (function node_test_exception_node_insert() ).
@@ -51,7 +53,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Tests the order of the node types on the add page.
    */
-  public function testNodeAddPageOrder() {
+  public function testNodeAddPageOrder(): void {
     $this->createContentType(['type' => 'bundle_1', 'name' => 'Bundle 1']);
     $this->createContentType(['type' => 'bundle_2', 'name' => 'Aaa Bundle 2']);
     $admin_content_types = $this->drupalCreateUser(['bypass node access']);
@@ -63,7 +65,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Creates a "Basic page" node and verifies its consistency in the database.
    */
-  public function testNodeCreation() {
+  public function testNodeCreation(): void {
     $node_type_storage = \Drupal::entityTypeManager()->getStorage('node_type');
 
     // Test /node/add page with only one content type.
@@ -123,7 +125,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Verifies that a transaction rolls back the failed creation.
    */
-  public function testFailedPageCreation() {
+  public function testFailedPageCreation(): void {
     // Create a node.
     $edit = [
       'uid'      => $this->loggedInUser->id(),
@@ -156,7 +158,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Creates an unpublished node and confirms correct redirect behavior.
    */
-  public function testUnpublishedNodeCreation() {
+  public function testUnpublishedNodeCreation(): void {
     // Set the front page to the test page.
     $this->config('system.site')->set('page.front', '/test-page')->save();
 
@@ -187,7 +189,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Creates nodes with different authored dates.
    */
-  public function testAuthoredDate() {
+  public function testAuthoredDate(): void {
     $now = \Drupal::time()->getRequestTime();
     $admin = $this->drupalCreateUser([], NULL, TRUE);
     $this->drupalLogin($admin);
@@ -256,7 +258,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Tests the author autocompletion textfield.
    */
-  public function testAuthorAutocomplete() {
+  public function testAuthorAutocomplete(): void {
     $admin_user = $this->drupalCreateUser([
       'administer nodes',
       'create page content',
@@ -284,7 +286,7 @@ class NodeCreationTest extends NodeTestBase {
   /**
    * Check node/add when no node types exist.
    */
-  public function testNodeAddWithoutContentTypes() {
+  public function testNodeAddWithoutContentTypes(): void {
     $this->drupalGet('node/add');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->linkByHrefNotExists('/admin/structure/types/add');

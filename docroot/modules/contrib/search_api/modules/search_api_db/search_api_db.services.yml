@@ -1,4 +1,8 @@
 services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
   logger.channel.search_api_db:
     parent: logger.channel_base
     arguments: ['search_api_db']
@@ -8,15 +12,13 @@ services:
     arguments: ['@database', '@transliteration']
     tags:
       - { name: backend_overridable }
+  Drupal\search_api_db\DatabaseCompatibility\DatabaseCompatibilityHandlerInterface: '@search_api_db.database_compatibility'
 
   mysql.search_api_db.database_compatibility:
     class: Drupal\search_api_db\DatabaseCompatibility\MySql
-    arguments: ['@database', '@transliteration']
 
   pgsql.search_api_db.database_compatibility:
-    class: Drupal\search_api_db\DatabaseCompatibility\CaseSensitiveDatabase
-    arguments: ['@database', '@transliteration']
+    class: Drupal\search_api_db\DatabaseCompatibility\Pgsql
 
   sqlite.search_api_db.database_compatibility:
     class: Drupal\search_api_db\DatabaseCompatibility\CaseSensitiveDatabase
-    arguments: ['@database', '@transliteration']

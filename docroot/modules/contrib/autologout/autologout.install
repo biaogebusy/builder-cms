@@ -55,3 +55,10 @@ function autologout_update_8003(&$sandbox) {
   $config->set('no_individual_logout_threshold', FALSE);
   $config->save(TRUE);
 }
+
+/**
+ * Make sure the js_cookie dependency is enabled.
+ */
+function autologout_update_9201(&$sandbox): void {
+  \Drupal::service('module_installer')->install(['js_cookie']);
+}

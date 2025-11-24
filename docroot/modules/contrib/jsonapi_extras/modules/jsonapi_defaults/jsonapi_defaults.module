@@ -70,7 +70,7 @@ function _jsonapi_defaults_form_alter(array &$form, FormStateInterface $form_sta
     '#default_value' => $filters,
     '#description' => t('Enter one filter per line, in the format key=value. For example:<br />
         filter[titleFilter][condition][path]=title<br />
-        filter[titleFilter][condition][value]=Comis Commodo Ymo<br />
+        filter[titleFilter][condition][value]=value<br />
         If a request contains an "filter" query string parameter those filters will be added to the defaults.'),
   ];
 
@@ -104,7 +104,7 @@ function _jsonapi_defaults_form_alter(array &$form, FormStateInterface $form_sta
  */
 function jsonapi_defaults_form_jsonapi_resource_config_form_builder($entity_type, JsonapiResourceConfig $config_resource, &$form, FormStateInterface $form_state) {
   if ($raw_value = $form_state->getValue('default_filter')) {
-    $value = _jsonapi_defaults_convert_rawvalue($raw_value);
+    $value = _jsonapi_defaults_convert_raw_value($raw_value);
     $config_resource->setThirdPartySetting('jsonapi_defaults', 'default_filter', $value);
   }
   else {
@@ -112,7 +112,7 @@ function jsonapi_defaults_form_jsonapi_resource_config_form_builder($entity_type
   }
 
   if ($raw_value = $form_state->getValue('default_sorting')) {
-    $value = _jsonapi_defaults_convert_rawvalue($raw_value);
+    $value = _jsonapi_defaults_convert_raw_value($raw_value);
     $config_resource->setThirdPartySetting('jsonapi_defaults', 'default_sorting', $value);
   }
   else {
@@ -145,7 +145,7 @@ function jsonapi_defaults_form_jsonapi_resource_config_form_builder($entity_type
  * @return array
  *   Value to be saved into config.
  */
-function _jsonapi_defaults_convert_rawvalue($raw_value) {
+function _jsonapi_defaults_convert_raw_value($raw_value) {
   $value = [];
   $raw_value = (!is_string($raw_value)) ? '' : $raw_value;
   foreach (preg_split('/\r\n|[\r\n]/', $raw_value) as $param) {

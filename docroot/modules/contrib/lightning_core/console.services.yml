@@ -1,7 +1,0 @@
-services:
-  lightning.command.update:
-    class: '\Drupal\lightning_core\Command\UpdateCommand'
-    arguments:
-      - '@lightning.update_manager'
-    tags:
-      - { name: drupal.command }

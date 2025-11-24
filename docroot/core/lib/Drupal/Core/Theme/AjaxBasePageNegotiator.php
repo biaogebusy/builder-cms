@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * theme as the base page, because most themes are built with the assumption
  * that they control the entire page, so if the CSS for two themes are both
  * loaded for a given page, they may conflict with each other. For example,
- * Bartik is Drupal's default theme, and Seven is Drupal's default
+ * Olivero is Drupal's default theme, and Claro is Drupal's default
  * administration theme. Depending on whether the "Use the administration theme
  * when editing or creating content" checkbox is checked, the node edit form may
  * be displayed in either theme, but the Ajax response to the Field module's
@@ -65,7 +65,7 @@ class AjaxBasePageNegotiator implements ThemeNegotiatorInterface {
    * {@inheritdoc}
    */
   public function applies(RouteMatchInterface $route_match) {
-    $ajax_page_state = $this->requestStack->getCurrentRequest()->request->get('ajax_page_state');
+    $ajax_page_state = $this->requestStack->getCurrentRequest()->get('ajax_page_state');
     return !empty($ajax_page_state['theme']) && isset($ajax_page_state['theme_token']);
   }
 
@@ -73,7 +73,7 @@ class AjaxBasePageNegotiator implements ThemeNegotiatorInterface {
    * {@inheritdoc}
    */
   public function determineActiveTheme(RouteMatchInterface $route_match) {
-    $ajax_page_state = $this->requestStack->getCurrentRequest()->request->get('ajax_page_state');
+    $ajax_page_state = $this->requestStack->getCurrentRequest()->get('ajax_page_state');
     $theme = $ajax_page_state['theme'];
     $token = $ajax_page_state['theme_token'];
 

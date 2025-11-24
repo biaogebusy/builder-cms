@@ -6,26 +6,27 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Plugin implementation of the 'timestamp' formatter as time ago.
- *
- * @FieldFormatter(
- *   id = "timestamp_ago",
- *   label = @Translation("Time ago"),
- *   field_types = {
- *     "timestamp",
- *     "created",
- *     "changed",
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'timestamp_ago',
+  label: new TranslatableMarkup('Time ago'),
+  field_types: [
+    'timestamp',
+    'created',
+    'changed',
+  ],
+)]
 class TimestampAgoFormatter extends FormatterBase {
 
   /**
@@ -46,7 +47,7 @@ class TimestampAgoFormatter extends FormatterBase {
    * Constructs a TimestampAgoFormatter object.
    *
    * @param string $plugin_id
-   *   The plugin_id for the formatter.
+   *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -110,6 +111,7 @@ class TimestampAgoFormatter extends FormatterBase {
       '#type' => 'textfield',
       '#title' => $this->t('Future format'),
       '#default_value' => $this->getSetting('future_format'),
+      '#required' => TRUE,
       '#description' => $this->t('Use <em>@interval</em> where you want the formatted interval text to appear.'),
     ];
 
@@ -117,6 +119,7 @@ class TimestampAgoFormatter extends FormatterBase {
       '#type' => 'textfield',
       '#title' => $this->t('Past format'),
       '#default_value' => $this->getSetting('past_format'),
+      '#required' => TRUE,
       '#description' => $this->t('Use <em>@interval</em> where you want the formatted interval text to appear.'),
     ];
 
@@ -126,7 +129,7 @@ class TimestampAgoFormatter extends FormatterBase {
       '#description' => $this->t('How many time interval units should be shown in the formatted output.'),
       '#default_value' => $this->getSetting('granularity') ?: 2,
       '#min' => 1,
-      '#max' => 6,
+      '#max' => 7,
     ];
 
     return $form;
@@ -138,8 +141,8 @@ class TimestampAgoFormatter extends FormatterBase {
   public function settingsSummary() {
     $summary = parent::settingsSummary();
 
-    $future_date = new DrupalDateTime('1 year 1 month 1 week 1 day 1 hour 1 minute');
-    $past_date = new DrupalDateTime('-1 year -1 month -1 week -1 day -1 hour -1 minute');
+    $future_date = new DrupalDateTime('1 year 1 month 1 week 1 day 1 hour 1 minute 1 second');
+    $past_date = new DrupalDateTime('-1 year -1 month -1 week -1 day -1 hour -1 minute -1 second');
     $granularity = $this->getSetting('granularity');
     $options = [
       'granularity' => $granularity,

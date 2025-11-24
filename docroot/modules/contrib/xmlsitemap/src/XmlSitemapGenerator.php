@@ -16,6 +16,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Url;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
@@ -206,7 +207,7 @@ class XmlSitemapGenerator implements XmlSitemapGeneratorInterface {
 
     if ($this->state->get('xmlsitemap_developer_mode')) {
       $this->logger->notice('Starting XML Sitemap generation. Memory usage: @memory-peak.', [
-        '@memory-peak' => format_size(memory_get_peak_usage(TRUE)),
+        '@memory-peak' => ByteSizeMarkup::create(memory_get_peak_usage(TRUE)),
       ]);
     }
   }
@@ -496,7 +497,7 @@ class XmlSitemapGenerator implements XmlSitemapGeneratorInterface {
       $this->messenger->addStatus($this->t('The sitemaps were regenerated.'));
 
       // Show a watchdog message that the sitemap was regenerated.
-      $this->logger->notice('Finished XML Sitemap generation in @elapsed. Memory usage: @memory-peak.', ['@elapsed' => $elapsed, '@memory-peak' => format_size(memory_get_peak_usage(TRUE))]);
+      $this->logger->notice('Finished XML Sitemap generation in @elapsed. Memory usage: @memory-peak.', ['@elapsed' => $elapsed, '@memory-peak' => ByteSizeMarkup::create(memory_get_peak_usage(TRUE))]);
     }
     else {
       $this->messenger->addError($this->t('The sitemaps were not successfully regenerated.'));

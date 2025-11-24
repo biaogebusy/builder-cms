@@ -2,12 +2,12 @@
 
 namespace Drupal\field_group\Plugin\Derivative;
 
+use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Plugin\Derivative\DeriverBase;
 
 /**
  * Provides local action definitions for all entity bundles.

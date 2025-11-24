@@ -41,6 +41,12 @@ abstract class ArgumentValidatorPluginBase extends PluginBase {
   protected $argument;
 
   /**
+   * The option name.
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  public string $option_name;
+
+  /**
    * Sets the parent argument this plugin is associated with.
    *
    * @param \Drupal\views\Plugin\views\argument\ArgumentPluginBase $argument

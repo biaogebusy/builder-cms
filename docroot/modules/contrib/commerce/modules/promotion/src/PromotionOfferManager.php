@@ -3,10 +3,12 @@
 namespace Drupal\commerce_promotion;
 
 use Drupal\Component\Plugin\Exception\PluginException;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_promotion\Attribute\CommercePromotionOffer;
+use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PromotionOfferInterface;
 
 /**
  * Manages discovery and instantiation of promotion offer plugins.
@@ -37,7 +39,14 @@ class PromotionOfferManager extends DefaultPluginManager {
    *   The entity type manager.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct('Plugin/Commerce/PromotionOffer', $namespaces, $module_handler, 'Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PromotionOfferInterface', 'Drupal\commerce_promotion\Annotation\CommercePromotionOffer');
+    parent::__construct(
+      'Plugin/Commerce/PromotionOffer',
+      $namespaces,
+      $module_handler,
+      PromotionOfferInterface::class,
+      CommercePromotionOffer::class,
+      'Drupal\commerce_promotion\Annotation\CommercePromotionOffer',
+    );
 
     $this->alterInfo('commerce_promotion_offer_info');
     $this->setCacheBackend($cache_backend, 'commerce_promotion_offer_plugins');

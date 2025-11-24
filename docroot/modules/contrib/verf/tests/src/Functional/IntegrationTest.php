@@ -5,7 +5,7 @@ namespace Drupal\Tests\verf\Functional;
 use Behat\Mink\Exception\ElementNotFoundException;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests the integration between Views Entity Reference Filter and Views.
@@ -14,7 +14,12 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class IntegrationTest extends BrowserTestBase {
 
-  use EntityReferenceTestTrait;
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * {@inheritdoc}

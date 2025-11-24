@@ -12,7 +12,7 @@ abstract class DateTimeEnhancerBase extends ResourceFieldEnhancerBase {
    */
   public function defaultConfiguration() {
     return [
-      'dateTimeFormat' => \DateTime::ISO8601,
+      'dateTimeFormat' => \DateTime::RFC3339,
     ];
   }
 

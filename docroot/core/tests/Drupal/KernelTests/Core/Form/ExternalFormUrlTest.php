@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Form;
 
 use Drupal\Core\Form\FormInterface;
@@ -7,6 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Ensures that form actions can't be tricked into sending to external URLs.
@@ -53,7 +57,6 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
 
     $test_user = User::create([
@@ -67,7 +70,7 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
   /**
    * Tests form behavior.
    */
-  public function testActionUrlBehavior() {
+  public function testActionUrlBehavior(): void {
     // Create a new request which has a request uri with multiple leading
     // slashes and make it the master request.
     $request_stack = \Drupal::service('request_stack');
@@ -77,6 +80,7 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
     $request_stack->pop();
     $request_stack->pop();
     $request = Request::create($original_request->getSchemeAndHttpHost() . '//example.org');
+    $request->setSession(new Session(new MockArraySessionStorage()));
     $request_stack->push($request);
 
     $form = \Drupal::formBuilder()->getForm($this);
@@ -92,6 +96,7 @@ class ExternalFormUrlTest extends KernelTestBase implements FormInterface {
     $request_stack = \Drupal::service('request_stack');
     $original_request = $request_stack->pop();
     $request = Request::create($original_request->getSchemeAndHttpHost() . '/example.org');
+    $request->setSession(new Session(new MockArraySessionStorage()));
     $request_stack->push($request);
 
     $form = \Drupal::formBuilder()->getForm($this);

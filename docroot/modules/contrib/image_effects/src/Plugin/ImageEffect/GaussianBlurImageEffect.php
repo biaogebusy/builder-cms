@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Blur image using the Gaussian function.
- *
- * @ImageEffect(
- *   id = "image_effects_gaussian_blur",
- *   label = @Translation("Gaussian blur"),
- *   description = @Translation("Blur the image with a Gaussian operator.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_gaussian_blur',
+  label: new TranslatableMarkup('Gaussian blur'),
+  description: new TranslatableMarkup('Blur the image with a Gaussian operator.'),
+)]
 class GaussianBlurImageEffect extends ConfigurableImageEffectBase {
 
   /**

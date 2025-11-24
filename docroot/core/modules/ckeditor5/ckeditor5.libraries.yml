@@ -38,7 +38,6 @@ internal.drupal.ckeditor5:
     - core/ckeditor5.editorDecoupled
     - core/ckeditor5
     - editor/drupal.editor
-    - ckeditor5/internal.ie11.user.warnings
     - ckeditor5/internal.drupal.ckeditor5.stylesheets
     - core/drupalSettings
     - core/drupal.message
@@ -92,25 +91,6 @@ internal.drupal.ckeditor5.mediaAlign:
   dependencies:
     - ckeditor5/internal.drupal.ckeditor5.media
 
-internal.ie11.user.warnings:
-  js:
-    js/ie11.user.warnings.js: { }
-  css:
-    theme:
-      css/ie-warnings.css: { }
-  dependencies:
-    - core/drupal
-    - core/drupal.message
-    - editor/drupal.editor
-
-internal.ie11.filter.warnings:
-  js:
-    js/ie11.filter.warnings.js: {}
-  dependencies:
-    - core/drupal
-    - core/drupal.message
-    - core/once
-
 internal.drupal.ckeditor5.filter.admin:
   js:
     js/ckeditor5.filter.admin.js: {}
@@ -119,6 +99,14 @@ internal.drupal.ckeditor5.filter.admin:
     - core/once
     - core/drupal.ajax
     - core/drupalSettings
+    - core/drupal.vertical-tabs
+
+internal.drupal.ckeditor5.table:
+  css:
+    theme:
+      css/table.css: { }
+  dependencies:
+    - core/ckeditor5.table
 
 internal.admin:
   js:
@@ -131,6 +119,7 @@ internal.admin:
     - filter/drupal.filter.admin
     - core/jquery
     - core/once
+    - core/drupal.announce
 
 internal.admin.specialCharacters:
   css:
@@ -199,6 +188,11 @@ internal.admin.drupalmedia:
     theme:
       css/drupalmedia.admin.css: { }
 
+internal.admin.showBlocks:
+  css:
+    theme:
+      css/show-blocks.admin.css: { }
+
 internal.admin.sourceEditing:
   css:
     theme:
@@ -229,3 +223,8 @@ internal.admin.image:
   css:
     theme:
       css/image.admin.css: { }
+  js:
+    js/ckeditor5.image.admin.js: { }
+  dependencies:
+    - core/jquery
+    - core/drupal

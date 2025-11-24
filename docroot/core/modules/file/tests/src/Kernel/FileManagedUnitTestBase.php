@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -14,16 +16,14 @@ use Drupal\user\Entity\User;
 abstract class FileManagedUnitTestBase extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['file_test', 'file', 'system', 'field', 'user'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // Clear out any hook calls.
     file_test_reset();
@@ -57,16 +57,16 @@ abstract class FileManagedUnitTestBase extends KernelTestBase {
     // Determine if there were any expected that were not called.
     $uncalled = array_diff($expected, $actual);
     if (count($uncalled)) {
-      $this->assertTrue(FALSE, new FormattableMarkup('Expected hooks %expected to be called but %uncalled was not called.', ['%expected' => implode(', ', $expected), '%uncalled' => implode(', ', $uncalled)]));
+      $this->assertTrue(FALSE, sprintf('Expected hooks %s to be called but %s was not called.', implode(', ', $expected), implode(', ', $uncalled)));
     }
     else {
-      $this->assertTrue(TRUE, new FormattableMarkup('All the expected hooks were called: %expected', ['%expected' => empty($expected) ? '(none)' : implode(', ', $expected)]));
+      $this->assertTrue(TRUE, sprintf('All the expected hooks were called: %s', empty($expected) ? '(none)' : implode(', ', $expected)));
     }
 
     // Determine if there were any unexpected calls.
     $unexpected = array_diff($actual, $expected);
     if (count($unexpected)) {
-      $this->assertTrue(FALSE, new FormattableMarkup('Unexpected hooks were called: %unexpected.', ['%unexpected' => empty($unexpected) ? '(none)' : implode(', ', $unexpected)]));
+      $this->assertTrue(FALSE, sprintf('Unexpected hooks were called: %s.', empty($unexpected) ? '(none)' : implode(', ', $unexpected)));
     }
     else {
       $this->assertTrue(TRUE, 'No unexpected hooks were called.');
@@ -97,7 +97,7 @@ abstract class FileManagedUnitTestBase extends KernelTestBase {
         $message = new FormattableMarkup('hook_file_@name was expected to be called %expected times but was called %actual times.', ['@name' => $hook, '%expected' => $expected_count, '%actual' => $actual_count]);
       }
     }
-    $this->assertEquals($expected_count, $actual_count, $message);
+    $this->assertEquals($expected_count, $actual_count, (string) $message);
   }
 
   /**

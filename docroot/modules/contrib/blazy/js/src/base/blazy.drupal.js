@@ -16,16 +16,15 @@
   var NAME = 'Drupal.' + ID;
   var DATA = 'data';
   var C_BG = 'b-bg';
+  var C_ERROR = 'errorClass';
+  var C_CHECKED = 'b-checked';
   var DATA_B_BG = DATA + '-' + C_BG;
-  // @todo remove at/by 3.x:
-  var DATA_RATIOS = DATA + '-ratios';
   var DATA_B_RATIOS = DATA + '-b-ratios';
   var S_BLUR = '.b-blur';
   var S_MEDIA = '.media';
   var C_SUCCESS = 'successClass';
-  // @todo rename it to use colon: blazy:done to allow namespacing.
-  var E_DONE = ID + '.done';
-  var E_DONE_COLON = ID + ':done';
+  var E_DONE = ID + ':done';
+  var E_ERROR = ID + ':error';
   var NOOP = function () {};
   var EXTENSIONS = {};
 
@@ -63,7 +62,7 @@
     isFluid: function (el, cn) {
       // @todo remove the last at/by 3.x:
       return $.equal(el.parentNode, 'picture') &&
-        $.hasAttr(cn, DATA_B_RATIOS + ' ' + DATA_RATIOS);
+        $.hasAttr(cn, DATA_B_RATIOS);
     },
 
     isLoaded: function (el) {
@@ -129,10 +128,23 @@
 
     clearing: function (el) {
       var me = this;
-      var ie = $.hasClass(el, 'b-responsive') && $.hasAttr(el, DATA + '-pfsrc');
+      var ie;
+
+      // Bail out if any error.
+      if ($.hasClass(el, me.options[C_ERROR]) && !$.hasClass(el, C_CHECKED)) {
+        $.addClass(el, C_CHECKED);
+        // Clear loading classes. Also supports future delayed Native loading.
+        if ($.isFun($.unloading)) {
+          $.unloading(el);
+        }
+
+        $.trigger(el, E_ERROR, [me]);
+        return;
+      }
 
       // @see https://scottjehl.github.io/picturefill/
       // @todo remove when IE gone from planet Drupal.
+      ie = $.hasClass(el, 'b-responsive') && $.hasAttr(el, DATA + '-pfsrc');
       if (_win.picturefill && ie) {
         _win.picturefill({
           reevaluate: true,
@@ -159,9 +171,8 @@
       me.clearScript(el);
 
       // Provides event listeners for easy overrides without full overrides.
-      $.trigger(el, E_DONE + ' ' + E_DONE_COLON, {
-        options: me.options,
-        warning: Drupal.t('blazy.done is deprecated in 2.17, use with colon blazy:done to allow namespacing instead.')
+      $.trigger(el, E_DONE, {
+        options: me.options
       });
     },
 

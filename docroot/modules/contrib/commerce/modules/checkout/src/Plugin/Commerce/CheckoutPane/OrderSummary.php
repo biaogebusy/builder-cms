@@ -3,25 +3,27 @@
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
 
 /**
  * Provides the Order summary pane.
- *
- * @CommerceCheckoutPane(
- *   id = "order_summary",
- *   label = @Translation("Order summary"),
- *   default_step = "_sidebar",
- *   wrapper_element = "container",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "order_summary",
+  label: new TranslatableMarkup("Order summary"),
+  default_step: "_sidebar",
+  wrapper_element: "container",
+)]
 class OrderSummary extends CheckoutPaneBase implements CheckoutPaneInterface {
 
   /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
+    $available_views = $this->getApplicableSummaryViews();
     return [
-      'view' => '',
+      'view' => $available_views ? key($available_views) : '',
     ] + parent::defaultConfiguration();
   }
 
@@ -29,15 +31,20 @@ class OrderSummary extends CheckoutPaneBase implements CheckoutPaneInterface {
    * {@inheritdoc}
    */
   public function buildConfigurationSummary() {
+    $parent_summary = parent::buildConfigurationSummary();
     if ($this->configuration['view']) {
       $view_storage = $this->entityTypeManager->getStorage('view');
       $view = $view_storage->load($this->configuration['view']);
       if ($view) {
-        return $this->t('View: @view', ['@view' => $view->label()]);
+        $summary = $this->t('View: @view', ['@view' => $view->label()]);
+        return $parent_summary ? implode('<br>', [$parent_summary, $summary]) : $summary;
       }
+
+      return $parent_summary;
     }
     else {
-      return $this->t('View: Not used');
+      $summary = $this->t('View: Not used');
+      return $parent_summary ? implode('<br>', [$parent_summary, $summary]) : $summary;
     }
   }
 
@@ -54,19 +61,10 @@ class OrderSummary extends CheckoutPaneBase implements CheckoutPaneInterface {
       '#default_value' => !empty($this->configuration['view']),
     ];
 
-    $view_storage = $this->entityTypeManager->getStorage('view');
-    $available_summary_views = [];
-    /** @var \Drupal\views\Entity\View $view */
-    foreach ($view_storage->loadMultiple() as $view) {
-      if (strpos($view->get('tag'), 'commerce_order_summary') !== FALSE) {
-        $available_summary_views[$view->id()] = $view->label();
-      }
-    }
-
     $form['view'] = [
       '#type' => 'select',
       '#title' => $this->t('View'),
-      '#options' => $available_summary_views,
+      '#options' => $this->getApplicableSummaryViews(),
       '#default_value' => $this->configuration['view'],
       '#required' => TRUE,
       '#states' => [
@@ -122,5 +120,25 @@ class OrderSummary extends CheckoutPaneBase implements CheckoutPaneInterface {
    * {@inheritdoc}
    */
   public function submitPaneForm(array &$pane_form, FormStateInterface $form_state, array &$complete_form) {}
+
+  /**
+   * Gets the applicable order summary views.
+   *
+   * @return array
+   *   The applicable order summary views.
+   */
+  protected function getApplicableSummaryViews(): array {
+    $view_storage = $this->entityTypeManager->getStorage('view');
+    $available_summary_views = [];
+    /** @var \Drupal\views\Entity\View $view */
+    foreach ($view_storage->loadMultiple() as $view) {
+      if (!str_contains($view->get('tag'), 'commerce_order_summary')) {
+        continue;
+      }
+      $available_summary_views[$view->id()] = $view->label();
+    }
+
+    return $available_summary_views;
+  }
 
 }

@@ -37,6 +37,16 @@ class PageManagerTranslationIntegrationTest extends ContentTranslationTestBase {
   /**
    * {@inheritdoc}
    */
+  protected function setUp(): void {
+    parent::setUp();
+    if (method_exists(self::class, 'doSetup')) {
+      $this->doSetup();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setupBundle() {
     parent::setupBundle();
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
@@ -56,7 +66,12 @@ class PageManagerTranslationIntegrationTest extends ContentTranslationTestBase {
     $this->drupalPlaceBlock('local_tasks_block');
     $this->drupalPlaceBlock('page_title_block');
 
-    $node = $this->drupalCreateNode(['type' => 'article']);
+    $settings = [
+      'title' => $this->randomMachineName(8),
+      'type' => 'article',
+      'promote' => 1,
+    ];
+    $node = $this->drupalCreateNode($settings);
     $this->drupalGet('node/' . $node->id());
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains($node->label());

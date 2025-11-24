@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Kernel;
 
 use Drupal\Core\Entity\EntityStorageException;
@@ -53,7 +55,6 @@ class WorkspaceCRUDTest extends KernelTestBase {
     'filter',
     'node',
     'text',
-    'path_alias',
   ];
 
   /**
@@ -82,7 +83,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
   /**
    * Tests the deletion of workspaces.
    */
-  public function testDeletingWorkspaces() {
+  public function testDeletingWorkspaces(): void {
     $admin = $this->createUser([
       'administer nodes',
       'create workspace',
@@ -106,10 +107,9 @@ class WorkspaceCRUDTest extends KernelTestBase {
     $workspace_1_node_1 = $this->createNode(['status' => FALSE]);
     $workspace_1_node_2 = $this->createNode(['status' => FALSE]);
 
-    // The 'live' workspace should have 2 revisions now. The initial revision
-    // for each node.
-    $live_revisions = $this->getUnassociatedRevisions('node');
-    $this->assertCount(2, $live_revisions);
+    // Check that the workspace tracks the initial revisions for both nodes.
+    $initial_revisions = $workspace_association->getAssociatedInitialRevisions($workspace_1->id(), 'node');
+    $this->assertCount(2, $initial_revisions);
 
     for ($i = 0; $i < 4; $i++) {
       $workspace_1_node_1->setNewRevision(TRUE);
@@ -123,13 +123,10 @@ class WorkspaceCRUDTest extends KernelTestBase {
     $tracked_entities = $workspace_association->getTrackedEntities($workspace_1->id());
     $this->assertCount(2, $tracked_entities['node']);
 
-    // There should still be 2 revisions associated with 'live'.
-    $live_revisions = $this->getUnassociatedRevisions('node');
-    $this->assertCount(2, $live_revisions);
-
-    // The other 8 revisions should be associated with 'workspace_1'.
+    // Since all the revisions were created inside a workspace, including the
+    // default one, 'workspace_1' should be tracking all 10 revisions.
     $associated_revisions = $workspace_association->getAssociatedRevisions($workspace_1->id(), 'node');
-    $this->assertCount(8, $associated_revisions);
+    $this->assertCount(10, $associated_revisions);
 
     // Check that we are allowed to delete the workspace.
     $this->assertTrue($workspace_1->access('delete', $admin));
@@ -145,10 +142,6 @@ class WorkspaceCRUDTest extends KernelTestBase {
     // There are no more revisions associated with 'workspace_1'.
     $associated_revisions = $workspace_association->getAssociatedRevisions($workspace_1->id(), 'node');
     $this->assertCount(0, $associated_revisions);
-
-    // There should still be 2 revisions associated with 'live'.
-    $live_revisions = $this->getUnassociatedRevisions('node');
-    $this->assertCount(2, $live_revisions);
 
     // Create another workspace, this time with a larger number of associated
     // node revisions so we can test the batch purge process.
@@ -169,23 +162,15 @@ class WorkspaceCRUDTest extends KernelTestBase {
     $tracked_entities = $workspace_association->getTrackedEntities($workspace_2->id());
     $this->assertCount(1, $tracked_entities['node']);
 
-    // One revision of this entity is in 'live'.
-    $live_revisions = $this->getUnassociatedRevisions('node', [$workspace_2_node_1->id()]);
-    $this->assertCount(1, $live_revisions);
-
-    // The other 59 are associated with 'workspace_2'.
+    // All 60 are associated with 'workspace_2'.
     $associated_revisions = $workspace_association->getAssociatedRevisions($workspace_2->id(), 'node', [$workspace_2_node_1->id()]);
-    $this->assertCount(59, $associated_revisions);
+    $this->assertCount(60, $associated_revisions);
 
-    // Delete the workspace and check that we still have 9 revision left to
+    // Delete the workspace and check that we still have 10 revision left to
     // delete.
     $workspace_2->delete();
     $associated_revisions = $workspace_association->getAssociatedRevisions($workspace_2->id(), 'node', [$workspace_2_node_1->id()]);
-    $this->assertCount(9, $associated_revisions);
-
-    // The live revision is also still there.
-    $live_revisions = $this->getUnassociatedRevisions('node', [$workspace_2_node_1->id()]);
-    $this->assertCount(1, $live_revisions);
+    $this->assertCount(10, $associated_revisions);
 
     $workspace_deleted = \Drupal::state()->get('workspace.deleted');
     $this->assertCount(1, $workspace_deleted);
@@ -204,27 +189,27 @@ class WorkspaceCRUDTest extends KernelTestBase {
     // from the "workspace.delete" state entry.
     \Drupal::service('cron')->run();
 
-    $associated_revisions = $workspace_association->getTrackedEntities($workspace_2->id());
-    $this->assertCount(0, $associated_revisions);
+    // Check that the actual node revisions were deleted as well.
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $this->assertEmpty($node_storage->loadMultipleRevisions(array_keys($associated_revisions)));
 
     // 'workspace_2 'is empty now.
     $associated_revisions = $workspace_association->getAssociatedRevisions($workspace_2->id(), 'node', [$workspace_2_node_1->id()]);
     $this->assertCount(0, $associated_revisions);
     $tracked_entities = $workspace_association->getTrackedEntities($workspace_2->id());
-    $this->assertEmpty($tracked_entities);
-
-    // The 3 revisions in 'live' remain.
-    $live_revisions = $this->getUnassociatedRevisions('node');
-    $this->assertCount(3, $live_revisions);
+    $this->assertCount(0, $tracked_entities);
 
     $workspace_deleted = \Drupal::state()->get('workspace.deleted');
     $this->assertCount(0, $workspace_deleted);
+
+    // Check that the deleted workspace is no longer active.
+    $this->assertFalse($this->workspaceManager->hasActiveWorkspace());
   }
 
   /**
    * Tests that deleting a workspace keeps its already published content.
    */
-  public function testDeletingPublishedWorkspace() {
+  public function testDeletingPublishedWorkspace(): void {
     $admin = $this->createUser([
       'administer nodes',
       'create workspace',
@@ -298,7 +283,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
   /**
    * Tests that a workspace with children can not be deleted.
    */
-  public function testDeletingWorkspaceWithChildren() {
+  public function testDeletingWorkspaceWithChildren(): void {
     $stage = Workspace::create(['id' => 'stage', 'label' => 'Stage']);
     $stage->save();
 
@@ -326,7 +311,7 @@ class WorkspaceCRUDTest extends KernelTestBase {
   /**
    * Tests loading the workspace tree when there are no workspaces available.
    */
-  public function testEmptyWorkspaceTree() {
+  public function testEmptyWorkspaceTree(): void {
     $tree = \Drupal::service('workspaces.repository')->loadTree();
     $this->assertSame([], $tree);
   }

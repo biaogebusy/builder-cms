@@ -3,7 +3,9 @@
 namespace Drupal\Tests\autologout\Functional;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Config\Config;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\Entity\User;
 
 /**
  * Test the Autologout ajax endpoints.
@@ -39,14 +41,14 @@ class AutologoutAjaxTest extends BrowserTestBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $privilegedUser;
+  protected User $privilegedUser;
 
   /**
    * Config factory.
    *
    * @var \Drupal\Core\Config\Config
    */
-  protected $moduleConfig;
+  protected Config $moduleConfig;
 
   /**
    * SetUp() performs any pre-requisite tasks that need to happen.
@@ -76,7 +78,7 @@ class AutologoutAjaxTest extends BrowserTestBase {
   }
 
   /**
-   * Test ajax logout callbacks work as expected.
+   * Tests ajax logout callbacks work as expected.
    */
   public function testAutologoutByAjax() {
     $this->moduleConfig->set('timeout', 100)->set('padding', 10)->save();
@@ -131,7 +133,72 @@ class AutologoutAjaxTest extends BrowserTestBase {
   }
 
   /**
-   * Test ajax stay logged in callbacks work as expected.
+   * Tests ajax logout callbacks work as expected when new response is added.
+   */
+  public function testAutologoutAjaxWithResponseAdded(): void {
+    $this->moduleConfig->set('timeout', 100)->set('padding', 10)->save();
+
+    // Check that the user can access the page after login.
+    $this->drupalGet('node');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Add a "response" in the first place.
+    $addResponse = [
+      [
+        'command' => 'insert',
+        'data' => 'test',
+        'message' => 'Test response.',
+      ],
+    ];
+    // Test the time remaining callback works as expected.
+    $result = Json::decode($this->drupalGet('autologout_ajax_get_time_left'));
+
+    // Merge the added response with the real ajax response.
+    $result = array_merge($addResponse, $result);
+
+    // Test that settings timer is not in first place.
+    self::assertNotEquals(
+      '#timer',
+      $result[0]['data'],
+      'Test response.'
+    );
+
+    // Get the key of settings time and test the callback works as expected.
+    $arrayKey = '';
+    foreach ($result as $key => $value) {
+      if ($value['command'] === 'settings') {
+        $arrayKey = $key;
+      }
+    }
+    self::assertTrue(
+      $result[$arrayKey]['settings']['time'] > 0,
+      'autologout_ajax_get_time_left returns the remaining time as a positive integer'
+    );
+
+    // Test that the ajax insert is now in key 1.
+    self::assertEquals(
+      'insert',
+      $result[1]['command'],
+      'autologout_ajax_get_time_left returns an insert command for adding the jstimer onto the page'
+    );
+    self::assertEquals(
+      '#timer',
+      $result[1]['selector'],
+      'autologout_ajax_get_time_left specifies the #timer selector.'
+    );
+
+    // Test that ajax logout works as expected.
+    $this->drupalGet('autologout_ajax_logout');
+    $this->assertSession()->statusCodeEquals(200);
+
+    // Check we are now logged out.
+    $this->drupalGet('node');
+    $this->assertSession()->statusCodeEquals(200);
+    self::assertFalse($this->drupalUserIsLoggedIn($this->privilegedUser));
+  }
+
+  /**
+   * Tests ajax stay logged in callbacks work as expected.
    */
   public function testStayloggedInByAjax() {
     $this->moduleConfig->set('timeout', 20)->set('padding', 5)->save();

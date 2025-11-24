@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -25,16 +27,17 @@ class BlockContentDeletionTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('block_content');
+    $this->container->get('theme_installer')->install(['stark']);
   }
 
   /**
    * Tests deleting a block_content updates the discovered block plugin.
    */
-  public function testDeletingBlockContentShouldClearPluginCache() {
+  public function testDeletingBlockContentShouldClearPluginCache(): void {
     // Create a block content type.
     $block_content_type = BlockContentType::create([
       'id' => 'spiffy',
@@ -69,7 +72,7 @@ class BlockContentDeletionTest extends KernelTestBase {
     $block_content->save();
 
     $plugin_id = 'block_content' . PluginBase::DERIVATIVE_SEPARATOR . $block_content->uuid();
-    $block = $this->placeBlock($plugin_id, ['region' => 'content']);
+    $block = $this->placeBlock($plugin_id, ['region' => 'content', 'theme' => 'stark']);
 
     // Delete it via storage.
     $storage = $this->container->get('entity_type.manager')->getStorage('block_content');

@@ -34,7 +34,7 @@
     var t = $('> ' + _elSlider, elm).length ? $('> ' + _elSlider, elm) : el;
     var a = $('> ' + _elArrow, elm);
     var o = t.data(_id) ? $.extend({}, drupalSettings.slick, t.data(_id)) : $.extend({}, drupalSettings.slick);
-    var r = $.type(o.responsive) === 'array' && o.responsive.length ? o.responsive : false;
+    var r = o.responsive && o.responsive.length ? o.responsive : false;
     var d = o.appendDots;
     var b;
     var isBlazy = o.lazyLoad === 'blazy' && _blazy;
@@ -197,12 +197,16 @@
      * Randomize slide orders, for ads/products rotation within cached blocks.
      */
     function randomize() {
-      t.children().sort(function () {
+      // Convert jQuery object to array for proper sorting in jQuery 4.
+      var children = t.children().get();
+      children.sort(function () {
         return 0.5 - Math.random();
-      })
-        .each(function () {
-          t.append(this);
-        });
+      });
+
+      // Append each child in the new random order.
+      $.each(children, function () {
+        t.append(this);
+      });
     }
 
     /**

@@ -69,7 +69,7 @@ class NodeTypeForm extends BundleEntityFormBase {
       '#title' => $this->t('Name'),
       '#type' => 'textfield',
       '#default_value' => $type->label(),
-      '#description' => $this->t('The human-readable name of this content type. This text will be displayed as part of the list on the <em>Add content</em> page. This name must be unique.'),
+      '#description' => $this->t('The human-readable name for this content type, displayed on the <em>Content types</em> page.'),
       '#required' => TRUE,
       '#size' => 30,
     ];
@@ -83,7 +83,7 @@ class NodeTypeForm extends BundleEntityFormBase {
         'exists' => ['Drupal\node\Entity\NodeType', 'load'],
         'source' => ['name'],
       ],
-      '#description' => $this->t('A unique machine-readable name for this content type. It must only contain lowercase letters, numbers, and underscores. This name will be used for constructing the URL of the %node-add page.', [
+      '#description' => $this->t('Unique machine-readable name: lowercase letters, numbers, and underscores only.', [
         '%node-add' => $this->t('Add content'),
       ]),
     ];
@@ -92,7 +92,7 @@ class NodeTypeForm extends BundleEntityFormBase {
       '#title' => $this->t('Description'),
       '#type' => 'textarea',
       '#default_value' => $type->getDescription(),
-      '#description' => $this->t('This text will be displayed on the <em>Add new content</em> page.'),
+      '#description' => $this->t('Displays on the <em>Content types</em> page.'),
     ];
 
     $form['additional_settings'] = [
@@ -191,15 +191,6 @@ class NodeTypeForm extends BundleEntityFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function actions(array $form, FormStateInterface $form_state) {
-    $actions = parent::actions($form, $form_state);
-    $actions['submit']['#value'] = $this->t('Save content type');
-    return $actions;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
@@ -208,6 +199,23 @@ class NodeTypeForm extends BundleEntityFormBase {
     if ($id == '0') {
       $form_state->setErrorByName('type', $this->t("Invalid machine-readable name. Enter a name other than %invalid.", ['%invalid' => $id]));
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildEntity(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\node\NodeTypeInterface $entity */
+    $entity = parent::buildEntity($form, $form_state);
+
+    // The description and help text cannot be empty strings.
+    if (trim($form_state->getValue('description')) === '') {
+      $entity->set('description', NULL);
+    }
+    if (trim($form_state->getValue('help')) === '') {
+      $entity->set('help', NULL);
+    }
+    return $entity;
   }
 
   /**

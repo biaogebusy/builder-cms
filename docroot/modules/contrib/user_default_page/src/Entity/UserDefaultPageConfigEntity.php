@@ -36,8 +36,7 @@ use Drupal\user_default_page\UserDefaultPageConfigEntityInterface;
  *     "login_redirect",
  *     "login_redirect_message",
  *     "logout_redirect",
- *     "logout_redirect_message",
- *     "weight"
+ *     "logout_redirect_message"
  *   },
  *   links = {
  *     "canonical" = "/admin/config/people/user_default_page/{user_default_page_config_entity}",

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * A SharedTempStore can be used to make temporary, non-cache data available
  * across requests. The data for the SharedTempStore is stored in one key/value
  * collection. SharedTempStore data expires automatically after a given
- * timeframe.
+ * time frame.
  *
  * The SharedTempStore is different from a cache, because the data in it is not
  * yet saved permanently and so it cannot be rebuilt. Typically, the
@@ -103,20 +103,11 @@ class SharedTempStore {
    * @param int $expire
    *   The time to live for items, in seconds.
    */
-  public function __construct(KeyValueStoreExpirableInterface $storage, LockBackendInterface $lock_backend, $owner, RequestStack $request_stack, $current_user = NULL, $expire = 604800) {
+  public function __construct(KeyValueStoreExpirableInterface $storage, LockBackendInterface $lock_backend, $owner, RequestStack $request_stack, AccountProxyInterface $current_user, $expire = 604800) {
     $this->storage = $storage;
     $this->lockBackend = $lock_backend;
     $this->owner = $owner;
     $this->requestStack = $request_stack;
-    if (!$current_user instanceof AccountProxyInterface) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $current_user argument is deprecated in drupal:9.2.0 and will be required in drupal:10.0.0. See https://www.drupal.org/node/3006268', E_USER_DEPRECATED);
-      if (is_int($current_user)) {
-        // If the $current_user argument is numeric then this object has been
-        // instantiated with the old constructor signature.
-        $expire = $current_user;
-      }
-      $current_user = \Drupal::currentUser();
-    }
     $this->currentUser = $current_user;
     $this->expire = $expire;
   }
@@ -308,10 +299,8 @@ class SharedTempStore {
    * This method should be called when a value is set.
    */
   protected function ensureAnonymousSession() {
-    // If this is being run from the CLI then the request will not have a
-    // session.
-    if ($this->currentUser->isAnonymous() && $this->requestStack->getCurrentRequest()->hasSession()) {
-      $this->requestStack->getCurrentRequest()->getSession()->set('core.tempstore.shared.owner', $this->owner);
+    if ($this->currentUser->isAnonymous()) {
+      $this->requestStack->getSession()->set('core.tempstore.shared.owner', $this->owner);
     }
   }
 

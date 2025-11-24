@@ -1,66 +1,96 @@
 include:
-  # This remote project centralize our CI "golden path" https://docs.gitlab.com/ee/ci/yaml/#includefile
-  remote: 'https://gitlab.com/drupalspoons/composer-plugin/-/raw/master/templates/.gitlab-ci.yml'
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+#
+# Start custom overrides.
+#
+
+.setup-extension: &setup-extension
+  # https://docs.gitlab.com/ee/ci/jobs/index.html#pre-collapse-sections
+  - echo -e "\e[0Ksection_start:`date +%s`:my_first_section[collapsed=true]\r\e[0KInstall PHP Extensions"
+  - >
+    if [ "$REDIS_INTERFACE" == "PhpRedis" ]; then
+      apt-get update
+      apt-get install -y --no-install-recommends $PHPIZE_DEPS
+      pecl install redis && docker-php-ext-enable redis
+    fi
+  - >
+    if [ "$REDIS_INTERFACE" == "Relay" ]; then
+      apt-get update
+      apt-get install -y --no-install-recommends $PHPIZE_DEPS
+      if [ ! -f /usr/src/php.tar.xz ]; then
+        PHP_URL="https://www.php.net/distributions/php-`php -r "echo phpversion();"`.tar.xz"
+        curl -fsSL -o /usr/src/php.tar.xz "$PHP_URL"
+      fi
+      curl -sSLf -o /usr/local/bin/install-php-extensions https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
+      chmod +x /usr/local/bin/install-php-extensions
+      PHPIZE_DEPS="autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c" PHP_INI_DIR="/usr/local/etc/php" install-php-extensions relay
+    fi
+  - echo -e "\e[0Ksection_end:`date +%s`:my_first_section\r\e[0K"
 
 variables:
-  PHP_TAG: "8.1"
-  # Disable default phpunit job in favor of the d9/10 variants below.
-  DCI_SKIP_PHPUNIT: 1
-  DCI_SKIP_PHPCS: 1
+  _SHOW_ENVIRONMENT_VARIABLES: 1
   REDIS_HOST: redis
+  REDIS_INTERFACE: PhpRedis
+  OPT_IN_TEST_PREVIOUS_MINOR: 1
+  OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  # Concurrency can not be enabled as environment variables are not passed
+  # through
+  _PHPUNIT_CONCURRENT: 0
+  # Relay can currently not be installed with docker-php-extension-installer
+  # on ubuntu.
+  PHP_IMAGE_VARIANT: 'apache'
 
-composer:
-  parallel:
-    matrix:
-      - DRUPAL_CORE_CONSTRAINT: "^9"
-        PHP_TAG: "7.4"
-      - DRUPAL_CORE_CONSTRAINT: "^10"
-        PHP_TAG: "8.1"
-  script:
-    # Symlinks the project into Drupal codebase, builds composer.spoons.json, and `composer install`.
-    # Override with you own script if your needs are vastly unusual.
-    - echo -e "\e[0Ksection_start:`date +%s`:my_2_section[collapsed=true]\r\e[0KInstall Dependencies"
-    - bash <(curl -s https://gitlab.com/drupalspoons/composer-plugin/-/raw/master/bin/setup)
-    - composer require predis/predis
-    - echo -e "\e[0Ksection_end:`date +%s`:my_2_section\r\e[0K"
+.composer-base:
+  before_script:
+    - composer require --dev predis/predis --no-update
 
-.phpunit-local:
+# For now, use Predis by default as this avoids issues with packages.
+.phpunit-base:
   variables:
-    DCI_SKIP_PHPUNIT: 0
+    REDIS_INTERFACE: Predis
+  before_script:
+    - *setup-extension
+  services:
+    - !reference [ .with-database ]
+    - !reference [ .with-chrome ]
+    - name: redis:7
+      alias: redis
+      command: ["redis-server", "--maxmemory-policy", "allkeys-lru", "--maxmemory", "100M"]
+
+phpunit:
   parallel:
     matrix:
       - REDIS_INTERFACE:
           - PhpRedis
           - Predis
           - Relay
+
+phpunit (previous minor):
+  extends: .phpunit-base
+
+phpunit (previous major):
+  extends: .phpunit-base
+
+phpunit (next minor):
+  extends: .phpunit-base
+
+phpunit (valkey):
+  extends: phpunit
   services:
-    - name: wodby/mariadb:$MARIADB_TAG
-      alias: mariadb
-    - name: redis:6
+    - !reference [ .with-database ]
+    - !reference [ .with-chrome ]
+    - name: valkey/valkey:8
+      alias: redis
+      command: [ "valkey-server", "--maxmemory-policy", "allkeys-lru", "--maxmemory", "100M" ]
+
+pages:
   before_script:
-    - sudo sed -i 's/zend.assertions = -1/zend.assertions = 1/g' /usr/local/etc/php/php.ini
-    - >
-      if [ "$REDIS_INTERFACE" == "Relay" ]; then
-        sudo curl -sSLf -o /usr/local/bin/install-php-extensions https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
-        sudo chmod +x /usr/local/bin/install-php-extensions
-        sudo PHPIZE_DEPS="autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c" PHP_INI_DIR="/usr/local/etc/php" install-php-extensions relay
-      fi
-
-phpunit-d9:
-  variables:
-    PHP_TAG: "7.4"
-  dependencies:
-     # This syntax comes from https://gitlab.com/gitlab-org/gitlab/-/merge_requests/82734/diffs
-     - "composer: [^9, 7.4]"
-  extends:
-    - .phpunit-base
-    - .phpunit-local
-
-phpunit-d10:
-  variables:
-    PHP_TAG: "8.1"
-  dependencies:
-    - "composer: [^10, 8.1]"
-  extends:
-    - .phpunit-base
-    - .phpunit-local
+    - mkdir docs
+    - mv *.md docs

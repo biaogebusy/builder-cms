@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\settings_tray\FunctionalJavascript;
 
 use Drupal\settings_tray_test\Plugin\Block\SettingsTrayFormAnnotationIsClassBlock;
@@ -9,7 +11,6 @@ use Drupal\user\Entity\Role;
 /**
  * Testing opening and saving block forms in the off-canvas dialog.
  *
- * @group #slow
  * @group settings_tray
  */
 class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
@@ -48,7 +49,7 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
   /**
    * Tests opening off-canvas dialog by click blocks and elements in the blocks.
    */
-  public function testBlocks() {
+  public function testBlocks(): void {
     foreach ($this->getBlockTests() as $test) {
       call_user_func_array([$this, 'doTestBlocks'], array_values($test));
     }
@@ -122,7 +123,7 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
       $page->pressButton($button_text);
       // Make sure the changes are present.
       $new_page_text_locator = "$block_selector $label_selector:contains($new_page_text)";
-      $this->assertElementVisibleAfterWait('css', $new_page_text_locator);
+      $this->assertNotEmpty($web_assert->waitForElementVisible('css', $new_page_text_locator));
       // The page is loaded with the new change but make sure page is
       // completely loaded.
       $this->assertPageLoadComplete();
@@ -146,7 +147,6 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
     $this->getSession()->executeScript('jQuery("body").trigger(jQuery.Event("keyup", { keyCode: 27 }));');
     $this->waitForOffCanvasToClose();
     $this->getSession()->wait(100);
-    $this->getSession()->executeScript("jQuery('[data-quickedit-entity-id]').trigger('mouseleave')");
     $this->getSession()->getPage()->find('css', static::TOOLBAR_EDIT_LINK_SELECTOR)->mouseOver();
     $this->assertEditModeDisabled();
     $this->assertNotEmpty($web_assert->waitForElement('css', '#drupal-live-announce:contains(Exited edit mode)'));
@@ -165,7 +165,7 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
    */
   public function getBlockTests() {
     $blocks = [];
-    foreach ($this->getTestThemes() as $theme) {
+    foreach (static::getTestThemes() as $theme) {
       $blocks += [
         "$theme: block-powered" => [
           'theme' => $theme,
@@ -230,8 +230,9 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
   /**
    * Tests enabling and disabling Edit Mode.
    */
-  public function testEditModeEnableDisable() {
-    foreach ($this->getTestThemes() as $theme) {
+  public function testEditModeEnableDisable(): void {
+    $this->markTestSkipped("Skipped due to frequent random test failures. See https://www.drupal.org/project/drupal/issues/3317520");
+    foreach (static::getTestThemes() as $theme) {
       $this->enableTheme($theme);
       $block = $this->placeBlock('system_powered_by_block');
       foreach (['contextual_link', 'toolbar_link'] as $enable_option) {
@@ -265,10 +266,10 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
   /**
    * Tests that validation errors appear in the off-canvas dialog.
    */
-  public function testValidationMessages() {
+  public function testValidationMessages(): void {
     $page = $this->getSession()->getPage();
     $web_assert = $this->assertSession();
-    foreach ($this->getTestThemes() as $theme) {
+    foreach (static::getTestThemes() as $theme) {
       $this->enableTheme($theme);
       $block = $this->placeBlock('settings_tray_test_validation');
       $this->drupalGet('user');
@@ -278,7 +279,7 @@ class SettingsTrayBlockFormTest extends SettingsTrayTestBase {
       $web_assert->assertWaitOnAjaxRequest();
       // The settings_tray_test_validation test plugin form always has a
       // validation error.
-      $web_assert->elementContains('css', '#drupal-off-canvas', 'Sorry system error. Please save again');
+      $web_assert->elementContains('css', '#drupal-off-canvas', 'Sorry system error. Save again');
       $this->disableEditMode();
       $block->delete();
     }

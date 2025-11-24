@@ -13,7 +13,7 @@ trait ParagraphsSourceData {
    * @return array
    *   The source data
    */
-  protected function getSourceData() {
+  protected static function getSourceData() {
     $data = [];
 
     $data[0]['source_data'] = [

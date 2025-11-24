@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
-use Drupal\entity_share\EntityShareUtility;
+use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 
 /**
@@ -23,16 +23,16 @@ use Drupal\entity_share_client\RuntimeImportContext;
  *   locked = false,
  * )
  */
-class LinkInternalContentImporter extends EntityReference {
+class LinkInternalContentImporter extends ImportProcessorReferencePluginBase {
 
   /**
    * {@inheritdoc}
    */
   public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
-    if (isset($entity_json_data['attributes']) && is_array($entity_json_data['attributes'])) {
+    if (isset($entity_json_data['attributes']) && \is_array($entity_json_data['attributes'])) {
       foreach ($entity_json_data['attributes'] as $field_name => $field_data) {
-        if (is_array($field_data)) {
-          if (EntityShareUtility::isNumericArray($field_data)) {
+        if (\is_array($field_data)) {
+          if (array_is_list($field_data)) {
             foreach ($field_data as $delta => $value) {
               if (isset($value['content_entity_href'])) {
                 $entity_json_data['attributes'][$field_name][$delta]['uri'] = $this->processLink($runtime_import_context, $value['uri'], $value['content_entity_href']);
@@ -62,22 +62,22 @@ class LinkInternalContentImporter extends EntityReference {
    */
   protected function processLink(RuntimeImportContext $runtime_import_context, string $uri, string $import_url) {
     // Check if it is a link to an entity.
-    preg_match("/entity:(.*)\/(.*)\/(.*)/", $uri, $parsed_uri);
+    \preg_match('/entity:(.*)\\/(.*)\\/(.*)/', $uri, $parsed_uri);
     // If the link is not in UUID enhanced format, just return the original URI.
     if (empty($parsed_uri)) {
       return $uri;
     }
 
     $entity_type = $parsed_uri[1];
-    $entity_uuid = $parsed_uri[3];
+    $entity_uuid = $parsed_uri[(int) 3];
 
     // In the case of links, if the linked entity is already
     // present on the website, there is nothing to do as the
     // UuidLinkEnhancer::doTransform() method will convert the URI format back
     // to Drupal expected format.
     if (
-      $this->currentRecursionDepth != $this->configuration['max_recursion_depth'] &&
-      !$runtime_import_context->isEntityMarkedForImport($entity_uuid)
+      $this->currentRecursionDepth != $this->configuration['max_recursion_depth']
+      && !$runtime_import_context->isEntityMarkedForImport($entity_uuid)
     ) {
       $runtime_import_context->addEntityMarkedForImport($entity_uuid);
       $referenced_entities_ids = $this->importUrl($runtime_import_context, $import_url);
@@ -85,9 +85,10 @@ class LinkInternalContentImporter extends EntityReference {
         return 'entity:' . $entity_type . '/' . $referenced_entities_ids[$entity_uuid];
       }
     }
-    else {
-      return $uri;
-    }
+
+    // If we're not attempting to import the linked entity, of it the linked
+    // entity failed to import, return the original field value.
+    return $uri;
   }
 
 }

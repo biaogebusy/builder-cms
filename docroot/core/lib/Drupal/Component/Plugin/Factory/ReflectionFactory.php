@@ -42,7 +42,7 @@ class ReflectionFactory extends DefaultFactory {
    * @param string $plugin_id
    *   The identifier of the plugin implementation.
    * @param mixed $plugin_definition
-   *   The definition associated with the plugin_id.
+   *   The definition associated with the plugin ID.
    * @param array $configuration
    *   An array of configuration that may be passed to the instance.
    *
@@ -64,7 +64,7 @@ class ReflectionFactory extends DefaultFactory {
       elseif ($param_name == 'configuration') {
         $arguments[] = $configuration;
       }
-      elseif (isset($configuration[$param_name]) || array_key_exists($param_name, $configuration)) {
+      elseif (\array_key_exists($param_name, $configuration)) {
         $arguments[] = $configuration[$param_name];
       }
       elseif ($param->isDefaultValueAvailable()) {

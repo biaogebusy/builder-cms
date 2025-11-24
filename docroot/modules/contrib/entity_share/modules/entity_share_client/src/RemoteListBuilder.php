@@ -19,6 +19,7 @@ class RemoteListBuilder extends ConfigEntityListBuilder {
     $header = [];
     $header['label'] = $this->t('Remote');
     $header['url'] = $this->t('URL');
+    $header['login_path'] = $this->t('Login form path');
     return $header + parent::buildHeader();
   }
 
@@ -29,6 +30,7 @@ class RemoteListBuilder extends ConfigEntityListBuilder {
     $row = [];
     $row['label'] = $entity->label() . ' (' . $entity->id() . ')';
     $row['url'] = $entity->get('url');
+    $row['login_path'] = $entity->get('login_path');
     return $row + parent::buildRow($entity);
   }
 

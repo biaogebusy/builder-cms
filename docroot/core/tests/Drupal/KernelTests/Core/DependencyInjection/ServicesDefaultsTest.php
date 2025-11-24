@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\DependencyInjection;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -12,12 +14,15 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  */
 class ServicesDefaultsTest extends KernelTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['services_defaults_test'];
 
   /**
    * Tests that 'services_defaults_test.service' has its dependencies injected.
    */
-  public function testAutowiring() {
+  public function testAutowiring(): void {
     // Ensure interface autowiring works.
     $this->assertSame(
       $this->container->get('Drupal\services_defaults_test\TestInjection'),
@@ -48,7 +53,7 @@ class ServicesDefaultsTest extends KernelTestBase {
   /**
    * Tests that default tags for 'services_defaults_test.service' are applied.
    */
-  public function testDefaultTags() {
+  public function testDefaultTags(): void {
     // Ensure default tags work.
     $testServiceDefinition = $this->container->getDefinition('Drupal\services_defaults_test\TestService');
     $testInjection1Definition = $this->container->getDefinition('Drupal\services_defaults_test\TestInjection');
@@ -74,7 +79,7 @@ class ServicesDefaultsTest extends KernelTestBase {
   /**
    * Tests that service from 'services_defaults_test.service' is private.
    */
-  public function testPrivateServices() {
+  public function testPrivateServices(): void {
     // Ensure default and overridden public flag works.
     $this->expectException(ServiceNotFoundException::class);
     $this->container->getDefinition('Drupal\services_defaults_test\TestPrivateService');

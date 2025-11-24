@@ -113,7 +113,7 @@ function webform_jqueryui_datepicker_webform_element_configuration_form_alter(&$
 
   // Datetime element.
   if ($element_plugin instanceof DateTime) {
-    // Add dateoicker option.
+    // Add datepicker option.
     $form['date']['date_date_element']['#options']['datepicker'] = t('Date picker input - Use jQuery date picker with custom date format');
 
     // Move none options last.

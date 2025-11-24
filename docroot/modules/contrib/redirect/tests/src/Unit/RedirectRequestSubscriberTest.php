@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Unit;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -100,7 +102,7 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
   /**
    * Data provider for both tests.
    */
-  public function getRedirectData() {
+  public static function getRedirectData() {
     return [
       ['non-existing', ['key' => 'val'], '/test-path', ['dummy' => 'value']],
       ['non-existing/', ['key' => 'val'], '/test-path', ['dummy' => 'value']],
@@ -111,9 +113,9 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
   /**
    * Instantiates the subscriber and runs onKernelRequestCheckRedirect()
    *
-   * @param $redirect
+   * @param \Drupal\redirect\Entity\Redirect $redirect
    *   The redirect entity.
-   * @param $request_uri
+   * @param string $request_uri
    *   The URI of the request.
    * @param array $request_query
    *   The query that is supposed to come via request.
@@ -125,13 +127,13 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
    */
   protected function callOnKernelRequestCheckRedirect($redirect, $request_uri, $request_query, $retain_query) {
 
-    $event = $this->getGetResponseEventStub($request_uri, http_build_query($request_query));
+    $event = $this->getGetRequestEventStub($request_uri, http_build_query($request_query));
     $request = $event->getRequest();
 
     $checker = $this->createMock('Drupal\redirect\RedirectChecker');
     $checker->expects($this->any())
       ->method('canRedirect')
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
 
     $context = $this->createMock('Symfony\Component\Routing\RequestContext');
 
@@ -140,7 +142,7 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
       ->method('processInbound')
       ->with($request->getPathInfo(), $request)
       ->willReturnCallback(function ($path, Request $request) {
-        if (strpos($path, '/system/files/') === 0 && !$request->query->has('file')) {
+        if (str_starts_with($path, '/system/files/') && !$request->query->has('file')) {
           // Private files paths are split by the inbound path processor and the
           // relative file path is moved to the 'file' query string parameter.
           // This is because the route system does not allow an arbitrary amount
@@ -175,9 +177,9 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
   /**
    * Gets the redirect repository mock object.
    *
-   * @param $method
+   * @param string $method
    *   Method to mock - either load() or findMatchingRedirect().
-   * @param $redirect
+   * @param \Drupal\redirect\Entity\Redirect $redirect
    *   The redirect object to be returned.
    *
    * @return \PHPUnit\Framework\MockObject\MockObject
@@ -198,7 +200,7 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
     else {
       $repository->expects($this->any())
         ->method($method)
-        ->will($this->returnValue($redirect));
+        ->willReturn($redirect);
     }
 
     return $repository;
@@ -207,8 +209,8 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
   /**
    * Gets the redirect mock object.
    *
-   * @param $url
-   *   Url to be returned from getRedirectUrl
+   * @param string $url
+   *   Url to be returned from getRedirectUrl.
    * @param int $status_code
    *   The redirect status code.
    *
@@ -219,16 +221,13 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
     $redirect = $this->createMock('Drupal\redirect\Entity\Redirect');
     $redirect->expects($this->once())
       ->method('getRedirectUrl')
-      ->will($this->returnValue($url));
+      ->willReturn($url);
     $redirect->expects($this->any())
       ->method('getStatusCode')
-      ->will($this->returnValue($status_code));
+      ->willReturn($status_code);
     $redirect->expects($this->any())
       ->method('id')
       ->willReturn(1);
-    $redirect->expects($this->once())
-      ->method('getCacheTags')
-      ->willReturn(['redirect:1']);
 
     return $redirect;
   }
@@ -252,30 +251,34 @@ class RedirectRequestSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * Gets response event object.
+   * Gets request event object.
    *
-   * @param $path_info
-   * @param $query_string
+   * @param string $path_info
+   *   The "pathinfo" (the url without querystring).
+   * @param string $query_string
+   *   The query string.
    *
-   * @return RequestEvent
+   * @return \Symfony\Component\HttpKernel\Event\RequestEvent
+   *   The request event object.
    */
-  protected function getGetResponseEventStub($path_info, $query_string) {
+  protected function getGetRequestEventStub($path_info, $query_string) {
     $request = Request::create($path_info . '?' . $query_string, 'GET', [], [], [], ['SCRIPT_NAME' => 'index.php']);
 
     $http_kernel = $this->createMock('\Symfony\Component\HttpKernel\HttpKernelInterface');
-    return new RequestEvent($http_kernel, $request, HttpKernelInterface::MASTER_REQUEST);
+    return new RequestEvent($http_kernel, $request, HttpKernelInterface::MAIN_REQUEST);
   }
 
   /**
    * Gets the language manager mock object.
    *
    * @return \Drupal\language\ConfigurableLanguageManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+   *   The language manager mock object.
    */
   protected function getLanguageManagerStub() {
     $language_manager = $this->createMock('Drupal\language\ConfigurableLanguageManagerInterface');
     $language_manager->expects($this->any())
       ->method('getCurrentLanguage')
-      ->will($this->returnValue(new Language(['id' => 'en'])));
+      ->willReturn(new Language(['id' => 'en']));
 
     return $language_manager;
   }

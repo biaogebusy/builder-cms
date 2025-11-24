@@ -5,14 +5,15 @@
  * Defines the Order entity and associated features.
  */
 
-use Drupal\commerce_order\Entity\OrderTypeInterface;
-use Drupal\commerce_order\Plugin\Field\FieldFormatter\PriceCalculatedFormatter;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\commerce_order\Form\DashboardMetricsForm;
+use Drupal\commerce_order\Plugin\Field\FieldFormatter\PriceCalculatedFormatter;
 use Drupal\entity\BundleFieldDefinition;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\profile\Entity\ProfileType;
@@ -57,6 +58,9 @@ function commerce_order_theme($existing, $type, $theme, $path) {
     ],
     'commerce_order_item' => [
       'render element' => 'elements',
+    ],
+    'commerce_order_dashboard_metrics_form' => [
+      'render element' => 'form',
     ],
   ];
 }
@@ -135,6 +139,9 @@ function commerce_order_field_widget_single_element_form_alter(&$element, FormSt
       }
     }
   }
+  if ($field_name === 'address' && $entity_type === 'profile') {
+    $element['#after_build'][] = 'commerce_order_address_field_after_build';
+  }
 }
 
 /**
@@ -173,8 +180,25 @@ function template_preprocess_commerce_order(array &$variables) {
   }
 
   if ($billing_profile = $order->getBillingProfile()) {
-    $profile_view_bulder = \Drupal::entityTypeManager()->getViewBuilder('profile');
-    $variables['order']['billing_information'] = $profile_view_bulder->view($billing_profile, $view_mode);
+    $profile_view_builder = \Drupal::entityTypeManager()->getViewBuilder('profile');
+    $variables['order']['billing_information'] = $profile_view_builder->view($billing_profile, $view_mode);
+  }
+
+  $route_name = \Drupal::routeMatch()->getRouteName();
+  if ($route_name === 'entity.commerce_order.canonical' &&
+    $order->isLocked() &&
+    $order->access('unlock')) {
+    $options = [
+      'query' => [
+        'destination' => $order->toUrl()->toString(),
+      ],
+    ];
+    $order_unlock_link = Url::fromRoute('entity.commerce_order.unlock_form', [
+      'commerce_order' => $order->id(),
+    ], $options)->toString();
+    $messenger = \Drupal::messenger();
+    $messenger->addStatus(t('This order is locked and cannot be edited or deleted. You can <a href=":link">unlock it here</a>.', [':link' => $order_unlock_link]));
+    $messenger->addStatus(t('Orders are typically locked during the payment step in checkout to ensure prices on it do not change during a payment attempt. If the customer is currently paying for this order on a hosted payment page, editing this order could result in a mismatch between the order total and payment amount.'));
   }
 }
 
@@ -195,21 +219,6 @@ function commerce_order_theme_suggestions_commerce_order_receipt(array $variable
     $suggestions[] = $variables['theme_hook_original'] . '__' . $order->bundle();
   }
   return $suggestions;
-}
-
-/**
- * Adds the default order_items field to an order type.
- *
- * @param \Drupal\commerce_order\Entity\OrderTypeInterface $order_type
- *   The order type.
- *
- * @deprecated in commerce:8.x-2.16 and is removed from commerce:3.x. The order
- *   items field is now a base field.
- *
- * @see https://www.drupal.org/node/3090561
- */
-function commerce_order_add_order_items_field(OrderTypeInterface $order_type) {
-  @trigger_error('commerce_order_add_order_items_field() function is deprecated in commerce:8.x-2.16 and is removed from commerce:3.x. The order_items field is now a base field. See https://www.drupal.org/node/3090561', E_USER_DEPRECATED);
 }
 
 /**
@@ -439,11 +448,13 @@ function commerce_order_jsonapi_commerce_order_filter_access(EntityTypeInterface
  * Implements hook_theme_registry_alter().
  */
 function commerce_order_theme_registry_alter(&$theme_registry) {
-  $theme_registry['commerce_price_calculated']['variables'] += [
-    'result' => NULL,
-    'base_price' => NULL,
-    'adjustments' => [],
-  ];
+  if (isset($theme_registry['commerce_price_calculated'])) {
+    $theme_registry['commerce_price_calculated']['variables'] += [
+      'result' => NULL,
+      'base_price' => NULL,
+      'adjustments' => [],
+    ];
+  }
 }
 
 /**
@@ -454,4 +465,48 @@ function commerce_order_theme_registry_alter(&$theme_registry) {
 function commerce_order_field_group_content_element_keys_alter(&$keys) {
   $keys['commerce_order'] = 'order';
   $keys['commerce_order_item'] = 'order_item';
+}
+
+/**
+ * #after_build callback: Rename the profile address organization field label.
+ */
+function commerce_order_address_field_after_build(array $element, FormStateInterface $form_state): array {
+  if (isset($element['address']['organization'])) {
+    $element['address']['organization']['#title'] = t('Company');
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_commerce_dashboard_page_build_alter().
+ */
+function commerce_order_commerce_dashboard_page_build_alter(&$build) {
+  $form = \Drupal::formBuilder()
+    ->getForm(DashboardMetricsForm::class);
+  // If all periods are disabled, skip rendering the form.
+  if (isset($form['periods'])) {
+    $build['metrics_form'] = $form;
+  }
+}
+
+/**
+ * Implements hook_entity_reference_selection_alter().
+ */
+function commerce_order_entity_reference_selection_alter(&$definitions) {
+  // Drupal core assumes our custom entity reference selection plugin for users
+  // is defined by a deriver and expect a "base_plugin_label" key to be present.
+  // Artificially set the base plugin label to the label.
+  if (isset($definitions['commerce:user'])) {
+    $definitions['commerce:user']['base_plugin_label'] = $definitions['commerce:user']['label'];
+  }
+}
+
+/**
+ * Implements hook_gin_content_form_routes().
+ */
+function commerce_order_gin_content_form_routes() {
+  return [
+    'entity.commerce_order.edit_form',
+  ];
 }

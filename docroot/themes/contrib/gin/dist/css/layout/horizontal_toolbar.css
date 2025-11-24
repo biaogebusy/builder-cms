@@ -18,22 +18,15 @@
 }
 
 .gin-secondary-toolbar--frontend {
-  top: calc(var(--gin-toolbar-secondary-height) * -1);
+  inset-block-start: calc(var(--gin-toolbar-secondary-height) * -1);
 }
 
 .toolbar .toolbar-bar {
   position: fixed;
+  inset-inline-start: 0;
   width: 100%;
   background: #100f10;
   box-shadow: none;
-}
-
-[dir="ltr"] .toolbar .toolbar-bar {
-  left: 0;
-}
-
-[dir="rtl"] .toolbar .toolbar-bar {
-  right: 0;
 }
 
 @media (min-width: 61em) {
@@ -51,21 +44,10 @@
 
 .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-icon,
 .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-box > .toolbar-icon:not(.toolbar-handle) {
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding-block: 20px;
+  padding-inline-start: 3.25em;
+  padding-inline-end: 1.25em;
   white-space: nowrap;
-}
-
-[dir="ltr"] .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-icon,
-[dir="ltr"] .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-box > .toolbar-icon:not(.toolbar-handle) {
-  padding-left: 3.25em;
-  padding-right: 1.25em;
-}
-
-[dir="rtl"] .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-icon,
-[dir="rtl"] .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-box > .toolbar-icon:not(.toolbar-handle) {
-  padding-right: 3.25em;
-  padding-left: 1.25em;
 }
 
 .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-icon::before,
@@ -73,12 +55,8 @@
   inset-inline-start: 1em;
 }
 
-[dir="ltr"] .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-box > .toolbar-icon:not(.toolbar-handle)::before {
-  left: var(--gin-spacing-s);
-}
-
-[dir="rtl"] .toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-box > .toolbar-icon:not(.toolbar-handle)::before {
-  right: var(--gin-spacing-s);
+.toolbar .toolbar-bar .toolbar-menu-administration > .toolbar-menu > .menu-item > .toolbar-box > .toolbar-icon:not(.toolbar-handle)::before {
+  inset-inline-start: var(--gin-spacing-s);
 }
 
 .toolbar .toolbar-bar .toolbar-toggle-orientation {
@@ -89,12 +67,8 @@
   width: 3rem;
 }
 
-[dir="ltr"] .toolbar-tray-vertical .toolbar-menu .level-1 > .toolbar-box .toolbar-icon.toolbar-handle:before {
-  left: var(--gin-spacing-m);
-}
-
-[dir="rtl"] .toolbar-tray-vertical .toolbar-menu .level-1 > .toolbar-box .toolbar-icon.toolbar-handle:before {
-  right: var(--gin-spacing-m);
+.toolbar-tray-vertical .toolbar-menu .level-1 > .toolbar-box .toolbar-icon.toolbar-handle:before {
+  inset-inline-start: var(--gin-spacing-m);
 }
 
 .toolbar-tray-horizontal .level-1 .menu-item--expanded > .toolbar-box a {
@@ -102,7 +76,7 @@
 }
 
 .toolbar-horizontal .toolbar-tray {
-  border-bottom: 0 none;
+  border-block-end: 0 none;
 }
 
 .toolbar .toolbar-menu,
@@ -112,12 +86,8 @@
   background-color: var(--gin-bg-layer);
 }
 
-[dir="ltr"] .toolbar-horizontal .toolbar-tray .toolbar-toggle-orientation {
-  border-left: 1px solid var(--gin-border-color);
-}
-
-[dir="rtl"] .toolbar-horizontal .toolbar-tray .toolbar-toggle-orientation {
-  border-right: 1px solid var(--gin-border-color);
+.toolbar-horizontal .toolbar-tray .toolbar-toggle-orientation {
+  border-inline-start: 1px solid var(--gin-border-color);
 }
 
 .toolbar-tray a,
@@ -181,7 +151,7 @@
 
 @media (min-width: 64em) {
   .gin--classic-toolbar table.sticky-header {
-    margin-top: 0;
+    margin-block-start: 0;
   }
 }
 
@@ -201,17 +171,8 @@
 
 .toolbar-tray-horizontal ul li.menu-item--expanded ul li.menu-item--expanded:before,
 .toolbar-tray-horizontal .toolbar-menu:not(:first-child) li.menu-item--expanded > a:focus:before {
-  top: 12px;
-}
-
-[dir="ltr"] .toolbar-tray-horizontal ul li.menu-item--expanded ul li.menu-item--expanded:before,
-[dir="ltr"] .toolbar-tray-horizontal .toolbar-menu:not(:first-child) li.menu-item--expanded > a:focus:before {
-  right: 12px;
-}
-
-[dir="rtl"] .toolbar-tray-horizontal ul li.menu-item--expanded ul li.menu-item--expanded:before,
-[dir="rtl"] .toolbar-tray-horizontal .toolbar-menu:not(:first-child) li.menu-item--expanded > a:focus:before {
-  left: 12px;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
 }
 
 .toolbar-tray-horizontal .menu-item:hover {
@@ -220,7 +181,7 @@
 
 @media (min-width: 64em) {
   .gin--horizontal-toolbar.gin--edit-form .page-wrapper__node-edit-form .layout-region-node-secondary {
-    top: var(--gin-toolbar-height);
+    inset-block-start: var(--gin-toolbar-height);
     height: calc(100% - var(--gin-toolbar-height));
   }
 }
@@ -229,7 +190,7 @@
   .gin--horizontal-toolbar #toolbar-administration {
     z-index: 502;
     position: fixed;
-    top: 0;
+    inset-block-start: 0;
     width: 100%;
   }
 
@@ -244,26 +205,14 @@
   .gin--horizontal-toolbar #toolbar-administration .toolbar-lining {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-  }
-
-  [dir="ltr"] .gin--horizontal-toolbar #toolbar-administration .toolbar-lining {
-    padding-right: 0;
-  }
-
-  [dir="rtl"] .gin--horizontal-toolbar #toolbar-administration .toolbar-lining {
-    padding-left: 0;
+    padding-inline-end: 0;
   }
 }
 
 @media (min-width: 61em) {
-  [dir="ltr"] .gin--horizontal-toolbar #toolbar-administration .menu-item__tools,
-  [dir="ltr"] .gin--horizontal-toolbar #toolbar-administration .menu-item__admin_toolbar_tools-help {
-    margin-left: calc(var(--gin-spacing-m) * -1);
-  }
-
-  [dir="rtl"] .gin--horizontal-toolbar #toolbar-administration .menu-item__tools,
-  [dir="rtl"] .gin--horizontal-toolbar #toolbar-administration .menu-item__admin_toolbar_tools-help {
-    margin-right: calc(var(--gin-spacing-m) * -1);
+  .gin--horizontal-toolbar #toolbar-administration .menu-item__tools,
+  .gin--horizontal-toolbar #toolbar-administration .menu-item__admin_toolbar_tools-help {
+    margin-inline-start: calc(var(--gin-spacing-m) * -1);
   }
 }
 
@@ -279,34 +228,22 @@
 }
 
 @media (min-width: 61em) {
-  [dir="ltr"] .gin--horizontal-toolbar #toolbar-administration .toolbar-icon-admin-toolbar-tools-help {
-    padding-left: 2.875em;
-  }
-
-  [dir="rtl"] .gin--horizontal-toolbar #toolbar-administration .toolbar-icon-admin-toolbar-tools-help {
-    padding-right: 2.875em;
+  .gin--horizontal-toolbar #toolbar-administration .toolbar-icon-admin-toolbar-tools-help {
+    padding-inline-start: 2.875em;
   }
 
   .gin--horizontal-toolbar #toolbar-administration .toolbar-icon-admin-toolbar-tools-help:before {
-    top: -1px;
+    inset-block-start: -1px;
+    inset-inline-start: 14px;
     width: 24px;
     -webkit-mask-size: 28px 28px;
             mask-size: 28px 28px;
-  }
-
-  [dir="ltr"] .gin--horizontal-toolbar #toolbar-administration .toolbar-icon-admin-toolbar-tools-help:before {
-    left: 14px;
-  }
-
-  [dir="rtl"] .gin--horizontal-toolbar #toolbar-administration .toolbar-icon-admin-toolbar-tools-help:before {
-    right: 14px;
   }
 }
 
 @media (min-width: 61em) {
   .gin--horizontal-toolbar #toolbar-administration .toolbar-menu-administration {
-    margin-left: min(5vw, var(--gin-spacing-xxl));
-    margin-right: min(5vw, var(--gin-spacing-xxl));
+    margin-inline: min(5vw, var(--gin-spacing-xxl));
   }
 
   .gin--horizontal-toolbar #toolbar-administration .toolbar-menu-administration > .toolbar-menu {

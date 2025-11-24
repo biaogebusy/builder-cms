@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\eck\EckEntityTypeBundleInfo;
-use PHPUnit_Framework_MockObject_MockObject;
 
 /**
  * Tests the form element implementation.
@@ -199,15 +198,15 @@ class EntityTypeBundleInfoTest extends UnitTestBase {
   /**
    * Creates a new test subject with an entity type.
    *
-   * @param \PHPUnit_Framework_MockObject_MockObject $entityTypeMock
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entityTypeMock
    *   The entity type mock.
-   * @param \PHPUnit_Framework_MockObject_MockObject $entityStorageMock
+   * @param \Drupal\Core\Entity\EntityStorageInterface $entityStorageMock
    *   The entity storage mock.
    *
    * @return \Drupal\eck\EckEntityTypeBundleInfo
    *   The test subject.
    */
-  protected function createNewTestSubjectWithEntityType(PHPUnit_Framework_MockObject_MockObject $entityTypeMock = NULL, PHPUnit_Framework_MockObject_MockObject $entityStorageMock = NULL) {
+  protected function createNewTestSubjectWithEntityType(EntityTypeInterface $entityTypeMock = NULL, EntityStorageInterface $entityStorageMock = NULL) {
     if (NULL === $entityTypeMock) {
       $entityTypeMock = $this->getMockForAbstractClass(EntityTypeInterface::class);
       $entityTypeMock->method('getBundleEntityType')

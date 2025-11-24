@@ -168,7 +168,7 @@ class StemmerTest extends UnitTestCase {
       $this->processor->preprocessSearchQuery($query);
       $this->assertFalse($should_process, "Keys weren't processed but should have been.");
     }
-    catch (\RuntimeException $e) {
+    catch (\RuntimeException) {
       $this->assertTrue($should_process, "Keys were processed but shouldn't have been.");
     }
   }
@@ -179,7 +179,7 @@ class StemmerTest extends UnitTestCase {
    * @return array[]
    *   Arrays of arguments for testPreprocessSearchQuery().
    */
-  public function preprocessSearchQueryDataProvider(): array {
+  public static function preprocessSearchQueryDataProvider(): array {
     return [
       'language-less query' => [NULL, TRUE],
       'English query' => [['en'], TRUE],
@@ -214,7 +214,8 @@ class StemmerTest extends UnitTestCase {
    * @return array[]
    *   Arrays of arguments for testProcess().
    */
-  public function processDataProvider(): array {
+  public static function processDataProvider(): array {
+    // cspell:disable
     return [
       ['Yo', 'yo'],
       ['ties', 'tie'],
@@ -305,6 +306,7 @@ class StemmerTest extends UnitTestCase {
       [" \tExtra  spaces \rappeared \n", 'extra space appear'],
       ["\tspaced-out  \r\n", 'space out'],
     ];
+    // cspell:enable
   }
 
   /**

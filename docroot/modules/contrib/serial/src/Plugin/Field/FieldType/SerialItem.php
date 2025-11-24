@@ -17,7 +17,7 @@ use Drupal\Core\TypedData\TranslatableInterface;
  *   id = "serial",
  *   label = @Translation("Serial"),
  *   description = @Translation("Auto increment serial field type."),
- *   category = @Translation("Number"),
+ *   category = "number",
  *   default_widget = "serial_default_widget",
  *   default_formatter = "serial_default_formatter"
  * )
@@ -108,7 +108,7 @@ class SerialItem extends FieldItemBase {
       $bundle = $fieldConfig->getTargetBundle();
       $query = \Drupal::entityQuery($entityTypeId);
       $query->condition($bundleKey, $bundle);
-      $ids = $query->execute();
+      $ids = $query->accessCheck(FALSE)->execute();
 
       if (count($ids) > 0) {
         /** @var \Drupal\serial\SerialStorageInterface $serialStorage */
@@ -121,14 +121,14 @@ class SerialItem extends FieldItemBase {
           $startValue
         );
         if ($oldCount > 0) {
-          \Drupal::messenger()->addMessage(t('Serial values have been automatically set for %count existing entities, starting from %start_value.', [
+          \Drupal::messenger()->addMessage($this->t('Serial values have been automatically set for %count existing entities, starting from %start_value.', [
             '%count' => $oldCount,
             '%start_value' => $startValue,
           ]));
         }
       }
       else {
-        \Drupal::messenger()->addWarning(t('No entities to initialize, the next entity to be created will start from %start_value.', [
+        \Drupal::messenger()->addWarning($this->t('No entities to initialize, the next entity to be created will start from %start_value.', [
           '%start_value' => $startValue,
         ]));
       }
@@ -187,7 +187,7 @@ class SerialItem extends FieldItemBase {
   /**
    * Gets the serial for this entity type, bundle, field instance.
    *
-   * @return int
+   * @return int|null
    *   serial id
    */
   private function getSerial() {
@@ -219,7 +219,7 @@ class SerialItem extends FieldItemBase {
 
       // Get the starting value from the storage settings.
       $settings = $this->getSettings();
-      $startValue = isset($settings['start_value']) ? $settings['start_value'] : 1;
+      $startValue = $settings['start_value'] ?? 1;
       // Subtract one as it is already added in code above.
       $serial = $serial + $startValue - 1;
     }

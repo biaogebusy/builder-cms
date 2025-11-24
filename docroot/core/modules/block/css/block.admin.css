@@ -13,6 +13,7 @@
   margin-top: 4px;
   margin-bottom: 4px;
   padding: 3px;
+  color: #000;
   background-color: #ff6;
 }
 a.block-demo-backlink,
@@ -37,7 +38,7 @@ a.block-demo-backlink:hover {
 .block-form .form-item-settings-admin-label label {
   display: inline;
 }
-.block-form .form-item-settings-admin-label label:after {
+.block-form .form-item-settings-admin-label label::after {
   content: ":";
 }
 .block-disabled:not(:hover) {

@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\UserInterface;
 
 /**
  * Settings form test.
@@ -17,10 +20,6 @@ class SettingsFormTest extends BrowserTestBase {
   protected static $modules = [
     'image_effects',
     'color',
-    // @todo this test is not executed since the 'jquery_colorpicker' module is
-    // throwing deprecations in D9.
-    // @see https://www.drupal.org/project/image_effects/issues/3296336
-    // 'jquery_colorpicker',
     'file_mdm',
     'file_mdm_exif',
     'file_mdm_font',
@@ -33,10 +32,8 @@ class SettingsFormTest extends BrowserTestBase {
 
   /**
    * Admin user.
-   *
-   * @var \Drupal\user\UserInterface
    */
-  protected $adminUser;
+  protected UserInterface $adminUser;
 
   /**
    * {@inheritdoc}
@@ -54,7 +51,7 @@ class SettingsFormTest extends BrowserTestBase {
   /**
    * Settings form test.
    */
-  public function testSettingsForm() {
+  public function testSettingsForm(): void {
     $admin_path = '/admin/config/media/image_effects';
 
     // Get the settings form.
@@ -92,42 +89,6 @@ class SettingsFormTest extends BrowserTestBase {
 
     // Check config changed.
     $this->assertEquals(['path' => 'public://'], \Drupal::config('image_effects.settings')->get('font_selector.plugin_settings.dropdown'));
-  }
-
-  /**
-   * Test JQuery Colorpicker color selector.
-   *
-   * @todo this test is not executed since the 'jquery_colorpicker' module is
-   *   throwing deprecations in D9.
-   *
-   * @see https://www.drupal.org/project/image_effects/issues/3296336
-   */
-  public function __testJqueryColorpickerSelector(): void {
-    $admin_path = '/admin/config/media/image_effects';
-
-    // Get the settings form.
-    $this->drupalGet($admin_path);
-
-    // Change the default color selector.
-    $edit = [
-      'settings[color_selector][plugin_id]' => 'jquery_colorpicker',
-    ];
-    $this->submitForm($edit, 'Save configuration');
-
-    // Check config changed.
-    $this->assertEquals('jquery_colorpicker', \Drupal::config('image_effects.settings')->get('color_selector.plugin_id'));
-
-    // Verify that the 'jquery_colorpicker' module cannot be uninstalled.
-    $this->assertNotEquals([], \Drupal::service('module_installer')->validateUninstall(['jquery_colorpicker']));
-
-    // Back to the default color selector.
-    $edit = [
-      'settings[color_selector][plugin_id]' => 'html_color',
-    ];
-    $this->submitForm($edit, 'Save configuration');
-
-    // Verify that the 'jquery_colorpicker' module can be uninstalled now.
-    $this->assertTrue(\Drupal::service('module_installer')->uninstall(['jquery_colorpicker']));
   }
 
 }

@@ -1,20 +1,23 @@
 services:
+  _defaults:
+    autowire: true
   plugin.manager.commerce_promotion_offer:
+    autowire: false
     class: Drupal\commerce_promotion\PromotionOfferManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager']
+  Drupal\commerce_promotion\PromotionOfferManager: '@plugin.manager.commerce_promotion_offer'
 
   commerce_promotion.promotion_order_processor:
     class: Drupal\commerce_promotion\PromotionOrderProcessor
-    arguments: ['@entity_type.manager', '@language_manager']
     tags:
       - { name: commerce_order.order_preprocessor, priority: 100}
       - { name: commerce_order.order_processor, priority: 100, adjustment_type: promotion }
 
   commerce_promotion.usage:
     class: Drupal\commerce_promotion\PromotionUsage
-    arguments: ['@database']
     tags:
       - { name: backend_overridable }
+  Drupal\commerce_promotion\PromotionUsageInterface: '@commerce_promotion.usage'
 
   commerce_promotion.filter_conditions_subscriber:
     class: Drupal\commerce_promotion\EventSubscriber\FilterConditionsEventSubscriber
@@ -23,15 +26,17 @@ services:
 
   commerce_promotion.order_subscriber:
     class: Drupal\commerce_promotion\EventSubscriber\OrderEventSubscriber
-    arguments: ['@entity_type.manager', '@commerce_promotion.usage']
     tags:
       - { name: event_subscriber }
 
   commerce_promotion.coupon_code_generator:
     class: Drupal\commerce_promotion\CouponCodeGenerator
-    arguments: ['@database']
+  Drupal\commerce_promotion\CouponCodeGeneratorInterface: '@commerce_promotion.coupon_code_generator'
 
   commerce_promotion.route_subscriber:
     class: Drupal\commerce_promotion\EventSubscriber\RouteSubscriber
     tags:
       - { name: event_subscriber }
+
+  commerce_promotion.cron:
+    class: Drupal\commerce_promotion\Cron

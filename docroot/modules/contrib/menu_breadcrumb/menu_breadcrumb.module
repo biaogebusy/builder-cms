@@ -5,6 +5,7 @@
  * menu_breadcrumb.module
  */
 
+use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
@@ -20,9 +21,9 @@ function menu_breadcrumb_help($route_name, RouteMatchInterface $route_match) {
 Menu Breadcrumb: Generate breadcrumbs based on menu position/titles.
 </h5>
 <p>
-On the module Settings page, select options regarding the apperarance of breadcrumbs,
+On the module Settings page, select options regarding the appearance of breadcrumbs,
 and select menus on which to generate menu-based breadcrumbs.
-This basic behaviour is similar to the Drupal 7 version,
+This basic behavior is similar to the Drupal 7 version,
 which in Drupal 8 is extended as follows:
 </p>
 <ul>
@@ -76,7 +77,7 @@ instead of adding them more than once your menu
 <p>
 Taxonomy terms are searched in the order that their entity reference fields
 appear in the current page's field listing.
-One way to change an unwanted taxonomy term taking precendence over the one
+One way to change an unwanted taxonomy term taking precedence over the one
 on which you want to "attach" would be to change the order of those fields.
 </p>
 <p>
@@ -114,4 +115,17 @@ EOT;
       break;
   }
   return $output;
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ *
+ * Add url.path context to all breadcrumbs to prevent pages not handled by Menu
+ * Breadcrumbs to have their breadcrumb replace other pages that should be
+ * handled by the module.
+ *
+ * @see https://www.drupal.org/project/menu_breadcrumb/issues/3230481
+ */
+function menu_breadcrumb_system_breadcrumb_alter(Breadcrumb &$breadcrumb, RouteMatchInterface $route_match, array $context) {
+  $breadcrumb->addCacheContexts(['url.path']);
 }

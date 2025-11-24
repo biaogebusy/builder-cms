@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 /**
@@ -17,7 +19,7 @@ trait CoreVersionUiTestTrait {
    * @param string $submit
    *   The label of the submit button to post.
    */
-  protected function drupalPostNodeForm($path, array $edit, $submit): void {
+  protected function drupalPostNodeForm($path, array $edit, string $submit): void {
     $this->drupalGet($path);
     $this->submitForm($edit, $submit);
   }

@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\file_mdm\FileMetadataManagerInterface;
 use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD AutoOrient operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_auto_orient",
- *   toolkit = "gd",
- *   operation = "auto_orient",
- *   label = @Translation("Auto orient image"),
- *   description = @Translation("Automatically adjusts the orientation of an image.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_auto_orient',
+  toolkit: 'gd',
+  operation: 'auto_orient',
+  label: new TranslatableMarkup('Auto orient image'),
+  description: new TranslatableMarkup('Automatically adjusts the orientation of an image.'),
+)]
 class AutoOrient extends GDImageToolkitOperationBase {
 
   /**
@@ -35,7 +39,7 @@ class AutoOrient extends GDImageToolkitOperationBase {
     }
 
     // Read EXIF data.
-    $file = \Drupal::service('file_metadata_manager')->uri($source_path);
+    $file = \Drupal::service(FileMetadataManagerInterface::class)->uri($source_path);
     $exif_orientation = $file->getMetadata('exif', 'Orientation');
     if ($exif_orientation && $exif_orientation['value'] !== NULL) {
       // http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/EXIF.html:
@@ -81,6 +85,8 @@ class AutoOrient extends GDImageToolkitOperationBase {
           return TRUE;
       }
     }
+
+    return TRUE;
   }
 
 }

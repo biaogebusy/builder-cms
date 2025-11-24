@@ -2,13 +2,14 @@
 
 namespace Drupal\Tests\commerce_promotion\FunctionalJavascript;
 
+use Drupal\commerce_payment\Entity\PaymentMethodInterface;
+use Drupal\Core\Url;
+use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 use Drupal\commerce_checkout\Entity\CheckoutFlow;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_order\Entity\OrderItemType;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Url;
-use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 
 /**
  * Tests the coupon redemption checkout pane.
@@ -46,6 +47,7 @@ class CouponRedemptionPaneTest extends CommerceWebDriverTestBase {
   protected static $modules = [
     'block',
     'commerce_cart',
+    'commerce_product',
     'commerce_promotion',
     'commerce_promotion_test',
     'commerce_checkout',
@@ -145,11 +147,17 @@ class CouponRedemptionPaneTest extends CommerceWebDriverTestBase {
       'card_number' => '1111',
       'billing_profile' => $profile,
       'reusable' => TRUE,
-      'expires' => strtotime('2028/03/24'),
+      'expires' => strtotime('+1 year'),
     ]);
+    assert($payment_method1 instanceof PaymentMethodInterface);
+    $payment_method1->setDefault(TRUE);
     $payment_method1->setBillingProfile($profile);
     $payment_method1->save();
+
+    // Two payment methods are created because some tests will switch between
+    // them to test integration with coupon redeem pane ajax.
     $payment_method2 = $this->createEntity('commerce_payment_method', [
+      'uid' => $this->adminUser->id(),
       'type' => 'credit_card',
       'payment_gateway' => 'onsite',
       'remote_id' => '123456',
@@ -157,7 +165,7 @@ class CouponRedemptionPaneTest extends CommerceWebDriverTestBase {
       'card_number' => '9999',
       'billing_profile' => $profile,
       'reusable' => TRUE,
-      'expires' => strtotime('2028/03/24'),
+      'expires' => strtotime('+1 year'),
     ]);
     $payment_method2->setBillingProfile($profile);
     $payment_method2->save();
@@ -209,6 +217,25 @@ class CouponRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->assertSession()->pageTextContains('$899.10');
 
     // Coupon removal.
+    $this->getSession()->getPage()->pressButton('Remove coupon');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextNotContains($coupon->getCode());
+    $this->assertSession()->fieldExists('Coupon code');
+    $this->assertSession()->buttonExists('Apply coupon');
+    $this->assertSession()->pageTextNotContains('-$99.90');
+    $this->assertSession()->pageTextContains('$999');
+
+    // Valid coupon - test whitespace trimming:
+    $this->getSession()->getPage()->fillField('Coupon code', ' ' . $coupon->getCode() . ' ');
+    $this->getSession()->getPage()->pressButton('Apply coupon');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains($coupon->getCode());
+    $this->assertSession()->fieldNotExists('Coupon code');
+    $this->assertSession()->buttonNotExists('Apply coupon');
+    $this->assertSession()->pageTextContains('-$99.90');
+    $this->assertSession()->pageTextContains('$899.10');
+
+    // Coupon removal - test whitespace trimming:
     $this->getSession()->getPage()->pressButton('Remove coupon');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextNotContains($coupon->getCode());
@@ -303,8 +330,10 @@ class CouponRedemptionPaneTest extends CommerceWebDriverTestBase {
     $this->drupalGet(Url::fromRoute('commerce_checkout.form', ['commerce_order' => $this->cart->id()]));
 
     $this->getSession()->getPage()->fillField('Coupon code', $coupon->getCode());
-    $this->submitForm([], 'Continue to review');
     $this->assertSession()->pageTextContains('Visa ending in 9999');
+    $this->assertSession()->pageTextContains('Visa ending in 1111');
+    $this->submitForm([], 'Continue to review');
+    $this->assertSession()->pageTextContains('Visa ending in 1111');
     $this->assertSession()->pageTextContains($coupon->getCode());
     $this->assertSession()->pageTextContains('-$99.90');
     $this->assertSession()->pageTextContains('$899.10');

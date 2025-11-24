@@ -1,5 +1,5 @@
 {
   "require": {
-    "drupal/jquery_ui": "^1.6"
+    "drupal/jquery_ui": "^1.7"
   }
 }

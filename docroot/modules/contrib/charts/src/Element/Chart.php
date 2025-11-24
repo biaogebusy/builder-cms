@@ -2,17 +2,18 @@
 
 namespace Drupal\charts\Element;
 
-use Drupal\charts\ChartManager;
-use Drupal\charts\Plugin\chart\Library\ChartBase;
-use Drupal\charts\Plugin\chart\Library\ChartInterface;
-use Drupal\charts\TypeManager;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\charts\ChartManager;
+use Drupal\charts\Plugin\chart\Library\ChartBase;
+use Drupal\charts\Plugin\chart\Library\ChartInterface;
+use Drupal\charts\Plugin\chart\Library\LibraryRetrieverTrait;
+use Drupal\charts\TypeManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,9 +21,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @RenderElement("chart")
  */
-class Chart extends RenderElement implements ContainerFactoryPluginInterface {
+class Chart extends RenderElementBase implements ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
+  use LibraryRetrieverTrait;
 
   /**
    * The config factory service.
@@ -123,6 +125,7 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
       '#tooltips_use_html' => FALSE,
       '#data_labels' => FALSE,
       '#data_markers' => FALSE,
+      '#connect_nulls' => FALSE,
       '#legend' => TRUE,
       '#legend_title' => '',
       '#legend_title_font_weight' => 'bold',
@@ -139,6 +142,7 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
       '#raw_options' => [],
       '#content_prefix' => [],
       '#content_suffix' => [],
+      '#library_type_options' => [],
     ];
   }
 
@@ -180,7 +184,7 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
       }
     }
 
-    self::castElementIntergerValues($element);
+    self::castElementIntegerValues($element);
 
     // Generic theme function assuming it will be suitable for most chart types.
     $element['#theme'] = 'charts_chart';
@@ -194,8 +198,7 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
 
     // Include the library-specific render callback via their plugin manager.
     // Use the first charting library if the requested library is not available.
-    $library = $element['#chart_library'] ?? '';
-    $library = $this->getLibrary($library);
+    $library = $this->getLibrary($element['#chart_library'] ?? '');
 
     $element['#chart_library'] = $library;
     $charts_settings = $this->configFactory->get('charts.settings');
@@ -235,7 +238,7 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
    * @param array $element
    *   The element.
    */
-  public static function castElementIntergerValues(array &$element) {
+  public static function castElementIntegerValues(array &$element) {
     // Cast options to integers to avoid redundant library fixing problems.
     $integer_options = [
       // Chart options.
@@ -257,7 +260,7 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
 
     foreach ($element as $property_name => $value) {
       if (is_array($element[$property_name])) {
-        self::castElementIntergerValues($element[$property_name]);
+        self::castElementIntegerValues($element[$property_name]);
       }
       elseif ($property_name && in_array($property_name, $integer_options)) {
         $element[$property_name] = (is_null($element[$property_name]) || strlen($element[$property_name]) === 0) ? NULL : (int) $element[$property_name];
@@ -283,29 +286,6 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
   }
 
   /**
-   * Get the library.
-   *
-   * @param string $library
-   *   The library.
-   *
-   * @return string
-   *   The library.
-   */
-  private function getLibrary($library) {
-    $definitions = $this->chartsManager->getDefinitions();
-    if (!$library || $library === 'site_default') {
-      $charts_settings = $this->configFactory->get('charts.settings');
-      $default_settings_library = $charts_settings->get('charts_default_settings.library');
-      $library = !empty($default_settings_library) ? $default_settings_library : key($definitions);
-    }
-    elseif (!isset($definitions[$library])) {
-      $library = key($definitions);
-    }
-
-    return $library;
-  }
-
-  /**
    * Build the element.
    *
    * @param array $settings
@@ -325,12 +305,14 @@ class Chart extends RenderElement implements ContainerFactoryPluginInterface {
       '#type' => 'chart',
       '#chart_type' => $type,
       '#chart_library' => $settings['library'],
+      '#library_type_options' => $settings['library_type_options'] ?? [],
       '#title' => $settings['display']['title'],
       '#title_position' => $settings['display']['title_position'],
       '#subtitle' => $settings['display']['subtitle'] ?? '',
       '#tooltips' => $settings['display']['tooltips'] ?? [],
       '#data_labels' => $settings['display']['data_labels'] ?? FALSE,
       '#data_markers' => $settings['display']['data_markers'] ?? FALSE,
+      '#connect_nulls' => $settings['display']['connect_nulls'] ?? FALSE,
       '#colors' => $display_colors,
       '#background' => $settings['display']['background'] ?? 'transparent',
       '#three_dimensional' => $settings['display']['three_dimensional'] ?? FALSE,

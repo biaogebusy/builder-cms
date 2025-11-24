@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\forum\Unit\Breadcrumb;
 
 use Drupal\Core\Cache\Cache;
@@ -11,6 +13,7 @@ use Symfony\Component\DependencyInjection\Container;
 /**
  * @coversDefaultClass \Drupal\forum\Breadcrumb\ForumBreadcrumbBuilderBase
  * @group forum
+ * @group legacy
  */
 class ForumBreadcrumbBuilderBaseTest extends UnitTestCase {
 
@@ -34,7 +37,7 @@ class ForumBreadcrumbBuilderBaseTest extends UnitTestCase {
    *
    * @covers ::__construct
    */
-  public function testConstructor() {
+  public function testConstructor(): void {
     // Make some test doubles.
     $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
     $config_factory = $this->getConfigFactoryStub(
@@ -60,7 +63,6 @@ class ForumBreadcrumbBuilderBaseTest extends UnitTestCase {
     // Test that the constructor made a config object with our info in it.
     $reflector = new \ReflectionClass($builder);
     $ref_property = $reflector->getProperty('config');
-    $ref_property->setAccessible(TRUE);
     $config = $ref_property->getValue($builder);
     $this->assertEquals('IAmATestValue', $config->get('IAmATestKey'));
   }
@@ -72,7 +74,7 @@ class ForumBreadcrumbBuilderBaseTest extends UnitTestCase {
    *
    * @covers ::build
    */
-  public function testBuild() {
+  public function testBuild(): void {
     // Build all our dependencies, backwards.
     $translation_manager = $this->getMockBuilder('Drupal\Core\StringTranslation\TranslationInterface')
       ->disableOriginalConstructor()

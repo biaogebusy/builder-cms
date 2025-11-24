@@ -1,0 +1,34 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"27"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Nam-gu": {
+			"local_name": "남구"
+		},
+		"Dalseo-gu": {
+			"local_name": "달서구"
+		},
+		"Dalseong-gun": {
+			"local_name": "달성군"
+		},
+		"Dong-gu": {
+			"local_name": "동구"
+		},
+		"Buk-gu": {
+			"local_name": "북구"
+		},
+		"Seo-gu": {
+			"local_name": "서구"
+		},
+		"Suseong-gu": {
+			"local_name": "수성구"
+		},
+		"Jung-gu": {
+			"local_name": "중구"
+		}
+	}
+}

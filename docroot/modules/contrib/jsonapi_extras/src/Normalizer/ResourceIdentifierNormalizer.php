@@ -43,7 +43,7 @@ class ResourceIdentifierNormalizer extends JsonApiNormalizerDecoratorBase {
   /**
    * {@inheritdoc}
    */
-  public function normalize($field, $format = NULL, array $context = []) {
+  public function normalize($field, $format = NULL, array $context = []): array|bool|string|int|float|null|\ArrayObject {
     assert($field instanceof ResourceIdentifier);
     $normalized_output = parent::normalize($field, $format, $context);
     assert($normalized_output instanceof CacheableNormalization);
@@ -54,6 +54,9 @@ class ResourceIdentifierNormalizer extends JsonApiNormalizerDecoratorBase {
     // Find the name of the field being normalized. This is unreasonably more
     // contrived than one could expect for ResourceIdentifiers.
     $resource_type = $resource_object->getResourceType();
+    if (!($resource_type instanceof ConfigurableResourceType)) {
+      return $normalized_output;
+    }
     $field_name = $this->guessFieldName($field->getId(), $resource_object);
     if (!$field_name) {
       return $normalized_output;
@@ -76,7 +79,7 @@ class ResourceIdentifierNormalizer extends JsonApiNormalizerDecoratorBase {
     return new CacheableNormalization(
       // This was passed by reference but often, merging creates a new object.
       $context->offsetGet(CacheableNormalizerInterface::SERIALIZATION_CONTEXT_CACHEABILITY),
-      array_intersect_key($transformed, array_flip(['id', 'type', 'meta']))
+      array_intersect_key($transformed ?? [], array_flip(['id', 'type', 'meta']))
     );
   }
 

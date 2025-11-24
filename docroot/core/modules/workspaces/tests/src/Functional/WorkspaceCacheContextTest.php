@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Functional;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\workspaces\Entity\Workspace;
@@ -30,9 +33,11 @@ class WorkspaceCacheContextTest extends BrowserTestBase {
   /**
    * Tests the 'workspace' cache context.
    */
-  public function testWorkspaceCacheContext() {
+  public function testWorkspaceCacheContext(): void {
     $renderer = \Drupal::service('renderer');
     $cache_contexts_manager = \Drupal::service("cache_contexts_manager");
+    /** @var \Drupal\Core\Cache\VariationCacheFactoryInterface $variation_cache_factory */
+    $variation_cache_factory = $this->container->get('variation_cache_factory');
 
     // Check that the 'workspace' cache context is present when the module is
     // installed.
@@ -54,13 +59,12 @@ class WorkspaceCacheContextTest extends BrowserTestBase {
     $renderer->renderRoot($build);
     $this->assertContains('workspace', $build['#cache']['contexts']);
 
-    $cid_parts = array_merge($build['#cache']['keys'], $cache_contexts_manager->convertTokensToKeys($build['#cache']['contexts'])->getKeys());
-    $this->assertContains('[workspace]=live', $cid_parts);
+    $context_tokens = $cache_contexts_manager->convertTokensToKeys($build['#cache']['contexts'])->getKeys();
+    $this->assertContains('[workspace]=live', $context_tokens);
 
     // Test that a cache entry is created.
-    $cid = implode(':', $cid_parts);
-    $bin = $build['#cache']['bin'];
-    $this->assertInstanceOf(\stdClass::class, $this->container->get('cache.' . $bin)->get($cid));
+    $cache_bin = $variation_cache_factory->get($build['#cache']['bin']);
+    $this->assertInstanceOf(\stdClass::class, $cache_bin->get($build['#cache']['keys'], CacheableMetadata::createFromRenderArray($build)));
 
     // Switch to the 'stage' workspace and check that the correct workspace
     // cache context is used.
@@ -80,13 +84,12 @@ class WorkspaceCacheContextTest extends BrowserTestBase {
     $renderer->renderRoot($build);
     $this->assertContains('workspace', $build['#cache']['contexts']);
 
-    $cid_parts = array_merge($build['#cache']['keys'], $cache_contexts_manager->convertTokensToKeys($build['#cache']['contexts'])->getKeys());
-    $this->assertContains('[workspace]=stage', $cid_parts);
+    $context_tokens = $cache_contexts_manager->convertTokensToKeys($build['#cache']['contexts'])->getKeys();
+    $this->assertContains('[workspace]=stage', $context_tokens);
 
     // Test that a cache entry is created.
-    $cid = implode(':', $cid_parts);
-    $bin = $build['#cache']['bin'];
-    $this->assertInstanceOf(\stdClass::class, $this->container->get('cache.' . $bin)->get($cid));
+    $cache_bin = $variation_cache_factory->get($build['#cache']['bin']);
+    $this->assertInstanceOf(\stdClass::class, $cache_bin->get($build['#cache']['keys'], CacheableMetadata::createFromRenderArray($build)));
   }
 
 }

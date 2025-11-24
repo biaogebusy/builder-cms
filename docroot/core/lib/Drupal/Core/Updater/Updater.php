@@ -8,7 +8,7 @@ use Drupal\Core\FileTransfer\FileTransfer;
 /**
  * Defines the base class for Updaters used in Drupal.
  */
-class Updater {
+abstract class Updater {
 
   /**
    * Directory to install from.
@@ -27,12 +27,12 @@ class Updater {
   /**
    * The name of the project directory (basename).
    */
-  protected $name;
+  protected string $name;
 
   /**
    * The title of the project.
    */
-  protected $title;
+  protected string $title;
 
   /**
    * Constructs a new updater.
@@ -195,6 +195,14 @@ class Updater {
   }
 
   /**
+   * Returns the path to the default install location for the current project.
+   *
+   * @return string
+   *   The absolute path of the directory.
+   */
+  abstract public function getInstallDirectory();
+
+  /**
    * Stores the default parameters for the Updater.
    *
    * @param array $overrides
@@ -332,12 +340,12 @@ class Updater {
           // Probably still not writable. Try to chmod and do it again.
           // @todo Make a new exception class so we can catch it differently.
           try {
-            $old_perms = substr(sprintf('%o', fileperms($parent_dir)), -4);
+            $old_perms = fileperms($parent_dir) & 0777;
             $filetransfer->chmod($parent_dir, 0755);
             $filetransfer->createDirectory($directory);
             $this->makeWorldReadable($filetransfer, $directory);
             // Put the permissions back.
-            $filetransfer->chmod($parent_dir, intval($old_perms, 8));
+            $filetransfer->chmod($parent_dir, $old_perms);
           }
           catch (FileTransferException $e) {
             $message = t($e->getMessage(), $e->arguments);
@@ -364,8 +372,8 @@ class Updater {
   public function makeWorldReadable(&$filetransfer, $path, $recursive = TRUE) {
     if (!is_executable($path)) {
       // Set it to read + execute.
-      $new_perms = substr(sprintf('%o', fileperms($path)), -4, -1) . "5";
-      $filetransfer->chmod($path, intval($new_perms, 8), $recursive);
+      $new_perms = fileperms($path) & 0777 | 0005;
+      $filetransfer->chmod($path, $new_perms, $recursive);
     }
   }
 

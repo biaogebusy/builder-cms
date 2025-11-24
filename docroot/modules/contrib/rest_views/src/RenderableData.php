@@ -2,19 +2,21 @@
 
 namespace Drupal\rest_views;
 
+use Drupal\Component\Render\MarkupInterface;
+
 /**
  * Wrapper for renderable data that will be rendered during normalization.
  *
  * @package Drupal\rest_views
  */
-class RenderableData {
+class RenderableData implements MarkupInterface {
 
   /**
    * The render array.
    *
    * @var array
    */
-  protected $data;
+  protected array $data;
 
   /**
    * RenderableData constructor.
@@ -29,12 +31,12 @@ class RenderableData {
   /**
    * Create a renderable data object.
    *
-   * @param array|static $data
+   * @param array|self $data
    *   The render array.
    *
    * @return static
    */
-  public static function create($data): self {
+  public static function create(array|self $data): static {
     if ($data instanceof static) {
       return $data;
     }
@@ -63,6 +65,13 @@ class RenderableData {
    */
   public function getData(): array {
     return $this->data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function jsonSerialize(): array {
+    return $this->getData();
   }
 
 }

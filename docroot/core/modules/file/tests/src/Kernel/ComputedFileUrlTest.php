@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel;
 
 use Drupal\Core\Field\FieldItemInterface;
@@ -25,7 +27,7 @@ class ComputedFileUrlTest extends KernelTestBase {
   /**
    * @covers ::getValue
    */
-  public function testGetValue() {
+  public function testGetValue(): void {
     $entity = $this->prophesize(FileInterface::class);
     $entity->getFileUri()
       ->willReturn($this->testUrl);
@@ -50,7 +52,7 @@ class ComputedFileUrlTest extends KernelTestBase {
   /**
    * @covers ::setValue
    */
-  public function testSetValue() {
+  public function testSetValue(): void {
     $name = $this->randomMachineName();
     $parent = $this->prophesize(FieldItemInterface::class);
     $parent->onChange($name)
@@ -72,7 +74,7 @@ class ComputedFileUrlTest extends KernelTestBase {
   /**
    * @covers ::setValue
    */
-  public function testSetValueNoNotify() {
+  public function testSetValueNoNotify(): void {
     $name = $this->randomMachineName();
     $parent = $this->prophesize(FieldItemInterface::class);
     $parent->onChange($name)

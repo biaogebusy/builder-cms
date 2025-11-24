@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\advancedqueue\Kernel;
 
 use Drupal\advancedqueue\Entity\Queue;
@@ -27,9 +29,7 @@ class ProcessorTest extends KernelTestBase {
   protected $processor;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'advancedqueue',
@@ -61,7 +61,7 @@ class ProcessorTest extends KernelTestBase {
    * @covers ::processQueue
    * @covers ::processJob
    */
-  public function testProcessor() {
+  public function testProcessor(): void {
     $first_job = Job::create('simple', ['test' => '1']);
     $second_job = Job::create('flexible',
       ['expected_state' => Job::STATE_SUCCESS, 'expected_message' => 'Done!']);
@@ -107,7 +107,7 @@ class ProcessorTest extends KernelTestBase {
    *
    * @dataProvider retryJobProvider
    */
-  public function testRetry(Job $job) {
+  public function testRetry(Job $job): void {
     $this->queue->setProcessingTime(2);
     $this->queue->enqueueJob($job);
 
@@ -141,10 +141,10 @@ class ProcessorTest extends KernelTestBase {
   /**
    * Data provider for ::testRetry.
    *
-   * @return array
+   * @return array<int, array<int, \Drupal\advancedqueue\Job>>
    *   A list of testRetry function arguments.
    */
-  public function retryJobProvider() {
+  public static function retryJobProvider(): array {
     // The first job has job-type-level retry parameters.
     // The second job has result-level retry parameters.
     $first_job = Job::create('retry', ['test' => '1']);
@@ -161,7 +161,7 @@ class ProcessorTest extends KernelTestBase {
   /**
    * @covers ::processQueue
    */
-  public function testTimeLimit() {
+  public function testTimeLimit(): void {
     $this->queue->setProcessingTime(2);
     $this->queue->save();
 

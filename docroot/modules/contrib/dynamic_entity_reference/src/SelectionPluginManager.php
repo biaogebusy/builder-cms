@@ -17,7 +17,7 @@ class SelectionPluginManager extends CoreSelectionPluginManager {
   /**
    * {@inheritdoc}
    */
-  public function getSelectionHandler(FieldDefinitionInterface $field_definition, EntityInterface $entity = NULL, $target_type = NULL) {
+  public function getSelectionHandler(FieldDefinitionInterface $field_definition, ?EntityInterface $entity = NULL, $target_type = NULL) {
     if ($target_type === NULL) {
       return parent::getSelectionHandler($field_definition, $entity);
     }

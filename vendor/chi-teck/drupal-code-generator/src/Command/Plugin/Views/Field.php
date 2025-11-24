@@ -1,36 +1,45 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Plugin\Views;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\Plugin\PluginGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements plugin:views:field command.
- */
-final class Field extends PluginGenerator {
-
-  protected string $name = 'plugin:views:field';
-  protected string $description = 'Generates views field plugin';
-  protected string $alias = 'views-field';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/plugin/views/field';
+#[Generator(
+  name: 'plugin:views:field',
+  description: 'Generates views field plugin',
+  aliases: ['views-field'],
+  templatePath: Application::TEMPLATE_PATH . '/Plugin/Views/_field',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Field extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['configurable'] = $this->confirm('Make the plugin configurable?', FALSE);
+  protected function generate(array &$vars, AssetCollection $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
 
-    $this->collectServices($vars, FALSE);
+    $vars['plugin_label'] = $ir->askPluginLabel();
+    $vars['plugin_id'] = $ir->askPluginId();
+    $vars['class'] = $ir->askPluginClass();
 
-    $this->addFile('src/Plugin/views/field/{class}.php', 'field');
+    $vars['configurable'] = $ir->confirm('Make the plugin configurable?', FALSE);
+
+    $vars['services'] = $ir->askServices(FALSE);
+
+    $assets->addFile('src/Plugin/views/field/{class}.php', 'field.twig');
 
     if ($vars['configurable']) {
-      $this->addSchemaFile('config/schema/{machine_name}.views.schema.yml')
-        ->template('schema');
+      $assets->addSchemaFile('config/schema/{machine_name}.views.schema.yml')
+        ->template('schema.twig');
     }
-
   }
 
 }

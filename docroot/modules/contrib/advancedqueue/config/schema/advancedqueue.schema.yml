@@ -12,7 +12,7 @@ advancedqueue.advancedqueue_queue.*:
       type: string
       label: 'Backend'
     backend_configuration:
-      type: advancedqueue.backend.[%parent.plugin]
+      type: advancedqueue.backend.[%parent.backend]
     processor:
       type: string
       label: 'Processor'
@@ -22,6 +22,9 @@ advancedqueue.advancedqueue_queue.*:
     locked:
       type: boolean
       label: 'Locked'
+    stop_when_empty:
+      type: boolean
+      label: 'Stop when empty'
     threshold:
       type: mapping
       mapping:
@@ -34,6 +37,9 @@ advancedqueue.advancedqueue_queue.*:
         state:
           type: string
           label: 'Threshold state'
+
+advancedqueue.backend.database:
+  type: advancedqueue_backend_configuration
 
 advancedqueue.backend.*:
   type: advancedqueue_backend_configuration
@@ -60,3 +66,7 @@ views.field.advancedqueue_job_state:
     icon:
       type: boolean
       label: 'Icon'
+
+views.field.advancedqueue_bulk_form:
+  type: views_field_bulk_form
+  label: 'Advanced queue bulk form'

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\field\Entity\FieldStorageConfig;
@@ -16,9 +18,7 @@ use Drupal\Tests\BrowserTestBase;
 class NodeFieldMultilingualTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'language'];
 
@@ -59,7 +59,7 @@ class NodeFieldMultilingualTest extends BrowserTestBase {
       'language_configuration[language_alterable]' => TRUE,
     ];
     $this->drupalGet('admin/structure/types/manage/page');
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("The content type Basic page has been updated.");
 
     // Make node body translatable.
@@ -71,7 +71,7 @@ class NodeFieldMultilingualTest extends BrowserTestBase {
   /**
    * Tests whether field languages are correctly set through the node form.
    */
-  public function testMultilingualNodeForm() {
+  public function testMultilingualNodeForm(): void {
     // Create "Basic page" content.
     $langcode = language_get_default_langcode('node', 'page');
     $title_key = 'title[0][value]';
@@ -123,7 +123,7 @@ class NodeFieldMultilingualTest extends BrowserTestBase {
   /**
    * Tests multilingual field display settings.
    */
-  public function testMultilingualDisplaySettings() {
+  public function testMultilingualDisplaySettings(): void {
     // Create "Basic page" content.
     $title_key = 'title[0][value]';
     $title_value = $this->randomMachineName(8);

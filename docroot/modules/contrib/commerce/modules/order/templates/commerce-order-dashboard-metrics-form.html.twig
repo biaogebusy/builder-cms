@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Template for the dashboard metrics form.
+ *
+ * Available variables:
+ * - form: The form.
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="commerce-dashboard__actions">
+  <div class="commerce-dashboard__periods">
+    {{ form.periods }}
+  </div>
+  {% if form.refresh is not empty %}
+    <div class="commerce-dashboard__refresh">
+      {{ form.refresh.button }}
+      <span>{{ form.refresh.refreshed }}</span>
+    </div>
+  {% endif %}
+</div>
+<div class="commerce-dashboard__metrics card">
+    <div class="metrics__actions">
+      {{ form.filters }}
+    </div>
+    <div class="metrics">
+      {{ form.metrics }}
+    </div>
+    <div class="metrics__tables">
+      {{ form|without('periods', 'metrics', 'filters', 'refresh') }}
+    </div>
+</div>

@@ -4,22 +4,21 @@ namespace Drupal\commerce_payment\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter\EntityReferenceRevisionsEntityFormatter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_payment_method_profile' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_payment_method_profile",
- *   label = @Translation("Payment method profile"),
- *   description = @Translation("Displays the billing profile referenced by the payment method."),
- *   field_types = {
- *     "entity_reference_revisions"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_payment_method_profile",
+  label: new TranslatableMarkup("Payment method profile"),
+  description: new TranslatableMarkup("Displays the billing profile referenced by the payment method."),
+  field_types: ["entity_reference_revisions"],
+)]
 final class PaymentMethodProfileFormatter extends EntityReferenceRevisionsEntityFormatter {
 
   /**

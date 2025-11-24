@@ -70,7 +70,7 @@ class PromotionForm extends ContentEntityForm {
         $coupon_code = '';
         if ($coupons_count === 1) {
           $coupons = $promotion->getCoupons();
-          $coupon_code = $coupons[0]->getCode();
+          $coupon_code = $coupons[0]?->getCode() ?? '';
         }
         $description = $this->formatPlural($coupons_count, 'There is one coupon defined for this promotion: @coupon_code.', 'There are @count coupons defined for this promotion.', ['@coupon_code' => $coupon_code]);
         // When the promotion references coupons, regardless of the setting
@@ -80,9 +80,7 @@ class PromotionForm extends ContentEntityForm {
       }
       $form['require_coupon']['widget']['value']['#description'] = $description;
     }
-
     $form['#theme'] = ['commerce_promotion_form'];
-    $form['#attached']['library'][] = 'commerce_promotion/form';
     $form['advanced'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['entity-meta']],
@@ -131,6 +129,7 @@ class PromotionForm extends ContentEntityForm {
       'usage_limit' => 'usage_details',
       'usage_limit_customer' => 'usage_details',
       'compatibility' => 'compatibility_details',
+      'allow_multiple_coupons' => 'usage_details',
     ];
     foreach ($field_details_mapping as $field => $group) {
       if (isset($form[$field])) {
@@ -164,7 +163,7 @@ class PromotionForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $save_result = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->messenger()->addMessage($this->t('Saved the %label promotion.', ['%label' => $this->entity->label()]));
 
@@ -174,6 +173,8 @@ class PromotionForm extends ContentEntityForm {
     else {
       $form_state->setRedirect('entity.commerce_promotion.collection');
     }
+
+    return $save_result;
   }
 
 }

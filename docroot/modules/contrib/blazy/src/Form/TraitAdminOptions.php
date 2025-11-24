@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Form;
 
-use Drupal\blazy\BlazySettings;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
+use Drupal\blazy\BlazySettings;
 
 /**
  * A blazy admin Trait to declutter, and focus more on form elements.
@@ -68,7 +68,7 @@ trait TraitAdminOptions {
     array $target_bundles = [],
     array $allowed_field_types = [],
     $entity_type = 'media',
-    $target_type = ''
+    $target_type = '',
   ): array {
     $options = [];
 
@@ -231,7 +231,7 @@ trait TraitAdminOptions {
   protected function getExcludedFieldOptions(): array {
     // @todo figure out a more efficient way than blacklisting.
     // Do not exclude field_media_image as needed for Main stage.
-    // Do not exclude field_media as needed for Overlays.
+    // Do not exclude field_media_ as needed for Overlays.
     $fields = 'media_document media_pinterest media_svg document_size media_file id media_in_library mime_type source media_twitter tweet_author tweet_id tweet_url media_video_embed_field instagram_shortcode instagram_url media_oembed_instagram media_soundcloud media_oembed_video media_audio_file media_video_file media_facebook media_flickr file_url external_thumbnail local_thumbnail local_thumbnail_uri media_unsplash';
     $fields = array_map('trim', explode(' ', $fields));
 

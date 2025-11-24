@@ -65,15 +65,11 @@ interface BlazyOEmbedInterface {
    * @param array $build
    *   The array being modified containing: content, settings and image item.
    *   Or just settings content for old deprecated approach.
-   * @param object $entity
-   *   The Media entity, File entity, ER, FieldItemList, etc., optional
-   *   to accommodate old approach (pre 2.10) and UGC.
    *
    * @todo should be at non-static BlazyMedia at 4.x, if too late for 3.x.
    * @todo add a return to avoid potential issues with references at 3.x.
-   * @todo make it single param like the rest by 3.x.
    */
-  public function build(array &$build, $entity = NULL): void;
+  public function build(array &$build): void;
 
   /**
    * Checks the given input URL.
@@ -87,16 +83,6 @@ interface BlazyOEmbedInterface {
    *   The modified input url.
    */
   public function checkInputUrl(array &$settings, $input): ?string;
-
-  /**
-   * Checks for the provider and its resources, to determine oembed, or not.
-   *
-   * @param string $input
-   *   The media input url.
-   * @param object $blazies
-   *   The blazies object to check and store the provider and its resources.
-   */
-  public function checkProviderAndResource($input, $blazies): void;
 
   /**
    * Returns external image item from resource for BlazyFilter or VEF.

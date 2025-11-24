@@ -21,7 +21,7 @@ class EckEntityRouteProvider implements EntityRouteProviderInterface {
     if ($eck_type = EckEntityType::load($entity_type->id())) {
       $view_defaults = [
         '_entity_view' => $eck_type->id(),
-        '_title' => $eck_type->label(),
+        '_title_callback' => '\Drupal\Core\Entity\Controller\EntityController::title',
       ];
       $route_view = new Route("{$eck_type->id()}/{{$eck_type->id()}}");
       $route_view->addDefaults($view_defaults);
@@ -30,7 +30,7 @@ class EckEntityRouteProvider implements EntityRouteProviderInterface {
 
       $edit_defaults = [
         '_entity_form' => $eck_type->id() . '.edit',
-        '_title' => 'Edit ' . $eck_type->label(),
+        '_title_callback' => '\Drupal\Core\Entity\Controller\EntityController::editTitle',
       ];
       $route_edit = new Route("{$eck_type->id()}/{{$eck_type->id()}}/edit");
       $route_edit->addDefaults($edit_defaults);
@@ -41,7 +41,7 @@ class EckEntityRouteProvider implements EntityRouteProviderInterface {
       // Route for delete.
       $delete_defaults = [
         '_entity_form' => $eck_type->id() . '.delete',
-        '_title' => 'Delete ' . $eck_type->label(),
+        '_title_callback' => '\Drupal\Core\Entity\Controller\EntityController::editTitle',
       ];
       $route_delete = new Route("{$eck_type->id()}/{{$eck_type->id()}}/delete");
       $route_delete->addDefaults($delete_defaults);

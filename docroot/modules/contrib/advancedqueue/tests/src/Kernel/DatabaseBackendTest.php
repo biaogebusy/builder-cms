@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\advancedqueue\Kernel;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\advancedqueue\Entity\Queue;
+use Drupal\advancedqueue\Entity\QueueInterface;
+use Drupal\advancedqueue\Exception\DuplicateJobException;
 use Drupal\advancedqueue\Job;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\KernelTests\KernelTestBase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass \Drupal\advancedqueue\Plugin\AdvancedQueue\Backend\Database
@@ -18,25 +22,20 @@ class DatabaseBackendTest extends KernelTestBase {
 
   /**
    * The first tested queue.
-   *
-   * @var \Drupal\advancedqueue\Entity\QueueInterface
    */
-  protected $firstQueue;
+  protected QueueInterface $firstQueue;
 
   /**
    * The second tested queue.
-   *
-   * @var \Drupal\advancedqueue\Entity\QueueInterface
    */
-  protected $secondQueue;
+  protected QueueInterface $secondQueue;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'advancedqueue',
+    'advancedqueue_test',
   ];
 
   /**
@@ -82,7 +81,7 @@ class DatabaseBackendTest extends KernelTestBase {
    * @covers ::onFailure
    * @covers ::deleteJob
    */
-  public function testQueue() {
+  public function testQueue(): void {
     $first_job = Job::create('simple', ['test' => '1']);
     $second_job = Job::create('simple', ['test' => '2']);
     $third_job = Job::create('simple', ['test' => '3']);
@@ -175,7 +174,7 @@ class DatabaseBackendTest extends KernelTestBase {
    * @covers ::enqueueJob
    * @covers ::claimJob
    */
-  public function testFutureQueue() {
+  public function testFutureQueue(): void {
     $first_job = Job::create('simple', ['test' => '1']);
     $second_job = Job::create('simple', ['test' => '2']);
 
@@ -202,9 +201,63 @@ class DatabaseBackendTest extends KernelTestBase {
   }
 
   /**
+   * Tests handling of duplicate jobs when duplicates should not be avoided.
+   *
+   * The simple plugin has the default setting of not avoiding duplicates.
+   */
+  public function testAvoidDuplicatesFalse():void {
+    $job = Job::create('simple', ['test' => '1']);
+    $this->firstQueue->enqueueJob($job);
+
+    $this->assertQueuedCount(1, $this->firstQueue, "The first copy of job was queued.");
+
+    // Confirm that the backend does requeue the same job.
+    $job = Job::create('simple', ['test' => '1']);
+    $this->firstQueue->enqueueJob($job);
+
+    $this->assertQueuedCount(2, $this->firstQueue, "The second copy of the job was queued.");
+  }
+
+  /**
+   * Tests handling of duplicate jobs when duplicates should be avoided.
+   */
+  public function testAvoidDuplicatesTrue():void {
+    $job = Job::create('avoid_duplicates', ['test' => '1']);
+    $this->firstQueue->enqueueJob($job);
+
+    $this->assertQueuedCount(1, $this->firstQueue, "The first copy of job was queued.");
+
+    // Confirm that the backend does not requeue the same job.
+    $job = Job::create('avoid_duplicates', ['test' => '1']);
+    try {
+      $this->firstQueue->enqueueJob($job);
+      $this->fail('Expected an exception to be thrown.');
+    }
+    catch (\Exception $e) {
+      $this->assertInstanceOf(DuplicateJobException::class, $e);
+    }
+
+    $this->assertQueuedCount(1, $this->firstQueue, "The second copy of the job was not queued.");
+
+    // Confirm that the backend can queue identical jobs in two different
+    // queues.
+    $job = Job::create('avoid_duplicates', ['test' => '1']);
+    $this->secondQueue->getBackend()->enqueueJob($job);
+
+    $this->assertQueuedCount(1, $this->secondQueue, "The same job was queued in the second queue.");
+
+    // Confirm that the same queue can hold unique jobs of different types with
+    // identical payloads.
+    $job = Job::create('avoid_duplicates', ['test' => '1']);
+    $this->firstQueue->getBackend()->enqueueJob($job);
+
+    $this->assertQueuedCount(2, $this->firstQueue, "A job of a different type with the same payload was queued.");
+  }
+
+  /**
    * @covers ::cleanupQueue
    */
-  public function testQueueCleanup() {
+  public function testQueueCleanup(): void {
     $job = Job::create('simple', ['test' => '1']);
     $this->firstQueue->getBackend()->enqueueJob($job);
     // Update the job to match how it will look when claimed.
@@ -228,7 +281,7 @@ class DatabaseBackendTest extends KernelTestBase {
   /**
    * @covers ::loadJob
    */
-  public function testLoadJob() {
+  public function testLoadJob(): void {
     $job = Job::create('simple', ['test' => '1']);
     $this->firstQueue->getBackend()->enqueueJob($job);
     $claimed_job = $this->firstQueue->getBackend()->claimJob();
@@ -242,7 +295,7 @@ class DatabaseBackendTest extends KernelTestBase {
    * @param int $new_time
    *   The new time.
    */
-  protected function rewindTime($new_time) {
+  protected function rewindTime(int $new_time): void {
     $mock_time = $this->prophesize(TimeInterface::class);
     $mock_time->getCurrentTime()->willReturn($new_time);
     $this->container->set('datetime.time', $mock_time->reveal());
@@ -250,14 +303,14 @@ class DatabaseBackendTest extends KernelTestBase {
     // Reload the queues so that their backends get the updated service.
     $storage = $this->container->get('entity_type.manager')->getStorage('advancedqueue_queue');
     $storage->resetCache(['first_queue', 'second_queue']);
-    $this->firstQueue = $storage->load('first_queue');
-    $this->secondQueue = $storage->load('second_queue');
+    $this->firstQueue = Queue::load('first_queue');
+    $this->secondQueue = Queue::load('second_queue');
   }
 
   /**
    * Asserts that the queued job has the correct data.
    *
-   * @param string $expected_id
+   * @param int $expected_id
    *   The expected job ID.
    * @param string $expected_queue_id
    *   The expected queue ID.
@@ -266,11 +319,30 @@ class DatabaseBackendTest extends KernelTestBase {
    * @param \Drupal\advancedqueue\Job $job
    *   The job.
    */
-  protected function assertQueuedJob($expected_id, $expected_queue_id, $expected_delay, Job $job) {
+  protected function assertQueuedJob(int $expected_id, string $expected_queue_id, int $expected_delay, Job $job): void {
     $this->assertEquals($expected_id, $job->getId());
     $this->assertEquals($expected_queue_id, $job->getQueueId());
     $this->assertEquals(Job::STATE_QUEUED, $job->getState());
     $this->assertEquals(635814000 + $expected_delay, $job->getAvailableTime());
+  }
+
+  /**
+   * Asserts the count of queued jobs in a queue.
+   *
+   * @param int $expected_count
+   *   The expected number of jobs.
+   * @param \Drupal\advancedqueue\Entity\QueueInterface $queue
+   *   The queue.
+   * @param string|null $message
+   *   (optional) The assertion message.
+   */
+  protected function assertQueuedCount(int $expected_count, QueueInterface $queue, ?string $message = NULL): void {
+    if (empty($message)) {
+      $message = "The queue contains {$expected_count} queued jobs.";
+    }
+
+    $counts = $queue->getBackend()->countJobs();
+    $this->assertEquals($expected_count, $counts[Job::STATE_QUEUED], $message);
   }
 
 }

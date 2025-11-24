@@ -53,7 +53,7 @@ abstract class ImageEffectFormBase extends FormBase {
    *
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ImageStyleInterface $image_style = NULL, $image_effect = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ImageStyleInterface $image_style = NULL, $image_effect = NULL) {
     $this->imageStyle = $image_style;
     try {
       $this->imageEffect = $this->prepareImageEffect($image_effect);
@@ -122,7 +122,10 @@ abstract class ImageEffectFormBase extends FormBase {
     $this->imageEffect->submitConfigurationForm($form['data'], SubformState::createForSubform($form['data'], $form, $form_state));
 
     $this->imageEffect->setWeight($form_state->getValue('weight'));
-    if (!$this->imageEffect->getUuid()) {
+    if ($uuid = $this->imageEffect->getUuid()) {
+      $this->imageStyle->getEffect($uuid)->setConfiguration($this->imageEffect->getConfiguration());
+    }
+    else {
       $this->imageStyle->addImageEffect($this->imageEffect->getConfiguration());
     }
     $this->imageStyle->save();

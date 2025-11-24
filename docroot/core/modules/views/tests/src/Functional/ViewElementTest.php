@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 use Drupal\views\Views;
@@ -35,7 +37,7 @@ class ViewElementTest extends ViewTestBase {
   /**
    * Tests the rendered output and form output of a view element.
    */
-  public function testViewElement() {
+  public function testViewElement(): void {
     $view = Views::getView('test_view_embed');
     $view->setDisplay();
     // Test a form.
@@ -75,7 +77,7 @@ class ViewElementTest extends ViewTestBase {
   /**
    * Tests the rendered output and form output of the "embed" display plugin.
    */
-  public function testViewElementEmbed() {
+  public function testViewElementEmbed(): void {
     $view = Views::getView('test_view_embed');
     $view->setDisplay();
     // Test a form.

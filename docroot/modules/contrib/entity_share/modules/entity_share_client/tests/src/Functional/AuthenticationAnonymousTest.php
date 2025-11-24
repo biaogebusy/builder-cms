@@ -104,14 +104,14 @@ class AuthenticationAnonymousTest extends AuthenticationTestBase {
     $entity_storage = $this->entityTypeManager->getStorage('node');
 
     $published = $entity_storage->loadByProperties(['uuid' => 'es_test_node_import_published']);
-    $this->assertEquals(1, count($published), 'The published node was imported.');
+    $this->assertEquals(1, \count($published), 'The published node was imported.');
 
     $not_published = $entity_storage->loadByProperties(['uuid' => 'es_test_node_import_not_published']);
-    $this->assertEquals(0, count($not_published), 'The unpublished node was not imported.');
+    $this->assertEquals(0, \count($not_published), 'The unpublished node was not imported.');
 
     foreach (static::$filesData as $file_data) {
-      $this->assertTrue(file_exists($file_data['uri']), 'The private physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
-      $file_content = file_get_contents($file_data['uri']);
+      $this->assertTrue(\file_exists($file_data['uri']), 'The private physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
+      $file_content = \file_get_contents($file_data['uri']);
       $this->assertEquals($file_data['file_content'], $file_content, 'Private physical file was downloaded with correct content.');
     }
   }

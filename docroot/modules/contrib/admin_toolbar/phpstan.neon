@@ -1,0 +1,22 @@
+parameters:
+  level: 6
+
+  # Ignore certain errors.
+  ignoreErrors:
+    # Until a better solution can be found for hook implementations, it is
+    # easier to ignore these errors. They are caused by conflicts with PHPCS
+    # preventing from adding 'param' and 'return' for hook implementations.
+    -
+      message: '#Function admin_toolbar_[a-zA-Z0-9\\_]+\(\) has no return type specified\.#'
+      paths:
+        - *.install
+        - *.module
+    -
+      message: '#Function admin_toolbar_[a-zA-Z0-9\\_]+\(\) has parameter \$[a-zA-Z0-9\\_]+ with no type specified\.#'
+      paths:
+        - *.install
+        - *.module
+    -
+      message: '#Function admin_toolbar_[a-zA-Z0-9\\_]+\(\) has parameter \$[a-zA-Z0-9\\_]+ with no value type specified in iterable type [a-zA-Z0-9\\_]+\.#'
+      paths:
+        - admin_toolbar_links_access_filter/admin_toolbar_links_access_filter.module

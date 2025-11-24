@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Unit;
 
 use Drupal\Component\Uuid\UuidInterface;
@@ -174,7 +176,7 @@ class FieldStorageConfigAccessControlHandlerTest extends UnitTestCase {
   /**
    * Ensures field storage config access is working properly.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $this->assertAllowOperations([], $this->anon);
     $this->assertAllowOperations(['view', 'update', 'delete'], $this->member);
 

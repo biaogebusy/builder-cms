@@ -121,7 +121,7 @@ class WebformExcludedElements extends WebformExcludedBase {
    * Get elements with or without markup and composite sub elements.
    *
    * @param array $element
-   *   The exclued elements form element.
+   *   The excluded elements form element.
    * @param \Drupal\webform\WebformInterface $webform
    *   A webform.
    *

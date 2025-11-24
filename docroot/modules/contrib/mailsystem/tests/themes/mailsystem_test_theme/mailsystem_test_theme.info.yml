@@ -1,8 +1,8 @@
 name: 'Mailsystem test theme'
 type: theme
-base theme: stable
+base theme: stable9
 description: 'Theme for testing mailsystem'
-core_version_requirement: ^8.7.7  || ^9  || ^10
+core_version_requirement: ^9  || ^10 || ^11
 regions:
   sidebar_first: 'Left sidebar'
   sidebar_second: 'Right sidebar'
@@ -15,7 +15,7 @@ regions_hidden:
   - sidebar_first
   - sidebar_second
 
-# Information added by Drupal.org packaging script on 2022-07-11
-version: '8.x-4.4'
+# Information added by Drupal.org packaging script on 2024-08-11
+version: '8.x-4.5'
 project: 'mailsystem'
-datestamp: 1657576309
+datestamp: 1723379372

@@ -24,6 +24,11 @@ entity.migration.overview_destination:
   parent_id: entity.migration.overview
   weight: 3
 
+entity.migration.execute_form:
+  route_name: migrate_tools.execute
+  base_route: entity.migration.overview
+  title: Execute
+
 entity.migration.edit_form:
   route_name: entity.migration.edit_form
   base_route: entity.migration.overview

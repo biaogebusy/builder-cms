@@ -5,7 +5,7 @@
     border:dotted black 1px;
     padding:5px;
     &:hover {
-      background-color:grey;
+      background-color: gray;
     }
     .private-message-inbox-thread-link {
       position:absolute;
@@ -17,7 +17,7 @@
     }
   }
   .unread-thread {
-    border:solid black 2px;  
+    border:solid black 2px;
   }
   .active-thread {
     border-color:#0096ff;

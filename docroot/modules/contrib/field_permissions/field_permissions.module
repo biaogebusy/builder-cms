@@ -5,16 +5,16 @@
  * Contains field_permissions.module.
  */
 
-use Drupal\field\FieldConfigInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\field\FieldConfigInterface;
 use Drupal\field_permissions\FieldPermissionsService;
-use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
 use Drupal\field_permissions\Plugin\AdminFormSettingsInterface;
+use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
 
 /**
  * Implements hook_help().
@@ -47,7 +47,7 @@ function field_permissions_entity_field_access($operation, FieldDefinitionInterf
  * Implements hook_jsonapi_entity_field_filter_access().
  */
 function field_permissions_jsonapi_entity_field_filter_access(FieldDefinitionInterface $field_definition, AccountInterface $account) {
-  if (!$field_definition->isDisplayConfigurable('view')) {
+  if (!$field_definition->isDisplayConfigurable('view') || !is_a($field_definition->getFieldStorageDefinition(), '\Drupal\field\FieldStorageConfigInterface')) {
     return AccessResult::neutral();
   }
 
@@ -82,8 +82,8 @@ function field_permissions_form_field_config_edit_form_alter(&$form, FormStateIn
   }
 
   $form['fid'] = ['#type' => 'hidden', '#value' => $field->id()];
-  $form['field']['field_permissions'] = [
-    '#weight' => -10,
+  $form['field_permissions'] = [
+    '#weight' => 50,
   ];
 
   // Always add the 'not set' option, which isn't implemented as a plugin.
@@ -109,7 +109,7 @@ function field_permissions_form_field_config_edit_form_alter(&$form, FormStateIn
     }
   }
 
-  $form['field']['field_permissions']['type'] = [
+  $form['field_permissions']['type'] = [
     '#title' => t('Field visibility and permissions'),
     '#description' => t('<strong>These permissions apply to all instances of this field.</strong>'),
     '#type' => 'radios',
@@ -118,16 +118,25 @@ function field_permissions_form_field_config_edit_form_alter(&$form, FormStateIn
   ];
 
   // Add in the descriptions.
-  $form['field']['field_permissions']['type'] += $descriptions;
+  $form['field_permissions']['type'] += $descriptions;
 
-  $form['actions']['submit']['#submit'][] = 'field_permission_field_config_edit_form_submit';
+  $form['actions']['submit']['#submit'][] = 'field_permissions_field_config_edit_form_submit';
   $form['#entity_builders'][] = 'field_permissions_field_config_edit_form_builder';
 
   $user_role_storage = \Drupal::service('entity_type.manager')->getStorage('user_role');
   // Allow each plugin to add to or alter the form.
   foreach ($plugins as $plugin) {
     if ($plugin instanceof AdminFormSettingsInterface) {
-      $plugin->buildAdminForm($form, $form_state, $user_role_storage);
+      // Allow plugin to add to the form.
+      $form['field_permissions'][$id] = [
+        '#type' => 'container',
+        '#states' => [
+          'visible' => [
+            ':input[name="type"]' => ['value' => $id],
+          ],
+        ],
+      ];
+      $plugin->buildAdminForm($form['field_permissions'][$id], $form_state, $user_role_storage);
     }
   }
 }
@@ -139,7 +148,13 @@ function field_permissions_form_field_config_edit_form_alter(&$form, FormStateIn
  */
 function field_permissions_field_config_edit_form_builder($entity_type, FieldConfigInterface $field, array &$form, FormStateInterface $form_state) {
   $storage = $field->getFieldStorageDefinition();
-  $storage->setThirdPartySetting('field_permissions', 'permission_type', $form_state->getValue('type'));
+  if ($form_state->getValue('type') == FieldPermissionTypeInterface::ACCESS_PUBLIC) {
+    // Avoid undesired noise in the field storage config (and its export).
+    $storage->unsetThirdPartySetting('field_permissions', 'permission_type');
+  }
+  else {
+    $storage->setThirdPartySetting('field_permissions', 'permission_type', $form_state->getValue('type'));
+  }
   if (version_compare(\Drupal::VERSION, '10.2', '<')) {
     $storage->save();
   }
@@ -150,7 +165,7 @@ function field_permissions_field_config_edit_form_builder($entity_type, FieldCon
  *
  * @see field_permissions_form_field_config_edit_form_alter()
  */
-function field_permission_field_config_edit_form_submit(array &$form, FormStateInterface $form_state) {
+function field_permissions_field_config_edit_form_submit(array &$form, FormStateInterface $form_state) {
   /** @var \Drupal\Core\Field\FieldDefinitionInterface $field */
   $field = $form_state->getFormObject()->getEntity();
 

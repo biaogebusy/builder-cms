@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\Entity\Comment;
@@ -73,7 +75,7 @@ class CommentAccessTest extends BrowserTestBase {
   /**
    * Tests commenting disabled for access-blocked entities.
    */
-  public function testCannotCommentOnEntitiesYouCannotView() {
+  public function testCannotCommentOnEntitiesYouCannotView(): void {
     $assert = $this->assertSession();
 
     $comment_url = 'comment/reply/node/' . $this->unpublishedNode->id() . '/comment';
@@ -91,7 +93,7 @@ class CommentAccessTest extends BrowserTestBase {
   /**
    * Tests cannot view comment reply form on entities you cannot view.
    */
-  public function testCannotViewCommentReplyFormOnEntitiesYouCannotView() {
+  public function testCannotViewCommentReplyFormOnEntitiesYouCannotView(): void {
     $assert = $this->assertSession();
 
     // Create a comment on an unpublished node.

@@ -1,10 +1,14 @@
 name: CKEditor TextIndent
 type: module
-description: 'Provides integration of the CKEditor TextIndent plugin with the Drupal 8 CKEditor.'
+description: 'Provides integration of the CKEditor TextIndent plugin with the Drupal CKEditor.'
 package: CKEditor
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8 || ^9 || ^10
+
 dependencies:
   - drupal:ckeditor
-version: '8.x-1.0'
+  - drupal:system (>= 8.1)
+
+# Information added by Drupal.org packaging script on 2022-07-01
+version: '2.0.1'
 project: 'ckeditor_textindent'
-datestamp: 1507249145
+datestamp: 1656672941

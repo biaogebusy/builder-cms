@@ -18,6 +18,7 @@ parameters:
     # new static() is a best practice in Drupal, so we cannot fix that.
     - "#^Unsafe usage of new static#"
     - '#Plugin definitions cannot be altered.#'
+    - '#Trait Drupal\\blazy\\Traits\\EasingTrait is used zero times and is not analysed.#'
     # https://github.com/phpstan/phpstan/discussions/7287
     # - "#Method [a-zA-Z0-9\\\\:\\(\\)]+ has parameter \\$[a-zA-Z0-9_]+ with no value type specified in iterable type array#"
     # - "#Method [a-zA-Z0-9\\\\:\\(\\)]+ has parameter \\$[a-zA-Z0-9_]+ with no type specified#"

@@ -8,5 +8,5 @@ drupal.multiselect:
   dependencies:
     - core/jquery
     - core/drupal
-    - core/jquery.once
+    - core/once
     - core/drupalSettings

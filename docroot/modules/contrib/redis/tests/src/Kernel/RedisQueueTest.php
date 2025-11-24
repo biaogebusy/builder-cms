@@ -2,8 +2,9 @@
 
 namespace Drupal\Tests\redis\Kernel;
 
-use Drupal\redis\ClientFactory;
-use \Drupal\KernelTests\Core\Queue\QueueTest as CoreQueueTest;
+use Drupal\KernelTests\Core\Queue\QueueTest as CoreQueueTest;
+use Drupal\redis\Queue\RedisQueue;
+use Drupal\redis\Queue\ReliableRedisQueue;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
 
 /**
@@ -25,32 +26,27 @@ class RedisQueueTest extends CoreQueueTest {
   /**
    * Tests Redis non-blocking queue.
    */
-  public function testRedisNonBlockingQueue() {
+  public function testRedisNonBlockingQueue(): void {
     self::setUpSettings();
     $client_factory = \Drupal::service('redis.factory');
     $settings = ['reserve_timeout' => NULL];
-    $class_name = $client_factory->getClass(ClientFactory::REDIS_IMPL_QUEUE);
 
-    /** @var \Drupal\Core\Queue\QueueInterface $queue1 */
-    $queue1 = new $class_name($this->randomMachineName(), $settings, $client_factory->getClient());
+    $queue1 = new RedisQueue($this->randomMachineName(), $settings, $client_factory->getClient());
     $queue1->createQueue();
 
-    /** @var \Drupal\Core\Queue\QueueInterface $queue2 */
-    $queue2 = new $class_name($this->randomMachineName(), $settings, $client_factory->getClient());
+    $queue2 = new RedisQueue($this->randomMachineName(), $settings, $client_factory->getClient());
     $queue2->createQueue();
 
     $this->runQueueTest($queue1, $queue2);
     $queue1->deleteQueue();
     $queue2->deleteQueue();
 
-    $class_name = $client_factory->getClass(ClientFactory::REDIS_IMPL_RELIABLE_QUEUE);
-
     /** @var \Drupal\Core\Queue\QueueInterface $queue1 */
-    $queue1 = new $class_name($this->randomMachineName(), $settings, $client_factory->getClient());
+    $queue1 = new ReliableRedisQueue($this->randomMachineName(), $settings, $client_factory->getClient());
     $queue1->createQueue();
 
     /** @var \Drupal\Core\Queue\QueueInterface $queue2 */
-    $queue2 = new $class_name($this->randomMachineName(), $settings, $client_factory->getClient());
+    $queue2 = new ReliableRedisQueue($this->randomMachineName(), $settings, $client_factory->getClient());
     $queue2->createQueue();
 
     $this->runQueueTest($queue1, $queue2);
@@ -59,19 +55,18 @@ class RedisQueueTest extends CoreQueueTest {
   /**
    * Tests Redis blocking queue.
    */
-  public function testRedisBlockingQueue() {
+  public function testRedisBlockingQueue(): void {
     self::setUpSettings();
     // Create two queues.
     $client_factory = \Drupal::service('redis.factory');
     $settings = ['reserve_timeout' => 30];
-    $class_name = $client_factory->getClass(ClientFactory::REDIS_IMPL_QUEUE);
 
     /** @var \Drupal\Core\Queue\QueueInterface $queue1 */
-    $queue1 = new $class_name($this->randomMachineName(), $settings, $client_factory->getClient());
+    $queue1 = new RedisQueue($this->randomMachineName(), $settings, $client_factory->getClient());
     $queue1->createQueue();
 
     /** @var \Drupal\Core\Queue\QueueInterface $queue2 */
-    $queue2 = new $class_name($this->randomMachineName(), $settings, $client_factory->getClient());
+    $queue2 = new RedisQueue($this->randomMachineName(), $settings, $client_factory->getClient());
     $queue2->createQueue();
 
     $this->runQueueTest($queue1, $queue2);
@@ -82,7 +77,7 @@ class RedisQueueTest extends CoreQueueTest {
    *
    * We override tests from core class we extend to prevent them from running.
    */
-  public function testSystemQueue() {
+  public function testSystemQueue(): void {
     $this->markTestSkipped();
   }
 
@@ -91,9 +86,8 @@ class RedisQueueTest extends CoreQueueTest {
    *
    * We override tests from core class we extend to prevent them from running.
    */
-  public function testMemoryQueue() {
+  public function testMemoryQueue(): void {
     $this->markTestSkipped();
   }
 
 }
-

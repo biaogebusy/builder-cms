@@ -11,3 +11,7 @@
 .flag a:hover {
   border: none;
 }
+
+.links.inline .flag {
+  display: inline;
+}

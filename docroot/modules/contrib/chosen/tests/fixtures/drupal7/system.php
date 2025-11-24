@@ -173,6 +173,6 @@ $connection->insert('system')
   'bootstrap' => '0',
   'schema_version' => '7204',
   'weight' => '0',
-  'info' => 'a:13:{s:4:"name";s:6:"Chosen";s:11:"description";s:104:"Makes select elements more user-friendly using <a href="http://harvesthq.github.com/chosen/">Chosen</a>.";s:7:"package";s:14:"User interface";s:9:"configure";s:34:"admin/config/user-interface/chosen";s:4:"core";s:3:"7.x";s:7:"version";s:7:"7.x-2.1";s:7:"project";s:6:"chosen";s:9:"datestamp";s:10:"1490260386";s:5:"mtime";i:1490260386;s:12:"dependencies";a:0:{}s:3:"php";s:5:"5.2.4";s:5:"files";a:0:{}s:9:"bootstrap";i:0;}',
+  'info' => 'a:13:{s:4:"name";s:6:"Chosen";s:11:"description";s:104:"Makes select elements more user-friendly using <a href="https://github.com/JJJ/chosen">Chosen</a>.";s:7:"package";s:14:"User interface";s:9:"configure";s:34:"admin/config/user-interface/chosen";s:4:"core";s:3:"7.x";s:7:"version";s:7:"7.x-2.1";s:7:"project";s:6:"chosen";s:9:"datestamp";s:10:"1490260386";s:5:"mtime";i:1490260386;s:12:"dependencies";a:0:{}s:3:"php";s:5:"5.2.4";s:5:"files";a:0:{}s:9:"bootstrap";i:0;}',
 ))
 ->execute();

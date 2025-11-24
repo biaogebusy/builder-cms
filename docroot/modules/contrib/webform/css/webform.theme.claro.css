@@ -153,6 +153,11 @@ table td > .button:only-child {
   display: inline;
 }
 
+.webform-results-table .sortable-heading > a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /*****************************************************************************   */
 /* States and Multiple */
 /*****************************************************************************   */

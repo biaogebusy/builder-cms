@@ -5,10 +5,15 @@ tour.tour.*:
   label: 'Tour settings'
   mapping:
     id:
-      type: string
+      type: machine_name
       label: 'ID'
+      constraints:
+        # Tour IDs also allow dashes.
+        Regex:
+          pattern: '/^[a-z0-9_-]+$/'
+          message: "The %value machine name is not valid."
     label:
-      type: label
+      type: required_label
       label: 'Label'
     module:
       type: string
@@ -36,29 +41,22 @@ tour.tip:
     plugin:
       type: string
       label: 'Plugin'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.tour.tip
+          interface: '\Drupal\tour\TipPluginInterface'
     label:
-      type: label
+      type: required_label
       label: 'Label'
     weight:
-      type: integer
+      type: weight
       label: 'Weight'
-    location:
-      deprecated: "The tour.tip 'location' config schema property is deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Instead use 'position'. The value must be a valid placement accepted by PopperJS. See https://www.drupal.org/node/3204093"
-      type: string
-      label: 'Location'
     position:
       type: string
       label: 'Position'
     selector:
       type: string
       label: 'Selector'
-    attributes:
-      deprecated: "The tour.tip 'attributes' config schema property is deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Instead of 'data-class' and 'data-id' attributes, use 'selector' to specify the element a tip attaches to. See https://www.drupal.org/node/3204093"
-      type: sequence
-      label: 'Attributes'
-      sequence:
-        type: string
-        label: 'Attribute'
 
 tour.tip.text:
   type: tour.tip

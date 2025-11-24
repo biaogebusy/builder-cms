@@ -1,68 +1,54 @@
 {
 	"country_code": "SV",
 	"subdivisions": {
-		"Ahuachapan": {
-			"name": "Ahuachapán",
-			"iso_code": "SV-AH",
-			"postal_code_pattern": "CP 21"
+		"AH": {
+			"code": "Ahuachapan",
+			"name": "Ahuachapán"
 		},
-		"Cabanas": {
-			"name": "Cabañas",
-			"iso_code": "SV-CA",
-			"postal_code_pattern": "CP 12"
+		"CA": {
+			"code": "Cabanas",
+			"name": "Cabañas"
 		},
-		"Calatenango": {
-			"name": "Chalatenango",
-			"iso_code": "SV-CH",
-			"postal_code_pattern": "CP 13"
+		"CH": {
+			"code": "Calatenango",
+			"name": "Chalatenango"
 		},
-		"Cuscatlan": {
-			"name": "Cuscatlán",
-			"iso_code": "SV-CU",
-			"postal_code_pattern": "CP 14"
+		"CU": {
+			"code": "Cuscatlan",
+			"name": "Cuscatlán"
 		},
-		"La Libertad": {
-			"iso_code": "SV-LI",
-			"postal_code_pattern": "CP 15"
+		"LI": {
+			"name": "La Libertad"
 		},
-		"La Paz": {
-			"iso_code": "SV-PA",
-			"postal_code_pattern": "CP 16"
+		"PA": {
+			"name": "La Paz"
 		},
-		"La Union": {
-			"name": "La Unión",
-			"iso_code": "SV-UN",
-			"postal_code_pattern": "CP 31"
+		"UN": {
+			"code": "La Union",
+			"name": "La Unión"
 		},
-		"Morazan": {
-			"name": "Morazán",
-			"iso_code": "SV-MO",
-			"postal_code_pattern": "CP 32"
+		"MO": {
+			"code": "Morazan",
+			"name": "Morazán"
 		},
-		"San Miguel": {
-			"iso_code": "SV-SM",
-			"postal_code_pattern": "CP 33"
+		"SM": {
+			"name": "San Miguel"
 		},
-		"San Salvador": {
-			"iso_code": "SV-SS",
-			"postal_code_pattern": "CP 11"
+		"SS": {
+			"name": "San Salvador"
 		},
-		"San Vicente": {
-			"iso_code": "SV-SV",
-			"postal_code_pattern": "CP 17"
+		"SV": {
+			"name": "San Vicente"
 		},
-		"Santa Ana": {
-			"iso_code": "SV-SA",
-			"postal_code_pattern": "CP 22"
+		"SA": {
+			"name": "Santa Ana"
 		},
-		"Sonsonate": {
-			"iso_code": "SV-SO",
-			"postal_code_pattern": "CP 23"
+		"SO": {
+			"name": "Sonsonate"
 		},
-		"Usulutan": {
-			"name": "Usulután",
-			"iso_code": "SV-US",
-			"postal_code_pattern": "CP 34"
+		"US": {
+			"code": "Usulutan",
+			"name": "Usulután"
 		}
 	}
 }

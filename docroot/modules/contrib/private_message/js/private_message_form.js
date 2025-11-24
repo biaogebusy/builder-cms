@@ -3,48 +3,53 @@
  * Adds JS functionality to the Private Message form.
  */
 
-(function ($, Drupal, drupalSettings, once) {
-
-  'use strict';
-
+((Drupal, drupalSettings, once) => {
+  /**
+   * @param {Event} e The event
+   */
   function submitKeyPress(e) {
-    var key = e.key || e.keyCode.toString();
-    var supportedKeys = drupalSettings.privateMessageSendKey.split(',');
+    const key = e.key || e.keyCode.toString();
+    const supportedKeys = drupalSettings.privateMessageSendKey.split(',');
     // Remove spaces in case people separated keys by "," or ", ".
-    for (var i = 0; i < supportedKeys.length; i++) {
+    for (let i = 0; i < supportedKeys.length; i++) {
       supportedKeys[i] = supportedKeys[i].trim();
     }
 
     if (supportedKeys.indexOf(key) !== -1) {
+      const el = e.currentTarget;
       // If it is the send key, just remove that character from the textarea.
-      $(this).val(function (index, value) {
-        return value.substr(0, value.length - 1);
-      });
+      const { value } = el;
 
-      if ($(this).val() !== '') {
-        $(this).parents('.private-message-add-form').find('.form-actions .form-submit').mousedown();
+      if (el.value.endsWith(key)) {
+        // @todo Move this in the backend to avoid screen flicker.
+        el.value = value.substring(0, value.length - 1);
+      }
+
+      if (el.value !== '') {
+        el.closest('.private-message-add-form')
+          ?.querySelectorAll('.form-actions .form-submit')
+          .forEach((elem) => {
+            elem.dispatchEvent(new Event('mousedown'));
+          });
       }
     }
   }
 
-  /**
-   * Event handler for the submit button on the private message form.
-   * @param {Object} context The context.
-   */
-  function submitButtonListener(context) {
-    $(once('private-message-form-submit-button-listener', '.private-message-add-form textarea', context)).each(function () {
-      $(this).keyup(submitKeyPress);
-    });
-  }
-
   Drupal.behaviors.privateMessageForm = {
-    attach: function (context) {
-      submitButtonListener(context);
+    attach(context) {
+      once(
+        'private-message-form-submit-button-listener',
+        '.private-message-add-form textarea',
+        context,
+      ).forEach((el) => {
+        el.addEventListener('keyup', submitKeyPress);
+      });
     },
-    detach: function (context) {
+    detach(context) {
       // Remove event handlers when the submit button is removed from the page.
-      $(context).find('.private-message-add-form textarea').unbind('keyup', submitKeyPress);
-    }
+      context
+        .querySelector('.private-message-add-form textarea')
+        ?.removeEventListener('keyup', submitKeyPress);
+    },
   };
-
-}(jQuery, Drupal, drupalSettings, once));
+})(Drupal, drupalSettings, once);

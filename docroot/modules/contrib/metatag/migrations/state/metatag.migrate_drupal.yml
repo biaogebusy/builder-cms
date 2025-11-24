@@ -7,6 +7,9 @@
 # These changes are finished, excluding bug reports.
 finished:
   7:
+    # The main configuration and all entity values are fully migrated.
+    metatag: metatag
+
     # All of the meta tags from these submodules have breen ported and should
     # work correctly.
     metatag_app_links: metatag
@@ -41,10 +44,6 @@ not_finished:
     page_title: metatag
 
   7:
-    # Metatag.
-    # @todo Configuration: https://www.drupal.org/project/metatag/issues/2563651
-    metatag: metatag
-
     # These will need custom work.
     # @todo https://www.drupal.org/project/metatag/issues/2563653
     metatag_context: metatag_context

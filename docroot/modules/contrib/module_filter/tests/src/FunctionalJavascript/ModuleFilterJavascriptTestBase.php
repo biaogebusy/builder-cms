@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\module_filter\FunctionalJavascript;
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\DocumentElement;
 
@@ -40,7 +41,7 @@ abstract class ModuleFilterJavascriptTestBase extends WebDriverTestBase {
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $adminUser;
+  protected AccountInterface $adminUser;
 
   /**
    * {@inheritdoc}
@@ -65,7 +66,7 @@ abstract class ModuleFilterJavascriptTestBase extends WebDriverTestBase {
    *
    * Core JSWebAssert has a function waitForText() but there is no equivalent to
    * wait until text is hidden, as there is for some other page elements.
-   * Therefore define that function here, based on waitForText() in
+   * Therefore, define that function here, based on waitForText() in
    * core/tests/Drupal/FunctionalJavascriptTests/JSWebAssert.php.
    *
    * @param string $text
@@ -76,7 +77,7 @@ abstract class ModuleFilterJavascriptTestBase extends WebDriverTestBase {
    * @return bool
    *   TRUE if not found, FALSE if found.
    */
-  public function waitForNoText($text, $timeout = 10000) {
+  public function waitForNoText(string $text, int $timeout = 10000): bool {
     $page = $this->getSession()->getPage();
     return (bool) $page->waitFor($timeout / 1000, function (DocumentElement $page) use ($text) {
       $actual = preg_replace('/\\s+/u', ' ', $page->getText());

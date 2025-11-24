@@ -3,25 +3,24 @@
 namespace Drupal\commerce_price\Plugin\Field\FieldFormatter;
 
 use CommerceGuys\Intl\Formatter\CurrencyFormatterInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_price_default' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_price_default",
- *   label = @Translation("Default"),
- *   field_types = {
- *     "commerce_price"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_price_default",
+  label: new TranslatableMarkup("Default"),
+  field_types: ["commerce_price"],
+)]
 class PriceDefaultFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**

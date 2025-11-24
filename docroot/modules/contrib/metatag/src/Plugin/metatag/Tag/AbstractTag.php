@@ -20,5 +20,5 @@ namespace Drupal\metatag\Plugin\metatag\Tag;
  * )
  */
 class AbstractTag extends MetaNameBase {
-
+  // Nothing here yet. Just a placeholder class for a plugin.
 }

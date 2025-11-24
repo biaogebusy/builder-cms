@@ -1,7 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
-/* cspell:words textalternativeformview */
+/* cspell:ignore textalternativeformview */
 
-import { Plugin, icons } from 'ckeditor5/src/core';
+import { Plugin } from 'ckeditor5/src/core';
+import { IconLowVision } from '@ckeditor/ckeditor5-icons';
 import {
   ButtonView,
   ContextualBalloon,
@@ -65,7 +66,7 @@ export default class MediaImageTextAlternativeUi extends Plugin {
 
       view.set({
         label: Drupal.t('Override media image alternative text'),
-        icon: icons.lowVision,
+        icon: IconLowVision,
         tooltip: true,
       });
 
@@ -105,7 +106,13 @@ export default class MediaImageTextAlternativeUi extends Plugin {
 
     this.listenTo(this._form, 'submit', () => {
       editor.execute('mediaImageTextAlternative', {
-        newValue: this._form.labeledInput.fieldView.element.value,
+        // The "decorative toggle" allows users to opt-in to empty alt
+        // attributes for the very rare edge cases where that is valid. This is
+        // indicated by specifying two double quotes as the alternative text.
+        // See https://www.w3.org/WAI/tutorials/images/decorative .
+        newValue: this._form.decorativeToggle.isOn
+          ? '""'
+          : this._form.labeledInput.fieldView.element.value,
       });
 
       this._hideForm(true);
@@ -149,6 +156,7 @@ export default class MediaImageTextAlternativeUi extends Plugin {
     }
     const editor = this.editor;
     const command = editor.commands.get('mediaImageTextAlternative');
+    const decorativeToggle = this._form.decorativeToggle;
     const metadataRepository = editor.plugins.get(
       'DrupalMediaMetadataRepository',
     );
@@ -162,6 +170,14 @@ export default class MediaImageTextAlternativeUi extends Plugin {
         position: getBalloonPositionData(editor),
       });
     }
+
+    // This implementation, populating double quotes, differs from drupalImage.
+    // In drupalImage, an image either has alt text or it is decorative, so the
+    // 'decorative' state can be represented by an empty string. In drupalMedia,
+    // an image can inherit alt text from the media entity (represented by an
+    // empty string), can have overridden alt text (represented by user-entered
+    // text), or can be designated decorative (represented by double quotes).
+    decorativeToggle.isOn = command.value === '""';
 
     // Make sure that each time the panel shows up, the field remains in sync with the value of
     // the command. If the user typed in the input, then canceled the balloon (`labeledInput#value`
@@ -183,6 +199,9 @@ export default class MediaImageTextAlternativeUi extends Plugin {
           this._form.defaultAltText = metadata.imageSourceMetadata
             ? metadata.imageSourceMetadata.alt
             : '';
+          labeledInput.infoText = Drupal.t(
+            `Leave blank to use the default alternative text: "${this._form.defaultAltText}".`,
+          );
         })
         .catch((e) => {
           // There isn't any UI indication for errors because this should be
@@ -192,8 +211,6 @@ export default class MediaImageTextAlternativeUi extends Plugin {
           console.warn(e.toString());
         });
     }
-
-    this._form.labeledInput.fieldView.select();
 
     this._form.enableCssTransitions();
   }

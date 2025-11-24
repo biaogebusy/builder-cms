@@ -21,30 +21,11 @@ class EntityShareUtility {
    *   An array of data.
    */
   public static function prepareData(array $data) {
-    if (self::isNumericArray($data)) {
+    if (array_is_list($data)) {
       return $data;
     }
-    else {
-      return [$data];
-    }
-  }
 
-  /**
-   * Check if a array is numeric.
-   *
-   * @param array $array
-   *   The array to check.
-   *
-   * @return bool
-   *   TRUE if the array is numeric. FALSE in case of associative array.
-   */
-  public static function isNumericArray(array $array) {
-    foreach (array_keys($array) as $a) {
-      if (!is_int($a)) {
-        return FALSE;
-      }
-    }
-    return TRUE;
+    return [$data];
   }
 
   /**
@@ -64,7 +45,7 @@ class EntityShareUtility {
     // @see https://www.drupal.org/node/2859657.
     // The value is cast in integer for
     // https://www.drupal.org/node/2837696.
-    if (is_numeric($changed_time)) {
+    if (\is_numeric($changed_time)) {
       $entity_changed_time = (int) $changed_time;
     }
     else {
@@ -116,11 +97,11 @@ class EntityShareUtility {
    * @return int
    *   The max size.
    */
-  public static function getMaxSize($import_config, string $channel_id, array $channel_infos) : int {
-    $import_maxsize = 50;
-    $channel_maxsize = 50;
+  public static function getMaxSize($import_config, string $channel_id, array $channel_infos): int {
+    $import_maxsize = EntityShareInterface::JSON_API_PAGER_SIZE_MAX;
+    $channel_maxsize = EntityShareInterface::JSON_API_PAGER_SIZE_MAX;
 
-    if (!is_null($import_config)) {
+    if ($import_config !== NULL) {
       $import_maxsize = $import_config->get('import_maxsize');
     }
 
@@ -128,7 +109,7 @@ class EntityShareUtility {
       $channel_maxsize = $channel_infos[$channel_id]['channel_maxsize'];
     }
 
-    return (int) min($import_maxsize, $channel_maxsize);
+    return (int) \min($import_maxsize, $channel_maxsize);
   }
 
 }

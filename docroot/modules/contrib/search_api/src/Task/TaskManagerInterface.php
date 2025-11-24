@@ -41,7 +41,7 @@ interface TaskManagerInterface {
    * @return \Drupal\search_api\Task\TaskInterface
    *   The new task, or an identical existing task.
    */
-  public function addTask($type, ServerInterface $server = NULL, IndexInterface $index = NULL, $data = NULL);
+  public function addTask($type, ?ServerInterface $server = NULL, ?IndexInterface $index = NULL, $data = NULL);
 
   /**
    * Load all tasks matching the given conditions.

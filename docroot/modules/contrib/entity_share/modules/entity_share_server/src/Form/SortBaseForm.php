@@ -9,8 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Base class to sort form.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SortBaseForm extends EntityForm {
 
@@ -50,16 +48,15 @@ class SortBaseForm extends EntityForm {
     $channel = $this->entity;
     $channel_sorts = $channel->get('channel_sorts');
 
-    if (is_null($channel_sorts)) {
+    if ($channel_sorts === NULL) {
       return FALSE;
     }
 
     if (isset($channel_sorts[$name])) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**

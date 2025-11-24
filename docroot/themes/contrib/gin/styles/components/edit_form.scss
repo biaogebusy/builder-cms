@@ -2,15 +2,17 @@
 .gin--edit-form {
   // Has sidebar, save the space
   @include mq(large) {
-    padding-right: var(--gin-sidebar-offset);
+    padding-inline-end: var(--gin-sidebar-offset);
 
     .dialog-off-canvas-main-canvas {
-      transition: padding-left var(--gin-transition-fast);
+      @media (prefers-reduced-motion: no-preference) {
+        transition: padding-inline-start var(--gin-transition-fast);
+      }
     }
 
     // If off-canvas dialog is shown
     &.js-off-canvas-dialog-open {
-      padding-right: 0;
+      padding-inline-end: 0;
 
       // Hide sidebar when off-canvas is shown
       .layout-region.layout-region-node-secondary {
@@ -44,7 +46,7 @@
   .layout-region-node-main,
   .layout-region-node-footer {
     width: 100%;
-    padding-right: 0;
+    padding-inline-end: 0;
 
     @include mq(large) {
       flex-basis: 40%;
@@ -55,6 +57,18 @@
   }
 
   .page-wrapper__node-edit-form {
+    .region-sticky {
+      @include mq($to: large) {
+        #edit-actions {
+          width: 100%;
+        }
+
+        #edit-gin-actions {
+          flex-grow: 1;
+        }
+      }
+    }
+
     .block-page-title-block {
       @include mq(1730px) {
         width: 100%;
@@ -78,25 +92,29 @@
     .help {
       width: 100%;
       max-width: $breakpointWide;
-      margin-left: auto;
-      margin-right: auto;
+      margin-inline: auto;
       box-sizing: border-box;
     }
 
     .layout-region-node-secondary {
       z-index: 103;
       width: var(--gin-sidebar-width);
+      min-width: var(--gin-sidebar-min-width);
+      max-width: var(--gin-sidebar-max-width);
       height: calc(100% - var(--gin-toolbar-y-offset));
       position: fixed;
-      top: var(--gin-toolbar-y-offset);
-      right: 0;
+      inset-block-start: var(--gin-toolbar-y-offset);
+      inset-inline-end: 0;
       margin: 0;
       overflow-x: hidden;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       background:var(--gin-bg-layer);
-      border-left: 1px solid var(--gin-border-color-layer);
-      transition: all var(--gin-transition-fast);
+      border-inline-start: 1px solid var(--gin-border-color-layer);
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: all var(--gin-transition-fast);
+      }
 
       .gin--dark-mode & {
         box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
@@ -107,15 +125,15 @@
           margin: 0;
 
           .action-link {
-            margin-top: var(--gin-spacing-xs);
-            margin-bottom: 0;
+            margin-block-start: var(--gin-spacing-xs);
+            margin-block-end: 0;
           }
         }
       }
 
       .field--name-revision-log,
       .field--name-revision-log-message {
-        margin-top: var(--gin-spacing-l);
+        margin-block-start: var(--gin-spacing-s);
       }
 
       .accordion {
@@ -129,29 +147,49 @@
 
         &__header {
           color: var(--gin-color-text);
-          padding-left: $sidebarSpacer;
-          padding-right: $sidebarSpacer;
+          padding: var(--gin-spacing-m) #{$sidebarSpacer};
           background-color: var(--gin-bg-layer);
           border: 0 none;
 
           @include mq($to: medium) {
-            padding-top: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
-            padding-right: var(--gin-spacing-l);
+            padding-block-start: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
+            padding-inline-end: var(--gin-spacing-l);
+          }
+
+          .form-type--item,
+          .form-item__label {
+            font-size: var(--gin-font-size-s);
+          }
+
+          .form-item {
+            margin-block: var(--gin-spacing-xxs);
           }
         }
 
         &__title {
           color: var(--gin-color-title);
           font-weight: var(--gin-font-weight-semibold);
-          margin-top: var(--gin-spacing-xxs);
-          margin-bottom: var(--gin-spacing-m);
           text-shadow: none;
+        }
+
+        &__revision {
+          margin-block-start: var(--gin-spacing-m);
+        }
+
+        &__last-saved,
+        &__author {
+          margin-block: var(--gin-spacing-xxs);
+
+          &,
+          .form-item__label {
+            font-size: var(--gin-font-size-s);
+          }
         }
 
         > .accordion__item {
           margin: 0;
           border: 0 none;
-          border-bottom: 1px solid var(--gin-border-color-layer);
+          border-block-end: 1px solid var(--gin-border-color-layer);
           border-radius: 0;
 
           .gin--dark-mode & {
@@ -159,17 +197,18 @@
           }
 
           > .claro-details__summary {
+            font-size: var(--gin-font-size-s);
             display: block;
-            padding-left: #{$sidebarSpacer + 1.5rem};
+            padding-inline-start: #{$sidebarSpacer + 1.5rem};
 
             .details-title {
               position: static;
-              padding-left: 0;
+              padding-inline-start: 0;
             }
 
             &::before {
-              top: var(--gin-spacing-xl);
-              left: $sidebarSpacer;
+              inset-block-start: var(--gin-spacing-xl);
+              inset-inline-start: $sidebarSpacer;
             }
 
             &:focus::after {
@@ -178,8 +217,7 @@
           }
 
           .claro-details__content {
-            margin-left: $sidebarSpacer;
-            margin-right: $sidebarSpacer;
+            margin-inline: $sidebarSpacer;
 
             .claro-details__wrapper {
               margin: var(--gin-spacing-l);
@@ -223,11 +261,11 @@
 
               &:first-of-type {
                 @include mq(tiny) {
-                  margin-right: var(--gin-spacing-xs);
+                  margin-inline-end: var(--gin-spacing-xs);
                 }
 
                 @include mq(large, wide) {
-                  margin-right: 0;
+                  margin-inline-end: 0;
                 }
               }
 
@@ -252,11 +290,10 @@
 
   .field--name-title .form-element {
     font-size: var(--gin-font-size-h3);
-    font-weight: var(--gin-font-weight-semibold);
+    font-weight: 475;
     line-height: normal;
     letter-spacing: -0.025em;
     width: 100%;
-    padding-top: var(--gin-spacing-s);
-    padding-bottom: var(--gin-spacing-s);
+    padding-block: var(--gin-spacing-s);
   }
 }

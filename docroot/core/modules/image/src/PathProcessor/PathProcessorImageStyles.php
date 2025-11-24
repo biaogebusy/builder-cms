@@ -45,12 +45,12 @@ class PathProcessorImageStyles implements InboundPathProcessorInterface {
    */
   public function processInbound($path, Request $request) {
     $directory_path = $this->streamWrapperManager->getViaScheme('public')->getDirectoryPath();
-    if (strpos($path, '/' . $directory_path . '/styles/') === 0) {
+    if (str_starts_with($path, '/' . $directory_path . '/styles/')) {
       $path_prefix = '/' . $directory_path . '/styles/';
     }
     // Check if the string '/system/files/styles/' exists inside the path,
     // that means we have a case of private file's image style.
-    elseif (strpos($path, '/system/files/styles/') !== FALSE) {
+    elseif (str_contains($path, '/system/files/styles/')) {
       $path_prefix = '/system/files/styles/';
       $path = substr($path, strpos($path, $path_prefix), strlen($path));
     }

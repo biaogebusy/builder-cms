@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -17,7 +19,7 @@ class PasswordConfirmTest extends UnitTestCase {
    *
    * @dataProvider providerTestValueCallback
    */
-  public function testValueCallback($expected, $element, $input) {
+  public function testValueCallback($expected, $element, $input): void {
     $form_state = $this->prophesize(FormStateInterface::class)->reveal();
     $this->assertSame($expected, PasswordConfirm::valueCallback($element, $input, $form_state));
   }
@@ -25,7 +27,7 @@ class PasswordConfirmTest extends UnitTestCase {
   /**
    * Data provider for testValueCallback().
    */
-  public function providerTestValueCallback() {
+  public static function providerTestValueCallback() {
     $data = [];
     $data[] = [['pass1' => '', 'pass2' => ''], [], NULL];
     $data[] = [['pass1' => '', 'pass2' => ''], ['#default_value' => ['pass2' => 'value']], NULL];

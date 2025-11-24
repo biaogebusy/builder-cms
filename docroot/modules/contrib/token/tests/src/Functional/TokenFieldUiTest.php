@@ -4,10 +4,10 @@ namespace Drupal\Tests\token\Functional;
 
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\node\Entity\NodeType;
-use Drupal\node\Entity\Node;
 use Drupal\file\Entity\File;
 use Drupal\image\Entity\ImageStyle;
+use Drupal\node\Entity\Node;
+use Drupal\node\Entity\NodeType;
 
 /**
  * Tests field ui.
@@ -192,11 +192,22 @@ class TokenFieldUiTest extends TokenTestBase {
     unlink('public://styles/medium/public/example2-test.gif');
     unlink('public://styles/large/public/example2-test.gif');
 
+    $style_mimetype_png = 'image/avif';
+    $style_mimetype_gif = 'image/avif';
+    if (version_compare(\Drupal::VERSION, '11.2', '<')) {
+      $style_mimetype_png = 'image/webp';
+      $style_mimetype_gif = 'image/webp';
+    }
+    if (version_compare(\Drupal::VERSION, '10.3', '<')) {
+      $style_mimetype_png = 'image/png';
+      $style_mimetype_gif = 'image/gif';
+    }
+
     $tokens = [
       // field_image
-      'field_image:thumbnail:mimetype' => 'image/png',
-      'field_image:medium:mimetype' => 'image/png',
-      'field_image:large:mimetype' => 'image/png',
+      'field_image:thumbnail:mimetype' => $style_mimetype_png,
+      'field_image:medium:mimetype' => $style_mimetype_png,
+      'field_image:large:mimetype' => $style_mimetype_png,
       'field_image:thumbnail:filesize' => $image_1_thumbnail->getFileSize(),
       'field_image:medium:filesize' => $image_1_medium->getFileSize(),
       'field_image:large:filesize' => $image_1_large->getFileSize(),
@@ -206,9 +217,9 @@ class TokenFieldUiTest extends TokenTestBase {
       'field_image:thumbnail:width' => '100',
       'field_image:medium:width' => '220',
       'field_image:large:width' => '480',
-      'field_image:thumbnail:uri' => 'public://styles/thumbnail/public/example1.png',
-      'field_image:medium:uri' => 'public://styles/medium/public/example1.png',
-      'field_image:large:uri' => 'public://styles/large/public/example1.png',
+      'field_image:thumbnail:uri' => $style_thumbnail->buildUri('public://example1.png'),
+      'field_image:medium:uri' => $style_medium->buildUri('public://example1.png'),
+      'field_image:large:uri' => $style_large->buildUri('public://example1.png'),
       'field_image:thumbnail:url' => $style_thumbnail->buildUrl('public://example1.png'),
       'field_image:medium:url' => $style_medium->buildUrl('public://example1.png'),
       'field_image:large:url' => $style_large->buildUrl('public://example1.png'),
@@ -216,9 +227,9 @@ class TokenFieldUiTest extends TokenTestBase {
       'field_image:medium' => $style_medium->buildUrl('public://example1.png'),
       'field_image:large' => $style_large->buildUrl('public://example1.png'),
       // field_image_2
-      'field_image_2:thumbnail:mimetype' => 'image/gif',
-      'field_image_2:medium:mimetype' => 'image/gif',
-      'field_image_2:large:mimetype' => 'image/gif',
+      'field_image_2:thumbnail:mimetype' => $style_mimetype_gif,
+      'field_image_2:medium:mimetype' => $style_mimetype_gif,
+      'field_image_2:large:mimetype' => $style_mimetype_gif,
       'field_image_2:thumbnail:filesize' => $image_2_thumbnail->getFileSize(),
       'field_image_2:medium:filesize' => $image_2_medium->getFileSize(),
       'field_image_2:large:filesize' => $image_2_large->getFileSize(),
@@ -228,9 +239,9 @@ class TokenFieldUiTest extends TokenTestBase {
       'field_image_2:thumbnail:width' => '100',
       'field_image_2:medium:width' => '220',
       'field_image_2:large:width' => '480',
-      'field_image_2:thumbnail:uri' => 'public://styles/thumbnail/public/example2.gif',
-      'field_image_2:medium:uri' => 'public://styles/medium/public/example2.gif',
-      'field_image_2:large:uri' => 'public://styles/large/public/example2.gif',
+      'field_image_2:thumbnail:uri' => $style_thumbnail->buildUri('public://example2.gif'),
+      'field_image_2:medium:uri' => $style_medium->buildUri('public://example2.gif'),
+      'field_image_2:large:uri' => $style_large->buildUri('public://example2.gif'),
       'field_image_2:thumbnail:url' => $style_thumbnail->buildUrl('public://example2.gif'),
       'field_image_2:medium:url' => $style_medium->buildUrl('public://example2.gif'),
       'field_image_2:large:url' => $style_large->buildUrl('public://example2.gif'),
@@ -238,19 +249,19 @@ class TokenFieldUiTest extends TokenTestBase {
       'field_image_2:medium' => $style_medium->buildUrl('public://example2.gif'),
       'field_image_2:large' => $style_large->buildUrl('public://example2.gif'),
       // multivalued_field_image:0, test for thumbnail image style only.
-      'multivalued_field_image:0:thumbnail:mimetype' => 'image/png',
+      'multivalued_field_image:0:thumbnail:mimetype' => $style_mimetype_png,
       'multivalued_field_image:0:thumbnail:filesize' => $image_1_thumbnail->getFileSize(),
       'multivalued_field_image:0:thumbnail:height' => '100',
       'multivalued_field_image:0:thumbnail:width' => '100',
-      'multivalued_field_image:0:thumbnail:uri' => 'public://styles/thumbnail/public/example1.png',
+      'multivalued_field_image:0:thumbnail:uri' => $style_thumbnail->buildUri('public://example1.png'),
       'multivalued_field_image:0:thumbnail:url' => $style_thumbnail->buildUrl('public://example1.png'),
       'multivalued_field_image:0:thumbnail' => $style_thumbnail->buildUrl('public://example1.png'),
       // multivalued_field_image:1, test for medium image style only.
-      'multivalued_field_image:1:medium:mimetype' => 'image/gif',
+      'multivalued_field_image:1:medium:mimetype' => $style_mimetype_gif,
       'multivalued_field_image:1:medium:filesize' => $image_2_medium->getFileSize(),
       'multivalued_field_image:1:medium:height' => '220',
       'multivalued_field_image:1:medium:width' => '220',
-      'multivalued_field_image:1:medium:uri' => 'public://styles/medium/public/example2.gif',
+      'multivalued_field_image:1:medium:uri' => $style_medium->buildUri('public://example2.gif'),
       'multivalued_field_image:1:medium:url' => $style_medium->buildUrl('public://example2.gif'),
       'multivalued_field_image:1:medium' => $style_medium->buildUrl('public://example2.gif'),
     ];

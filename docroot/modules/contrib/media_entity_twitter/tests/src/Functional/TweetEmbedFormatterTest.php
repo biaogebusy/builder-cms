@@ -58,29 +58,23 @@ class TweetEmbedFormatterTest extends MediaFunctionalTestBase {
     $this->assertSession()->fieldValueEquals('label', $bundle->label());
     $this->assertSession()->fieldValueEquals('source', 'twitter');
 
-    // Add and save string_long field type settings (Embed code).
+    // Add and save formatted_text field type settings (Embed code).
     $this->drupalGet('admin/structure/media/manage/' . $bundle->id() . '/fields/add-field');
+    $this->submitForm(['new_storage_type' => 'formatted_text'], 'Continue');
     $edit_conf = [
-      'new_storage_type' => 'string_long',
+      'group_field_options_wrapper' => 'text_long',
       'label' => 'Embed code',
       'field_name' => 'embed_code',
     ];
-    $this->submitForm($edit_conf, t('Save and continue'));
+    $this->submitForm($edit_conf, 'Continue');
     $this->assertSession()
       ->responseContains('These settings apply to the <em class="placeholder">' . $edit_conf['label'] . '</em> field everywhere it is used.');
     $edit = [
-      'cardinality' => 'number',
-      'cardinality_number' => '1',
-    ];
-    $this->submitForm($edit, t('Save field settings'));
-    $this->assertSession()
-      ->responseContains('Updated field <em class="placeholder">' . $edit_conf['label'] . '</em> field settings.');
-
-    // Set the new string_long field type as required.
-    $edit = [
+      'field_storage[subform][cardinality]' => 'number',
+      'field_storage[subform][cardinality_number]' => '1',
       'required' => TRUE,
     ];
-    $this->submitForm($edit, t('Save settings'));
+    $this->submitForm($edit, 'Save settings');
     $this->assertSession()
       ->responseContains('Saved <em class="placeholder">' . $edit_conf['label'] . '</em> configuration.');
 
@@ -90,12 +84,12 @@ class TweetEmbedFormatterTest extends MediaFunctionalTestBase {
     $xpath = $this->xpath('//*[@id=:id]/td', [':id' => 'field-media-twitter']);
     $this->assertEquals((string) $xpath[0]->getText(), 'Tweet URL');
     $this->assertEquals((string) $xpath[1]->getText(), 'field_media_twitter');
-    $this->assertEquals((string) $xpath[2]->find('css', 'a')->getText(), 'Text (plain)');
+    $this->assertEquals((string) $xpath[2]->find('css', 'li')->getText(), 'Text (plain)');
 
     $xpath = $this->xpath('//*[@id=:id]/td', [':id' => 'field-embed-code']);
     $this->assertEquals((string) $xpath[0]->getText(), 'Embed code');
     $this->assertEquals((string) $xpath[1]->getText(), 'field_embed_code');
-    $this->assertEquals((string) $xpath[2]->find('css', 'a')->getText(), 'Text (plain, long)');
+    $this->assertEquals((string) $xpath[2]->find('css', 'li')->getText(), 'Text (formatted, long)');
 
     $this->drupalGet('admin/structure/media/manage/' . $bundle->id() . '/display');
 

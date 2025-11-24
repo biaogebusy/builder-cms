@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
 use Drupal\Core\Url;
@@ -18,7 +20,7 @@ class ModalFormTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -95,9 +97,13 @@ class ModalFormTest extends WebDriverTestBase {
       'flag' => $this->flag->id(),
       'entity_id' => $this->node->id(),
     ]);
-    $this->assertSession()->addressEquals($expected->getInternalPath());
-    $this->assertSession()->buttonExists(t('Create flagging'))->press();
-    $this->assertSession()->addressEquals($this->node->toUrl());
+
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
+    $assert_session = $this->assertSession();
+
+    $assert_session->addressEquals($expected->getInternalPath());
+    $assert_session->buttonExists('Create flagging')->press();
+    $assert_session->addressEquals($this->node->toUrl());
 
     // Unflag.
     $this->clickLink($this->flag->getShortText('unflag'));
@@ -105,9 +111,9 @@ class ModalFormTest extends WebDriverTestBase {
       'flag' => $this->flag->id(),
       'entity_id' => $this->node->id(),
     ]);
-    $this->assertSession()->addressEquals($expected->getInternalPath());
-    $this->assertSession()->buttonExists(t('Delete flagging'))->press();
-    $this->assertSession()->addressEquals($this->node->toUrl());
+    $assert_session->addressEquals($expected->getInternalPath());
+    $assert_session->buttonExists('Delete flagging')->press();
+    $assert_session->addressEquals($this->node->toUrl());
 
     // Set the modal option for the 'confirm' link.
     $configuration = $this->flag->getLinkTypePlugin()->getConfiguration();
@@ -117,27 +123,23 @@ class ModalFormTest extends WebDriverTestBase {
 
     $this->drupalGet($this->node->toUrl());
     $this->clickLink($this->flag->getShortText('flag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $assert_session->assertWaitOnAjaxRequest();
 
     // Should still be on the node url, as this is using a modal.
-    $this->assertSession()->addressEquals($this->node->toUrl()
-      ->getInternalPath());
+    $assert_session->addressEquals($this->node->toUrl()->getInternalPath());
     // Note, there is some odd behavior calling the `press()` method on the
     // button, so after asserting it exists, click via this method.
-    $this->assertSession()->buttonExists(t('Create flagging'));
+    $assert_session->buttonExists('Create flagging');
     $this->click('button:contains("Create flagging")');
-    $this->assertSession()->addressEquals($this->node->toUrl()
-      ->getInternalPath());
+    $assert_session->addressEquals($this->node->toUrl()->getInternalPath());
 
     // Unflag.
     $this->clickLink($this->flag->getShortText('unflag'));
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->addressEquals($this->node->toUrl()
-      ->getInternalPath());
-    $this->assertSession()->buttonExists(t('Delete flagging'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->addressEquals($this->node->toUrl()->getInternalPath());
+    $assert_session->buttonExists('Delete flagging');
     $this->click('button:contains("Delete flagging")');
-    $this->assertSession()->addressEquals($this->node->toUrl()
-      ->getInternalPath());
+    $assert_session->addressEquals($this->node->toUrl()->getInternalPath());
   }
 
 }

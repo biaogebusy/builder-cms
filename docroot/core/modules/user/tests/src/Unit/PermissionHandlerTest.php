@@ -1,13 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\user\Unit\PermissionHandlerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Core\Extension\Extension;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -23,6 +21,7 @@ use org\bovigo\vfs\vfsStreamWrapper;
  * @group user
  *
  * @coversDefaultClass \Drupal\user\PermissionHandler
+ * @runTestsInSeparateProcesses
  */
 class PermissionHandlerTest extends UnitTestCase {
 
@@ -48,11 +47,11 @@ class PermissionHandlerTest extends UnitTestCase {
   protected $stringTranslation;
 
   /**
-   * The mocked controller resolver.
+   * The mocked callable resolver.
    *
-   * @var \Drupal\Core\Controller\ControllerResolverInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\Core\Utility\CallableResolver|\PHPUnit\Framework\MockObject\MockObject
    */
-  protected $controllerResolver;
+  protected $callableResolver;
 
   /**
    * {@inheritdoc}
@@ -61,7 +60,7 @@ class PermissionHandlerTest extends UnitTestCase {
     parent::setUp();
 
     $this->stringTranslation = new TestTranslationManager();
-    $this->controllerResolver = $this->createMock('Drupal\Core\Controller\ControllerResolverInterface');
+    $this->callableResolver = $this->createMock('Drupal\Core\Utility\CallableResolver');
   }
 
   /**
@@ -89,7 +88,7 @@ class PermissionHandlerTest extends UnitTestCase {
    * @covers ::buildPermissionsYaml
    * @covers ::moduleProvidesPermissions
    */
-  public function testBuildPermissionsYaml() {
+  public function testBuildPermissionsYaml(): void {
     vfsStreamWrapper::register();
     $root = new vfsStreamDirectory('modules');
     vfsStreamWrapper::setRoot($root);
@@ -130,10 +129,12 @@ EOF
       ->method('getModuleList')
       ->willReturn(array_flip($modules));
 
-    $this->controllerResolver->expects($this->never())
-      ->method('getControllerFromDefinition');
+    $this->callableResolver->expects($this->never())
+      ->method('getCallableFromDefinition');
 
-    $this->permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->controllerResolver);
+    $module_extension_list = $this->createMock(ModuleExtensionList::class);
+
+    $this->permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->callableResolver, $module_extension_list);
 
     $actual_permissions = $this->permissionHandler->getPermissions();
     $this->assertPermissions($actual_permissions);
@@ -152,7 +153,7 @@ EOF
    * @covers ::buildPermissionsYaml
    * @covers ::sortPermissions
    */
-  public function testBuildPermissionsSortPerModule() {
+  public function testBuildPermissionsSortPerModule(): void {
     vfsStreamWrapper::register();
     $root = new vfsStreamDirectory('modules');
     vfsStreamWrapper::setRoot($root);
@@ -165,7 +166,8 @@ EOF
         'module_b' => vfsStream::url('modules/module_b'),
         'module_c' => vfsStream::url('modules/module_c'),
       ]);
-    $this->moduleHandler->expects($this->exactly(3))
+    $module_extension_list = $this->createMock(ModuleExtensionList::class);
+    $module_extension_list->expects($this->exactly(3))
       ->method('getName')
       ->willReturnMap([
         ['module_a', 'Module a'],
@@ -194,7 +196,7 @@ EOF
       ->method('getModuleList')
       ->willReturn(array_flip($modules));
 
-    $permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->controllerResolver);
+    $permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->callableResolver, $module_extension_list);
     $actual_permissions = $permissionHandler->getPermissions();
     $this->assertEquals(['access_module_a4', 'access_module_a1', 'access_module_a2', 'access_module_a3'],
       array_keys($actual_permissions));
@@ -207,7 +209,7 @@ EOF
    * @covers ::getPermissions
    * @covers ::buildPermissionsYaml
    */
-  public function testBuildPermissionsYamlCallback() {
+  public function testBuildPermissionsYamlCallback(): void {
     vfsStreamWrapper::register();
     $root = new vfsStreamDirectory('modules');
     vfsStreamWrapper::setRoot($root);
@@ -248,8 +250,8 @@ EOF
       ->method('getModuleList')
       ->willReturn(array_flip($modules));
 
-    $this->controllerResolver->expects($this->exactly(4))
-      ->method('getControllerFromDefinition')
+    $this->callableResolver->expects($this->exactly(4))
+      ->method('getCallableFromDefinition')
       ->willReturnMap([
         ['Drupal\\user\\Tests\\TestPermissionCallbacks::singleDescription', [new TestPermissionCallbacks(), 'singleDescription']],
         ['Drupal\\user\\Tests\\TestPermissionCallbacks::titleDescription', [new TestPermissionCallbacks(), 'titleDescription']],
@@ -257,7 +259,9 @@ EOF
         ['Drupal\\user\\Tests\\TestPermissionCallbacks::titleDescriptionRestrictAccess', [new TestPermissionCallbacks(), 'titleDescriptionRestrictAccess']],
       ]);
 
-    $this->permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->controllerResolver);
+    $module_extension_list = $this->createMock(ModuleExtensionList::class);
+
+    $this->permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->callableResolver, $module_extension_list);
 
     $actual_permissions = $this->permissionHandler->getPermissions();
     $this->assertPermissions($actual_permissions);
@@ -266,7 +270,7 @@ EOF
   /**
    * Tests a YAML file containing both static permissions and a callback.
    */
-  public function testPermissionsYamlStaticAndCallback() {
+  public function testPermissionsYamlStaticAndCallback(): void {
     vfsStreamWrapper::register();
     $root = new vfsStreamDirectory('modules');
     vfsStreamWrapper::setRoot($root);
@@ -295,12 +299,14 @@ EOF
       ->method('getModuleList')
       ->willReturn(array_flip($modules));
 
-    $this->controllerResolver->expects($this->once())
-      ->method('getControllerFromDefinition')
+    $this->callableResolver->expects($this->once())
+      ->method('getCallableFromDefinition')
       ->with('Drupal\\user\\Tests\\TestPermissionCallbacks::titleDescription')
       ->willReturn([new TestPermissionCallbacks(), 'titleDescription']);
 
-    $this->permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->controllerResolver);
+    $module_extension_list = $this->createMock(ModuleExtensionList::class);
+
+    $this->permissionHandler = new PermissionHandler($this->moduleHandler, $this->stringTranslation, $this->callableResolver, $module_extension_list);
 
     $actual_permissions = $this->permissionHandler->getPermissions();
 

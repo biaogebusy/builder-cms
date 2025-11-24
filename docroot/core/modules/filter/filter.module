@@ -13,6 +13,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Template\Attribute;
 use Drupal\filter\FilterFormatInterface;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 
 /**
  * Implements hook_help().
@@ -21,12 +23,12 @@ function filter_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.filter':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Filter module allows administrators to configure text formats. Text formats change how HTML tags and other text will be <em>processed and displayed</em> in the site. They are used to transform text, and also help to defend your website against potentially damaging input from malicious users. Visual text editors can be associated with text formats by using the <a href=":editor_help">Text Editor module</a>. For more information, see the <a href=":filter_do">online documentation for the Filter module</a>.', [':filter_do' => 'https://www.drupal.org/documentation/modules/filter/', ':editor_help' => (\Drupal::moduleHandler()->moduleExists('editor')) ? Url::fromRoute('help.page', ['name' => 'editor'])->toString() : '#']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Managing text formats') . '</dt>';
-      $output .= '<dd>' . t('You can create and edit text formats on the <a href=":formats">Text formats page</a> (if the Text Editor module is enabled, this page is named Text formats and editors). One text format is included by default: Plain text (which removes all HTML tags). Additional text formats may be created during installation. You can create a text format by clicking "<a href=":add_format">Add text format</a>".', [':formats' => Url::fromRoute('filter.admin_overview')->toString(), ':add_format' => Url::fromRoute('filter.format_add')->toString()]) . '</dd>';
+      $output .= '<dd>' . t('You can create and edit text formats on the <a href=":formats">Text formats page</a> (if the Text Editor module is installed, this page is named Text formats and editors). One text format is included by default: Plain text (which removes all HTML tags). Additional text formats may be created during installation. You can create a text format by clicking "<a href=":add_format">Add text format</a>".', [':formats' => Url::fromRoute('filter.admin_overview')->toString(), ':add_format' => Url::fromRoute('filter.format_add')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Assigning roles to text formats') . '</dt>';
       $output .= '<dd>' . t('You can define which users will be able to use each text format by selecting roles. To ensure security, anonymous and untrusted users should only have access to text formats that restrict them to either plain text or a safe set of HTML tags. This is because HTML tags can allow embedding malicious links or scripts in text. More trusted registered users may be granted permission to use less restrictive text formats in order to create rich text. <strong>Improper text format configuration is a security risk.</strong>') . '</dd>';
       $output .= '<dt>' . t('Selecting filters') . '</dt>';
@@ -93,7 +95,7 @@ function filter_theme() {
  *
  * @see filter_formats_reset()
  */
-function filter_formats(AccountInterface $account = NULL) {
+function filter_formats(?AccountInterface $account = NULL) {
   $formats = &drupal_static(__FUNCTION__, []);
 
   // All available formats are cached for performance.
@@ -149,11 +151,16 @@ function filter_formats_reset() {
 function filter_get_roles_by_format(FilterFormatInterface $format) {
   // Handle the fallback format upfront (all roles have access to this format).
   if ($format->isFallbackFormat()) {
-    return user_role_names();
+    return array_map(fn(RoleInterface $role) => $role->label(), Role::loadMultiple());
   }
   // Do not list any roles if the permission does not exist.
   $permission = $format->getPermissionName();
-  return !empty($permission) ? user_role_names(FALSE, $permission) : [];
+  if (empty($permission)) {
+    return [];
+  }
+
+  $roles = array_filter(Role::loadMultiple(), fn(RoleInterface $role) => $role->hasPermission($permission));
+  return array_map(fn(RoleInterface $role) => $role->label(), $roles);
 }
 
 /**
@@ -202,7 +209,7 @@ function filter_get_formats_by_role($rid) {
  *
  * @see filter_fallback_format()
  */
-function filter_default_format(AccountInterface $account = NULL) {
+function filter_default_format(?AccountInterface $account = NULL) {
   if (!isset($account)) {
     $account = \Drupal::currentUser();
   }
@@ -300,7 +307,7 @@ function check_markup($text, $format_id = NULL, $langcode = '', $filter_types_to
     '#filter_types_to_skip' => $filter_types_to_skip,
     '#langcode' => $langcode,
   ];
-  return \Drupal::service('renderer')->renderPlain($build);
+  return \Drupal::service('renderer')->renderInIsolation($build);
 }
 
 /**
@@ -362,7 +369,7 @@ function template_preprocess_filter_guidelines(&$variables) {
     '#tips' => _filter_tips($format->id(), FALSE),
   ];
 
-  // Add format id for filter.es6.js.
+  // Add format id for filter.js.
   $variables['attributes']['data-drupal-format-id'] = $format->id();
 }
 
@@ -397,14 +404,14 @@ function template_preprocess_text_format_wrapper(&$variables) {
  *     'module-name/filter-id' (only used when $long is TRUE) for each
  *     filter in one or more text formats. Example:
  *     @code
- *       array(
- *         'Full HTML' => array(
- *           0 => array(
+ *       [
+ *         'Full HTML' => [
+ *           0 => [
  *             'tip' => 'Web page addresses and email addresses turn into links automatically.',
  *             'id' => 'filter/2',
- *           ),
- *         ),
- *       );
+ *           ],
+ *         ],
+ *       ];
  *     @endcode
  *   - long: (optional) Whether the passed-in filter tips contain extended
  *     explanations, i.e. intended to be output on the path 'filter/tips'
@@ -414,15 +421,15 @@ function template_preprocess_text_format_wrapper(&$variables) {
 function template_preprocess_filter_tips(&$variables) {
   $tips = $variables['tips'];
 
-  foreach ($variables['tips'] as $name => $tiplist) {
-    foreach ($tiplist as $tip_key => $tip) {
-      $tiplist[$tip_key]['attributes'] = new Attribute();
+  foreach ($variables['tips'] as $name => $tip_list) {
+    foreach ($tip_list as $tip_key => $tip) {
+      $tip_list[$tip_key]['attributes'] = new Attribute();
     }
 
     $variables['tips'][$name] = [
       'attributes' => new Attribute(),
       'name' => $name,
-      'list' => $tiplist,
+      'list' => $tip_list,
     ];
   }
 
@@ -487,8 +494,8 @@ function _filter_url($text, $filter) {
   $valid_url_query_chars = '[a-zA-Z0-9!?\*\'@\(\);:&=\+\$\/%#\[\]\-_\.,~|]';
   $valid_url_query_ending_chars = '[a-zA-Z0-9_&=#\/]';
 
-  // full path
-  // and allow @ in a url, but only in the middle. Catch things like http://example.com/@user/
+  // Full path
+  // and allow @ in a URL, but only in the middle. Catch things like http://example.com/@user/
   $valid_url_path = '(?:(?:' . $valid_url_path_characters . '*(?:' . $valid_url_balanced_parens . $valid_url_path_characters . '*)*' . $valid_url_ending_characters . ')|(?:@' . $valid_url_path_characters . '+\/))';
 
   // Prepare domain name pattern.
@@ -702,12 +709,11 @@ function _filter_autop($text) {
   // Note: PHP ensures the array consists of alternating delimiters and literals
   // and begins and ends with a literal (inserting NULL as required).
   $ignore = FALSE;
-  $ignoretag = '';
+  $ignore_tag = '';
   $output = '';
   foreach ($chunks as $i => $chunk) {
     if ($i % 2) {
-      $comment = (substr($chunk, 0, 4) == '<!--');
-      if ($comment) {
+      if (str_starts_with($chunk, '<!--')) {
         // Nothing to do, this is a comment.
         $output .= $chunk;
         continue;
@@ -718,37 +724,58 @@ function _filter_autop($text) {
       if (!$ignore) {
         if ($open) {
           $ignore = TRUE;
-          $ignoretag = $tag;
+          $ignore_tag = $tag;
         }
       }
       // Only allow a matching tag to close it.
-      elseif (!$open && $ignoretag == $tag) {
+      elseif (!$open && $ignore_tag == $tag) {
         $ignore = FALSE;
-        $ignoretag = '';
+        $ignore_tag = '';
       }
     }
     elseif (!$ignore) {
-      // just to make things a little easier, pad the end
+      // Skip if the next chunk starts with Twig theme debug.
+      // @see twig_render_template()
+      if (isset($chunks[$i + 1]) && $chunks[$i + 1] === '<!-- THEME DEBUG -->') {
+        $chunk = rtrim($chunk, "\n");
+        $output .= $chunk;
+        continue;
+      }
+
+      // Skip if the preceding chunk was the end of a Twig theme debug.
+      // @see twig_render_template()
+      if (isset($chunks[$i - 1])) {
+        if (
+          str_starts_with($chunks[$i - 1], '<!-- BEGIN OUTPUT from ')
+          || str_starts_with($chunks[$i - 1], '<!-- 💡 BEGIN CUSTOM TEMPLATE OUTPUT from ')
+        ) {
+          $chunk = ltrim($chunk, "\n");
+          $output .= $chunk;
+          continue;
+        }
+      }
+
+      // Just to make things a little easier, pad the end
       $chunk = preg_replace('|\n*$|', '', $chunk) . "\n\n";
       $chunk = preg_replace('|<br />\s*<br />|', "\n\n", $chunk);
       // Space things out a little
       $chunk = preg_replace('!(<' . $block . '[^>]*>)!', "\n$1", $chunk);
       // Space things out a little
       $chunk = preg_replace('!(</' . $block . '>)!', "$1\n\n", $chunk);
-      // take care of duplicates
+      // Take care of duplicates
       $chunk = preg_replace("/\n\n+/", "\n\n", $chunk);
       $chunk = preg_replace('/^\n|\n\s*\n$/', '', $chunk);
-      // make paragraphs, including one at the end
+      // Make paragraphs, including one at the end
       $chunk = '<p>' . preg_replace('/\n\s*\n\n?(.)/', "</p>\n<p>$1", $chunk) . "</p>\n";
-      // problem with nested lists
+      // Problem with nested lists
       $chunk = preg_replace("|<p>(<li.+?)</p>|", "$1", $chunk);
       $chunk = preg_replace('|<p><blockquote([^>]*)>|i', "<blockquote$1><p>", $chunk);
       $chunk = str_replace('</blockquote></p>', '</p></blockquote>', $chunk);
-      // under certain strange conditions it could create a P of entirely whitespace
+      // Under certain strange conditions it could create a P of entirely whitespace
       $chunk = preg_replace('|<p>\s*</p>\n?|', '', $chunk);
       $chunk = preg_replace('!<p>\s*(</?' . $block . '[^>]*>)!', "$1", $chunk);
       $chunk = preg_replace('!(</?' . $block . '[^>]*>)\s*</p>!', "$1", $chunk);
-      // make line breaks
+      // Make line breaks
       $chunk = preg_replace('|(?<!<br />)\s*\n|', "<br />\n", $chunk);
       $chunk = preg_replace('!(</?' . $block . '[^>]*>)\s*<br />!', "$1", $chunk);
       $chunk = preg_replace('!<br />(\s*</?(?:p|li|div|dl|dd|dt|th|pre|td|ul|ol)>)!', '$1', $chunk);

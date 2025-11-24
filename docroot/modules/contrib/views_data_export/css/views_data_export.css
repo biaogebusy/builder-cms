@@ -2,11 +2,11 @@
   display: inline;
 }
 .views-data-export-feed .feed-icon {
-  background: no-repeat;
-  overflow: hidden;
-  text-indent: -9999px;
   display: block;
+  overflow: hidden;
   width: 36px;
+  text-indent: -9999px;
+  background: no-repeat;
 }
 .json-feed .feed-icon {
   background-image: url(../images/json.png);
@@ -21,6 +21,6 @@
   background-image: url(../images/xls.png);
 }
 .xlsx-feed .feed-icon {
-  background-image: url(../images/xlsx.png);
   width: 43px;
+  background-image: url(../images/xlsx.png);
 }

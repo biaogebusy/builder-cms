@@ -129,8 +129,8 @@ abstract class FormEntryTypeBase extends ActionLinkTypeBase implements FormEntry
   /**
    * {@inheritdoc}
    */
-  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity) {
-    $render = parent::getAsFlagLink($flag, $entity);
+  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL): array {
+    $render = parent::getAsFlagLink($flag, $entity, $view_mode);
     if ($this->configuration['form_behavior'] !== 'default') {
       $render['#attached']['library'][] = 'core/drupal.ajax';
       $render['#attributes']['class'][] = 'use-ajax';

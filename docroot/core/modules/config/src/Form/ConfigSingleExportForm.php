@@ -154,8 +154,9 @@ class ConfigSingleExportForm extends FormBase {
       $name = $form_state->getValue('config_name');
     }
     // Read the raw data for this config name, encode it, and display it.
-    $form['export']['#value'] = Yaml::encode($this->configStorage->read($name));
-    $form['export']['#description'] = $this->t('Filename: %name', ['%name' => $name . '.yml']);
+    $exists = $this->configStorage->exists($name);
+    $form['export']['#value'] = !$exists ? NULL : Yaml::encode($this->configStorage->read($name));
+    $form['export']['#description'] = !$exists ? NULL : $this->t('Filename: %name', ['%name' => $name . '.yml']);
     return $form['export'];
   }
 
@@ -172,7 +173,7 @@ class ConfigSingleExportForm extends FormBase {
       foreach ($entity_storage->loadMultiple() as $entity) {
         $entity_id = $entity->id();
         if ($label = $entity->label()) {
-          $names[$entity_id] = new TranslatableMarkup('@label (@id)', ['@label' => $label, '@id' => $entity_id]);
+          $names[$entity_id] = new TranslatableMarkup('@id (@label)', ['@label' => $label, '@id' => $entity_id]);
         }
         else {
           $names[$entity_id] = $entity_id;
@@ -187,11 +188,11 @@ class ConfigSingleExportForm extends FormBase {
       }, $this->definitions);
 
       // Find all config, and then filter our anything matching a config prefix.
-      $names = $this->configStorage->listAll();
+      $names += $this->configStorage->listAll();
       $names = array_combine($names, $names);
       foreach ($names as $config_name) {
         foreach ($config_prefixes as $config_prefix) {
-          if (strpos($config_name, $config_prefix) === 0) {
+          if (str_starts_with($config_name, $config_prefix)) {
             unset($names[$config_name]);
           }
         }

@@ -10,7 +10,7 @@ use Drupal\Component\Utility\NestedArray;
 trait WebformTermReferenceTrait {
 
   /**
-   * Set referencable term entities as options for an element.
+   * Set referenceable term entities as options for an element.
    *
    * @param array $element
    *   An element.

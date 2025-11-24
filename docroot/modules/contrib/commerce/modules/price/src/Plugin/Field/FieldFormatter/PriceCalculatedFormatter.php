@@ -3,29 +3,28 @@
 namespace Drupal\commerce_price\Plugin\Field\FieldFormatter;
 
 use CommerceGuys\Intl\Formatter\CurrencyFormatterInterface;
-use Drupal\commerce\Context;
-use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
-use Drupal\commerce_store\CurrentStoreInterface;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Context;
+use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
+use Drupal\commerce_store\CurrentStoreInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_price_calculated' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_price_calculated",
- *   label = @Translation("Calculated"),
- *   field_types = {
- *     "commerce_price"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_price_calculated",
+  label: new TranslatableMarkup("Calculated"),
+  field_types: ["commerce_price"],
+)]
 class PriceCalculatedFormatter extends PriceDefaultFormatter implements ContainerFactoryPluginInterface {
 
   /**

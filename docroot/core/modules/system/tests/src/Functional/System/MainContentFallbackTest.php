@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Tests\BrowserTestBase;
@@ -12,9 +14,7 @@ use Drupal\Tests\BrowserTestBase;
 class MainContentFallbackTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'system_test'];
 
@@ -47,7 +47,7 @@ class MainContentFallbackTest extends BrowserTestBase {
   /**
    * Tests availability of main content: Drupal falls back to SimplePageVariant.
    */
-  public function testMainContentFallback() {
+  public function testMainContentFallback(): void {
     $edit = [];
     // Uninstall the block module.
     $edit['uninstall[block]'] = 'block';
@@ -76,9 +76,9 @@ class MainContentFallbackTest extends BrowserTestBase {
     $edit['modules[block][enable]'] = 'block';
     $this->drupalGet('admin/modules');
     $this->submitForm($edit, 'Install');
-    $this->assertSession()->pageTextContains('Module Block has been enabled.');
+    $this->assertSession()->pageTextContains('Module Block has been installed.');
     $this->rebuildContainer();
-    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('block'), 'Block module re-enabled.');
+    $this->assertTrue(\Drupal::moduleHandler()->moduleExists('block'), 'Block module re-installed.');
   }
 
 }

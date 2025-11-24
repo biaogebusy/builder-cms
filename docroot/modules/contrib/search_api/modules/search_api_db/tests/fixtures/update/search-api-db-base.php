@@ -8,7 +8,7 @@
  */
 
 use Drupal\Core\Database\Database;
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 
 $connection = Database::getConnection();
 

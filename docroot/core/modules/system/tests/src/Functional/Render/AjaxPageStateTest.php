@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Render;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -12,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class AjaxPageStateTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'views'];
 
@@ -49,7 +50,7 @@ class AjaxPageStateTest extends BrowserTestBase {
    * The libraries active-link and drupalSettings are loaded default from core
    * and available in code as scripts. Do this as the base test.
    */
-  public function testLibrariesAvailable() {
+  public function testLibrariesAvailable(): void {
     $this->drupalGet('node', []);
     // The active link library from core should be loaded.
     $this->assertSession()->responseContains('/core/misc/active-link.js');
@@ -64,13 +65,13 @@ class AjaxPageStateTest extends BrowserTestBase {
    * should be excluded as it is already loaded. This should not affect other
    * libraries so test if active-link is still available.
    */
-  public function testDrupalSettingsIsNotLoaded() {
+  public function testDrupalSettingsIsNotLoaded(): void {
     $this->drupalGet('node',
       [
-        "query" =>
+        'query' =>
           [
             'ajax_page_state' => [
-              'libraries' => 'core/drupalSettings',
+              'libraries' => UrlHelper::compressQueryParameter('core/drupalSettings'),
             ],
           ],
       ]
@@ -88,10 +89,14 @@ class AjaxPageStateTest extends BrowserTestBase {
    * The ajax_page_state[libraries] should be able to support multiple libraries
    * comma separated.
    */
-  public function testMultipleLibrariesAreNotLoaded() {
-    $this->drupalGet('node',
-      ['query' => ['ajax_page_state' => ['libraries' => 'core/drupal,core/drupalSettings']]]
-    );
+  public function testMultipleLibrariesAreNotLoaded(): void {
+    $this->drupalGet('node', [
+      'query' => [
+        'ajax_page_state' => [
+          'libraries' => UrlHelper::compressQueryParameter('core/drupal,core/drupalSettings'),
+        ],
+      ],
+    ]);
     $this->assertSession()->statusCodeEquals(200);
     // The drupal library from core should be excluded from loading.
     $this->assertSession()->responseNotContains('/core/misc/drupal.js');

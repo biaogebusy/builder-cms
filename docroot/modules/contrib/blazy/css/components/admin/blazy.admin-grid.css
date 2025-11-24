@@ -119,6 +119,10 @@ Unreliable given hidden states.
     white-space: normal;
   }
 
+  .b-nativegrid--form.is-b-narrow .form-item label {
+    width: 140px;
+  }
+
   .b-nativegrid--form .form-item > div,
   .b-nativegrid--form .form-item > input,
   .b-nativegrid--form .form-item > select,

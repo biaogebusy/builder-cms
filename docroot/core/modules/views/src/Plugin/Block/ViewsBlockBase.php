@@ -2,6 +2,7 @@
 
 namespace Drupal\views\Plugin\Block;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Url;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
@@ -51,7 +52,7 @@ abstract class ViewsBlockBase extends BlockBase implements ContainerFactoryPlugi
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\views\ViewExecutableFactory $executable_factory
@@ -84,6 +85,30 @@ abstract class ViewsBlockBase extends BlockBase implements ContainerFactoryPlugi
       $container->get('entity_type.manager')->getStorage('view'),
       $container->get('current_user')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts() {
+    $contexts = $this->view->display_handler->getCacheMetadata()->getCacheContexts();
+    return Cache::mergeContexts(parent::getCacheContexts(), $contexts);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $tags = $this->view->display_handler->getCacheMetadata()->getCacheTags();
+    return Cache::mergeTags(parent::getCacheTags(), $tags);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge() {
+    $max_age = $this->view->display_handler->getCacheMetadata()->getCacheMaxAge();
+    return Cache::mergeMaxAges(parent::getCacheMaxAge(), $max_age);
   }
 
   /**

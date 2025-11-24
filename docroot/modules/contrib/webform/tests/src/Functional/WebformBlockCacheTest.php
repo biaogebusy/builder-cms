@@ -10,7 +10,7 @@ use Drupal\webform\Entity\Webform;
  *
  * These tests proof that the webform block which
  * renders the webform as a block provides the correct
- * cache tags / cache contexts so that cachability works.
+ * cache tags / cache contexts so that cacheability works.
  *
  * @group webform_browser
  */

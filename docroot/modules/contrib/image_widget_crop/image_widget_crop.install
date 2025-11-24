@@ -20,7 +20,7 @@ function image_widget_crop_requirements($phase) {
     ];
 
     foreach ($files as $type => $file) {
-      $is_local = parse_url($file, PHP_URL_SCHEME) === NULL && strpos($file, '//') !== 0;
+      $is_local = !empty($file) && parse_url($file, PHP_URL_SCHEME) === NULL && strpos($file, '//') !== 0;
       // If libraries module is active check if folder is malformed.
       if ($is_local
         && \Drupal::moduleHandler()->moduleExists('libraries')

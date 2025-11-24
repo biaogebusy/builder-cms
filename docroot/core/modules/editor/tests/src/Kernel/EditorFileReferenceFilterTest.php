@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\editor\Kernel;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\file\Entity\File;
 use Drupal\filter\FilterPluginCollection;
 use Drupal\KernelTests\KernelTestBase;
@@ -19,9 +21,7 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
   use TestFileCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -54,7 +54,7 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
   /**
    * Tests the editor file reference filter.
    */
-  public function testEditorFileReferenceFilter() {
+  public function testEditorFileReferenceFilter(): void {
     $filter = $this->filters['editor_file_reference'];
 
     $test = function ($input) use ($filter) {
@@ -86,15 +86,15 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $this->assertSame($input, $output->getProcessedText());
 
     // One data-entity-uuid attribute.
-    $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '">';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '">';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->assertEquals($cache_tag, $output->getCacheTags());
 
     // One data-entity-uuid attribute with odd capitalization.
     $input = '<img src="llama.jpg" data-entity-type="file" DATA-entity-UUID =   "' . $uuid . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '">';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->assertEquals($cache_tag, $output->getCacheTags());
@@ -107,7 +107,7 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     $this->assertEquals($cache_tag, $output->getCacheTags());
 
     // One data-entity-uuid attribute with an invalid value.
-    $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="invalid-' . $uuid . '" />';
+    $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="invalid-' . $uuid . '">';
     $output = $test($input);
     $this->assertSame($input, $output->getProcessedText());
     $this->assertEquals([], $output->getCacheTags());
@@ -115,8 +115,8 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     // Two different data-entity-uuid attributes.
     $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $input .= '<img src="alpaca.jpg" data-entity-type="file" data-entity-uuid="' . $uuid_2 . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output .= '<img src="/' . $this->siteDirectory . '/files/alpaca.jpg" data-entity-type="file" data-entity-uuid="' . $uuid_2 . '" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '">';
+    $expected_output .= '<img src="/' . $this->siteDirectory . '/files/alpaca.jpg" data-entity-type="file" data-entity-uuid="' . $uuid_2 . '">';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->assertEquals(Cache::mergeTags($cache_tag, $cache_tag_2), $output->getCacheTags());
@@ -124,30 +124,30 @@ class EditorFileReferenceFilterTest extends KernelTestBase {
     // Two identical  data-entity-uuid attributes.
     $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
     $input .= '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output .= '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '">';
+    $expected_output .= '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '">';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->assertEquals($cache_tag, $output->getCacheTags());
 
-    // Add a valid image for test lazy loading feature.
+    // Add a valid image for image dimension testing.
     /** @var array stdClass */
     $files = $this->getTestFiles('image');
     $image = reset($files);
-    \Drupal::service('file_system')->copy($image->uri, 'public://llama.jpg', FileSystemInterface::EXISTS_REPLACE);
+    \Drupal::service('file_system')->copy($image->uri, 'public://llama.jpg', FileExists::Replace);
     [$width, $height] = getimagesize('public://llama.jpg');
     $dimensions = 'width="' . $width . '" height="' . $height . '"';
 
-    // Image dimensions and loading attributes are present.
+    // Image dimensions are present.
     $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" ' . $dimensions . ' loading="lazy" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" ' . $dimensions . '>';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->assertEquals($cache_tag, $output->getCacheTags());
 
-    // Image dimensions and loading attributes are set manually.
-    $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '"width="41" height="21" loading="eager" />';
-    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" width="41" height="21" loading="eager" />';
+    // Image dimensions are set manually.
+    $input = '<img src="llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '"width="41" height="21" />';
+    $expected_output = '<img src="/' . $this->siteDirectory . '/files/llama.jpg" data-entity-type="file" data-entity-uuid="' . $uuid . '" width="41" height="21">';
     $output = $test($input);
     $this->assertSame($expected_output, $output->getProcessedText());
     $this->assertEquals($cache_tag, $output->getCacheTags());

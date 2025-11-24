@@ -49,7 +49,8 @@ class StopwordsTest extends UnitTestCase {
    *
    * Processor checks for exact case, and tokenized content.
    */
-  public function processDataProvider() {
+  public static function processDataProvider() {
+    // cspell:disable
     return [
       [
         'or',
@@ -87,6 +88,7 @@ class StopwordsTest extends UnitTestCase {
         ['stopword1', 'ÄÖÜÀÁ', 'stopword3'],
       ],
     ];
+    // cspell:enable
   }
 
   /**
@@ -96,7 +98,7 @@ class StopwordsTest extends UnitTestCase {
     $index = $this->createMock(IndexInterface::class);
     $index->expects($this->any())
       ->method('status')
-      ->will($this->returnValue(TRUE));
+      ->willReturn(TRUE);
     /** @var \Drupal\search_api\IndexInterface $index */
 
     $this->processor->setIndex($index);
@@ -106,6 +108,7 @@ class StopwordsTest extends UnitTestCase {
     $keys = ['#conjunction' => 'AND', 'foo', 'bar', 'bar foo'];
     $query->keys($keys);
 
+    // cspell:disable-next-line
     $configuration = ['stopwords' => ['foobar', 'bar', 'barfoo']];
     $this->processor->setConfiguration($configuration);
     $this->processor->preprocessSearchQuery($query);

@@ -9,11 +9,10 @@
   background: none;
 
   .layout {
-    border-left: 1px solid var(--gin-border-color);
-    border-bottom: 1px solid var(--gin-border-color);
+    border-inline: 1px solid var(--gin-border-color);
     background: var(--gin-bg-layer);
-    border-bottom-left-radius: var(--gin-border-m);
-    border-bottom-right-radius: var(--gin-border-m);
+    border-end-start-radius: var(--gin-border-m);
+    border-end-end-radius: var(--gin-border-m);
   }
 
   .layout-controls,
@@ -48,14 +47,14 @@
   .layout-paragraphs-add-content--single {
     button {
       .icon {
-        margin-right: var(--gin-spacing-xs);
+        margin-inline-end: var(--gin-spacing-xs);
       }
     }
   }
 
   // Spacer
   .active-items {
-    padding-bottom: var(--gin-spacing-xl);
+    padding-block-end: var(--gin-spacing-xl);
   }
 
   .layout-handle,
@@ -67,7 +66,7 @@
   // Layout selection
   .layout-select {
     &__item {
-      margin-left: 0;
+      margin-inline-start: 0;
 
       input + label {
         border: 1px solid var(--gin-border-color);
@@ -89,7 +88,7 @@
     }
 
     .form-item {
-      margin-left: var(--gin-spacing-xs);
+      margin-inline-start: var(--gin-spacing-xs);
     }
 
     &.active {
@@ -101,10 +100,10 @@
   .layout-paragraphs-layout.layout-paragraphs-item {
     // Item in layout
     .layout-paragraphs-item {
-      margin-bottom: var(--gin-spacing-m);
+      margin-block-end: var(--gin-spacing-m);
 
       &:last-of-type {
-        margin-bottom: var(--gin-spacing-s);
+        margin-block-end: var(--gin-spacing-s);
       }
     }
 
@@ -130,7 +129,7 @@
 
   // Paragraph preview
   .paragraph--view-mode--preview {
-    padding-right: 0;
+    padding-inline-end: 0;
   }
 
   // Disabled wrapper
@@ -139,7 +138,7 @@
       border: var(--gin-border-xs) solid #fff;
 
       &:not(:last-of-type) {
-        margin-bottom: var(--gin-spacing-m);
+        margin-block-end: var(--gin-spacing-m);
       }
 
       .layout-paragraphs-add-content__toggle {
@@ -151,7 +150,7 @@
   // Disabled items
   .layout-paragraphs-disabled-items {
     &__description {
-      margin-bottom: calc((var(--gin-spacing-xs) + var(--gin-spacing-xl)) * -1);
+      margin-block-end: calc((var(--gin-spacing-xs) + var(--gin-spacing-xl)) * -1);
       pointer-events: none;
     }
 
@@ -163,8 +162,8 @@
   .layout-paragraphs-disabled-items,
   .layout-paragraphs-disabled-items.form-item.form-wrapper {
     padding: var(--gin-spacing-m);
-    margin-top: 0;
-    margin-bottom: -6rem;
+    margin-block-start: 0;
+    margin-block-end: -6rem;
     background: #f1f1f3;
     border-radius: var(--gin-border-m);
 
@@ -182,7 +181,8 @@
     }
 
     .fieldset__label {
-      padding: var(--gin-spacing-m) 0 var(--gin-spacing-l);
+      padding-block: var(--gin-spacing-m) var(--gin-spacing-l);
+      padding-inline: 0;
     }
 
     &__description {
@@ -219,11 +219,11 @@
   &:focus-within {
     background: transparent;
     border: 0 none;
-    border-top: 1px solid var(--gin-border-color);
-    border-right: 1px solid var(--gin-border-color);
+    border-block-start: 1px solid var(--gin-border-color);
+    border-inline-end: 1px solid var(--gin-border-color);
 
     &:last-of-type {
-      border-bottom-right-radius: var(--gin-border-m);
+      border-end-end-radius: var(--gin-border-m);
     }
   }
 
@@ -247,7 +247,7 @@
   border-radius: var(--gin-border-l);
 
   &:not(:last-of-type) {
-    margin-bottom: var(--gin-spacing-xl);
+    margin-block-end: var(--gin-spacing-xl);
   }
 
   &:hover,
@@ -277,8 +277,8 @@
   label.paragraph-type--label {
     margin: -1px;
     position: absolute;
-    top: 12px;
-    left: 50%;
+    inset-block-start: 12px;
+    inset-inline-start: 50%;
     transform: translate(-50%);
     border: 0 none;
     font-style: normal;
@@ -289,16 +289,16 @@
   .layout-controls {
     opacity: 1;
     position: absolute;
-    left: var(--gin-spacing-xxs);
-    top: var(--gin-spacing-xs);
+    inset-inline-start: var(--gin-spacing-xxs);
+    inset-block-start: var(--gin-spacing-xs);
   }
 
   // Actions
   .layout-paragraphs-actions {
     visibility: visible;
     position: absolute;
-    right: var(--gin-spacing-xxs);
-    top: var(--gin-spacing-xs);
+    inset-inline-end: var(--gin-spacing-xxs);
+    inset-block-start: var(--gin-spacing-xs);
   }
 
   // Basic Paragraph style adjustments
@@ -324,7 +324,7 @@
 
       .field__item {
         flex-basis: 100%;
-        margin-right: var(--gin-spacing-xs);
+        margin-inline-end: var(--gin-spacing-xs);
       }
     }
   }
@@ -336,8 +336,9 @@
 .layout-paragraphs-field.is-moving .layout-paragraphs-item.layout-paragraphs-layout:hover,
 .erl-layout.erl-item.form-wrapper {
   position: relative;
-  padding: 47px 0 0;
-  margin-bottom: var(--gin-spacing-m);
+  padding-block: 47px 0;
+  padding-inline: 0;
+  margin-block-end: var(--gin-spacing-m);
   background: none;
   border: 0 none;
   border-radius: var(--gin-border-m);
@@ -347,8 +348,8 @@
     content: "";
     display: block;
     position: absolute;
-    top: 0;
-    left: 0;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     width: 100%;
     height: 48px;
     background: #fff;
@@ -364,7 +365,7 @@
   .paragraph-layout--label {
     opacity: .6;
     position: absolute;
-    top: 12px;
+    inset-block-start: 12px;
     transform: translateX(-50%);
     font-style: normal;
     font-weight: var(--gin-font-weight-heavy) !important;
@@ -378,9 +379,11 @@
 .erl-loading div.spinner {
   width: 1.125rem;
   height: 1.125rem;
-  animation: gin-throbber 0.75s linear infinite;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: gin-throbber 0.75s linear infinite;
+  }
   border: 2px solid var(--gin-color-primary);
-  border-right: 2px dotted transparent;
+  border-inline-end: 2px dotted transparent;
   border-radius: 50%;
 }
 
@@ -395,7 +398,7 @@
   // Add Toggle
   &__toggle {
     opacity: 1;
-    bottom: 2px;
+    inset-block-end: 2px;
     background: var(--gin-color-primary);
     border-radius: 50%;
 
@@ -431,7 +434,7 @@
       color: #000;
       text-align: center;
       flex-basis: 33.333%;
-      margin-bottom: var(--gin-spacing-m);
+      margin-block-end: var(--gin-spacing-m);
 
       @include mq(large) {
         flex-basis: 25%;
@@ -460,8 +463,9 @@
 .erl-field .erl-item > .erl-add-content--single {
   position: static;
   width: 100%;
-  left: 0;
-  margin: var(--gin-spacing-m) 0 0 0;
+  inset-inline-start: 0;
+  margin: 0;
+  margin-block-start: var(--gin-spacing-m);
   box-sizing: border-box;
 }
 
@@ -486,7 +490,7 @@
   // Search
   &__search {
     background: var(--gin-bg-layer3);
-    border-bottom: 1px solid var(--gin-border-color-layer2);
+    border-block-end: 1px solid var(--gin-border-color-layer2);
     border-radius: 0;
   }
 
@@ -497,7 +501,7 @@
     align-self: stretch;
 
     &:last-of-type {
-      margin-bottom: calc(var(--gin-spacing-xs) + var(--gin-spacing-xl));
+      margin-block-end: calc(var(--gin-spacing-xs) + var(--gin-spacing-xl));
     }
 
     &.hidden {
@@ -519,7 +523,7 @@
     img {
       width: 24px;
       height: 24px;
-      margin-bottom: var(--gin-spacing-xs);
+      margin-block-end: var(--gin-spacing-xs);
 
       @include mq(large) {
         width: 32px;
@@ -538,7 +542,7 @@
     &--content {
       justify-content: flex-start;
       overflow-x: hidden;
-      padding-bottom: var(--gin-spacing-xxs);
+      padding-block-end: var(--gin-spacing-xxs);
     }
 
     &--layout:not(:empty),
@@ -546,7 +550,8 @@
       &::before {
         color: var(--gin-color-title);
         flex-basis: 100%;
-        padding: var(--gin-spacing-m) var(--gin-spacing-m) 0;
+        padding-block: var(--gin-spacing-m) 0;
+        padding-inline: var(--gin-spacing-m);
         font-size: var(--gin-font-size-s);
         opacity: .4;
       }
@@ -558,8 +563,8 @@
         content: var(--gin-lp-layout, 'Layout');
         display: block;
         width: 100%;
-        padding-left: 0;
-        margin-left: var(--gin-spacing-m);
+        padding-inline-start: 0;
+        margin-inline-start: var(--gin-spacing-m);
       }
     }
 
@@ -569,21 +574,20 @@
     }
 
     &--layout + &--content {
-      margin-top: -2.6rem;
-      margin-bottom: -2.6rem;
+      margin-block: -2.6rem;
       z-index: 1;
       position: relative;
       background: var(--gin-bg-layer3);
-      border-top: 1px solid var(--gin-border-color-layer);
+      border-block-start: 1px solid var(--gin-border-color-layer);
     }
   }
 
   // If search is visible
   &__search + &__group &__group--layout + &__group--content {
-    margin-bottom: 0;
+    margin-block-end: 0;
 
     > div:last-of-type {
-      margin-bottom: 0;
+      margin-block-end: 0;
     }
   }
 }
@@ -592,9 +596,8 @@
 fieldset.layout-paragraphs-field,
 fieldset.fieldset.erl-field {
   position: relative;
-  padding-top: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding-block-start: 0;
+  padding-inline: 0;
   background: transparent;
   box-shadow: none;
 
@@ -615,7 +618,7 @@ fieldset.fieldset.erl-field {
 // Move message
 .layout-paragraphs-field .layout-paragraphs-moving-message {
   z-index: 2;
-  top: calc(var(--gin-spacing-xs) * -1);
+  inset-block-start: calc(var(--gin-spacing-xs) * -1);
   width: calc(100% - var(--gin-spacing-xxl));
   padding: var(--gin-spacing-xs);
   margin: var(--gin-spacing-m);
@@ -652,8 +655,7 @@ fieldset.fieldset.erl-field {
   }
 
   .layout-paragraphs-form-actions {
-    margin-bottom: 0 !important;
-    padding-top: 0;
-    padding-bottom: 0;
+    margin-block-end: 0 !important;
+    padding-block: 0;
   }
 }

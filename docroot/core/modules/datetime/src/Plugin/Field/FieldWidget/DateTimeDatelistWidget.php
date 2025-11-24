@@ -2,20 +2,19 @@
 
 namespace Drupal\datetime\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'datetime_datelist' widget.
- *
- * @FieldWidget(
- *   id = "datetime_datelist",
- *   label = @Translation("Select list"),
- *   field_types = {
- *     "datetime"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'datetime_datelist',
+  label: new TranslatableMarkup('Select list'),
+  field_types: ['datetime'],
+)]
 class DateTimeDatelistWidget extends DateTimeWidgetBase {
 
   /**
@@ -50,31 +49,16 @@ class DateTimeDatelistWidget extends DateTimeWidgetBase {
     }
 
     // Set up the date part order array.
-    switch ($date_order) {
-      case 'YMD':
-        $date_part_order = ['year', 'month', 'day'];
-        break;
-
-      case 'MDY':
-        $date_part_order = ['month', 'day', 'year'];
-        break;
-
-      case 'DMY':
-        $date_part_order = ['day', 'month', 'year'];
-        break;
-    }
-    switch ($time_type) {
-      case '24':
-        $date_part_order = array_merge($date_part_order, ['hour', 'minute']);
-        break;
-
-      case '12':
-        $date_part_order = array_merge($date_part_order, ['hour', 'minute', 'ampm']);
-        break;
-
-      case 'none':
-        break;
-    }
+    $date_part_order = match ($date_order) {
+      'YMD' => ['year', 'month', 'day'],
+      'MDY' => ['month', 'day', 'year'],
+      'DMY' => ['day', 'month', 'year'],
+    };
+    $date_part_order = match ($time_type) {
+      '24' => array_merge($date_part_order, ['hour', 'minute']),
+      '12' => array_merge($date_part_order, ['hour', 'minute', 'ampm']),
+      default => $date_part_order,
+    };
 
     $element['value'] = [
       '#type' => 'datelist',
@@ -116,10 +100,10 @@ class DateTimeDatelistWidget extends DateTimeWidgetBase {
         '#default_value' => $this->getSetting('increment'),
         '#options' => [
           1 => $this->t('1 minute'),
-          5 => $this->t('5 minute'),
-          10 => $this->t('10 minute'),
-          15 => $this->t('15 minute'),
-          30 => $this->t('30 minute'),
+          5 => $this->t('@count minutes', ['@count' => 5]),
+          10 => $this->t('@count minutes', ['@count' => 10]),
+          15 => $this->t('@count minutes', ['@count' => 15]),
+          30 => $this->t('@count minutes', ['@count' => 30]),
         ],
       ];
     }

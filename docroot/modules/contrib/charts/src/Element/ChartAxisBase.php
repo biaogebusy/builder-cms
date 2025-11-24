@@ -2,12 +2,12 @@
 
 namespace Drupal\charts\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a chart render element.
  */
-abstract class ChartAxisBase extends RenderElement {
+abstract class ChartAxisBase extends RenderElementBase {
 
   /**
    * {@inheritdoc}

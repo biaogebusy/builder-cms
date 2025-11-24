@@ -49,14 +49,6 @@ class UnstyledLogOutputStyler implements LogOutputStylerInterface
     /**
      * {@inheritdoc}
      */
-    public function success($output, $level, $message, $context)
-    {
-        return $this->write($output, $this->formatMessageByLevel($level, $message, $context), $context);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function error($output, $level, $message, $context)
     {
         return $this->write($output, $this->formatMessageByLevel($level, $message, $context), $context);

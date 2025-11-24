@@ -83,7 +83,7 @@ class LocaleDefaultConfigStorage {
     elseif ($this->optionalInstallStorage->exists($name)) {
       return $this->optionalInstallStorage->read($name);
     }
-    elseif (strpos($name, 'language.entity.') === 0) {
+    elseif (str_starts_with($name, 'language.entity.')) {
       // Simulate default languages as if they were shipped as default
       // configuration.
       $langcode = str_replace('language.entity.', '', $name);
@@ -129,8 +129,8 @@ class LocaleDefaultConfigStorage {
   public function getComponentNames($type, array $list) {
     $names = array_unique(
       array_merge(
-        array_keys($this->requiredInstallStorage->getComponentNames($type, $list)),
-        array_keys($this->optionalInstallStorage->getComponentNames($type, $list))
+        array_keys($this->requiredInstallStorage->getComponentNames($list)),
+        array_keys($this->optionalInstallStorage->getComponentNames($list))
       )
     );
     if ($type == 'module' && in_array('language', $list)) {

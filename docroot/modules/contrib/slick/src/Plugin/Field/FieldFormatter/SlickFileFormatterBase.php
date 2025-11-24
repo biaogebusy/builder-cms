@@ -2,8 +2,8 @@
 
 namespace Drupal\slick\Plugin\Field\FieldFormatter;
 
-use Drupal\blazy\Plugin\Field\FieldFormatter\BlazyFileFormatterBase;
 use Drupal\Component\Utility\Xss;
+use Drupal\blazy\Plugin\Field\FieldFormatter\BlazyFileFormatterBase;
 use Drupal\slick\SlickDefault;
 
 /**
@@ -49,25 +49,13 @@ abstract class SlickFileFormatterBase extends BlazyFileFormatterBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @todo remove it into self::withElementOverride() post blazy:2.17.
    */
-  public function buildElements(array &$build, $files, $langcode) {
-    foreach ($this->getElements($build, $files) as $element) {
-      if ($element) {
-        // Build individual item.
-        $build['items'][] = $element;
-
-        // Build individual thumbnail.
-        $this->withElementThumbnail($build, $element);
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function withElementThumbnail(array &$build, array $element): void {
+  protected function withElementOverride(array &$build, array $element): void {
+    // If ($build['#vanilla']) {
+    // Build media item including custom highres video thumbnail.
+    // @todo re-check/ refine for Paragraphs, etc.
+    // $this->blazyOembed->build($element);
+    // }
     if (!$build['#asnavfor']) {
       return;
     }

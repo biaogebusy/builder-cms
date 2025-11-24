@@ -14,20 +14,6 @@ use Drupal\Core\Datetime\DrupalDateTime;
 class ActiveHoursDates {
 
   /**
-   * The start date.
-   *
-   * @var \Drupal\Core\Datetime\DrupalDateTime
-   */
-  protected $start;
-
-  /**
-   * The end date.
-   *
-   * @var \Drupal\Core\Datetime\DrupalDateTime
-   */
-  protected $end;
-
-  /**
    * Construct a new ActiveHoursDates object.
    *
    * @param \Drupal\Core\Datetime\DrupalDateTime $start
@@ -35,9 +21,10 @@ class ActiveHoursDates {
    * @param \Drupal\Core\Datetime\DrupalDateTime $end
    *   The end date.
    */
-  public function __construct(DrupalDateTime $start, DrupalDateTime $end) {
-    $this->start = $start;
-    $this->end = $end;
+  public function __construct(
+    protected DrupalDateTime $start,
+    protected DrupalDateTime $end,
+  ) {
   }
 
   /**

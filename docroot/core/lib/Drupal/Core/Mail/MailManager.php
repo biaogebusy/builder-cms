@@ -6,6 +6,7 @@ use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Mail\Attribute\Mail;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -79,7 +80,7 @@ class MailManager extends DefaultPluginManager implements MailManagerInterface {
    *   The renderer.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, TranslationInterface $string_translation, RendererInterface $renderer) {
-    parent::__construct('Plugin/Mail', $namespaces, $module_handler, 'Drupal\Core\Mail\MailInterface', 'Drupal\Core\Annotation\Mail');
+    parent::__construct('Plugin/Mail', $namespaces, $module_handler, 'Drupal\Core\Mail\MailInterface', Mail::class, 'Drupal\Core\Annotation\Mail');
     $this->alterInfo('mail_backend_info');
     $this->setCacheBackend($cache_backend, 'mail_backend_plugins');
     $this->configFactory = $config_factory;
@@ -107,21 +108,21 @@ class MailManager extends DefaultPluginManager implements MailManagerInterface {
    * file, you might set the variable as something like:
    *
    * @code
-   * array(
+   * [
    *   'default' => 'php_mail',
    *   'user' => 'devel_mail_log',
-   * );
+   * ];
    * @endcode
    *
    * Finally, a different system can be specified for a specific message ID (see
    * the $key param), such as one of the keys used by the contact module:
    *
    * @code
-   * array(
+   * [
    *   'default' => 'php_mail',
    *   'user' => 'devel_mail_log',
    *   'contact_page_autoreply' => 'null_mail',
-   * );
+   * ];
    * @endcode
    *
    * Other possible uses for system include a mail-sending plugin that actually
@@ -172,7 +173,7 @@ class MailManager extends DefaultPluginManager implements MailManagerInterface {
    */
   public function mail($module, $key, $to, $langcode, $params = [], $reply = NULL, $send = TRUE) {
     // Mailing can invoke rendering (e.g., generating URLs, replacing tokens),
-    // but e-mails are not HTTP responses: they're not cached, they don't have
+    // but emails are not HTTP responses: they're not cached, they don't have
     // attachments. Therefore we perform mailing inside its own render context,
     // to ensure it doesn't leak into the render context for the HTTP response
     // to the current request.

@@ -15,7 +15,6 @@ use Drupal\Core\TypedData\TraversableTypedDataInterface;
  *   id = "video_embed_field",
  *   label = @Translation("Video Embed"),
  *   description = @Translation("Stores a video and then outputs some embed code."),
- *   category = @Translation("Media"),
  *   default_widget = "video_embed_field_textfield",
  *   default_formatter = "video_embed_field_video",
  *   constraints = {"VideoEmbedValidation" = {}}
@@ -33,7 +32,7 @@ class VideoEmbedField extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct($definition, $name = NULL, TraversableTypedDataInterface $parent = NULL, $provider_manager = NULL) {
+  public function __construct($definition, $name = NULL, ?TraversableTypedDataInterface $parent = NULL, $provider_manager = NULL) {
     parent::__construct($definition, $name, $parent);
     $this->providerManager = $provider_manager;
   }
@@ -41,7 +40,7 @@ class VideoEmbedField extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function createInstance($definition, $name = NULL, TraversableTypedDataInterface $parent = NULL) {
+  public static function createInstance($definition, $name = NULL, ?TraversableTypedDataInterface $parent = NULL) {
     $provider_manager = \Drupal::service('video_embed_field.provider_manager');
     return new static($definition, $name, $parent, $provider_manager);
   }

@@ -2,10 +2,10 @@
 
 namespace Drupal\flag\Plugin\ActionLink;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\flag\ActionLink\ActionLinkTypeBase;
 use Drupal\flag\FlagInterface;
-use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Provides the Normal Link (Reload) link type.
@@ -18,8 +18,11 @@ use Drupal\Core\Entity\EntityInterface;
  */
 class Reload extends ActionLinkTypeBase {
 
+  /**
+   * Get URL.
+   */
   public function getUrl($action, FlagInterface $flag, EntityInterface $entity) {
-    switch($action) {
+    switch ($action) {
       case 'flag':
         return Url::fromRoute('flag.action_link_flag', [
           'flag' => $flag->id(),

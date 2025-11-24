@@ -15,7 +15,7 @@ class LonelyMonkeyController extends ControllerBase implements ContainerInjectio
   /**
    * The lonely monkey class.
    */
-  protected $class;
+  protected LonelyMonkeyClass $class;
 
   public function __construct(LonelyMonkeyClass $class) {
     $this->class = $class;

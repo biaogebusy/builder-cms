@@ -46,3 +46,5 @@ $RECYCLE.BIN/
 .directory
 # Linux trash folder which might appear on any partition or disk
 .Trash-*
+.DS_Store
+node_modules

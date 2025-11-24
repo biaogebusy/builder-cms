@@ -4,6 +4,6 @@
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "require": {
-    "phpoffice/phpspreadsheet": "^1.26"
+    "phpoffice/phpspreadsheet": "^2.3.7"
   }
 }

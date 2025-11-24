@@ -148,15 +148,15 @@ class ParagraphsAdministrationTest extends ParagraphsTestBase {
     $this->drupalGet('admin/structure/paragraphs_type');
     $this->assertSession()->pageTextContains('There are no Paragraphs types yet.');
     $this->drupalGet('admin/structure/types/manage/paragraphs/fields/add-field');
+    $this->getSession()->getPage()->fillField('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
+    if ($this->coreVersion('10.3')) {
+      $this->getSession()->getPage()->pressButton('Continue');
+    }
     $edit = [
-      'new_storage_type' => 'field_ui:entity_reference_revisions:paragraph',
       'label' => 'Paragraph',
       'field_name' => 'paragraph',
     ];
-    $this->submitForm($edit, $this->coreVersion('10.2') ? 'Continue' : 'Save and continue');
-    if (!$this->coreVersion('10.2')) {
-      $this->submitForm([], 'Save field settings');
-    }
+    $this->submitForm($edit, 'Continue');
 
     $this->assertSession()->linkByHrefExists('admin/structure/paragraphs_type/add');
     $this->clickLink('here');
@@ -443,15 +443,8 @@ class ParagraphsAdministrationTest extends ParagraphsTestBase {
     $this->assertSession()->pageTextNotContains('This entity (paragraph: ) cannot be referenced.');
 
     // Set the fields as not required.
-    if ($this->coreVersion('10.2')) {
-      $this->drupalGet('admin/structure/types/manage/article/fields/node.article.field_paragraphs');
-      $this->submitForm(['required' => FALSE], 'Save');
-    }
-    else {
-      $this->drupalGet('admin/structure/types/manage/article/fields');
-      $this->clickLink('Edit');
-      $this->submitForm(['required' => FALSE], 'Save settings');
-    }
+    $this->drupalGet('admin/structure/types/manage/article/fields/node.article.field_paragraphs');
+    $this->submitForm(['required' => FALSE], 'Save');
 
     // Set the Paragraph field edit mode to "Closed" and the closed mode to
     // "Summary".
@@ -496,7 +489,7 @@ class ParagraphsAdministrationTest extends ParagraphsTestBase {
     $this->assertSession()->pageTextNotContains('The referenced entity (node: ' . $node->id() . ') does not exist.');
     $this->assertSession()->fieldNotExists('field_paragraphs[1][subform][field_entity_reference][0][target_id]');
     $this->submitForm([], 'Save');
-    $this->assertSession()->pageTextContains('Validation error on collapsed paragraph field_entity_reference.0.target_id: The referenced entity (node: ' . $node->id() . ') does not exist.');
+    $this->assertSession()->pageTextContains('Error in field field_paragraphs #1 (node_test), Entity reference : The referenced entity (node: ' . $node->id() . ') does not exist.');
 
     // Attempt to edit the Paragraph.
     $this->submitForm([], 'field_paragraphs_0_edit');

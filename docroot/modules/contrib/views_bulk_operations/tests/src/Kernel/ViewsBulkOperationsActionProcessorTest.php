@@ -11,7 +11,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->createTestNodes([
@@ -29,7 +29,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
    * @param bool $exclude
    *   Exclude mode enabled?
    */
-  protected function assertNodeStatuses(array $list, $exclude = FALSE) {
+  protected function assertNodeStatuses(array $list, $exclude = FALSE): void {
     $nodeStorage = $this->container->get('entity_type.manager')->getStorage('node');
 
     $statuses = [];
@@ -65,7 +65,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
    * @covers ::populateQueue
    * @covers ::process
    */
-  public function testViewsbulkOperationsActionProcessor() {
+  public function testViewsbulkOperationsActionProcessor(): void {
     $vbo_data = [
       'view_id' => 'views_bulk_operations_test',
       'action_id' => 'views_bulk_operations_simple_test_action',
@@ -81,7 +81,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
     // (10 nodes, each having a translation), check messages:
     $this->assertEquals('Processed 10 of 20 entities.', $results['messages'][0]);
     $this->assertEquals('Processed 20 of 20 entities.', $results['messages'][1]);
-    $this->assertEquals(20, $results['operations']['Test']);
+    $this->assertEquals(20, $results['operations'][0]['count']);
 
     // For a more advanced test, check if randomly selected entities
     // have been unpublished.
@@ -99,7 +99,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
     $vbo_data['list'] = $this->getResultsList($vbo_data, $selection);
 
     // Execute the action.
-    $results = $this->executeAction($vbo_data);
+    $this->executeAction($vbo_data);
 
     $this->assertNodeStatuses($vbo_data['list']);
   }
@@ -112,7 +112,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
    * @covers ::process
    * @covers ::initialize
    */
-  public function testViewsbulkOperationsActionProcessorExclude() {
+  public function testViewsbulkOperationsActionProcessorExclude(): void {
     $vbo_data = [
       'view_id' => 'views_bulk_operations_test',
       'action_id' => 'views_bulk_operations_advanced_test_action',
@@ -128,7 +128,7 @@ class ViewsBulkOperationsActionProcessorTest extends ViewsBulkOperationsKernelTe
     $vbo_data['list'] = $this->getResultsList($vbo_data, $selection);
 
     // Execute the action.
-    $results = $this->executeAction($vbo_data);
+    $this->executeAction($vbo_data);
 
     $this->assertNodeStatuses($vbo_data['list'], $vbo_data['exclude_mode']);
   }

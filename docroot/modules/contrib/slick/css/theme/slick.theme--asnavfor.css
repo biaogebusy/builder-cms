@@ -85,7 +85,9 @@
 /**
  * Thumnails layout.
  */
-.slick-wrapper--tn-top .slick--thumbnail.slick--skin--asnavfor .slick__slide.slick-current::before {
+.slick-wrapper--tn-top
+  .slick--thumbnail.slick--skin--asnavfor
+  .slick__slide.slick-current::before {
   top: auto;
   bottom: -6px;
   border-top: 8px solid #fff;

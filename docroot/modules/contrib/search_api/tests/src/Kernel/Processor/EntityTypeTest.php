@@ -11,6 +11,7 @@ use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Kernel\PostRequestIndexingTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the entity type property.
@@ -19,6 +20,7 @@ use Drupal\Tests\search_api\Kernel\PostRequestIndexingTrait;
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\processor\EntityType
  */
+#[RunTestsInSeparateProcesses]
 class EntityTypeTest extends ProcessorTestBase {
 
   use PostRequestIndexingTrait;

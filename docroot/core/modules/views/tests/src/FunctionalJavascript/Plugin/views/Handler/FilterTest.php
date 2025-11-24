@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript\Plugin\views\Handler;
 
 use Drupal\field\Entity\FieldConfig;
@@ -44,6 +46,7 @@ class FilterTest extends WebDriverTestBase {
 
     NodeType::create([
       'type' => 'page',
+      'name' => 'Page',
     ])->save();
 
     FieldConfig::create([
@@ -56,7 +59,7 @@ class FilterTest extends WebDriverTestBase {
   /**
    * Tests adding a filter handler.
    */
-  public function testAddingFilter() {
+  public function testAddingFilter(): void {
     $web_assert = $this->assertSession();
 
     $url = '/admin/structure/views/view/content';
@@ -151,7 +154,7 @@ class FilterTest extends WebDriverTestBase {
 
       foreach ($handler_rows as $handler_row) {
         // Test that all the visible rows are of the 'content' type.
-        if (strpos($handler_row->getAttribute('class'), 'content') === FALSE) {
+        if (!str_contains($handler_row->getAttribute('class'), 'content')) {
           return FALSE;
         }
       }

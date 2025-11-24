@@ -36,6 +36,7 @@ abstract class CartBrowserTestBase extends OrderBrowserTestBase {
   protected static $modules = [
     'commerce_cart',
     'commerce_cart_test',
+    'commerce_product',
     'node',
     'taxonomy',
   ];

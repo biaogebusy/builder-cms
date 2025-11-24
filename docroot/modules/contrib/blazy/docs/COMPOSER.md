@@ -2,14 +2,13 @@
 ***
 ## <a name="composer"></a>INSTALLING THIRD-PARTY LIBRARIES VIA COMPOSER
 
-Until Drupal has an official [core management of the 3rd-party front-end libraries](https://www.drupal.org/project/drupal/issues/2873160), there are various ways to
-install third party bower (deprecated)/ npm asset libraries.
+Until Drupal has an official [core management of the 3rd-party front-end libraries](https://www.drupal.org/project/drupal/issues/2873160), there are various ways to install third party bower (deprecated)/ npm asset libraries.
 
-Check out any below suitable to your workflow:  
+Check out any below suitable to your workflow:
 
   + [#3021902](https://www.drupal.org/project/blazy/issues/3021902)
   + [#2907371](https://www.drupal.org/project/slick/issues/2907371)
-  + [#2907371](https://www.drupal.org/project/slick/issues/2907371#comment-12882235)  
+  + [#2907371](https://www.drupal.org/project/slick/issues/2907371#comment-12882235)
   + Via [asset-packagist.org](https://asset-packagist.org/), see below.
 
 It is up to you to decide which works best. Composer is not designed to
@@ -25,7 +24,7 @@ be sure to set up your composer.json correctly, some distros use it, see
 copy/ paste from their composer.json files. Be warned! Invalid json may break.
 Normally unwanted trailing commas.
 
-1. Add/ merge these lines, add commas as required:  
+1. Add/ merge these lines, add commas as required:
 ````
     "repositories": [
         {
@@ -35,7 +34,7 @@ Normally unwanted trailing commas.
     ]
 ````
 
-2. Add/ merge these lines, add commas as required:  
+2. Add/ merge these lines, add commas as required:
 ````
     "extra": {
         "installer-types": [
@@ -53,7 +52,7 @@ Normally unwanted trailing commas.
     }
 ````
 
-3. Require [composer-installers-extender](https://github.com/oomphinc/composer-installers-extender):  
+3. Require [composer-installers-extender](https://github.com/oomphinc/composer-installers-extender):
   `composer require oomphinc/composer-installers-extender`
 
 4. Then require any libraries as usual only prefixed with `npm-asset`, or
@@ -68,11 +67,10 @@ Normally unwanted trailing commas.
      * `composer require npm-asset/jquery-colorbox:^1.6.4`
    + etc.
 
-   Or run them once:  
-   + `composer require npm-asset/slick-carousel:1.8.0
-     npm-asset/splidejs--splide:^4.0 npm-asset/jquery-colorbox:^1.6.4`
+   Or run them once:
+   + `composer require npm-asset/slick-carousel:1.8.0 npm-asset/splidejs--splide:^4.0 npm-asset/jquery-colorbox:^1.6.4`
 
-5. To update:  
+5. To update:
    `composer update --with-dependencies`
 
 ### Warning!

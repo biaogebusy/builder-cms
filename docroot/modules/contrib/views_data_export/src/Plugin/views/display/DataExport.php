@@ -4,19 +4,29 @@ namespace Drupal\views_data_export\Plugin\views\display;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheableResponse;
-use Drupal\Core\Config\StorageException;
+use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\Exception\FileExistsException;
+use Drupal\Core\File\Exception\InvalidStreamWrapperException;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\rest\Plugin\views\display\RestExport;
-use Drupal\views\Views;
-use Drupal\views\ViewExecutable;
+use Drupal\Core\Session\UserSession;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Core\Url;
+use Drupal\facets\FacetSource\FacetSourcePluginManager;
+use Drupal\file\FileInterface;
+use Drupal\rest\Plugin\views\display\RestExport;
+use Drupal\search_api\Plugin\views\query\SearchApiQuery;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Views;
+use Drupal\views_data_export\BatchProcessingAdapterDrupal;
+use Drupal\views_data_export\BatchProcessingAdapterInterface;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
-use Drupal\search_api\Plugin\views\query\SearchApiQuery;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Drupal\Core\File\FileSystemInterface;
 
 /**
  * Provides a data export display plugin.
@@ -38,9 +48,37 @@ use Drupal\Core\File\FileSystemInterface;
 class DataExport extends RestExport {
 
   /**
+   * The facet source plugin manager, if Facets module is enabled.
+   *
+   * @var \Drupal\facets\FacetSource\FacetSourcePluginManager|null
+   */
+  protected ?FacetSourcePluginManager $facetSourcePluginManager;
+
+  /**
+   * The stream wrapper manager service.
+   *
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   */
+  protected ?StreamWrapperManagerInterface $streamWrapperManager;
+
+  /**
    * {@inheritdoc}
    */
-  public static function buildResponse($view_id, $display_id, array $args = [], &$view = []) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $facetsEnabled = $container->get('module_handler')->moduleExists('facets');
+    $instance->facetSourcePluginManager = $facetsEnabled ? $container->get('plugin.manager.facets.facet_source') : NULL;
+    $instance->streamWrapperManager = $container->get('stream_wrapper_manager');
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function buildResponse($view_id, $display_id, array $args = [], ?BatchProcessingAdapterInterface $batch_processing_adapter = NULL) {
+    if (is_null($batch_processing_adapter)) {
+      $batch_processing_adapter = new BatchProcessingAdapterDrupal();
+    }
     // Load the View we're working with and set its display ID so we can get
     // the exposed input.
     $view = Views::getView($view_id);
@@ -48,11 +86,12 @@ class DataExport extends RestExport {
     $view->setArguments($args);
 
     // Build different responses whether batch or standard method is used.
-    if ($view->display_handler->getOption('export_method') == 'batch') {
-      return static::buildBatch($view, $args);
+    if ($view->display_handler->getOption('export_method') === 'batch') {
+      return static::buildBatch($view, $batch_processing_adapter);
     }
-
-    return static::buildStandard($view);
+    else {
+      return static::buildStandard($view);
+    }
   }
 
   /**
@@ -60,13 +99,14 @@ class DataExport extends RestExport {
    *
    * @param \Drupal\views\ViewExecutable $view
    *   The view to export.
-   * @param array $args
-   *   Arguments for the $view.
+   * @param \Drupal\views_data_export\BatchProcessingAdapterInterface $batch_processing_adapter
+   *   The batch processing adapter to use for the export.
    *
    * @return null|\Symfony\Component\HttpFoundation\RedirectResponse
    *   Redirect to the batching page.
    */
-  protected static function buildBatch(ViewExecutable &$view, array $args) {
+  protected static function buildBatch(ViewExecutable $view, BatchProcessingAdapterInterface $batch_processing_adapter) {
+    $args = $view->args;
     // Get total number of items.
     $view->get_total_rows = TRUE;
     $export_limit = $view->getDisplay()->getOption('export_limit');
@@ -94,42 +134,7 @@ class DataExport extends RestExport {
       unset($query_parameters['_format']);
     }
 
-    // Check where to redirect the user after the batch finishes.
-    // Defaults to the <front> route.
-    $redirect_url = Url::fromRoute('<front>');
-
-    // Get options set in views display configuration.
-    $custom_redirect = $view->getDisplay()->getOption('custom_redirect_path');
-    $redirect_to_display = $view->getDisplay()->getOption('redirect_to_display');
-
-    // Check if the url query string should be added to the redirect URL.
-    $include_query_params = $view->display_handler->getOption('include_query_params');
-
-    if ($custom_redirect) {
-      $redirect_path = $view->display_handler->getOption('redirect_path');
-      if (isset($redirect_path)) {
-        // Replace tokens in the redirect_path.
-        $token_service = \Drupal::token();
-        $redirect_path = $token_service->replace($redirect_path, ['view' => $view]);
-
-        if ($include_query_params) {
-          $redirect_url = Url::fromUserInput(trim($redirect_path), ['query' => $query_parameters]);
-        }
-        else {
-          $redirect_url = Url::fromUserInput(trim($redirect_path));
-        }
-      }
-    }
-    elseif (isset($redirect_to_display) && $redirect_to_display !== 'none') {
-      // Get views display URL.
-      $display_route = $view->getUrl([], $redirect_to_display)->getRouteName();
-      if ($include_query_params) {
-        $redirect_url = Url::fromRoute($display_route, [], ['query' => $query_parameters]);
-      }
-      else {
-        $redirect_url = Url::fromRoute($display_route);
-      }
-    }
+    $redirect_url = static::checkWhereToRedirectTheUserAfterTheBatchFinishes($view, $query_parameters);
 
     $batch_definition = [
       'operations' => [
@@ -142,18 +147,25 @@ class DataExport extends RestExport {
             $view->getExposedInput(),
             $total_rows,
             $query_parameters,
-            $redirect_url->toString(),
+            $redirect_url,
+            // Add the current user ID, mostly for Drush, which looses the user
+            // context when running a batch.
+            \Drupal::currentUser()->id(),
           ],
         ],
       ],
       'title' => t('Exporting data...'),
       'progressive' => TRUE,
-      'progress_message' => t('@percentage% complete. Time elapsed: @elapsed'),
-      'finished' => [static::class, 'finishBatch'],
+      'progress_message' => t('Time elapsed: @elapsed. Estimated @estimate remaining.'),
     ];
+
+    // Add the appropriate finish callback based on the execution context.
+    $batch_definition['finished'] = $batch_processing_adapter->getFinishedCallback(static::class);
+
     batch_set($batch_definition);
 
-    return batch_process();
+    // Process the batch using the appropriate engine.
+    return $batch_processing_adapter->batchProcess();
   }
 
   /**
@@ -163,12 +175,12 @@ class DataExport extends RestExport {
    *   The view to export.
    *
    * @return \Drupal\Core\Cache\CacheableResponse
-   *   Redirect to the batching page.
+   *   Response object containing the rendered view output.
    */
   protected static function buildStandard(ViewExecutable $view) {
     $build = $view->buildRenderable();
 
-    // Setup an empty response so headers can be added as needed during views
+    // Set up an empty response so headers can be added as needed during views
     // rendering and processing.
     $response = new CacheableResponse('', 200);
     $build['#response'] = $response;
@@ -189,6 +201,60 @@ class DataExport extends RestExport {
     $response->headers->set('Content-type', $build['#content_type']);
 
     return $response;
+  }
+
+  /**
+   * Determine where to redirect the user after the batch finishes.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The view being exported.
+   * @param array $query_parameters
+   *   The query parameters to include in the redirect URL.
+   *
+   * @return string
+   *   The URL to redirect the user to after the batch finishes.
+   */
+  public static function checkWhereToRedirectTheUserAfterTheBatchFinishes(ViewExecutable $view, array $query_parameters): string {
+    // Check where to redirect the user after the batch finishes.
+    // Defaults to the <front> route.
+    $redirect_url = Url::fromRoute('<front>');
+
+    // Get options set in views display configuration.
+    $custom_redirect = $view->getDisplay()->getOption('custom_redirect_path');
+    $redirect_to_display = $view->getDisplay()
+      ->getOption('redirect_to_display');
+
+    // Check if the url query string should be added to the redirect URL.
+    $include_query_params = $view->display_handler->getOption('include_query_params');
+
+    if ($custom_redirect) {
+      $redirect_path = $view->display_handler->getOption('redirect_path');
+      if (isset($redirect_path)) {
+        // Replace tokens in the redirect_path.
+        $token_service = \Drupal::token();
+        $redirect_path = $token_service->replace($redirect_path, ['view' => $view]);
+
+        if ($include_query_params) {
+          $redirect_url = Url::fromUserInput(trim($redirect_path), ['query' => $query_parameters]);
+        }
+        else {
+          $redirect_url = Url::fromUserInput(trim($redirect_path));
+        }
+      }
+    }
+    elseif (isset($redirect_to_display) && $redirect_to_display !== 'none') {
+      // Get views display URL, including route parameters.
+      $view_url = $view->getUrl($view->args, $redirect_to_display);
+      $display_route = $view_url->getRouteName();
+      $display_route_parameters = $view_url->getRouteParameters();
+      if ($include_query_params) {
+        $redirect_url = Url::fromRoute($display_route, $display_route_parameters, ['query' => $query_parameters]);
+      }
+      else {
+        $redirect_url = Url::fromRoute($display_route, $display_route_parameters);
+      }
+    }
+    return $redirect_url->toString();
   }
 
   /**
@@ -216,7 +282,7 @@ class DataExport extends RestExport {
     $options['export_limit']['default'] = '0';
 
     // Set facet source default.
-    if (\Drupal::service('module_handler')->moduleExists('facets')) {
+    if ($this->facetSourcePluginManager) {
       $options['facet_settings']['default'] = 'none';
     }
 
@@ -303,7 +369,7 @@ class DataExport extends RestExport {
       'value' => $attach_to,
     ];
 
-    if (\Drupal::service('module_handler')->moduleExists('facets')) {
+    if ($this->facetSourcePluginManager) {
       // Add a view configuration category for data facet settings in the
       // second column.
       $categories['facet_settings'] = [
@@ -397,9 +463,8 @@ class DataExport extends RestExport {
           '#fieldset' => 'file_fieldset',
         ];
 
-        $streamWrapperManager = \Drupal::service('stream_wrapper_manager');
         // Check if the private file system is ready to use.
-        if ($streamWrapperManager->isValidScheme('private')) {
+        if ($this->streamWrapperManager->isValidScheme('private')) {
           $form['store_in_public_file_directory'] = [
             '#type' => 'checkbox',
             '#title' => $this->t("Store file in public files directory"),
@@ -510,9 +575,8 @@ class DataExport extends RestExport {
           $view_module_dependencies = $dependencies['module'];
           if (in_array('search_api', $view_module_dependencies)) {
             // Check if the facets module is enabled.
-            if (\Drupal::service('module_handler')->moduleExists('facets')) {
-              $facet_source_plugin_manager = \Drupal::service('plugin.manager.facets.facet_source');
-              $facet_sources = $facet_source_plugin_manager->getDefinitions();
+            if ($this->facetSourcePluginManager) {
+              $facet_sources = $this->facetSourcePluginManager->getDefinitions();
               $facet_source_list = ['none' => 'None'];
               foreach ($facet_sources as $source_id => $source) {
                 $facet_source_list[$source_id] = $source['label'];
@@ -551,17 +615,14 @@ class DataExport extends RestExport {
     $clone->setArguments($this->view->args);
     $clone->setDisplay($this->display['id']);
     $clone->buildTitle();
-    $displays = $clone->storage->get('display');
     $title = $clone->getTitle();
 
-    if (!empty($displays[$this->display['id']])) {
-      $title = $displays[$this->display['id']]['display_title'];
-    }
-
     if ($plugin = $clone->display_handler->getPlugin('style')) {
-      $plugin->attachTo($build, $display_id, $clone->getUrl(), $title);
-      foreach ($clone->feedIcons as $feed_icon) {
-        $this->view->feedIcons[] = $feed_icon;
+      if ($clone->hasUrl()) {
+        $plugin->attachTo($build, $display_id, $clone->getUrl(), $title);
+        foreach ($clone->feedIcons as $feed_icon) {
+          $this->view->feedIcons[] = $feed_icon;
+        }
       }
     }
 
@@ -633,12 +694,56 @@ class DataExport extends RestExport {
    * {@inheritdoc}
    */
   public function getAvailableGlobalTokens($prepared = FALSE, array $types = []) {
-    $types += ['date'];
+    $types = array_merge($types, ['date']);
     return parent::getAvailableGlobalTokens($prepared, $types);
   }
 
   /**
    * Implements callback_batch_operation() - perform processing on each batch.
+   *
+   * Provides a wrapper that switches the current user to the user that is
+   * should be running the batch process.
+   *
+   * @param string $view_id
+   *   ID of the view.
+   * @param string $display_id
+   *   ID of the view display.
+   * @param array $args
+   *   Views arguments.
+   * @param array $exposed_input
+   *   Exposed input.
+   * @param int $total_rows
+   *   Total rows.
+   * @param array $query_parameters
+   *   Query string parameters.
+   * @param string $redirect_url
+   *   Redirect URL.
+   * @param int $uid
+   *   User ID. This is used to be able to pass the user ID to the batch
+   *   process, which is relevant in the context of the Drush command.
+   * @param mixed $context
+   *   Batch context information.
+   *
+   * @throws \PhpOffice\PhpSpreadsheet\Exception
+   * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+   * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+   */
+  public static function processBatch($view_id, $display_id, array $args, array $exposed_input, $total_rows, array $query_parameters, $redirect_url, int $uid, &$context = []) {
+    $switchAccount = ((int) \Drupal::currentUser()->id() !== $uid);
+    if ($switchAccount) {
+      $accountSwitcher = \Drupal::service('account_switcher');
+      $accountSwitcher->switchTo(new UserSession(['uid' => $uid]));
+    }
+
+    static::doProcessBatch($view_id, $display_id, $args, $exposed_input, $total_rows, $query_parameters, $redirect_url, $context);
+
+    if ($switchAccount) {
+      $accountSwitcher->switchBack();
+    }
+  }
+
+  /**
+   * Implements the heavy lifting for the callback_batch_operation().
    *
    * Writes rendered data export View rows to an output file that will be
    * returned by callback_batch_finished() (i.e. finishBatch) when we're done.
@@ -660,12 +765,11 @@ class DataExport extends RestExport {
    * @param mixed $context
    *   Batch context information.
    *
-   * @throws \Drupal\Core\Entity\EntityStorageException
    * @throws \PhpOffice\PhpSpreadsheet\Exception
    * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
    * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
    */
-  public static function processBatch($view_id, $display_id, array $args, array $exposed_input, $total_rows, array $query_parameters, $redirect_url, &$context) {
+  protected static function doProcessBatch($view_id, $display_id, array $args, array $exposed_input, $total_rows, array $query_parameters, $redirect_url, &$context = []) {
     // Add query string back to the URL for processing.
     if ($query_parameters) {
       \Drupal::request()->query->add($query_parameters);
@@ -706,56 +810,9 @@ class DataExport extends RestExport {
       // we've processed.
       $context['sandbox']['progress'] = 0;
 
-      // Initialize file we'll write our output results to.
-      // This file will be written to with each batch iteration until all
-      // batches have been processed.
-      // This is a private file because some use cases will want to restrict
-      // access to the file. The View display's permissions will govern access
-      // to the file.
-      $current_user = \Drupal::currentUser();
-      $user_ID = $current_user->isAuthenticated() ? $current_user->id() : NULL;
-      $timestamp = \Drupal::time()->getRequestTime();
-      $filename = \Drupal::token()->replace($view->getDisplay()->options['filename'], ['view' => $view]);
-      $extension = reset($view->getDisplay()->options['style']['options']['formats']);
-
-      // Checks if extension is already included in the filename.
-      if (!preg_match("/^.*\.($extension)$/i", $filename)) {
-        $filename = $filename . "." . $extension;
-      }
-
-      $user_dir = $user_ID ? "$user_ID-$timestamp" : $timestamp;
-      $view_dir = $view_id . '_' . $display_id;
-
-      // Determine if the export file should be stored in the public or private
-      // file system.
-      $store_in_public_file_directory = TRUE;
-      $streamWrapperManager = \Drupal::service('stream_wrapper_manager');
-      // Check if the private file system is ready to use.
-      if ($streamWrapperManager->isValidScheme('private')) {
-        $store_in_public_file_directory = $view->getDisplay()->getOption('store_in_public_file_directory');
-      }
-
-      if ($store_in_public_file_directory === TRUE) {
-        $directory = "public://views_data_export/$view_dir/$user_dir/";
-      }
-      else {
-        $directory = "private://views_data_export/$view_dir/$user_dir/";
-      }
-
       try {
-        $fileSystem = \Drupal::service('file_system');
-        $fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
-        $destination = $directory . $filename;
-        $file = \Drupal::service('file.repository')->writeData('', $destination, FileSystemInterface::EXISTS_REPLACE);
-        if (!$file) {
-          // Failed to create the file, abort the batch.
-          unset($context['sandbox']);
-          $context['success'] = FALSE;
-          throw new StorageException('Could not create a temporary file.');
-        }
+        $file = static::getTempFile($view, $view_id, $display_id);
 
-        $file->setTemporary();
-        $file->save();
         // Create sandbox variable from filename that can be referenced
         // throughout the batch processing.
         $context['sandbox']['vde_file'] = $file->getFileUri();
@@ -766,7 +823,10 @@ class DataExport extends RestExport {
         // results so the $context['results'] array is unused.
         $context['results']['vde_file'] = $context['sandbox']['vde_file'];
       }
-      catch (StorageException $e) {
+      catch (FileException | FileExistsException | InvalidStreamWrapperException | EntityStorageException) {
+        // Failed to create the file, abort the batch.
+        unset($context['sandbox']);
+        $context['success'] = FALSE;
         $message = t('Could not write to temporary output file for result export (@file). Check permissions.', ['@file' => $context['sandbox']['vde_file']]);
         \Drupal::logger('views_data_export')->error($message);
       }
@@ -799,22 +859,35 @@ class DataExport extends RestExport {
     $string = (string) $rendered_rows['#markup'];
 
     // Workaround for CSV headers, remove the first line.
-    if ($context['sandbox']['progress'] != 0 && reset($view->getStyle()->options['formats']) == 'csv') {
-      $string = preg_replace('/^[^\n]+/', '', $string);
+    $options = $view->getStyle()->options;
+    if ($context['sandbox']['progress'] != 0 && reset($options['formats']) == 'csv') {
+      $string = $options['csv_settings']['output_header']
+        ? preg_replace('/^[^\n]+/', '', $string)
+        : "\n{$string}";
     }
 
     // Workaround for XML.
     $output_format = reset($view->getStyle()->options['formats']);
     if ($output_format == 'xml') {
+      $format_options = $view->getStyle()->options['xml_settings'];
+      $root_node_name = $format_options['root_node_name'];
+      $encoding = $format_options['encoding'];
       $maximum = $export_limit ? $export_limit : $total_rows;
-      // Remove xml declaration and response opening tag.
+
+      // Remove xml declaration, root node opening tag.
       if ($context['sandbox']['progress'] != 0) {
-        $string = str_replace('<?xml version="1.0"?>', '', $string);
-        $string = str_replace('<response>', '', $string);
+        if (!empty($encoding)) {
+          $string = str_replace('<?xml version="1.0" encoding="' . $encoding . '"?>', '', $string);
+        }
+        else {
+          $string = str_replace('<?xml version="1.0"?>', '', $string);
+        }
+        $string = str_replace("<{$root_node_name}>", '', $string);
       }
-      // Remove response closing tag.
+
+      // Remove root node closing tag.
       if ($context['sandbox']['progress'] + $items_this_batch < $maximum) {
-        $string = str_replace('</response>', '', $string);
+        $string = str_replace("</{$root_node_name}>", '', $string);
       }
     }
 
@@ -835,11 +908,11 @@ class DataExport extends RestExport {
         $rowIndex++;
         $colIndex = 0;
         foreach ($row->getCellIterator() as $cell) {
-          $previousExcel->getActiveSheet()->setCellValueByColumnAndRow(++$colIndex, $rowIndex, $cell->getValue());
+          $previousExcel->getActiveSheet()->setCellValue([++$colIndex, $rowIndex], $cell->getValue());
         }
       }
 
-      $objWriter = new Xlsx($previousExcel);
+      $objWriter = IOFactory::createWriter($previousExcel, ucfirst($output_format));
       $objWriter->save($vdeFileRealPath);
     }
     // Write rendered rows to output file.
@@ -897,7 +970,7 @@ class DataExport extends RestExport {
         // Create a web server accessible URL for the private file.
         // Permissions for accessing this URL will be inherited from the View
         // display's configuration.
-        $url = \Drupal::service('file_url_generator')->generateAbsoluteString($results['vde_file']);
+        $url = \Drupal::service('file_url_generator')->generateString($results['vde_file']);
         $message = t('Export complete. Download the file <a download href=":download_url"  data-download-enabled="false" id="vde-automatic-download">here</a>.', [':download_url' => $url]);
         // If the user specified instant download than redirect to the file.
         if ($results['automatic_download']) {
@@ -920,19 +993,125 @@ class DataExport extends RestExport {
   }
 
   /**
+   * Initialize file we'll write our output results to.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The views.
+   * @param string $view_id
+   *   ID of the view.
+   * @param string $display_id
+   *   ID of the view display.
+   *
+   * @return \Drupal\file\FileInterface
+   *   The temporary file.
+   *
+   * @throws \Drupal\Core\File\Exception\FileException
+   *   Thrown when there is an error writing to the file system.
+   * @throws \Drupal\Core\File\Exception\FileExistsException
+   *   Thrown when the destination exists and $replace is set to
+   *   FileExists::Error.
+   * @throws \Drupal\Core\File\Exception\InvalidStreamWrapperException
+   *   Thrown when the destination is an invalid stream wrapper.
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   *   Thrown when there is an error saving the file.
+   */
+  protected static function getTempFile(ViewExecutable $view, $view_id, $display_id): FileInterface {
+    // This is a private file because some use cases will want to restrict
+    // access to the file. The View display's permissions will govern access
+    // to the file.
+    $current_user = \Drupal::currentUser();
+    $user_ID = $current_user->isAuthenticated() ? $current_user->id() : NULL;
+    $timestamp = \Drupal::time()->getRequestTime();
+    $filename = \Drupal::token()->replace($view->getDisplay()->options['filename'], ['view' => $view]);
+    $extension = reset($view->getStyle()->options['formats']);
+
+    // Checks if extension is already included in the filename.
+    if (!preg_match("/^.*\.($extension)$/i", $filename)) {
+      $filename = $filename . "." . $extension;
+    }
+
+    $user_dir = $user_ID ? "$user_ID-$timestamp" : $timestamp;
+    $view_dir = $view_id . '_' . $display_id;
+
+    // Determine if the export file should be stored in the public or private
+    // file system.
+    $store_in_public_file_directory = TRUE;
+    $streamWrapperManager = \Drupal::service('stream_wrapper_manager');
+    // Check if the private file system is ready to use.
+    if ($streamWrapperManager->isValidScheme('private')) {
+      $store_in_public_file_directory = $view->getDisplay()->getOption('store_in_public_file_directory');
+    }
+
+    if ($store_in_public_file_directory === TRUE) {
+      $directory = "public://views_data_export/$view_dir/$user_dir/";
+    }
+    else {
+      $directory = "private://views_data_export/$view_dir/$user_dir/";
+    }
+
+    $fileSystem = \Drupal::service('file_system');
+    $fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+    $destination = $directory . $filename;
+    if (version_compare(\Drupal::VERSION, '10.3', '>=')) {
+      $file = \Drupal::service('file.repository')->writeData('', $destination, FileExists::Replace);
+    }
+    else {
+      // @phpstan-ignore-next-line
+      $file = \Drupal::service('file.repository')->writeData('', $destination, FileSystemInterface::EXISTS_REPLACE);
+    }
+
+    $file->setTemporary();
+    $file->save();
+    return $file;
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function getRoute($view_id, $display_id) {
     $route = parent::getRoute($view_id, $display_id);
-    $view = Views::getView($view_id);
-    $view->setDisplay($display_id);
 
     // If this display is going to perform a redirect to the batch url
     // make sure thr redirect response is never cached.
-    if ($view->display_handler->getOption('export_method') == 'batch') {
+    if ($this->getOption('export_method') == 'batch') {
       $route->setOption('no_cache', TRUE);
+
+      // Additionally if the path is an admin path we need to set the
+      // _admin_route option to TRUE so the batch process is executed in the
+      // same theme as we'd normally expect for the path even though this is
+      // not an HTML route.
+      if (str_starts_with($this->getOption('path') ?? '', 'admin/')) {
+        $route->setOption('_admin_route', TRUE);
+      }
     }
     return $route;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate() {
+    $errors = parent::validate();
+
+    // Validate that the style plugin is valid for our display.
+    $style_plugin = $this->getPlugin('style');
+    if (!empty($style_plugin)) {
+      $plugin_definition = $style_plugin->getPluginDefinition();
+      if (!in_array($this->getType(), $plugin_definition['display_types'])) {
+        $errors[] = $this->t('Display "@display" does not use a valid style plugin.', ['@display' => $this->display['display_title']]);
+      }
+    }
+
+    // Validate that the row plugin is valid for our display.
+    $row_plugin = $this->getPlugin('row');
+    if (!empty($row_plugin)) {
+      $plugin_definition = $row_plugin->getPluginDefinition();
+      if (!in_array($this->getType(), $plugin_definition['display_types'])) {
+        $errors[] = $this->t('Display "@display" does not use a valid row plugin.', ['@display' => $this->display['display_title']]);
+      }
+    }
+
+    return $errors;
   }
 
 }

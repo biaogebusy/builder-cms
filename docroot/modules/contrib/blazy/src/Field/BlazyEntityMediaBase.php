@@ -2,10 +2,10 @@
 
 namespace Drupal\blazy\Field;
 
-use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\internals\Internals;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,7 +24,7 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->svgManager = $container->get('blazy.svg');
@@ -46,15 +46,6 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
 
     if (isset($element['media_switch'])) {
       $element['media_switch']['#options']['rendered'] = $this->t('Image rendered by its formatter');
-      $element['media_switch']['#description'] .= ' ' . $this->t('<b>Image rendered</b> requires <b>Image</b> option filled out and is useful if the formatter offers awesomeness that Blazy does not have but still wants Blazy for a Grid, etc. Be sure the enabled fields here are not hidden/ disabled at its view mode.');
-    }
-
-    if (isset($element['caption'])) {
-      $element['caption']['#description'] = $this->t('Check fields to be treated as captions, even if not caption texts.');
-    }
-
-    if (isset($element['image']['#description'])) {
-      $element['image']['#description'] .= ' ' . $this->t('The formatter/renderer is managed by <strong>@plugin_id</strong> formatter. Meaning original formatter ignored.', ['@plugin_id' => $this->getPluginId()]);
     }
 
     return $element;
@@ -63,10 +54,40 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
   /**
    * {@inheritdoc}
    */
+  protected function getScopedDefinition(array $form): array {
+    $definition = parent::getScopedDefinition($form);
+    $existings = $definition['additional_descriptions'] ?? [];
+
+    $descriptions = [
+      'image' => [
+        'description' => $this->t('The formatter/renderer is managed by <strong>@plugin_id</strong> formatter. Meaning original formatter ignored.', ['@plugin_id' => $this->getPluginId()]),
+        'placement' => 'after',
+      ],
+      'media_switch' => [
+        'description' => $this->t('<br><b>Image rendered</b> requires <b>Image</b> option filled out and is useful if the formatter offers awesomeness that Blazy does not have but still wants Blazy for a Grid, etc. Be sure the enabled fields here are not hidden/ disabled at its view mode.'),
+        'placement' => 'after',
+      ],
+      'ratio' => [
+        'description' => $this->t('Required if using media entity to switch between iframe and overlay image, otherwise DIY.'),
+        'placement' => 'after',
+      ],
+    ];
+
+    $replaced_descriptions = [
+      'caption' => $this->t('Check fields to be treated as captions, even if not caption texts.'),
+    ];
+
+    $definition['additional_descriptions'] = $this->manager->merge($descriptions, $existings);
+    $definition['replaced_descriptions'] = $replaced_descriptions;
+    return $definition;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function withElementDetail(array $build): array {
     [
       '#entity'   => $entity,
-      '#langcode' => $langcode,
       '#settings' => $settings,
     ] = $build;
 
@@ -87,14 +108,6 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
 
     // Captions if so configured, including Blazy formatters.
     $captions = $this->getCaptions($data);
-
-    // @todo remove BC at blazy:3.x.
-    $this->getCaption($data, $entity, $langcode);
-    if (isset($data[static::$captionId])) {
-      @trigger_error('getCaption is deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use \Drupal\blazy\Field\BlazyEntityMediaBase::getCaptions() instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
-      $captions = array_merge($captions, $data[static::$captionId]);
-      unset($data[static::$captionId]);
-    }
 
     // If `Image rendered` is picked, render image as is. Might not be Blazy's
     // formatter, yet has awesomeness that Blazy doesn't, but still wants to be
@@ -129,6 +142,7 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
     ] = $element;
 
     $blazies   = $settings['blazies'];
+    $parent    = $element['#parent'] ?? NULL;
     $view_mode = $settings['view_mode'] ?? 'full';
     $captions  = $items = $weights = [];
     $fields    = $settings['caption'] ?? [];
@@ -137,6 +151,10 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
     $_title    = $settings['title'] ?? NULL;
     $_switch   = $settings['media_switch'] ?? NULL;
     $output    = [];
+    $titlesets = $blazies->get('format.title', []);
+    $formatted = !empty($titlesets['delimiter']);
+    $url       = !empty($titlesets['link_to_entity']) && $parent
+      ? Internals::entityUrl($parent) : NULL;
 
     // Title can be plain text, or link field.
     if ($_title) {
@@ -150,7 +168,13 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
         // Respects both fake and real image item.
         if ($caption = trim($item->title ?? '')) {
           $caption = Xss::filter($caption, BlazyDefault::TAGS);
-          $output = ['#markup' => $caption];
+
+          if ($formatted) {
+            $output = Internals::formatTitle($caption, $url, $titlesets);
+          }
+          else {
+            $output = ['#markup' => $caption];
+          }
         }
       }
 
@@ -287,16 +311,6 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
   }
 
   /**
-   * Build extra elements.
-   */
-  protected function withElementExtra(array &$element): void {
-    // @todo remove at 3.x:
-    $entity = $element['#entity'] ?? NULL;
-    $langcode = $element['#langcode'] ?? NULL;
-    $this->buildElementExtra($element, $entity, $langcode);
-  }
-
-  /**
    * Build thumbnail navigation such as for Slick/ Splide asnavfor.
    *
    * @todo re-enable after sub-modules corrected params.
@@ -307,36 +321,10 @@ abstract class BlazyEntityMediaBase extends BlazyEntityVanillaBase {
    */
 
   /**
-   * Deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0.
-   *
-   * @todo deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use
-   *   self::getCaptions() instead.
-   * @see https://www.drupal.org/node/3103018
+   * Build extra elements.
    */
-  protected function getCaption(array &$element, $entity, $langcode) {
-    @trigger_error('getCaption is deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use \Drupal\blazy\Field\BlazyEntityMediaBase::getCaptions() instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
-  }
-
-  /**
-   * Deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0.
-   *
-   * @todo deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use
-   *   self::withElementExtra() instead.
-   * @see https://www.drupal.org/node/3103018
-   */
-  protected function buildElementExtra(array &$element, $entity, $langcode) {
-    // @trigger_error('buildElementExtra is deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use \Drupal\blazy\Field\BlazyEntityMediaBase::withElementExtra() instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
-  }
-
-  /**
-   * Deprecated in blazy:8.x-2.17, added in blazy:8.x-2.17.
-   *
-   * @todo deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use
-   *   self::withElementDetail() instead.
-   * @see https://www.drupal.org/node/3103018
-   */
-  protected function toElements(array &$build): void {
-    @trigger_error('toElements is deprecated in blazy:8.x-2.17 and is removed from blazy:8.x-3.0. Use \Drupal\blazy\Field\BlazyEntityMediaBase::withElementDetail() instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
+  protected function withElementExtra(array &$element): void {
+    // Do nothing, let extenders do their jobs.
   }
 
 }

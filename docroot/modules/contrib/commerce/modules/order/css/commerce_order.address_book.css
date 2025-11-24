@@ -4,8 +4,8 @@
  */
 
 .address-book__add-link {
-  margin: 0.75em;
   display: block;
+  margin: 0.75em;
   text-decoration: none;
   border: 0;
 }
@@ -18,8 +18,8 @@
 
 .address-book__profile {
   flex: 1;
-  margin-left: 0.75em;
   margin-right: 0.75em;
+  margin-left: 0.75em;
 }
 
 .address-book__empty-text {

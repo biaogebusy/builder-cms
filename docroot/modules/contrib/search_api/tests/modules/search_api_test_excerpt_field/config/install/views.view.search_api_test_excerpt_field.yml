@@ -24,7 +24,7 @@ display:
         type: none
         options: {  }
       cache:
-        type: none
+        type: search_api_none
         options: {  }
       query:
         type: search_api_query
@@ -70,6 +70,7 @@ display:
         options:
           view_modes:
             'entity:entity_test_mulrev_changed':
+              ':default': default
               article: search_result
               item: search_result
       fields: {  }

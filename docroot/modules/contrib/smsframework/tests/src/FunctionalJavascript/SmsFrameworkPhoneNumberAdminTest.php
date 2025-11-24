@@ -20,7 +20,7 @@ final class SmsFrameworkPhoneNumberAdminTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -49,7 +49,6 @@ final class SmsFrameworkPhoneNumberAdminTest extends WebDriverTestBase {
       'administer smsframework',
     ]);
     $this->drupalLogin($account);
-
   }
 
   /**

@@ -4,19 +4,21 @@ namespace Drupal\statistics\Plugin\migrate\destination;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\migrate\Plugin\migrate\destination\DestinationBase;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+// cspell:ignore daycount totalcount
+
 /**
  * Destination for node counter.
- *
- * @MigrateDestination(
- *   id = "node_counter",
- *   destination_module = "statistics"
- * )
  */
+#[MigrateDestination(
+  id: 'node_counter',
+  destination_module: 'statistics'
+)]
 class NodeCounter extends DestinationBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -48,7 +50,7 @@ class NodeCounter extends DestinationBase implements ContainerFactoryPluginInter
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -98,7 +100,7 @@ class NodeCounter extends DestinationBase implements ContainerFactoryPluginInter
       ->expression('totalcount', '[totalcount] + :totalcount', [':totalcount' => $totalcount])
       // Per Drupal policy: "A query may have any number of placeholders, but
       // all must have unique names even if they have the same value."
-      // https://www.drupal.org/docs/8/api/database-api/static-queries#placeholders
+      // https://www.drupal.org/docs/drupal-apis/database-api/static-queries#placeholders
       ->expression('timestamp', 'CASE WHEN [timestamp] > :timestamp1 THEN [timestamp] ELSE :timestamp2 END', [':timestamp1' => $timestamp, ':timestamp2' => $timestamp])
       ->execute();
 

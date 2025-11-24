@@ -3,9 +3,12 @@
 namespace Drupal\system\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\RedundantEditableConfigNamesTrait;
+use Drupal\Core\StreamWrapper\AssetsStream;
 use Drupal\Core\StreamWrapper\PrivateStream;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\Core\Form\ConfigFormBase;
@@ -19,6 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @internal
  */
 class FileSystemForm extends ConfigFormBase {
+  use RedundantEditableConfigNamesTrait;
 
   /**
    * The date formatter service.
@@ -46,6 +50,8 @@ class FileSystemForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter service.
    * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
@@ -53,8 +59,8 @@ class FileSystemForm extends ConfigFormBase {
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, DateFormatterInterface $date_formatter, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, DateFormatterInterface $date_formatter, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->dateFormatter = $date_formatter;
     $this->streamWrapperManager = $stream_wrapper_manager;
     $this->fileSystem = $file_system;
@@ -66,6 +72,7 @@ class FileSystemForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('date.formatter'),
       $container->get('stream_wrapper_manager'),
       $container->get('file_system')
@@ -82,15 +89,7 @@ class FileSystemForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
-    return ['system.file'];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('system.file');
     $form['file_public_path'] = [
       '#type' => 'item',
       '#title' => $this->t('Public file system path'),
@@ -103,6 +102,13 @@ class FileSystemForm extends ConfigFormBase {
       '#title' => $this->t('Public file base URL'),
       '#markup' => PublicStream::baseUrl(),
       '#description' => $this->t('The base URL that will be used for public file URLs. This can be changed in settings.php'),
+    ];
+
+    $form['file_assets_path'] = [
+      '#type' => 'item',
+      '#title' => $this->t('Optimized assets file system path'),
+      '#markup' => AssetsStream::basePath(),
+      '#description' => $this->t('A local file system path where optimized assets files will be stored. This directory must exist and be writable by Drupal. This directory must be relative to the Drupal installation directory and be accessible over the web. This must be changed in settings.php'),
     ];
 
     $form['file_private_path'] = [
@@ -126,7 +132,7 @@ class FileSystemForm extends ConfigFormBase {
       $form['file_default_scheme'] = [
         '#type' => 'radios',
         '#title' => $this->t('Default download method'),
-        '#default_value' => $config->get('default_scheme'),
+        '#config_target' => 'system.file:default_scheme',
         '#options' => $options,
         '#description' => $this->t('This setting is used as the preferred download method. The use of public files is more efficient, but does not provide any access control.'),
       ];
@@ -138,27 +144,12 @@ class FileSystemForm extends ConfigFormBase {
     $form['temporary_maximum_age'] = [
       '#type' => 'select',
       '#title' => $this->t('Delete temporary files after'),
-      '#default_value' => $config->get('temporary_maximum_age'),
+      '#config_target' => 'system.file:temporary_maximum_age',
       '#options' => $period,
       '#description' => $this->t('Temporary files are not referenced, but are in the file system and therefore may show up in administrative lists. <strong>Warning:</strong> If enabled, temporary files will be permanently deleted and may not be recoverable.'),
     ];
 
     return parent::buildForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->config('system.file')
-      ->set('temporary_maximum_age', $form_state->getValue('temporary_maximum_age'));
-
-    if ($form_state->hasValue('file_default_scheme')) {
-      $config->set('default_scheme', $form_state->getValue('file_default_scheme'));
-    }
-    $config->save();
-
-    parent::submitForm($form, $form_state);
   }
 
 }

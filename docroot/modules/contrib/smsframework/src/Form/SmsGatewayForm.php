@@ -6,6 +6,7 @@ namespace Drupal\sms\Form;
 
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -24,61 +25,36 @@ use Drupal\Component\Utility\NestedArray;
 class SmsGatewayForm extends EntityForm {
 
   /**
-   * The route builder.
-   *
-   * @var \Drupal\Core\Routing\RouteBuilderInterface
-   */
-  protected $routeBuilder;
-
-  /**
-   * The request context.
-   *
-   * @var \Drupal\Core\Routing\RequestContext
-   */
-  protected $requestContext;
-
-  /**
-   * The access manager service.
-   *
-   * @var \Drupal\Core\Access\AccessManagerInterface
-   */
-  protected $accessManager;
-
-  /**
-   * The gateway manager.
-   *
-   * @var \Drupal\sms\Plugin\SmsGatewayPluginManagerInterface
-   */
-  protected $gatewayManager;
-
-  /**
    * Gateway storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $gatewayStorage;
+  protected EntityStorageInterface $gatewayStorage;
 
   /**
    * Constructs a new SmsGatewayForm.
    *
-   * @param \Drupal\Core\Routing\RouteBuilderInterface $route_builder
+   * @param \Drupal\Core\Routing\RouteBuilderInterface $routeBuilder
    *   The route builder.
-   * @param \Drupal\Core\Routing\RequestContext $request_context
+   * @param \Drupal\Core\Routing\RequestContext $requestContext
    *   The request context.
-   * @param \Drupal\Core\Access\AccessManagerInterface $access_manager
+   * @param \Drupal\Core\Access\AccessManagerInterface $accessManager
    *   The access manager.
-   * @param \Drupal\sms\Plugin\SmsGatewayPluginManagerInterface $gateway_manager
+   * @param \Drupal\sms\Plugin\SmsGatewayPluginManagerInterface $gatewayManager
    *   The gateway manager service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   Entity type manager.
    */
-  public function __construct(RouteBuilderInterface $route_builder, RequestContext $request_context, AccessManagerInterface $access_manager, SmsGatewayPluginManagerInterface $gateway_manager, MessengerInterface $messenger, EntityTypeManagerInterface $entityTypeManager) {
-    $this->routeBuilder = $route_builder;
-    $this->requestContext = $request_context;
-    $this->accessManager = $access_manager;
-    $this->gatewayManager = $gateway_manager;
+  public function __construct(
+    protected RouteBuilderInterface $routeBuilder,
+    protected RequestContext $requestContext,
+    protected AccessManagerInterface $accessManager,
+    protected SmsGatewayPluginManagerInterface $gatewayManager,
+    MessengerInterface $messenger,
+    EntityTypeManagerInterface $entityTypeManager,
+  ) {
     $this->setMessenger($messenger);
     $this->gatewayStorage = $entityTypeManager->getStorage('sms_gateway');
   }
@@ -351,6 +327,7 @@ class SmsGatewayForm extends EntityForm {
    */
   public function exists($entity_id, array $element, FormStateInterface $form_state) {
     return (bool) $this->gatewayStorage->getQuery()
+      ->accessCheck(FALSE)
       ->condition('id', $entity_id)
       ->execute();
   }

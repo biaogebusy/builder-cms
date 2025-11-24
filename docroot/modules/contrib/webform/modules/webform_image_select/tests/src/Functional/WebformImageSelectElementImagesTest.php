@@ -29,32 +29,32 @@ class WebformImageSelectElementImagesTest extends WebformElementBrowserTestBase 
     $this->submitForm([], 'Submit');
     $assert_session->responseContains("webform_image_select_images: {  }
 webform_image_select_images_default_value:
-  kitten_1:
-    text: 'Cute Kitten 1'
-    src: 'http://placekitten.com/220/200'
-  kitten_2:
-    text: 'Cute Kitten 2'
-    src: 'http://placekitten.com/180/200'
-  kitten_3:
-    text: 'Cute Kitten 3'
-    src: 'http://placekitten.com/130/200'
-  kitten_4:
-    text: 'Cute Kitten 4'
-    src: 'http://placekitten.com/270/200'
-webform_image_select_element_images_entity: kittens
+  dog_1:
+    text: 'Cute Dog 1'
+    src: 'https://placedog.net/220/200'
+  dog_2:
+    text: 'Cute Dog 2'
+    src: 'https://placedog.net/180/200'
+  dog_3:
+    text: 'Cute Dog 3'
+    src: 'https://placedog.net/130/200'
+  dog_4:
+    text: 'Cute Dog 4'
+    src: 'https://placedog.net/270/200'
+webform_image_select_element_images_entity: dogs
 webform_image_select_element_images_custom:
-  kitten_1:
-    text: 'Cute Kitten 1'
-    src: 'http://placekitten.com/220/200'
-  kitten_2:
-    text: 'Cute Kitten 2'
-    src: 'http://placekitten.com/180/200'
-  kitten_3:
-    text: 'Cute Kitten 3'
-    src: 'http://placekitten.com/130/200'
-  kitten_4:
-    text: 'Cute Kitten 4'
-    src: 'http://placekitten.com/270/200'");
+  dog_1:
+    text: 'Cute Dog 1'
+    src: 'https://placedog.net/220/200'
+  dog_2:
+    text: 'Cute Dog 2'
+    src: 'https://placedog.net/180/200'
+  dog_3:
+    text: 'Cute Dog 3'
+    src: 'https://placedog.net/130/200'
+  dog_4:
+    text: 'Cute Dog 4'
+    src: 'https://placedog.net/270/200'");
 
     // Check unique key validation with image src.
     $this->drupalGet('/webform/test_element_images');

@@ -2,34 +2,28 @@
 
 namespace Drupal\media_entity_instagram\Form;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\RedundantEditableConfigNamesTrait;
 
 /**
  * Provides a form to configure Instagram credentials.
  */
 class InstagramSettingsForm extends ConfigFormBase {
 
+  use RedundantEditableConfigNamesTrait;
+
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'media_entity_instagram_settings_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
-    return ['media_entity_instagram.settings'];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $settings = $this->config('media_entity_instagram.settings');
-
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['credentials'] = [
       '#type' => 'details',
       '#title' => $this->t('Facebook credentials'),
@@ -42,8 +36,8 @@ class InstagramSettingsForm extends ConfigFormBase {
       '#title' => $this->t('App ID'),
       '#size' => 40,
       '#maxlength' => 255,
-      '#default_value' => $settings->get('facebook_app_id'),
       '#description' => $this->t('The ID of your Facebook App.'),
+      '#config_target' => 'media_entity_instagram.settings:facebook_app_id',
     ];
 
     $form['credentials']['facebook_app_secret'] = [
@@ -51,22 +45,10 @@ class InstagramSettingsForm extends ConfigFormBase {
       '#title' => $this->t('App secret'),
       '#size' => 40,
       '#maxlength' => 255,
-      '#default_value' => $settings->get('facebook_app_secret'),
       '#description' => $this->t('The secret of your Facebook App.'),
+      '#config_target' => 'media_entity_instagram.settings:facebook_app_secret',
     ];
     return parent::buildForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->config('media_entity_instagram.settings')
-      ->set('facebook_app_id', $form_state->getValue('facebook_app_id'))
-      ->set('facebook_app_secret', $form_state->getValue('facebook_app_secret'))
-      ->save();
-
-    parent::submitForm($form, $form_state);
   }
 
 }

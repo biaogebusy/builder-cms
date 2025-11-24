@@ -2,8 +2,8 @@
 
 namespace Drupal\blazy\Plugin\Field\FieldFormatter;
 
-use Drupal\blazy\BlazyDefault;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\blazy\BlazyDefault;
 
 /**
  * Plugin implementation of the 'Blazy File' to get image/ SVG from files.
@@ -29,6 +29,11 @@ class BlazyFileFormatter extends BlazyFormatterBlazy {
    * {@inheritdoc}
    */
   protected static $fieldType = 'entity';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $byDelta = TRUE;
 
   /**
    * {@inheritdoc}

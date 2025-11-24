@@ -4,24 +4,27 @@ namespace Drupal\menu_item_extras\Cache;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CalculatedCacheContextInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
+use Drupal\Core\Menu\MenuActiveTrailInterface;
 
 /**
- * Defines the MenuActiveTrailsCacheContext service.
- *
- * This class is container-aware to avoid initializing the 'menu.active_trails'
- * service (and its dependencies) when it is not necessary.
+ * Defines the LinkItemContentActiveTrailsCacheContext service.
  */
-class LinkItemContentActiveTrailsCacheContext implements CalculatedCacheContextInterface, ContainerAwareInterface {
+class LinkItemContentActiveTrailsCacheContext implements CalculatedCacheContextInterface {
 
-  use ContainerAwareTrait;
+  /**
+   * Constructs a LinkItemContentActiveTrailsCacheContext object.
+   *
+   * @param \Drupal\Core\Menu\MenuActiveTrailInterface $menuActiveTrailService
+   *   The menu active trail service.
+   */
+  public function __construct(protected MenuActiveTrailInterface $menuActiveTrailService) {
+  }
 
   /**
    * {@inheritdoc}
    */
   public static function getLabel() {
-    return t("Active menu trail");
+    return t("Active link item content");
   }
 
   /**
@@ -34,9 +37,8 @@ class LinkItemContentActiveTrailsCacheContext implements CalculatedCacheContextI
       throw new \LogicException('No menu name provided for menu.active_trails cache context.');
     }
 
-    $active_trail_manager = $this->container->get('menu.active_trail');
-    $active_trail_link = $active_trail_manager->getActiveLink($menu_name);
-    $active_trail_ids = array_values($active_trail_manager->getActiveTrailIds($menu_name));
+    $active_trail_link = $this->menuActiveTrailService->getActiveLink($menu_name);
+    $active_trail_ids = array_values($this->menuActiveTrailService->getActiveTrailIds($menu_name));
 
     if ($active_trail_link && $active_trail_link->getDerivativeId() == $menu_link_id) {
       return 'link_item_content.active.' . $menu_link_id;
@@ -58,6 +60,7 @@ class LinkItemContentActiveTrailsCacheContext implements CalculatedCacheContextI
     if (!$menu_name) {
       throw new \LogicException('No menu name provided for menu.active_trails cache context.');
     }
+
     $cacheable_metadata = new CacheableMetadata();
     return $cacheable_metadata->setCacheTags(["config:system.menu.$menu_name"]);
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Datetime;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -102,7 +104,7 @@ class TimestampAgoFormatterTest extends BrowserTestBase {
   /**
    * Tests the formatter settings.
    */
-  public function testSettings() {
+  public function testSettings(): void {
     $this->drupalGet('entity_test/structure/entity_test/display');
 
     $edit = [

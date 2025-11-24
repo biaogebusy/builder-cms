@@ -15,34 +15,25 @@ class RouterRebuildConfirmForm extends ConfirmFormBase {
 
   /**
    * The route builder service.
-   *
-   * @var \Drupal\Core\Routing\RouteBuilderInterface
    */
-  protected $routeBuilder;
+  protected RouteBuilderInterface $routeBuilder;
 
   /**
-   * Constructs a new RouterRebuildConfirmForm object.
-   *
-   * @param \Drupal\Core\Routing\RouteBuilderInterface $route_builder
-   *   The route builder service.
+   * {@inheritdoc}
    */
-  public function __construct(RouteBuilderInterface $route_builder) {
-    $this->routeBuilder = $route_builder;
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->routeBuilder = $container->get('router.builder');
+    $instance->messenger = $container->get('messenger');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('router.builder')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'devel_menu_rebuild';
   }
 
@@ -56,7 +47,7 @@ class RouterRebuildConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return new Url('<front>');
   }
 
@@ -77,9 +68,9 @@ class RouterRebuildConfirmForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $this->routeBuilder->rebuild();
-    $this->messenger()->addMessage($this->t('The router has been rebuilt.'));
+    $this->messenger->addMessage($this->t('The router has been rebuilt.'));
     $form_state->setRedirect('<front>');
   }
 

@@ -53,9 +53,9 @@
     checkDarkmode: () => {
       const darkmodeClass = drupalSettings.gin.darkmode_class;
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e => {
-        e.matches && "auto" === localStorage.getItem("Drupal.gin.darkmode") && document.querySelector("html").classList.add(darkmodeClass);
+        e.matches && "auto" === window.ginDarkmode && document.querySelector("html").classList.add(darkmodeClass);
       })), window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e => {
-        e.matches && "auto" === localStorage.getItem("Drupal.gin.darkmode") && document.querySelector("html").classList.remove(darkmodeClass);
+        e.matches && "auto" === window.ginDarkmode && document.querySelector("html").classList.remove(darkmodeClass);
       }));
     },
     hexToRgb: hex => {

@@ -2,9 +2,9 @@
 
 namespace Drupal\quick_node_clone\EventSubscriber;
 
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\address\Event\AddressEvents;
 use Drupal\address\Event\InitialValuesEvent;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\quick_node_clone\QuickNodeCloneNodeFinder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Config\Entity;
 
-use Drupal\blazy\Utility\Arrays;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\blazy\Utility\Arrays;
 
 /**
  * Defines the common configuration entity.

@@ -6,7 +6,7 @@ dependencies:
   - message_notify:message_notify
 package: Testing
 
-# Information added by Drupal.org packaging script on 2022-11-02
-version: '8.x-1.3'
+# Information added by Drupal.org packaging script on 2025-02-17
+version: '8.x-1.5'
 project: 'message_notify'
-datestamp: 1667430683
+datestamp: 1739804812

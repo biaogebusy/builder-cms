@@ -14,15 +14,19 @@
  *   {{ content|without('field_example') }} to temporarily suppress the printing
  *   of a given child element.
  * - attributes: HTML attributes for the containing element.
+ * - view_mode: View mode; for example, "teaser" or "full".
  *
  * @see template_preprocess_eck_entity()
  *
  * @ingroup themeable
  */
 #}
-{% set classes = [
-'eck-entity',
-] %}
+{%
+    set classes = [
+        'eck-entity',
+    ]
+%}
+
 <div{{ attributes.addClass(classes) }}>
     {{ content }}
 </div>

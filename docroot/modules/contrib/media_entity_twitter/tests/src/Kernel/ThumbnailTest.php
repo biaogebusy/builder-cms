@@ -3,9 +3,9 @@
 namespace Drupal\Tests\media_entity_twitter\Kernel;
 
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\media\Entity\Media;
 use Drupal\media\Entity\MediaType;
 use Drupal\media_entity_twitter\Plugin\media\Source\Twitter;

@@ -13,7 +13,7 @@
     },
     "require-dev": {
         "drupal/config_readonly":  "^1.0",
-        "drupal/metatag": "^1.0",
+        "drupal/metatag": "^2.0",
         "drupal/robotstxt": "^1.0"
     },
     "suggest": {
@@ -22,7 +22,7 @@
     "extra": {
         "drush": {
              "services": {
-                 "drush.services.yml": "^10 || ^11"
+                 "drush.services.yml": ">=11"
              }
         }
     }

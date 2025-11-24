@@ -9,6 +9,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ctools\Form\ManageConditions;
 
+/**
+ * Form for Page Variant Selection.
+ */
 class PageVariantSelectionForm extends ManageConditions {
 
   /**
@@ -50,7 +53,7 @@ class PageVariantSelectionForm extends ManageConditions {
    * {@inheritdoc}
    */
   protected function getConditions($cached_values) {
-    /** @var $page \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page */
     $page_variant = $cached_values['page_variant'];
     return $page_variant->get('selection_criteria');
   }
@@ -59,7 +62,7 @@ class PageVariantSelectionForm extends ManageConditions {
    * {@inheritdoc}
    */
   protected function getContexts($cached_values) {
-    /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
     $page_variant = $cached_values['page_variant'];
     return $page_variant->getContexts();
   }
@@ -80,7 +83,7 @@ class PageVariantSelectionForm extends ManageConditions {
     $condition = $form_state->getValue('conditions');
     $content = \Drupal::formBuilder()->getForm($this->getConditionClass(), $condition, $this->getTempstoreId(), $this->machine_name, $page_variant->id());
     $content['#attached']['library'][] = 'core/drupal.dialog.ajax';
-    list(, $route_parameters) = $this->getOperationsRouteInfo($cached_values, $this->machine_name, $form_state->getValue('conditions'));
+    [, $route_parameters] = $this->getOperationsRouteInfo($cached_values, $this->machine_name, $form_state->getValue('conditions'));
     $content['submit']['#attached']['drupalSettings']['ajax'][$content['submit']['#id']]['url'] = Url::fromRoute(
       $this->getAddRoute($cached_values),
       $route_parameters,

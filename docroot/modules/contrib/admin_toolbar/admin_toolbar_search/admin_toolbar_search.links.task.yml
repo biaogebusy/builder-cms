@@ -1,0 +1,6 @@
+# Add Admin Toolbar Search settings as a local task displayed as a tab.
+admin_toolbar_search.settings:
+  title: 'Search settings'
+  route_name: admin_toolbar_search.settings
+  base_route: admin_toolbar.settings
+  weight: 5

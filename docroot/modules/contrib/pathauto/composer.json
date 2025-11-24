@@ -13,14 +13,13 @@
         "drupal/token": "*",
         "drupal/ctools": "*"
     },
+    "require-dev": {
+        "drupal/forum": "*"
+    },
+    "conflict": {
+        "drush/drush": "<12.5.1"
+    },
     "suggest": {
         "drupal/redirect": "When installed Pathauto will provide a new \"Update Action\" in case your URLs change. This is the recommended update action and is considered the best practice for SEO and usability."
-    },
-    "extra": {
-        "drush": {
-            "services": {
-                "drush.services.yml": "^9 || ^10"
-            }
-        }
     }
 }

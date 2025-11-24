@@ -3,7 +3,7 @@
  * Styles for menu placed in sidebar region.
  */
 
-@import "../../base/variables.pcss.css";
+@import "../../base/media-queries.pcss.css";
 
 .menu--sidebar {
   list-style: none;
@@ -26,31 +26,31 @@
     font-size: 18px;
 
     /* Bottom divider line. */
-    &:after {
+    &::after {
       position: absolute;
       inset-block-end: 0;
       inset-inline-start: 0;
       width: var(--sp4);
       height: 0;
       content: "";
-      border-block-start: solid 2px var(--color--gray-80);
+      border-block-start: solid 2px var(--color--gray-95);
     }
   }
 
   & .menu__link--link {
     text-decoration: none;
-    color: var(--color--gray-0);
+    color: var(--color-text-neutral-loud);
     font-weight: 600;
 
     &:hover {
-      color: var(--color--blue-50);
+      color: var(--color--primary-50);
     }
   }
 
   /* No bottom divider line for last menu item. */
   & .menu__item--level-1:last-child > .menu__link:last-child,
   & .menu__item--level-1:last-child > .menu__item--level-2:last-child > .menu__link:last-child {
-    &:after {
+    &::after {
       content: none;
     }
   }

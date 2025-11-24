@@ -50,14 +50,15 @@
     "url-loader": "^4.1.1",
     "webpack": "^5.26.3",
     "webpack-cli": "^4.5.0",
-    "webpack-dev-middleware": "^4.1.0",
+    "webpack-dev-middleware": "^7.4.2",
     "webpack-merge": "^5.7.3",
     "webpack-notifier": "^1.13.0",
     "webpack-remove-empty-scripts": "^0.7.1"
   },
   "dependencies": {
     "core-js": "^3.9.1",
-    "postcss": "^8.1.0",
+    "postcss": "^8.4.47",
+    "postcss-rtl-logical-properties": "^1.0.7",
     "sass": "^1.44.0"
   },
   "repository": {

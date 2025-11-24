@@ -22,7 +22,7 @@ class EntityShareSerializedDataEnhancer extends ResourceFieldEnhancerBase {
    * {@inheritdoc}
    */
   protected function doTransform($data, Context $context) {
-    return is_array($data) ? ['value' => $data] : $data;
+    return \is_array($data) ? ['value' => $data] : $data;
   }
 
   /**

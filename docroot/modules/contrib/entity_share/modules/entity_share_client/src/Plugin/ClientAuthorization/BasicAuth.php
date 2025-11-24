@@ -28,7 +28,7 @@ class BasicAuth extends ClientAuthorizationPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getClient($url) {
+  public function getClient($url, $login_path) {
     $credentials = $this->keyService->getCredentials($this);
     $http_client = $this->httpClientFactory->fromOptions([
       'base_uri' => $url . '/',
@@ -36,7 +36,7 @@ class BasicAuth extends ClientAuthorizationPluginBase {
       'allow_redirects' => TRUE,
     ]);
 
-    $http_client->post('/user/login', [
+    $http_client->post($login_path, [
       'form_params' => [
         'name' => $credentials['username'],
         'pass' => $credentials['password'],

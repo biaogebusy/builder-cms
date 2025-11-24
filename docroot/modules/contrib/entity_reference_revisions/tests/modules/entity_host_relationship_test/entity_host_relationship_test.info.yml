@@ -6,7 +6,7 @@ package: Testing
 dependencies:
   - entity_composite_relationship_test:entity_composite_relationship_test
 
-# Information added by Drupal.org packaging script on 2024-01-13
-version: '8.x-1.11'
+# Information added by Drupal.org packaging script on 2024-08-04
+version: '8.x-1.12'
 project: 'entity_reference_revisions'
-datestamp: 1705140725
+datestamp: 1722804499

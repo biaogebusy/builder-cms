@@ -67,6 +67,23 @@ class TextFormat extends WebformElementBase {
   public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
     $this->setElementDefaultCallback($element, 'process');
+
+    // Make sure allowed formats are supported for the current user.
+    // @see \Drupal\filter\Element\TextFormat::processFormat
+    if (isset($element['#allowed_formats'])) {
+      $formats = array_intersect_key(
+        filter_formats($this->currentUser),
+        array_flip($element['#allowed_formats'])
+      );
+      if (empty($formats)) {
+        // Unsetting the allowed formats allows the user's default format
+        // to be used.
+        unset($element['#allowed_formats']);
+        // Set the #format to empty string to disable the text format.
+        $element['#format'] = '';
+      }
+    }
+
     $element['#process'][] = [get_class($this), 'process'];
     $element['#after_build'] = [[get_class($this), 'afterBuild']];
     $element['#attached']['library'][] = 'webform/webform.element.text_format';

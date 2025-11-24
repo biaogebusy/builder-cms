@@ -46,19 +46,15 @@ class BookAdminEditForm extends FormBase {
    * Constructs a new BookAdminEditForm.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $node_storage
-   *   The custom block storage.
+   *   The content block storage.
    * @param \Drupal\book\BookManagerInterface $book_manager
    *   The book manager.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface|null $entity_repository
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
    *   The entity repository service.
    */
-  public function __construct(EntityStorageInterface $node_storage, BookManagerInterface $book_manager, EntityRepositoryInterface $entity_repository = NULL) {
+  public function __construct(EntityStorageInterface $node_storage, BookManagerInterface $book_manager, EntityRepositoryInterface $entity_repository) {
     $this->nodeStorage = $node_storage;
     $this->bookManager = $book_manager;
-    if (!$entity_repository) {
-      @trigger_error('The entity.repository service must be passed to ' . __NAMESPACE__ . '\BookAdminEditForm::__construct(). It was added in drupal:9.2.0 and will be required before drupal:10.0.0.', E_USER_DEPRECATED);
-      $entity_repository = \Drupal::service('entity.repository');
-    }
     $this->entityRepository = $entity_repository;
   }
 
@@ -84,7 +80,7 @@ class BookAdminEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, NodeInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?NodeInterface $node = NULL) {
     $form['#title'] = $node->label();
     $form['#node'] = $node;
     $this->bookAdminTable($node, $form);
@@ -138,7 +134,7 @@ class BookAdminEditForm extends FormBase {
             $node->book['link_title'] = $values['title'];
             $node->setNewRevision();
             $node->save();
-            $this->logger('content')->notice('book: updated %title.', ['%title' => $node->label(), 'link' => $node->toLink($this->t('View'))->toString()]);
+            $this->logger('content')->info('book: updated %title.', ['%title' => $node->label(), 'link' => $node->toLink($this->t('View'))->toString()]);
           }
         }
       }

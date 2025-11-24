@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class StripMetadataTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testStripMetadataEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testStripMetadataEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Add Strip metadata effect to the test image style.
@@ -57,14 +59,14 @@ class StripMetadataTest extends ImageEffectsTestBase {
 
       // Test source image EXIF data.
       $exif = @exif_read_data(\Drupal::service('file_system')->realpath($original_uri));
-      $this->assertEquals($data['original_orientation'], isset($exif['Orientation']) ? $exif['Orientation'] : NULL);
+      $this->assertEquals($data['original_orientation'], $exif['Orientation'] ?? NULL);
 
       // Process source image.
       $this->testImageStyle->createDerivative($original_uri, $derivative_uri);
 
       // Check that ::applyEffect strips EXIF metadata.
       $exif = @exif_read_data(\Drupal::service('file_system')->realpath($derivative_uri));
-      $this->assertEquals(NULL, isset($exif['Orientation']) ? $exif['Orientation'] : NULL);
+      $this->assertEquals(NULL, $exif['Orientation'] ?? NULL);
     }
   }
 

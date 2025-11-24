@@ -1,1 +1,1 @@
-!function(i){const n=i.el=i.el||{};n.dictionary=Object.assign(n.dictionary||{},{Source:"Κώδικας"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));
+!function(i){const n=i.el=i.el||{};n.dictionary=Object.assign(n.dictionary||{},{"Show source":"Εμφάνιση πηγής"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));

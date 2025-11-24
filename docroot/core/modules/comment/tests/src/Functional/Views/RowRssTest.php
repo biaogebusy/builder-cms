@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
 
 /**
@@ -25,7 +27,7 @@ class RowRssTest extends CommentTestBase {
   /**
    * Tests comment rss output.
    */
-  public function testRssRow() {
+  public function testRssRow(): void {
     $this->drupalGet('test-comment-rss');
 
     // Because the response is XML we can't use the page which depends on an

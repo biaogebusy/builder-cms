@@ -16,6 +16,8 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Database\Connection;
 
+// cspell:ignore filesort
+
 /**
  * A Route Provider front-end for all Drupal-stored routes.
  */
@@ -123,7 +125,7 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   (Optional) The language manager.
    */
-  public function __construct(Connection $connection, StateInterface $state, CurrentPathStack $current_path, CacheBackendInterface $cache_backend, InboundPathProcessorInterface $path_processor, CacheTagsInvalidatorInterface $cache_tag_invalidator, $table = 'router', LanguageManagerInterface $language_manager = NULL) {
+  public function __construct(Connection $connection, StateInterface $state, CurrentPathStack $current_path, CacheBackendInterface $cache_backend, InboundPathProcessorInterface $path_processor, CacheTagsInvalidatorInterface $cache_tag_invalidator, $table = 'router', ?LanguageManagerInterface $language_manager = NULL) {
     $this->connection = $connection;
     $this->state = $state;
     $this->currentPath = $current_path;
@@ -142,7 +144,7 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
    * RouteObjectInterface to link to a content document.
    *
    * This method may not throw an exception based on implementation specific
-   * restrictions on the url. That case is considered a not found - returning
+   * restrictions on the URL. That case is considered a not found - returning
    * an empty array. Exceptions are only used to abort the whole request in
    * case something is seriously broken, like the storage backend being down.
    *
@@ -155,7 +157,7 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
    *   A request against which to match.
    *
    * @return \Symfony\Component\Routing\RouteCollection
-   *   RouteCollection with all urls that could potentially match $request.
+   *   RouteCollection with all URLs that could potentially match $request.
    *   Empty collection if nothing can match. The collection will be sorted from
    *   highest to lowest fit (match of path parts) and then in ascending order
    *   by route name for routes with the same fit.
@@ -167,6 +169,9 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
     if ($cached = $this->cache->get($cid)) {
       $this->currentPath->setPath($cached->data['path'], $request);
       $request->query->replace($cached->data['query']);
+      if ($cached->data['routes'] === FALSE) {
+        return new RouteCollection();
+      }
       return $cached->data['routes'];
     }
     else {
@@ -181,7 +186,7 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
       $cache_value = [
         'path' => $path,
         'query' => $query_parameters,
-        'routes' => $routes,
+        'routes' => $routes->count() === 0 ? FALSE : $routes,
       ];
       $this->cache->set($cid, $cache_value, CacheBackendInterface::CACHE_PERMANENT, ['route_match']);
       return $routes;
@@ -424,62 +429,9 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[RoutingEvents::FINISHED][] = ['reset'];
     return $events;
-  }
-
-  /**
-   * Returns a chunk of routes.
-   *
-   * Should only be used in conjunction with an iterator.
-   *
-   * @param int $offset
-   *   The query offset.
-   * @param int $length
-   *   The number of records.
-   *
-   * @return \Symfony\Component\Routing\Route[]
-   *   Routes keyed by the route name.
-   *
-   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. No direct
-   *   replacement is provided.
-   *
-   * @see https://www.drupal.org/node/3151009
-   */
-  public function getRoutesPaged($offset, $length = NULL) {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. No direct replacement is provided. See https://www.drupal.org/node/3151009', E_USER_DEPRECATED);
-    $select = $this->connection->select($this->tableName, 'router')
-      ->fields('router', ['name', 'route']);
-
-    if (isset($length)) {
-      $select->range($offset, $length);
-    }
-
-    $routes = $select->execute()->fetchAllKeyed();
-
-    $result = [];
-    foreach ($routes as $name => $route) {
-      $result[$name] = unserialize($route);
-    }
-
-    return $result;
-  }
-
-  /**
-   * Gets the total count of routes provided by the router.
-   *
-   * @return int
-   *   Number of routes.
-   *
-   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. No direct
-   *   replacement is provided.
-   *
-   * @see https://www.drupal.org/node/3151009
-   */
-  public function getRoutesCount() {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. No direct replacement is provided. See https://www.drupal.org/node/3151009', E_USER_DEPRECATED);
-    return $this->connection->query("SELECT COUNT(*) FROM {" . $this->connection->escapeTable($this->tableName) . "}")->fetchField();
   }
 
   /**
@@ -504,6 +456,8 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
     // based on the domain.
     $this->addExtraCacheKeyPart('language', $this->getCurrentLanguageCacheIdPart());
 
+    $this->addExtraCacheKeyPart('query_parameters', $this->getQueryParametersCacheIdPart($request));
+
     // Sort the cache key parts by their provider in order to have predictable
     // cache keys.
     ksort($this->extraCacheKeyParts);
@@ -512,7 +466,52 @@ class RouteProvider implements CacheableRouteProviderInterface, PreloadableRoute
       $key_parts[] = '[' . $provider . ']=' . $key_part;
     }
 
-    return 'route:' . implode(':', $key_parts) . ':' . $request->getPathInfo() . ':' . $request->getQueryString();
+    return 'route:' . implode(':', $key_parts) . ':' . $request->getPathInfo();
+  }
+
+  /**
+   * Returns the query parameters identifier for the route collection cache.
+   *
+   * The query parameters on the request may be altered programmatically, e.g.
+   * while serving private files or in subrequests. As such, we must vary on
+   * both the query string from the client and the parameter bag after incoming
+   * route processors have modified the request object.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Request.
+   *
+   * @return string
+   */
+  protected function getQueryParametersCacheIdPart(Request $request) {
+    // @todo Use \Symfony\Component\HttpFoundation\Request::normalizeQueryString
+    //   for recursive key ordering if support is added in the future.
+    $recursive_sort = function (&$array) use (&$recursive_sort) {
+      foreach ($array as &$v) {
+        if (is_array($v)) {
+          $recursive_sort($v);
+        }
+      }
+      ksort($array);
+    };
+    // Recursively normalize the query parameters to ensure maximal cache hits.
+    // If we did not normalize the order, functionally identical query string
+    // sets could be sent in differing order creating a potential DoS vector
+    // and decreasing cache hit rates.
+    $sorted_resolved_parameters = $request->query->all();
+    $recursive_sort($sorted_resolved_parameters);
+    $sorted_original_parameters = Request::create('/?' . $request->getQueryString())->query->all();
+    $recursive_sort($sorted_original_parameters);
+    // Hash this portion to help shorten the total key length.
+    $resolved_hash = $sorted_resolved_parameters
+      ? sha1(http_build_query($sorted_resolved_parameters))
+      : NULL;
+    return implode(
+      ',',
+      array_filter([
+        http_build_query($sorted_original_parameters),
+        $resolved_hash,
+      ])
+    );
   }
 
   /**

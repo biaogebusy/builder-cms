@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_order;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_price\RounderInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 class PriceSplitter implements PriceSplitterInterface {
 

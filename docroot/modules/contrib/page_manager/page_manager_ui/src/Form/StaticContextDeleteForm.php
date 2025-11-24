@@ -30,7 +30,7 @@ class StaticContextDeleteForm extends ContextDelete {
    */
   public function getQuestion() {
     $cached_values = $this->getTempstore();
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page_variant = $this->getPageVariant($cached_values);
     return $this->t('Are you sure you want to delete the static context %label?', ['%label' => $page_variant->getStaticContext($this->context_id)['label']]);
   }
@@ -40,7 +40,7 @@ class StaticContextDeleteForm extends ContextDelete {
    */
   public function getCancelUrl() {
     $cached_values = $this->getTempstore();
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
 
     if ($page->isNew()) {
@@ -71,7 +71,7 @@ class StaticContextDeleteForm extends ContextDelete {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $cached_values = $this->getTempstore();
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page_variant = $this->getPageVariant($cached_values);
     $this->messenger()->addMessage($this->t('The static context %label has been removed.', ['%label' => $page_variant->getStaticContext($this->context_id)['label']]));
     $page_variant->removeStaticContext($this->context_id);
@@ -86,13 +86,14 @@ class StaticContextDeleteForm extends ContextDelete {
    *   The cached values from the wizard.
    *
    * @return \Drupal\page_manager\PageVariantInterface
+   *   The page variant.
    */
   protected function getPageVariant($cached_values) {
     if (isset($cached_values['page_variant'])) {
       return $cached_values['page_variant'];
     }
 
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     return $page->getVariant($this->variantMachineName);
   }

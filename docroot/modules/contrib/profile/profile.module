@@ -20,6 +20,7 @@ use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
 use Drupal\profile\Entity\ProfileType;
 use Drupal\profile\Plugin\Field\ProfileEntityFieldItemList;
+use Drupal\user\UserInterface;
 
 /**
  * Implements hook_help().
@@ -68,7 +69,7 @@ function profile_entity_bundle_info_alter(&$bundles) {
 /**
  * Implements hook_entity_field_access().
  */
-function profile_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+function profile_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
   if ($operation == 'view' && $items && $field_definition->getTargetEntityTypeId() == 'profile') {
     if ($field_definition instanceof FieldConfigInterface) {
       $is_private = $field_definition->getThirdPartySetting('profile', 'profile_private', FALSE);
@@ -78,7 +79,7 @@ function profile_entity_field_access($operation, FieldDefinitionInterface $field
         /** @var \Drupal\profile\Entity\ProfileInterface $profile */
         $profile = $items->getEntity();
         if ($account->id() === $profile->getOwnerId()) {
-          return AccessResult::neutral();
+          return AccessResult::neutral()->addCacheContexts(['session']);
         }
 
         return AccessResult::forbiddenIf(!$account->hasPermission('administer profile'));
@@ -135,6 +136,31 @@ function template_preprocess_profile(array &$variables) {
   $variables['content'] = [];
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function profile_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'user_insert') {
+    // Move profile_user_insert() to the top so it fires first.
+    $group = $implementations['profile'];
+    unset($implementations['profile']);
+    $implementations = ['profile' => $group] + $implementations;
+  }
+}
+
+/**
+ * Implements hook_user_insert().
+ */
+function profile_user_insert(UserInterface $user) {
+  // Save any profiles that were prepared for the user.
+  $profiles = \Drupal::service('profile.user_syncer')->flushPreparedProfiles($user);
+  foreach ($profiles as $profile) {
+    $profile->setOwnerId($user->id());
+    $profile->setPublished();
+    $profile->save();
   }
 }
 
@@ -321,7 +347,7 @@ function profile_migration_plugins_alter(array &$migrations) {
  * Map profile2 fields to 'profile'.
  *
  * @param array $migration
- *   Thei migration to process.
+ *   The migration to process.
  * @param string $destination
  *   The process destination.
  */

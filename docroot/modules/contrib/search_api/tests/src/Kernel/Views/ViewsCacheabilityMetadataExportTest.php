@@ -5,12 +5,14 @@ namespace Drupal\Tests\search_api\Kernel\Views;
 use Drupal\Core\Config\Config;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that cacheability metadata is included when Views config is exported.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ViewsCacheabilityMetadataExportTest extends KernelTestBase {
 
   /**

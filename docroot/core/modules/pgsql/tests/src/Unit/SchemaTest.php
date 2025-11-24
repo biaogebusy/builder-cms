@@ -1,35 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\pgsql\Unit;
 
 use Drupal\pgsql\Driver\Database\pgsql\Schema;
 use Drupal\Tests\UnitTestCase;
-
-// cSpell:ignore conname
+use Prophecy\Argument;
 
 /**
  * @coversDefaultClass \Drupal\pgsql\Driver\Database\pgsql\Schema
  * @group Database
  */
 class SchemaTest extends UnitTestCase {
-
-  /**
-   * The PostgreSql DB connection.
-   *
-   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\pgsql\Driver\Database\pgsql\Connection
-   */
-  protected $connection;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->connection = $this->getMockBuilder('\Drupal\pgsql\Driver\Database\pgsql\Connection')
-      ->disableOriginalConstructor()
-      ->getMock();
-  }
 
   /**
    * Tests whether the actual constraint name is correctly computed.
@@ -44,33 +27,29 @@ class SchemaTest extends UnitTestCase {
    * @covers ::constraintExists
    * @dataProvider providerComputedConstraintName
    */
-  public function testComputedConstraintName($table_name, $name, $expected) {
+  public function testComputedConstraintName($table_name, $name, $expected): void {
     $max_identifier_length = 63;
-    $schema = new Schema($this->connection);
 
-    $statement = $this->createMock('\Drupal\Core\Database\StatementInterface');
-    $statement->expects($this->any())
-      ->method('fetchField')
-      ->willReturn($max_identifier_length);
+    $connection = $this->prophesize('\Drupal\pgsql\Driver\Database\pgsql\Connection');
+    $connection->getConnectionOptions()->willReturn([]);
+    $connection->getPrefix()->willReturn('');
 
-    $this->connection->expects($this->exactly(2))
-      ->method('query')
-      ->withConsecutive(
-        [$this->anything()],
-        ["SELECT 1 FROM pg_constraint WHERE conname = '$expected'"],
-      )
-      ->willReturnOnConsecutiveCalls(
-        $statement,
-        $this->createMock('\Drupal\Core\Database\StatementInterface'),
-      );
+    $statement = $this->prophesize('\Drupal\Core\Database\StatementInterface');
+    $statement->fetchField()->willReturn($max_identifier_length);
+    $connection->query('SHOW max_identifier_length')->willReturn($statement->reveal());
 
+    $connection->query(Argument::containingString($expected))
+      ->willReturn($this->prophesize('\Drupal\Core\Database\StatementInterface')->reveal())
+      ->shouldBeCalled();
+
+    $schema = new Schema($connection->reveal());
     $schema->constraintExists($table_name, $name);
   }
 
   /**
    * Data provider for ::testComputedConstraintName().
    */
-  public function providerComputedConstraintName() {
+  public static function providerComputedConstraintName() {
     return [
       ['user_field_data', 'pkey', 'user_field_data____pkey'],
       ['user_field_data', 'name__key', 'user_field_data__name__key'],

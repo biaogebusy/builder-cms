@@ -2,10 +2,10 @@
 
 namespace Drupal\page_manager\EventSubscriber;
 
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Routing\StackedRouteMatchInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -43,7 +43,7 @@ class RouteNameResponseSubscriber implements EventSubscriberInterface {
       // If the route specifies a 'base route name', use that. Otherwise fall
       // back to the route name. The 'base route name' is specified in
       // \Drupal\page_manager\Routing\PageManagerRoutes.
-      $route_name = $this->routeMatch->getParameter('base_route_name') ?: $this->routeMatch->getRouteName();
+      $route_name = $this->routeMatch->getParameter('_base_route_name') ?: $this->routeMatch->getRouteName();
       $cacheability_metadata->addCacheTags(['page_manager_route_name:' . $route_name]);
     }
   }
@@ -51,7 +51,7 @@ class RouteNameResponseSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Run before dynamic_page_cache_subscriber:onResponse.
     $events[KernelEvents::RESPONSE][] = ['onResponse', 101];
     return $events;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools\Form;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -27,7 +29,7 @@ class MigrationEditForm extends MigrationFormBase {
    * @return array
    *   An array of supported actions for the current entity form.
    */
-  public function actions(array $form, FormStateInterface $form_state) {
+  public function actions(array $form, FormStateInterface $form_state): array {
     $actions = parent::actions($form, $form_state);
     $actions['submit']['#value'] = $this->t('Update Migration');
 
@@ -42,7 +44,7 @@ class MigrationEditForm extends MigrationFormBase {
    * @param string $migration_group
    *   The migration's parent group.
    */
-  protected function addGroupParameter(Url $url, $migration_group) {
+  protected function addGroupParameter(Url $url, string $migration_group): void {
     $route_parameters = $url->getRouteParameters() + ['migration_group' => $migration_group];
     $url->setRouteParameters($route_parameters);
   }

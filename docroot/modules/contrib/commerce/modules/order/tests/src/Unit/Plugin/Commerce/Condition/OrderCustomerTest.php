@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_order\Unit\Plugin\Commerce\Condition;
 
-use Drupal\commerce\EntityUuidMapperInterface;
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\Plugin\Commerce\Condition\OrderCustomer;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce\EntityUuidMapperInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Plugin\Commerce\Condition\OrderCustomer;
 use Drupal\user\UserInterface;
 
 /**

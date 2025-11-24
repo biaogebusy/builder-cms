@@ -14,7 +14,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['devel', 'toolbar', 'block'];
+  protected static $modules = ['devel', 'toolbar', 'block', 'node'];
 
   /**
    * The user for tests.
@@ -24,14 +24,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
   protected $toolbarUser;
 
   /**
-   * The user for tests.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected $develUser;
-
-  /**
-   * The dafault toolbar items.
+   * The default toolbar items.
    *
    * @var array
    */
@@ -48,7 +41,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalPlaceBlock('local_tasks_block');
@@ -58,16 +51,18 @@ class DevelToolbarTest extends DevelBrowserTestBase {
       'administer site configuration',
       'access devel information',
       'access toolbar',
+      'switch users',
     ]);
     $this->toolbarUser = $this->drupalCreateUser([
       'access toolbar',
+      'switch users',
     ]);
   }
 
   /**
    * Tests configuration form.
    */
-  public function testConfigurationForm() {
+  public function testConfigurationForm(): void {
     // Ensures that the page is accessible only to users with the adequate
     // permissions.
     $this->drupalGet('admin/config/development/devel/toolbar');
@@ -100,7 +95,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
       'toolbar_items[devel.event_info]' => 'devel.event_info',
       'toolbar_items[devel.theme_registry]' => 'devel.theme_registry',
     ];
-    $this->drupalPostForm('admin/config/development/devel/toolbar', $edit, 'Save configuration');
+    $this->submitForm($edit, 'Save configuration');
     $this->assertSession()->pageTextContains('The configuration options have been saved.');
 
     $expected_items = array_merge($this->defaultToolbarItems, ['devel.event_info', 'devel.theme_registry']);
@@ -114,7 +109,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
   /**
    * Tests cache metadata headers.
    */
-  public function testCacheHeaders() {
+  public function testCacheHeaders(): void {
     // Disable user toolbar tab so we can test properly if the devel toolbar
     // implementation interferes with the page cacheability.
     \Drupal::service('module_installer')->install(['toolbar_disable_user_toolbar']);
@@ -128,6 +123,12 @@ class DevelToolbarTest extends DevelBrowserTestBase {
     // Make sure that the configuration cache tags are present for users with
     // the adequate permission.
     $this->drupalLogin($this->develUser);
+
+    // Dont go to the user/n page as thats uncacheable per https://gitlab.com/drupalspoons/devel/-/issues/541#note_2113393769
+    $node_type = $this->drupalCreateContentType();
+    $node = $this->drupalCreateNode(['type' => $node_type->id()]);
+    $this->drupalGet($node->toUrl());
+
     $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'config:devel.toolbar.settings');
     $this->assertSession()->responseHeaderContains('X-Drupal-Cache-Tags', 'config:system.menu.devel');
 
@@ -138,14 +139,14 @@ class DevelToolbarTest extends DevelBrowserTestBase {
 
     // Triggers a page reload and verify that the page is served from the
     // cache.
-    $this->drupalGet('');
+    $this->drupalGet($node->toUrl());
     $this->assertSession()->responseHeaderContains('X-Drupal-Dynamic-Cache', 'HIT');
   }
 
   /**
    * Tests toolbar integration.
    */
-  public function testToolbarIntegration() {
+  public function testToolbarIntegration(): void {
     $library_css_url = 'css/devel.toolbar.css';
     $toolbar_selector = '#toolbar-bar .toolbar-tab';
     $toolbar_tab_selector = '#toolbar-bar .toolbar-tab a.toolbar-icon-devel';
@@ -222,7 +223,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
   /**
    * Tests devel when toolbar module is not installed.
    */
-  public function testToolbarModuleNotInstalled() {
+  public function testToolbarModuleNotInstalled(): void {
     // Ensures that when toolbar module is not installed all works properly.
     \Drupal::service('module_installer')->uninstall(['toolbar']);
 
@@ -262,6 +263,7 @@ class DevelToolbarTest extends DevelBrowserTestBase {
         'url' => $element->link->getUrlObject()->toString(),
       ];
     }
+
     return $links;
   }
 

@@ -128,6 +128,16 @@ devel.switch:
     _permission: 'switch users'
     _csrf_token: 'TRUE'
 
+devel.switch_user:
+  path: '/devel/switch-user'
+  defaults:
+    _form: '\Drupal\devel\Form\SwitchUserPageForm'
+    _title: 'Switch user'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'switch users'
+
 devel.cache_clear:
   path: '/devel/cache/clear'
   defaults:

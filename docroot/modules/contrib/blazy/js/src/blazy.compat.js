@@ -21,9 +21,8 @@
   var COMPAT = 'compat';
   var C_IS_ANIMATED = 'is-b-animated';
   var DATA = 'data-';
-  // @todo remove the last at/by 3.x:
-  var DATA_RATIOS = DATA + 'b-ratios ' + DATA + 'ratios';
-  var DATA_RATIO = DATA + 'b-ratio ' + DATA + 'ratio';
+  var DATA_RATIOS = DATA + 'b-ratios';
+  var DATA_RATIO = DATA + 'b-ratio';
   var E_RESIZING = 'bio:resizing.' + COMPAT;
   var S_PICTURE = 'picture';
   var S_RATIO = '.media--ratio';
@@ -75,12 +74,6 @@
 
       me.destroyed = false;
       return V_WINDATA;
-    },
-
-    unresize: function () {
-      if ($.observer) {
-        $.observer.unload(this);
-      }
     }
   });
 
@@ -223,12 +216,6 @@
       // No bind without extra arguments, call me.
       $.once(process.call(me));
 
-    },
-    detach: function (context, settings, trigger) {
-      if (trigger === 'unload') {
-        var me = Drupal.blazy;
-        me.unresize();
-      }
     }
   };
 

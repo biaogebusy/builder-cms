@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Traits\Core\Image;
 
 use Drupal\Core\Image\ImageInterface;
@@ -42,6 +44,7 @@ trait ToolkitTestTrait {
       'scale_and_crop',
       'my_operation',
       'convert',
+      'failing',
     ];
     if (count(array_intersect($expected, $operations)) > 0 && !in_array('apply', $expected)) {
       $expected[] = 'apply';
@@ -101,7 +104,10 @@ trait ToolkitTestTrait {
     $effect = $this->imageEffectPluginManager->createInstance($effect_name, ['data' => $data]);
     $image = $this->getImage();
     $this->imageTestReset();
-    $this->assertTrue($effect->applyEffect($image));
+    // The test toolkit does not actually implement the operation plugins,
+    // therefore the calls to TestToolkit::apply() will fail. That's not a
+    // problem here, we are not testing the actual operations.
+    $this->assertFalse($effect->applyEffect($image));
     $this->assertToolkitOperationsCalled($expected_operations);
   }
 

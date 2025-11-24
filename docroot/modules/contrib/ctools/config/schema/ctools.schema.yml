@@ -50,7 +50,7 @@ ctools.block_plugin.*:
       type: sequence
       label: 'Context assignments'
       sequence:
-        - type: string
+        type: string
 
 ctools.block_display_variant:
   type: display_variant.plugin
@@ -60,4 +60,4 @@ ctools.block_display_variant:
       type: sequence
       label: 'Blocks'
       sequence:
-        - type: ctools.block_plugin.[id]
+        type: ctools.block_plugin.[id]

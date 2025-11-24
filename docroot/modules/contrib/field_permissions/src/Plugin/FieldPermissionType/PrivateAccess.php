@@ -37,7 +37,7 @@ class PrivateAccess extends Base {
       return $entity->id() == $account->id();
     }
     elseif ($entity instanceof EntityOwnerInterface) {
-      return $entity->getOwnerId() == $account->id();
+      return $entity->getOwnerId() === $account->id();
     }
 
     return TRUE;

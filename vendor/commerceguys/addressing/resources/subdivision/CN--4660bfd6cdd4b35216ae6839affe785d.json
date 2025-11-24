@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD",
+		"Zhanjiang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chikan Qu": {
+			"local_name": "赤坎区"
+		},
+		"Leizhou Shi": {
+			"local_name": "雷州市"
+		},
+		"Lianjiang Shi": {
+			"local_name": "廉江市"
+		},
+		"Mazhang Qu": {
+			"local_name": "麻章区"
+		},
+		"Potou Qu": {
+			"local_name": "坡头区"
+		},
+		"Suixi Xian": {
+			"local_name": "遂溪县"
+		},
+		"Wuchuan Shi": {
+			"local_name": "吴川市"
+		},
+		"Xiashan Qu": {
+			"local_name": "霞山区"
+		},
+		"Xuwen Xian": {
+			"local_name": "徐闻县"
+		}
+	}
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 /**
@@ -22,7 +24,7 @@ class ViewsFormAlterTest extends ViewTestBase {
   /**
    * Tests hook_form_BASE_FORM_ID_alter for a ViewsForm.
    */
-  public function testViewsFormAlter() {
+  public function testViewsFormAlter(): void {
     $this->drupalLogin($this->createUser(['access media overview']));
     $this->drupalGet('admin/content/media');
     $count = $this->container->get('state')->get('hook_form_BASE_FORM_ID_alter_count');

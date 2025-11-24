@@ -2,17 +2,20 @@
 
 namespace Drupal\commerce_tax\Plugin\Commerce\TaxType;
 
-use Drupal\commerce_tax\TaxZone;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_tax\Attribute\CommerceTaxType;
+use Drupal\commerce_tax\TaxZone;
+
+// cspell:ignore Büsingen Lugano
 
 /**
  * Provides the Swiss VAT tax type.
- *
- * @CommerceTaxType(
- *   id = "swiss_vat",
- *   label = "Swiss VAT",
- * )
  */
+#[CommerceTaxType(
+  id: "swiss_vat",
+  label: new TranslatableMarkup("Swiss VAT"),
+)]
 class SwissVat extends LocalTaxTypeBase {
 
   /**

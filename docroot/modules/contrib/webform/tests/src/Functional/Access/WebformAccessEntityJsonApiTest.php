@@ -20,7 +20,7 @@ class WebformAccessEntityJsonApiTest extends WebformBrowserTestBase {
   protected static $modules = ['webform', 'jsonapi'];
 
   /**
-   * Tests webform entity REST acces.
+   * Tests webform entity REST access.
    */
   public function testRestAccess() {
     $assert_session = $this->assertSession();

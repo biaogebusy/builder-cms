@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects;
 
 use Drupal\image\Entity\ImageStyle;
@@ -56,7 +58,7 @@ class ImageEffectsConverter {
         $needs_saving = TRUE;
       }
     }
-    return $needs_saving ? $style->save() : FALSE;
+    return $needs_saving ? (bool) $style->save() : FALSE;
   }
 
   /**
@@ -108,7 +110,7 @@ class ImageEffectsConverter {
         $needs_saving = TRUE;
       }
     }
-    return $needs_saving ? $style->save() : FALSE;
+    return $needs_saving ? (bool) $style->save() : FALSE;
   }
 
 }

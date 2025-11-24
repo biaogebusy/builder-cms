@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.data.dataservice.holographic.factor.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-20 17:27:50
+ * @since 1.0, 2025-08-13 16:42:41
  */
 class AlipayDataDataserviceHolographicFactorQueryRequest
 {

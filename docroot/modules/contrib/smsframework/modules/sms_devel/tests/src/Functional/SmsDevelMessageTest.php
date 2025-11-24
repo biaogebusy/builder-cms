@@ -26,7 +26,7 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * A memory gateway.
@@ -61,8 +61,8 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->responseContains('Message was processed, 1 delivery reports were generated.');
 
     $messages = $this->getTestMessages($this->gateway);
-    $this->assertCount(1, $messages);
-    $this->assertEquals($edit['message'], $messages[0]->getMessage());
+    static::assertCount(1, $messages);
+    static::assertEquals($edit['message'], $messages[0]->getMessage());
   }
 
   /**
@@ -79,8 +79,8 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
 
     $messages = SmsMessage::loadMultiple();
     $message = reset($messages);
-    $this->assertEquals($edit['message'], $message->getMessage(), 'Message is same');
-    $this->assertEquals(Direction::OUTGOING, $message->getDirection(), 'Message is outgoing');
+    static::assertEquals($edit['message'], $message->getMessage(), 'Message is same');
+    static::assertEquals(Direction::OUTGOING, $message->getDirection(), 'Message is outgoing');
   }
 
   /**
@@ -96,7 +96,7 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
     $this->submitForm($edit, t('Receive'));
     $this->assertSession()->responseContains('Message was processed, 1 delivery reports were generated.');
 
-    $this->assertEquals($edit['message'], sms_test_gateway_get_incoming()['message']);
+    static::assertEquals($edit['message'], sms_test_gateway_get_incoming()['message']);
   }
 
   /**
@@ -114,8 +114,8 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
 
     $messages = SmsMessage::loadMultiple();
     $message = reset($messages);
-    $this->assertEquals($edit['message'], $message->getMessage(), 'Message is same');
-    $this->assertEquals(Direction::INCOMING, $message->getDirection(), 'Message is incoming');
+    static::assertEquals($edit['message'], $message->getMessage(), 'Message is same');
+    static::assertEquals(Direction::INCOMING, $message->getDirection(), 'Message is incoming');
   }
 
   /**
@@ -143,7 +143,7 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
 
     $messages = SmsMessage::loadMultiple();
     $message = reset($messages);
-    $this->assertFalse($message->isAutomated(), 'Message is not automated');
+    static::assertFalse($message->isAutomated(), 'Message is not automated');
   }
 
   /**
@@ -167,7 +167,7 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
 
     $messages = SmsMessage::loadMultiple();
     $message = reset($messages);
-    $this->assertEquals($date->format('U'), $message->getSendTime(), 'Message has send time.');
+    static::assertEquals($date->format('U'), $message->getSendTime(), 'Message has send time.');
   }
 
   /**
@@ -185,7 +185,7 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->responseContains('Message could not be sent');
 
     $messages = $this->getTestMessages($this->gateway);
-    $this->assertCount(0, $messages, 'No messages sent.');
+    static::assertCount(0, $messages, 'No messages sent.');
   }
 
   /**
@@ -226,7 +226,7 @@ final class SmsDevelMessageTest extends SmsFrameworkBrowserTestBase {
 
     $message = $this->getLastTestMessage($this->gateway);
     $report = $this->getTestMessageReports($this->gateway)[0];
-    $this->assertEquals($edit['number'], $report->getRecipient());
+    static::assertEquals($edit['number'], $report->getRecipient());
 
     $first_row_first_report = '#edit-results > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(1)';
 

@@ -628,7 +628,7 @@ class WebformSubmissionListBuilder extends EntityListBuilder {
       '#type' => 'operations',
       '#links' => $links,
       '#prefix' => '<div class="webform-dropbutton webform-submission-views-dropbutton">',
-      '#suffix' => '</div>' . ($this->submissionView ? '<p><hr/></p>' : ''),
+      '#suffix' => '</div>' . ($this->submissionView ? '<hr class="webform-hr"/>' : ''),
     ];
     return $build;
   }

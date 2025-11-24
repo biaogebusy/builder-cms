@@ -7,6 +7,7 @@
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -144,7 +145,11 @@ function entity_module_preuninstall($module) {
 /**
  * Implements hook_query_TAG_alter().
  */
-function entity_query_entity_query_alter(SelectInterface $query) {
+function entity_query_entity_query_alter(AlterableInterface $query) {
+  if (!$query instanceof SelectInterface) {
+    return;
+  }
+  
   $entity_type_id = $query->getMetaData('entity_type');
   if ($query->hasTag($entity_type_id . '_access')) {
     $entity_type_manager = \Drupal::entityTypeManager();

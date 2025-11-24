@@ -2,15 +2,15 @@
 
 namespace Drupal\crop;
 
-use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Routing\UrlGeneratorInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\image\Entity\ImageStyle;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a class to build a listing of crop type entities.
@@ -59,7 +59,7 @@ class CropTypeListBuilder extends ConfigEntityListBuilder {
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('url_generator'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
     );
   }
 
@@ -68,7 +68,7 @@ class CropTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function buildHeader() {
     $header = [];
-    $header['name'] = t('Name');
+    $header['name'] = $this->t('Name');
     $header['description'] = [
       'data' => $this->t('Description'),
       'class' => [RESPONSIVE_PRIORITY_MEDIUM],
@@ -89,7 +89,7 @@ class CropTypeListBuilder extends ConfigEntityListBuilder {
       'data' => $entity->label(),
       'class' => ['menu-label'],
     ];
-    $row['description'] = Xss::filterAdmin($entity->description);
+    $row['description'] = Xss::filterAdmin($entity->description ?? '');
     $row['aspect_ratio'] = $entity->getAspectRatio();
 
     // Load all image styles used by the current crop type.
@@ -109,7 +109,7 @@ class CropTypeListBuilder extends ConfigEntityListBuilder {
 
     $other_image_styles = array_splice($image_styles, 2);
     if ($other_image_styles) {
-      $usage_message = t('@first, @second and @count more', [
+      $usage_message = $this->t('@first, @second and @count more', [
         '@first' => $usage[0],
         '@second' => $usage[1],
         '@count' => count($other_image_styles),
@@ -128,10 +128,26 @@ class CropTypeListBuilder extends ConfigEntityListBuilder {
    */
   public function render() {
     $build = parent::render();
-    $build['table']['#empty'] = t('No crop types available. <a href="@link">Add crop type</a>.', [
+    $build['table']['#empty'] = $this->t('No crop types available. <a href="@link">Add crop type</a>.', [
       '@link' => $this->urlGenerator->generateFromRoute('crop.type_add'),
     ]);
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity): array {
+    $flush = [
+      'title' => $this->t('Flush'),
+      'weight' => 200,
+      'url' => $entity->toUrl('flush-form'),
+    ];
+
+    return parent::getDefaultOperations($entity) + [
+      'flush' => $flush,
+    ];
+
   }
 
 }

@@ -18,16 +18,16 @@ namespace Symfony\Component\Validator;
  */
 class ConstraintViolation implements ConstraintViolationInterface
 {
-    private $message;
-    private $messageTemplate;
-    private $parameters;
-    private $plural;
-    private $root;
-    private $propertyPath;
-    private $invalidValue;
-    private $constraint;
-    private $code;
-    private $cause;
+    private string|\Stringable $message;
+    private ?string $messageTemplate;
+    private array $parameters;
+    private ?int $plural;
+    private mixed $root;
+    private ?string $propertyPath;
+    private mixed $invalidValue;
+    private ?Constraint $constraint;
+    private ?string $code;
+    private mixed $cause;
 
     /**
      * Creates a new constraint violation.
@@ -49,21 +49,8 @@ class ConstraintViolation implements ConstraintViolationInterface
      *                                            caused the violation
      * @param mixed              $cause           The cause of the violation
      */
-    public function __construct($message, ?string $messageTemplate, array $parameters, $root, ?string $propertyPath, $invalidValue, int $plural = null, $code = null, Constraint $constraint = null, $cause = null)
+    public function __construct(string|\Stringable $message, ?string $messageTemplate, array $parameters, mixed $root, ?string $propertyPath, mixed $invalidValue, ?int $plural = null, ?string $code = null, ?Constraint $constraint = null, mixed $cause = null)
     {
-        if (null === $message) {
-            @trigger_error(sprintf('Passing a null message when instantiating a "%s" is deprecated since Symfony 4.4.', __CLASS__), \E_USER_DEPRECATED);
-            $message = '';
-        }
-
-        if (null !== $code && !\is_string($code)) {
-            @trigger_error(sprintf('Not using a string as the error code in %s() is deprecated since Symfony 4.4. A type-hint will be added in 5.0.', __METHOD__), \E_USER_DEPRECATED);
-        }
-
-        if (!\is_string($message) && !(\is_object($message) && method_exists($message, '__toString'))) {
-            throw new \TypeError('Constraint violation message should be a string or an object which implements the __toString() method.');
-        }
-
         $this->message = $message;
         $this->messageTemplate = $messageTemplate;
         $this->parameters = $parameters;
@@ -76,15 +63,10 @@ class ConstraintViolation implements ConstraintViolationInterface
         $this->cause = $cause;
     }
 
-    /**
-     * Converts the violation into a string for debugging purposes.
-     *
-     * @return string The violation as string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         if (\is_object($this->root)) {
-            $class = 'Object('.\get_class($this->root).')';
+            $class = 'Object('.$this->root::class.')';
         } elseif (\is_array($this->root)) {
             $class = 'Array';
         } else {
@@ -92,99 +74,70 @@ class ConstraintViolation implements ConstraintViolationInterface
         }
 
         $propertyPath = (string) $this->propertyPath;
-        $code = (string) $this->code;
 
         if ('' !== $propertyPath && '[' !== $propertyPath[0] && '' !== $class) {
             $class .= '.';
         }
 
-        if ('' !== $code) {
+        if (null !== ($code = $this->code) && '' !== $code) {
             $code = ' (code '.$code.')';
         }
 
         return $class.$propertyPath.":\n    ".$this->getMessage().$code;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getMessageTemplate()
+    public function getMessageTemplate(): string
     {
-        return $this->messageTemplate;
+        return (string) $this->messageTemplate;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getParameters()
+    public function getParameters(): array
     {
         return $this->parameters;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPlural()
+    public function getPlural(): ?int
     {
         return $this->plural;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getMessage()
+    public function getMessage(): string|\Stringable
     {
         return $this->message;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getRoot()
+    public function getRoot(): mixed
     {
         return $this->root;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPropertyPath()
+    public function getPropertyPath(): string
     {
-        return $this->propertyPath;
+        return (string) $this->propertyPath;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getInvalidValue()
+    public function getInvalidValue(): mixed
     {
         return $this->invalidValue;
     }
 
     /**
      * Returns the constraint whose validation caused the violation.
-     *
-     * @return Constraint|null The constraint or null if it is not known
      */
-    public function getConstraint()
+    public function getConstraint(): ?Constraint
     {
         return $this->constraint;
     }
 
     /**
      * Returns the cause of the violation.
-     *
-     * @return mixed
      */
-    public function getCause()
+    public function getCause(): mixed
     {
         return $this->cause;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getCode()
+    public function getCode(): ?string
     {
         return $this->code;
     }

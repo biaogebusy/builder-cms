@@ -36,8 +36,8 @@ interface OrderTypeInterface extends CommerceBundleEntityInterface {
   /**
    * Gets the order type's number pattern.
    *
-   * @return \Drupal\commerce_number_pattern\Entity\NumberPatternInterface
-   *   The number pattern.
+   * @return \Drupal\commerce_number_pattern\Entity\NumberPatternInterface|null
+   *   The number pattern, NULL if not set.
    */
   public function getNumberPattern();
 

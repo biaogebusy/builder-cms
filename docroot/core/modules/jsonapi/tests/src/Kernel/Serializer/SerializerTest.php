@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Kernel\Serializer;
 
 use Drupal\Core\Render\Markup;
@@ -25,6 +27,7 @@ class SerializerTest extends JsonapiKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'file',
     'serialization',
     'system',
     'node',
@@ -61,7 +64,7 @@ class SerializerTest extends JsonapiKernelTestBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $user;
+  protected User $user;
 
   /**
    * {@inheritdoc}
@@ -72,7 +75,6 @@ class SerializerTest extends JsonapiKernelTestBase {
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
     // Add the additional table schemas.
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installSchema('user', ['users_data']);
     $this->user = User::create([
@@ -82,6 +84,7 @@ class SerializerTest extends JsonapiKernelTestBase {
     $this->user->save();
     NodeType::create([
       'type' => 'foo',
+      'name' => 'Foo',
     ])->save();
     $this->createTextField('node', 'foo', 'field_text', 'Text');
     $this->node = Node::create([
@@ -102,7 +105,7 @@ class SerializerTest extends JsonapiKernelTestBase {
   /**
    * @covers \Drupal\jsonapi\Serializer\Serializer::normalize
    */
-  public function testFallbackNormalizer() {
+  public function testFallbackNormalizer(): void {
     $context = [
       'account' => $this->user,
       'resource_object' => ResourceObject::createFromEntity($this->resourceType, $this->node),

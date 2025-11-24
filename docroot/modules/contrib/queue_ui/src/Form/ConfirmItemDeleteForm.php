@@ -5,6 +5,7 @@ namespace Drupal\queue_ui\Form;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Queue\QueueWorkerManagerInterface;
 use Drupal\Core\Url;
 use Drupal\queue_ui\QueueUIManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,24 +20,13 @@ class ConfirmItemDeleteForm extends ConfirmFormBase {
 
   /**
    * The queue name.
-   *
-   * @var string
    */
-  protected $queueName;
+  protected string $queueName;
 
   /**
    * The queue item.
-   *
-   * @var string
    */
-  protected $queueItem;
-
-  /**
-   * The QueueUIManager.
-   *
-   * @var \Drupal\queue_ui\QueueUIManager
-   */
-  private $queueUIManager;
+  protected string $queueItem;
 
   /**
    * ConfirmItemDeleteForm constructor.
@@ -45,10 +35,15 @@ class ConfirmItemDeleteForm extends ConfirmFormBase {
    *   The messenger service.
    * @param \Drupal\queue_ui\QueueUIManager $queueUIManager
    *   The QueueUIManager object.
+   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queueWorkerManager
+   *   The queue worker manager.
    */
-  public function __construct(MessengerInterface $messenger, QueueUIManager $queueUIManager) {
+  public function __construct(
+    MessengerInterface $messenger,
+    private QueueUIManager $queueUIManager,
+    private readonly QueueWorkerManagerInterface $queueWorkerManager,
+  ) {
     $this->messenger = $messenger;
-    $this->queueUIManager = $queueUIManager;
   }
 
   /**
@@ -62,7 +57,8 @@ class ConfirmItemDeleteForm extends ConfirmFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('messenger'),
-      $container->get('plugin.manager.queue_ui')
+      $container->get('plugin.manager.queue_ui'),
+      $container->get('plugin.manager.queue_worker')
     );
   }
 
@@ -70,7 +66,15 @@ class ConfirmItemDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete queue item %queueItem?', ['%queueItem' => $this->queueItem]);
+    return $this->t(
+      'Are you sure you want to delete item %queueItem of %queueTitle queue?',
+      [
+        '%queueItem' => $this->queueItem,
+        '%queueTitle' => $this->queueWorkerManager->getDefinition(
+          $this->queueName
+        )['title'],
+      ]
+    );
   }
 
   /**

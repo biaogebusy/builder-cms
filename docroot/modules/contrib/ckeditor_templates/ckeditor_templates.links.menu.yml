@@ -1,0 +1,5 @@
+entity.ckeditor_templates.overview:
+  title: CKEditor Templates
+  parent: system.admin_config_content
+  description: 'List of CKEditor Templates to be used when editing texts.'
+  route_name: entity.ckeditor_templates.collection

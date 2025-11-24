@@ -11,6 +11,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 use Drupal\user\Entity\Role;
 use Psr\Log\NullLogger;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Search API functionality that gets executed by console utilities.
@@ -18,6 +19,7 @@ use Psr\Log\NullLogger;
  * @group search_api
  * @coversDefaultClass \Drupal\search_api\Utility\CommandHelper
  */
+#[RunTestsInSeparateProcesses]
 class CommandHelperTest extends KernelTestBase {
 
   use ExampleContentTrait;
@@ -47,7 +49,6 @@ class CommandHelperTest extends KernelTestBase {
     parent::setUp();
 
     $this->installSchema('search_api', ['search_api_item']);
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installEntitySchema('search_api_task');
     $this->installConfig('search_api');
@@ -238,7 +239,10 @@ class CommandHelperTest extends KernelTestBase {
     $index->clear();
     $this->assertSame(0, $index->getTrackerInstance()->getIndexedItemsCount());
     $this->systemUnderTest->indexItemsToIndexCommand(['test_index'], 10, 10);
+    $this->assertNull($index->getIndexingRequestTime());
     $this->runBatch();
+    // @todo Getting this assertion to work requires mocking the time service.
+    // $this->assertNotNull($index->getIndexingRequestTime());
     $this->assertSame(5, $index->getTrackerInstance()->getIndexedItemsCount());
   }
 

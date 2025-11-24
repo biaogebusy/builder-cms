@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Plugin;
 
 use Drupal\Core\Plugin\Context\Context;
@@ -20,7 +22,7 @@ class ContextTypedDataTest extends KernelTestBase {
   /**
    * Tests that contexts can be serialized.
    */
-  public function testSerialize() {
+  public function testSerialize(): void {
     $definition = new ContextDefinition('any');
     $data_definition = DataDefinition::create('string');
     $typed_data = new StringData($data_definition);
@@ -42,7 +44,7 @@ class ContextTypedDataTest extends KernelTestBase {
    *
    * @covers ::getContextValue
    */
-  public function testGetContextValue() {
+  public function testGetContextValue(): void {
     $data_definition = DataDefinition::create('string');
     $typed_data = new StringData($data_definition);
     $typed_data->setValue('example string');
@@ -63,7 +65,7 @@ class ContextTypedDataTest extends KernelTestBase {
   /**
    * Data provider for testHasContextValue.
    */
-  public function providerHasContextValue() {
+  public static function providerHasContextValue() {
     return [
       [TRUE, FALSE],
       [TRUE, 0],

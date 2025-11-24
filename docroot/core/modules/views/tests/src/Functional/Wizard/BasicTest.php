@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Wizard;
 
 use Drupal\Component\Serialization\Json;
@@ -27,7 +29,7 @@ class BasicTest extends WizardTestBase {
     $this->drupalPlaceBlock('page_title_block');
   }
 
-  public function testViewsWizardAndListing() {
+  public function testViewsWizardAndListing(): void {
     $this->drupalCreateContentType(['type' => 'article']);
     $this->drupalCreateContentType(['type' => 'page']);
 
@@ -38,7 +40,7 @@ class BasicTest extends WizardTestBase {
     // Create a simple and not at all useful view.
     $view1 = [];
     $view1['label'] = $this->randomMachineName(16);
-    $view1['id'] = strtolower($this->randomMachineName(16));
+    $view1['id'] = $this->randomMachineName(16);
     $view1['description'] = $this->randomMachineName(16);
     $view1['page[create]'] = FALSE;
     $this->drupalGet('admin/structure/views/add');
@@ -65,7 +67,7 @@ class BasicTest extends WizardTestBase {
     // Now create a page with simple node listing and an attached feed.
     $view2 = [];
     $view2['label'] = $this->randomMachineName(16);
-    $view2['id'] = strtolower($this->randomMachineName(16));
+    $view2['id'] = $this->randomMachineName(16);
     $view2['description'] = $this->randomMachineName(16);
     $view2['page[create]'] = 1;
     $view2['page[title]'] = $this->randomMachineName(16);
@@ -115,7 +117,7 @@ class BasicTest extends WizardTestBase {
     // Create a view with a page and a block, and filter the listing.
     $view3 = [];
     $view3['label'] = $this->randomMachineName(16);
-    $view3['id'] = strtolower($this->randomMachineName(16));
+    $view3['id'] = $this->randomMachineName(16);
     $view3['description'] = $this->randomMachineName(16);
     $view3['show[wizard_key]'] = 'node';
     $view3['show[type]'] = 'page';
@@ -161,7 +163,7 @@ class BasicTest extends WizardTestBase {
     // Create a view with only a REST export.
     $view4 = [];
     $view4['label'] = $this->randomMachineName(16);
-    $view4['id'] = strtolower($this->randomMachineName(16));
+    $view4['id'] = $this->randomMachineName(16);
     $view4['description'] = $this->randomMachineName(16);
     $view4['show[wizard_key]'] = 'node';
     $view4['show[type]'] = 'page';
@@ -184,7 +186,7 @@ class BasicTest extends WizardTestBase {
     // set.
     $leading_slash_view = [];
     $leading_slash_view['label'] = $this->randomMachineName(16);
-    $leading_slash_view['id'] = strtolower($this->randomMachineName(16));
+    $leading_slash_view['id'] = $this->randomMachineName(16);
     $leading_slash_view['description'] = $this->randomMachineName(16);
     $leading_slash_view['show[wizard_key]'] = 'node';
     $leading_slash_view['show[type]'] = 'page';
@@ -201,8 +203,8 @@ class BasicTest extends WizardTestBase {
    *
    * @see \Drupal\views\Plugin\views\display\DisplayPluginBase::mergeDefaults()
    */
-  public function testWizardDefaultValues() {
-    $random_id = strtolower($this->randomMachineName(16));
+  public function testWizardDefaultValues(): void {
+    $random_id = $this->randomMachineName(16);
     // Create a basic view.
     $view = [];
     $view['label'] = $this->randomMachineName(16);

@@ -3,17 +3,18 @@
 namespace Drupal\search_api_test\Plugin\search_api\data_type;
 
 use Drupal\Component\Plugin\DependentPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiDataType;
 use Drupal\search_api\DataType\DataTypePluginBase;
 
 /**
  * Provides a dummy data type for testing purposes.
- *
- * @SearchApiDataType(
- *   id = "search_api_test_altering",
- *   label = @Translation("Altering test data type"),
- *   description = @Translation("Altering dummy data type implementation")
- * )
  */
+#[SearchApiDataType(
+  id: 'search_api_test_altering',
+  label: new TranslatableMarkup('Altering test data type'),
+  description: new TranslatableMarkup('Altering dummy data type implementation')
+)]
 class AlteringValueTestDataType extends DataTypePluginBase implements DependentPluginInterface {
 
   /**

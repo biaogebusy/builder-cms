@@ -4,6 +4,8 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\search_api\processor\Resources\Porter2;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -12,18 +14,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Stems search terms.
- *
- * @SearchApiProcessor(
- *   id = "stemmer",
- *   label = @Translation("Stemmer"),
- *   description = @Translation("Stems search terms (for example, <em>talking</em> to <em>talk</em>). Currently, this only acts on English language content. It uses the Porter 2 stemmer algorithm (<a href=""https://wikipedia.org/wiki/Stemming"">More information</a>). For best results, use after tokenizing."),
- *   stages = {
- *     "pre_index_save" = 0,
- *     "preprocess_index" = 0,
- *     "preprocess_query" = 0,
- *   }
- * )
  */
+#[SearchApiProcessor(
+  id: 'stemmer',
+  label: new TranslatableMarkup('Stemmer'),
+  description: new TranslatableMarkup('Stems search terms (for example, <em>talking</em> to <em>talk</em>). Currently, this only acts on English language content. It uses the Porter 2 stemmer algorithm (<a href="https://wikipedia.org/wiki/Stemming">More information</a>). For best results, use after tokenizing.'),
+  stages: [
+    'pre_index_save' => 0,
+    'preprocess_index' => 0,
+    'preprocess_query' => 0,
+  ],
+)]
 class Stemmer extends FieldsProcessorPluginBase {
 
   /**
@@ -74,7 +75,7 @@ class Stemmer extends FieldsProcessorPluginBase {
    *   otherwise.
    */
   protected static function isEnglish(string $langcode): bool {
-    return substr($langcode, 0, 2) === 'en';
+    return str_starts_with($langcode, 'en');
   }
 
   /**
@@ -108,8 +109,10 @@ class Stemmer extends FieldsProcessorPluginBase {
 
     $configuration += [
       'exceptions' => [
+        // cspell:disable
         'texan' => 'texa',
         'mexican' => 'mexic',
+        // cspell:enable
       ],
     ];
 

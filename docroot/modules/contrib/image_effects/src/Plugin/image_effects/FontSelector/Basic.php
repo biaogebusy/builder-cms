@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\image_effects\FontSelector;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file_mdm\FileMetadataManagerInterface;
+use Drupal\image_effects\Plugin\Attribute\FontSelector;
 use Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface;
 use Drupal\image_effects\Plugin\ImageEffectsPluginBase;
 use Psr\Log\LoggerInterface;
@@ -14,14 +18,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Basic font selector plugin.
  *
  * Allows typing in the font file URI/path.
- *
- * @Plugin(
- *   id = "basic",
- *   title = @Translation("Basic font selector"),
- *   short_title = @Translation("Basic"),
- *   help = @Translation("Allows typing in the font file URI/path.")
- * )
  */
+#[FontSelector(
+  id: "basic",
+  title: new TranslatableMarkup("Basic font selector"),
+  shortTitle: new TranslatableMarkup("Basic"),
+  help: new TranslatableMarkup("Allows typing in the font file URI/path."),
+)]
 class Basic extends ImageEffectsPluginBase implements ImageEffectsFontSelectorPluginInterface {
 
   /**
@@ -32,7 +35,7 @@ class Basic extends ImageEffectsPluginBase implements ImageEffectsFontSelectorPl
   protected $fileMetadataManager;
 
   /**
-   * Constructs a ImageEffectsPluginBase object.
+   * Basic constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -62,14 +65,14 @@ class Basic extends ImageEffectsPluginBase implements ImageEffectsFontSelectorPl
       $plugin_definition,
       $container->get('config.factory'),
       $container->get('logger.channel.image_effects'),
-      $container->get('file_metadata_manager')
+      $container->get(FileMetadataManagerInterface::class)
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function selectionElement(array $options = []) {
+  public function selectionElement(array $options = []): array {
     // Element.
     return array_merge([
       '#type' => 'textfield',
@@ -82,7 +85,7 @@ class Basic extends ImageEffectsPluginBase implements ImageEffectsFontSelectorPl
   /**
    * Validation handler for the selection element.
    */
-  public function validateSelectorUri($element, FormStateInterface $form_state, $form) {
+  public function validateSelectorUri(array $element, FormStateInterface $form_state, array $form): void {
     if (!empty($element['#value'])) {
       if (!file_exists($element['#value'])) {
         $form_state->setErrorByName(implode('][', $element['#parents']), $this->t('The file does not exist.'));
@@ -93,7 +96,7 @@ class Basic extends ImageEffectsPluginBase implements ImageEffectsFontSelectorPl
   /**
    * {@inheritdoc}
    */
-  public function getDescription($uri) {
+  public function getDescription(string $uri): ?string {
     return $this->fileMetadataManager->uri($uri)->getMetadata('font', 'FullName');
   }
 

@@ -9,8 +9,6 @@ use Drupal\Core\State\StateInterface;
 
 /**
  * Populate a queue for asynchronous treatment.
- *
- * @package Drupal\entity_share_async\Service
  */
 class QueueHelper implements QueueHelperInterface {
 

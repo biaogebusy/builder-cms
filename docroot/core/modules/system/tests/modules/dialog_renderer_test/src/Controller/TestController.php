@@ -126,7 +126,9 @@ class TestController {
           'class' => ['use-ajax'],
           'data-dialog-type' => 'modal',
           'data-dialog-options' => Json::encode([
-            'dialogClass' => 'no-close',
+            'classes' => [
+              'ui-dialog' => 'no-close',
+            ],
           ]),
         ],
         '#attached' => [
@@ -184,6 +186,89 @@ class TestController {
           'library' => [
             'core/drupal.ajax',
           ],
+        ],
+      ],
+      'auto_buttons_default' => [
+        '#title' => 'Auto buttons default!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute('dialog_renderer_test.modal_form'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+        ],
+        '#attached' => [
+          'library' => [
+            'core/drupal.ajax',
+          ],
+        ],
+      ],
+      'auto_buttons_false' => [
+        '#title' => 'Auto buttons false!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute('dialog_renderer_test.modal_form'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-options' => Json::encode([
+            'drupalAutoButtons' => FALSE,
+          ]),
+        ],
+        '#attached' => [
+          'library' => [
+            'core/drupal.ajax',
+          ],
+        ],
+      ],
+      'auto_buttons_true' => [
+        '#title' => 'Auto buttons true!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute('dialog_renderer_test.modal_form'),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-options' => Json::encode([
+            'drupalAutoButtons' => TRUE,
+          ]),
+        ],
+        '#attached' => [
+          'library' => [
+            'core/drupal.ajax',
+          ],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Displays a dropbutton with a link that opens in a modal dialog.
+   *
+   * @return array
+   *   Render array with links.
+   */
+  public function collapsedOpener() {
+    return [
+      '#markup' => '<h2>Honk</h2>',
+      'dropbutton' => [
+        '#type' => 'dropbutton',
+        '#dropbutton_type' => 'small',
+        '#links' => [
+          'front' => [
+            'title' => 'front!',
+            'url' => Url::fromRoute('<front>'),
+          ],
+          'in a dropbutton' => [
+            'title' => 'inside a dropbutton',
+            'url' => Url::fromRoute('dialog_renderer_test.modal_content'),
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'modal',
+            ],
+          ],
+        ],
+      ],
+      '#attached' => [
+        'library' => [
+          'core/drupal.ajax',
         ],
       ],
     ];

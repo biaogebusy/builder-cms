@@ -124,7 +124,7 @@ class WebformSettingsAutofillTest extends WebformBrowserTestBase {
     $assert_session->fieldValueEquals('textfield_autofill', '{textfield_autofill}');
     $assert_session->responseNotContains('This submission has been autofilled with your previous submission.');
 
-    // Set custom automfill message.
+    // Set custom autofill message.
     $webform
       ->setSetting('autofill_message', '{autofill_message}')
       ->save();

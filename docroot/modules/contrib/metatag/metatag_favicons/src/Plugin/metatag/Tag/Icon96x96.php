@@ -22,7 +22,7 @@ class Icon96x96 extends LinkSizesBase {
   /**
    * {@inheritdoc}
    */
-  protected function iconSize() {
+  protected function iconSize(): string {
     return '96x96';
   }
 

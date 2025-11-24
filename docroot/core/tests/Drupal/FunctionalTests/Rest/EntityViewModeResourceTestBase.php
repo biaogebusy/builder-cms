@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Rest;
 
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
@@ -10,7 +12,7 @@ abstract class EntityViewModeResourceTestBase extends ConfigEntityResourceTestBa
   /**
    * {@inheritdoc}
    *
-   * @todo: Remove 'field_ui' when https://www.drupal.org/node/2867266.
+   * @todo Remove 'field_ui' when https://www.drupal.org/node/2867266.
    */
   protected static $modules = ['user', 'field_ui'];
 
@@ -38,6 +40,7 @@ abstract class EntityViewModeResourceTestBase extends ConfigEntityResourceTestBa
     $entity_view_mode = EntityViewMode::create([
       'id' => 'user.test',
       'label' => 'Test',
+      'description' => '',
       'targetEntityType' => 'user',
     ]);
     $entity_view_mode->save();
@@ -55,6 +58,7 @@ abstract class EntityViewModeResourceTestBase extends ConfigEntityResourceTestBa
           'user',
         ],
       ],
+      'description' => '',
       'id' => 'user.test',
       'label' => 'Test',
       'langcode' => 'en',

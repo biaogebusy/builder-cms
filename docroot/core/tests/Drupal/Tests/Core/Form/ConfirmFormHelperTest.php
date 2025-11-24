@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Core\Form\ConfirmFormHelper;
@@ -19,7 +21,7 @@ class ConfirmFormHelperTest extends UnitTestCase {
    *
    * Tests the cancel link title.
    */
-  public function testCancelLinkTitle() {
+  public function testCancelLinkTitle(): void {
     $cancel_text = 'Cancel text';
     $form = $this->createMock('Drupal\Core\Form\ConfirmFormInterface');
     $form->expects($this->any())
@@ -36,7 +38,7 @@ class ConfirmFormHelperTest extends UnitTestCase {
    *
    * Tests a cancel link route.
    */
-  public function testCancelLinkRoute() {
+  public function testCancelLinkRoute(): void {
     $route_name = 'foo_bar';
     $cancel_route = new Url($route_name);
     $form = $this->createMock('Drupal\Core\Form\ConfirmFormInterface');
@@ -53,7 +55,7 @@ class ConfirmFormHelperTest extends UnitTestCase {
    *
    * Tests a cancel link route with parameters.
    */
-  public function testCancelLinkRouteWithParams() {
+  public function testCancelLinkRouteWithParams(): void {
     $expected = Url::fromRoute('foo_bar.baz', ['baz' => 'banana'], ['absolute' => TRUE]);
     $form = $this->createMock('Drupal\Core\Form\ConfirmFormInterface');
     $form->expects($this->any())
@@ -69,7 +71,7 @@ class ConfirmFormHelperTest extends UnitTestCase {
    *
    * Tests a cancel link route with a URL object.
    */
-  public function testCancelLinkRouteWithUrl() {
+  public function testCancelLinkRouteWithUrl(): void {
     $cancel_route = new Url(
       'foo_bar.baz', [
         'baz' => 'banana',
@@ -94,7 +96,7 @@ class ConfirmFormHelperTest extends UnitTestCase {
    *
    * @dataProvider providerTestCancelLinkDestination
    */
-  public function testCancelLinkDestination($destination) {
+  public function testCancelLinkDestination($destination): void {
     $query = ['destination' => $destination];
     $form = $this->createMock('Drupal\Core\Form\ConfirmFormInterface');
 
@@ -117,7 +119,7 @@ class ConfirmFormHelperTest extends UnitTestCase {
   /**
    * Provides test data for testCancelLinkDestination().
    */
-  public function providerTestCancelLinkDestination() {
+  public static function providerTestCancelLinkDestination() {
     $data = [];
     $data[] = ['baz'];
     $data[] = ['/baz'];

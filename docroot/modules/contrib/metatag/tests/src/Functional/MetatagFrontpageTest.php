@@ -3,7 +3,6 @@
 namespace Drupal\Tests\metatag\Functional;
 
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Ensures that meta tags are rendering correctly on home page.
@@ -13,7 +12,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 class MetatagFrontpageTest extends BrowserTestBase {
 
   use MetatagHelperTrait;
-  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -76,7 +74,7 @@ class MetatagFrontpageTest extends BrowserTestBase {
       'description' => 'Test description',
       'keywords' => 'testing,keywords',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $session->statusCodeEquals(200);
     $session->pageTextContains('Saved the Front page Metatag defaults.');
 
@@ -121,19 +119,21 @@ class MetatagFrontpageTest extends BrowserTestBase {
     ];
     $this->drupalGet('admin/config/system/site-information');
     $session->statusCodeEquals(200);
-    $this->submitForm($site_edit, $this->t('Save configuration'));
+    $this->submitForm($site_edit, 'Save configuration');
     $session->pageTextContains('The configuration options have been saved.');
-    return;
 
     // @todo Finish this?
-    $this->drupalGet('test-page');
-    $session->statusCodeEquals(200);
-    foreach ($edit as $metatag => $metatag_value) {
-      $xpath = $this->xpath("//meta[@name='" . $metatag . "']");
-      $this->assertCount(1, $xpath, 'Exactly one ' . $metatag . ' meta tag found.');
-      $value = $xpath[0]->getAttribute('content');
-      $this->assertEquals($value, $metatag_value);
-    }
+    // @code
+    // $this->drupalGet('test-page');
+    // $session->statusCodeEquals(200);
+    // foreach ($edit as $metatag => $metatag_value) {
+    //   $xpath = $this->xpath("//meta[@name='" . $metatag . "']");
+    //   $assert_message = 'Exactly one ' . $metatag . ' meta tag found.';
+    //   $this->assertCount(1, $xpath, $assert_message);
+    //   $value = $xpath[0]->getAttribute('content');
+    //   $this->assertEquals($value, $metatag_value);
+    // }
+    // @endcode
   }
 
   /**
@@ -144,7 +144,7 @@ class MetatagFrontpageTest extends BrowserTestBase {
     $this->drupalGet('admin/config/search/metatag/front/delete');
     $session = $this->assertSession();
     $session->statusCodeEquals(200);
-    $this->submitForm([], $this->t('Delete'));
+    $this->submitForm([], 'Delete');
     $session->statusCodeEquals(200);
     $session->pageTextContains('Deleted Front page defaults.');
 
@@ -179,7 +179,7 @@ class MetatagFrontpageTest extends BrowserTestBase {
     $edit = [
       'site_frontpage' => '/test-page',
     ];
-    $this->submitForm($edit, $this->t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     $session->pageTextContains('The configuration options have been saved.');
 
     // Front page is custom route.

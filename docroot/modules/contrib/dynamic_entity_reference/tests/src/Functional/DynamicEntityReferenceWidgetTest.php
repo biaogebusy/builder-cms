@@ -123,12 +123,9 @@ class DynamicEntityReferenceWidgetTest extends BrowserTestBase {
     // Only 1 target_type is configured, so this field is not available on the
     // node add/edit page.
     $assert_session->fieldNotExists($field_name . '[0][target_type]');
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
     $node = $this->drupalGetNodeByTitle($title);
-    $assert_session->responseContains(t('@type %title has been created.', [
-      '@type' => 'reference_content',
-      '%title' => $node->toLink($node->label())->toString(),
-    ]));
+    $assert_session->pageTextContains(sprintf('reference_content %s has been created.', $node->label()));
     $nodes = \Drupal::entityTypeManager()
       ->getStorage('node')
       ->loadByProperties(['title' => $title]);
@@ -157,12 +154,10 @@ class DynamicEntityReferenceWidgetTest extends BrowserTestBase {
       $field_name => $referenced_node->getEntityTypeId() . '-' . $referenced_node->id(),
     ];
     $this->drupalGet(Url::fromRoute('node.add', ['node_type' => 'reference_content']));
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
+
     $node = $this->drupalGetNodeByTitle($title);
-    $assert_session->responseContains(t('@type %title has been created.', [
-      '@type' => 'reference_content',
-      '%title' => $node->toLink($node->label())->toString(),
-    ]));
+    $assert_session->pageTextContains(sprintf('reference_content %s has been created.', $node->label()));
     $nodes = \Drupal::entityTypeManager()
       ->getStorage('node')
       ->loadByProperties(['title' => $title]);
@@ -195,12 +190,10 @@ class DynamicEntityReferenceWidgetTest extends BrowserTestBase {
     // Only one bundle is configuerd, so optgroup should not be added to
     // the select element.
     $assert_session->elementNotContains('css', '[name=' . $field_name . ']', 'optgroup');
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
+
     $node = $this->drupalGetNodeByTitle($title);
-    $assert_session->responseContains(t('@type %title has been created.', [
-      '@type' => 'reference_content',
-      '%title' => $node->toLink($node->label())->toString(),
-    ]));
+    $assert_session->pageTextContains(sprintf('reference_content %s has been created.', $node->label()));
     $nodes = \Drupal::entityTypeManager()
       ->getStorage('node')
       ->loadByProperties(['title' => $title]);
@@ -225,7 +218,6 @@ class DynamicEntityReferenceWidgetTest extends BrowserTestBase {
     $assert_session->elementContains('css', '[name=' . $field_name . ']', 'optgroup');
 
     $field_config->setSetting('node', $node_setting);
-
   }
 
 }

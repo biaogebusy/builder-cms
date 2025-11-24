@@ -22,6 +22,6 @@ interface ViewsBulkOperationsPreconfigurationInterface {
    * @return array
    *   The action configuration form element.
    */
-  public function buildPreConfigurationForm(array $element, array $values, FormStateInterface $form_state);
+  public function buildPreConfigurationForm(array $element, array $values, FormStateInterface $form_state): array;
 
 }

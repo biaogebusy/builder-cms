@@ -2,15 +2,18 @@
 
 namespace Drupal\Tests\metatag\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 
 /**
  * Base class for ensuring that the Metatag field works correctly.
  */
 abstract class MetatagFieldTestBase extends BrowserTestBase {
 
+  use FieldUiTestTrait;
   use StringTranslationTrait;
 
   /**
@@ -149,7 +152,7 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
   /**
    * Any additional configuration that's needed for this entity type.
    */
-  protected function setUpEntityType() {}
+  protected function setUpEntityType(): void {}
 
   /**
    * A list of default values to add to the entity being created.
@@ -157,7 +160,7 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
    * @return array
    *   Default values.
    */
-  protected function entityDefaultValues($title = 'Barfoo') {
+  protected function entityDefaultValues($title = 'Barfoo'): array {
     return [
       $this->entityTitleField . '[0][value]' => $title,
     ];
@@ -166,17 +169,9 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
   /**
    * Add a Metatag field to this entity type.
    */
-  protected function addField() {
+  protected function addField(): void {
     // Add a metatag field to the entity type test_entity.
-    $this->drupalGet($this->entityFieldAdminPath . '/add-field');
-    $this->assertSession()->statusCodeEquals(200);
-    $edit = [
-      'label' => 'Metatag',
-      'field_name' => 'metatag',
-      'new_storage_type' => 'metatag',
-    ];
-    $this->submitForm($edit, $this->t('Save and continue'));
-    $this->submitForm([], $this->t('Save field settings'));
+    $this->fieldUIAddNewField($this->entityFieldAdminPath, 'metatag', 'Metatag', 'metatag');
 
     // Clear all settings.
     $this->container->get('entity_field.manager')->clearCachedFieldDefinitions();
@@ -244,9 +239,6 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
     $session->statusCodeEquals(200);
     $session->pageTextNotContains('Fatal error');
 
-    // Allow the fields to be customized if needed.
-    $edit = $this->entityDefaultValues('Barfoo');
-
     // If this entity type supports defaults then verify the global default is
     // not present but that the entity default *is* present.
     $session->fieldValueEquals('field_metatag[0][basic][metatag_test_tag]', $entity_values['metatag_test_tag']);
@@ -267,10 +259,17 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
    * Confirm a field can be added to the entity bundle.
    */
   public function testFieldCanBeAdded() {
-    $this->drupalGet($this->entityFieldAdminPath . '/add-field');
+    $this->drupalGet($this->entityFieldAdminPath . '/fields/add-field');
     $session = $this->assertSession();
     $session->statusCodeEquals(200);
-    $session->responseContains('<option value="metatag">' . $this->t('Meta tags') . '</option>');
+
+    // Check both the title and the description, both of which should be links.
+    $result = DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '11.2',
+      currentCallable: fn() => $session->linkExists('Meta tags'),
+      deprecatedCallable: fn() => $session->elementExists('css', 'label:contains("Meta tags")'),
+    );
   }
 
   /**
@@ -430,8 +429,8 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
     // @todo Confirm the values output correctly.
     // Check the output.
     // @todo Test this.
-    $all_tags = metatag_generate_entity_all_tags($entity);
-    $overrides = metatag_generate_entity_overrides($entity);
+    metatag_generate_entity_all_tags($entity);
+    metatag_generate_entity_overrides($entity);
   }
 
   /**
@@ -439,7 +438,7 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
    *
    * @todo Finish this.
    */
-  public function tofixTestEntityField() {
+  public function todoTestEntityField() {
     // Add a field to the entity type.
     $this->addField();
 
@@ -451,7 +450,7 @@ abstract class MetatagFieldTestBase extends BrowserTestBase {
     $edit = $this->entityDefaultValues() + [
       'field_metatag[0][basic][metatag_test_tag]' => 'Kilimanjaro',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $entities = \Drupal::entityTypeManager()
       ->getStorage('entity_test')
       ->loadByProperties([$this->entityTitleField => 'Barfoo']);

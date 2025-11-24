@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate\d7;
 
 use Drupal\file\Entity\File;
@@ -33,7 +35,7 @@ class MigrateFileTest extends MigrateDrupal7TestBase {
   protected function getFileMigrationInfo() {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
-      'size' => '3620',
+      'size' => 3620,
       'base_path' => 'public://',
       'plugin_id' => 'd7_file',
     ];
@@ -42,8 +44,8 @@ class MigrateFileTest extends MigrateDrupal7TestBase {
   /**
    * Tests that all expected files are migrated.
    */
-  public function testFileMigration() {
-    $this->assertEntity(1, 'cube.jpeg', 'public://cube.jpeg', 'image/jpeg', '3620', '1421727515', '1421727515', '1');
+  public function testFileMigration(): void {
+    $this->assertEntity(1, 'cube.jpeg', 'public://cube.jpeg', 'image/jpeg', 3620, 1421727515, 1421727515, '1');
     // Ensure temporary file was not migrated.
     $this->assertNull(File::load(4));
   }

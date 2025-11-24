@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Traits;
 
 use Drupal\Component\Serialization\Json;
@@ -7,7 +9,7 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Url;
 use Drupal\entity_test\Entity\EntityTest;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\jsonapi\Functional\ResourceTestBase;
 use GuzzleHttp\RequestOptions;
 
@@ -16,7 +18,7 @@ use GuzzleHttp\RequestOptions;
  */
 trait CommonCollectionFilterAccessTestPatternsTrait {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Implements ::testCollectionFilterAccess() for pure permission-based access.
@@ -103,12 +105,11 @@ trait CommonCollectionFilterAccessTestPatternsTrait {
     $message = "The current user is not authorized to filter by the `spotlight` field, given in the path `spotlight`.";
     $expected_cache_tags = ['4xx-response', 'http_response'];
     $expected_cache_contexts = [
-      'url.query_args:filter',
-      'url.query_args:sort',
+      'url.query_args',
       'url.site',
       'user.permissions',
     ];
-    $this->assertResourceErrorResponse(403, $message, $collection_filter_url, $response, FALSE, $expected_cache_tags, $expected_cache_contexts, FALSE, 'MISS');
+    $this->assertResourceErrorResponse(403, $message, $collection_filter_url, $response, FALSE, $expected_cache_tags, $expected_cache_contexts, NULL, 'MISS');
     // And ensure the it is allowed when the proper permission is granted.
     $this->grantPermissionsToTestedRole(['filter by spotlight field']);
     $response = $this->request('GET', $collection_filter_url, $request_options);

@@ -17,7 +17,7 @@ Exif extensions which only provides read capabilities.
   a. Prepare collecting metadata for the file located at a desired URI:
 
 ```php
-  $fmdm = \Drupal::service('file_metadata_manager');
+  $fmdm = \Drupal::service(FileMetadataManagerInterface::class);
   $my_file_metadata = $fmdm->uri('public::/my_directory/test-exif.jpeg');
 ```
 
@@ -117,7 +117,7 @@ b. If you are _adding_ a TAG that was not existing before, you need to pass a
 
 ```php
   ...
-  $artist_tag = \Drupal::service('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('Artist');
+  $artist_tag = \Drupal::service(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('Artist');
   $value = 'MEEeeee!';
   $artist = new PelEntryAscii($artist_tag['tag'], $value);
   $my_file_metadata->setMetadata('exif', 'Artist', $artist);

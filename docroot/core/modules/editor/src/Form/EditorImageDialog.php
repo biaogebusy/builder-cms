@@ -17,6 +17,11 @@ use Drupal\Core\Entity\EntityStorageInterface;
 /**
  * Provides an image dialog for text editors.
  *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
+ * replacement.
+ *
+ * @see https://www.drupal.org/node/3291493
+ *
  * @internal
  */
 class EditorImageDialog extends FormBase {
@@ -35,6 +40,7 @@ class EditorImageDialog extends FormBase {
    *   The file storage service.
    */
   public function __construct(EntityStorageInterface $file_storage) {
+    @trigger_error(__NAMESPACE__ . '\EditorImageDialog is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3291493', E_USER_DEPRECATED);
     $this->fileStorage = $file_storage;
   }
 
@@ -64,7 +70,7 @@ class EditorImageDialog extends FormBase {
    * @param \Drupal\editor\Entity\Editor $editor
    *   The text editor to which this dialog corresponds.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Editor $editor = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Editor $editor = NULL) {
     // This form is special, in that the default values do not come from the
     // server side, but from the client side, from a text editor. We must cache
     // this data in form state, because when the form is rebuilt, we will be
@@ -90,25 +96,15 @@ class EditorImageDialog extends FormBase {
 
     // Construct strings to use in the upload validators.
     $image_upload = $editor->getImageUploadSettings();
-    if (!empty($image_upload['max_dimensions']['width']) || !empty($image_upload['max_dimensions']['height'])) {
-      $max_dimensions = $image_upload['max_dimensions']['width'] . 'x' . $image_upload['max_dimensions']['height'];
-    }
-    else {
-      $max_dimensions = 0;
-    }
-    $max_filesize = min(Bytes::toNumber($image_upload['max_size']), Environment::getUploadMaxSize());
     $existing_file = isset($image_element['data-entity-uuid']) ? \Drupal::service('entity.repository')->loadEntityByUuid('file', $image_element['data-entity-uuid']) : NULL;
     $fid = $existing_file ? $existing_file->id() : NULL;
 
     $form['fid'] = [
       '#title' => $this->t('Image'),
       '#type' => 'managed_file',
-      '#upload_location' => $image_upload['scheme'] . '://' . $image_upload['directory'],
       '#default_value' => $fid ? [$fid] : NULL,
       '#upload_validators' => [
-        'file_validate_extensions' => ['gif png jpg jpeg'],
-        'file_validate_size' => [$max_filesize],
-        'file_validate_image_resolution' => [$max_dimensions],
+        'FileExtension' => ['extensions' => 'gif png jpg jpeg'],
       ],
       '#required' => TRUE,
     ];
@@ -126,6 +122,17 @@ class EditorImageDialog extends FormBase {
     if ($image_upload['status']) {
       $form['attributes']['src']['#access'] = FALSE;
       $form['attributes']['src']['#required'] = FALSE;
+
+      if (!empty($image_upload['max_dimensions']['width']) || !empty($image_upload['max_dimensions']['height'])) {
+        $max_dimensions = $image_upload['max_dimensions']['width'] . 'x' . $image_upload['max_dimensions']['height'];
+      }
+      else {
+        $max_dimensions = 0;
+      }
+      $max_filesize = min(Bytes::toNumber($image_upload['max_size'] ?? 0), Environment::getUploadMaxSize());
+      $form['fid']['#upload_location'] = $image_upload['scheme'] . '://' . ($image_upload['directory'] ?? '');
+      $form['fid']['#upload_validators']['FileSizeLimit'] = ['fileLimit' => $max_filesize];
+      $form['fid']['#upload_validators']['FileImageDimensions'] = ['maxDimensions' => $max_dimensions];
     }
     else {
       $form['fid']['#access'] = FALSE;

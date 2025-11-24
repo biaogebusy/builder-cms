@@ -38,3 +38,7 @@
   display: block;
   clear: both;
 }
+
+.chosen-container:has(+ .chosen-helper-btn) {
+  margin-right: var(--space-s, 0.75rem);
+}

@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_order\Entity\OrderType;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\commerce_promotion\Entity\PromotionInterface;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests promotion compatibility options.
@@ -52,7 +52,7 @@ class PromotionCompatibilityTest extends OrderKernelTestBase {
     ]);
     $order_item->save();
 
-    $this->order = Order::create([
+    $order = Order::create([
       'type' => 'default',
       'state' => 'completed',
       'mail' => 'test@example.com',
@@ -63,6 +63,8 @@ class PromotionCompatibilityTest extends OrderKernelTestBase {
       'total_price' => new Price('100.00', 'USD'),
       'uid' => $this->createUser()->id(),
     ]);
+    $order->save();
+    $this->order = $this->reloadEntity($order);
   }
 
   /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\block\Kernel\Plugin\migrate\source\BlockTest;
@@ -21,7 +23,7 @@ class BlockTranslationTest extends BlockTest {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     // Test data is the same as BlockTest, but with the addition of i18n_blocks.
     $tests = parent::providerSource();
 

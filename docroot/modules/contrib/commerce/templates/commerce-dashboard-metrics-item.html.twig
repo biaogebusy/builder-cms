@@ -1,0 +1,23 @@
+{%
+  set classes = [
+    'metrics-item',
+  ]
+%}
+{%
+  set metric_value_classes = [
+    'metrics-item__value',
+  ]
+%}
+<div{{ attributes.addClass(classes) }}>
+  <span class="metrics-item__icon"></span>
+  <div class="metrics-item__data">
+    <h5 class="metrics-item__label">{{ title }}</h5>
+    {% if values %}
+      {% for value in values %}
+        <span{{ create_attribute(metric_value_attributes).addClass(metric_value_classes) }}>{{ value }}</span>
+      {% endfor %}
+    {% else %}
+      <span class="metrics-item__value">{{ '-'|t }}</span>
+    {% endif %}
+  </div>
+</div>

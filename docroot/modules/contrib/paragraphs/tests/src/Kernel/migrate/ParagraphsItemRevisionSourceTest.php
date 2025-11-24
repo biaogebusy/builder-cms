@@ -22,9 +22,9 @@ class ParagraphsItemRevisionSourceTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
-    $data = $this->getSourceData();
-    $data[0]['expected_results'] = [
+  public static function providerSource() {
+    $data = static::getSourceData();
+    $data[0]['expected_data'] = [
       [
         'item_id' => '2',
         'revision_id' => '2',

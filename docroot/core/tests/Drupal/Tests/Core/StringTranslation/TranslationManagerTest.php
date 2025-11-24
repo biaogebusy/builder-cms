@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\StringTranslation\TranslationManagerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\StringTranslation;
 
@@ -28,6 +25,8 @@ class TranslationManagerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->translationManager = new TestTranslationManager();
   }
 
@@ -35,7 +34,7 @@ class TranslationManagerTest extends UnitTestCase {
    * Provides some test data for formatPlural()
    * @return array
    */
-  public function providerTestFormatPlural() {
+  public static function providerTestFormatPlural() {
     return [
       [1, 'Singular', '@count plural', [], [], 'Singular'],
       [2, 'Singular', '@count plural', [], [], '2 plural'],
@@ -50,7 +49,7 @@ class TranslationManagerTest extends UnitTestCase {
   /**
    * @dataProvider providerTestFormatPlural
    */
-  public function testFormatPlural($count, $singular, $plural, array $args, array $options, $expected) {
+  public function testFormatPlural($count, $singular, $plural, array $args, array $options, $expected): void {
     $langcode = empty($options['langcode']) ? 'fr' : $options['langcode'];
     $translator = $this->createMock('\Drupal\Core\StringTranslation\Translator\TranslatorInterface');
     $translator->expects($this->once())
@@ -78,7 +77,7 @@ class TranslationManagerTest extends UnitTestCase {
    *
    * @dataProvider providerTestTranslatePlaceholder
    */
-  public function testTranslatePlaceholder($string, array $args, $expected_string) {
+  public function testTranslatePlaceholder($string, array $args, $expected_string): void {
     $actual = $this->translationManager->translate($string, $args);
     $this->assertInstanceOf(MarkupInterface::class, $actual);
     $this->assertEquals($expected_string, (string) $actual);
@@ -89,7 +88,7 @@ class TranslationManagerTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerTestTranslatePlaceholder() {
+  public static function providerTestTranslatePlaceholder() {
     return [
       ['foo @bar', ['@bar' => 'bar'], 'foo bar'],
       ['bar %baz', ['%baz' => 'baz'], 'bar <em class="placeholder">baz</em>'],

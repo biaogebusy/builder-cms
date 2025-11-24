@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Kernel\Views;
 
 use Drupal\views\Views;
@@ -22,7 +24,7 @@ class OptionsListArgumentTest extends OptionsTestBase {
   /**
    * Tests the options field argument.
    */
-  public function testViewsTestOptionsListArgument() {
+  public function testViewsTestOptionsListArgument(): void {
     $view = Views::getView('test_options_list_argument_numeric');
     $this->executeView($view, [1]);
 

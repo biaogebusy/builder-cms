@@ -56,3 +56,4 @@ implement `\Drupal\Core\Field\FieldItemInterface::generateSampleValue()`.
 Devel Generate automatically uses the values returned by this method during the
 generate process for generating placeholder field values. For more information
 see: https://api.drupal.org/api/drupal/core!lib!Drupal!Core!Field!FieldItemInterface.php/function/FieldItemInterface::generateSampleValue
+- For Drupal 10, the webprofiler module has broken out to its own project at https://www.drupal.org/project/webprofiler

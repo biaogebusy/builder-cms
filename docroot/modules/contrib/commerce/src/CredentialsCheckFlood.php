@@ -14,20 +14,6 @@ use Drupal\Core\Flood\FloodInterface;
 class CredentialsCheckFlood implements CredentialsCheckFloodInterface {
 
   /**
-   * The flood controller.
-   *
-   * @var \Drupal\Core\Flood\FloodInterface
-   */
-  protected $flood;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The flood configuration.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
@@ -46,15 +32,17 @@ class CredentialsCheckFlood implements CredentialsCheckFloodInterface {
    *
    * @param \Drupal\Core\Flood\FloodInterface $flood
    *   The flood controller.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    */
-  public function __construct(FloodInterface $flood, EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory) {
-    $this->flood = $flood;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->config = $config_factory->get('user.flood');
+  public function __construct(
+    protected FloodInterface $flood,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    ConfigFactoryInterface $configFactory,
+  ) {
+    $this->config = $configFactory->get('user.flood');
   }
 
   /**

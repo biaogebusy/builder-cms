@@ -30,15 +30,20 @@ class MultiselectWidget extends OptionsWidgetBase {
     /** @var \Drupal\multiselect\Element\Multiselect $element */
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
 
-    // Prepare some properties for the child methods to build the actual form
-    // element.
-    $this->required = $element['#required'];
-    $this->multiple = $this->fieldDefinition->getFieldStorageDefinition()->isMultiple();
-    $this->has_value = isset($items[0]->{$this->column});
+    // Where parents exist, adjust the name appropriately.
+    if (!empty($element["#field_parents"]) && is_array($element["#field_parents"])) {
+      $parents = array_merge($element["#field_parents"], [$items->getName()]);
+      $name = array_shift($parents);
+      $name .= '[' . implode('][', $parents) . ']';
+    }
+    else {
+      $name = $items->getName();
+    }
 
     $element += [
       '#type' => 'multiselect',
-      '#name' => $items->getName(),
+      '#name' => $name,
+      '#parents' => $element['#field_parents'],
       '#size' => $this->getSetting('size'),
       '#options' => $this->getOptions($items->getEntity()),
       '#default_value' => $this->getSelectedOptions($items, $delta),

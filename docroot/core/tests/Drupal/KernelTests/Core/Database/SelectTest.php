@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\InvalidQueryException;
@@ -17,7 +19,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests rudimentary SELECT statements.
    */
-  public function testSimpleSelect() {
+  public function testSimpleSelect(): void {
     $query = $this->connection->select('test');
     $query->addField('test', 'name');
     $query->addField('test', 'age', 'age');
@@ -29,7 +31,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests rudimentary SELECT statement with a COMMENT.
    */
-  public function testSimpleComment() {
+  public function testSimpleComment(): void {
     $query = $this->connection->select('test')->comment('Testing query comments');
     $query->addField('test', 'name');
     $query->addField('test', 'age', 'age');
@@ -47,7 +49,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests query COMMENT system against vulnerabilities.
    */
-  public function testVulnerableComment() {
+  public function testVulnerableComment(): void {
     $query = $this->connection->select('test')->comment('Testing query comments */ SELECT nid FROM {node}; --');
     $query->addField('test', 'name');
     $query->addField('test', 'age', 'age');
@@ -104,7 +106,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests basic conditionals on SELECT statements.
    */
-  public function testSimpleSelectConditional() {
+  public function testSimpleSelectConditional(): void {
     $query = $this->connection->select('test');
     $name_field = $query->addField('test', 'name');
     $age_field = $query->addField('test', 'age', 'age');
@@ -124,7 +126,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests SELECT statements with expressions.
    */
-  public function testSimpleSelectExpression() {
+  public function testSimpleSelectExpression(): void {
     $query = $this->connection->select('test');
     $name_field = $query->addField('test', 'name');
     $age_field = $query->addExpression("[age]*2", 'double_age');
@@ -144,7 +146,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests SELECT statements with multiple expressions.
    */
-  public function testSimpleSelectExpressionMultiple() {
+  public function testSimpleSelectExpressionMultiple(): void {
     $query = $this->connection->select('test');
     $name_field = $query->addField('test', 'name');
     $age_double_field = $query->addExpression("[age]*2");
@@ -166,7 +168,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests adding multiple fields to a SELECT statement at the same time.
    */
-  public function testSimpleSelectMultipleFields() {
+  public function testSimpleSelectMultipleFields(): void {
     $record = $this->connection->select('test')
       ->fields('test', ['id', 'name', 'age', 'job'])
       ->condition('age', 27)
@@ -189,7 +191,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests adding all fields from a given table to a SELECT statement.
    */
-  public function testSimpleSelectAllFields() {
+  public function testSimpleSelectAllFields(): void {
     $record = $this->connection->select('test')
       ->fields('test')
       ->condition('age', 27)
@@ -212,7 +214,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that a comparison with NULL is always FALSE.
    */
-  public function testNullCondition() {
+  public function testNullCondition(): void {
     $this->ensureSampleDataNull();
 
     $names = $this->connection->select('test_null', 'tn')
@@ -226,7 +228,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can find a record with a NULL value.
    */
-  public function testIsNullCondition() {
+  public function testIsNullCondition(): void {
     $this->ensureSampleDataNull();
 
     $names = $this->connection->select('test_null', 'tn')
@@ -235,13 +237,13 @@ class SelectTest extends DatabaseTestBase {
       ->execute()->fetchCol();
 
     $this->assertCount(1, $names, 'Correct number of records found with NULL age.');
-    $this->assertEquals('Fozzie', $names[0], 'Correct record returned for NULL age.');
+    $this->assertEquals('Ernie', $names[0], 'Correct record returned for NULL age.');
   }
 
   /**
    * Tests that we can find a record without a NULL value.
    */
-  public function testIsNotNullCondition() {
+  public function testIsNotNullCondition(): void {
     $this->ensureSampleDataNull();
 
     $names = $this->connection->select('test_null', 'tn')
@@ -258,7 +260,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can force a query to return an empty result.
    */
-  public function testAlwaysFalseCondition() {
+  public function testAlwaysFalseCondition(): void {
     $names = $this->connection->select('test', 'test')
       ->fields('test', ['name'])
       ->condition('age', 27)
@@ -279,7 +281,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can force an extended query to return an empty result.
    */
-  public function testExtenderAlwaysFalseCondition() {
+  public function testExtenderAlwaysFalseCondition(): void {
     $names = $this->connection->select('test', 'test')
       ->extend(SelectExtender::class)
       ->fields('test', ['name'])
@@ -305,7 +307,7 @@ class SelectTest extends DatabaseTestBase {
    * This is semantically equal to UNION DISTINCT, so we don't explicitly test
    * that.
    */
-  public function testUnion() {
+  public function testUnion(): void {
     $query_1 = $this->connection->select('test', 't')
       ->fields('t', ['name'])
       ->condition('age', [27, 28], 'IN');
@@ -327,7 +329,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can UNION ALL multiple SELECT queries together.
    */
-  public function testUnionAll() {
+  public function testUnionAll(): void {
     $query_1 = $this->connection->select('test', 't')
       ->fields('t', ['name'])
       ->condition('age', [27, 28], 'IN');
@@ -351,7 +353,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can get a count query for a UNION Select query.
    */
-  public function testUnionCount() {
+  public function testUnionCount(): void {
     $query_1 = $this->connection->select('test', 't')
       ->fields('t', ['name', 'age'])
       ->condition('age', [27, 28], 'IN');
@@ -371,7 +373,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can UNION multiple Select queries together and set the ORDER.
    */
-  public function testUnionOrder() {
+  public function testUnionOrder(): void {
     // This gives George and Ringo.
     $query_1 = $this->connection->select('test', 't')
       ->fields('t', ['name'])
@@ -400,7 +402,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that we can UNION multiple Select queries together with and a LIMIT.
    */
-  public function testUnionOrderLimit() {
+  public function testUnionOrderLimit(): void {
     // This gives George and Ringo.
     $query_1 = $this->connection->select('test', 't')
       ->fields('t', ['name'])
@@ -441,7 +443,7 @@ class SelectTest extends DatabaseTestBase {
    * order each time, the only way this could happen is if we have successfully
    * triggered the database's random ordering functionality.
    */
-  public function testRandomOrder() {
+  public function testRandomOrder(): void {
     // Use 52 items, so the chance that this test fails by accident will be the
     // same as the chance that a deck of cards will come out in the same order
     // after shuffling it (in other words, nearly impossible).
@@ -498,7 +500,7 @@ class SelectTest extends DatabaseTestBase {
    *     - the regular expression pattern to search for.
    *     - the regular expression operator 'REGEXP' or 'NOT REGEXP'.
    */
-  public function providerRegularExpressionCondition() {
+  public static function providerRegularExpressionCondition() {
     return [
       [['John'], 'name', 'hn$', 'REGEXP'],
       [['Paul'], 'name', '^Pau', 'REGEXP'],
@@ -521,7 +523,7 @@ class SelectTest extends DatabaseTestBase {
    *
    * @dataProvider providerRegularExpressionCondition
    */
-  public function testRegularExpressionCondition($expected, $column, $pattern, $operator) {
+  public function testRegularExpressionCondition($expected, $column, $pattern, $operator): void {
     $database = $this->container->get('database');
     $database->insert('test')
       ->fields([
@@ -543,7 +545,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests that aliases are renamed when they are duplicates.
    */
-  public function testSelectDuplicateAlias() {
+  public function testSelectDuplicateAlias(): void {
     $query = $this->connection->select('test', 't');
     $alias1 = $query->addField('t', 'name', 'the_alias');
     $alias2 = $query->addField('t', 'age', 'the_alias');
@@ -551,24 +553,9 @@ class SelectTest extends DatabaseTestBase {
   }
 
   /**
-   * Tests deprecation of the 'throw_exception' option.
-   *
-   * @group legacy
-   */
-  public function testLegacyThrowExceptionOption(): void {
-    $this->expectDeprecation("Passing a 'throw_exception' option to %AExceptionHandler::handleExecutionException is deprecated in drupal:9.2.0 and is removed in drupal:10.0.0. Always catch exceptions. See https://www.drupal.org/node/3201187");
-    // This query will fail because the table does not exist.
-    $this->assertNull($this->connection->select('some_table_that_does_not_exist', 't', ['throw_exception' => FALSE])
-      ->fields('t')
-      ->countQuery()
-      ->execute()
-    );
-  }
-
-  /**
    * Tests that an invalid count query throws an exception.
    */
-  public function testInvalidSelectCount() {
+  public function testInvalidSelectCount(): void {
     $this->expectException(DatabaseExceptionWrapper::class);
     // This query will fail because the table does not exist.
     $this->connection->select('some_table_that_does_not_exist', 't')
@@ -580,7 +567,7 @@ class SelectTest extends DatabaseTestBase {
   /**
    * Tests thrown exception for IN query conditions with an empty array.
    */
-  public function testEmptyInCondition() {
+  public function testEmptyInCondition(): void {
     try {
       $this->connection->select('test', 't')
         ->fields('t')
@@ -604,6 +591,56 @@ class SelectTest extends DatabaseTestBase {
     catch (InvalidQueryException $e) {
       $this->assertEquals("Query condition 'age NOT IN ()' cannot be empty.", $e->getMessage());
     }
+  }
+
+  /**
+   * Data provider for testNonArrayOperatorWithArrayValueCondition().
+   *
+   * @return array[]
+   *   Array of non array compatible operators and its value in the expected
+   *   exception message.
+   */
+  public static function providerNonArrayOperatorWithArrayValueCondition() {
+    return [
+      '=' => ['=', '='],
+      '>' => ['>', '>'],
+      '<' => ['<', '<'],
+      '>=' => ['>=', '>='],
+      '<=' => ['<=', '<='],
+      'IS NULL' => ['IS NULL', 'IS NULL'],
+      'IS NOT NULL' => ['IS NOT NULL', 'IS NOT NULL'],
+      'Empty string' => ['', '='],
+      'Not set' => [NULL, '='],
+    ];
+  }
+
+  /**
+   * Tests thrown exception for non array operator conditions with array value.
+   *
+   * @dataProvider providerNonArrayOperatorWithArrayValueCondition
+   */
+  public function testNonArrayOperatorWithArrayValueCondition($operator, $operator_in_exception_message): void {
+    $this->expectException(InvalidQueryException::class);
+    $this->expectExceptionMessage("Query condition 'age " . $operator_in_exception_message . " 26, 27' must have an array compatible operator.");
+
+    $this->connection->select('test', 't')
+      ->fields('t')
+      ->condition('age', [26, 27], $operator)
+      ->execute();
+  }
+
+  /**
+   * Tests thrown exception for non array operator conditions with array value.
+   *
+   * @dataProvider providerNonArrayOperatorWithArrayValueCondition
+   * @group legacy
+   */
+  public function testNonArrayOperatorWithArrayValueConditionDeprecated($operator, $operator_in_exception_message): void {
+    $this->expectDeprecation('Calling Drupal\Core\Database\Query\Condition::condition() without an array compatible operator is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3350985');
+    $this->connection->select('test', 't')
+      ->fields('t')
+      ->condition('age', [26], $operator)
+      ->execute();
   }
 
 }

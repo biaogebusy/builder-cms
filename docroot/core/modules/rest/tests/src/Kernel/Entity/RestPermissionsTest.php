@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Kernel\Entity;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -27,7 +29,7 @@ class RestPermissionsTest extends KernelTestBase {
   /**
    * @covers ::permissions
    */
-  public function testPermissions() {
+  public function testPermissions(): void {
     RestResourceConfig::create([
       'id' => 'dblog',
       'plugin_id' => 'dblog',

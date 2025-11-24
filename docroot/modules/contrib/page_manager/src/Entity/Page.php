@@ -4,14 +4,14 @@ namespace Drupal\page_manager\Entity;
 
 use Drupal\Component\Plugin\Context\ContextInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Condition\ConditionPluginCollection;
+use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\page_manager\Context\ContextDefinitionFactory;
 use Drupal\page_manager\Event\PageManagerContextEvent;
 use Drupal\page_manager\Event\PageManagerEvents;
 use Drupal\page_manager\PageInterface;
-use Drupal\Core\Condition\ConditionPluginCollection;
-use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\page_manager\PageVariantInterface;
 
 /**
@@ -178,6 +178,7 @@ class Page extends ConfigEntityBase implements PageInterface {
    * Wraps the entity storage for page variants.
    *
    * @return \Drupal\Core\Entity\EntityStorageInterface
+   *   Page variant entity storage.
    */
   protected function variantStorage() {
     return \Drupal::service('entity_type.manager')->getStorage('page_variant');
@@ -472,7 +473,7 @@ class Page extends ConfigEntityBase implements PageInterface {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $vars = parent::__sleep();
 
     // Gathered contexts objects should not be serialized.
@@ -486,7 +487,7 @@ class Page extends ConfigEntityBase implements PageInterface {
   /**
    * {@inheritdoc}
    *
-   * @todo: Remove this as part of https://www.drupal.org/node/2696683.
+   * @todo Remove this as part of https://www.drupal.org/node/2696683.
    */
   protected function urlRouteParameters($rel) {
     if ($rel == 'edit-form') {

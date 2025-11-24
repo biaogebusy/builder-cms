@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -14,7 +16,7 @@ class SetTransparentColorTest extends ImageEffectsTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     $toolkits = parent::providerToolkits();
     // @todo This effect does not work on GraphicsMagick.
     unset($toolkits['ImageMagick-graphicsmagick']);
@@ -33,7 +35,7 @@ class SetTransparentColorTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testSetTransparentColorEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testSetTransparentColorEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Test on the GIF test image.
@@ -90,7 +92,7 @@ class SetTransparentColorTest extends ImageEffectsTestBase {
       $this->assertColorsAreClose($colors[3], $this->getPixelColor($image, 39, 19), 40);
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 

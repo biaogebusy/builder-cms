@@ -49,7 +49,11 @@ function mysite_update_9001() {
       // Look for permissions that started with the old permission string.
       if (strpos($perm, 'access metatag tag') !== FALSE) {
         // Grand the new permission.
-        $role->grantPermission(str_replace('access metatag tag', 'access metatag', $perm));
+        $role->grantPermission(
+          str_replace(
+            'access metatag tag', 'access metatag', $perm
+          )
+        );
 
         // Track that the role's permissions changed.
         $changed = TRUE;

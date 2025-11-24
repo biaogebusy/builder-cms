@@ -19,7 +19,7 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -27,6 +27,9 @@ class LayoutBuilderDisplayVariantTest extends WebDriverTestBase {
   protected static $modules = [
     'layout_builder',
     'page_manager_ui',
+    'page_manager',
+    'field',
+    'dblog',
   ];
 
   /**

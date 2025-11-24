@@ -473,11 +473,16 @@ class Field implements \IteratorAggregate, FieldInterface {
     if (!isset($this->dataDefinition)) {
       $definitions = $this->getIndex()
         ->getPropertyDefinitions($this->getDatasourceId());
+      if ($this->getPropertyPath() === NULL) {
+        $field_label = $this->getLabel() ?: $this->getFieldIdentifier();
+        $index_label = $this->getIndex()->label();
+        throw new SearchApiException("Field '$field_label' on index '$index_label' has no property path set.");
+      }
       $definition = \Drupal::getContainer()
         ->get('search_api.fields_helper')
         ->retrieveNestedProperty($definitions, $this->getPropertyPath());
       if (!$definition) {
-        $field_label = $this->getLabel();
+        $field_label = $this->getLabel() ?: $this->getFieldIdentifier();
         $index_label = $this->getIndex()->label();
         throw new SearchApiException("Could not retrieve data definition for field '$field_label' on index '$index_label'.");
       }
@@ -669,8 +674,7 @@ class Field implements \IteratorAggregate, FieldInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \Traversable {
     return new \ArrayIterator($this->values);
   }
 

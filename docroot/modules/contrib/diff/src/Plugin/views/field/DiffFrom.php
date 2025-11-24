@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\views\field;
 
 use Drupal\Core\Entity\RevisionableInterface;
@@ -21,8 +23,7 @@ class DiffFrom extends DiffPluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-
-    $options['label']['default'] = t('From');
+    $options['label']['default'] = $this->t('From');
     return $options;
   }
 
@@ -41,12 +42,13 @@ class DiffFrom extends DiffPluginBase {
    * @return string|null
    *   The diff_to field ID, or null if the field was not found on the view.
    */
-  protected function getToFieldId() {
+  protected function getToFieldId(): ?string {
     foreach ($this->view->field as $id => $field) {
       if ($field instanceof DiffTo) {
         return $id;
       }
     }
+    return NULL;
   }
 
   /**
@@ -60,7 +62,7 @@ class DiffFrom extends DiffPluginBase {
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    *   Thrown when the user tried to access an action without access to it.
    */
-  public function viewsFormSubmit(array &$form, FormStateInterface $form_state) {
+  public function viewsFormSubmit(array &$form, FormStateInterface $form_state): void {
     if ($form_state->get('step') == 'views_form_views_form') {
       $diff_from = $form_state->getValue($this->options['id']);
       $diff_from_entity = $this->loadEntityFromDiffFormKey($diff_from);

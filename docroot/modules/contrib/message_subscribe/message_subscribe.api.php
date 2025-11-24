@@ -28,7 +28,7 @@ use Drupal\message_subscribe\Subscribers\DeliveryCandidateInterface;
  *   related subscribers.
  *
  * @return \Drupal\message_subscribe\Subscribers\DeliveryCandidateInterface[]
- *   An array, keyed by recipeint user ID, of delivery candidate objects.
+ *   An array, keyed by recipient user ID, of delivery candidate objects.
  */
 function hook_message_subscribe_get_subscribers(MessageInterface $message, array $subscribe_options = [], array $context = []) {
   return [

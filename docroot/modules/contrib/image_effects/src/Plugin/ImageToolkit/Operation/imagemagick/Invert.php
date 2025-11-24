@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines ImageMagick Invert operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_invert",
- *   toolkit = "imagemagick",
- *   operation = "invert",
- *   label = @Translation("Invert"),
- *   description = @Translation("Replace each pixel with its complementary color.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_invert',
+  toolkit: 'imagemagick',
+  operation: 'invert',
+  label: new TranslatableMarkup('Invert'),
+  description: new TranslatableMarkup('Replace each pixel with its complementary color.'),
+)]
 class Invert extends ImagemagickImageToolkitOperationBase {
 
   /**
@@ -29,7 +32,7 @@ class Invert extends ImagemagickImageToolkitOperationBase {
    * {@inheritdoc}
    */
   protected function execute(array $arguments) {
-    $this->addArgument('-negate');
+    $this->addArguments(['-negate']);
     return TRUE;
   }
 

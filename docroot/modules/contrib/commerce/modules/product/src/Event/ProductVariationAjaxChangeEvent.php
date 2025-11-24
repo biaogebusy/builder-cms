@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_product\Event;
 
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\commerce\EventBase;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
-use Drupal\Core\Ajax\AjaxResponse;
 
 /**
  * Defines the product variation ajax change event.
@@ -64,7 +64,7 @@ class ProductVariationAjaxChangeEvent extends EventBase {
    * The ajax response.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
-   *   The ajax reponse.
+   *   The ajax response.
    */
   public function getResponse() {
     return $this->response;

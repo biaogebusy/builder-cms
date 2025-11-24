@@ -200,10 +200,10 @@ class Views {
    *   A list of arrays containing the $view_id and $display_id.
    *
    * @code
-   * array(
-   *   array($view_id, $display_id),
-   *   array($view_id, $display_id),
-   * );
+   * [
+   *   [$view_id, $display_id],
+   *   [$view_id, $display_id],
+   * ];
    * @endcode
    */
   public static function getApplicableViews($type) {
@@ -432,7 +432,7 @@ class Views {
     if (!isset(static::$handlerTypes)) {
       static::$handlerTypes = [
         'field' => [
-          // title
+          // Title
           'title' => static::t('Fields'),
           // Lowercase title for mid-sentence.
           'ltitle' => static::t('fields'),

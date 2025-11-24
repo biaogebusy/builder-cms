@@ -7,8 +7,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\shs\StringTranslationTrait;
 use Drupal\taxonomy\Plugin\views\filter\TaxonomyIndexTid;
-use Drupal\taxonomy\VocabularyStorageInterface;
 use Drupal\taxonomy\TermStorageInterface;
+use Drupal\taxonomy\VocabularyStorageInterface;
 
 /**
  * Filter by term id using Simple hierarchical select widgets.
@@ -24,7 +24,7 @@ class ShsTaxonomyIndexTid extends TaxonomyIndexTid {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, VocabularyStorageInterface $vocabulary_storage, TermStorageInterface $term_storage, AccountInterface $current_user = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, VocabularyStorageInterface $vocabulary_storage, TermStorageInterface $term_storage, ?AccountInterface $current_user = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $vocabulary_storage, $term_storage, $current_user);
 
     // Set translation context.
@@ -47,6 +47,7 @@ class ShsTaxonomyIndexTid extends TaxonomyIndexTid {
     $vocabulary = $this->vocabularyStorage->load($this->options['vid']);
     if (empty($vocabulary) && $this->options['limit']) {
       $form['markup'] = [
+        // cspell:disable-next-line ForbiddenWords
         '#markup' => '<div class="js-form-item form-item">' . $this->t('An invalid vocabulary is selected. Please change it in the options.') . '</div>',
       ];
       return;
@@ -82,7 +83,7 @@ class ShsTaxonomyIndexTid extends TaxonomyIndexTid {
     $identifier = $this->options['expose']['identifier'];
     $default_value = (array) $this->value;
     if (empty($default_value)) {
-      $exposed_input = isset($this->view->getExposedInput()[$identifier]) ? $this->view->getExposedInput()[$identifier] : [];
+      $exposed_input = $this->view->getExposedInput()[$identifier] ?? [];
       if ($exposed_input) {
         $default_value = (array) $exposed_input;
       }
@@ -128,7 +129,7 @@ class ShsTaxonomyIndexTid extends TaxonomyIndexTid {
       'parents' => $parents,
       'defaultValue' => $default_value,
     ];
-    $field_name = isset($this->definition['field_name']) ? $this->definition['field_name'] : $this->realField;
+    $field_name = $this->definition['field_name'] ?? $this->realField;
     $hooks = [
       'shs_js_settings',
       "shs_{$field_name}_js_settings",

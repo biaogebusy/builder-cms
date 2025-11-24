@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate\d6;
 
 use Drupal\file\Entity\File;
@@ -66,7 +68,7 @@ class MigrateUploadTest extends MigrateDrupal6TestBase {
   /**
    * Tests upload migration from Drupal 6 to Drupal 8.
    */
-  public function testUpload() {
+  public function testUpload(): void {
     $this->container->get('entity_type.manager')
       ->getStorage('node')
       ->resetCache([1, 2, 12]);

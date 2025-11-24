@@ -54,7 +54,7 @@ trait DynamicEntityReferenceOptionsTrait {
    */
   public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
     foreach ($values as $index => $value) {
-      list($values[$index]['target_type'], $values[$index]['target_id']) = explode('-', $value['target_id']);
+      [$values[$index]['target_type'], $values[$index]['target_id']] = explode('-', $value['target_id']);
     }
     return $values;
   }

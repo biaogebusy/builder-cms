@@ -31,7 +31,7 @@
     }
   },
   "require": {
-    "drupal/core": "^9.4 || ^10",
+    "drupal/core": "^10.2",
     "php": ">=8.1"
   },
   "require-dev": {
@@ -47,6 +47,7 @@
     "drupal/group": "1.x-dev",
     "drupal/hal" : "1 - 2",
     "drupal/jquery_ui": "1.x-dev",
+    "drupal/jquery_ui_button": "2.x-dev",
     "drupal/jquery_ui_checkboxradio": "2.x-dev",
     "drupal/jquery_ui_datepicker": "2.x-dev",
     "drupal/mailsystem": "4.x-dev",
@@ -60,7 +61,7 @@
     "drupal/variationcache": "1.x-dev"
   },
   "suggest": {
-    "drupal/jquery_ui_checkboxradio": "Provides jQuery UI Checkboxradio library. Required by the Webform jQueryUI Buttons module. The Webform jQueryUI Buttons module is deprecated because jQueryUI is no longer maintained.",
+    "drupal/jquery_ui_buttons": "Provides jQuery UI Checkboxradio library. Required by the Webform jQueryUI Buttons module. The Webform jQueryUI Buttons module is deprecated because jQueryUI is no longer maintained.",
     "drupal/jquery_ui_datepicker": "Provides jQuery UI Datepicker library. Required to support datepickers. The Webform jQueryUI Datepicker module is deprecated because jQueryUI is no longer maintained."
   }
 }

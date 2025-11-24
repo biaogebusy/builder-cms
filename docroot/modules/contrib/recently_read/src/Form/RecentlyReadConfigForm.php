@@ -49,7 +49,7 @@ class RecentlyReadConfigForm extends ConfigFormBase {
    *   Service cache.default.
    */
   public function __construct(ConfigFactoryInterface $configFactory, EntityTypeManagerInterface $entityTypeManager, CacheBackendInterface $cacheBackendInterface) {
-    parent::__construct($configFactory);
+    $this->configFactory = $configFactory;
     $this->entityTypeManager = $entityTypeManager;
     $this->cache = $cacheBackendInterface;
   }
@@ -57,8 +57,8 @@ class RecentlyReadConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
+  public static function create(ContainerInterface $container): RecentlyReadConfigForm {
+    return new self(
       $container->get('config.factory'),
       $container->get('entity_type.manager'),
       $container->get('cache.default')
@@ -68,7 +68,7 @@ class RecentlyReadConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return [
       'delete_config',
       'delete_time',
@@ -78,14 +78,14 @@ class RecentlyReadConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'recently_read_config';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->configFactory->get('recently_read.configuration');
 
     $recentlyReadEntityTypes = [];
@@ -155,7 +155,7 @@ class RecentlyReadConfigForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     parent::submitForm($form, $form_state);
 
     $selectedEntityTypes = $form_state->getValue('entity_types');
@@ -167,10 +167,12 @@ class RecentlyReadConfigForm extends ConfigFormBase {
     $toRemove = array_diff($enabledEntityTypes, $selectedEntityTypes);
 
     foreach ($toAdd as $entityType) {
-      RecentlyReadType::create([
-        'id' => $entityType,
-        'label' => $this->entityTypeManager->getDefinition($entityType)->getLabel(),
-      ])->save();
+      RecentlyReadType::create(
+            [
+              'id' => $entityType,
+              'label' => $this->entityTypeManager->getDefinition($entityType)->getLabel(),
+            ]
+        )->save();
     }
 
     foreach ($toRemove as $entityType) {

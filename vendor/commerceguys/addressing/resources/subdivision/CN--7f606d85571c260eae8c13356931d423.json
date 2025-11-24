@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"YN",
+		"Wenshan Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Funing Xian": {
+			"local_name": "富宁县"
+		},
+		"Guangnan Xian": {
+			"local_name": "广南县"
+		},
+		"Malipo Xian": {
+			"local_name": "麻栗坡县"
+		},
+		"Maguan Xian": {
+			"local_name": "马关县"
+		},
+		"Qiubei Xian": {
+			"local_name": "丘北县"
+		},
+		"Wenshan Xian": {
+			"local_name": "文山县"
+		},
+		"Xichou Xian": {
+			"local_name": "西畴县"
+		},
+		"Yanshan Xian": {
+			"local_name": "砚山县"
+		}
+	}
+}

@@ -22,13 +22,13 @@ trait SmsFrameworkMessageResultTestTrait {
    */
   public function testError(): void {
     $result = $this->createMessageResult();
-    $this->assertNull($result->getError(), 'Default value is NULL');
+    static::assertNull($result->getError(), 'Default value is NULL');
 
     $error = $this->getRandomGenerator()->string();
     $return = $result->setError($error);
 
-    $this->assertTrue($return instanceof SmsMessageResultInterface);
-    $this->assertEquals($error, $result->getError());
+    static::assertTrue($return instanceof SmsMessageResultInterface);
+    static::assertEquals($error, $result->getError());
   }
 
   /**
@@ -39,13 +39,13 @@ trait SmsFrameworkMessageResultTestTrait {
    */
   public function testErrorMessage(): void {
     $result = $this->createMessageResult();
-    $this->assertEquals('', $result->getErrorMessage(), 'Default value is empty string');
+    static::assertEquals('', $result->getErrorMessage(), 'Default value is empty string');
 
     $error_message = $this->getRandomGenerator()->string();
     $return = $result->setErrorMessage($error_message);
 
-    $this->assertTrue($return instanceof SmsMessageResultInterface);
-    $this->assertEquals($error_message, $result->getErrorMessage());
+    static::assertTrue($return instanceof SmsMessageResultInterface);
+    static::assertEquals($error_message, $result->getErrorMessage());
   }
 
   /**
@@ -56,13 +56,13 @@ trait SmsFrameworkMessageResultTestTrait {
   public function testGetReport(): void {
     $result = $this->createMessageResult();
     $recipient = '123123123';
-    $this->assertNull($result->getReport($recipient), 'No report found');
+    static::assertNull($result->getReport($recipient), 'No report found');
 
     $report = (new SmsDeliveryReport())
       ->setRecipient($recipient);
     $result->setReports([$report]);
 
-    $this->assertTrue($result->getReport($recipient) instanceof SmsDeliveryReportInterface, 'Report found');
+    static::assertTrue($result->getReport($recipient) instanceof SmsDeliveryReportInterface, 'Report found');
   }
 
   /**
@@ -78,11 +78,11 @@ trait SmsFrameworkMessageResultTestTrait {
     $report = (new SmsDeliveryReport())
       ->setRecipient($recipient);
     $return = $result->setReports([$report]);
-    $this->assertTrue($return instanceof SmsMessageResultInterface);
+    static::assertTrue($return instanceof SmsMessageResultInterface);
 
     $reports = $result->getReports();
-    $this->assertCount(1, $reports);
-    $this->assertTrue($reports[0] instanceof SmsDeliveryReportInterface);
+    static::assertCount(1, $reports);
+    static::assertTrue($reports[0] instanceof SmsDeliveryReportInterface);
 
     // Verify that a second ::setReports() call clears what was there before.
     $report2 = (new SmsDeliveryReport())
@@ -90,7 +90,7 @@ trait SmsFrameworkMessageResultTestTrait {
     $result->setReports([$report2]);
 
     $reports = $result->getReports();
-    $this->assertCount(1, $reports);
+    static::assertCount(1, $reports);
   }
 
   /**
@@ -101,15 +101,15 @@ trait SmsFrameworkMessageResultTestTrait {
   public function testAddReport(): void {
     $result = $this->createMessageResult();
 
-    $this->assertCount(0, $result->getReports(), 'There are zero reports.');
+    static::assertCount(0, $result->getReports(), 'There are zero reports.');
 
     $report = (new SmsDeliveryReport())
       ->setRecipient('123123123');
 
     $return = $result->addReport($report);
-    $this->assertTrue($return instanceof SmsMessageResultInterface, 'Return type is a result object');
+    static::assertTrue($return instanceof SmsMessageResultInterface, 'Return type is a result object');
 
-    $this->assertCount(1, $result->getReports(), 'There is one report.');
+    static::assertCount(1, $result->getReports(), 'There is one report.');
   }
 
   /**
@@ -120,12 +120,12 @@ trait SmsFrameworkMessageResultTestTrait {
    */
   public function testCreditsBalance(): void {
     $result = $this->createMessageResult();
-    $this->assertNull($result->getCreditsBalance(), 'No credit balance set');
+    static::assertNull($result->getCreditsBalance(), 'No credit balance set');
 
     $balance = 13.37;
     $return = $result->setCreditsBalance($balance);
-    $this->assertTrue($return instanceof SmsMessageResultInterface);
-    $this->assertEquals($balance, $result->getCreditsBalance());
+    static::assertTrue($return instanceof SmsMessageResultInterface);
+    static::assertEquals($balance, $result->getCreditsBalance());
   }
 
   /**
@@ -150,12 +150,12 @@ trait SmsFrameworkMessageResultTestTrait {
    */
   public function testCreditsUsed(): void {
     $result = $this->createMessageResult();
-    $this->assertNull($result->getCreditsUsed(), 'No credits used set');
+    static::assertNull($result->getCreditsUsed(), 'No credits used set');
 
     $used = 13.37;
     $return = $result->setCreditsUsed($used);
-    $this->assertTrue($return instanceof SmsMessageResultInterface);
-    $this->assertEquals($used, $result->getCreditsUsed());
+    static::assertTrue($return instanceof SmsMessageResultInterface);
+    static::assertEquals($used, $result->getCreditsUsed());
   }
 
   /**

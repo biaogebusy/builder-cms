@@ -67,11 +67,11 @@ class FieldCollectionsFieldInstanceSettingsTest extends ProcessTestCase {
    * @return array
    *   The source data and expected data.
    */
-  public function getData() {
+  public static function getData() {
     $data = [
       'With no data' => [
-        'source_data' => [],
-        'expected_results' => [
+        'source' => [],
+        'expected' => [
           'handler_settings' => [
             'negate' => 0,
             'target_bundles' => [

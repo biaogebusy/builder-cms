@@ -5,9 +5,9 @@
  * Install, update and uninstall functions for the commerce_promotion module.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\commerce\CommerceContentEntityStorageSchema;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\user\Entity\Role;
 
 /**
@@ -69,7 +69,9 @@ function commerce_promotion_schema() {
  * Install the `commerce_promotion_usage` table schema.
  */
 function commerce_promotion_update_8201() {
-  drupal_install_schema('commerce_promotion');
+  $schema = \Drupal::database()->schema();
+  $tables = commerce_promotion_schema();
+  $schema->createTable('commerce_promotion_usage', $tables['commerce_promotion_usage']);
 }
 
 /**
@@ -373,4 +375,29 @@ function commerce_promotion_update_8213() {
       }
     }
   }
+}
+
+/**
+ * Added allow_multiple_coupons field to promotion entity.
+ */
+function commerce_promotion_update_8214() {
+  $field_storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Allow multiple coupons'))
+    ->setDescription(t('Allow multiple coupons to apply to a single order.'))
+    ->setDefaultValue(FALSE)
+    ->setSetting('display_description', TRUE)
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => TRUE,
+      ],
+    ])
+    ->setDisplayConfigurable('view', TRUE)
+    ->setDisplayConfigurable('form', TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('allow_multiple_coupons',
+      'commerce_promotion',
+      'commerce_promotion',
+      $field_storage_definition);
 }

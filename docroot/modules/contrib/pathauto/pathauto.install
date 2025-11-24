@@ -134,7 +134,7 @@ function pathauto_update_8100() {
           $language = NULL;
           preg_match('/^(.*)_([a-z-]*)$/', $bundle, $matches);
           if (count($matches) == 3) {
-            list(, $extracted_bundle, $langcode) = $matches;
+            [, $extracted_bundle, $langcode] = $matches;
             $language = $language_manager->getLanguage($langcode);
           }
           // Validate bundle, langcode and language.
@@ -173,7 +173,7 @@ function pathauto_update_8100() {
             'negate' => FALSE,
             'context_mapping' => [
               'language' => $language_mapping,
-            ]
+            ],
           ]);
 
           // Add the context relationship for this language.

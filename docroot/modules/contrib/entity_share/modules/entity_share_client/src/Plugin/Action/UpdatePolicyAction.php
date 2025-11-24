@@ -4,12 +4,12 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\Action;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\entity_share_client\ImportPolicy\ImportPolicyPluginManager;
 use Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionBase;
-use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -104,7 +104,7 @@ class UpdatePolicyAction extends ViewsBulkOperationsActionBase implements Contai
    *
    * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     /** @var \Drupal\entity_share_client\Entity\EntityImportStatusInterface $object */
     return $object->access('update', $account, $return_as_object);
   }

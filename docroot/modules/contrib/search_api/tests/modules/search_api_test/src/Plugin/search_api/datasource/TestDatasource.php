@@ -3,19 +3,20 @@
 namespace Drupal\search_api_test\Plugin\search_api\datasource;
 
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\ComplexDataInterface;
+use Drupal\search_api\Attribute\SearchApiDatasource;
 use Drupal\search_api\Datasource\DatasourcePluginBase;
 use Drupal\search_api_test\TestPluginTrait;
 
 /**
- * Provides a datasource for testing purposes.
- *
- * @SearchApiDatasource(
- *   id = "search_api_test",
- *   label = @Translation("&quot;Test&quot; datasource"),
- *   description = @Translation("This is the <em>test datasource</em> plugin description."),
- * )
+ * Provides a dummy datasource for testing purposes.
  */
+#[SearchApiDatasource(
+  id: 'search_api_test',
+  label: new TranslatableMarkup('&quot;Test&quot; datasource'),
+  description: new TranslatableMarkup('This is the <em>test datasource</em> plugin description.'),
+)]
 class TestDatasource extends DatasourcePluginBase {
 
   use TestPluginTrait;

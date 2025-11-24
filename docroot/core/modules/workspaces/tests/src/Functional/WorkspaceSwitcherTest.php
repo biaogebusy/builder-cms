@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Functional;
 
+use Drupal\dynamic_page_cache\EventSubscriber\DynamicPageCacheSubscriber;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 
@@ -18,7 +21,13 @@ class WorkspaceSwitcherTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'workspaces'];
+  protected static $modules = [
+    'block',
+    'dynamic_page_cache',
+    'node',
+    'toolbar',
+    'workspaces',
+  ];
 
   /**
    * {@inheritdoc}
@@ -47,11 +56,14 @@ class WorkspaceSwitcherTest extends BrowserTestBase {
   /**
    * Tests switching workspace via the switcher block and admin page.
    */
-  public function testSwitchingWorkspaces() {
-    $vultures = $this->createWorkspaceThroughUi('Vultures', 'vultures');
-    $this->switchToWorkspace($vultures);
-
+  public function testSwitchingWorkspaces(): void {
+    $this->createAndActivateWorkspaceThroughUi('Vultures', 'vultures');
     $gravity = $this->createWorkspaceThroughUi('Gravity', 'gravity');
+
+    // Confirm the block shows on the front page.
+    $this->drupalGet('<front>');
+    $page = $this->getSession()->getPage();
+    $this->assertTrue($page->hasContent('Workspace switcher'));
 
     $this->drupalGet('/admin/config/workflow/workspaces/manage/' . $gravity->id() . '/activate');
 
@@ -69,23 +81,41 @@ class WorkspaceSwitcherTest extends BrowserTestBase {
   /**
    * Tests switching workspace via a query parameter.
    */
-  public function testQueryParameterNegotiator() {
+  public function testQueryParameterNegotiator(): void {
     $web_assert = $this->assertSession();
     // Initially the default workspace should be active.
-    $web_assert->elementContains('css', '#block-workspaceswitcher', 'None');
+    $web_assert->elementContains('css', '#block-workspace-switcher', 'None');
 
     // When adding a query parameter the workspace will be switched.
     $current_user_url = \Drupal::currentUser()->getAccount()->toUrl();
     $this->drupalGet($current_user_url, ['query' => ['workspace' => 'stage']]);
-    $web_assert->elementContains('css', '#block-workspaceswitcher', 'Stage');
+    $web_assert->elementContains('css', '#block-workspace-switcher', 'Stage');
 
     // The workspace switching via query parameter should persist.
     $this->drupalGet($current_user_url);
-    $web_assert->elementContains('css', '#block-workspaceswitcher', 'Stage');
+    $web_assert->elementContains('css', '#block-workspace-switcher', 'Stage');
 
     // Check that WorkspaceCacheContext provides the cache context used to
     // support its functionality.
     $this->assertCacheContext('session');
+  }
+
+  /**
+   * Tests that the toolbar workspace switcher doesn't disable the page cache.
+   */
+  public function testToolbarSwitcherDynamicPageCache(): void {
+    $node_type = $this->drupalCreateContentType();
+    $node = $this->drupalCreateNode(['type' => $node_type->id()]);
+    $this->drupalLogin($this->drupalCreateUser([
+      'access toolbar',
+      'view any workspace',
+    ]));
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'MISS');
+    // Reload the page, it should be cached now.
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->elementExists('css', '.workspaces-toolbar-tab');
+    $this->assertSession()->responseHeaderEquals(DynamicPageCacheSubscriber::HEADER, 'HIT');
   }
 
 }

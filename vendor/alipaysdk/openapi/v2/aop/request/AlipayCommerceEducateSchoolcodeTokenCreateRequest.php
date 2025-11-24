@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.educate.schoolcode.token.create request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:34:25
+ * @since 1.0, 2025-08-13 15:12:42
  */
 class AlipayCommerceEducateSchoolcodeTokenCreateRequest
 {

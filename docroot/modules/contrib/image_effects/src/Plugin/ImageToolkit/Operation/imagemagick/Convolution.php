@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\ConvolutionTrait;
 use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines ImageMagick Convolution operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_convolution",
- *   toolkit = "imagemagick",
- *   operation = "convolution",
- *   label = @Translation("Convolution"),
- *   description = @Translation("Adjust image convolution.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_convolution',
+  toolkit: 'imagemagick',
+  operation: 'convolution',
+  label: new TranslatableMarkup('Convolution'),
+  description: new TranslatableMarkup('Adjust image convolution.'),
+)]
 class Convolution extends ImagemagickImageToolkitOperationBase {
 
   use ConvolutionTrait;
@@ -33,7 +36,7 @@ class Convolution extends ImagemagickImageToolkitOperationBase {
         $matrix_s .= implode(',', $vector) . " ";
       }
       $matrix_s = substr($matrix_s, 0, -1);
-      $this->addArgument("-morphology Convolve '3x3:$matrix_s'");
+      $this->addArguments(["-morphology", "Convolve", "3x3:{$matrix_s}"]);
     }
 
     return TRUE;

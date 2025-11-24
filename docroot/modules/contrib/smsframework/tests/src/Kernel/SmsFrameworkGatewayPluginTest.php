@@ -49,7 +49,7 @@ final class SmsFrameworkGatewayPluginTest extends SmsFrameworkKernelBase {
     $sms_message->setResult($this->createMessageResult($sms_message));
 
     $this->smsProvider->queue($sms_message);
-    $this->assertCount(1, \Drupal::state()->get('sms_test_gateway.memory.incoming'));
+    static::assertCount(1, \Drupal::state()->get('sms_test_gateway.memory.incoming'));
   }
 
 }

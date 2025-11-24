@@ -11,7 +11,7 @@ use Drupal\message_notify\Exception\MessageNotifyException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Email notifier.
+ * Email notifier plugin.
  *
  * @Notifier(
  *   id = "email",
@@ -47,14 +47,14 @@ class Email extends MessageNotifierBase {
    *   The entity type manager service.
    * @param \Drupal\Core\Render\RendererInterface $render
    *   The rendering service.
-   * @param \Drupal\message\MessageInterface $message
+   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   *   The mail manager service.
+   * @param \Drupal\message\MessageInterface|null $message
    *   (optional) The message entity. This is required when sending or
    *   delivering a notification. If not passed to the constructor, use
    *   ::setMessage().
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
-   *   The mail manager service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, RendererInterface $render, MessageInterface $message = NULL, MailManagerInterface $mail_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, RendererInterface $render, MailManagerInterface $mail_manager, ?MessageInterface $message = NULL) {
     // Set configuration defaults.
     $configuration += [
       'mail' => FALSE,
@@ -70,7 +70,7 @@ class Email extends MessageNotifierBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MessageInterface $message = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MessageInterface $message = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -78,8 +78,8 @@ class Email extends MessageNotifierBase {
       $container->get('logger.channel.message_notify'),
       $container->get('entity_type.manager'),
       $container->get('renderer'),
+      $container->get('plugin.manager.mail'),
       $message,
-      $container->get('plugin.manager.mail')
     );
   }
 
@@ -89,8 +89,8 @@ class Email extends MessageNotifierBase {
   public function deliver(array $output = []) {
     /** @var \Drupal\user\UserInterface $account */
     $account = $this->message->getOwner();
-
-    if (!$this->configuration['mail'] && !$account->id()) {
+    $invalid_account = (!$account || (!$this->configuration['mail'] && !$account->id()));
+    if ($invalid_account) {
       // The message has no owner and no mail was passed. This will cause an
       // exception, we just make sure it's a clear one.
       throw new MessageNotifyException('It is not possible to send a Message to an anonymous owner. You may set an owner using ::setOwner() or pass a "mail" to the $options array.');
@@ -121,7 +121,7 @@ class Email extends MessageNotifierBase {
       $from
     );
 
-    return isset($result['result']);
+    return $result['result'] ?? FALSE;
   }
 
 }

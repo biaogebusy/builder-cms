@@ -3,11 +3,15 @@
 namespace Drupal\user\Plugin\rest\resource;
 
 use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\rest\Attribute\RestResource;
 use Drupal\rest\ModifiedResourceResponse;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\Plugin\rest\resource\EntityResourceAccessTrait;
 use Drupal\rest\Plugin\rest\resource\EntityResourceValidationTrait;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,16 +21,15 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 /**
  * Represents user registration as a resource.
- *
- * @RestResource(
- *   id = "user_registration",
- *   label = @Translation("User registration"),
- *   serialization_class = "Drupal\user\Entity\User",
- *   uri_paths = {
- *     "create" = "/user/register",
- *   },
- * )
  */
+#[RestResource(
+  id: "user_registration",
+  label: new TranslatableMarkup("User registration"),
+  serialization_class: User::class,
+  uri_paths: [
+    "create" => "/user/register",
+  ],
+)]
 class UserRegistrationResource extends ResourceBase {
 
   use EntityResourceValidationTrait;
@@ -47,12 +50,19 @@ class UserRegistrationResource extends ResourceBase {
   protected $currentUser;
 
   /**
+   * The password generator.
+   *
+   * @var \Drupal\Core\Password\PasswordGeneratorInterface
+   */
+  protected $passwordGenerator;
+
+  /**
    * Constructs a new UserRegistrationResource instance.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param array $serializer_formats
@@ -63,11 +73,19 @@ class UserRegistrationResource extends ResourceBase {
    *   A user settings config instance.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
+   * @param \Drupal\Core\Password\PasswordGeneratorInterface|null $password_generator
+   *   The password generator.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, array $serializer_formats, LoggerInterface $logger, ImmutableConfig $user_settings, AccountInterface $current_user) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, array $serializer_formats, LoggerInterface $logger, ImmutableConfig $user_settings, AccountInterface $current_user, ?PasswordGeneratorInterface $password_generator = NULL) {
+    if (is_null($password_generator)) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $password_generator argument is deprecated in drupal:10.3.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3405799', E_USER_DEPRECATED);
+      $password_generator = \Drupal::service('password_generator');
+    }
+
     parent::__construct($configuration, $plugin_id, $plugin_definition, $serializer_formats, $logger);
     $this->userSettings = $user_settings;
     $this->currentUser = $current_user;
+    $this->passwordGenerator = $password_generator;
   }
 
   /**
@@ -81,7 +99,8 @@ class UserRegistrationResource extends ResourceBase {
       $container->getParameter('serializer.formats'),
       $container->get('logger.factory')->get('rest'),
       $container->get('config.factory')->get('user.settings'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('password_generator')
     );
   }
 
@@ -97,16 +116,20 @@ class UserRegistrationResource extends ResourceBase {
    * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
    * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
    */
-  public function post(UserInterface $account = NULL) {
+  public function post(?UserInterface $account = NULL) {
     $this->ensureAccountCanRegister($account);
 
-    // Only activate new users if visitors are allowed to register and no email
-    // verification required.
-    if ($this->userSettings->get('register') == UserInterface::REGISTER_VISITORS && !$this->userSettings->get('verify_mail')) {
+    // Only activate new users if visitors are allowed to register.
+    if ($this->userSettings->get('register') == UserInterface::REGISTER_VISITORS) {
       $account->activate();
     }
     else {
       $account->block();
+    }
+
+    // Generate password if email verification required.
+    if ($this->userSettings->get('verify_mail')) {
+      $account->setPassword($this->passwordGenerator->generate());
     }
 
     $this->checkEditFieldAccess($account);
@@ -128,7 +151,7 @@ class UserRegistrationResource extends ResourceBase {
    * @param \Drupal\user\UserInterface $account
    *   The user account to register.
    */
-  protected function ensureAccountCanRegister(UserInterface $account = NULL) {
+  protected function ensureAccountCanRegister(?UserInterface $account = NULL) {
     if ($account === NULL) {
       throw new BadRequestHttpException('No user account data for registration received.');
     }
@@ -153,13 +176,13 @@ class UserRegistrationResource extends ResourceBase {
 
     if (!$this->userSettings->get('verify_mail')) {
       if (empty($account->getPassword())) {
-        // If no e-mail verification then the user must provide a password.
+        // If no email verification then the user must provide a password.
         throw new UnprocessableEntityHttpException('No password provided.');
       }
     }
     else {
       if (!empty($account->getPassword())) {
-        // If e-mail verification required then a password cannot provided.
+        // If email verification required then a password cannot provided.
         // The password will be set when the user logs in.
         throw new UnprocessableEntityHttpException('A Password cannot be specified. It will be generated on login.');
       }
@@ -174,7 +197,7 @@ class UserRegistrationResource extends ResourceBase {
    */
   protected function sendEmailNotifications(UserInterface $account) {
     $approval_settings = $this->userSettings->get('register');
-    // No e-mail verification is required. Activating the user.
+    // No email verification is required. Activating the user.
     if ($approval_settings == UserInterface::REGISTER_VISITORS) {
       if ($this->userSettings->get('verify_mail')) {
         // No administrator approval required.

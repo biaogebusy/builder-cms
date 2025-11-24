@@ -2,12 +2,11 @@
 
 namespace Drupal\Tests\views_data_export\Functional;
 
-use Drupal\csv_serialization\Encoder\CsvEncoder;
 use Drupal\Tests\node\Traits\ContentTypeCreationTrait;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
-use Drupal\views\Tests\ViewTestData;
+use Drupal\csv_serialization\Encoder\CsvEncoder;
 
 /**
  * Tests views data export with batch.
@@ -46,6 +45,7 @@ class ViewsDataExportBatchTest extends ViewTestBase {
     'views_data_test_1',
     'views_data_test_2',
     'views_data_test_3',
+    'views_data_test_4',
   ];
 
   /**
@@ -83,15 +83,23 @@ class ViewsDataExportBatchTest extends ViewTestBase {
    */
   public function testBatchCreation() {
 
-    // By this view we fetch page with link present.
+    // By this view we fetch page with link present and csv with 11 rows.
     $this->drupalGet('views_data_export/test_1');
     $link = $this->getSession()->getPage()->findLink('here');
     $path_to_file = $link->getAttribute('href');
     $this->drupalGet($path_to_file);
     $this->assertEquals(200, $this->getSession()->getStatusCode(), 'File was not created');
 
+    $path_to_file = parse_url($path_to_file, PHP_URL_PATH);
+    $public_directory_path = \Drupal::service('stream_wrapper_manager')->getViaScheme('public')->getDirectoryPath();
+    $path_to_file = str_replace($_SERVER['REQUEST_URI'] . $public_directory_path, 'public:/', $path_to_file);
+    $res1 = $this->readCsv(file_get_contents($path_to_file));
+    // The first line contains the header, expect one extra row.
+    $this->assertEquals(11, count($res1), 'Count of exported nodes is wrong.');
+    $this->assertEquals([0 => 'title'], $res1[0]);
+
     // By this view we obtain file right after batch process finished.
-    // @todo - make separate FunctionalJavascript test to check automatic fetching.
+    // @todo make separate FunctionalJavascript test to check automatic fetching.
     $this->drupalGet('views_data_export/test_2');
     $this->assertSession()->pageTextContainsOnce('automatically downloaded');
 
@@ -106,9 +114,20 @@ class ViewsDataExportBatchTest extends ViewTestBase {
     $path_to_file = parse_url($path_to_file, PHP_URL_PATH);
     $path_to_file = str_replace($_SERVER['REQUEST_URI'] . 'system/files', 'private:/', $path_to_file);
     $res3 = $this->readCsv(file_get_contents($path_to_file));
-    // The first line always contains the header, expect one extra row.
+    // The first line contains the header, expect one extra row.
     $this->assertEquals(4, count($res3), 'Count of exported nodes is wrong.');
     $this->assertEquals([0 => 'title'], $res3[0]);
+
+    // By this view's batch finished we fetch csv with 10 rows without header.
+    $this->drupalGet('views_data_export/test_4');
+    $link = $this->getSession()->getPage()->findLink('here');
+    $path_to_file = $link->getAttribute('href');
+
+    $path_to_file = parse_url($path_to_file, PHP_URL_PATH);
+    $path_to_file = str_replace($_SERVER['REQUEST_URI'] . 'system/files', 'private:/', $path_to_file);
+    $res4 = $this->readCsv(file_get_contents($path_to_file));
+    $this->assertEquals(10, count($res4), 'Count of exported nodes is wrong.');
+    $this->assertNotEquals([0 => 'title'], $res4[0]);
 
     // Testing search api index's view.
     $this->indexItems('database_search_index');
@@ -118,10 +137,10 @@ class ViewsDataExportBatchTest extends ViewTestBase {
     $path_to_file = $link->getAttribute('href');
     $path_to_file = parse_url($path_to_file, PHP_URL_PATH);
     $path_to_file = str_replace($_SERVER['REQUEST_URI'] . 'system/files', 'private:/', $path_to_file);
-    $res4 = $this->readCsv(file_get_contents($path_to_file));
-    // The first line always contains the header, expect one extra row.
-    $this->assertEquals(9, count($res4), 'Count of exported test entities is wrong.');
-    $this->assertEquals([0 => 'id'], $res4[0]);
+    $res5 = $this->readCsv(file_get_contents($path_to_file));
+    // The first line contains the header, expect one extra row.
+    $this->assertEquals(9, count($res5), 'Count of exported test entities is wrong.');
+    $this->assertEquals([0 => 'id'], $res5[0]);
   }
 
   /**

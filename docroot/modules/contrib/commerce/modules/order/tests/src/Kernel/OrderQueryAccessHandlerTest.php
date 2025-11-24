@@ -52,7 +52,7 @@ class OrderQueryAccessHandlerTest extends OrderKernelTestBase {
    */
   public function testNoAccess() {
     foreach (['view', 'update', 'delete'] as $operation) {
-      $user = $this->createUser([], ['access content']);
+      $user = $this->createUser(['access content']);
       $conditions = $this->handler->getConditions($operation, $user);
       $this->assertEquals(0, $conditions->count());
       $this->assertEquals(['user.permissions'], $conditions->getCacheContexts());
@@ -65,7 +65,7 @@ class OrderQueryAccessHandlerTest extends OrderKernelTestBase {
    */
   public function testAdmin() {
     foreach (['view', 'update', 'delete'] as $operation) {
-      $user = $this->createUser([], ['administer commerce_order']);
+      $user = $this->createUser(['administer commerce_order']);
       $conditions = $this->handler->getConditions($operation, $user);
       $this->assertEquals(0, $conditions->count());
       $this->assertEquals(['user.permissions'], $conditions->getCacheContexts());
@@ -78,14 +78,14 @@ class OrderQueryAccessHandlerTest extends OrderKernelTestBase {
    */
   public function testView() {
     // Entity type permission.
-    $user = $this->createUser([], ['view commerce_order']);
+    $user = $this->createUser(['view commerce_order']);
     $conditions = $this->handler->getConditions('view', $user);
     $this->assertEquals(0, $conditions->count());
     $this->assertEquals(['user.permissions'], $conditions->getCacheContexts());
     $this->assertFalse($conditions->isAlwaysFalse());
 
     // Own permission.
-    $user = $this->createUser([], ['view own commerce_order']);
+    $user = $this->createUser(['view own commerce_order']);
     $conditions = $this->handler->getConditions('view', $user);
     $expected_conditions = [
       new Condition('uid', $user->id()),
@@ -97,7 +97,7 @@ class OrderQueryAccessHandlerTest extends OrderKernelTestBase {
     $this->assertFalse($conditions->isAlwaysFalse());
 
     // Bundle permission.
-    $user = $this->createUser([], ['view first commerce_order']);
+    $user = $this->createUser(['view first commerce_order']);
     $conditions = $this->handler->getConditions('view', $user);
     $expected_conditions = [
       new Condition('type', ['first']),
@@ -115,7 +115,7 @@ class OrderQueryAccessHandlerTest extends OrderKernelTestBase {
   public function testUpdateDelete() {
     foreach (['update', 'delete'] as $operation) {
       // Bundle permission.
-      $user = $this->createUser([], [
+      $user = $this->createUser([
         "$operation first commerce_order",
         "$operation second commerce_order",
       ]);

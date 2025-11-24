@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\link\Unit\Plugin\Validation\Constraint;
 
 use Drupal\Component\Utility\UrlHelper;
@@ -20,7 +22,7 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
    * @dataProvider providerValidate
    * @runInSeparateProcess
    */
-  public function testValidate($url, $valid) {
+  public function testValidate($url, $valid): void {
     $link = $this->createMock('Drupal\link\LinkItemInterface');
     $link->expects($this->any())
       ->method('getUrl')
@@ -49,12 +51,12 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
   /**
    * Data provider for ::testValidate.
    */
-  public function providerValidate() {
+  public static function providerValidate() {
     $data = [];
 
     // Test allowed protocols.
-    $data[] = ['http://www.drupal.org', TRUE];
-    $data[] = ['https://www.drupal.org', TRUE];
+    $data[] = ['http://www.example.com', TRUE];
+    $data[] = ['https://www.example.com', TRUE];
     // cSpell:disable-next-line
     $data[] = ['magnet:?xt=urn:sha1:YNCKHTQCWBTRNJIV4WNAE52SJUQCZO5C', TRUE];
 
@@ -69,7 +71,7 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Url::fromUri
    */
-  public function testValidateWithMalformedUri() {
+  public function testValidateWithMalformedUri(): void {
     $link = $this->createMock('Drupal\link\LinkItemInterface');
     $link->expects($this->any())
       ->method('getUrl')
@@ -89,7 +91,7 @@ class LinkExternalProtocolsConstraintValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateIgnoresInternalUrls() {
+  public function testValidateIgnoresInternalUrls(): void {
     $link = $this->createMock('Drupal\link\LinkItemInterface');
     $link->expects($this->any())
       ->method('getUrl')

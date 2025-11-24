@@ -17,7 +17,7 @@ interface TransformationValidationInterface {
    * @return bool
    *   TRUE if the transformation can be used with the supplied data.
    */
-  public function conformsToExpectedInputShape($data, Context $context = NULL);
+  public function conformsToExpectedInputShape($data, ?Context $context = NULL);
 
   /**
    * Checks if the transformed data conforms to the expected shape.
@@ -30,7 +30,7 @@ interface TransformationValidationInterface {
    * @return bool
    *   TRUE if the transformed data conforms to the expected shape.
    */
-  public function conformsToOutputShape($data, Context $context = NULL);
+  public function conformsToOutputShape($data, ?Context $context = NULL);
 
   /**
    * The validator for the input data.

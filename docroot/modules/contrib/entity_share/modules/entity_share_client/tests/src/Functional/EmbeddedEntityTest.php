@@ -15,6 +15,7 @@ use Drupal\Tests\TestFileCreationTrait;
  * @group entity_share_client
  */
 class EmbeddedEntityTest extends EntityShareClientFunctionalTestBase {
+
   use TestFileCreationTrait;
 
   /**
@@ -52,13 +53,6 @@ class EmbeddedEntityTest extends EntityShareClientFunctionalTestBase {
   ];
 
   /**
-   * An array of file size keyed by file UUID.
-   *
-   * @var array
-   */
-  protected $filesSize = [];
-
-  /**
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.UndefinedVariable)
@@ -69,7 +63,7 @@ class EmbeddedEntityTest extends EntityShareClientFunctionalTestBase {
     $this->getTestFiles('image');
     // Special case for the image created using native helper method.
     if (isset(static::$filesData['file_image'])) {
-      $this->filesSize['file_image'] = filesize(static::$filesData['file_image']['uri']);
+      $this->filesSize['file_image'] = \filesize(static::$filesData['file_image']['uri']);
     }
 
     $this->entityTypeManager->getStorage('jsonapi_resource_config')->create([
@@ -202,7 +196,7 @@ class EmbeddedEntityTest extends EntityShareClientFunctionalTestBase {
     $value = <<<EOT
 <p>Test image</p>
 
-<img alt="alt" data-align="center" data-entity-type="file" data-entity-uuid="file_image" src="$image_src" />
+<img alt="alt" data-align="center" data-entity-type="file" data-entity-uuid="file_image" src="{$image_src}" />
 
 <p>Test Linkit</p>
 
@@ -234,7 +228,7 @@ EOT;
     // Needs to make the requests when only the embedded content will be
     // required.
     // Nodes.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
+    $route_name = \sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
     $linked_content_url = Url::fromRoute($route_name, [
       'entity' => 'es_test_embedded_linkit',
     ])
@@ -250,7 +244,7 @@ EOT;
 
     // File.
     // File document will be detected with the media.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'file', 'file');
+    $route_name = \sprintf('jsonapi.%s--%s.individual', 'file', 'file');
     $linked_content_url = Url::fromRoute($route_name, [
       'entity' => 'file_image',
     ])
@@ -259,7 +253,7 @@ EOT;
     $this->discoverJsonApiEndpoints($linked_content_url->toString());
 
     // Media.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'media', 'es_test_document');
+    $route_name = \sprintf('jsonapi.%s--%s.individual', 'media', 'es_test_document');
     $linked_content_url = Url::fromRoute($route_name, [
       'entity' => 'es_test_document',
     ])

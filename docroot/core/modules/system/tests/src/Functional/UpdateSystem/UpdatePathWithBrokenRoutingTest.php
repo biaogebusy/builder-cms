@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Url;
@@ -30,7 +32,7 @@ class UpdatePathWithBrokenRoutingTest extends BrowserTestBase {
   /**
    * Tests running update.php with some form of broken routing.
    */
-  public function testWithBrokenRouting() {
+  public function testWithBrokenRouting(): void {
     // Simulate a broken router, and make sure the front page is
     // inaccessible.
     \Drupal::state()->set('update_script_test_broken_inbound', TRUE);

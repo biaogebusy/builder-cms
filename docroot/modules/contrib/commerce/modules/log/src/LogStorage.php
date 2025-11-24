@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_log;
 
-use Drupal\commerce\CommerceContentEntityStorage;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\commerce\CommerceContentEntityStorage;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LogStorage extends CommerceContentEntityStorage implements LogStorageInterface {

@@ -1,0 +1,9 @@
+# Ignore files that DDEV Drupal Contrib adds.
+.editorconfig
+.gitattributes
+.ddev/
+/vendor/
+/web/
+
+# Ignore PHPStorm Project files
+.idea

@@ -226,7 +226,7 @@ access:
 handlers:
   tomorrow:
     id: scheduled_email
-    label: Tomorow
+    label: Tomorrow
     notes: ''
     handler_id: tomorrow
     status: true

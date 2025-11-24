@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.merchant.indirect.smidbind.query request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:28:01
+ * @since 1.0, 2025-08-13 16:32:42
  */
 class AlipayMerchantIndirectSmidbindQueryRequest
 {

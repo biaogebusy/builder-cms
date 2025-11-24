@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Migrate\d6;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -40,7 +42,7 @@ class MigrateLanguageContentMenuSettingsTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of menu translation ability.
    */
-  public function testLanguageMenuContent() {
+  public function testLanguageMenuContent(): void {
     $config = ContentLanguageSettings::load('menu_link_content.menu_link_content');
     $this->assertInstanceOf(ContentLanguageSettings::class, $config);
     $this->assertSame('menu_link_content', $config->getTargetEntityTypeId());

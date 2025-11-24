@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Cache\Context;
 
 use Drupal\Core\Cache\Context\QueryArgsCacheContext;
@@ -18,7 +20,7 @@ class QueryArgsCacheContextTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetContext
    */
-  public function testGetContext(array $query_args, $cache_context_parameter, $context) {
+  public function testGetContext(array $query_args, $cache_context_parameter, $context): void {
     $request_stack = new RequestStack();
     $request = Request::create('/', 'GET', $query_args);
     $request_stack->push($request);
@@ -29,7 +31,7 @@ class QueryArgsCacheContextTest extends UnitTestCase {
   /**
    * Provides a list of query arguments and expected cache contexts.
    */
-  public function providerTestGetContext() {
+  public static function providerTestGetContext() {
     return [
       [[], NULL, ''],
       [[], 'foo', ''],

@@ -61,9 +61,9 @@ final class SmsFrameworkIncomingRouteTest extends SmsFrameworkKernelBase {
     $incoming_gateway = $this->createMemoryGateway(['plugin' => 'incoming']);
     $name = 'sms.incoming.receive.' . $incoming_gateway->id();
     $route = $this->routeProvider->getRouteByName($name);
-    $this->assertEquals(
+    static::assertEquals(
       $incoming_gateway->getPushIncomingPath(),
-      $route->getPath()
+      $route->getPath(),
     );
   }
 

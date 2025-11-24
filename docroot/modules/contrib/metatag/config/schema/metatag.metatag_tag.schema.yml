@@ -11,9 +11,6 @@ metatag.metatag_tag.cache_control:
 metatag.metatag_tag.canonical_url:
   type: text
   label: 'Canonical URL'
-metatag.metatag_tag.content_language:
-  type: text
-  label: 'Content Language'
 metatag.metatag_tag.description:
   type: text
   label: 'Description'
@@ -29,9 +26,6 @@ metatag.metatag_tag.image_src:
 metatag.metatag_tag.keywords:
   type: text
   label: 'Keywords'
-metatag.metatag_tag.news_keywords:
-  type: text
-  label: 'Google News Keywords'
 metatag.metatag_tag.next:
   type: text
   label: 'Next page URL'
@@ -65,9 +59,6 @@ metatag.metatag_tag.robots:
 metatag.metatag_tag.shortlink:
   type: text
   label: 'Shortlink'
-metatag.metatag_tag.standout:
-  type: text
-  label: 'Standout'
 metatag.metatag_tag.title:
   type: text
   label: 'Page title'

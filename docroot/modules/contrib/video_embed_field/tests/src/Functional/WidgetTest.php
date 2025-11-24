@@ -44,14 +44,14 @@ class WidgetTest extends BrowserTestBase {
     $this->submitForm([
       'title[0][value]' => $node_title,
       $this->fieldName . '[0][value]' => 'Some useless value.',
-    ], t('Save'));
+    ], 'Save');
     $this->assertSession()->pageTextContains('Could not find a video provider to handle the given URL.');
 
     // Test a valid input.
-    $valid_input = 'https://vimeo.com/80896303';
+    $valid_input = 'https://vimeo.com/399842404';
     $this->submitForm([
       $this->fieldName . '[0][value]' => $valid_input,
-    ], t('Save'));
+    ], 'Save');
     $this->assertSession()->pageTextContains(sprintf('%s %s has been created.', $this->contentTypeName, $node_title));
 
     // Load the saved node and assert the valid value was saved into the field.

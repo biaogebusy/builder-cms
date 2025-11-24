@@ -2,8 +2,8 @@
 
 namespace Drupal\page_manager\Event;
 
-use Symfony\Contracts\EventDispatcher\Event;
 use Drupal\page_manager\PageInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Wraps a page entity for event subscribers.

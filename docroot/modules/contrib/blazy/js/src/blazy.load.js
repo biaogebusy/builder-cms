@@ -27,12 +27,9 @@
   var S_GLOBAL = 'body';
   var ID_ONCE_GLOBAL = 'b-root';
   var V_DATA = 'data';
-  var C_CHECKED = 'b-checked';
-  var C_ERROR = 'errorClass';
   var V_IMAGE = 'image';
   var V_SRC = 'src';
   var S_SCROLL_ELEMENTS = '#drupal-modal, .is-b-scroll';
-  var OPTS = {};
 
   /**
    * Blazy public methods.
@@ -43,14 +40,6 @@
 
     clearScript: function (el) {
       var me = this;
-
-      // In case an error, try forcing it, once.
-      if ($.hasClass(el, OPTS[C_ERROR]) && !$.hasClass(el, C_CHECKED)) {
-        $.addClass(el, C_CHECKED);
-
-        // This is a rare case, hardly called, just nice to have for errors.
-        me.update(el, true);
-      }
 
       // Update picture aspect ratio on being resized.
       me.pad(el, updatePicture);
@@ -144,7 +133,7 @@
     }
 
     opts.container = S_SCROLL_ELEMENTS;
-    OPTS = me.merge(opts);
+    me.merge(opts);
 
     // Attempts to fix for Views rewrite stripping out data URI causing 404.
     me.fixDataUri();
@@ -167,7 +156,7 @@
     var eventId = ID + ':uniform' + instance;
     var localItems = $.findAll(elm, '.media--ratio');
 
-    OPTS = me.merge(opts);
+    me.merge(opts);
     me.revalidate = me.revalidate || $.hasClass(elm, ID + '--revalidate');
 
     // Each cointainer may have different image styles and aspect ratio.

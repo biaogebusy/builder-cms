@@ -1,9 +1,9 @@
 ################
 # DrupalCI GitLabCI template
 #
-# Gitlab-ci.yml to replicate DrupalCI testing for Contrib 
+# Gitlab-ci.yml to replicate DrupalCI testing for Contrib
 #
-# With thanks to: 
+# With thanks to:
 #   * The GitLab Acceleration Initiative participants
 #   * DrupalSpoons
 ################
@@ -11,24 +11,24 @@
 ################
 # Guidelines
 #
-# This template is designed to give any Contrib maintainer everything they need to test, without requiring modification. It is also designed to keep up to date with Core Development automatically through the use of include files that can be centrally maintained. 
+# This template is designed to give any Contrib maintainer everything they need to test, without requiring modification. It is also designed to keep up to date with Core Development automatically through the use of include files that can be centrally maintained.
 #
-# However, you can modify this template if you have additional needs for your project. 
+# However, you can modify this template if you have additional needs for your project.
 ################
 
 ################
 # Includes
 #
 # Additional configuration can be provided through includes.
-# One advantage of include files is that if they are updated upstream, the changes affect all pipelines using that include. 
+# One advantage of include files is that if they are updated upstream, the changes affect all pipelines using that include.
 #
 # Includes can be overridden by re-declaring anything provided in an include, here in gitlab-ci.yml
 # https://docs.gitlab.com/ee/ci/yaml/includes.html#override-included-configuration-values
 ################
 
-include: 
+include:
   ################
-  # DrupalCI includes: 
+  # DrupalCI includes:
   # As long as you include this, any future includes added by the Drupal Association will be accessible to your pipelines automatically.
   # View these include files at https://git.drupalcode.org/project/gitlab_templates/
   ################
@@ -46,34 +46,71 @@ include:
 #
 # Docs at https://git.drupalcode.org/project/gitlab_templates/-/blob/1.0.x/includes/include.drupalci.variables.yml
 ################
-# variables:
-#   SKIP_ESLINT: '1'
+variables:
+  OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_PREVIOUS_MINOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 1
+  OPT_IN_TEST_MAX_PHP: 1
+  # _PHPUNIT_CONCURRENT=1 uses run-tests.sh, 0 uses phpunit directly.
+  _PHPUNIT_CONCURRENT: 0
 
+phpunit (coverage):
+  extends: phpunit
+  rules:
+    - if: '$SKIP_PHPUNIT == "1"'
+      when: never
+    - when: on_success
+  before_script:
+    # Install and enable PCOV.
+    - echo -e '[pcov]\npcov.directory=.' > /usr/local/etc/php/conf.d/pcov.ini
+    - docker-php-ext-enable pcov
+  variables:
+    REPORT_COVERAGE: "true"
+    SYMFONY_DEPRECATIONS_HELPER: weak
+    _PHPUNIT_EXTRA:
+      value: --coverage-cobertura $CI_PROJECT_DIR/coverage.xml --coverage-text --colors=never --coverage-html $CI_PROJECT_DIR/public/coverage
+  coverage: /^\s*Lines:\s*\d+.\d+\%/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - junit.xml
+      - apache.access.log.txt
+      - $BROWSERTEST_OUTPUT_DIRECTORY
+      - coverage.xml
+      - public
+
+phpunit:
+  rules:
+    - when: never
 
 ###################################################################################
 #
-#                                        *                                      
-#                                       /(                                      
-#                                      ((((,                                    
-#                                    /(((((((                                   
-#                                   ((((((((((*                                 
-#                                ,(((((((((((((((                               
-#                              ,(((((((((((((((((((                             
-#                            ((((((((((((((((((((((((*                          
-#                         *(((((((((((((((((((((((((((((                        
-#                       ((((((((((((((((((((((((((((((((((*                     
-#                    *((((((((((((((((((  .((((((((((((((((((                   
-#                  ((((((((((((((((((.       /(((((((((((((((((*                
-#                /(((((((((((((((((            .(((((((((((((((((,              
-#             ,((((((((((((((((((                 ((((((((((((((((((            
-#           .((((((((((((((((((((                   .(((((((((((((((((          
-#          (((((((((((((((((((((((                     ((((((((((((((((/        
-#        (((((((((((((((((((((((((((/                    ,(((((((((((((((*      
-#      .((((((((((((((/  /(((((((((((((.                   ,(((((((((((((((     
-#     *((((((((((((((      ,(((((((((((((/                   *((((((((((((((.   
-#    ((((((((((((((,          /(((((((((((((.                  ((((((((((((((,  
-#   (((((((((((((/              ,(((((((((((((*                 ,(((((((((((((, 
-#  *(((((((((((((                .(((((((((((((((                ,((((((((((((( 
+#                                        *
+#                                       /(
+#                                      ((((,
+#                                    /(((((((
+#                                   ((((((((((*
+#                                ,(((((((((((((((
+#                              ,(((((((((((((((((((
+#                            ((((((((((((((((((((((((*
+#                         *(((((((((((((((((((((((((((((
+#                       ((((((((((((((((((((((((((((((((((*
+#                    *((((((((((((((((((  .((((((((((((((((((
+#                  ((((((((((((((((((.       /(((((((((((((((((*
+#                /(((((((((((((((((            .(((((((((((((((((,
+#             ,((((((((((((((((((                 ((((((((((((((((((
+#           .((((((((((((((((((((                   .(((((((((((((((((
+#          (((((((((((((((((((((((                     ((((((((((((((((/
+#        (((((((((((((((((((((((((((/                    ,(((((((((((((((*
+#      .((((((((((((((/  /(((((((((((((.                   ,(((((((((((((((
+#     *((((((((((((((      ,(((((((((((((/                   *((((((((((((((.
+#    ((((((((((((((,          /(((((((((((((.                  ((((((((((((((,
+#   (((((((((((((/              ,(((((((((((((*                 ,(((((((((((((,
+#  *(((((((((((((                .(((((((((((((((                ,(((((((((((((
 #  ((((((((((((/                /((((((((((((((((((.              ,((((((((((((/
 # (((((((((((((              *(((((((((((((((((((((((*             *((((((((((((
 # (((((((((((((            ,(((((((((((((..(((((((((((((           *((((((((((((
@@ -81,17 +118,17 @@ include:
 # (((((((((((((        /((((((((((((/          (((((((((((((*       ((((((((((((
 # (((((((((((((/     /((((((((((((               ,((((((((((((,    *((((((((((((
 #  ((((((((((((((  *(((((((((((/                   *((((((((((((.  ((((((((((((/
-#  *((((((((((((((((((((((((((,                      /((((((((((((((((((((((((( 
-#   (((((((((((((((((((((((((                         ((((((((((((((((((((((((, 
-#   .(((((((((((((((((((((((/                         ,(((((((((((((((((((((((  
-#     ((((((((((((((((((((((/                         ,(((((((((((((((((((((/   
-#      *(((((((((((((((((((((                         (((((((((((((((((((((,    
-#       ,(((((((((((((((((((((,                      ((((((((((((((((((((/      
-#         ,(((((((((((((((((((((*                  /((((((((((((((((((((        
-#            ((((((((((((((((((((((,           ,/((((((((((((((((((((,          
-#              ,(((((((((((((((((((((((((((((((((((((((((((((((((((             
-#                 .(((((((((((((((((((((((((((((((((((((((((((((                
-#                     .((((((((((((((((((((((((((((((((((((,.                   
-#                          .,(((((((((((((((((((((((((.           
-#     
+#  *((((((((((((((((((((((((((,                      /(((((((((((((((((((((((((
+#   (((((((((((((((((((((((((                         ((((((((((((((((((((((((,
+#   .(((((((((((((((((((((((/                         ,(((((((((((((((((((((((
+#     ((((((((((((((((((((((/                         ,(((((((((((((((((((((/
+#      *(((((((((((((((((((((                         (((((((((((((((((((((,
+#       ,(((((((((((((((((((((,                      ((((((((((((((((((((/
+#         ,(((((((((((((((((((((*                  /((((((((((((((((((((
+#            ((((((((((((((((((((((,           ,/((((((((((((((((((((,
+#              ,(((((((((((((((((((((((((((((((((((((((((((((((((((
+#                 .(((((((((((((((((((((((((((((((((((((((((((((
+#                     .((((((((((((((((((((((((((((((((((((,.
+#                          .,(((((((((((((((((((((((((.
+#
 ###################################################################################

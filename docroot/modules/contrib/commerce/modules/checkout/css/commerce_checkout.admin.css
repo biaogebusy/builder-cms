@@ -10,12 +10,17 @@
   font-style: italic;
 }
 
+.checkout-pane-overview .pane-configuration-admin-description,
+.checkout-pane-overview .pane-configuration-default-step {
+  font-size: 0.9em;
+  font-style: italic;
+}
 .checkout-pane-overview .pane-configuration-summary-cell {
   line-height: 1em;
 }
 .checkout-pane-overview .pane-configuration-summary {
   float: left; /* LTR */
-  font-size: .9em;
+  font-size: 0.9em;
 }
 [dir="rtl"] .checkout-pane-overview .pane-configuration-summary {
   float: right;
@@ -23,7 +28,7 @@
 .checkout-pane-overview .pane-configuration-summary-cell .warning {
   display: block;
   float: left; /* LTR */
-  margin-right: .5em;
+  margin-right: 0.5em;
 }
 [dir="rtl"] .checkout-pane-overview .pane-configuration-summary-cell .warning {
   float: right;
@@ -45,10 +50,10 @@
 }
 
 .checkout-pane-overview tr.pane-configuration-changed {
-  background: #ffffbb;
+  background: #ffb;
 }
 .checkout-pane-overview tr.drag {
-  background: #ffee77;
+  background: #fe7;
 }
 .checkout-pane-overview tr.pane-configuration-editing {
   background: #d5e9f2;

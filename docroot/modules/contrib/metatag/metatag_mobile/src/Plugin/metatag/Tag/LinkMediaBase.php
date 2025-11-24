@@ -12,7 +12,7 @@ abstract class LinkMediaBase extends LinkRelBase {
   /**
    * {@inheritdoc}
    */
-  public function output() {
+  public function output(): array {
     $element = parent::output();
 
     if ($element) {
@@ -32,7 +32,7 @@ abstract class LinkMediaBase extends LinkRelBase {
    * @return string
    *   A string for the desired media type.
    */
-  protected function media() {
+  protected function media(): string {
     return '';
   }
 

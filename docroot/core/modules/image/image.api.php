@@ -32,10 +32,13 @@ function hook_image_effect_info_alter(&$effects) {
  *
  * @param \Drupal\image\ImageStyleInterface $style
  *   The image style object that is being flushed.
+ * @param string|null $path
+ *   (optional) The original image path or URI. If it's supplied, only this
+ *   image derivative will be flushed.
  */
-function hook_image_style_flush($style) {
+function hook_image_style_flush($style, $path = NULL) {
   // Empty cached data that contains information about the style.
-  \Drupal::cache('mymodule')->deleteAll();
+  \Drupal::cache('my_module')->deleteAll();
 }
 
 /**

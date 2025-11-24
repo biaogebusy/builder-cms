@@ -99,7 +99,7 @@ class Oauth extends ClientAuthorizationPluginBase {
           $this->logger->critical(
             'Entity Share refresh oauth token request failed with Exception: %exception_type and error: %error.',
             [
-              '%exception_type' => get_class($e),
+              '%exception_type' => \get_class($e),
               '%error' => $e->getMessage(),
             ]
           );
@@ -110,7 +110,7 @@ class Oauth extends ClientAuthorizationPluginBase {
             $this->logger->critical(
               'Entity Share new oauth token request failed with Exception: %exception_type and error: %error.',
               [
-                '%exception_type' => get_class($e),
+                '%exception_type' => \get_class($e),
                 '%error' => $e->getMessage(),
               ]
             );
@@ -129,7 +129,7 @@ class Oauth extends ClientAuthorizationPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getClient($url) {
+  public function getClient($url, $login_path) {
     $token = $this->getAccessToken($url);
     return $this->httpClientFactory->fromOptions(
       [
@@ -234,8 +234,8 @@ class Oauth extends ClientAuthorizationPluginBase {
     $resetConfiguration = $configuration;
     $provider = $values['credential_provider'];
     $credentials = $values[$provider];
-    array_walk($credentials, function (&$value) {
-      $value = trim($value);
+    \array_walk($credentials, static function (&$value) {
+      $value = \trim($value);
     });
     $key = $configuration['uuid'];
     if ($provider == 'key') {
@@ -262,8 +262,8 @@ class Oauth extends ClientAuthorizationPluginBase {
         default:
           $accessToken = $this->initializeToken($remote, $credentials);
           // Remove the username and password.
-          unset($credentials['username']);
-          unset($credentials['password']);
+          unset($credentials['username'], $credentials['password']);
+
           $this->keyValueStore->set($configuration['uuid'], $credentials);
       }
       // Save the token, using the plugin id appended to the uuid to create a
@@ -300,7 +300,7 @@ class Oauth extends ClientAuthorizationPluginBase {
    *   An OAuth client provider.
    */
   protected function getOauthClient(string $url, array $credentials) {
-    $oauth_client = new GenericProvider(
+    return new GenericProvider(
       [
         'clientId' => $credentials['client_id'],
         'clientSecret' => $credentials['client_secret'],
@@ -314,10 +314,8 @@ class Oauth extends ClientAuthorizationPluginBase {
         'httpClient' => $this->httpClientFactory->fromOptions(),
       ]
     );
-    return $oauth_client;
   }
 
-  // phpcs:disable
   /**
    * Helper function to initialize a token.
    *
@@ -328,33 +326,9 @@ class Oauth extends ClientAuthorizationPluginBase {
    *
    * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
    *   Exception thrown if the provider response contains errors.
-   *
-   * @deprecated in 8.x-3.0-beta4 and will be removed in 4.0.0. Use
-   *   initializeToken() instead.
-   *
-   * @SuppressWarnings(PHPMD.ErrorControlOperator)
-   * cSpell:disable.
-   */
-  public function initalizeToken(Remote $remote, array $credentials) {
-    // cSpell:enable.
-    @trigger_error(__METHOD__ . '() is deprecated in 8.x-3.0-beta4 and will be removed in 4.0.0. use initializeToken() instead.', \E_USER_DEPRECATED);
-    $this->initializeToken($remote, $credentials);
-  }
-  // phpcs:enable
-
-  /**
-   * Helper function to initialize a token.
-   *
-   * @param \Drupal\entity_share_client\Entity\Remote $remote
-   *   The remote website for which authorization is needed.
-   * @param array $credentials
-   *   Trial credentials.
    *
    * @return \League\OAuth2\Client\Token\AccessTokenInterface
    *   A valid access token.
-   *
-   * @throws \League\OAuth2\Client\Provider\Exception\IdentityProviderException
-   *   Exception thrown if the provider response contains errors.
    */
   public function initializeToken(Remote $remote, array $credentials) {
     $oauth_client = $this->getOauthClient($remote->get('url'), $credentials);

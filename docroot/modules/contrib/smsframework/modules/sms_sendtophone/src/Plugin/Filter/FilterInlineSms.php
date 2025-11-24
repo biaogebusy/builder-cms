@@ -138,7 +138,7 @@ class FilterInlineSms extends FilterBase {
       '#title' => $markup,
       '#url' => Url::fromRoute('sms_sendtophone.page', ['type' => 'inline'], $options),
     ];
-    return $this->renderer()->renderPlain($link);
+    return $this->renderer()->renderInIsolation($link);
   }
 
   /**

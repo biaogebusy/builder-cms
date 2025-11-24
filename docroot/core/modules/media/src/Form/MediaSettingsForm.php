@@ -3,7 +3,9 @@
 namespace Drupal\media\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\ConfigTarget;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\media\IFrameUrlHelper;
@@ -35,13 +37,15 @@ class MediaSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\media\IFrameUrlHelper $iframe_url_helper
    *   The iFrame URL helper service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, IFrameUrlHelper $iframe_url_helper, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, IFrameUrlHelper $iframe_url_helper, EntityTypeManagerInterface $entity_type_manager) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->iFrameUrlHelper = $iframe_url_helper;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -52,6 +56,7 @@ class MediaSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('media.oembed.iframe_url_helper'),
       $container->get('entity_type.manager')
     );
@@ -99,7 +104,7 @@ class MediaSettingsForm extends ConfigFormBase {
       '#title' => $this->t('iFrame domain'),
       '#size' => 40,
       '#maxlength' => 255,
-      '#default_value' => $domain,
+      '#config_target' => new ConfigTarget('media.settings', 'iframe_domain', toConfig: fn(?string $value) => $value ?: NULL),
       '#description' => $this->t('Enter a different domain from which to serve oEmbed content, including the <em>http://</em> or <em>https://</em> prefix. This domain needs to point back to this site, or existing oEmbed content may not display correctly, or at all.'),
     ];
 
@@ -107,22 +112,10 @@ class MediaSettingsForm extends ConfigFormBase {
       '#prefix' => '<hr>',
       '#type' => 'checkbox',
       '#title' => $this->t('Standalone media URL'),
-      '#default_value' => $this->config('media.settings')->get('standalone_url'),
+      '#config_target' => 'media.settings:standalone_url',
       '#description' => $this->t("Allow users to access @media-entities at /media/{id}.", ['@media-entities' => $this->entityTypeManager->getDefinition('media')->getPluralLabel()]),
     ];
     return parent::buildForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->config('media.settings')
-      ->set('iframe_domain', $form_state->getValue('iframe_domain'))
-      ->set('standalone_url', $form_state->getValue('standalone_url'))
-      ->save();
-
-    parent::submitForm($form, $form_state);
   }
 
 }

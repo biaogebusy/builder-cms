@@ -20,3 +20,14 @@ display_variant.plugin.panels_variant:
     storage_id:
       type: string
       label: Storage Id
+    css_classes:
+       type: sequence
+       label: The list of the display variant CSS classes
+       sequence:
+         type: string
+    html_id:
+      type: string
+      label: The HTML Id. of the display variant
+    css_styles:
+      type: string
+      label: The inline CSS styles of the display variant

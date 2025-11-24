@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.open.agent.common.sign request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:26:13
+ * @since 1.0, 2025-06-17 15:52:40
  */
 class AlipayOpenAgentCommonSignRequest
 {
@@ -143,7 +143,7 @@ class AlipayOpenAgentCommonSignRequest
 	private $longTerm;
 	
 	/** 
-	 * <a href="https://opendocs.alipay.com/common/02khjv">商家经营类目</a> 中的“经营类目编码”
+	 * <a href="https://opendocs.alipay.com/common/02khjv">商家经营类目2.0</a> 中的“经营类目编码”
 	 **/
 	private $mccCode;
 	

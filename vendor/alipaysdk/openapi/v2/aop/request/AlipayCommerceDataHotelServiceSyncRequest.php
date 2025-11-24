@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.data.hotel.service.sync request
  *
  * @author auto create
- * @since 1.0, 2023-08-20 17:57:56
+ * @since 1.0, 2025-08-13 16:47:41
  */
 class AlipayCommerceDataHotelServiceSyncRequest
 {

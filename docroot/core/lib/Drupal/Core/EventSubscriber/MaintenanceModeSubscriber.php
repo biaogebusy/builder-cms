@@ -84,7 +84,7 @@ class MaintenanceModeSubscriber implements EventSubscriberInterface {
    * @param \Drupal\Core\StringTranslation\TranslationInterface $translation
    *   The string translation.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
-   *   The url generator.
+   *   The URL generator.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
    * @param \Drupal\Core\Render\BareHtmlPageRendererInterface $bare_html_page_renderer
@@ -94,7 +94,7 @@ class MaintenanceModeSubscriber implements EventSubscriberInterface {
    * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    */
-  public function __construct(MaintenanceModeInterface $maintenance_mode, ConfigFactoryInterface $config_factory, TranslationInterface $translation, UrlGeneratorInterface $url_generator, AccountInterface $account, BareHtmlPageRendererInterface $bare_html_page_renderer, MessengerInterface $messenger, EventDispatcherInterface $event_dispatcher = NULL) {
+  public function __construct(MaintenanceModeInterface $maintenance_mode, ConfigFactoryInterface $config_factory, TranslationInterface $translation, UrlGeneratorInterface $url_generator, AccountInterface $account, BareHtmlPageRendererInterface $bare_html_page_renderer, MessengerInterface $messenger, EventDispatcherInterface $event_dispatcher) {
     $this->maintenanceMode = $maintenance_mode;
     $this->config = $config_factory;
     $this->stringTranslation = $translation;
@@ -102,10 +102,6 @@ class MaintenanceModeSubscriber implements EventSubscriberInterface {
     $this->account = $account;
     $this->bareHtmlPageRenderer = $bare_html_page_renderer;
     $this->messenger = $messenger;
-    if (!$event_dispatcher) {
-      @trigger_error('Calling MaintenanceModeSubscriber::__construct() without the $event_dispatcher argument is deprecated in drupal:9.4.0 and the $event_dispatcher argument will be required in drupal:10.0.0. See https://www.drupal.org/node/3255799', E_USER_DEPRECATED);
-      $event_dispatcher = \Drupal::service('event_dispatcher');
-    }
     $this->eventDispatcher = $event_dispatcher;
   }
 
@@ -127,15 +123,23 @@ class MaintenanceModeSubscriber implements EventSubscriberInterface {
         $this->eventDispatcher->dispatch($event, MaintenanceModeEvents::MAINTENANCE_MODE_REQUEST);
       }
       else {
-        // Display a message if the logged in user has access to the site in
-        // maintenance mode. However, suppress it on the maintenance mode
-        // settings page.
+        // Display a message if the logged-in user has access to the site in
+        // maintenance mode. Don't show maintenance message:
+        // - on AJAX requests.
+        // - on Iframe uploads.
+        // - on the maintenance mode settings page.
         if ($route_match->getRouteName() != 'system.site_maintenance_mode') {
-          if ($this->account->hasPermission('administer site configuration')) {
-            $this->messenger->addMessage($this->t('Operating in maintenance mode. <a href=":url">Go online.</a>', [':url' => $this->urlGenerator->generate('system.site_maintenance_mode')]), 'status', FALSE);
-          }
-          else {
-            $this->messenger->addMessage($this->t('Operating in maintenance mode.'), 'status', FALSE);
+          $show_message = $route_match->getRouteName() != 'system.site_maintenance_mode' &&
+            !$event->getRequest()->isXmlHttpRequest() &&
+            $event->getRequest()->get('ajax_iframe_upload', FALSE) === FALSE;
+
+          if ($show_message) {
+            if ($this->account->hasPermission('administer site configuration')) {
+              $this->messenger->addMessage($this->t('Operating in maintenance mode. <a href=":url">Go online.</a>', [':url' => $this->urlGenerator->generate('system.site_maintenance_mode')]), 'status', FALSE);
+            }
+            else {
+              $this->messenger->addMessage($this->t('Operating in maintenance mode.'), 'status', FALSE);
+            }
           }
         }
       }
@@ -166,7 +170,7 @@ class MaintenanceModeSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::REQUEST][] = ['onKernelRequestMaintenance', 30];
     $events[KernelEvents::EXCEPTION][] = ['onKernelRequestMaintenance'];
     $events[MaintenanceModeEvents::MAINTENANCE_MODE_REQUEST][] = [

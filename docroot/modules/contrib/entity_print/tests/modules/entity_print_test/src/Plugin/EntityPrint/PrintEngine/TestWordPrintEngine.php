@@ -28,6 +28,7 @@ class TestWordPrintEngine extends PrintEngineBase {
    */
   public function addPage($content) {
     $this->html .= $content;
+    return $this;
   }
 
   /**
@@ -87,6 +88,8 @@ class TestWordPrintEngine extends PrintEngineBase {
   /**
    * {@inheritdoc}
    */
-  public function getPrintObject() {}
+  public function getPrintObject() {
+    return new \stdClass();
+  }
 
 }

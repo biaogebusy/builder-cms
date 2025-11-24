@@ -4,9 +4,9 @@ namespace Drupal\page_manager_ui\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\ctools\Form\AjaxFormTrait;
-use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -93,8 +93,8 @@ class VariantPluginContentForm extends FormBase {
     ]);
 
     // Set up the attributes used by a modal to prevent duplication later.
-    $attributes = $this->getAjaxAttributes();
-    $add_button_attributes = $this->getAjaxButtonAttributes();
+    $attributes = static::getAjaxAttributes();
+    $add_button_attributes = static::getAjaxButtonAttributes();
 
     if ($block_assignments = $variant_plugin->getRegionAssignments()) {
       // Build a table of all blocks used by this variant.
@@ -192,7 +192,7 @@ class VariantPluginContentForm extends FormBase {
           $configuration = $block->getConfiguration();
           $row['weight'] = [
             '#type' => 'weight',
-            '#default_value' => isset($configuration['weight']) ? $configuration['weight'] : 0,
+            '#default_value' => $configuration['weight'] ?? 0,
             '#title' => $this->t('Weight for @block block', ['@block' => $block->label()]),
             '#title_display' => 'invisible',
             '#attributes' => [

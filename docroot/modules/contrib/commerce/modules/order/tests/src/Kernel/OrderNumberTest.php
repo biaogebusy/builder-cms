@@ -28,7 +28,7 @@ class OrderNumberTest extends OrderKernelTestBase {
    * Tests setting the order number.
    */
   public function testSetOrderNumber() {
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     $number_pattern = NumberPattern::load('order_default');
     $number_pattern->setPluginConfiguration([

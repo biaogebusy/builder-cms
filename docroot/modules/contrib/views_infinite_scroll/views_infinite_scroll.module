@@ -5,8 +5,9 @@
  * Module file for views_infinite_scroll.
  */
 
-use Drupal\Core\Url;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Template\Attribute;
+use Drupal\Core\Url;
 use Drupal\views_infinite_scroll\Plugin\views\pager\InfiniteScroll;
 
 /**
@@ -54,10 +55,23 @@ function views_infinite_scroll_preprocess_views_view(&$vars) {
 }
 
 /**
- * Implements hook_preprocess_eva_display_entity_view()
+ * Implements hook_preprocess_eva_display_entity_view().
  */
 function views_infinite_scroll_preprocess_eva_display_entity_view(&$vars) {
   // When the contributed EVA module is used to display the View, apply the
   // preprocessing logic of this module.
   views_infinite_scroll_preprocess_views_view($vars);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function views_infinite_scroll_form_view_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $viewDisplay = $form_state->getFormObject()->getEntity()->getDisplay('default');
+  if (isset($viewDisplay['display_options']['pager']['type']) && $viewDisplay['display_options']['pager']['type'] != 'infinite_scroll') {
+    return;
+  }
+  if (isset($viewDisplay['display_options']['use_ajax']) && $viewDisplay['display_options']['use_ajax'] === FALSE) {
+    \Drupal::messenger()->addWarning('AJAX is currently disabled, for this views default display. For the "Views Infinite Scroll" to work, this setting needs to be enabled!');
+  }
 }

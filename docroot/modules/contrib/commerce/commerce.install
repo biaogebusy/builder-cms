@@ -5,6 +5,17 @@
  * Contains install and update functions for Commerce.
  */
 
+use Drupal\commerce\InboxMessage;
+
+/**
+ * Implements hook_install().
+ */
+function commerce_install() {
+  /** @var \Drupal\commerce\InboxMessageFetcherInterface $inbox_message_fetcher */
+  $inbox_message_fetcher = \Drupal::service('commerce.inbox_message_fetcher');
+  $inbox_message_fetcher->fetchNewStoreMessages();
+}
+
 /**
  * Implements hook_requirements().
  */
@@ -24,8 +35,128 @@ function commerce_requirements($phase) {
 }
 
 /**
+ * Implements hook_schema().
+ */
+function commerce_schema() {
+  return [
+    'commerce_inbox_message' => [
+      'description' => 'Stores the Commerce inbox messages.',
+      'fields' => [
+        'id' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'description' => 'ID of the message',
+        ],
+        'subject' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'description' => 'Subject of the message',
+        ],
+        'message' => [
+          'type' => 'text',
+          'not null' => TRUE,
+          'size' => 'big',
+          'description' => 'Text of the message.',
+        ],
+        'cta_text' => [
+          'type' => 'text',
+          'not null' => TRUE,
+          'size' => 'small',
+          'description' => 'CTA text',
+        ],
+        'cta_link' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'description' => 'CTA link',
+        ],
+        'send_date' => [
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'default' => 0,
+          'description' => 'Send date.',
+        ],
+        'state' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => 'unread',
+          'description' => 'State',
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'state' => ['state'],
+      ],
+    ],
+  ];
+}
+
+/**
  * Install the Token module.
  */
 function commerce_update_8201() {
   \Drupal::service('module_installer')->install(['token']);
+}
+
+/**
+ * Install the `commerce_inbox_message` table schema.
+ */
+function commerce_update_8202() {
+  $schema = \Drupal::database()->schema();
+
+  // Create database table.
+  if (!$schema->tableExists('commerce_inbox_message')) {
+    $tables = commerce_schema();
+    $schema->createTable('commerce_inbox_message', $tables['commerce_inbox_message']);
+  }
+}
+
+/**
+ * Create a Commerce inbox message announcing the new dashboard.
+ */
+function commerce_update_8203() {
+  $inbox_message = new InboxMessage(
+    'commerce.8203',
+    'Introducing the Commerce Dashboard',
+    "Commerce Core 2.37 introduced a new dashboard to Drupal Commerce. Designed with merchants in mind, it includes easy access management links, sales metrics and summary reports, and project updates in the form of a \"Commerce inbox.\" Future releases will build on this work to give you even greater insight into your store's performance.",
+    '',
+    '',
+    \Drupal::time()->getRequestTime(),
+    'unread'
+  );
+  \Drupal::service('commerce.inbox_message_storage')->save($inbox_message);
+}
+
+/**
+ * Remove \Drupal\commerce\BundleFieldDefinition from field storage definitions.
+ */
+function commerce_update_8204() {
+  $old_string = 'O:37:"Drupal\\commerce\\BundleFieldDefinition":5:';
+  $new_string = 'O:35:"Drupal\\entity\\BundleFieldDefinition":5:';
+
+  $database = \Drupal::database();
+  $query = $database->select('key_value', 'kv')
+    ->fields('kv', ['name', 'value'])
+    ->condition('collection', 'entity.definitions.installed')
+    ->condition('name', '%.field_storage_definitions', 'LIKE');
+  $results = $query->execute();
+  $updated_count = 0;
+
+  foreach ($results as $row) {
+    $new_value = str_replace($old_string, $new_string, $row->value);
+    if ($new_value !== $row->value) {
+      $database->update('key_value')
+        ->fields(['value' => $new_value])
+        ->condition('collection', 'entity.definitions.installed')
+        ->condition('name', $row->name)
+        ->execute();
+      $updated_count++;
+    }
+  }
+
+  \Drupal::logger('commerce')->notice('Updated @count records in key_value table.', ['@count' => $updated_count]);
 }

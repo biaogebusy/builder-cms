@@ -11,8 +11,8 @@ The following plugins are provided by the module:
 
 Plugin        | Read | Write | Description                                                  |
 --------------|:----:|:-----:|--------------------------------------------------------------|
-exif          | X    | X     | Uses the [PHP Exif Library](https://github.com/lsolesen/pel) to read/write EXIF information to image files, bypassing the limitations of the standard PHP Exif extensions which only provides read capabilities. Enable the _file_mdm_exif_ submodule to enable this plugin.        |
-font          | X    |       | Uses the [PHP Font Lib](https://github.com/PhenX/php-font-lib) to read font information from TTF/OTF/WOFF font files. Enable the _file_mdm_exif_ submodule to enable this plugin.         |
+exif          | X    | X     | Uses the [PHP Exif Library](https://github.com/FileEye/pel) to read/write EXIF information to image files, bypassing the limitations of the standard PHP Exif extensions which only provides read capabilities. Enable the _file_mdm_exif_ submodule to enable this plugin.        |
+font          | X    |       | Uses the [PHP Font Lib](https://github.com/dompdf/php-font-lib) to read font information from TTF/OTF/WOFF font files. Enable the _file_mdm_exif_ submodule to enable this plugin.         |
 getimagesize  | X    |       | Caches calls to the PHP ```getimagesize()``` function.        |
 
 The module is inspired by discussions at [#2630242 Provide methods to retrieve EXIF image information via the Image object](https://www.drupal.org/node/2630242).
@@ -30,15 +30,6 @@ The module is inspired by discussions at [#2630242 Provide methods to retrieve E
 5. Manages copying to/from local temporary storage files stored in remote file
    systems, to allow PHP functions that do not support remote stream wrappers
    access the file locally.
-
-
-## Requirements
-
-* The module **must** be downloaded or updated using Composer, see [Download contributed modules and themes using Composer](https://www.drupal.org/node/2718229#adding-modules).
-This ensures that all dependencies get downloaded as well, with the appropriate
-release level.
-
-* Drupal 9.3.x and higher or 10.0.x and higher
 
 
 ## Installing
@@ -81,11 +72,11 @@ bits     | The number of bits for each color                            |
 
 1. __Basic usage:__
 
-  a. Use the _file_metadata_manager_ service to prepare collecting metadata for
+  a. Use the _FileMetadataManagerInterface::class_ service to prepare collecting metadata for
      the file located at a desired URI:
 
 ```php
-   $fmdm = \Drupal::service('file_metadata_manager');
+   $fmdm = \Drupal::service(FileMetadataManagerInterface::class);
    $my_file_metadata = $fmdm->uri('public::/my_directory/test-image.jpeg');
 ```
 
@@ -99,7 +90,7 @@ bits     | The number of bits for each color                            |
   c. Summarizing, in the context of a controller returning a render array:
 
 ```php
-  $fmdm = \Drupal::service('file_metadata_manager');
+  $fmdm = \Drupal::service(FileMetadataManagerInterface::class);
   $my_file_metadata = $fmdm->uri('public::/my_directory/test-image.jpeg');
   $mime = $my_file_metadata->getMetadata('getimagesize', 'mime');
   return ['#markup' => 'MIME type: ' . $mime];
@@ -114,7 +105,7 @@ MIME type: image/jpeg
 2. __Use a known local temp copy of the remote file to avoid remote file access:__
 
 ```php
-$fmdm = \Drupal::service('file_metadata_manager');
+$fmdm = \Drupal::service(FileMetadataManagerInterface::class);
 $my_file_metadata = $fmdm->uri('remote_wrapper::/my_directory/test-image.jpeg');
 $my_file_metadata->setLocalTempPath($temp_path);
 $mime = $my_file_metadata->getMetadata('getimagesize', 'mime');
@@ -123,7 +114,7 @@ $mime = $my_file_metadata->getMetadata('getimagesize', 'mime');
 3. __Make a local temp copy of the remote file to avoid remote file access:__
 
 ```php
-$fmdm = \Drupal::service('file_metadata_manager');
+$fmdm = \Drupal::service(FileMetadataManagerInterface::class);
 $my_file_metadata = $fmdm->uri('remote_wrapper::/my_directory/test-image.jpeg');
 $my_file_metadata->copyUriToTemp();
 $mime = $my_file_metadata->getMetadata('getimagesize', 'mime');

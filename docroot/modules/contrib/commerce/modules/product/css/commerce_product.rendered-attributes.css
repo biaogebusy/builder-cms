@@ -5,8 +5,8 @@
 
 .product--rendered-attribute .form-item {
   display: inline-block;
-  vertical-align: middle;
   margin: 2px;
+  vertical-align: middle;
 }
 .product--rendered-attribute label.option {
   display: inline-block;

@@ -8,12 +8,14 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\search_api\Kernel\PostRequestIndexingTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests Search API functionality when executed in the CLI.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class CliTest extends KernelTestBase {
 
   use PostRequestIndexingTrait;
@@ -73,6 +75,7 @@ class CliTest extends KernelTestBase {
       'name' => 'foo bar baz föö smile' . json_decode('"\u1F601"'),
       'body' => 'test test case Case casE',
       'type' => 'entity_test_mulrev_changed',
+      // cspell:disable-next-line
       'keywords' => ['Orange', 'orange', 'örange', 'Orange'],
       'category' => 'item_category',
     ])->save();

@@ -2,10 +2,14 @@
 
 namespace Drupal\user\Plugin\views\access;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\user\RoleInterface;
 use Drupal\user\RoleStorageInterface;
+use Drupal\views\Attribute\ViewsAccess;
 use Drupal\views\Plugin\views\access\AccessPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
@@ -15,13 +19,12 @@ use Drupal\Core\Session\AccountInterface;
  * Access plugin that provides role-based access control.
  *
  * @ingroup views_access_plugins
- *
- * @ViewsAccess(
- *   id = "role",
- *   title = @Translation("Role"),
- *   help = @Translation("Access will be granted to users with any of the specified roles.")
- * )
  */
+#[ViewsAccess(
+  id: 'role',
+  title: new TranslatableMarkup('Role'),
+  help: new TranslatableMarkup('Access will be granted to users with any of the specified roles.'),
+)]
 class Role extends AccessPluginBase implements CacheableDependencyInterface {
 
   /**
@@ -42,7 +45,7 @@ class Role extends AccessPluginBase implements CacheableDependencyInterface {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\user\RoleStorageInterface $role_storage
@@ -90,9 +93,8 @@ class Role extends AccessPluginBase implements CacheableDependencyInterface {
       return $this->t('Multiple roles');
     }
     else {
-      $rids = user_role_names();
       $rid = reset($this->options['role']);
-      return $rids[$rid];
+      return $this->roleStorage->load($rid)->label();
     }
   }
 
@@ -109,7 +111,7 @@ class Role extends AccessPluginBase implements CacheableDependencyInterface {
       '#type' => 'checkboxes',
       '#title' => $this->t('Role'),
       '#default_value' => $this->options['role'],
-      '#options' => array_map('\Drupal\Component\Utility\Html::escape', user_role_names()),
+      '#options' => array_map(fn(RoleInterface $role) => Html::escape($role->label()), $this->roleStorage->loadMultiple()),
       '#description' => $this->t('Only the checked roles will be able to access this display.'),
     ];
   }

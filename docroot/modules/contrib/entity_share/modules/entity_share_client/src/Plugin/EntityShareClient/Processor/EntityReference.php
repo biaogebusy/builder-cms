@@ -4,13 +4,12 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\entity_share\EntityShareUtility;
 use Drupal\entity_share_client\Event\RelationshipFieldValueEvent;
-use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginBase;
+use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Drupal\entity_share_client\Service\EntityReferenceHelperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -28,7 +27,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   locked = true,
  * )
  */
-class EntityReference extends ImportProcessorPluginBase implements PluginFormInterface {
+class EntityReference extends ImportProcessorReferencePluginBase implements PluginFormInterface {
+
+  /**
+   * Depth for limitless recursion.
+   */
+  public const INFINITE_RECURSION_DEPTH = -1;
 
   /**
    * The entity type manager.
@@ -45,13 +49,6 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
   protected $eventDispatcher;
 
   /**
-   * The remote manager.
-   *
-   * @var \Drupal\entity_share_client\Service\RemoteManagerInterface
-   */
-  protected $remoteManager;
-
-  /**
    * Logger.
    *
    * @var \Psr\Log\LoggerInterface
@@ -66,20 +63,12 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
   protected $entityReferenceHelper;
 
   /**
-   * The current recursion depth.
-   *
-   * @var int
-   */
-  protected $currentRecursionDepth = 0;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->eventDispatcher = $container->get('event_dispatcher');
-    $instance->remoteManager = $container->get('entity_share_client.remote_manager');
     $instance->logger = $container->get('logger.channel.entity_share_client');
     $instance->entityReferenceHelper = $container->get('entity_share_client.entity_reference_helper');
     return $instance;
@@ -90,7 +79,7 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
    */
   public function defaultConfiguration() {
     return [
-      'max_recursion_depth' => -1,
+      'max_recursion_depth' => static::INFINITE_RECURSION_DEPTH,
     ] + parent::defaultConfiguration();
   }
 
@@ -103,7 +92,7 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
       '#title' => $this->t('Maximum recursion depth'),
       '#description' => $this->t('The maximum recursion depth. -1 for unlimited. When reaching max recursion depth, referenced entities are set if the entity already exists on the website.'),
       '#default_value' => $this->configuration['max_recursion_depth'],
-      '#min' => -1,
+      '#min' => static::INFINITE_RECURSION_DEPTH,
     ];
 
     return $form;
@@ -117,7 +106,7 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
       $field_mappings = $runtime_import_context->getFieldMappings();
       // Loop on reference fields.
       foreach ($entity_json_data['relationships'] as $field_public_name => $field_data) {
-        $field_internal_name = array_search($field_public_name, $field_mappings[$processed_entity->getEntityTypeId()][$processed_entity->bundle()]);
+        $field_internal_name = \array_search($field_public_name, $field_mappings[$processed_entity->getEntityTypeId()][$processed_entity->bundle()], TRUE);
         if (!$processed_entity->hasField($field_internal_name)) {
           $this->logger->notice('Error during import. The field @field does not exist.', ['@field' => $field_internal_name]);
           continue;
@@ -198,7 +187,7 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
     // Extract list of UUIDs.
     foreach ($data as $field_value_data) {
       if ($field_value_data['id'] !== 'missing') {
-        $parsed_type = explode('--', $field_value_data['type']);
+        $parsed_type = \explode('--', $field_value_data['type']);
         $entity_type_id = $parsed_type[0];
         $entity_uuids[] = $field_value_data['id'];
       }
@@ -224,38 +213,6 @@ class EntityReference extends ImportProcessorPluginBase implements PluginFormInt
         $log_variables['@msg'] = $e->getMessage();
         $this->logger->error('Caught exception trying to load existing entities. Error message was @msg', $log_variables);
       }
-    }
-
-    return $referenced_entities_ids;
-  }
-
-  /**
-   * Helper function.
-   *
-   * @param \Drupal\entity_share_client\RuntimeImportContext $runtime_import_context
-   *   The runtime import context.
-   * @param string $url
-   *   The URL to import.
-   *
-   * @return array
-   *   The list of entity IDs imported keyed by UUIDs.
-   */
-  protected function importUrl(RuntimeImportContext $runtime_import_context, $url) {
-    $referenced_entities_ids = [];
-    $referenced_entities_response = $this->remoteManager->jsonApiRequest($runtime_import_context->getRemote(), 'GET', $url);
-
-    if (is_null($referenced_entities_response)) {
-      return $referenced_entities_ids;
-    }
-
-    $referenced_entities_json = Json::decode((string) $referenced_entities_response->getBody());
-
-    // $referenced_entities_json['data'] can be null in the case of
-    // missing/deleted referenced entities.
-    if (!isset($referenced_entities_json['errors']) && !is_null($referenced_entities_json['data'])) {
-      $this->currentRecursionDepth++;
-      $referenced_entities_ids = $runtime_import_context->getImportService()->importEntityListData($referenced_entities_json['data']);
-      $this->currentRecursionDepth--;
     }
 
     return $referenced_entities_ids;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\image_effects\Component\ColorUtility;
@@ -31,7 +33,7 @@ class ColorUtilityTest extends TestCase {
   /**
    * Provides data for testValidateRgba().
    */
-  public function providerTestValidateRgba(): array {
+  public static function providerTestValidateRgba(): array {
     return [
       // Tests length.
       [FALSE, ''],

@@ -18,8 +18,8 @@ class RedirectDomainForm extends ConfigFormBase {
   }
 
   /**
-  * {@inheritdoc}
-  */
+   * {@inheritdoc}
+   */
   protected function getEditableConfigNames() {
     return [
       'redirect_domain.domains',
@@ -40,13 +40,12 @@ class RedirectDomainForm extends ConfigFormBase {
       '#header' => [
         $this->t('From domain'),
         $this->t('Sub path'),
-        $this->t('Destination')
+        $this->t('Destination'),
       ],
       '#prefix' => '<div id="redirect-domain-wrapper">',
       '#suffix' => '</div>',
     ];
 
-    $rows = [];
     // Obtain domain redirects from configuration.
     if ($domain_redirects = $this->config('redirect_domain.domains')->get('domain_redirects')) {
       foreach ($domain_redirects as $key => $value) {
@@ -54,7 +53,7 @@ class RedirectDomainForm extends ConfigFormBase {
           $form['redirects'][] = [
             'from' => [
               '#type' => 'textfield',
-              '#value' => str_replace(':','.',$key),
+              '#value' => str_replace(':', '.', $key),
             ],
             'sub_path' => [
               '#type' => 'textfield',
@@ -132,7 +131,7 @@ class RedirectDomainForm extends ConfigFormBase {
     parent::validateForm($form, $form_state);
     if ($redirects = $form_state->getValue('redirects')) {
       foreach ($redirects as $redirect) {
-        if (strpos($redirect['from'], '://') !== FALSE) {
+        if (str_contains($redirect['from'], '://')) {
           $form_state->setErrorByName('redirects', $this->t('No protocol should be included in the redirect domain.'));
         }
       }
@@ -154,7 +153,7 @@ class RedirectDomainForm extends ConfigFormBase {
           $redirect['from'] = str_replace('.', ':', $redirect['from']);
           $domain_redirects[$redirect['from']][] = [
             'sub_path' => '/' . ltrim($redirect['sub_path'], '/'),
-            'destination' => $redirect['destination']
+            'destination' => $redirect['destination'],
           ];
         }
       }
@@ -163,4 +162,5 @@ class RedirectDomainForm extends ConfigFormBase {
     $domain_config->save();
     $this->messenger()->addMessage($this->t('The domain redirects have been saved.'));
   }
+
 }

@@ -12,7 +12,7 @@ abstract class LinkSizesBase extends LinkRelBase {
   /**
    * {@inheritdoc}
    */
-  public function output() {
+  public function output(): array {
     $element = parent::output();
 
     if ($element) {
@@ -32,22 +32,26 @@ abstract class LinkSizesBase extends LinkRelBase {
    * @return string
    *   A string in the format "XxY" for a given width and height.
    */
-  protected function iconSize() {
+  protected function iconSize(): string {
     return '';
   }
 
   /**
-   * The dimensions supported by this icon.
-   *
-   * @return string
-   *   A string in the format "XxY" for a given width and height.
-   *
-   * @deprecated in 8.x-1.22 and is removed from 2.0.0. Use iconSize() instead.
-   *
-   * @see https://www.drupal.org/node/3300522
+   * {@inheritdoc}
    */
-  protected function sizes() {
-    return $this->iconSize();
+  public function getTestOutputExistsXpath(): array {
+    return ["//link[@rel='{$this->name}' and @sizes='" . $this->iconSize() . "']"];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputValuesXpath(array $values): array {
+    $xpath_strings = [];
+    foreach ($values as $value) {
+      $xpath_strings[] = "//link[@rel='{$this->name}' and @sizes='" . $this->iconSize() . "' and @" . $this->htmlValueAttribute . "='{$value}']";
+    }
+    return $xpath_strings;
   }
 
 }

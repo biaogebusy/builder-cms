@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel;
 
 use Drupal\field\Entity\FieldConfig;
@@ -15,9 +17,7 @@ use Drupal\KernelTests\KernelTestBase;
 class NodeBodyFieldStorageTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'user',
@@ -33,7 +33,6 @@ class NodeBodyFieldStorageTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', 'sequences');
     // Necessary for module uninstall.
     $this->installSchema('user', 'users_data');
     $this->installEntitySchema('user');
@@ -44,7 +43,7 @@ class NodeBodyFieldStorageTest extends KernelTestBase {
   /**
    * Tests node body field storage persistence even if there are no instances.
    */
-  public function testFieldOverrides() {
+  public function testFieldOverrides(): void {
     $field_storage = FieldStorageConfig::loadByName('node', 'body');
     $this->assertNotEmpty($field_storage, 'Node body field storage exists.');
     $type = NodeType::create(['name' => 'Ponies', 'type' => 'ponies']);

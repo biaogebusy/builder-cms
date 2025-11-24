@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\node\Entity\Node;
 use Drupal\serial\SerialStorageInterface;
@@ -18,7 +20,20 @@ function serial_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.serial':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Defines serial field type.') . '</p>';
+      $output .= '<p>' . t('The Serial module allows you to create fields that can be used to increment an id automatically. See the <a href=":field">Field module help</a> and the <a href=":field_ui">Field UI help</a> pages for general information on fields and how to create and manage them. For more information, see the <a href=":serial_project_page">project page for the Serial module</a>.', [
+        ':serial_project_page' => 'https://www.drupal.org/project/serial',
+        ':field' => Url::fromRoute('help.page', ['name' => 'field'])->toString(),
+        ':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#',
+      ]) . '</p>';
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Managing and displaying Serial fields') . '</dt>';
+      $output .= '<dd>' . t('As the Serial field is automatically incremented, its widget is hidden by default from the entity edit form.') . '</dd>';
+      $output .= '<dt>' . t('Starting value') . '</dt>';
+      $output .= '<dd>' . t('By default, the value starts at 1, this can be overridden while creating the field.') . '</dd>';
+      $output .= '<dt>' . t('Start on existing entities') . '</dt>';
+      $output .= '<dd>' . t('By default, the serial id starts on new entities. Existing entities can be initialized based on the starting value while creating the field.') . '</dd>';
+      $output .= '</dl>';
       return $output;
   }
 }
@@ -39,7 +54,6 @@ function serial_field_config_create(FieldConfig $field) {
       $field->getFieldStorageDefinition()->getName()
     );
     $serialStorage->createStorageFromName($storageName);
-    $field->save();
   }
 }
 
@@ -94,4 +108,16 @@ function serial_theme() {
  */
 function theme_serial_default(array $variables) {
   return $variables['serial_id'];
+}
+
+/**
+ * Implements hook_field_info_alter().
+ *
+ * @todo Remove once minimum version supported is at least 10.2.0.
+ */
+function serial_field_info_alter(array &$info): void {
+  // Allow module to work with older versions of Drupal.
+  if (\version_compare(\Drupal::VERSION, '10.1.9999', '<')) {
+    $info['serial']['category'] = new TranslatableMarkup("Number");
+  }
 }

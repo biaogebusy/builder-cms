@@ -54,7 +54,7 @@ class PathAliasProcessor extends ImportProcessorPluginBase {
   }
 
   /**
-   * {@inheritDoc}
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
@@ -70,7 +70,7 @@ class PathAliasProcessor extends ImportProcessorPluginBase {
    */
   public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
     $field_mappings = $runtime_import_context->getFieldMappings();
-    $parsed_type = explode('--', $entity_json_data['type']);
+    $parsed_type = \explode('--', $entity_json_data['type']);
     $entity_type_id = $parsed_type[0];
     $entity_bundle = $parsed_type[1];
 
@@ -98,7 +98,7 @@ class PathAliasProcessor extends ImportProcessorPluginBase {
         unset($path['pid']);
         return;
       }
-      $local_entity = reset($local_entities);
+      $local_entity = \reset($local_entities);
 
       // The already imported entity does not have an alias yet.
       if (empty($local_entity->path->pid)) {

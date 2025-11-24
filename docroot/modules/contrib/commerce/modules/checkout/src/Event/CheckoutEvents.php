@@ -25,4 +25,13 @@ final class CheckoutEvents {
    */
   const COMPLETION_REGISTER = 'commerce_checkout.completion_register';
 
+  /**
+   * Name of the event fired when the customer registers during checkout.
+   *
+   * @Event
+   *
+   * @see \Drupal\commerce_checkout\Event\RegisterDuringCheckoutEvent
+   */
+  const CHECKOUT_REGISTER = 'commerce_checkout.checkout_register';
+
 }

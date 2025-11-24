@@ -40,7 +40,7 @@ directories other than "/vendor" (e.g. "/libraries") using Composer.
                      "installer-name": "d3"
                  },
                  "dist": {
-                     "url": "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.js",
+                     "url": "https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js",
                      "type": "file"
                  },
                  "require": {

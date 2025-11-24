@@ -22,6 +22,7 @@ use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Renders the batch processing page based on the current state of the batch.
@@ -42,8 +43,8 @@ function _batch_page(Request $request) {
   if (!$batch) {
     $batch = \Drupal::service('batch.storage')->load($request_id);
     if (!$batch) {
-      \Drupal::messenger()->addError(t('No active batch.'));
-      return new RedirectResponse(Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString());
+      \Drupal::messenger()->addError(t('No batch with ID @batch exists.', ['@batch' => $request_id]));
+      throw new NotFoundHttpException(sprintf('No batch with ID %s exists.', $request_id));
     }
   }
 
@@ -75,6 +76,7 @@ function _batch_page(Request $request) {
     }
   }
 
+  $response = FALSE;
   $op = $request->query->get('op', '');
   switch ($op) {
     case 'start':
@@ -183,7 +185,7 @@ function _batch_progress_page() {
     print $fallback;
 
     // Perform actual processing.
-    [$percentage, $message, $label] = _batch_process($batch);
+    [$percentage, $message, $label] = _batch_process();
     if ($percentage == 100) {
       $new_op = 'finished';
     }
@@ -345,14 +347,14 @@ function _batch_process() {
     }
     else {
       // Processing will continue with the current batch set.
-      $remaining        = $old_set['count'];
-      $total            = $old_set['total'];
-      $progress_message = $old_set['progress_message'];
+      $remaining        = $old_set['count'] ?? 0;
+      $total            = $old_set['total'] ?? 0;
+      $progress_message = $old_set['progress_message'] ?? '';
     }
 
     // Total progress is the number of operations that have fully run plus the
     // completion level of the current operation.
-    $current    = $total - $remaining + $finished;
+    $current    = $total - $remaining + ($finished ?? 0);
     $percentage = _batch_api_percentage($total, $current);
     $elapsed    = $current_set['elapsed'] ?? 0;
     $values     = [
@@ -473,11 +475,14 @@ function _batch_finished() {
       }
     }
     // Clean-up the session. Not needed for CLI updates.
-    if (isset($_SESSION)) {
-      unset($_SESSION['batches'][$batch['id']]);
-      if (empty($_SESSION['batches'])) {
-        unset($_SESSION['batches']);
-      }
+    $session = \Drupal::request()->getSession();
+    $batches = $session->get('batches', []);
+    unset($batches[$batch['id']]);
+    if (empty($batches)) {
+      $session->remove('batches');
+    }
+    else {
+      $session->set('batches', $batches);
     }
   }
   $_batch = $batch;
@@ -530,7 +535,8 @@ function _batch_finished() {
     // form needs to be rebuilt, save the final $form_state for
     // \Drupal\Core\Form\FormBuilderInterface::buildForm().
     if ($_batch['form_state']->isRebuilding()) {
-      $_SESSION['batch_form_state'] = $_batch['form_state'];
+      $session = \Drupal::request()->getSession();
+      $session->set('batch_form_state', $_batch['form_state']);
     }
     $callback = $_batch['redirect_callback'];
     $_batch['source_url']->mergeOptions(['query' => ['op' => 'finish', 'id' => $_batch['id']]]);

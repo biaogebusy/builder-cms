@@ -46,6 +46,9 @@ autosave_form.settings:
             sequence:
               type: string
               label: 'Bundle'
+    allowed_new:
+      type: boolean
+      label: 'Active on create entity forms'
 
 autosave_form.messages:
   type: config_object

@@ -35,7 +35,7 @@ class LayoutBuilderEntityViewDisplayForm extends EntityViewDisplayEditForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, SectionStorageInterface $section_storage = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?SectionStorageInterface $section_storage = NULL) {
     $this->sectionStorage = $section_storage;
     return parent::buildForm($form, $form_state);
   }
@@ -143,7 +143,9 @@ class LayoutBuilderEntityViewDisplayForm extends EntityViewDisplayEditForm {
 
     // The default mode is valid if the canonical mode is not enabled.
     if ($mode === 'default') {
-      $query = $this->entityTypeManager->getStorage($this->entity->getEntityTypeId())->getQuery()
+      /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
+      $storage = $this->entityTypeManager->getStorage($this->entity->getEntityTypeId());
+      $query = $storage->getQuery()
         ->condition('targetEntityType', $this->entity->getTargetEntityTypeId())
         ->condition('bundle', $this->entity->getTargetBundle())
         ->condition('status', TRUE)

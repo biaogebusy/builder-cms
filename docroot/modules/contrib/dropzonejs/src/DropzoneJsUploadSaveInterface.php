@@ -27,9 +27,9 @@ interface DropzoneJsUploadSaveInterface {
    *   The owner of the file.
    * @param array $validators
    *   (Optional) Associative array of callback functions used to validate the
-   *   file. See file_validate() for more documentation. Note that we add
-   *   file_validate_extensions and file_validate_name_length in this method
-   *   already.
+   *   file. See \Drupal\file\Validation\FileValidatorInterface for more
+   *   documentation. Note that we add FileExtension and FileNameLength in this
+   *   method already.
    *
    * @return \Drupal\file\FileInterface|bool
    *   The file entity of the newly uploaded file or false in case of a failure.
@@ -45,10 +45,10 @@ interface DropzoneJsUploadSaveInterface {
    * @param string $extensions
    *   A space separated string of valid extensions.
    * @param array $additional_validators
-   *   An optional, associative array of callback functions used to validate the
-   *   file. See file_validate() for more documentation. Note that we add
-   *   file_validate_extensions and file_validate_name_length in this method
-   *   already.
+   *   (Optional) Associative array of callback functions used to validate the
+   * *   file. See \Drupal\file\Validation\FileValidatorInterface for more
+   * *   documentation. Note that we add FileExtension and FileNameLength in this
+   * *   method already.
    *
    * @return array
    *   An array containing validation error messages.

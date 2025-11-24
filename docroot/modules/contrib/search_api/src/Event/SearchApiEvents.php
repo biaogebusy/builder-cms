@@ -90,11 +90,11 @@ final class SearchApiEvents {
    * This can be used to modify the items in some way before their fields are
    * extracted and they are passed to the server.
    *
-   * Please be aware that generally preventing the indexing of certain items is
+   * Be aware that generally preventing the indexing of certain items is
    * deprecated. This is better done with processors, which can easily be
-   * configured and only added to indexes where this behaviour is wanted.
-   * If your module will use this event to reject certain items from indexing,
-   * please document this clearly to avoid confusion.
+   * configured and only added to indexes where this behavior is wanted. If your
+   * module will use this event to reject certain items from indexing, you
+   * should document this clearly to avoid confusion.
    *
    * @Event
    *

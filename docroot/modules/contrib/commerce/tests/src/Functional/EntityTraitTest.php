@@ -51,7 +51,7 @@ class EntityTraitTest extends CommerceBrowserTestBase {
     // The store type entity shows the correct traits.
     $store_type = StoreType::load('online');
     $this->assertEquals(['first'], $store_type->getTraits());
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     // The field was created.
     $this->drupalGet('admin/commerce/config/store-types/online/edit/fields');
     $this->assertSession()->pageTextContains('phone');
@@ -75,7 +75,7 @@ class EntityTraitTest extends CommerceBrowserTestBase {
     // The store type entity shows the correct traits.
     $store_type = StoreType::load('online');
     $this->assertEquals([], $store_type->getTraits());
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     // The field was removed.
     $this->drupalGet('admin/commerce/config/store-types/online/edit/fields');
     $this->assertSession()->pageTextNotContains('phone');

@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\help;
 
-use Symfony\Component\Console\Application;
 use Consolidation\AnnotatedCommand\Help\HelpDocument;
 use Consolidation\OutputFormatters\FormatterManager;
 use Consolidation\OutputFormatters\Options\FormatterOptions;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
+use Drush\Attributes as CLI;
+use Drush\Boot\DrupalBootLevels;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Descriptor\JsonDescriptor;
 use Symfony\Component\Console\Descriptor\XmlDescriptor;
@@ -18,23 +22,19 @@ use Symfony\Component\Console\Terminal;
 
 class ListCommands extends DrushCommands
 {
+    const LIST = 'list';
+
     /**
      * List available commands.
-     *
-     * @command list
-     * @option filter Restrict command list to those commands defined in the specified file. Omit value to choose from a list of names.
-     * @option raw Show a simple table of command names and descriptions.
-     * @bootstrap max
-     * @usage drush list
-     *   List all commands.
-     * @usage drush list --filter=devel_generate
-     *   Show only commands starting with devel-
-     * @usage drush list --format=xml
-     *   List all commands in Symfony compatible xml format.
-     *
-     * @return string
      */
-    public function helpList($options = ['format' => 'listcli', 'raw' => false, 'filter' => self::REQ])
+    #[CLI\Command(name: self::LIST, aliases: [])]
+    #[CLI\Option(name: 'filter', description: 'Restrict command list to those commands defined in the specified file. Omit value to choose from a list of names.')]
+    #[CLI\Option(name: 'raw', description: 'Show a simple table of command names and descriptions.')]
+    #[CLI\Bootstrap(level: DrupalBootLevels::MAX)]
+    #[CLI\Usage(name: 'drush list', description: 'List all commands.')]
+    #[CLI\Usage(name: 'drush list --filter=devel_generate', description: 'Show only commands starting with devel-')]
+    #[CLI\Usage(name: 'drush list --format=xml', description: 'List all commands in Symfony compatible xml format.')]
+    public function helpList($options = ['format' => 'listcli', 'raw' => false, 'filter' => self::REQ]): ?string
     {
         $application = Drush::getApplication();
         $all = $application->all();
@@ -61,27 +61,26 @@ class ListCommands extends DrushCommands
         } elseif ($options['format'] == 'listcli') {
             $preamble = dt('Run `drush help [command]` to view command-specific help.  Run `drush topic` to read even more documentation.');
             $this->renderListCLI($application, $namespaced, $this->output(), $preamble);
-            if (!Drush::bootstrapManager()->hasBootstrapped((DRUSH_BOOTSTRAP_DRUPAL_ROOT))) {
-                $this->io()->note(dt('Drupal root not found. Pass --root or a @siteAlias in order to see Drupal-specific commands.'));
+            if (!Drush::bootstrapManager()->hasBootstrapped((DrupalBootLevels::ROOT))) {
+                $this->io()->note(dt('Drupal root not found. In order to see Drupal-specific commands, make sure that the `drush` you are calling is a dependency in your site\'s composer.json. The --uri option might also help.'));
             }
             return null;
         } elseif ($options['format'] == 'xml') {
-            $descriptor  = new XmlDescriptor($this->output(), []);
-            return $descriptor->describe($this->output, $application, []);
+            $descriptor = new XmlDescriptor();
+            $descriptor->describe($this->output, $application, []);
+            return null;
         } elseif ($options['format'] == 'json') {
-            $descriptor  = new JsonDescriptor($this->output(), []);
-            return $descriptor->describe($this->output, $application, []);
+            $descriptor = new JsonDescriptor();
+            $descriptor->describe($this->output, $application, []);
+            return null;
         } else {
             // No longer used. Works for XML, but gives error for JSON.
             // $dom = $this->buildDom($namespaced, $application);
             // return $dom;
+            return null;
         }
     }
 
-    /**
-     * @param $namespaced
-     * @param $application
-     */
     public function buildDom($namespaced, $application): \DOMDocument
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
@@ -179,7 +178,7 @@ class ListCommands extends DrushCommands
     /**
      * @param Command[] $all
      *
-     * @return Command[]
+     * @return array<string, array<Command>>
      */
     public static function categorize(array $all, string $separator = ':'): array
     {

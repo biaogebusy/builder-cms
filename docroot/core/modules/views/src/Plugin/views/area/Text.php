@@ -3,14 +3,14 @@
 namespace Drupal\views\Plugin\views\area;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 
 /**
  * Views area text handler.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("text")
  */
+#[ViewsArea("text")]
 class Text extends TokenizeAreaPluginBase {
 
   /**
@@ -49,7 +49,7 @@ class Text extends TokenizeAreaPluginBase {
   public function preQuery() {
     $content = $this->options['content']['value'];
     // Check for tokens that require a total row count.
-    if (strpos($content, '[view:page-count]') !== FALSE || strpos($content, '[view:total-rows]') !== FALSE) {
+    if (str_contains($content, '[view:page-count]') || str_contains($content, '[view:total-rows]')) {
       $this->view->get_total_rows = TRUE;
     }
   }

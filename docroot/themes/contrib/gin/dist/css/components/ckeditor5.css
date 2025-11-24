@@ -1,5 +1,4 @@
 .ck {
-  --ck-spacing-small: var(--gin-spacing-xxs);
   --ck-color-text: var(--gin-color-text);
   --ck-color-toolbar-background: var(--gin-bg-layer3);
   --ck-color-toolbar-border: var(--gin-border-color-form-element);
@@ -51,7 +50,11 @@
 
 .ck.ck-sticky-panel .ck-sticky-panel__content.ck-sticky-panel__content_sticky {
   z-index: 2;
-  top: calc(var(--gin-toolbar-y-offset) + var(--gin-sticky-offset)) !important;
+  inset-block-start: calc(var(--gin-toolbar-y-offset) + var(--gin-sticky-offset)) !important;
+}
+
+.ck[data-fullscreen=fullscreeneditor] .ck-sticky-panel__content.ck-sticky-panel__content_sticky {
+  inset-block-start: 0 !important;
 }
 
 .ck .ck-toolbar__separator {
@@ -67,17 +70,17 @@
   padding: 0 var(--gin-spacing-s);
 }
 
+.ck .ck.ck-content {
+  padding-bottom: var(--gin-spacing-l);
+}
+
 .ck .ck-button[aria-pressed=true] {
   color: var(--gin-color-primary-active);
   border: 2px solid var(--gin-color-primary);
 }
 
-[dir="ltr"] .ck .ck-button.ck-source-editing-button {
-  padding-left: var(--gin-spacing-m);
-}
-
-[dir="rtl"] .ck .ck-button.ck-source-editing-button {
-  padding-right: var(--gin-spacing-m);
+.ck .ck-button.ck-source-editing-button {
+  padding-inline-start: var(--gin-spacing-m);
 }
 
 .ck.ck-button:not(.ck-disabled):hover {
@@ -105,5 +108,10 @@
 .ck .ck-content .drupal-media > figcaption {
   color: var(--ck-color-image-caption-text);
   background: var(--ck-color-image-caption-background);
+}
+
+.ck .ck.ck.ck-balloon-panel.ck-powered-by-balloon {
+  z-index: 2;
+  transform: translateY(-13px);
 }
 

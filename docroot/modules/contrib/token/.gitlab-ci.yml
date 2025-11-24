@@ -51,7 +51,18 @@ include:
 # variables:
 #   SKIP_ESLINT: '1'
 variables:
+  OPT_IN_TEST_NEXT_MINOR: '1'
   OPT_IN_TEST_PREVIOUS_MINOR: '1'
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+  _PHPUNIT_CONCURRENT: 1
+
+#
+# CSpell overrides and configuration.
+#
+cspell:
+  # Require spellcheck to pass.
+  allow_failure: false
+
 
 ###################################################################################
 #

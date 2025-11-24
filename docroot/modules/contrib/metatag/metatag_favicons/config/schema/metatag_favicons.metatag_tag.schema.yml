@@ -75,3 +75,6 @@ metatag.metatag_tag.apple_touch_icon_precomposed_152x152:
 metatag.metatag_tag.apple_touch_icon_precomposed_180x180:
   type: text
   label: 'Apple touch icon (precomposed): 180px x 180px'
+metatag.metatag_tag.svg_icon:
+  type: text
+  label: 'SVG icon'

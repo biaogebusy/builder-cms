@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\Kernel;
 
@@ -34,7 +34,7 @@ class CKEditor5StylesheetsTest extends KernelTestBase {
    *
    * @dataProvider externalStylesheetsProvider
    */
-  public function testExternalStylesheets($theme, $expected) {
+  public function testExternalStylesheets($theme, $expected): void {
     \Drupal::service('theme_installer')->install([$theme]);
     $this->config('system.theme')->set('default', $theme)->save();
     $this->assertSame($expected, _ckeditor5_theme_css($theme));
@@ -46,7 +46,7 @@ class CKEditor5StylesheetsTest extends KernelTestBase {
    * @return array
    *   An array of test cases.
    */
-  public function externalStylesheetsProvider() {
+  public static function externalStylesheetsProvider() {
     return [
       'Install theme which has an absolute external CSS URL' => [
         'test_ckeditor_stylesheets_external',

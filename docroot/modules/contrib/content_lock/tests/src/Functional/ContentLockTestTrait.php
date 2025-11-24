@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock\Functional;
 
 use Drupal\entity_test\Entity\EntityTestMulChanged;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
- * Trait ContentLockTestTrait.
+ * Trait for testing content lock.
  */
 trait ContentLockTestTrait {
 
@@ -84,7 +86,7 @@ trait ContentLockTestTrait {
         'settings[entity_test_mul_changed][entity_test_mul_changed][fields][field_test_text]' => 1,
       ];
       $this->drupalGet('admin/config/regional/content-language');
-      $this->submitForm($edit, t('Save configuration'));
+      $this->submitForm($edit, 'Save configuration');
       $this->rebuildContainer();
     }
 

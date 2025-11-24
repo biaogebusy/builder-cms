@@ -7,8 +7,8 @@ use Drupal\advancedqueue\Event\AdvancedQueueEvents;
 use Drupal\advancedqueue\Event\JobEvent;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Utility\Error;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides the default queue processor.
@@ -64,7 +64,7 @@ class Processor implements ProcessorInterface {
    * @param \Psr\Log\LoggerInterface|null $logger
    *   The logger.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, TimeInterface $time, JobTypeManager $job_type_manager, LoggerInterface $logger = NULL) {
+  public function __construct(EventDispatcherInterface $event_dispatcher, TimeInterface $time, JobTypeManager $job_type_manager, ?LoggerInterface $logger = NULL) {
     if ($logger === NULL) {
       @trigger_error('Calling Processor::__construct() without the $logger argument is deprecated in advancedqueue:8.x-1.0 and will be required before advancedqueue:8.x-2.0. See https://www.drupal.org/project/advancedqueue/issues/3192113', E_USER_DEPRECATED);
       $logger = \Drupal::service('logger.channel.cron');
@@ -81,7 +81,6 @@ class Processor implements ProcessorInterface {
   public function processQueue(QueueInterface $queue) {
     // Start from a clean slate.
     $queue->getBackend()->cleanupQueue();
-
     $this->shouldStop = FALSE;
 
     // Allow unlimited processing time only on the CLI.
@@ -91,6 +90,8 @@ class Processor implements ProcessorInterface {
     }
     $expected_end = $this->time->getCurrentTime() + $processing_time;
     $num_processed = 0;
+    $stop_when_empty = $queue->getStopWhenEmpty();
+    $was_empty = FALSE;
 
     while (TRUE) {
       if ($this->shouldStop) {
@@ -98,15 +99,25 @@ class Processor implements ProcessorInterface {
       }
       $job = $queue->getBackend()->claimJob();
       if (!$job) {
-        // The queue is empty. Stop here.
-        break;
+        $was_empty = TRUE;
+
+        if ($stop_when_empty) {
+          break;
+        }
       }
-      $this->processJob($job, $queue);
-      $num_processed++;
+
+      if ($job) {
+        $this->processJob($job, $queue);
+        $num_processed++;
+      }
 
       if ($processing_time && $this->time->getCurrentTime() >= $expected_end) {
         // Time limit reached. Stop here.
         break;
+      }
+
+      if ($was_empty) {
+        sleep(1);
       }
     }
 

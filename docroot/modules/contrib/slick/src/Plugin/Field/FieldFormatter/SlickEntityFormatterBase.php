@@ -4,7 +4,6 @@ namespace Drupal\slick\Plugin\Field\FieldFormatter;
 
 use Drupal\blazy\Field\BlazyEntityVanillaBase;
 use Drupal\slick\SlickDefault;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for slick entity reference formatters without field details.
@@ -45,23 +44,6 @@ abstract class SlickEntityFormatterBase extends BlazyEntityVanillaBase {
    * {@inheritdoc}
    */
   protected static $fieldType = 'entity';
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo remove post blazy:2.17, no differences so far.
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
-    return static::injectServices($instance, $container, static::$fieldType);
-  }
-
-  /**
-   * Returns the blazy manager.
-   */
-  public function blazyManager() {
-    return $this->formatter;
-  }
 
   /**
    * {@inheritdoc}

@@ -5,6 +5,7 @@ namespace Drupal\field_ui\Routing;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
+use Drupal\field_ui\Controller\FieldConfigAddController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -56,7 +57,7 @@ class RouteSubscriber extends RouteSubscriberBase {
         ];
         // If the entity type has no bundles and it doesn't use {bundle} in its
         // admin path, use the entity type.
-        if (strpos($path, '{bundle}') === FALSE) {
+        if (!str_contains($path, '{bundle}')) {
           $defaults['bundle'] = !$entity_type->hasKey('bundle') ? $entity_type_id : '';
         }
 
@@ -70,14 +71,6 @@ class RouteSubscriber extends RouteSubscriberBase {
           $options
         );
         $collection->add("entity.field_config.{$entity_type_id}_field_edit_form", $route);
-
-        $route = new Route(
-          "$path/fields/{field_config}/storage",
-          ['_entity_form' => 'field_storage_config.edit'] + $defaults,
-          ['_permission' => 'administer ' . $entity_type_id . ' fields'],
-          $options
-        );
-        $collection->add("entity.field_config.{$entity_type_id}_storage_edit_form", $route);
 
         $route = new Route(
           "$path/fields/{field_config}/delete",
@@ -108,6 +101,28 @@ class RouteSubscriber extends RouteSubscriberBase {
           $options
         );
         $collection->add("field_ui.field_storage_config_add_$entity_type_id", $route);
+
+        $route = new Route(
+          "$path/add-field/{entity_type}/{field_name}",
+          [
+            '_controller' => FieldConfigAddController::class . '::fieldConfigAddConfigureForm',
+            '_title' => 'Add field',
+          ] + $defaults,
+          ['_permission' => 'administer ' . $entity_type_id . ' fields'],
+          $options
+        );
+        $collection->add("field_ui.field_add_$entity_type_id", $route);
+
+        $route = new Route(
+          "$path/fields/reuse",
+          [
+            '_form' => '\Drupal\field_ui\Form\FieldStorageReuseForm',
+            '_title' => 'Re-use an existing field',
+          ] + $defaults,
+          ['_field_ui_field_reuse_access' => 'administer ' . $entity_type_id . ' fields'],
+          $options
+        );
+        $collection->add("field_ui.field_storage_config_reuse_$entity_type_id", $route);
 
         $route = new Route(
           "$path/form-display",
@@ -161,7 +176,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = parent::getSubscribedEvents();
     $events[RoutingEvents::ALTER] = ['onAlterRoutes', -100];
     return $events;

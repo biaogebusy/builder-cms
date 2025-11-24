@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HL",
+		"Jixi Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chengzihe Qu": {
+			"local_name": "城子河区"
+		},
+		"Keyao Qu": {
+			"local_name": "滴道区"
+		},
+		"Hengshan Qu": {
+			"local_name": "恒山区"
+		},
+		"Hulin Shi": {
+			"local_name": "虎林市"
+		},
+		"Jidong Xian": {
+			"local_name": "鸡东县"
+		},
+		"Jiguan Qu": {
+			"local_name": "鸡冠区"
+		},
+		"Lishu Qu": {
+			"local_name": "梨树区"
+		},
+		"Mashan Qu": {
+			"local_name": "麻山区"
+		},
+		"Mishan Shi": {
+			"local_name": "密山市"
+		}
+	}
+}

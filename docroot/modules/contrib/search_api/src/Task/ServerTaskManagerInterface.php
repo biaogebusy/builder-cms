@@ -19,7 +19,7 @@ interface ServerTaskManagerInterface {
    * @return int
    *   The number of tasks pending for this server, or in total.
    */
-  public function getCount(ServerInterface $server = NULL);
+  public function getCount(?ServerInterface $server = NULL);
 
   /**
    * Checks for pending tasks on one or all enabled search servers.
@@ -33,7 +33,7 @@ interface ServerTaskManagerInterface {
    *   executed successfully, or if there were no tasks. FALSE if there are
    *   still pending tasks.
    */
-  public function execute(ServerInterface $server = NULL);
+  public function execute(?ServerInterface $server = NULL);
 
   /**
    * Sets a batch for executing server tasks.
@@ -42,7 +42,7 @@ interface ServerTaskManagerInterface {
    *   (optional) The server whose tasks should be executed. If not given, the
    *   tasks for all enabled servers are executed.
    */
-  public function setExecuteBatch(ServerInterface $server = NULL);
+  public function setExecuteBatch(?ServerInterface $server = NULL);
 
   /**
    * Removes pending server tasks from the list.
@@ -57,6 +57,6 @@ interface ServerTaskManagerInterface {
    *   (optional) The types of tasks that should be deleted, or NULL to delete
    *   tasks regardless of type.
    */
-  public function delete(ServerInterface $server = NULL, $index = NULL, array $types = NULL);
+  public function delete(?ServerInterface $server = NULL, $index = NULL, ?array $types = NULL);
 
 }

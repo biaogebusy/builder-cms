@@ -10,7 +10,7 @@
       "source": "http://cgit.drupalcode.org/message_ui"
     },
     "require": {
-      "drupal/core": "^9 || ^10",
+      "drupal/core": "^9 || ^10 || ^11",
       "drupal/message": "^1"
     },
     "require-dev": {

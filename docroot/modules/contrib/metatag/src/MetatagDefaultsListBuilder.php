@@ -50,7 +50,7 @@ class MetatagDefaultsListBuilder extends ConfigEntityListBuilder {
    * @return array
    *   The list of parents to load
    */
-  protected function getParentIds(array $entity_ids) {
+  protected function getParentIds(array $entity_ids): array {
     $parents = ['global' => 'global'];
     foreach ($entity_ids as $entity_id) {
       if (strpos($entity_id, '__') !== FALSE) {
@@ -112,7 +112,7 @@ class MetatagDefaultsListBuilder extends ConfigEntityListBuilder {
    * @return array
    *   Render array for a table cell.
    */
-  public function getLabelAndConfig(EntityInterface $entity) {
+  public function getLabelAndConfig(EntityInterface $entity): array {
     /** @var \Drupal\metatag\Entity\MetatagDefaults $entity */
     $output = '<div>';
     $prefix = '';

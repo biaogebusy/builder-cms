@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
@@ -29,12 +31,10 @@ class AnnotatedClassDiscoveryTest extends TestCase {
    * @covers ::__construct
    * @covers ::getPluginNamespaces
    */
-  public function testGetPluginNamespaces() {
+  public function testGetPluginNamespaces(): void {
     $discovery = new AnnotatedClassDiscovery(['com/example' => [__DIR__]]);
 
     $reflection = new \ReflectionMethod($discovery, 'getPluginNamespaces');
-    $reflection->setAccessible(TRUE);
-
     $result = $reflection->invoke($discovery);
     $this->assertEquals(['com/example' => [__DIR__]], $result);
   }
@@ -44,7 +44,7 @@ class AnnotatedClassDiscoveryTest extends TestCase {
    * @covers ::prepareAnnotationDefinition
    * @covers ::getAnnotationReader
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $discovery = new AnnotatedClassDiscovery(['com\example' => [__DIR__ . '/Fixtures']]);
     $this->assertEquals([
       'discovery_test_1' => [

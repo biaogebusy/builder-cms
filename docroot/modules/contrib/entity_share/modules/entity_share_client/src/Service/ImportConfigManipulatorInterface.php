@@ -30,17 +30,17 @@ interface ImportConfigManipulatorInterface {
    * @param string $processor_id
    *   The ID of the processor plugin to return.
    *
-   * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface
-   *   The processor plugin with the given ID.
-   *
    * @throws \Exception
    *   Thrown if the specified processor isn't enabled for this import config,
    *   or couldn't be loaded.
+   *
+   * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface
+   *   The processor plugin with the given ID.
    */
   public function getImportProcessor(ImportConfigInterface $import_config, $processor_id);
 
   /**
-   * Loads this import config's processors for a specific stage.
+   * Loads this import config's processors for all stages.
    *
    * @param \Drupal\entity_share_client\Entity\ImportConfigInterface $import_config
    *   The import config.
@@ -50,7 +50,9 @@ interface ImportConfigManipulatorInterface {
    *
    * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface[][]
    *   An array of all enabled processors that support the given stage for each
-   *   stage, ordered by the weight for that stage.
+   *   stage, ordered by the weight for that stage. If a plugin belongs in
+   *   multiple stages, the same plugin instance is used, provided it is not
+   *   the target of an item in $overrides.
    */
   public function getImportProcessorsByStages(ImportConfigInterface $import_config, array $overrides = []);
 
@@ -66,6 +68,11 @@ interface ImportConfigManipulatorInterface {
    * @param array[] $overrides
    *   (optional) Overrides to apply to the import config's processors, keyed by
    *   processor IDs with their respective overridden settings as values.
+   * @param array $processors
+   *   (optional) The array of processor plugins for the import config. If
+   *   provided, this ensures that the same plugin instance is returned for
+   *   different stages. Processors that have an override will have their own
+   *   instance.
    *
    * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface[]
    *   An array of all enabled processors that support the given stage, ordered

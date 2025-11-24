@@ -15,12 +15,10 @@
   var ID_ONCE = 'b-' + NICK;
   var B_ROOT = 'b-' + ID;
   var S_ROOT = '#' + ID;
-  var $BODY = $('body');
   var C_MOUNTED = 'is-' + ID_ONCE;
   var S_ELEMENT = '[data-' + ID + '-trigger]:not(.' + C_MOUNTED + ')';
   var C_MEDIA_BOX = 'media media--box';
   var C_MEDIA_RATIO = C_MEDIA_BOX + ' media--ratio';
-  var C_CBOX_ON = 'colorbox-on';
   var S_LOADED_CONTENT = '#cboxLoadedContent';
   var FN_SANITIZER = _d.sanitizer;
   var FN_INSTAGRAM = _d.instagram || false;
@@ -37,11 +35,9 @@
    *   The colorbox HTML element.
    */
   function process(box) {
-
     var $root = $(S_ROOT);
     var $box = $(box);
-    // @todo remove the second at 3.x:
-    var media = $box.data('bMedia') || $box.data('media') || {};
+    var media = $box.data('bMedia') || {};
     var oEmbedUrl = $box.data('oembedUrl');
     var url = box.href || 'x';
 
@@ -97,12 +93,7 @@
               $root.addClass(B_PROVIDER + provider);
             }
 
-            // @deprecated in 2.17, and is removed in 3.x for local classes.
-            $BODY.addClass(C_CBOX_ON + ' ' + C_CBOX_ON + '--' + media.type);
             if (isIframe || isHtml) {
-              // @deprecated in 2.17, and is removed in 3.x for local classes.
-              $BODY.addClass(isIframe ? C_CBOX_ON + '--media' : C_CBOX_ON + '--html');
-
               resizeBox();
             }
           }
@@ -130,11 +121,6 @@
     function removeClasses() {
       // Re-check might be empty for some reasons.
       $root = $(S_ROOT);
-
-      // @todo remove at 3.x for local classes.
-      $BODY.removeClass(function (index, css) {
-        return (css.match(/(^|\s)colorbox-\S+/g) || []).join(' ');
-      });
 
       $root.removeClass(B_PROVIDER + MD_PROVIDER);
       $root.removeClass(function (index, css) {

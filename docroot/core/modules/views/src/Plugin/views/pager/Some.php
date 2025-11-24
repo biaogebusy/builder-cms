@@ -3,19 +3,20 @@
 namespace Drupal\views\Plugin\views\pager;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsPager;
 
 /**
  * Plugin for views without pagers.
  *
  * @ingroup views_pager_plugins
- *
- * @ViewsPager(
- *   id = "some",
- *   title = @Translation("Display a specified number of items"),
- *   help = @Translation("Display a limited number items that this view might find."),
- *   display_types = {"basic"}
- * )
  */
+#[ViewsPager(
+  id: "some",
+  title: new TranslatableMarkup("Display a specified number of items"),
+  help: new TranslatableMarkup("Display a limited number items that this view might find."),
+  display_types: ["basic"],
+)]
 class Some extends PagerPluginBase {
 
   public function summaryTitle() {
@@ -67,6 +68,13 @@ class Some extends PagerPluginBase {
   public function query() {
     $this->view->query->setLimit($this->options['items_per_page']);
     $this->view->query->setOffset($this->options['offset']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postExecute(&$result): void {
+    $this->total_items = count($result);
   }
 
 }

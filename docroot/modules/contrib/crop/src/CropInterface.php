@@ -7,6 +7,9 @@ use Drupal\image\ImageStyleInterface;
 
 /**
  * Provides an interface defining the crop entity.
+ *
+ * @phpcs:disable Drupal.Commenting.Deprecated.DeprecatedMissingSeeTag
+ * @phpcs:disable Drupal.Commenting.Deprecated.IncorrectTextLayout
  */
 interface CropInterface extends ContentEntityInterface {
 

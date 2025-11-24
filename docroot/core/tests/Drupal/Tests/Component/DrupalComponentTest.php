@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component;
 
 use org\bovigo\vfs\vfsStream;
@@ -16,7 +18,7 @@ class DrupalComponentTest extends TestCase {
   /**
    * Tests that classes in Component do not use any Core class.
    */
-  public function testNoCoreInComponent() {
+  public function testNoCoreInComponent(): void {
     $component_path = dirname(substr(__DIR__, 0, -strlen(__NAMESPACE__))) . '/lib/Drupal/Component';
     foreach ($this->findPhpClasses($component_path) as $class) {
       $this->assertNoCoreUsage($class);
@@ -26,7 +28,7 @@ class DrupalComponentTest extends TestCase {
   /**
    * Tests that classes in Component Tests do not use any Core class.
    */
-  public function testNoCoreInComponentTests() {
+  public function testNoCoreInComponentTests(): void {
     $component_path = dirname(substr(__DIR__, 0, -strlen(__NAMESPACE__))) . '/tests/Drupal/Tests/Component';
     foreach ($this->findPhpClasses($component_path) as $class) {
       $this->assertNoCoreUsage($class);
@@ -36,12 +38,12 @@ class DrupalComponentTest extends TestCase {
   /**
    * Tests LICENSE.txt is present and has the correct content.
    *
-   * @param $component_path
+   * @param string $component_path
    *   The path to the component.
    *
-   * @dataProvider \Drupal\Tests\Component\DrupalComponentTest::getComponents
+   * @dataProvider getComponents
    */
-  public function testComponentLicense($component_path) {
+  public function testComponentLicense(string $component_path): void {
     $this->assertFileExists($component_path . DIRECTORY_SEPARATOR . 'LICENSE.txt');
     $this->assertSame('e84dac1d9fbb5a4a69e38654ce644cea769aa76b', hash_file('sha1', $component_path . DIRECTORY_SEPARATOR . 'LICENSE.txt'));
   }
@@ -51,7 +53,7 @@ class DrupalComponentTest extends TestCase {
    *
    * @return array
    */
-  public function getComponents() {
+  public static function getComponents(): array {
     $root_component_path = dirname(substr(__DIR__, 0, -strlen(__NAMESPACE__))) . '/lib/Drupal/Component';
     $component_paths = [];
     foreach (new \DirectoryIterator($root_component_path) as $file) {
@@ -111,7 +113,7 @@ class DrupalComponentTest extends TestCase {
    *   - TRUE if the test passes, FALSE otherwise.
    *   - File data as a string. This will be used as a virtual file.
    */
-  public function providerAssertNoCoreUsage() {
+  public static function providerAssertNoCoreUsage() {
     return [
       [
         TRUE,
@@ -138,7 +140,7 @@ class DrupalComponentTest extends TestCase {
    * @covers \Drupal\Tests\Component\DrupalComponentTest::assertNoCoreUsage
    * @dataProvider providerAssertNoCoreUsage
    */
-  public function testAssertNoCoreUsage($expected_pass, $file_data) {
+  public function testAssertNoCoreUsage($expected_pass, $file_data): void {
     // Set up a virtual file to read.
     $vfs_root = vfsStream::setup('root');
     vfsStream::newFile('Test.php')->at($vfs_root)->setContent($file_data);

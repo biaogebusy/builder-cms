@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 /**
@@ -64,10 +66,10 @@ class DiffAdminFormsTest extends DiffTestBase {
    */
   public function testRequirements(): void {
     \Drupal::moduleHandler()->loadInclude('diff', 'install');
-    $requirements = diff_requirements('runtime');
+    $requirements = \diff_requirements('runtime');
     $this->assertEquals($requirements['html_diff_advanced']['title'], 'Diff');
 
-    $has_htmlDiffAdvanced = class_exists('\HtmlDiffAdvanced');
+    $has_htmlDiffAdvanced = \class_exists('\HtmlDiffAdvanced');
     if (!$has_htmlDiffAdvanced) {
       // The plugin is disabled dependencies are missing.
       $this->assertEquals($requirements['html_diff_advanced']['value'], 'Visual inline layout');
@@ -165,7 +167,7 @@ class DiffAdminFormsTest extends DiffTestBase {
     $this->assertSession()->linkExists('Raw');
     $this->assertSession()->linkExists('Strip tags');
     $text = $this->xpath('//tbody/tr[4]/td[3]');
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($text[0]->getHtml())), '<p>great_body</p>');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $text[0]->getHtml())), '<p>great_body</p>');
 
     // Change the settings of the layouts, disable the single column.
     $edit = [

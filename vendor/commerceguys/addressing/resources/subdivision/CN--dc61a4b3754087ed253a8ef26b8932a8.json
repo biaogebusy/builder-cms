@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HL",
+		"Heihe Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Aihui Qu": {
+			"local_name": "爱辉区"
+		},
+		"Bei'an Shi": {
+			"local_name": "北安市"
+		},
+		"Nenjiang Xian": {
+			"local_name": "嫩江县"
+		},
+		"Sunwu Xian": {
+			"local_name": "孙吴县"
+		},
+		"Wudalianchi Shi": {
+			"local_name": "五大连池市"
+		},
+		"Xunke Xian": {
+			"local_name": "逊克县"
+		}
+	}
+}

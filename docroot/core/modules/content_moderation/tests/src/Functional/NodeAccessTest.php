@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Functional;
 
 use Drupal\node\Entity\NodeType;
@@ -12,9 +14,7 @@ use Drupal\node\Entity\NodeType;
 class NodeAccessTest extends ModerationStateTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'content_moderation',
@@ -54,6 +54,9 @@ class NodeAccessTest extends ModerationStateTestBase {
     parent::setUp();
     $this->drupalLogin($this->adminUser);
     $this->createContentTypeFromUi('Moderated content', 'moderated_content', FALSE);
+    // Ensure the statically cached entity bundle info is aware of the content
+    // type that was just created in the UI.
+    $this->container->get('entity_type.bundle.info')->clearCachedBundles();
     $this->grantUserPermissionToCreateContentOfType($this->adminUser, 'moderated_content');
 
     // Add the private field to the node type.
@@ -67,7 +70,7 @@ class NodeAccessTest extends ModerationStateTestBase {
   /**
    * Verifies that a non-admin user can still access the appropriate pages.
    */
-  public function testPageAccess() {
+  public function testPageAccess(): void {
     // Initially disable access grant records in
     // node_access_test_node_access_records().
     \Drupal::state()->set('node_access_test.private', TRUE);
@@ -165,7 +168,7 @@ class NodeAccessTest extends ModerationStateTestBase {
     $this->assertSession()->statusCodeEquals(200);
 
     // Now create a private node that the user is not granted access to by the
-    // node grants, but is granted access via hook_node_access().
+    // node grants, but is granted access via hook_ENTITY_TYPE_access().
     // @see node_access_test_node_access
     $node = $this->createNode([
       'type' => 'moderated_content',

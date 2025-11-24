@@ -46,9 +46,9 @@ final class SmsFrameworkTokenTest extends SmsFrameworkKernelBase {
    */
   public function testSmsTokens(): void {
     $url_options = ['absolute' => TRUE];
-    $this->assertEquals(
+    static::assertEquals(
       Url::fromRoute('sms.phone.verify', [], $url_options)->toString(),
-      $this->tokenService->replace('[sms:verification-url]')
+      $this->tokenService->replace('[sms:verification-url]'),
     );
   }
 
@@ -59,9 +59,9 @@ final class SmsFrameworkTokenTest extends SmsFrameworkKernelBase {
    */
   public function testVerificationCode(): void {
     $data['sms_verification_code'] = $this->randomMachineName();
-    $this->assertEquals(
+    static::assertEquals(
       $data['sms_verification_code'],
-      $this->tokenService->replace('[sms-message:verification-code]', $data)
+      $this->tokenService->replace('[sms-message:verification-code]', $data),
     );
   }
 
@@ -78,14 +78,14 @@ final class SmsFrameworkTokenTest extends SmsFrameworkKernelBase {
       ->addRecipients($phone_numbers);
     $data['sms-message'] = $sms_message;
 
-    $this->assertEquals(
+    static::assertEquals(
       $phone_numbers[0],
-      $this->tokenService->replace('[sms-message:phone-number]', $data)
+      $this->tokenService->replace('[sms-message:phone-number]', $data),
     );
 
-    $this->assertEquals(
+    static::assertEquals(
       Html::escape($message),
-      $this->tokenService->replace('[sms-message:message]', $data)
+      $this->tokenService->replace('[sms-message:message]', $data),
     );
   }
 

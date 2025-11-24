@@ -15,6 +15,7 @@
 .admin-dblog .dblog-notice .icon,
 .system-status-report__status-icon--checked .details-title:before,
 .details .system-status-report__status-icon--checked:before,
+.claro-details .system-status-report__status-icon--checked:before,
 .color-checked .system-status-report__status-title:before,
 .upgrade-status-counter__status-icon--checked:before,
 .upgrade-status-error-list tr.no-known-error > td.status-info:before,
@@ -33,6 +34,7 @@
 .admin-dblog .dblog-warning .icon,
 .system-status-report__status-icon--warning .details-title:before,
 .details .system-status-report__status-icon--warning:before,
+.claro-details .system-status-report__status-icon--warning:before,
 .upgrade-status-counter__status-icon--warning:before,
 .upgrade-status-error-list tr.known-warnings > td.status-info:before,
 .upgrade-status-summary tr.known-warnings > td.status-info:before {
@@ -52,6 +54,7 @@
 .admin-dblog .dblog-emergency .icon,
 .system-status-report__status-icon--error .details-title:before,
 .details .system-status-report__status-icon--error:before,
+.claro-details .system-status-report__status-icon--error:before,
 .upgrade-status-counter__status-icon--error:before,
 .upgrade-status-error-list tr.known-errors > td.status-info:before,
 .upgrade-status-summary tr.known-errors > td.status-info:before {
@@ -71,12 +74,12 @@
   border-radius: var(--gin-border-m);
 
   &__status-title {
-    padding-left: 0;
+    padding-inline-start: 0;
   }
 
   &__status-icon {
     background-color: transparent;
-    border-right: 0 none;
+    border-inline-end: 0 none;
     box-shadow: none;
 
     &--checked:before,
@@ -96,11 +99,11 @@
 
 .system-status-general-info {
   &__header {
-    margin-bottom: var(--gin-spacing-xs);
+    margin-block-end: var(--gin-spacing-xs);
   }
 
   &__items {
-    border-bottom: 0 none;
+    border-block-end: 0 none;
   }
 
   &__item {
@@ -162,11 +165,11 @@
 }
 
 .cron-description__run-cron {
-  margin-top: var(--gin-spacing-m);
+  margin-block-start: var(--gin-spacing-m);
 }
 
 .system-status-report {
-  margin-top: var(--gin-spacing-l);
+  margin-block-start: var(--gin-spacing-l);
 
   &-counters &-counters__item {
     border: 1px solid var(--gin-border-color-layer);
@@ -184,17 +187,18 @@
   &:before {
     content: "";
     position: absolute;
-    top: 1em;
-    left: 10px;
+    inset-block-start: 1em;
+    inset-inline-start: 10px;
     display: inline-block;
     width: 24px;
     height: 24px;
-    margin-right: 10px;
+    margin-inline-end: 10px;
   }
 }
 
 .system-status-report__status-title .details-title:before,
-.details .system-status-report__status-icon:before {
+.details .system-status-report__status-icon:before,
+.claro-details .system-status-report__status-icon:before {
   width: 24px;
   height: 24px;
 }

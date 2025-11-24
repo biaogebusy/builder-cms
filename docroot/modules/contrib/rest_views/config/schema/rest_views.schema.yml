@@ -1,9 +1,31 @@
+field.formatter.settings.image_export:
+  type: field.formatter.settings.image
+  mapping:
+    export_alt:
+      type: boolean
+      label: 'Export the alt attribute'
+    export_title:
+      type: boolean
+      label: 'Export the title attribute'
+
 field.formatter.settings.entity_reference_export:
   type: field.formatter.settings.entity_reference_entity_view
   mapping:
-    title:
+    extra:
+      type: sequence
+      label: 'Export metadata'
+      sequence:
+        type: string
+        label: 'Export metadata'
+
+views.field.field_export:
+  type: views.field.field
+  label: 'Entity field (serializable)'
+
+field.formatter.settings.entity_path:
+  type: mapping
+  label: 'Entity path formatter settings'
+  mapping:
+    absolute:
       type: boolean
-      label: 'Export title'
-    url:
-      type: boolean
-      label: 'Export URL'
+      label: 'Output an absolute path'

@@ -64,6 +64,10 @@ commerce_order_admin_comment:
   category: commerce_order
   label: 'Admin comment'
   template: '<p><strong>Admin comment:</strong><br /> {{ comment }}</p>'
+commerce_order_from_customer_comment:
+  category: commerce_order
+  label: 'Comment from customer'
+  template: '<p><strong>From customer:</strong><br /> {{ comment|raw }}</p>'
 payment_added:
   category: commerce_payment
   label: 'Payment added'
@@ -88,3 +92,7 @@ payment_deleted:
   category: commerce_payment
   label: 'Payment deleted'
   template: '<p>Payment deleted: {{ amount|commerce_price_format }}.{% if method %} [{{ method }}].{% endif %}{% if remote_id %}<br /> Transaction ID: {{ remote_id }}.{% endif %}</p>'
+payment_failed:
+  category: commerce_payment
+  label: 'Payment failed'
+  template: '<p>Payment failed via <em>{{ gateway }}</em> for {{ amount|commerce_price_format }}{% if method %} using <em>{{ method }}</em>{% endif %}.<br />Message: {{ error_message }}.{% if remote_id %}<br /> Transaction ID: {{ remote_id }}.{% endif %}</p>'

@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_cart;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\commerce_cart\Exception\DuplicateCartException;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_store\CurrentStoreInterface;
 use Drupal\commerce_store\Entity\StoreInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Session\AccountInterface;
 
 /**
  * Default implementation of the cart provider.
@@ -20,27 +20,6 @@ class CartProvider implements CartProviderInterface {
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $orderStorage;
-
-  /**
-   * The current store.
-   *
-   * @var \Drupal\commerce_store\CurrentStoreInterface
-   */
-  protected $currentStore;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
-
-  /**
-   * The session.
-   *
-   * @var \Drupal\commerce_cart\CartSessionInterface
-   */
-  protected $cartSession;
 
   /**
    * The loaded cart data, grouped by uid, then keyed by cart order ID.
@@ -58,24 +37,26 @@ class CartProvider implements CartProviderInterface {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\commerce_store\CurrentStoreInterface $current_store
+   * @param \Drupal\commerce_store\CurrentStoreInterface $currentStore
    *   The current store.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
+   * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   The current user.
-   * @param \Drupal\commerce_cart\CartSessionInterface $cart_session
+   * @param \Drupal\commerce_cart\CartSessionInterface $cartSession
    *   The cart session.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, CurrentStoreInterface $current_store, AccountInterface $current_user, CartSessionInterface $cart_session) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    protected CurrentStoreInterface $currentStore,
+    protected AccountInterface $currentUser,
+    protected CartSessionInterface $cartSession,
+  ) {
     $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
-    $this->currentStore = $current_store;
-    $this->currentUser = $current_user;
-    $this->cartSession = $cart_session;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createCart($order_type, StoreInterface $store = NULL, AccountInterface $account = NULL) {
+  public function createCart($order_type, ?StoreInterface $store = NULL, ?AccountInterface $account = NULL) {
     $store = $store ?: $this->currentStore->getStore();
     $account = $account ?: $this->currentUser;
     $uid = $account->id();
@@ -131,7 +112,7 @@ class CartProvider implements CartProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCart($order_type, StoreInterface $store = NULL, AccountInterface $account = NULL) {
+  public function getCart($order_type, ?StoreInterface $store = NULL, ?AccountInterface $account = NULL) {
     $cart = NULL;
     $cart_id = $this->getCartId($order_type, $store, $account);
     if ($cart_id) {
@@ -144,7 +125,7 @@ class CartProvider implements CartProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCartId($order_type, StoreInterface $store = NULL, AccountInterface $account = NULL) {
+  public function getCartId($order_type, ?StoreInterface $store = NULL, ?AccountInterface $account = NULL) {
     $cart_id = NULL;
     $cart_data = $this->loadCartData($account);
     if ($cart_data) {
@@ -162,7 +143,7 @@ class CartProvider implements CartProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCarts(AccountInterface $account = NULL, StoreInterface $store = NULL) {
+  public function getCarts(?AccountInterface $account = NULL, ?StoreInterface $store = NULL) {
     $carts = [];
     $cart_ids = $this->getCartIds($account, $store);
     if ($cart_ids) {
@@ -175,7 +156,7 @@ class CartProvider implements CartProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCartIds(AccountInterface $account = NULL, StoreInterface $store = NULL) {
+  public function getCartIds(?AccountInterface $account = NULL, ?StoreInterface $store = NULL) {
     // Filter out cart IDS that do not belong to the store passed.
     $cart_data = array_filter($this->loadCartData($account), function ($data) use ($store) {
       return !$store || $store->id() === $data['store_id'];
@@ -200,7 +181,7 @@ class CartProvider implements CartProviderInterface {
    * @return array
    *   The cart data.
    */
-  protected function loadCartData(AccountInterface $account = NULL) {
+  protected function loadCartData(?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
     $uid = $account->id();
     if (isset($this->cartData[$uid])) {
@@ -276,6 +257,10 @@ class CartProvider implements CartProviderInterface {
     }
     // Empty carts should not be valid.
     if (empty($cart->cart->value)) {
+      return FALSE;
+    }
+    // A cart belonging to an unpublished store should no longer be eligible.
+    if (!$cart->getStore()->isPublished()) {
       return FALSE;
     }
     // Carts not in draft mode should not be valid.

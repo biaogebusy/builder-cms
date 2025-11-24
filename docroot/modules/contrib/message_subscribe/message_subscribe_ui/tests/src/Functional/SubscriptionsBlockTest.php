@@ -4,7 +4,7 @@ namespace Drupal\Tests\message_subscribe_ui\Functional;
 
 use Drupal\entity_test\FieldStorageDefinition;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
 /**
@@ -15,7 +15,7 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 class SubscriptionsBlockTest extends BrowserTestBase {
 
   use TaxonomyTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Admin user.

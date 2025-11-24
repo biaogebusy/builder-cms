@@ -122,8 +122,8 @@
       });
 
       // Add "any" option.
-      if (widget.model.itemCollection.length > 1) {
-        widget.$el.append($('<option>').text(widget.container.app.getSetting('anyLabel')).val(widget.container.app.getSetting('anyValue')));
+      if (widget.model.itemCollection.length > 0) {
+        widget.$el.prepend($('<option>').text(widget.container.app.getSetting('anyLabel')).val(widget.container.app.getSetting('anyValue')));
       }
 
       var $container = $('.shs-widget-container[data-shs-level="' + widget.model.get('level') + '"]', widget.container.$el);
@@ -189,6 +189,8 @@
       this.model.set('defaultValue', value);
       // Fire events.
       this.container.collection.trigger('update:selection', this.model, value, this);
+      // Focus the current element.
+      this.container.$el.last().find('select').focus();
     }
 
   });

@@ -18,7 +18,7 @@ use Drupal\commerce\Entity\CommerceBundleEntityBase;
  *     plural = "@count order item types",
  *   ),
  *   handlers = {
- *     "access" = "Drupal\commerce\CommerceBundleAccessControlHandler",
+ *     "access" = "Drupal\commerce_order\OrderItemTypeAccessControlHandler",
  *     "form" = {
  *       "add" = "Drupal\commerce_order\Form\OrderItemTypeForm",
  *       "edit" = "Drupal\commerce_order\Form\OrderItemTypeForm",

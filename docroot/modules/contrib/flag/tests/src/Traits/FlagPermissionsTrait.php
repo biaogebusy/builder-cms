@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Traits;
 
+use Drupal\flag\FlagInterface;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
-use Drupal\flag\FlagInterface;
 
 /**
  * Trait for programmatically creating Flags.
@@ -26,10 +28,12 @@ trait FlagPermissionsTrait {
    *   Optional TRUE to grant the role unflagging permission, FALSE to not grant
    *   unflagging permission to the role. If omitted, TRUE is assumed.
    */
-  protected function grantFlagPermissions(FlagInterface $flag,
-                                      $role_id = RoleInterface::AUTHENTICATED_ID,
-                                      $can_flag = TRUE,
-                                      $can_unflag = TRUE) {
+  protected function grantFlagPermissions(
+    FlagInterface $flag,
+    $role_id = RoleInterface::AUTHENTICATED_ID,
+    $can_flag = TRUE,
+    $can_unflag = TRUE,
+  ) {
 
     // Grant the flag permissions to the authenticated role, so that both
     // users have the same roles and share the render cache.
@@ -41,7 +45,7 @@ trait FlagPermissionsTrait {
     if ($can_unflag) {
       $role->grantPermission('unflag ' . $flag->id());
     }
-    
+
     $role->save();
   }
 

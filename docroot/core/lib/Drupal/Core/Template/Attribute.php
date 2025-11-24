@@ -12,8 +12,8 @@ use Drupal\Component\Utility\NestedArray;
  * To use, optionally pass in an associative array of defined attributes, or
  * add attributes using array syntax. For example:
  * @code
- *  $attributes = new Attribute(array('id' => 'socks'));
- *  $attributes['class'] = array('black-cat', 'white-cat');
+ *  $attributes = new Attribute(['id' => 'socks']);
+ *  $attributes['class'] = ['black-cat', 'white-cat'];
  *  $attributes['class'][] = 'black-white-cat';
  *  echo '<cat' . $attributes . '>';
  *  // Produces <cat id="socks" class="black-cat white-cat black-white-cat">
@@ -21,8 +21,8 @@ use Drupal\Component\Utility\NestedArray;
  *
  * $attributes always prints out all the attributes. For example:
  * @code
- *  $attributes = new Attribute(array('id' => 'socks'));
- *  $attributes['class'] = array('black-cat', 'white-cat');
+ *  $attributes = new Attribute(['id' => 'socks']);
+ *  $attributes['class'] = ['black-cat', 'white-cat'];
  *  $attributes['class'][] = 'black-white-cat';
  *  echo '<cat class="cat ' . $attributes['class'] . '"' . $attributes . '>';
  *  // Produces <cat class="cat black-cat white-cat black-white-cat" id="socks" class="cat black-cat white-cat black-white-cat">
@@ -47,7 +47,7 @@ use Drupal\Component\Utility\NestedArray;
  * @code
  *  $path = 'javascript:alert("xss");';
  *  $path = UrlHelper::stripDangerousProtocols($path);
- *  $attributes = new Attribute(array('href' => $path));
+ *  $attributes = new Attribute(['href' => $path]);
  *  echo '<a' . $attributes . '>';
  *  // Produces <a href="alert(&quot;xss&quot;);">
  * @endcode
@@ -73,7 +73,7 @@ class Attribute implements \ArrayAccess, \IteratorAggregate, MarkupInterface {
    *
    * @var \Drupal\Core\Template\AttributeValueBase[]
    */
-  protected $storage = [];
+  protected array $storage = [];
 
   /**
    * Constructs a \Drupal\Core\Template\Attribute object.
@@ -94,6 +94,13 @@ class Attribute implements \ArrayAccess, \IteratorAggregate, MarkupInterface {
   public function offsetGet($name) {
     if (isset($this->storage[$name])) {
       return $this->storage[$name];
+    }
+    // The 'class' array key is expected to be itself an array, and therefore
+    // can be accessed using array append syntax before it has been initialized.
+    if ($name === 'class') {
+      // Initialize the class attribute as an empty array if not set.
+      $this->offsetSet('class', []);
+      return $this->storage['class'];
     }
   }
 
@@ -183,8 +190,9 @@ class Attribute implements \ArrayAccess, \IteratorAggregate, MarkupInterface {
         // Merge the values passed in from the classes array.
         // The argument is cast to an array to support comma separated single
         // values or one or more array arguments.
-        $classes = array_merge($classes, (array) $arg);
+        $classes[] = (array) $arg;
       }
+      $classes = array_merge(...$classes);
 
       // Merge if there are values, just add them otherwise.
       if (isset($this->storage['class']) && $this->storage['class'] instanceof AttributeArray) {
@@ -271,8 +279,9 @@ class Attribute implements \ArrayAccess, \IteratorAggregate, MarkupInterface {
         // Merge the values passed in from the classes array.
         // The argument is cast to an array to support comma separated single
         // values or one or more array arguments.
-        $classes = array_merge($classes, (array) $arg);
+        $classes[] = (array) $arg;
       }
+      $classes = array_merge(...$classes);
 
       // Remove the values passed in from the value array. Use array_values() to
       // ensure that the array index remains sequential.

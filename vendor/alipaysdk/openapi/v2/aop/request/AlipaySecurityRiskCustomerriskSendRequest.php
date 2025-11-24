@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.security.risk.customerrisk.send request
  *
  * @author auto create
- * @since 1.0, 2023-10-26 13:53:22
+ * @since 1.0, 2024-07-11 11:47:05
  */
 class AlipaySecurityRiskCustomerriskSendRequest
 {

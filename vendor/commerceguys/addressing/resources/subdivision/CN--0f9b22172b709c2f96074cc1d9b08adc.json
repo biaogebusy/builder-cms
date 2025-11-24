@@ -1,0 +1,65 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Garzê Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Batang Xian": {
+			"local_name": "巴塘县"
+		},
+		"Baiyu Xian": {
+			"local_name": "白玉县"
+		},
+		"Danba Xian": {
+			"local_name": "丹巴县"
+		},
+		"Dawu Xian": {
+			"local_name": "道孚县"
+		},
+		"Daocheng Xian": {
+			"local_name": "稻城县"
+		},
+		"Dêrong Xian": {
+			"local_name": "得荣县"
+		},
+		"Dêgê Xian": {
+			"local_name": "德格县"
+		},
+		"Garzê Xian": {
+			"local_name": "甘孜县"
+		},
+		"Jiulong Xian": {
+			"local_name": "九龙县"
+		},
+		"Kangding Xian": {
+			"local_name": "康定县"
+		},
+		"Litang Xian": {
+			"local_name": "理塘县"
+		},
+		"Luding Xian": {
+			"local_name": "泸定县"
+		},
+		"Luhuo Xian": {
+			"local_name": "炉霍县"
+		},
+		"Sêrtar Xian": {
+			"local_name": "色达县"
+		},
+		"Sêrxü Xian": {
+			"local_name": "石渠县"
+		},
+		"Xiangcheng Xian": {
+			"local_name": "乡城县"
+		},
+		"Xinlong Xian": {
+			"local_name": "新龙县"
+		},
+		"Yajiang Xian": {
+			"local_name": "雅江县"
+		}
+	}
+}

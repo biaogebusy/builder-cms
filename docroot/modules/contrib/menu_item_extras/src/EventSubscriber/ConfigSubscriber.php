@@ -3,8 +3,8 @@
 namespace Drupal\menu_item_extras\EventSubscriber;
 
 use Drupal\Core\Config\ConfigEvents;
-use Drupal\Core\Config\StorageTransformEvent;
 use Drupal\Core\Config\ConfigInstallerInterface;
+use Drupal\Core\Config\StorageTransformEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**

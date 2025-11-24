@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Kernel;
 
 use Drupal\Core\Block\BlockPluginInterface;
@@ -17,9 +19,7 @@ use Drupal\block\Entity\Block;
 class BlockStorageUnitTest extends KernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'block_test', 'system'];
 
@@ -44,7 +44,7 @@ class BlockStorageUnitTest extends KernelTestBase {
   /**
    * Tests CRUD operations.
    */
-  public function testBlockCRUD() {
+  public function testBlockCRUD(): void {
     $this->assertInstanceOf(ConfigEntityStorage::class, $this->controller);
 
     // Run each test method in the same installation.
@@ -145,7 +145,7 @@ class BlockStorageUnitTest extends KernelTestBase {
   /**
    * Tests the installation of default blocks.
    */
-  public function testDefaultBlocks() {
+  public function testDefaultBlocks(): void {
     \Drupal::service('theme_installer')->install(['stark']);
     $entities = $this->controller->loadMultiple();
     $this->assertEmpty($entities, 'There are no blocks initially.');

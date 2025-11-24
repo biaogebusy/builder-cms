@@ -45,7 +45,7 @@ class LinkGenerator implements LinkGeneratorInterface {
    * Constructs a LinkGenerator instance.
    *
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
-   *   The url generator.
+   *   The URL generator.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\Core\Render\RendererInterface $renderer
@@ -61,6 +61,7 @@ class LinkGenerator implements LinkGeneratorInterface {
    * {@inheritdoc}
    */
   public function generateFromLink(Link $link) {
+    @trigger_error('\Drupal\Core\Utility\LinkGeneratorInterface::generateFromLink() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Utility\LinkGeneratorInterface::generate() instead. See https://www.drupal.org/node/3342992', E_USER_DEPRECATED);
     return $this->generate($link->getText(), $link->getUrl());
   }
 
@@ -148,7 +149,7 @@ class LinkGenerator implements LinkGeneratorInterface {
 
     // Remove all HTML and PHP tags from a tooltip, calling expensive strip_tags()
     // only when a quick strpos() gives suspicion tags are present.
-    if (isset($variables['options']['attributes']['title']) && strpos($variables['options']['attributes']['title'], '<') !== FALSE) {
+    if (isset($variables['options']['attributes']['title']) && str_contains($variables['options']['attributes']['title'], '<')) {
       $variables['options']['attributes']['title'] = strip_tags($variables['options']['attributes']['title']);
     }
 
@@ -190,14 +191,14 @@ class LinkGenerator implements LinkGeneratorInterface {
   /**
    * Generates the link.
    *
-   * @param Drupal\Core\GeneratedLink $generated_link
+   * @param \Drupal\Core\GeneratedLink $generated_link
    *   The generated link, along with its associated cacheability metadata.
    * @param array $attributes
    *   The attributes of the generated link.
    * @param array $variables
-   *   The link text, url, and other options.
+   *   The link text, URL, and other options.
    *
-   * @return Drupal\Core\GeneratedLink
+   * @return \Drupal\Core\GeneratedLink
    *   The generated link, along with its associated cacheability metadata.
    */
   protected function doGenerate($generated_link, $attributes, $variables) {

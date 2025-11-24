@@ -1,0 +1,75 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HB"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Ezhou Shi": {
+			"local_name": "鄂州市",
+			"has_children": true
+		},
+		"Enshi Zhou": {
+			"local_code": "恩施土家族苗族自治州",
+			"local_name": "恩施州",
+			"has_children": true
+		},
+		"Huanggang Shi": {
+			"local_name": "黄冈市",
+			"has_children": true
+		},
+		"Huangshi Shi": {
+			"local_name": "黄石市",
+			"has_children": true
+		},
+		"Jingmen Shi": {
+			"local_name": "荆门市",
+			"has_children": true
+		},
+		"Jingzhou Shi": {
+			"local_name": "荆州市",
+			"has_children": true
+		},
+		"Qianjiang Shi": {
+			"local_name": "潜江市"
+		},
+		"Shennongjia Linqu": {
+			"local_name": "神农架林区"
+		},
+		"Shiyan Shi": {
+			"local_name": "十堰市",
+			"has_children": true
+		},
+		"Suizhou Shi": {
+			"local_name": "随州市",
+			"has_children": true
+		},
+		"Tianmen Shi": {
+			"local_name": "天门市"
+		},
+		"Wuhan Shi": {
+			"local_name": "武汉市",
+			"has_children": true
+		},
+		"Xiantao Shi": {
+			"local_name": "仙桃市"
+		},
+		"Xianning Shi": {
+			"local_name": "咸宁市",
+			"has_children": true
+		},
+		"Xiangyang Shi": {
+			"local_name": "襄阳市",
+			"has_children": true
+		},
+		"Xiaogan Shi": {
+			"local_name": "孝感市",
+			"has_children": true
+		},
+		"Yichang Shi": {
+			"local_name": "宜昌市",
+			"has_children": true
+		}
+	}
+}

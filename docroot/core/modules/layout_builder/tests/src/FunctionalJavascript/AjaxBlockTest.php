@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -56,7 +58,7 @@ class AjaxBlockTest extends WebDriverTestBase {
   /**
    * Tests configuring a field block for a user field.
    */
-  public function testAddAjaxBlock() {
+  public function testAddAjaxBlock(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -102,8 +104,8 @@ class AjaxBlockTest extends WebDriverTestBase {
     // Then add the block.
     $assert_session->waitForElementVisible('named', ['button', 'Add block'])->press();
     $assert_session->assertWaitOnAjaxRequest();
-    $assert_session->waitForElementVisible('css', '.block-layout-builder-test-testajax');
-    $block_elements = $this->cssSelect('.block-layout-builder-test-testajax');
+    $assert_session->waitForElementVisible('css', '.block-layout-builder-test-ajax');
+    $block_elements = $this->cssSelect('.block-layout-builder-test-ajax');
     // Should be exactly one of these in there.
     $this->assertCount(1, $block_elements);
     $assert_session->pageTextContains('Every word is like an unnecessary stain on silence and nothingness.');

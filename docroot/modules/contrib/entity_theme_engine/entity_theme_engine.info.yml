@@ -1,14 +1,14 @@
 name: Entity theme engine
 type: module
 description: Entity theme engine with editable twig template
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^8.8 || ^9 || ^10
 package: Custom
 dependencies:
   - drupal:node
   - drupal:block
   - drupal:serialization
 
-# Information added by Drupal.org packaging script on 2020-04-04
-version: '8.x-1.5'
+# Information added by Drupal.org packaging script on 2024-05-23
+version: '8.x-1.7'
 project: 'entity_theme_engine'
-datestamp: 1585984055
+datestamp: 1716423802

@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_store\Unit\Resolver;
 
-use Drupal\commerce_store\Resolver\ChainStoreResolver;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_store\Resolver\ChainStoreResolver;
 
 /**
  * @coversDefaultClass \Drupal\commerce_store\Resolver\ChainStoreResolver

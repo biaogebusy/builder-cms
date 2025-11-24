@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\serialization\Unit\Normalizer\ComplexDataNormalizerTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
@@ -38,13 +35,15 @@ class ComplexDataNormalizerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->normalizer = new ComplexDataNormalizer();
   }
 
   /**
    * @covers ::supportsNormalization
    */
-  public function testSupportsNormalization() {
+  public function testSupportsNormalization(): void {
     $complex_data = $this->prophesize(ComplexDataInterface::class)->reveal();
     $this->assertTrue($this->normalizer->supportsNormalization($complex_data));
     // Also test that an object not implementing ComplexDataInterface fails.
@@ -56,7 +55,7 @@ class ComplexDataNormalizerTest extends UnitTestCase {
    *
    * @covers ::normalize
    */
-  public function testNormalizeComplexData() {
+  public function testNormalizeComplexData(): void {
     $serializer_prophecy = $this->prophesize(Serializer::class);
 
     $non_internal_property = $this->getTypedDataProperty(FALSE);
@@ -87,7 +86,7 @@ class ComplexDataNormalizerTest extends UnitTestCase {
    *
    * @covers ::normalize
    */
-  public function testNormalizeNonComplex() {
+  public function testNormalizeNonComplex(): void {
     $normalizer = new TestExtendedNormalizer();
     $serialization_context = ['test' => 'test'];
 
@@ -116,6 +115,14 @@ class ComplexDataNormalizerTest extends UnitTestCase {
  * Test normalizer with a different supported class.
  */
 class TestExtendedNormalizer extends ComplexDataNormalizer {
-  protected $supportedInterfaceOrClass = \stdClass::class;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [
+      \stdClass::class => TRUE,
+    ];
+  }
 
 }

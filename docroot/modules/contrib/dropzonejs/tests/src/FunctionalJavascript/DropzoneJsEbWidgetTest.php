@@ -59,8 +59,8 @@ class DropzoneJsEbWidgetTest extends DropzoneJsWebDriverTestBase {
     $this->getSession()->getPage()->pressButton('Select entities');
 
     // Switch back to the main page.
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
     // For some reason we have to wait here for the markup to show up regardless
     // of the waitForAjaxToFinish above.
     sleep(2);

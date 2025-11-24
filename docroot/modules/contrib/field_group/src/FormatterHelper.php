@@ -2,7 +2,6 @@
 
 namespace Drupal\field_group;
 
-use Drupal;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Security\TrustedCallbackInterface;
@@ -43,7 +42,7 @@ class FormatterHelper implements TrustedCallbackInterface {
    * @return array
    *   The update entity view.
    */
-  public static function entityViewPrender(array $element) {
+  public static function entityViewPreRender(array $element) {
     field_group_build_entity_groups($element, 'view');
     return $element;
   }
@@ -53,7 +52,7 @@ class FormatterHelper implements TrustedCallbackInterface {
    *
    * @param array $element
    *   Form that is being processed.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param \Drupal\Core\Form\FormStateInterface|null $form_state
    *   The current state of the form.
    * @param array $form
    *   The complete form structure.
@@ -61,7 +60,7 @@ class FormatterHelper implements TrustedCallbackInterface {
    * @return array
    *   The updated form.
    */
-  public static function formProcess(array &$element, FormStateInterface $form_state = NULL, array &$form = []) {
+  public static function formProcess(array &$element, ?FormStateInterface $form_state = NULL, array &$form = []) {
     if (empty($element['#field_group_form_process'])) {
       $element['#field_group_form_process'] = TRUE;
       if (empty($element['#fieldgroups'])) {
@@ -111,26 +110,26 @@ class FormatterHelper implements TrustedCallbackInterface {
         // The intention here is to have the opportunity to alter the
         // elements, as defined in hook_field_group_formatter_info.
         // Note, implement $element by reference!
-        if (method_exists(Drupal::moduleHandler(), 'invokeAllWith')) {
+        if (method_exists(\Drupal::moduleHandler(), 'invokeAllWith')) {
           // On Drupal >= 9.4 use the new method.
-          Drupal::moduleHandler()->invokeAllWith('field_group_form_process', function (callable $hook) use (&$field_group_element, &$group, &$element) {
+          \Drupal::moduleHandler()->invokeAllWith('field_group_form_process', function (callable $hook) use (&$field_group_element, &$group, &$element) {
             $hook($field_group_element, $group, $element);
           });
         }
         else {
           // @phpstan-ignore-next-line
-          foreach (Drupal::moduleHandler()->getImplementations('field_group_form_process') as $module) {
+          foreach (\Drupal::moduleHandler()->getImplementations('field_group_form_process') as $module) {
             $function = $module . '_field_group_form_process';
             $function($field_group_element, $group, $element);
           }
         }
 
         // Allow others to alter the pre_render.
-        Drupal::moduleHandler()->alter('field_group_form_process', $field_group_element, $group, $element);
+        \Drupal::moduleHandler()->alter('field_group_form_process', $field_group_element, $group, $element);
       }
 
       // Allow others to alter the complete processed build.
-      Drupal::moduleHandler()->alter('field_group_form_process_build', $element, $form_state, $form);
+      \Drupal::moduleHandler()->alter('field_group_form_process_build', $element, $form_state, $form);
     }
 
     return $element;
@@ -194,7 +193,7 @@ class FormatterHelper implements TrustedCallbackInterface {
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return ['entityViewPrender', 'formProcess', 'formGroupPreRender'];
+    return ['entityViewPreRender', 'formProcess', 'formGroupPreRender'];
   }
 
 }

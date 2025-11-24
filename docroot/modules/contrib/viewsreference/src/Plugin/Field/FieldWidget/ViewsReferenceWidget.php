@@ -29,7 +29,24 @@ class ViewsReferenceWidget extends EntityReferenceAutocompleteWidget {
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
     $element = $this->fieldElement($items, $delta, $element, $form, $form_state);
+    $form['#validate'][] = [$this, 'elementValidate'];
     return $element;
+  }
+
+  /**
+   * Validate that a display ID is selected for a View.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function elementValidate(array $element, FormStateInterface $form_state) {
+    $key = $this->fieldDefinition->getName();
+    $field_values = $form_state->getValue($key);
+    if (is_array($field_values)) {
+      self::validateDisplayId($field_values, $form_state, $key);
+    }
   }
 
   /**

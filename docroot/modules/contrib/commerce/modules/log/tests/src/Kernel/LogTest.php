@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
+use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\commerce_log\Entity\Log;
 use Drupal\entity_test\Entity\EntityTest;
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 
 /**
  * Tests log generation.

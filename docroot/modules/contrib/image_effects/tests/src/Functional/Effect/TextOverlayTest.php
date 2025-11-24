@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
 
 /**
@@ -28,7 +30,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     $toolkits = parent::providerToolkits();
     // @todo This effect does not work on GraphicsMagick.
     unset($toolkits['ImageMagick-graphicsmagick']);
@@ -47,11 +49,11 @@ class TextOverlayTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testTextOverlayEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testTextOverlayEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Copy the font file to the test path.
-    $this->fileSystem->copy('vendor://fileeye/linuxlibertine-fonts/LinLibertine_Rah.ttf', 'dummy-remote://', FileSystemInterface::EXISTS_REPLACE);
+    $this->fileSystem->copy('vendor://fileeye/linuxlibertine-fonts/LinLibertine_Rah.ttf', 'dummy-remote://', FileExists::Replace);
 
     // Add Text overlay effects to the test image style.
     // Different ways to access the same font file, via URI (local and remote),
@@ -96,7 +98,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
     // Check that no temporary files are left in Imagemagick.
     if ($toolkit_id === 'imagemagick') {
       $directory_scan = $this->fileSystem->scanDirectory('temporary://', '/ifx.*/');
-      $this->assertEquals(0, count($directory_scan));
+      $this->assertCount(0, $directory_scan);
     }
 
     $test_data = [
@@ -143,7 +145,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
   /**
    * Text alteration test.
    */
-  public function testTextAlter() {
+  public function testTextAlter(): void {
     // Add Text overlay effect to the test image style.
     $effect_config = [
       'id' => 'image_effects_text_overlay',
@@ -159,6 +161,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
     $uuid = $this->addEffectToTestStyle($effect_config);
 
     // Test text and HTML tags and entities.
+    /** @var \Drupal\image_effects\Plugin\ImageEffect\TextOverlayImageEffect $effect */
     $effect = $this->testImageStyle->getEffect($uuid);
     $this->assertEquals('the quick brown fox jumps over the lazy dog', $effect->getAlteredText($effect->getConfiguration()['data']['text_string']));
     $this->assertEquals('Para1 Para2', $effect->getAlteredText('<p>Para1</p><!-- Comment --> Para2'));
@@ -169,6 +172,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
       'text_default][decode_entities' => FALSE,
     ];
     $uuid = $this->addEffectToTestStyle($effect_config);
+    /** @var \Drupal\image_effects\Plugin\ImageEffect\TextOverlayImageEffect $effect */
     $effect = $this->testImageStyle->getEffect($uuid);
     $this->assertEquals('<p>Para1</p><!-- Comment --> Para2', $effect->getAlteredText('<p>Para1</p><!-- Comment --> Para2'));
     $this->assertEquals('&quot;Title&quot; One &hellip;', $effect->getAlteredText('&quot;Title&quot; One &hellip;'));
@@ -180,6 +184,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
       'text][case_format' => 'upper',
     ];
     $uuid = $this->addEffectToTestStyle($effect_config);
+    /** @var \Drupal\image_effects\Plugin\ImageEffect\TextOverlayImageEffect $effect */
     $effect = $this->testImageStyle->getEffect($uuid);
     $this->assertEquals('THE QUICK…', $effect->getAlteredText($effect->getConfiguration()['data']['text_string']));
 
@@ -188,6 +193,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
     $effect_config['data']['text][case_format'] = 'ucwords';
     $effect_config['data']['text][maximum_chars'] = '';
     $uuid = $this->addEffectToTestStyle($effect_config);
+    /** @var \Drupal\image_effects\Plugin\ImageEffect\TextOverlayImageEffect $effect */
     $effect = $this->testImageStyle->getEffect($uuid);
     $this->assertEquals('The Quick Brown Fox Jumps Over The Lazy Dog', $effect->getAlteredText($effect->getConfiguration()['data']['text_string']));
 
@@ -195,6 +201,7 @@ class TextOverlayTest extends ImageEffectsTestBase {
     $this->removeEffectFromTestStyle($uuid);
     $effect_config['data']['text][case_format'] = 'ucfirst';
     $uuid = $this->addEffectToTestStyle($effect_config);
+    /** @var \Drupal\image_effects\Plugin\ImageEffect\TextOverlayImageEffect $effect */
     $effect = $this->testImageStyle->getEffect($uuid);
     $this->assertEquals('The quick brown fox jumps over the lazy dog', $effect->getAlteredText($effect->getConfiguration()['data']['text_string']));
   }

@@ -1,8 +1,38 @@
 # Changelog
 
-### 4.2.1 - 2022/Oct/18
+### 5.4.2 - 2024/Dec/13
+
+* PHP 8.4 support
+
+### 5.4.1 - 2024/Jul/10
+
+* Allow Docker Compose v2
+
+### 5.4.0
+
+* Support Symfony 7
+
+### 5.3.0 - 2024/Apr/1
+
+* Allow short options. Needed to pass along -vvv (#76)
+
+### 5.2.0 - 2022/Dec/6
+
+* Transport support for Skpr (#66)
+* Allow to set an entrypoint on KubectlTransport (#70)
+
+### 5.1.1 - 2022/Oct/18
 
 * Allow site-alias ^4
+
+### 5.1.0 - 2022/Sep/15
+
+* Support use of "docker-compose run". (#67)
+* Support kubeconfig on KubectlTransport.php (#64)
+
+### 5.0.0 - 2022/Feb/18
+
+* Support symfony/process ^6
 
 ### 4.2.0 - 2022/Feb/18
 

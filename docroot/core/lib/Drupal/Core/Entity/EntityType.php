@@ -23,6 +23,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var bool
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $static_cache = TRUE;
 
   /**
@@ -30,6 +31,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var bool
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $render_cache = TRUE;
 
   /**
@@ -37,6 +39,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var bool
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $persistent_cache = TRUE;
 
   /**
@@ -44,6 +47,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $entity_keys = [];
 
   /**
@@ -74,7 +78,16 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $admin_permission;
+
+  /**
+   * The name of the collection permission.
+   *
+   * @var string
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  protected $collection_permission;
 
   /**
    * The permission granularity level.
@@ -83,6 +96,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $permission_granularity = 'entity_type';
   /**
    * Link templates using the URI template syntax.
@@ -96,6 +110,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $bundle_entity_type = NULL;
 
   /**
@@ -103,6 +118,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $bundle_of = NULL;
 
   /**
@@ -110,6 +126,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $bundle_label = NULL;
 
   /**
@@ -117,6 +134,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $base_table = NULL;
 
   /**
@@ -124,6 +142,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $revision_data_table = NULL;
 
   /**
@@ -131,6 +150,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $revision_table = NULL;
 
   /**
@@ -138,6 +158,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $data_table = NULL;
 
   /**
@@ -159,6 +180,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var bool
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $show_revision_ui = FALSE;
 
   /**
@@ -177,6 +199,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @see \Drupal\Core\Entity\EntityTypeInterface::getCollectionLabel()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $label_collection = '';
 
   /**
@@ -186,6 +209,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @see \Drupal\Core\Entity\EntityTypeInterface::getSingularLabel()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $label_singular = '';
 
   /**
@@ -195,6 +219,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @see \Drupal\Core\Entity\EntityTypeInterface::getPluralLabel()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $label_plural = '';
 
   /**
@@ -212,6 +237,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @see \Drupal\Core\Entity\EntityTypeInterface::getCountLabel()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $label_count = [];
 
   /**
@@ -219,6 +245,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var callable|null
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $uri_callback = NULL;
 
   /**
@@ -237,6 +264,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @see \Drupal\Core\Entity\EntityTypeInterface::getGroupLabel()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $group_label;
 
   /**
@@ -244,6 +272,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $field_ui_base_route;
 
   /**
@@ -254,6 +283,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var bool
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $common_reference_target = FALSE;
 
   /**
@@ -261,6 +291,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string[]
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $list_cache_contexts = [];
 
   /**
@@ -268,6 +299,7 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    *
    * @var string[]
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $list_cache_tags = [];
 
   /**
@@ -442,14 +474,6 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function isSubclassOf($class) {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:8.3.0 and is removed from drupal:10.0.0. Use Drupal\Core\Entity\EntityTypeInterface::entityClassImplements() instead. See https://www.drupal.org/node/2842808', E_USER_DEPRECATED);
-    return $this->entityClassImplements($class);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getHandlerClasses() {
     return $this->handlers;
   }
@@ -614,6 +638,13 @@ class EntityType extends PluginDefinition implements EntityTypeInterface {
    */
   public function getAdminPermission() {
     return $this->admin_permission ?: FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCollectionPermission(): ?string {
+    return $this->collection_permission;
   }
 
   /**

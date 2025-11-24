@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\commerce_cart\Kernel;
 
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\user\UserInterface;
 
 /**
  * Tests the unsetting of the cart flag when order is placed.
  *
- * @covers \Drupal\commerce_cart\CartProvider::finalizeCart()
+ * @covers \Drupal\commerce_cart\CartProvider::finalizeCart
  * @group commerce
  */
 class CartOrderPlacedTest extends CartKernelTestBase {

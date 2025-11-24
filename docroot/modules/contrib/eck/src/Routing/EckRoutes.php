@@ -52,8 +52,6 @@ class EckRoutes {
       '_title_arguments' => ['%type' => ucfirst($entityTypeLabel)],
     ];
     $permissions = [
-      "view own {$entityTypeId} entities",
-      "view any {$entityTypeId} entities",
       "access {$entityTypeId} entity listing",
       "bypass eck entity access",
     ];

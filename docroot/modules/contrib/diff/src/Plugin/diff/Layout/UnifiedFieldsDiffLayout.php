@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Layout;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -8,6 +10,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\DiffLayoutBuilder;
 use Drupal\diff\DiffEntityComparison;
 use Drupal\diff\DiffEntityParser;
 use Drupal\diff\DiffLayoutBase;
@@ -16,59 +20,16 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides Unified fields diff layout.
- *
- * @DiffLayoutBuilder(
- *   id = "unified_fields",
- *   label = @Translation("Unified fields"),
- *   description = @Translation("Field based layout, displays revision comparison line by line."),
- * )
  */
+#[DiffLayoutBuilder(
+  id: 'unified_fields',
+  label: new TranslatableMarkup('Unified fields'),
+  description: new TranslatableMarkup('Field based layout, displays revision comparison line by line.'),
+)]
 class UnifiedFieldsDiffLayout extends DiffLayoutBase {
 
   /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The diff entity comparison service.
-   *
-   * @var \Drupal\diff\DiffEntityComparison
-   */
-  protected $entityComparison;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
    * Constructs a UnifiedFieldsDiffLayout object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
-   *   The configuration factory object.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\diff\DiffEntityParser $entity_parser
-   *   The entity parser.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date
-   *   The date service.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\diff\DiffEntityComparison $entity_comparison
-   *   The diff entity comparison service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
    */
   public function __construct(
     array $configuration,
@@ -78,14 +39,11 @@ class UnifiedFieldsDiffLayout extends DiffLayoutBase {
     EntityTypeManagerInterface $entity_type_manager,
     DiffEntityParser $entity_parser,
     DateFormatterInterface $date,
-    RendererInterface $renderer,
-    DiffEntityComparison $entity_comparison,
-    RequestStack $request_stack,
+    protected RendererInterface $renderer,
+    protected DiffEntityComparison $entityComparison,
+    protected RequestStack $requestStack,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $config, $entity_type_manager, $entity_parser, $date);
-    $this->renderer = $renderer;
-    $this->entityComparison = $entity_comparison;
-    $this->requestStack = $request_stack;
   }
 
   /**
@@ -109,7 +67,7 @@ class UnifiedFieldsDiffLayout extends DiffLayoutBase {
   /**
    * {@inheritdoc}
    */
-  public function build(ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, ContentEntityInterface $entity) {
+  public function build(ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, ContentEntityInterface $entity): array {
     // Build the revisions data.
     $build = $this->buildRevisionsData($left_revision, $right_revision);
 
@@ -226,7 +184,7 @@ class UnifiedFieldsDiffLayout extends DiffLayoutBase {
       }
 
       // Add field diff rows to the table rows.
-      $diff_rows = array_merge($diff_rows, $final_diff);
+      $diff_rows = \array_merge($diff_rows, $final_diff);
     }
 
     if (!$raw_active) {
@@ -265,7 +223,7 @@ class UnifiedFieldsDiffLayout extends DiffLayoutBase {
    * @return array
    *   Header for Diff table.
    */
-  protected function buildTableHeader(EntityInterface $right_revision) {
+  protected function buildTableHeader(EntityInterface $right_revision): array {
     $header = [];
     $header[] = [
       'data' => ['#markup' => $this->buildRevisionLink($right_revision)],

@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_tax\Entity;
 
+use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\commerce\CommerceSinglePluginCollection;
 use Drupal\commerce\ConditionGroup;
 use Drupal\commerce\Plugin\Commerce\Condition\ParentEntityAwareInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\Core\Config\Entity\ConfigEntityInterface;
 
 /**
  * Defines the tax type entity class.
@@ -226,6 +226,8 @@ class TaxType extends ConfigEntityBase implements TaxTypeInterface {
     else {
       return parent::set($property_name, $value);
     }
+
+    return $this;
   }
 
   /**

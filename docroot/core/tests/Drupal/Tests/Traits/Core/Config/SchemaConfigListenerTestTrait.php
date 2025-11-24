@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Traits\Core\Config;
 
 use Drupal\Core\Config\Schema\SchemaIncompleteException;
@@ -12,7 +14,7 @@ trait SchemaConfigListenerTestTrait {
   /**
    * Tests \Drupal\Core\Config\Development\ConfigSchemaChecker.
    */
-  public function testConfigSchemaChecker() {
+  public function testConfigSchemaChecker(): void {
     // Test a non-existing schema.
     $message = 'Expected SchemaIncompleteException thrown';
     try {
@@ -55,7 +57,7 @@ trait SchemaConfigListenerTestTrait {
       $this->fail($message);
     }
     catch (SchemaIncompleteException $e) {
-      $this->assertEquals('Schema errors for config_test.types with the following errors: config_test.types:array variable type is integer but applied schema class is Drupal\Core\Config\Schema\Sequence, config_test.types:foo missing schema', $e->getMessage());
+      $this->assertEquals("Schema errors for config_test.types with the following errors: config_test.types:array variable type is integer but applied schema class is Drupal\Core\Config\Schema\Sequence, config_test.types:foo missing schema, 0 [foo] &#039;foo&#039; is not a supported key.", $e->getMessage());
     }
 
   }

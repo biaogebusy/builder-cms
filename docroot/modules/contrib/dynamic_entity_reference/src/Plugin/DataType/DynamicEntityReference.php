@@ -47,7 +47,7 @@ class DynamicEntityReference extends EntityReference {
       // for
       // \Drupal\dynamic_entity_reference\Plugin\DataType\DynamicEntityReference
       // $target_type will be NULL because it doesn't exist in
-      // DynamicEntityReferenceItem storage settings it is selected dynamically
+      // DynamicEntityReferenceItem storage settings it is selected dynamically,
       // so it exists in DynamicEntityReferenceItem::values['target_type'].
       $target_type = $this->parent->getValue()['target_type'];
       $entity = \Drupal::entityTypeManager()

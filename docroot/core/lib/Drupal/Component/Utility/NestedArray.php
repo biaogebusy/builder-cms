@@ -69,7 +69,7 @@ class NestedArray {
   public static function &getValue(array &$array, array $parents, &$key_exists = NULL) {
     $ref = &$array;
     foreach ($parents as $parent) {
-      if (is_array($ref) && (isset($ref[$parent]) || array_key_exists($parent, $ref))) {
+      if (is_array($ref) && \array_key_exists($parent, $ref)) {
         $ref = &$ref[$parent];
       }
       else {
@@ -92,22 +92,22 @@ class NestedArray {
    * Example:
    * @code
    * // Assume you have a 'signature' element somewhere in a form. It might be:
-   * $form['signature_settings']['signature'] = array(
+   * $form['signature_settings']['signature'] = [
    *   '#type' => 'text_format',
    *   '#title' => t('Signature'),
-   * );
+   * ];
    * // Or, it might be further nested:
-   * $form['signature_settings']['user']['signature'] = array(
+   * $form['signature_settings']['user']['signature'] = [
    *   '#type' => 'text_format',
    *   '#title' => t('Signature'),
-   * );
+   * ];
    * @endcode
    *
    * To deal with the situation, the code needs to figure out the route to the
    * element, given an array of parents that is either
-   * @code array('signature_settings', 'signature') @endcode
+   * @code ['signature_settings', 'signature'] @endcode
    * in the first case or
-   * @code array('signature_settings', 'user', 'signature') @endcode
+   * @code ['signature_settings', 'user', 'signature'] @endcode
    * in the second case.
    *
    * Without this helper function the only way to set the signature element in
@@ -138,7 +138,7 @@ class NestedArray {
    * @param bool $force
    *   (optional) If TRUE, the value is forced into the structure even if it
    *   requires the deletion of an already existing non-array parent value. If
-   *   FALSE, PHP throws an error if trying to add into a value that is not an
+   *   FALSE, throws an exception if trying to add into a value that is not an
    *   array. Defaults to FALSE.
    *
    * @see NestedArray::unsetValue()
@@ -149,7 +149,10 @@ class NestedArray {
     foreach ($parents as $parent) {
       // PHP auto-creates container arrays and NULL entries without error if $ref
       // is NULL, but throws an error if $ref is set, but not an array.
-      if ($force && isset($ref) && !is_array($ref)) {
+      if (isset($ref) && !is_array($ref)) {
+        if (!$force) {
+          throw new \LogicException('Cannot create key "' . $parent . '" on non-array value.');
+        }
         $ref = [];
       }
       $ref = &$ref[$parent];
@@ -167,22 +170,22 @@ class NestedArray {
    * Example:
    * @code
    * // Assume you have a 'signature' element somewhere in a form. It might be:
-   * $form['signature_settings']['signature'] = array(
+   * $form['signature_settings']['signature'] = [
    *   '#type' => 'text_format',
    *   '#title' => t('Signature'),
-   * );
+   * ];
    * // Or, it might be further nested:
-   * $form['signature_settings']['user']['signature'] = array(
+   * $form['signature_settings']['user']['signature'] = [
    *   '#type' => 'text_format',
    *   '#title' => t('Signature'),
-   * );
+   * ];
    * @endcode
    *
    * To deal with the situation, the code needs to figure out the route to the
    * element, given an array of parents that is either
-   * @code array('signature_settings', 'signature') @endcode
+   * @code ['signature_settings', 'signature'] @endcode
    * in the first case or
-   * @code array('signature_settings', 'user', 'signature') @endcode
+   * @code ['signature_settings', 'user', 'signature'] @endcode
    * in the second case.
    *
    * Without this helper function the only way to unset the signature element in
@@ -219,7 +222,7 @@ class NestedArray {
   public static function unsetValue(array &$array, array $parents, &$key_existed = NULL) {
     $unset_key = array_pop($parents);
     $ref = &self::getValue($array, $parents, $key_existed);
-    if ($key_existed && is_array($ref) && (isset($ref[$unset_key]) || array_key_exists($unset_key, $ref))) {
+    if ($key_existed && is_array($ref) && \array_key_exists($unset_key, $ref)) {
       $key_existed = TRUE;
       unset($ref[$unset_key]);
     }
@@ -273,13 +276,13 @@ class NestedArray {
    *
    * Example:
    * @code
-   * $link_options_1 = array('fragment' => 'x', 'attributes' => array('title' => t('X'), 'class' => array('a', 'b')));
-   * $link_options_2 = array('fragment' => 'y', 'attributes' => array('title' => t('Y'), 'class' => array('c', 'd')));
+   * $link_options_1 = ['fragment' => 'x', 'attributes' => ['title' => t('X'), 'class' => ['a', 'b']]];
+   * $link_options_2 = ['fragment' => 'y', 'attributes' => ['title' => t('Y'), 'class' => ['c', 'd']]];
    *
-   * // This results in array('fragment' => array('x', 'y'), 'attributes' => array('title' => array(t('X'), t('Y')), 'class' => array('a', 'b', 'c', 'd'))).
+   * // This results in ['fragment' => ['x', 'y'], 'attributes' => ['title' => [t('X'), t('Y')], 'class' => ['a', 'b', 'c', 'd']]].
    * $incorrect = array_merge_recursive($link_options_1, $link_options_2);
    *
-   * // This results in array('fragment' => 'y', 'attributes' => array('title' => t('Y'), 'class' => array('a', 'b', 'c', 'd'))).
+   * // This results in ['fragment' => 'y', 'attributes' => ['title' => t('Y'), 'class' => ['a', 'b', 'c', 'd']]].
    * $correct = NestedArray::mergeDeep($link_options_1, $link_options_2);
    * @endcode
    *
@@ -304,7 +307,7 @@ class NestedArray {
    *
    * The following are equivalent:
    * - NestedArray::mergeDeep($a, $b);
-   * - NestedArray::mergeDeepArray(array($a, $b));
+   * - NestedArray::mergeDeepArray([$a, $b]);
    *
    * The following are also equivalent:
    * - call_user_func_array('NestedArray::mergeDeep', $arrays_to_merge);
@@ -355,7 +358,7 @@ class NestedArray {
    * @return array
    *   The filtered array.
    */
-  public static function filter(array $array, callable $callable = NULL) {
+  public static function filter(array $array, ?callable $callable = NULL) {
     $array = is_callable($callable) ? array_filter($array, $callable) : array_filter($array);
     foreach ($array as &$element) {
       if (is_array($element)) {

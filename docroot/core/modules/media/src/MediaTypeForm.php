@@ -97,7 +97,7 @@ class MediaTypeForm extends EntityForm {
       '#title' => $this->t('Name'),
       '#type' => 'textfield',
       '#default_value' => $this->entity->label(),
-      '#description' => $this->t('The human-readable name of this media type.'),
+      '#description' => $this->t('The human-readable name for this media type, displayed on the <em>Media types</em> page.'),
       '#required' => TRUE,
       '#size' => 30,
     ];
@@ -110,14 +110,14 @@ class MediaTypeForm extends EntityForm {
       '#machine_name' => [
         'exists' => [MediaType::class, 'load'],
       ],
-      '#description' => $this->t('A unique machine-readable name for this media type.'),
+      '#description' => $this->t('Unique machine-readable name: lowercase letters, numbers, and underscores only.'),
     ];
 
     $form['description'] = [
       '#title' => $this->t('Description'),
       '#type' => 'textarea',
       '#default_value' => $this->entity->getDescription(),
-      '#description' => $this->t('Describe this media type. The text will be displayed on the <em>Add new media</em> page.'),
+      '#description' => $this->t('Displays on the <em>Media types</em> page.'),
     ];
 
     $plugins = $this->sourceManager->getDefinitions();
@@ -176,7 +176,13 @@ class MediaTypeForm extends EntityForm {
     }
     else {
       $options = [MediaSourceInterface::METADATA_FIELD_EMPTY => $this->t('- Skip field -')];
+      $source_field_name = $source->getSourceFieldDefinition($this->entity)?->getName();
       foreach ($this->entityFieldManager->getFieldDefinitions('media', $this->entity->id()) as $field_name => $field) {
+        // The source field cannot be the target of a field mapping, because
+        // this would cause it to be overwritten, probably with invalid data.
+        if ($field_name === $source_field_name) {
+          continue;
+        }
         if (!($field instanceof BaseFieldDefinition) || $field_name === 'name') {
           $options[$field_name] = $field->getLabel();
         }

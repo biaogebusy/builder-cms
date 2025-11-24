@@ -1,45 +1,46 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Plugin;
 
 use DrupalCodeGenerator\Application;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements plugin:block command.
- */
-final class Block extends PluginGenerator {
-
-  protected string $name = 'plugin:block';
-  protected string $description = 'Generates block plugin';
-  protected string $alias = 'block';
-  protected string $pluginClassSuffix = 'Block';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/plugin/block';
+#[Generator(
+  name: 'plugin:block',
+  description: 'Generates block plugin',
+  aliases: ['block'],
+  templatePath: Application::TEMPLATE_PATH . '/Plugin/_block',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Block extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
 
-    $vars['category'] = $this->ask('Block category', 'Custom');
-    $vars['configurable'] = $this->confirm('Make the block configurable?', FALSE);
+    $vars['machine_name'] = $ir->askMachineName();
 
-    $this->collectServices($vars, FALSE);
+    $vars['plugin_label'] = $ir->askPluginLabel('Block admin label');
+    $vars['plugin_id'] = $ir->askPluginId();
+    $vars['class'] = $ir->askPluginClass(suffix: 'Block');
 
-    $vars['access'] = $this->confirm('Create access callback?', FALSE);
+    $vars['category'] = $ir->ask('Block category', 'Custom');
+    $vars['configurable'] = $ir->confirm('Make the block configurable?', FALSE);
+    $vars['services'] = $ir->askServices(FALSE);
 
-    $this->addFile('src/Plugin/Block/{class}.php', 'block');
+    $vars['access'] = $ir->confirm('Create access callback?', FALSE);
 
+    $assets->addFile('src/Plugin/Block/{class}.php', 'block.twig');
     if ($vars['configurable']) {
-      $this->addSchemaFile()->template('schema');
+      $assets->addSchemaFile()->template('schema.twig');
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function askPluginLabelQuestion(): ?string {
-    return $this->ask('Block admin label', 'Example', '::validateRequired');
   }
 
 }

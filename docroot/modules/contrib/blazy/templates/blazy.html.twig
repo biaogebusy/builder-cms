@@ -95,7 +95,7 @@
     'class': ['media__icon', 'media__icon--play'],
     'data-b-provider': blazies.media.provider,
     'data-b-token': blazies.media.token,
-    'data-url': blazies.media.embed_url,
+    'data-b-url': blazies.media.embed_url,
     'data-iframe-title': label,
     'title': play_title,
     'type': 'button'
@@ -138,11 +138,9 @@
     {%- if media_attributes -%}<div{{- media_attributes -}}>{%- endif -%}
       {%- if url and not blazies.use.player -%}
         <a href="{{ url }}"{{ url_attributes }}>{{- media -}}</a>
-        {# Allows fieldable captions with A tag, such as social share.
-          litebox-caption is deprecated for litebox__caption in 2.17.
-        #}
+        {# Allows fieldable captions with A tag, such as social share. #}
         {%- if captions and captions.lightbox is not empty -%}
-          <div class="litebox__caption litebox-caption visually-hidden">
+          <div class="litebox__caption visually-hidden">
             {{- captions.lightbox -}}
           </div>
         {%- endif -%}
@@ -152,11 +150,7 @@
     {%- if media_attributes -%}</div>{%- endif -%}
   {%- endblock %}
 
-  {#
-     Since 2.17, this will replace sub-modules theme_ITEM() contents at 3.x.
-     To test it out, enable the option `Use theme_blazy()` at Blazy UI.
-     It opens up the door for hoverable effects, etc. at ease and reduce dups.
-  #}
+  {# Since 3.x, this replaces sub-modules theme_ITEM() contents. #}
   {%- set IS_INLINE = captions.inline is not empty -%}
   {%- set IS_OVERLAY = captions.overlay is not empty -%}
 

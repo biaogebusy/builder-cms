@@ -2,17 +2,18 @@
 
 namespace Drupal\commerce_tax\Plugin\Commerce\TaxType;
 
-use Drupal\commerce_tax\TaxZone;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_tax\Attribute\CommerceTaxType;
+use Drupal\commerce_tax\TaxZone;
 
 /**
  * Provides the Norwegian VAT tax type.
- *
- * @CommerceTaxType(
- *   id = "norwegian_vat",
- *   label = "Norwegian VAT",
- * )
  */
+#[CommerceTaxType(
+  id: "norwegian_vat",
+  label: new TranslatableMarkup("Norwegian VAT"),
+)]
 class NorwegianVat extends LocalTaxTypeBase {
 
   /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -48,15 +50,13 @@ class NodeAccessTest extends KernelTestBase {
     $this->installEntitySchema('content_moderation_state');
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
-    $this->installEntitySchema('workflow');
     $this->installConfig(['content_moderation', 'filter']);
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
 
     // Add a moderated node type.
     $node_type = NodeType::create([
       'type' => 'page',
-      'label' => 'Page',
+      'name' => 'Page',
     ]);
     $node_type->save();
     $workflow = $this->createEditorialWorkflow();
@@ -69,7 +69,7 @@ class NodeAccessTest extends KernelTestBase {
   /**
    * @covers \Drupal\content_moderation\ModerationInformation::getDefaultRevisionId
    */
-  public function testGetDefaultRevisionId() {
+  public function testGetDefaultRevisionId(): void {
     // Create an admin user.
     $user = $this->createUser([], NULL, TRUE);
     \Drupal::currentUser()->setAccount($user);

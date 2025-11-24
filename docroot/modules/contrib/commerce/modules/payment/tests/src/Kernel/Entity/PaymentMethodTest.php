@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel\Entity;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentMethodType\CreditCard;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\user\UserInterface;
 
 /**
@@ -41,6 +41,7 @@ class PaymentMethodTest extends OrderKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installEntitySchema('commerce_payment');
     $this->installEntitySchema('commerce_payment_method');
     $this->installConfig('commerce_payment');
 
@@ -178,6 +179,34 @@ class PaymentMethodTest extends OrderKernelTestBase {
     $payment_method->save();
     $this->assertEquals(0, $payment_method->getBillingProfile()->getOwnerId());
     $this->assertEquals($profile->id(), $payment_method->getBillingProfile()->id());
+
+    // Confirm that a single payment method is always default, even if not
+    // explicitly set as default.
+    $payment_method->setOwner($this->user);
+    $payment_method->save();
+    $this->assertTrue($payment_method->isDefault());
+
+    /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface $payment_method */
+    $payment_method2 = PaymentMethod::create([
+      'type' => 'credit_card',
+      'payment_gateway' => 'example',
+      'billing_profile' => $payment_method->getBillingProfile(),
+    ]);
+    $payment_method2->setOwner($this->user);
+    $payment_method2->save();
+    $payment_method = $this->reloadEntity($payment_method);
+    $payment_method2 = $this->reloadEntity($payment_method2);
+    $this->assertTrue($payment_method->isDefault());
+    $this->assertFalse($payment_method2->isDefault());
+
+    // If the payment method becomes default, the payment method that was
+    // previously default must be set non-default.
+    $payment_method2->setDefault(TRUE);
+    $payment_method2->save();
+    $payment_method = $this->reloadEntity($payment_method);
+    $payment_method2 = $this->reloadEntity($payment_method2);
+    $this->assertFalse($payment_method->isDefault());
+    $this->assertTrue($payment_method2->isDefault());
   }
 
 }

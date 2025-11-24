@@ -3,15 +3,15 @@
 namespace Drupal\views\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 
 /**
  * Field handler to show a counter of the current row.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("counter")
  */
+#[ViewsField("counter")]
 class Counter extends FieldPluginBase {
 
   use UncacheableFieldHandlerTrait;
@@ -51,7 +51,7 @@ class Counter extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function query() {
-    // do nothing -- to override the parent query.
+    // Do nothing -- to override the parent query.
   }
 
   /**

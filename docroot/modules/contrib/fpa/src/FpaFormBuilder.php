@@ -9,6 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Element\Checkboxes;
 use Drupal\Core\Url;
+use Drupal\user\Entity\Role;
 
 /**
  * Class FpaFormBuilder.
@@ -28,7 +29,8 @@ class FpaFormBuilder {
   public static function getRequiredMemory($suffix = '') {
     $permission = \Drupal::service('user.permissions');
     $permissions_count = count($permission->getPermissions());
-    $user_roles_count = count(user_roles());
+    $roles = Role::loadMultiple();
+    $user_roles_count = count($roles);
     $page_ram_required = (9 * 1024 * 1024);
     // Takes ~26kb per row without any checkboxes.
     $permission_row_overhead = 27261.028783658;
@@ -256,9 +258,9 @@ class FpaFormBuilder {
         $permission_system_name = '';
         // Might be empty if no modules are displayed in Permissions Filter module.
         if (!empty($sub_children[$roles_keys[0]])) {
-          $permission_system_name = $sub_children[$roles_keys[0]['#return_value'];
+        $permission_system_name = $sub_children[$roles_keys[0]['#return_value'];
         }
-        */
+         */
 
         $label = $permission_col_template;
 
@@ -268,9 +270,9 @@ class FpaFormBuilder {
         @todo Work on integration with permission filter module
         // Permissions filter might cause no Roles to display.
         if (count(element_children($form['checkboxes'])) == 0) {
-          unset($label['checkbox_cell']);
+        unset($label['checkbox_cell']);
         }
-        */
+         */
 
         // Readable.
         $row['data'][] = [

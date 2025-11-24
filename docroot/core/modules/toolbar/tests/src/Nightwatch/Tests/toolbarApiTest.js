@@ -8,8 +8,7 @@ module.exports = {
   before(browser) {
     browser
       .drupalInstall()
-      .drupalInstallModule('breakpoint')
-      .drupalInstallModule('toolbar')
+      .drupalInstallModule('toolbar', true)
       .drupalCreateUser({
         name: 'user',
         password: '123',
@@ -26,21 +25,21 @@ module.exports = {
           'administer users',
         ],
       })
-      .drupalLogin({ name: 'user', password: '123' })
-      .drupalRelativeURL('/')
-      .waitForElementPresent('#toolbar-administration', 10000);
+      .drupalLogin({ name: 'user', password: '123' });
   },
   beforeEach(browser) {
     // Set the resolution to the default desktop resolution. Ensure the default
     // toolbar is horizontal in headless mode.
-    browser.resizeWindow(1920, 1080);
-    // To clear active tab/tray from previous tests
-    browser.execute(function () {
-      localStorage.clear();
-      // Clear escapeAdmin url values.
-      sessionStorage.clear();
-    });
-    browser.drupalRelativeURL('/');
+    browser
+      .setWindowSize(1920, 1080)
+      // To clear active tab/tray from previous tests
+      .execute(function () {
+        localStorage.clear();
+        // Clear escapeAdmin URL values.
+        sessionStorage.clear();
+      })
+      .drupalRelativeURL('/')
+      .waitForElementPresent('#toolbar-administration', 50000, 1000, false);
   },
   after(browser) {
     browser.drupalUninstall();
@@ -82,9 +81,9 @@ module.exports = {
         toReturn.toolbarModelOffsetsRight =
           models.toolbarModel.get('offsets').right === 0;
         toReturn.toolbarModelOffsetsTop =
-          models.toolbarModel.get('offsets').top === 79;
+          models.toolbarModel.get('offsets').top === 80;
         toReturn.toolbarModelSubtrees =
-          Object.keys(models.menuModel.get('subtrees')).length === 0;
+          models.menuModel.get('subtrees') === null;
         return toReturn;
       },
       [],

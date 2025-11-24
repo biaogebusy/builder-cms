@@ -74,7 +74,6 @@
  *   // The #item_attributes will be finally removed at 3.x.
  *   // Use blazies.image.attributes or blazies.iframe.attributes for anything
  *   // other than basic image attributes (width/height/alt/title) instead.
- *   // It is still usable for adding minor class attributes, etc., though.
  *   // You are on your own other than the above-mentioned supported attributes.
  *   // Supported means, it won't mess up the provided image_style, etc.
  *   // On your own means, you can XSS attack your own site, it's all yours.
@@ -134,9 +133,9 @@
  *   // Option init #2 at item level:
  *   // $parent_settings is the first settings setup as above, here in a loop.
  *   // $settings = $manager->toSettings($parent_settings, $info); to have
- *   // initial info which should be stored within blazies object initially.
+ *   // initial $info which should be stored within blazies object initially.
  *   // Basically 3 tasks: reset blazies object per item, merging initial parent
- *   // $settings along with the initial values for item-level blazies object.
+ *   // $settings along with the initial $info for item-level blazies object.
  *
  *   // Supported media switcher options dependent on available modules:
  *   // colorbox, media (Image to iframe), etc. These can also be moved into
@@ -309,7 +308,7 @@ function hook_blazy_attach_alter(array &$load, array $settings) {
     $template = ['#theme' => 'photoswipe_container'];
     $load['drupalSettings']['photoswipe'] = [
       'options' => blazy()->config('options', 'photoswipe.settings'),
-      'container' => blazy()->renderer()->renderPlain($template),
+      'container' => blazy()->renderInIsolation($template),
     ];
   }
 }
@@ -342,7 +341,7 @@ function hook_blazy_lightboxes_alter(array &$lightboxes) {
  */
 function hook_blazy_alter(array &$build, array $settings) {
   if (!empty($settings['media_switch']) && $settings['media_switch'] == 'photoswipe') {
-    // Full blown overrides:
+    // Full blown overrides, and must also implement trusted callback:
     $build['#pre_render'][] = 'my_module_pre_render';
   }
 }
@@ -370,7 +369,7 @@ function hook_blazy_build_alter(array &$build, array $settings) {
   // This also allows a quasi-lightbox like ElevateZoomPlus inject its optionset
   // as its value: elevatezoomplus: responsive, etc.
   if ($blazies->get('colorbox') || $blazies->get('zooming')) {
-    // Full blown overrides:
+    // Full blown overrides, and must also implement trusted callback:
     $build['#pre_render'][] = 'my_module_pre_render_build';
   }
 }
@@ -435,20 +434,22 @@ function hook_blazy_base_settings_alter(array &$settings, array $context) {
  *
  * @param array $build
  *   The array containing: #settings, or potential #optionset for sub-modules.
- * @param object $items
- *   The Drupal\Core\Field\FieldItemListInterface items.
+ * @param object|null $object
+ *   Since 3.0.9, maybe one of these depending on the provider/ trigger:
+ *     - Drupal\Core\Field\FieldItemListInterface for field formatters.
+ *     - Drupal\views\ViewExecutable for Views fields.
+ *     - NULL, such as from IO/ Slick Browser widget displays.
+ *   This should make many sub-modules support their lightboxes at one go.
+ *
+ * @see \Drupal\blazy\BlazyFormatter
+ * @see \Drupal\blazy\BlazyEntity
+ * @see \Drupal\blazy\Plugin\views\field\BLAH
+ * @see \Drupal\io_browser\Plugin\EntityBrowser\BLAH
+ * @see \Drupal\slick_browser\Plugin\EntityBrowser\BLAH
  *
  * @ingroup blazy_api
  */
-function hook_blazy_settings_alter(array &$build, $items) {
-  // Since blazy:2.17, the settings key is hashed to avoid leaks/ render errors.
-  // Pre blazy:2.17 $build['settings'] will continue working till 3.x.
-  // @todo remove check post blazy:2.17, only needed for mismatched versions.
-  $key = 'settings';
-  if (!isset($build["#$key"]) && isset($build[$key])) {
-    $build["#$key"] = $build[$key];
-  }
-
+function hook_blazy_settings_alter(array &$build, $object) {
   $settings = &$build['#settings'];
 
   // Most configurable settings are put as direct key-value pairs.
@@ -456,7 +457,13 @@ function hook_blazy_settings_alter(array &$build, $items) {
   // For pre 2.6, please use $settings['NAME'] directly.
   $blazies = $settings['blazies'];
 
-  // Add more custom CSS aspect ratios, see /admin/help/blazy_ui#aspect-ratio:
+  // Add more custom CSS aspect ratios, see /admin/help/blazy_ui#aspect-ratio.
+  // You must provide your own CSS rules in accordance with css/components/
+  // blazy.ratio.css convention, hence .media--ratio--78 {}, etc.
+  // These will NOT be seen as Aspect ratio form item options, but taken into
+  // account/ calculated automatically only if Aspect ratio Fluid is chosen.
+  // The benefit is removing the need to use padding hack inline styles for
+  // your own custom CSS rules so to have cleaner markups.
   $blazies->set('css.ratio', ['7:8', '6:5'], TRUE);
 
   // Overrides one pixel placeholder on particular pages relevant if using Views
@@ -487,17 +494,32 @@ function hook_blazy_settings_alter(array &$build, $items) {
   // - `blazy_filter` for BlazyFilter, supports both plain media and galleries.
   // - `slick_filter` for SlickFilter galleries.
   // - `splide_filter` for SplideFilter galleries.
-  $plugin_id = $blazies->get('view.plugin_id') == 'blazy';
+  $expected_plugin_id = $blazies->get('view.plugin_id') == 'blazy';
 
   // Only concern with blocks having `Rewrite view resuts` to fix 404 due to
   // `data:image` placeholder is stripped out by Views sanitization procedure.
   // By default machine names are like block_1, or page_1, etc. till changed.
   $rewriten_blocks = ['block_categories', 'block_popular', 'block_related'];
-  if ($plugin_id && $view_mode = $blazies->get('view.view_mode')) {
+  if ($expected_plugin_id && $view_mode = $blazies->get('view.view_mode')) {
     if (in_array($view_mode, $rewriten_blocks)) {
       $blazies->set('ui.placeholder', '/blank.svg');
     }
   }
+
+  // Makes any image-based title as caption formatted as HTML caption where
+  // BlazyTitleFormatter is not available. The image title like:
+  // Awesome image: some short sub-title, will be formatted as:
+  // Awesome image <small>some short sub-title</small>.
+  // The <small> tag can be put on another line using CSS display:block, etc.
+  // Useful for captions so to make Alt attribute is more for longer SEO stuff.
+  // Add more conditional based on entities, etc. via blazies objects.
+  // Available since Blazy:3.0.6:
+  $blazies->set('format.title', [
+    // Any following character will be treated as a delimiter.
+    'delimiter' => '|,:,/,- , —',
+    'tag' => 'small',
+    'link_to_entity' => TRUE,
+  ]);
 }
 
 /**
@@ -525,10 +547,12 @@ function hook_blazy_item_alter(array &$settings, array &$attributes, array &$ite
   // says put $blazies->set('libs.media', TRUE); in hook_blazy_settings_alter(),
   // conditionally to not waste libraries.
   if ($blazies->get('colorbox') && $blazies->get('media.embed_url')) {
+    // Set the Media switch option to Image to iframe, hence, media player.
     $blazies->set('switch', 'media')
       // The is.player is deprecated in 2.17 for use.player.
       // ->set('is.player', TRUE)
       ->set('use.player', TRUE)
+      // Disable lightbox so to use the above inline media player.
       ->set('is.lightbox', FALSE);
   }
 
@@ -540,14 +564,14 @@ function hook_blazy_item_alter(array &$settings, array &$attributes, array &$ite
   // $blazies->is('captioned') or $blazies->is('multimedia') in case
   // captioned or not, or breaking multimedia or media player, etc.
   // If any display issues with grid, media player, etc., refine or remove this.
-  // blazies.is[image|video_file|twitter, etc] is related to Media sources.
+  // blazies.is[image|video_file|twitter, etc.] is related to Media sources.
   if ($blazies->get('namespace') == 'blazy' && $blazies->is('image')) {
     $blazies->set('is.figcaption', TRUE)
       ->set('item.wrapper_tag', 'figure')
       ->set('item.wrapper_attributes.class', ['blazy__content']);
   }
 
-  // Changed default caption title tag from H2 to H3.
+  // Change default caption title tag from H2 to H3.
   $blazies->set('item.title_tag', 'h3');
 
   // Since > 2.17-beta1, below is no longer needed, already merged.

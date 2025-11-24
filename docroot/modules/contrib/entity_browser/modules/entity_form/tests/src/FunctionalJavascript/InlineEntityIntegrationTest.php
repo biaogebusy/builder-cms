@@ -62,7 +62,6 @@ class InlineEntityIntegrationTest extends WebDriverTestBase {
     $this->assertSession()
       ->selectExists('fields[field_content_reference][region]')
       ->selectOption('content');
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     // Switch to using inline_entity_form_complex, so we can test
     // entity browser alterations to field widget settings form.

@@ -34,8 +34,12 @@ class CountryConstraintValidatorTest extends UnitTestCase {
    * {@inheritdoc}
    */
   public function setUp(): void {
+    parent::setUp();
     $country_repository = $this->prophesize(CountryRepositoryInterface::class);
-    $country_repository->getList()->willReturn(['RS' => 'Serbia', 'FR' => 'France']);
+    $country_repository->getList()->willReturn([
+      'RS' => 'Serbia',
+      'FR' => 'France',
+    ]);
 
     $this->constraint = new CountryConstraint(['availableCountries' => ['FR']]);
     $this->validator = new CountryConstraintValidator($country_repository->reveal());
@@ -53,7 +57,7 @@ class CountryConstraintValidatorTest extends UnitTestCase {
     if ($expected_violation) {
       $violation_builder = $this->prophesize(ConstraintViolationBuilderInterface::class);
       $violation_builder->setParameter('%value', Argument::any())->willReturn($violation_builder);
-      $violation_builder->addViolation()->willReturn($violation_builder);
+      $violation_builder->addViolation()->shouldBeCalled();
       $context->buildViolation($expected_violation)->willReturn($violation_builder->reveal())->shouldBeCalled();
     }
     else {

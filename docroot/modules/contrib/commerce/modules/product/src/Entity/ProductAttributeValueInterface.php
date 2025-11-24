@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_product\Entity;
 
-use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 
 /**
  * Defines the interface for product attribute values.

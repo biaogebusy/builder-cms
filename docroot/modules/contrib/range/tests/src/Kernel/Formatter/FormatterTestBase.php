@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\range\Kernel\Formatter;
 
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\range\Traits\RangeTestTrait;
-use Drupal\entity_test\Entity\EntityTest;
 
 /**
  * Base class for range functional integration tests.
@@ -125,10 +125,10 @@ abstract class FormatterTestBase extends KernelTestBase {
       // Loop over the base formatter settings.
       foreach ($this->fieldFormatterBaseDataProvider() as $formatter_base_data) {
         [$base_settings, $expected_format_separate, $expected_format_combined] = $formatter_base_data;
-        $diplay_settings = $settings + $base_settings + $this->defaultSettings;
+        $display_settings = $settings + $base_settings + $this->defaultSettings;
         $expected_format = $expected_from !== $expected_to ? $expected_format_separate : $expected_format_combined;
         yield [
-          $diplay_settings,
+          $display_settings,
           $from, $to,
           sprintf($expected_format, $expected_from, $expected_to),
         ];
@@ -177,29 +177,29 @@ abstract class FormatterTestBase extends KernelTestBase {
       [
         'field_prefix_suffix' => TRUE,
       ],
-      'field_prefix%s-%sfield_suffix',
-      'field_prefix%sfield_suffix',
+      'field_prefix_%s-%s_field_suffix',
+      'field_prefix_%s_field_suffix',
     ];
     yield [
       [
         'from_prefix_suffix' => TRUE,
       ],
-      'from_prefix%sfrom_suffix-%s',
-      'from_prefix%sfrom_suffix',
+      'from_prefix_%s_from_suffix-%s',
+      'from_prefix_%s_from_suffix',
     ];
     yield [
       [
         'to_prefix_suffix' => TRUE,
       ],
-      '%s-to_prefix%sto_suffix',
-      'to_prefix%sto_suffix',
+      '%s-to_prefix_%s_to_suffix',
+      'to_prefix_%s_to_suffix',
     ];
     yield [
       [
         'combined_prefix_suffix' => TRUE,
       ],
       '%s-%s',
-      'combined_prefix%scombined_suffix',
+      'combined_prefix_%s_combined_suffix',
     ];
     yield [
       [
@@ -214,24 +214,24 @@ abstract class FormatterTestBase extends KernelTestBase {
         'field_prefix_suffix' => TRUE,
         'from_prefix_suffix' => TRUE,
       ],
-      'field_prefixfrom_prefix%sfrom_suffix-%sfield_suffix',
-      'field_prefixfrom_prefix%sfrom_suffixfield_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-%s_field_suffix',
+      'field_prefix_from_prefix_%s_from_suffix_field_suffix',
     ];
     yield [
       [
         'field_prefix_suffix' => TRUE,
         'to_prefix_suffix' => TRUE,
       ],
-      'field_prefix%s-to_prefix%sto_suffixfield_suffix',
-      'field_prefixto_prefix%sto_suffixfield_suffix',
+      'field_prefix_%s-to_prefix_%s_to_suffix_field_suffix',
+      'field_prefix_to_prefix_%s_to_suffix_field_suffix',
     ];
     yield [
       [
         'field_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefix%s-%sfield_suffix',
-      'field_prefixcombined_prefix%scombined_suffixfield_suffix',
+      'field_prefix_%s-%s_field_suffix',
+      'field_prefix_combined_prefix_%s_combined_suffix_field_suffix',
     ];
     yield [
       [
@@ -239,24 +239,24 @@ abstract class FormatterTestBase extends KernelTestBase {
         'field_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefix%s-%sfield_suffix',
-      'field_prefix%s-%sfield_suffix',
+      'field_prefix_%s-%s_field_suffix',
+      'field_prefix_%s-%s_field_suffix',
     ];
     yield [
       [
         'from_prefix_suffix' => TRUE,
         'to_prefix_suffix' => TRUE,
       ],
-      'from_prefix%sfrom_suffix-to_prefix%sto_suffix',
-      'from_prefix%sto_suffix',
+      'from_prefix_%s_from_suffix-to_prefix_%s_to_suffix',
+      'from_prefix_%s_to_suffix',
     ];
     yield [
       [
         'from_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'from_prefix%sfrom_suffix-%s',
-      'combined_prefix%scombined_suffix',
+      'from_prefix_%s_from_suffix-%s',
+      'combined_prefix_%s_combined_suffix',
     ];
     yield [
       [
@@ -264,16 +264,16 @@ abstract class FormatterTestBase extends KernelTestBase {
         'from_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'from_prefix%sfrom_suffix-%s',
-      'from_prefix%sfrom_suffix-%s',
+      'from_prefix_%s_from_suffix-%s',
+      'from_prefix_%s_from_suffix-%s',
     ];
     yield [
       [
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      '%s-to_prefix%sto_suffix',
-      'combined_prefix%scombined_suffix',
+      '%s-to_prefix_%s_to_suffix',
+      'combined_prefix_%s_combined_suffix',
     ];
     yield [
       [
@@ -281,8 +281,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      '%s-to_prefix%sto_suffix',
-      '%s-to_prefix%sto_suffix',
+      '%s-to_prefix_%s_to_suffix',
+      '%s-to_prefix_%s_to_suffix',
     ];
     yield [
       [
@@ -290,8 +290,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'from_prefix_suffix' => TRUE,
         'to_prefix_suffix' => TRUE,
       ],
-      'field_prefixfrom_prefix%sfrom_suffix-to_prefix%sto_suffixfield_suffix',
-      'field_prefixfrom_prefix%sto_suffixfield_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-to_prefix_%s_to_suffix_field_suffix',
+      'field_prefix_from_prefix_%s_to_suffix_field_suffix',
     ];
     yield [
       [
@@ -299,8 +299,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'from_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefixfrom_prefix%sfrom_suffix-%sfield_suffix',
-      'field_prefixcombined_prefix%scombined_suffixfield_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-%s_field_suffix',
+      'field_prefix_combined_prefix_%s_combined_suffix_field_suffix',
     ];
     yield [
       [
@@ -309,8 +309,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'from_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefixfrom_prefix%sfrom_suffix-%sfield_suffix',
-      'field_prefixfrom_prefix%sfrom_suffix-%sfield_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-%s_field_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-%s_field_suffix',
     ];
     yield [
       [
@@ -318,8 +318,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefix%s-to_prefix%sto_suffixfield_suffix',
-      'field_prefixcombined_prefix%scombined_suffixfield_suffix',
+      'field_prefix_%s-to_prefix_%s_to_suffix_field_suffix',
+      'field_prefix_combined_prefix_%s_combined_suffix_field_suffix',
     ];
     yield [
       [
@@ -328,8 +328,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefix%s-to_prefix%sto_suffixfield_suffix',
-      'field_prefix%s-to_prefix%sto_suffixfield_suffix',
+      'field_prefix_%s-to_prefix_%s_to_suffix_field_suffix',
+      'field_prefix_%s-to_prefix_%s_to_suffix_field_suffix',
     ];
     yield [
       [
@@ -337,8 +337,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'from_prefix%sfrom_suffix-to_prefix%sto_suffix',
-      'combined_prefix%scombined_suffix',
+      'from_prefix_%s_from_suffix-to_prefix_%s_to_suffix',
+      'combined_prefix_%s_combined_suffix',
     ];
     yield [
       [
@@ -347,8 +347,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'from_prefix%sfrom_suffix-to_prefix%sto_suffix',
-      'from_prefix%sfrom_suffix-to_prefix%sto_suffix',
+      'from_prefix_%s_from_suffix-to_prefix_%s_to_suffix',
+      'from_prefix_%s_from_suffix-to_prefix_%s_to_suffix',
     ];
     yield [
       [
@@ -357,8 +357,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefixfrom_prefix%sfrom_suffix-to_prefix%sto_suffixfield_suffix',
-      'field_prefixcombined_prefix%scombined_suffixfield_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-to_prefix_%s_to_suffix_field_suffix',
+      'field_prefix_combined_prefix_%s_combined_suffix_field_suffix',
     ];
     yield [
       [
@@ -368,8 +368,8 @@ abstract class FormatterTestBase extends KernelTestBase {
         'to_prefix_suffix' => TRUE,
         'combined_prefix_suffix' => TRUE,
       ],
-      'field_prefixfrom_prefix%sfrom_suffix-to_prefix%sto_suffixfield_suffix',
-      'field_prefixfrom_prefix%sfrom_suffix-to_prefix%sto_suffixfield_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-to_prefix_%s_to_suffix_field_suffix',
+      'field_prefix_from_prefix_%s_from_suffix-to_prefix_%s_to_suffix_field_suffix',
     ];
   }
 

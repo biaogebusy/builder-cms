@@ -2,6 +2,8 @@
 
 namespace Drupal\viewsreference\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -76,10 +78,22 @@ class ViewsReferenceFieldFormatter extends FormatterBase {
     $parent_entity_type = $items->getEntity()->getEntityTypeId();
     $parent_entity_id = $items->getEntity()->id();
     $parent_field_name = $items->getFieldDefinition()->getName();
+    $parent_revision_id = NULL;
+    if ($items->getEntity() instanceof RevisionableInterface) {
+      $parent_revision_id = $items->getEntity()->getRevisionId();
+    }
+
+    $cacheability = new CacheableMetadata();
 
     foreach ($items as $delta => $item) {
       $view_name = $item->getValue()['target_id'];
       $display_id = $item->getValue()['display_id'];
+
+      // Since no JS creating a node is a multi-step, it is possible that
+      // no display ID has yet been selected.
+      if (!$display_id) {
+        continue;
+      }
       $view = Views::getView($view_name);
 
       // Add an extra check because the view could have been deleted.
@@ -95,19 +109,27 @@ class ViewsReferenceFieldFormatter extends FormatterBase {
       // behaviour in views. The hook_views_pre_build() needs to know if the
       // view was part of a viewsreference field or not.
       $view->element['#viewsreference'] = [
-        'data' => unserialize($item->getValue()['data'], ['allowed_classes' => FALSE]),
+        'data' => !empty($item->getValue()['data']) ? unserialize($item->getValue()['data'], ['allowed_classes' => FALSE]) : [],
         'enabled_settings' => $enabled_settings,
         'parent_entity_type' => $parent_entity_type,
         'parent_entity_id' => $parent_entity_id,
         'parent_field_name' => $parent_field_name,
+        'parent_revision_id' => $parent_revision_id,
+        'field_item_delta' => $delta,
       ];
 
       $view->preExecute();
       $view->execute($display_id);
 
+      // Exposed form handler.
+      /** @var \Drupal\views\Plugin\views\exposed_form\ExposedFormPluginBase $exposed_form_handler */
+      $exposed_form_handler = $view->display_handler->getPlugin('exposed_form');
+
       $render_array = $view->buildRenderable($display_id, $view->args, FALSE);
       if (!empty(array_filter($this->getSetting('plugin_types')))) {
-        if (!empty($view->result) || !empty($view->empty)) {
+        // Show view if there are results, empty behaviour defined, exposed
+        // widgets, or a header or footer set to appear despite no results.
+        if (!empty($view->result) || !empty($view->empty) || ($exposed_form_handler?->options['input_required'] ?? FALSE) || !empty($view->exposed_widgets) || !empty($view->header) || !empty($view->footer)) {
           // Add a custom template if the title is available.
           $title = $view->getTitle();
           if (!empty($title)) {
@@ -118,8 +140,9 @@ class ViewsReferenceFieldFormatter extends FormatterBase {
               $title = $view->getTitle();
             }
             $render_array['title'] = [
-              '#theme' => 'viewsreference__view_title',
+              '#theme' => $view->buildThemeFunctions('viewsreference__view_title'),
               '#title' => $title,
+              '#view' => $view,
             ];
           }
           // The views_add_contextual_links() function needs the following
@@ -132,8 +155,18 @@ class ViewsReferenceFieldFormatter extends FormatterBase {
 
           $elements[$delta]['contents'] = $render_array;
         }
+        else {
+          // We should always add the cache metadata.
+          $elements[$delta]['contents']['#cache'] = $render_array['#cache'];
+        }
       }
+
+      // Collect cache metadata of the fully processed view, even if no results.
+      $cacheable_metadata = CacheableMetadata::createFromRenderArray($render_array);
+      $cacheability->merge($cacheable_metadata);
     }
+
+    $cacheability->applyTo($elements);
 
     return $elements;
   }

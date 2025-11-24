@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\CookieResourceTestTrait;
 
 /**
- * @group rest
+ * @group Action
  */
 class ActionJsonCookieTest extends ActionResourceTestBase {
 

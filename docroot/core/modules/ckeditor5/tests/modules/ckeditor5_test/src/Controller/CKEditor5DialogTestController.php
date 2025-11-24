@@ -34,10 +34,6 @@ class CKEditor5DialogTestController {
       ],
     ];
     $build['#attached']['library'][] = 'core/drupal.dialog.ajax';
-    // Add this library to prevent Modernizr from triggering a deprecation
-    // notice during testing.
-    // @todo remove in https://www.drupal.org/project/drupal/issues/3269082.
-    $build['#attached']['library'][] = 'core/drupal.touchevents-test';
     return $build;
   }
 

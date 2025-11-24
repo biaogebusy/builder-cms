@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * @see https://www.drupal.org/project/drupal/issues/3352581 on why we need to do this.
+ */
+function ckeditor_templates_preprocess_radios(&$variables) {
+  $element = $variables['element'];
+
+  if (isset($element['#wrapper_attributes']) && $element['#array_parents'][0] == 'templates') {
+    $attributes = $variables['attributes'];
+    $variables['attributes'] = $variables['element']['#wrapper_attributes'];
+
+    foreach ($attributes as $delta => $value) {
+      if (!isset($variables['attributes'][$delta])) {
+        $variables['attributes'][$delta] = $value;
+      }
+      elseif (is_array($value)) {
+        $variables['attributes'][$delta] = array_merge($variables['attributes'][$delta], $value);
+      }
+    }
+  }
+}

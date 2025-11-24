@@ -1,0 +1,32 @@
+{
+  "name": "ckeditor5-templates",
+  "version": "1.0.0",
+  "description": "CKEditor 5 plugin development.",
+  "scripts": {
+    "start": "webpack --mode development --watch",
+    "build": "webpack"
+  },
+  "author": "",
+  "license": "GPL-2.0-or-later",
+  "dependencies": {
+    "@ckeditor/ckeditor5-basic-styles": "^35.4.0",
+    "@ckeditor/ckeditor5-dev-utils": "^32.0.2",
+    "@ckeditor/ckeditor5-editor-classic": "^35.4.0",
+    "@ckeditor/ckeditor5-engine": "^35.4.0",
+    "@ckeditor/ckeditor5-essentials": "^35.4.0",
+    "@ckeditor/ckeditor5-html-support": "^35.4.0",
+    "@ckeditor/ckeditor5-paragraph": "^35.4.0",
+    "@ckeditor/ckeditor5-theme-lark": "^35.4.0",
+    "ckeditor5": "^35.4.0",
+    "css-loader": "^5.2.7",
+    "mini-css-extract-plugin": "^2.7.2",
+    "postcss-loader": "^4.3.0",
+    "raw-loader": "^4.0.2",
+    "sass": "^1.58.0",
+    "sass-loader": "^13.2.0",
+    "style-loader": "^2.0.0",
+    "terser-webpack-plugin": "^5.3.6",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
+  }
+}

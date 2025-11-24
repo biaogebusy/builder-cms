@@ -3,23 +3,24 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
 
 /**
  * Configure types of characters which should be ignored for searches.
- *
- * @SearchApiProcessor(
- *   id = "ignore_character",
- *   label = @Translation("Ignore characters"),
- *   description = @Translation("Configure types of characters which should be ignored for searches."),
- *   stages = {
- *     "pre_index_save" = 0,
- *     "preprocess_index" = -10,
- *     "preprocess_query" = -10,
- *   }
- * )
  */
+#[SearchApiProcessor(
+  id: 'ignore_character',
+  label: new TranslatableMarkup('Ignore characters'),
+  description: new TranslatableMarkup('Configure types of characters which should be ignored for searches.'),
+  stages: [
+    'pre_index_save' => 0,
+    'preprocess_index' => -10,
+    'preprocess_query' => -10,
+  ],
+)]
 class IgnoreCharacters extends FieldsProcessorPluginBase {
 
   /**

@@ -28,7 +28,7 @@ class AddVariantContextsForm extends ManageContext {
    */
   public function addContext(array &$form, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
     $page_variant = $cached_values['page_variant'];
     $context = $form_state->getValue('context');
     $content = $this->formBuilder->getForm($this->getContextClass($cached_values), $context, $this->getTempstoreId(), $this->machine_name, $page_variant->id());
@@ -90,7 +90,7 @@ class AddVariantContextsForm extends ManageContext {
    * {@inheritdoc}
    */
   protected function getContexts($cached_values) {
-    /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
     $page_variant = $cached_values['page_variant'];
     return $page_variant->getContexts();
   }
@@ -125,11 +125,6 @@ class AddVariantContextsForm extends ManageContext {
 
   /**
    * Check if context is editable.
-   *
-   * @param $cached_values
-   * @param $row
-   *
-   * @return bool
    */
   protected function isEditableContext($cached_values, $row) {
     /** @var \Drupal\page_manager\PageVariantInterface $page_variant */

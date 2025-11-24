@@ -4,24 +4,23 @@ namespace Drupal\charts\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Plugin implementation of the 'chart_config_default' widget.
- *
- * @FieldWidget(
- *   id = "chart_config_default",
- *   label = @Translation("Chart"),
- *   field_types = {
- *     "chart_config",
- *   },
- * )
+ * Defines the 'chart_config' field widget.
  */
+#[FieldWidget(
+  id: "chart_config_default",
+  label: new TranslatableMarkup("Chart"),
+  field_types: ["chart_config"],
+)]
 class ChartConfigItemDefaultWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**

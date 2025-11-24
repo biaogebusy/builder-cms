@@ -3,19 +3,20 @@
 namespace Drupal\jsonapi_extras\Plugin\jsonapi\FieldEnhancer;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer;
 use Drupal\jsonapi_extras\Plugin\DateTimeEnhancerBase;
 use Shaper\Util\Context;
 
 /**
  * Perform additional manipulations to timestamp fields.
- *
- * @ResourceFieldEnhancer(
- *   id = "date_time",
- *   label = @Translation("Date Time (Timestamp field)"),
- *   description = @Translation("Formats a date based the configured date format for timestamp fields."),
- *   dependencies = {"datetime"}
- * )
  */
+#[ResourceFieldEnhancer(
+  id: 'date_time',
+  label: new TranslatableMarkup('Date Time (Timestamp field)'),
+  description: new TranslatableMarkup('Formats a date based the configured date format for timestamp fields.'),
+  dependencies: ['datetime'],
+)]
 class DateTimeEnhancer extends DateTimeEnhancerBase {
 
   /**

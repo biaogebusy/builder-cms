@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
@@ -20,13 +22,13 @@ class PathRedirectSourceTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
     $tests[0]['source_data']['variable'] = [
       [
         'name' => 'redirect_default_status_code',
         'value' => 's:3:"307";',
-      ]
+      ],
     ];
 
     $tests[0]['source_data']['redirect'] = [

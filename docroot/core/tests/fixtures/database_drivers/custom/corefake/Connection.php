@@ -1,7 +1,7 @@
 <?php
 
-namespace Drupal\Driver\Database\corefake;
+namespace Drupal\Driver\Database\CoreFake;
 
-use Drupal\Core\Database\Driver\corefake\Connection as CoreFakeConnection;
+use Drupal\Core\Database\Driver\CoreFake\Connection as CoreFakeConnection;
 
 class Connection extends CoreFakeConnection {}

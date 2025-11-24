@@ -114,6 +114,9 @@ class MediaLibraryState extends ParameterBag implements CacheableDependencyInter
       throw new BadRequestHttpException("Invalid media library parameters specified.");
     }
 
+    // @todo Review parameters passed and remove irrelevant ones in
+    //   https://www.drupal.org/i/3396650
+
     // Once we have validated the required parameters, we restore the parameters
     // from the request since there might be additional values.
     $state->replace($query->all());
@@ -269,31 +272,6 @@ class MediaLibraryState extends ParameterBag implements CacheableDependencyInter
    */
   public function getOpenerParameters() {
     return $this->all('media_library_opener_parameters');
-  }
-
-  /**
-   * Returns the parameters.
-   *
-   * @param string|null $key
-   *   The name of the parameter to return or null to get them all.
-   *
-   * @return array
-   *   An array of parameters.
-   *
-   * @todo Remove this when Symfony 4 is no longer supported.
-   *   See https://www.drupal.org/node/3162981
-   */
-  public function all(string $key = NULL): array {
-    if ($key === NULL) {
-      return $this->parameters;
-    }
-
-    $value = $this->parameters[$key] ?? [];
-    if (!is_array($value)) {
-      throw new \UnexpectedValueException(sprintf('Unexpected value for parameter "%s": expecting "array", got "%s".', $key, get_debug_type($value)));
-    }
-
-    return $value;
   }
 
   /**

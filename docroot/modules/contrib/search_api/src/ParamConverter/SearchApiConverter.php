@@ -38,8 +38,6 @@ class SearchApiConverter extends EntityConverter implements ParamConverterInterf
    */
   protected $currentUser;
 
-  // phpcs:disable Drupal.Commenting.FunctionComment.TypeHintMissing
-
   /**
    * Constructs a new SearchApiConverter.
    *
@@ -52,10 +50,16 @@ class SearchApiConverter extends EntityConverter implements ParamConverterInterf
    * @param \Drupal\Core\Session\AccountInterface $user
    *   The current user.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, $entity_repository, $temp_store_factory, $user = NULL) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    $entity_repository,
+    $temp_store_factory,
+    $user = NULL,
+  ) {
     // For backwards-compatibility, we still support passing just
     // ($entity_manager, $temp_store_factory, $user).
     if (!$user) {
+      // @todo Add autowiring once we remove this BC code, see #3528045.
       @trigger_error('Constructing \Drupal\search_api\ParamConverter\SearchApiConverter with ($entity_manager, $temp_store_factory, $user) is deprecated in search_api:8.x-1.18 and will stop working in search_api:2.0.0. Pass ($entity_type_manager, $entity_repository, $temp_store_factory, $user) instead. See https://www.drupal.org/node/3164248', E_USER_DEPRECATED);
       $user = $temp_store_factory;
       $temp_store_factory = $entity_repository;
@@ -66,7 +70,7 @@ class SearchApiConverter extends EntityConverter implements ParamConverterInterf
       3 => [$temp_store_factory, SharedTempStoreFactory::class],
       4 => [$user, AccountInterface::class],
     ];
-    foreach ($type_checks as $i => list($object, $expected)) {
+    foreach ($type_checks as $i => [$object, $expected]) {
       if (!($object instanceof $expected)) {
         $actual = get_class($object);
         throw new \TypeError("Argument $i passed to Drupal\search_api\ParamConverter\SearchApiConverter::__construct() must implement interface $expected, instance of $actual given");
@@ -89,8 +93,7 @@ class SearchApiConverter extends EntityConverter implements ParamConverterInterf
     try {
       $storage = $this->entityTypeManager->getStorage('search_api_index');
     }
-    // @todo Remove $e once we depend on PHP 8.0+.
-    catch (InvalidPluginDefinitionException | PluginNotFoundException $e) {
+    catch (InvalidPluginDefinitionException | PluginNotFoundException) {
       return NULL;
     }
     if (!($storage instanceof ConfigEntityStorageInterface)) {

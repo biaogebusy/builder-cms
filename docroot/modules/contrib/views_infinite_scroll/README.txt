@@ -14,9 +14,11 @@ INTRODUCTION
 The Views Infinite Scroll module provides a pager, which allows an infinite
 scroll effect for views. It can work on any view: block, page, etc.
 
-* For a full description of the module visit https://www.drupal.org/project/views_infinite_scroll
+* For a full description of the module visit
+  https://www.drupal.org/project/views_infinite_scroll
 
-* To submit bug reports and feature suggestions, or to track changes visit https://www.drupal.org/project/issues/views_infinite_scroll
+* To submit bug reports and feature suggestions, or to track changes visit
+  https://www.drupal.org/project/issues/views_infinite_scroll
 
 
 REQUIREMENTS
@@ -28,7 +30,9 @@ This module requires no modules outside of Drupal core.
 INSTALLATION
 ------------
 
-* Install the Views Infinite Scroll module as you would normally install a contributed Drupal module. Visit https://www.drupal.org/node/1897420 for further information.
+* Install the Views Infinite Scroll module as you would normally install
+  a contributed Drupal module. Visit https://www.drupal.org/node/1897420
+  for further information.
 
 
 CONFIGURATION

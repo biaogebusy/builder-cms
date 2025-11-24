@@ -2,10 +2,11 @@
 
 namespace Drupal\commerce_cart\Plugin\views\field;
 
-use Drupal\commerce_cart\CartManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\commerce_cart\CartManagerInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Plugin\views\field\UncacheableFieldHandlerTrait;
 use Drupal\views\ResultRow;
@@ -13,9 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a form element for editing the order item quantity.
- *
- * @ViewsField("commerce_order_item_edit_quantity")
  */
+#[ViewsField("commerce_order_item_edit_quantity")]
 class EditQuantity extends FieldPluginBase {
 
   use UncacheableFieldHandlerTrait;

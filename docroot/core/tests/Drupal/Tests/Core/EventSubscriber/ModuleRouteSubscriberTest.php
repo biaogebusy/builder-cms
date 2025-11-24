@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\Routing\RouteBuildEvent;
@@ -25,6 +27,8 @@ class ModuleRouteSubscriberTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->moduleHandler = $this->createMock('Drupal\Core\Extension\ModuleHandlerInterface');
 
     $value_map = [
@@ -50,12 +54,12 @@ class ModuleRouteSubscriberTest extends UnitTestCase {
    * @param bool $removed
    *   Whether or not the route is expected to be removed from the collection.
    */
-  public function testRemoveRoute($route_name, array $requirements, $removed) {
+  public function testRemoveRoute($route_name, array $requirements, $removed): void {
     $collection = new RouteCollection();
     $route = new Route('', [], $requirements);
     $collection->add($route_name, $route);
 
-    $event = new RouteBuildEvent($collection, 'test');
+    $event = new RouteBuildEvent($collection);
     $route_subscriber = new ModuleRouteSubscriber($this->moduleHandler);
     $route_subscriber->onAlterRoutes($event);
 
@@ -70,7 +74,7 @@ class ModuleRouteSubscriberTest extends UnitTestCase {
   /**
    * Data provider for testRemoveRoute().
    */
-  public function providerTestRemoveRoute() {
+  public static function providerTestRemoveRoute() {
     return [
       ['enabled', ['_module_dependencies' => 'enabled'], FALSE],
       ['disabled', ['_module_dependencies' => 'disabled'], TRUE],

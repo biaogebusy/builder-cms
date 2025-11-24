@@ -45,3 +45,17 @@ views.field.field_charts_fields_scatter:
     y_axis:
       type: string
       label: 'Y Axis Field'
+
+views.field.field_charts_numeric_array:
+  type: views_field
+  label: 'Numeric Array Field'
+  mapping:
+    array_length:
+      type: integer
+      label: 'Array Length'
+    ordinal_fields:
+      type: sequence
+      label: 'Ordinal Fields'
+      sequence:
+        type: string
+        label: 'Ordinal Field'

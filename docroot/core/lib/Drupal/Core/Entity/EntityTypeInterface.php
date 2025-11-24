@@ -361,23 +361,6 @@ interface EntityTypeInterface extends PluginDefinitionInterface {
   public function entityClassImplements($interface);
 
   /**
-   * Indicates if the entity type is a subclass of the given class or interface.
-   *
-   * @param string $class
-   *   The class or interface to check.
-   *
-   * @return bool
-   *   TRUE if the entity type is a subclass of the class or interface.
-   *
-   * @deprecated in drupal:8.3.0 and is removed from drupal:10.0.0.
-   *   Use Drupal\Core\Entity\EntityTypeInterface::entityClassImplements()
-   *   instead.
-   *
-   * @see https://www.drupal.org/node/2842808
-   */
-  public function isSubclassOf($class);
-
-  /**
    * Sets the handlers for a given type.
    *
    * @param string $handler_type
@@ -400,6 +383,16 @@ interface EntityTypeInterface extends PluginDefinitionInterface {
    * @return string|bool
    */
   public function getAdminPermission();
+
+  /**
+   * Gets the name of the default collection permission.
+   *
+   * @see \Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider::getCollectionRoute()
+   *
+   * @return string|null
+   *   The collection permission name, or NULL if none.
+   */
+  public function getCollectionPermission(): ?string;
 
   /**
    * Gets the permission granularity level.
@@ -487,15 +480,15 @@ interface EntityTypeInterface extends PluginDefinitionInterface {
   public function getBundleEntityType();
 
   /**
-   * Gets the entity type for which this entity provides bundles.
+   * Gets the entity type ID for which this entity provides bundles.
    *
    * It can be used by other modules to act accordingly; for example,
    * the Field UI module uses it to add operation links to manage fields and
    * displays.
    *
    * @return string|null
-   *   The entity type for which this entity provides bundles, or NULL if does
-   *   not provide bundles for another entity type.
+   *   The entity type ID for which this entity provides bundles, or NULL if
+   *   does not provide bundles for another entity type.
    */
   public function getBundleOf();
 
@@ -525,8 +518,8 @@ interface EntityTypeInterface extends PluginDefinitionInterface {
    *
    * The implications of this method are left to the discretion of the caller.
    * For example, a module providing an HTTP API may not expose entities of
-   * this type or a custom entity reference field settings form may deprioritize
-   * entities of this type in a select list.
+   * this type or a custom entity reference field settings form may reduce the
+   * priority for entities of this type in a select list.
    *
    * @return bool
    *   TRUE if the entity data is internal, FALSE otherwise.

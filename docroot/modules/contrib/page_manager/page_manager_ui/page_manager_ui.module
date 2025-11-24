@@ -6,10 +6,10 @@
  */
 
 use Drupal\Core\Url;
-use Drupal\page_manager_ui\Entity\PageListBuilder;
-use Drupal\page_manager_ui\Form\PageDeleteForm;
 use Drupal\page_manager_ui\ConfigTranslation\PageConfigMapper;
 use Drupal\page_manager_ui\ConfigTranslation\PageVariantConfigMapper;
+use Drupal\page_manager_ui\Entity\PageListBuilder;
+use Drupal\page_manager_ui\Form\PageDeleteForm;
 use Drupal\page_manager_ui\Wizard\PageAddWizard;
 use Drupal\page_manager_ui\Wizard\PageEditWizard;
 use Drupal\page_manager_ui\Wizard\PageVariantAddWizard;
@@ -18,7 +18,7 @@ use Drupal\page_manager_ui\Wizard\PageVariantAddWizard;
  * Implements hook_entity_type_build().
  */
 function page_manager_ui_entity_type_build(array &$entity_types) {
-  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
   if (isset($entity_types['page'])) {
     $entity_types['page']
       ->setListBuilderClass(PageListBuilder::class)

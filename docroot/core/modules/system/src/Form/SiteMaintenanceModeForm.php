@@ -3,6 +3,7 @@
 namespace Drupal\system\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -36,13 +37,15 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state keyvalue collection to use.
    * @param \Drupal\user\PermissionHandlerInterface $permission_handler
    *   The permission handler.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, StateInterface $state, PermissionHandlerInterface $permission_handler) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, StateInterface $state, PermissionHandlerInterface $permission_handler) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->state = $state;
     $this->permissionHandler = $permission_handler;
   }
@@ -53,6 +56,7 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('state'),
       $container->get('user.permissions')
     );
@@ -76,7 +80,6 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('system.maintenance');
     $permissions = $this->permissionHandler->getPermissions();
     $permission_label = $permissions['access site in maintenance mode']['title'];
     $form['maintenance_mode'] = [
@@ -88,7 +91,7 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
     $form['maintenance_mode_message'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Message to display when in maintenance mode'),
-      '#default_value' => $config->get('message'),
+      '#config_target' => 'system.maintenance:message',
     ];
 
     return parent::buildForm($form, $form_state);
@@ -98,10 +101,6 @@ class SiteMaintenanceModeForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->config('system.maintenance')
-      ->set('message', $form_state->getValue('maintenance_mode_message'))
-      ->save();
-
     $this->state->set('system.maintenance_mode', $form_state->getValue('maintenance_mode'));
     parent::submitForm($form, $form_state);
   }

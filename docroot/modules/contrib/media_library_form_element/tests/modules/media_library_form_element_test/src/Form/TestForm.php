@@ -42,7 +42,7 @@ class TestForm extends ConfigFormBase {
     ];
     $form['media_unlimited'] = [
       '#type' => 'media_library',
-      '#allowed_bundles' => ['type_two'],
+      '#allowed_bundles' => ['type_one'],
       '#title' => $this->t('Upload infinite images'),
       '#default_value' => $config->get('media_unlimited') ?? NULL,
       '#description' => $this->t('Upload or select unlimited images.'),

@@ -2,29 +2,31 @@
 
 namespace Drupal\user\Plugin\LanguageNegotiation;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\PathProcessor\PathProcessorManager;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\AdminContext;
 use Drupal\Core\Routing\StackedRouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\language\Attribute\LanguageNegotiation;
 use Drupal\language\LanguageNegotiationMethodBase;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Routing\Exception\ExceptionInterface;
 use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
 
 /**
  * Identifies admin language from the user preferences.
- *
- * @LanguageNegotiation(
- *   id = Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUserAdmin::METHOD_ID,
- *   types = {Drupal\Core\Language\LanguageInterface::TYPE_INTERFACE},
- *   weight = -10,
- *   name = @Translation("Account administration pages"),
- *   description = @Translation("Account administration pages language setting.")
- * )
  */
+#[LanguageNegotiation(
+  id: LanguageNegotiationUserAdmin::METHOD_ID,
+  name: new TranslatableMarkup('Account administration pages'),
+  types: [LanguageInterface::TYPE_INTERFACE],
+  weight: -10,
+  description: new TranslatableMarkup('Account administration pages language setting.')
+)]
 class LanguageNegotiationUserAdmin extends LanguageNegotiationMethodBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -97,7 +99,7 @@ class LanguageNegotiationUserAdmin extends LanguageNegotiationMethodBase impleme
   /**
    * {@inheritdoc}
    */
-  public function getLangcode(Request $request = NULL) {
+  public function getLangcode(?Request $request = NULL) {
     $langcode = NULL;
 
     // User preference (only for administrators).
@@ -137,10 +139,7 @@ class LanguageNegotiationUserAdmin extends LanguageNegotiationMethodBase impleme
           $path = $this->pathProcessorManager->processInbound(urldecode(rtrim($cloned_request->getPathInfo(), '/')), $cloned_request);
           $attributes = $this->router->match($path);
         }
-        catch (ResourceNotFoundException $e) {
-          return FALSE;
-        }
-        catch (AccessDeniedHttpException $e) {
+        catch (ExceptionInterface | HttpException) {
           return FALSE;
         }
         $route_object = $attributes[RouteObjectInterface::ROUTE_OBJECT];

@@ -7,8 +7,5 @@
   "support": {
     "issues": "https://www.drupal.org/project/issues/entity",
     "source": "https://git.drupalcode.org/project/entity"
-  },
-  "require": {
-    "drupal/core": "^9.2|^10.0"
   }
 }

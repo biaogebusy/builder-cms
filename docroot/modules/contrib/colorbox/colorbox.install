@@ -45,20 +45,8 @@ function colorbox_requirements($phase) {
       'title' => t('DOMPurify library'),
       'value' => $dompurify_exists ? t('Installed') : t('Not installed'),
       'description' => $dompurify_exists ? '' :
-        t('The DOMPurify library is not installed. ' .
-          'The Colorbox module uses this library to sanitize HTML captions. ' .
-          'Without this library, all captions will be treated as plain text. ' .
-          'If you intend to have HTML captions in Colorbox content, ' .
-          'download the <a href="@url">DOMPurify library</a>, extract it, ' .
-          'and copy the dist directory into the /libraries/DOMPurify folder ' .
-          'in your Drupal installation directory. ' .
-          'Specifically, the system looks for ' .
-          '/libraries/DOMPurify/dist/purify.min.js. <br /><br />' .
-          'To avoid potential security ' .
-          'issues, please only install the dist directory, and not any other ' .
-          'files from the archive.<br /><br />' .
-          'If you do not intend to use HTML captions, you can suppress this warning on the ' .
-          '<a href="@config">Colorbox configuration page.</a>',
+      // cspell:disable-next-line ForbiddenWords
+      t('The DOMPurify library is not installed. The Colorbox module uses this library to sanitize HTML captions. Without this library, all captions will be treated as plain text. If you intend to have HTML captions in Colorbox content, download the <a href="@url">DOMPurify library</a>, extract it, and copy the dist directory into the /libraries/DOMPurify folder in your Drupal installation directory. Specifically, the system looks for /libraries/DOMPurify/dist/purify.min.js. <br /><br /> To avoid potential security issues, please only install the dist directory, and not any other files from the archive.<br /><br /> If you do not intend to use HTML captions, you can suppress this warning on the <a href="@config">Colorbox configuration page.</a>',
           [
             '@url' => 'https://github.com/cure53/DOMPurify/archive/main.zip',
             '@config' => Url::fromRoute('colorbox.admin_settings')->toString(),

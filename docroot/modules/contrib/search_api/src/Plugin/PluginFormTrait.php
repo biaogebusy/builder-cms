@@ -3,7 +3,6 @@
 namespace Drupal\search_api\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
-use Drupal\Component\Plugin\ConfigurablePluginInterface as DrupalConfigurablePluginInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -24,8 +23,7 @@ trait PluginFormTrait {
    *
    * @see \Drupal\Core\Plugin\PluginFormInterface::validateConfigurationForm()
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-  }
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {}
 
   /**
    * Form submission handler.
@@ -39,8 +37,7 @@ trait PluginFormTrait {
    * @see \Drupal\Core\Plugin\PluginFormInterface::submitConfigurationForm()
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    // @todo Clean this up once we depend on Drupal 9.0+.
-    if ($this instanceof ConfigurableInterface || $this instanceof DrupalConfigurablePluginInterface) {
+    if ($this instanceof ConfigurableInterface) {
       $this->setConfiguration($form_state->getValues());
     }
   }

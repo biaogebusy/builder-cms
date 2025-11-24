@@ -5,7 +5,7 @@ package: Testing
 dependencies:
   - views_data_export:views_data_export
 
-# Information added by Drupal.org packaging script on 2023-11-02
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2025-10-24
+version: '8.x-1.8'
 project: 'views_data_export'
-datestamp: 1698948993
+datestamp: 1761320261

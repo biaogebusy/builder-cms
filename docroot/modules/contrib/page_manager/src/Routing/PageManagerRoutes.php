@@ -66,7 +66,7 @@ class PageManagerRoutes extends RouteSubscriberBase {
         $collection_route = $collection->get($overridden_route_name);
 
         // Add the name of the overridden route for use during filtering.
-        $defaults['overridden_route_name'] = $overridden_route_name;
+        $defaults['_overridden_route_name'] = $overridden_route_name;
         $path = $collection_route->getPath();
         $parameters = $collection_route->getOption('parameters') ?: [];
         $requirements = $collection_route->getRequirements();
@@ -89,21 +89,21 @@ class PageManagerRoutes extends RouteSubscriberBase {
       // When adding multiple variants, the variant ID is added to the route
       // name. In order to convey the base route name for this set of variants,
       // add it as a parameter.
-      $defaults['base_route_name'] = $base_route_name;
+      $defaults['_base_route_name'] = $base_route_name;
 
-      $defaults['_entity_view'] = 'page_manager_page_variant';
+      $defaults['_entity_view'] = '_page_manager_page_variant';
       $defaults['_title'] = $entity->label();
-      $defaults['page_manager_page'] = $entity->id();
-      $parameters['page_manager_page_variant']['type'] = 'entity:page_variant';
-      $parameters['page_manager_page']['type'] = 'entity:page';
-      $requirements['_page_access'] = 'page_manager_page.view';
+      $defaults['_page_manager_page'] = $entity->id();
+      $parameters['_page_manager_page_variant']['type'] = 'entity:page_variant';
+      $parameters['_page_manager_page']['type'] = 'entity:page';
+      $requirements['_page_access'] = '_page_manager_page.view';
       foreach ($entity->getVariants() as $variant_id => $variant) {
         // Construct and add a new route.
         $route = new Route(
           $path,
           $defaults + [
-            'page_manager_page_variant' => $variant_id,
-            'page_manager_page_variant_weight' => $variant->getWeight(),
+            '_page_manager_page_variant' => $variant_id,
+            '_page_manager_page_variant_weight' => $variant->getWeight(),
           ],
           $requirements,
           [

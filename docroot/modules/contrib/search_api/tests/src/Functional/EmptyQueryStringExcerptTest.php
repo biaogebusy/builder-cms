@@ -5,6 +5,7 @@ namespace Drupal\Tests\search_api\Functional;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Highlight processor's ability to create excerpts without keywords.
@@ -13,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\Highlight
  */
+#[RunTestsInSeparateProcesses]
 class EmptyQueryStringExcerptTest extends SearchApiBrowserTestBase {
 
   use ExampleContentTrait;
@@ -94,7 +96,7 @@ class EmptyQueryStringExcerptTest extends SearchApiBrowserTestBase {
    *   An associative array of argument arrays for testExcerptAlways(), keyed by
    *   data set label.
    */
-  public function excerptAlwaysDataProvider() {
+  public static function excerptAlwaysDataProvider() {
     return [
       'setting disabled' => [FALSE],
       'setting enabled' => [TRUE],

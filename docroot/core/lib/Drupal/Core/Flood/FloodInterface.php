@@ -13,7 +13,7 @@ interface FloodInterface {
    * @param string $name
    *   The name of an event. To prevent unintended name clashes, it is recommended
    *   to use the module name first in the event name, optionally followed by
-   *   a dot and the actual event name (e.g. "mymodule.my_event").
+   *   a dot and the actual event name (e.g. "my_module.my_event").
    * @param int $window
    *   (optional) Number of seconds before this event expires. Defaults to 3600
    *   (1 hour). Typically uses the same value as the isAllowed() $window
@@ -21,7 +21,10 @@ interface FloodInterface {
    *   table from growing indefinitely.
    * @param string $identifier
    *   (optional) Unique identifier of the current user. Defaults to the current
-   *   user's IP address).
+   *   user's IP address. The identifier can be given an additional prefix
+   *   separated by "-". Flood backends may then optionally implement the
+   *   PrefixFloodInterface which allows all flood events that share the same
+   *   prefix to be cleared simultaneously.
    */
   public function register($name, $window = 3600, $identifier = NULL);
 

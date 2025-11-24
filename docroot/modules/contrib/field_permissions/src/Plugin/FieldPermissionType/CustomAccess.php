@@ -5,7 +5,6 @@ namespace Drupal\field_permissions\Plugin\FieldPermissionType;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\field_permissions\FieldPermissionsService;
 use Drupal\field_permissions\Plugin\AdminFormSettingsInterface;
 use Drupal\field_permissions\Plugin\CustomPermissionsInterface;
 use Drupal\user\EntityOwnerInterface;
@@ -43,7 +42,7 @@ class CustomAccess extends Base implements CustomPermissionsInterface, AdminForm
         return $entity->id() == $account->id() && $account->hasPermission($operation . ' own ' . $field_name);
       }
       elseif ($entity instanceof EntityOwnerInterface) {
-        return $entity->getOwnerId() == $account->id() && $account->hasPermission($operation . ' own ' . $field_name);
+        return $entity->getOwnerId() === $account->id() && $account->hasPermission($operation . ' own ' . $field_name);
       }
     }
 
@@ -65,36 +64,52 @@ class CustomAccess extends Base implements CustomPermissionsInterface, AdminForm
    */
   public function buildAdminForm(array &$form, FormStateInterface $form_state, RoleStorageInterface $role_storage) {
     $this->addPermissionsGrid($form, $form_state, $role_storage);
-
-    // Only display the permissions matrix if this type is selected.
-    $form['#attached']['library'][] = 'field_permissions/field_permissions';
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitAdminForm(array &$form, FormStateInterface $form_state, RoleStorageInterface $role_storage) {
+    $this_plugin_applies = $form_state->getValue('type') === $this->getPluginId();
     $custom_permissions = $form_state->getValue('permissions');
-    /** @var \Drupal\user\RoleInterface[] $roles */
-    $roles = [];
-    foreach ($custom_permissions as $permission_name => $field_perm) {
-      foreach ($field_perm as $role_name => $role_permission) {
-        $roles[$role_name] = $role_storage->load($role_name);
-        // If using this plugin, set permissions to the value submitted in the
-        // form. Otherwise remove all permissions as they will no longer exist.
-        $role_permission = $form_state->getValue('type') === $this->getPluginId() ? $role_permission : FALSE;
-        if ($role_permission) {
-          $roles[$role_name]->grantPermission($permission_name);
-        }
-        else {
-          $roles[$role_name]->revokePermission($permission_name);
-        }
+    $keys = array_keys($custom_permissions);
+    $custom_permissions = $this->transposeArray($custom_permissions);
+    foreach ($role_storage->loadMultiple() as $role) {
+      $permissions = $role->getPermissions();
+      $removed = array_values(array_intersect($permissions, $keys));
+      $added = $this_plugin_applies ? array_keys(array_filter($custom_permissions[$role->id()])) : [];
+      // Permissions in role object are sorted on save. Permissions on form are
+      // not in same order (the 'any' and 'own' items are flipped) but need to
+      // be as array equality tests keys and values. So sort the added items.
+      sort($added);
+      if ($removed != $added) {
+        // Rule #1 Do NOT save something that is not changed.
+        // Like field storage, delete existing items then add current items.
+        $permissions = array_diff($permissions, $removed);
+        $permissions = array_merge($permissions, $added);
+        $role->set('permissions', $permissions);
+        $role->trustData()->save();
       }
     }
-    // Save all roles.
-    foreach ($roles as $role) {
-      $role->trustData()->save();
+  }
+
+  /**
+   * Transposes a 2-dimensional array.
+   *
+   * @param array $original
+   *   The array to transpose.
+   *
+   * @return array
+   *   The transposed array.
+   */
+  protected function transposeArray(array $original) {
+    $transpose = [];
+    foreach ($original as $row => $columns) {
+      foreach ($columns as $column => $value) {
+        $transpose[$column][$row] = $value;
+      }
     }
+    return $transpose;
   }
 
   /**
@@ -103,7 +118,7 @@ class CustomAccess extends Base implements CustomPermissionsInterface, AdminForm
   public function getPermissions() {
     $permissions = [];
     $field_name = $this->fieldStorage->getName();
-    $permission_list = FieldPermissionsService::getList($field_name);
+    $permission_list = $this->fieldPermissionsService->getList($field_name);
     $perms_name = array_keys($permission_list);
     foreach ($perms_name as $perm_name) {
       $name = $perm_name . ' ' . $field_name;
@@ -142,8 +157,8 @@ class CustomAccess extends Base implements CustomPermissionsInterface, AdminForm
         'class' => ['checkbox'],
       ];
     }
-    // @todo Remove call to global service.
-    $test = \Drupal::service('field_permissions.permissions_service')->getPermissionsByRole();
+
+    $test = $this->fieldPermissionsService->getPermissionsByRole();
     foreach ($permissions as $provider => $permission) {
       $form['permissions'][$provider]['description'] = [
         '#type' => 'inline_template',

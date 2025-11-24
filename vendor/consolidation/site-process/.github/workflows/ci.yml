@@ -4,10 +4,10 @@
 on:
   pull_request:
     branches:
-      - 4.x
+      - main
   push:
     branches:
-      - 4.x
+      - main
 
 name: CI
 
@@ -24,7 +24,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: 8.2
           coverage: none
 
       - name: Install dependencies
@@ -53,7 +53,7 @@ jobs:
       - name: Install PHP with extensions
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: 8.2
           coverage: none
           extensions: intl
 
@@ -62,10 +62,10 @@ jobs:
           mkdir -p tools
           echo '{}' > tools/composer.json
           composer --working-dir=tools config --no-plugins allow-plugins.ocramius/package-versions true
-          composer --working-dir=tools require roave/backward-compatibility-check:^5
+          composer --working-dir=tools require roave/backward-compatibility-check:^7
 
       - name: Run roave/backward-compatibility-check
-        run: ./tools/vendor/bin/roave-backward-compatibility-check --from=4.2.1
+        run: ./tools/vendor/bin/roave-backward-compatibility-check --from=5.4.0
 
   tests:
     name: Tests
@@ -82,30 +82,27 @@ jobs:
           - windows-latest
 
         php-version:
-          - "7.4"
+          - "8.2"
 
         php-ini-values:
-          - assert.exception=1, zend.assertions=1
+          - assert.exception=1, zend.assertions=1, opcache.enable=1, opcache.enable_cli=1, opcache.optimization_level=-1, opcache.jit_buffer_size=4096M, opcache.jit=1205
 
         dependencies:
           - locked
 
         include:
           - os: ubuntu-latest
-            php-version: "7.1"
-            dependencies: lowest
-
-          - os: ubuntu-latest
-            php-version: "7.4"
-            dependencies: highest
-
-          - os: ubuntu-latest
             php-version: "8.0"
             dependencies: highest
             php-ini-values: assert.exception=1, zend.assertions=1, opcache.enable=1, opcache.enable_cli=1, opcache.optimization_level=-1, opcache.jit_buffer_size=4096M, opcache.jit=1205
 
           - os: ubuntu-latest
-            php-version: "8.1"
+            php-version: "8.3"
+            dependencies: highest
+            php-ini-values: assert.exception=1, zend.assertions=1, opcache.enable=1, opcache.enable_cli=1, opcache.optimization_level=-1, opcache.jit_buffer_size=4096M, opcache.jit=1205
+
+          - os: ubuntu-latest
+            php-version: "8.4"
             dependencies: highest
             php-ini-values: assert.exception=1, zend.assertions=1, opcache.enable=1, opcache.enable_cli=1, opcache.optimization_level=-1, opcache.jit_buffer_size=4096M, opcache.jit=1205
 
@@ -139,7 +136,7 @@ jobs:
 
       - name: Make sure composer.json is valid before we start modifyig it
         run: composer validate
-        
+
       - name: Clear platform php configuration in case we need to update phpunit
         run: composer config --unset platform.php
 
@@ -157,20 +154,17 @@ jobs:
         if: matrix.dependencies == 'highest'
         run: composer update --no-ansi --no-interaction --no-progress
 
-      - name: Show dependencies
-        run: composer info
-
       # Use "script" hack to give us a tty. See https://github.com/actions/runner/issues/241#issuecomment-745902718
       - name: Run tests with phpunit
         if: matrix.os != 'windows-latest'
         shell: 'script -q -e -c "bash {0}"'
         run: composer unit
-      
+
       # Run without "script" on Windows
       - name: Run tests with phpunit
         if: matrix.os == 'windows-latest'
         run: composer unit
-      
+
       - name: Publish code coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.php-version == '8.0'
         run: bash <(curl -s https://codecov.io/bash)

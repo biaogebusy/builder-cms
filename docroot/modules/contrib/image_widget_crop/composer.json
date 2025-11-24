@@ -26,12 +26,11 @@
     }
   ],
   "require": {
-    "drupal/crop": "^1 || ^2"
+    "drupal/crop": "^2"
   },
   "require-dev": {
-    "drupal/bartik": "^1",
-    "drupal/ctools": "^3",
+    "drupal/ctools": "^4.1",
     "drupal/entity_browser": "^2",
-    "drupal/inline_entity_form": "^1"
+    "drupal/inline_entity_form": "^1 || ^3"
   }
 }

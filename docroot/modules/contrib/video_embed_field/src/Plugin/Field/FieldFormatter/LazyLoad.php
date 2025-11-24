@@ -3,8 +3,8 @@
 namespace Drupal\video_embed_field\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -32,7 +32,7 @@ class LazyLoad extends FormatterBase implements ContainerFactoryPluginInterface 
   protected $thumbnailFormatter;
 
   /**
-   * The field formatterp plguin instance for videos.
+   * The field formatter plugin instance for videos.
    *
    * @var \Drupal\Core\Field\FormatterInterface
    */
@@ -109,7 +109,8 @@ class LazyLoad extends FormatterBase implements ContainerFactoryPluginInterface 
         '#type' => 'html_tag',
         '#tag' => 'button',
         '#attributes' => [
-          'class' => ['video-embed-field-lazy-play']
+          'class' => ['video-embed-field-lazy-play'],
+          'aria-label' => $this->t('Play video'),
         ],
       ];
       $element[$delta] = [

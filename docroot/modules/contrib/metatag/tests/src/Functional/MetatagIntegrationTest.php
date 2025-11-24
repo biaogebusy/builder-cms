@@ -5,7 +5,7 @@ namespace Drupal\Tests\metatag\Functional;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * Ensures that the Metatag hook_metatags_attachments_alter() works.
+ * Ensures that the Metatag hooks() works.
  *
  * @group metatag
  */

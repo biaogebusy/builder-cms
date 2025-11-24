@@ -6,6 +6,8 @@ use Drupal\commerce_order\Entity\OrderItemInterface;
 
 /**
  * Defines the interface for order type resolvers.
+ *
+ * Interface for services tagged as 'commerce_order.order_type_resolver'.
  */
 interface OrderTypeResolverInterface {
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\text\Unit\Plugin\migrate\field\d6;
 
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -30,6 +32,8 @@ class TextFieldTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->plugin = new TextField([], 'text', []);
 
     $migration = $this->prophesize(MigrationInterface::class);
@@ -49,11 +53,11 @@ class TextFieldTest extends UnitTestCase {
   /**
    * @covers ::defineValueProcessPipeline
    */
-  public function testProcessFilteredTextFieldValues($method = 'defineValueProcessPipeline') {
+  public function testFilteredTextValueProcessPipeline(): void {
     $field_info = [
       'widget_type' => 'text_textfield',
     ];
-    $this->plugin->$method($this->migration, 'body', $field_info);
+    $this->plugin->defineValueProcessPipeline($this->migration, 'body', $field_info);
 
     $process = $this->migration->getProcess();
     $this->assertSame('sub_process', $process['plugin']);
@@ -72,14 +76,14 @@ class TextFieldTest extends UnitTestCase {
   /**
    * @covers ::defineValueProcessPipeline
    */
-  public function testProcessBooleanTextImplicitValues($method = 'defineValueProcessPipeline') {
+  public function testBooleanTextImplicitValueProcessPipeline(): void {
     $info = [
       'widget_type' => 'optionwidgets_onoff',
       'global_settings' => [
         'allowed_values' => "foo\nbar",
       ],
     ];
-    $this->plugin->$method($this->migration, 'field', $info);
+    $this->plugin->defineValueProcessPipeline($this->migration, 'field', $info);
 
     $expected = [
       'value' => [
@@ -97,14 +101,14 @@ class TextFieldTest extends UnitTestCase {
   /**
    * @covers ::defineValueProcessPipeline
    */
-  public function testProcessBooleanTextExplicitValues($method = 'defineValueProcessPipeline') {
+  public function testBooleanTextExplicitValueProcessPipeline(): void {
     $info = [
       'widget_type' => 'optionwidgets_onoff',
       'global_settings' => [
-        'allowed_values' => "foo|Foo\nbaz|Baz",
+        'allowed_values' => "foo|Foo\nBaz|Baz",
       ],
     ];
-    $this->plugin->$method($this->migration, 'field', $info);
+    $this->plugin->defineValueProcessPipeline($this->migration, 'field', $info);
 
     $expected = [
       'value' => [
@@ -112,7 +116,7 @@ class TextFieldTest extends UnitTestCase {
         'source' => 'value',
         'default_value' => 0,
         'map' => [
-          'baz' => 1,
+          'Baz' => 1,
         ],
       ],
     ];
@@ -122,7 +126,7 @@ class TextFieldTest extends UnitTestCase {
   /**
    * Data provider for testGetFieldType().
    */
-  public function getFieldTypeProvider() {
+  public static function getFieldTypeProvider() {
     return [
       ['string_long', 'text_textfield', ['text_processing' => FALSE]],
       ['string', 'text_textfield', [
@@ -159,7 +163,7 @@ class TextFieldTest extends UnitTestCase {
    * @covers ::getFieldType
    * @dataProvider getFieldTypeProvider
    */
-  public function testGetFieldType($expected_type, $widget_type, array $settings = []) {
+  public function testGetFieldType($expected_type, $widget_type, array $settings = []): void {
     $row = new Row();
     $row->setSourceProperty('widget_type', $widget_type);
     $row->setSourceProperty('global_settings', $settings);

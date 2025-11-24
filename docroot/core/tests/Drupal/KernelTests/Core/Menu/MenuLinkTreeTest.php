@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Menu;
 
+use Drupal\Core\Menu\InaccessibleMenuLink;
 use Drupal\Core\Menu\MenuLinkTreeElement;
 use Drupal\Core\Menu\MenuTreeParameters;
+use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\Core\Session\UserSession;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\Core\Menu\MenuLinkMock;
 
@@ -31,9 +36,7 @@ class MenuLinkTreeTest extends KernelTestBase {
   protected $menuLinkManager;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -59,9 +62,11 @@ class MenuLinkTreeTest extends KernelTestBase {
   /**
    * Tests deleting all the links in a menu.
    */
-  public function testDeleteLinksInMenu() {
-    \Drupal::entityTypeManager()->getStorage('menu')->create(['id' => 'menu1'])->save();
-    \Drupal::entityTypeManager()->getStorage('menu')->create(['id' => 'menu2'])->save();
+  public function testDeleteLinksInMenu(): void {
+    /** @var \Drupal\system\MenuStorage $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('menu');
+    $storage->create(['id' => 'menu1', 'label' => 'Menu 1'])->save();
+    $storage->create(['id' => 'menu2', 'label' => 'Menu 2'])->save();
 
     \Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu1', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
     \Drupal::entityTypeManager()->getStorage('menu_link_content')->create(['link' => ['uri' => 'internal:/menu_name_test'], 'menu_name' => 'menu1', 'bundle' => 'menu_link_content', 'title' => 'Link test'])->save();
@@ -84,7 +89,7 @@ class MenuLinkTreeTest extends KernelTestBase {
   /**
    * Tests creating links with an expected tree structure.
    */
-  public function testCreateLinksInMenu() {
+  public function testCreateLinksInMenu(): void {
     // This creates a tree with the following structure:
     // - 1
     // - 2
@@ -101,10 +106,10 @@ class MenuLinkTreeTest extends KernelTestBase {
       2 => MenuLinkMock::create(['id' => 'test.example2', 'route_name' => 'example2', 'title' => 'bar', 'parent' => 'test.example1', 'route_parameters' => ['foo' => 'bar']]),
       3 => MenuLinkMock::create(['id' => 'test.example3', 'route_name' => 'example3', 'title' => 'baz', 'parent' => 'test.example2', 'route_parameters' => ['baz' => 'qux']]),
       4 => MenuLinkMock::create(['id' => 'test.example4', 'route_name' => 'example4', 'title' => 'qux', 'parent' => 'test.example3']),
-      5 => MenuLinkMock::create(['id' => 'test.example5', 'route_name' => 'example5', 'title' => 'foofoo', 'parent' => '']),
+      5 => MenuLinkMock::create(['id' => 'test.example5', 'route_name' => 'example5', 'title' => 'title5', 'parent' => '']),
       6 => MenuLinkMock::create(['id' => 'test.example6', 'route_name' => '', 'url' => 'https://www.drupal.org/', 'title' => 'barbar', 'parent' => '']),
-      7 => MenuLinkMock::create(['id' => 'test.example7', 'route_name' => 'example7', 'title' => 'bazbaz', 'parent' => '']),
-      8 => MenuLinkMock::create(['id' => 'test.example8', 'route_name' => 'example8', 'title' => 'quxqux', 'parent' => '']),
+      7 => MenuLinkMock::create(['id' => 'test.example7', 'route_name' => 'example7', 'title' => 'title7', 'parent' => '']),
+      8 => MenuLinkMock::create(['id' => 'test.example8', 'route_name' => 'example8', 'title' => 'title8', 'parent' => '']),
     ];
     foreach ($links as $instance) {
       $this->menuLinkManager->addDefinition($instance->getPluginId(), $instance->getPluginDefinition());
@@ -129,6 +134,44 @@ class MenuLinkTreeTest extends KernelTestBase {
     $this->assertEquals($links[3]->getPluginId(), $child->link->getPluginId());
     $height = $this->linkTree->getSubtreeHeight('test.example2');
     $this->assertEquals(3, $height);
+  }
+
+  /**
+   * Tests user/login and user/logout links.
+   */
+  public function testUserLoginAndUserLogoutLinks(): void {
+    $account_switcher = $this->container->get('account_switcher');
+
+    $login_menu_link = MenuLinkMock::create(['id' => 'user_login_example', 'route_name' => 'user.login']);
+    $logout_menu_link = MenuLinkMock::create(['id' => 'user_logout_example', 'route_name' => 'user.logout']);
+
+    $this->menuLinkManager->addDefinition($login_menu_link->getPluginId(), $login_menu_link->getPluginDefinition());
+    $this->menuLinkManager->addDefinition($logout_menu_link->getPluginId(), $logout_menu_link->getPluginDefinition());
+
+    // Returns the accessible links from transformed 'mock' menu tree.
+    $get_accessible_links = function () {
+      $parameters = new MenuTreeParameters();
+      $manipulators = [
+        ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      ];
+
+      $tree = $this->linkTree->load('mock', $parameters);
+      $this->linkTree->transform($tree, $manipulators);
+
+      return array_keys(
+        array_filter($tree, function (MenuLinkTreeElement $element) {
+          return !$element->link instanceof InaccessibleMenuLink;
+        })
+      );
+    };
+
+    // Check that anonymous can only access the login link.
+    $account_switcher->switchTo(new AnonymousUserSession());
+    $this->assertSame(['user_login_example'], $get_accessible_links());
+
+    // Ensure that also user 1 does not see the login link.
+    $account_switcher->switchTo(new UserSession(['uid' => 1]));
+    $this->assertSame(['user_logout_example'], $get_accessible_links());
   }
 
 }

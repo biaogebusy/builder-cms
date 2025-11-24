@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Unit\Transliteration;
 
 use Drupal\Core\Access\CsrfTokenGenerator;
@@ -15,7 +17,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 /**
  * Tests that the machine name controller can transliterate strings as expected.
  *
- * @group system
+ * @group legacy
  */
 class MachineNameControllerTest extends UnitTestCase {
 
@@ -57,7 +59,7 @@ class MachineNameControllerTest extends UnitTestCase {
    *     - An array of request parameters.
    *     - The expected content of the JSONresponse.
    */
-  public function providerTestMachineNameController() {
+  public static function providerTestMachineNameController() {
     // cspell:ignore äwesome
     $valid_data = [
       [['text' => 'Bob', 'langcode' => 'en'], '"Bob"'],
@@ -97,7 +99,7 @@ class MachineNameControllerTest extends UnitTestCase {
    *
    * @dataProvider providerTestMachineNameController
    */
-  public function testMachineNameController(array $request_params, $expected_content) {
+  public function testMachineNameController(array $request_params, $expected_content): void {
     $request = Request::create('', 'GET', $request_params);
     $json = $this->machineNameController->transliterate($request);
     $this->assertEquals($expected_content, $json->getContent());
@@ -106,7 +108,7 @@ class MachineNameControllerTest extends UnitTestCase {
   /**
    * Tests the pattern validation.
    */
-  public function testMachineNameControllerWithInvalidReplacePattern() {
+  public function testMachineNameControllerWithInvalidReplacePattern(): void {
     $request = Request::create('', 'GET', ['text' => 'Bob', 'langcode' => 'en', 'replace' => 'Alice', 'replace_pattern' => 'Bob', 'replace_token' => 'invalid']);
 
     $this->expectException(AccessDeniedHttpException::class);
@@ -117,12 +119,22 @@ class MachineNameControllerTest extends UnitTestCase {
   /**
    * Tests the pattern validation with a missing token.
    */
-  public function testMachineNameControllerWithMissingToken() {
+  public function testMachineNameControllerWithMissingToken(): void {
     $request = Request::create('', 'GET', ['text' => 'Bob', 'langcode' => 'en', 'replace' => 'Alice', 'replace_pattern' => 'Bob']);
 
     $this->expectException(AccessDeniedHttpException::class);
     $this->expectExceptionMessage("Missing 'replace_token' query parameter.");
     $this->machineNameController->transliterate($request);
+  }
+
+  /**
+   * Tests deprecation of MachineNameController.
+   */
+  public function testMachineNameControllerDeprecation(): void {
+    $request = Request::create('', 'GET', ['text' => 'Bob', 'langcode' => 'en']);
+    $this->expectDeprecation('Drupal\system\MachineNameController::transliterate() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3367037');
+    $json = $this->machineNameController->transliterate($request);
+    $this->assertEquals('"Bob"', $json->getContent());
   }
 
 }

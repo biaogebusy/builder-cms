@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
 use Drupal\Core\Url;
@@ -16,9 +18,7 @@ class UpdatesWith7xTest extends BrowserTestBase {
   use RequirementsPageTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['update_test_with_7x'];
 
@@ -51,7 +51,7 @@ class UpdatesWith7xTest extends BrowserTestBase {
     ]);
   }
 
-  public function testWith7x() {
+  public function testWith7x(): void {
     /** @var \Drupal\Core\Update\UpdateHookRegistry $update_registry */
     $update_registry = \Drupal::service('update.update_hook_registry');
 

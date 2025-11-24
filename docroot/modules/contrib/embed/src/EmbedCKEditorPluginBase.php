@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\embed;
 
@@ -14,8 +14,16 @@ use Drupal\editor\Entity\Editor;
 use Drupal\embed\Controller\EmbedController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+@trigger_error('EmbedCKEditorPluginBase is deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. Use \Drupal\entity_embed\Plugin\CKEditor5Plugin\EmbedCKEditor5PluginBase instead. See https://www.drupal.org/node/3467748', E_USER_DEPRECATED);
+
 /**
  * Provides a base class for embed CKEditor plugins.
+ *
+ * @deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. Use
+ *   \Drupal\entity_embed\Plugin\CKEditor5Plugin\EmbedCKEditor5PluginBase
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3467748
  */
 abstract class EmbedCKEditorPluginBase extends CKEditorPluginBase implements ContainerFactoryPluginInterface {
 

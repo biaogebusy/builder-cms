@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -67,7 +69,7 @@ class CacheableMetadataCalculationTest extends KernelTestBase {
    *
    * @see \Drupal\views\Entity\View::addCacheMetadata()
    */
-  public function testCacheableMetadataCalculation() {
+  public function testCacheableMetadataCalculation(): void {
     // Enabling a module that contains a view should not cause the cacheability
     // metadata to be recalculated.
     $this->enableModules([self::TEST_MODULE]);

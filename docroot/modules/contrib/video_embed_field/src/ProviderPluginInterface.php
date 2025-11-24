@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\video_embed_field;
+
 use Drupal\Component\Plugin\PluginInspectionInterface;
 
 /**
@@ -49,7 +50,7 @@ interface ProviderPluginInterface extends PluginInspectionInterface {
   /**
    * Get the URL to the local thumbnail.
    *
-   * This method does not gartunee that the file will exist, only that it will
+   * This method does not guarantee that the file will exist, only that it will
    * be the location of the thumbnail after the download thumbnail method has
    * been called.
    *
@@ -72,11 +73,15 @@ interface ProviderPluginInterface extends PluginInspectionInterface {
    *   The height of the video player.
    * @param bool $autoplay
    *   If the video should autoplay.
+   * @param string|null $title_format
+   *   The format to use for a title attribute.
+   * @param bool $use_title_fallback
+   *   Whether to use a fallback title or not (defaults to TRUE).
    *
    * @return mixed
    *   A renderable array of the embed code.
    */
-  public function renderEmbedCode($width, $height, $autoplay);
+  public function renderEmbedCode($width, $height, $autoplay, $title_format = NULL, $use_title_fallback = TRUE);
 
   /**
    * Get the ID of the video from user input.
@@ -84,7 +89,7 @@ interface ProviderPluginInterface extends PluginInspectionInterface {
    * @param string $input
    *   Input a user would enter into a video field.
    *
-   * @return string
+   * @return string|false
    *   The ID in whatever format makes sense for the provider.
    */
   public static function getIdFromInput($input);
@@ -92,9 +97,16 @@ interface ProviderPluginInterface extends PluginInspectionInterface {
   /**
    * Get the name of the video.
    *
-   * @return string
-   *   A name to represent the video for the given plugin.
+   * @param string|null $title_format
+   *   A standard format for the title, allowing the provider to be displayed
+   *   with the video title/ID. Use the tokens @title and/or @provider.
+   * @param bool $use_title_fallback
+   *   Whether to use a fallback title or not. Defaults to TRUE.
+   *
+   * @return string|null
+   *   A name to represent the video for the given plugin, or NULL if not title
+   *   could be provided and $use_title_fallback was FALSE.
    */
-  public function getName();
+  public function getName($title_format = NULL, $use_title_fallback = TRUE);
 
 }

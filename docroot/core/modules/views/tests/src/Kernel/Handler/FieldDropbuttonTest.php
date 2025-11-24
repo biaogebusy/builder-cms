@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Render\RenderContext;
@@ -87,26 +89,27 @@ class FieldDropbuttonTest extends ViewsKernelTestBase {
     $admin = $this->createUser();
 
     // And three nodes.
+    $requestTime = \Drupal::time()->getRequestTime();
     $this->node1 = $this->createNode([
       'type' => 'bar',
-      'title' => 'bazs',
+      'title' => 'foo',
       'status' => 1,
       'uid' => $admin->id(),
-      'created' => REQUEST_TIME - 10,
+      'created' => $requestTime - 10,
     ]);
     $this->node2 = $this->createNode([
       'type' => 'foo',
-      'title' => 'foos',
+      'title' => 'foo',
       'status' => 1,
       'uid' => $admin->id(),
-      'created' => REQUEST_TIME - 5,
+      'created' => $requestTime - 5,
     ]);
     $this->node3 = $this->createNode([
       'type' => 'bar',
       'title' => 'bars',
       'status' => 1,
       'uid' => $admin->id(),
-      'created' => REQUEST_TIME,
+      'created' => $requestTime,
     ]);
 
     // Now create a user with the ability to edit bar but not foo.
@@ -123,7 +126,7 @@ class FieldDropbuttonTest extends ViewsKernelTestBase {
   /**
    * Tests that dropbutton markup doesn't leak between rows.
    */
-  public function testDropbuttonMarkupShouldNotLeakBetweenRows() {
+  public function testDropbuttonMarkupShouldNotLeakBetweenRows(): void {
     $view = Views::getView('test_dropbutton');
     $view->setDisplay();
     $view->preExecute([]);

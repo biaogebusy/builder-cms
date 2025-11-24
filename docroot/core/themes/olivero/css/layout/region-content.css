@@ -11,19 +11,17 @@
  */
 
 .region--content {
-  margin-bottom: 1.125rem;
+  margin-block-end: var(--sp);
 }
 
 @media (min-width: 43.75rem) {
-
   .region--content {
-    margin-bottom: 2.25rem;
+    margin-block-end: var(--sp2);
   }
 }
 
 @media (min-width: 62.5rem) {
-
   .region--content {
-    margin-bottom: 3.375rem;
+    margin-block-end: var(--sp3);
   }
 }

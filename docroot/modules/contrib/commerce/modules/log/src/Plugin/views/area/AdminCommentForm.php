@@ -2,12 +2,13 @@
 
 namespace Drupal\commerce_log\Plugin\views\area;
 
-use Drupal\commerce_log\Form\LogCommentForm;
-use Drupal\commerce_log\LogTemplateManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\commerce_log\Form\LogCommentForm;
+use Drupal\commerce_log\LogTemplateManagerInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,9 +19,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * log as comment.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("commerce_log_admin_comment_form")
  */
+#[ViewsArea("commerce_log_admin_comment_form")]
 class AdminCommentForm extends AreaPluginBase {
 
   use StringTranslationTrait;

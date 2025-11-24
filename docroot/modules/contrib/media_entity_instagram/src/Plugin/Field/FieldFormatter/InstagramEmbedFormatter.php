@@ -3,29 +3,91 @@
 namespace Drupal\media_entity_instagram\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\media\Entity\MediaType;
 use Drupal\media\IFrameMarkup;
+use Drupal\media\IFrameUrlHelper;
 use Drupal\media\OEmbed\Resource;
 use Drupal\media\OEmbed\ResourceException;
-use Drupal\media\Plugin\Field\FieldFormatter\OEmbedFormatter;
+use Drupal\media\OEmbed\ResourceFetcherInterface;
+use Drupal\media\OEmbed\UrlResolverInterface;
 use Drupal\media_entity_instagram\Plugin\media\Source\Instagram;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'instagram_embed' formatter.
- *
- * @FieldFormatter(
- *   id = "instagram_embed",
- *   label = @Translation("Instagram embed"),
- *   field_types = {
- *     "link", "string", "string_long"
- *   }
- * )
  */
-class InstagramEmbedFormatter extends OEmbedFormatter {
+#[FieldFormatter(
+  id: 'instagram_embed',
+  label: new TranslatableMarkup('Instagram embed'),
+  field_types: [
+    'link',
+    'string',
+    'string_long',
+  ],
+)]
+class InstagramEmbedFormatter extends FormatterBase {
+
+  /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected LoggerInterface $logger;
+
+  /**
+   * The media settings config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $config;
+
+  /**
+   * Constructs an OEmbedFormatter instance.
+   *
+   * @param string $plugin_id
+   *   The plugin ID for the formatter.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   The definition of the field to which the formatter is associated.
+   * @param array $settings
+   *   The formatter settings.
+   * @param string $label
+   *   The formatter label display setting.
+   * @param string $view_mode
+   *   The view mode.
+   * @param array $third_party_settings
+   *   Any third party settings.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   * @param \Drupal\media\OEmbed\ResourceFetcherInterface $resourceFetcher
+   *   The oEmbed resource fetcher service.
+   * @param \Drupal\media\OEmbed\UrlResolverInterface $urlResolver
+   *   The oEmbed URL resolver service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger factory service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
+   * @param \Drupal\media\IFrameUrlHelper $iframeUrlHelper
+   *   The iFrame URL helper service.
+   */
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, MessengerInterface $messenger, protected readonly ResourceFetcherInterface $resourceFetcher, protected readonly UrlResolverInterface $urlResolver, LoggerChannelFactoryInterface $logger_factory, ConfigFactoryInterface $config_factory, protected readonly IFrameUrlHelper $iframeUrlHelper) {
+    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
+    $this->messenger = $messenger;
+    $this->logger = $logger_factory->get('media');
+    $this->config = $config_factory->get('media.settings');
+  }
 
   /**
    * {@inheritdoc}
@@ -51,17 +113,17 @@ class InstagramEmbedFormatter extends OEmbedFormatter {
   /**
    * {@inheritdoc}
    */
-  public static function defaultSettings() {
-    $settings = parent::defaultSettings();
-    $settings['hidecaption'] = FALSE;
-    unset($settings['max_height']);
-    return $settings;
+  public static function defaultSettings(): array {
+    return [
+      'max_width' => 0,
+      'hidecaption' => FALSE,
+    ] + parent::defaultSettings();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public function viewElements(FieldItemListInterface $items, $langcode): array {
     $element = [];
     $max_width = $this->getSetting('max_width');
 
@@ -83,11 +145,7 @@ class InstagramEmbedFormatter extends OEmbedFormatter {
       }
 
       switch ($resource->getType()) {
-        case Resource::TYPE_LINK:
-        case Resource::TYPE_PHOTO:
-          return parent::viewElements($items, $langcode);
-
-        default:
+        case Resource::TYPE_RICH:
           $element[$delta] = [
             '#theme' => 'media_oembed_iframe',
             '#resource' => $resource,
@@ -111,24 +169,34 @@ class InstagramEmbedFormatter extends OEmbedFormatter {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    $elements = parent::settingsForm($form, $form_state);
-    $elements['hidecaption'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Hide caption'),
-      '#default_value' => $this->getSetting('hidecaption'),
-      '#description' => $this->t('Hide caption of Instagram posts.'),
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
+    return parent::settingsForm($form, $form_state) + [
+      'max_width' => [
+        '#type' => 'number',
+        '#title' => $this->t('Maximum width'),
+        '#default_value' => $this->getSetting('max_width'),
+        '#size' => 5,
+        '#field_suffix' => $this->t('pixels'),
+        '#max' => 658,
+        '#min' => 0,
+      ],
+      'hidecaption' => [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Hide caption'),
+        '#default_value' => $this->getSetting('hidecaption'),
+        '#description' => $this->t('Hide caption of Instagram posts.'),
+      ],
     ];
-
-    unset($elements['max_height']);
-    return $elements;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function settingsSummary() {
+  public function settingsSummary(): array {
     $summary = parent::settingsSummary();
+    $summary[] = $this->t('Maximum width: %max_width pixels', [
+      '%max_width' => $this->getSetting('max_width'),
+    ]);
     $summary[] = $this->t('Caption: @hidecaption', [
       '@hidecaption' => $this->getSetting('hidecaption') ? $this->t('Hidden') : $this->t('Visible'),
     ]);
@@ -138,7 +206,7 @@ class InstagramEmbedFormatter extends OEmbedFormatter {
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable(FieldDefinitionInterface $field_definition) {
+  public static function isApplicable(FieldDefinitionInterface $field_definition): bool {
     if (parent::isApplicable($field_definition)) {
       $media_type = $field_definition->getTargetBundle();
 

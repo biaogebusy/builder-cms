@@ -2,32 +2,33 @@
 
 namespace Drupal\jsonapi\Controller;
 
-use Drupal\Component\Utility\Bytes;
+use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Utility\Crypt;
-use Drupal\Component\Utility\Environment;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
 use Drupal\Core\File\Exception\FileException;
-use Drupal\Core\Validation\DrupalTranslator;
-use Drupal\file\FileInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Utility\Token;
-use Drupal\Component\Render\PlainTextOutput;
-use Drupal\Core\Entity\EntityConstraintViolationList;
 use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\file\Upload\ContentDispositionFilenameParser;
+use Drupal\file\Upload\FileUploadLocationTrait;
+use Drupal\file\Upload\InputStreamFileWriterInterface;
+use Drupal\file\Validation\FileValidatorInterface;
+use Drupal\file\Validation\FileValidatorSettingsTrait;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpFoundation\File\Exception\CannotWriteFileException;
+use Symfony\Component\HttpFoundation\File\Exception\NoFileException;
+use Symfony\Component\HttpFoundation\File\Exception\UploadException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -42,13 +43,29 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *     entity-level access.
  *
  * @internal This will be removed once https://www.drupal.org/project/drupal/issues/2940383 lands.
+ *
+ * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3445266
  */
 class TemporaryJsonapiFileFieldUploader {
+
+  use FileValidatorSettingsTrait;
+  use FileUploadLocationTrait {
+    getUploadLocation as getUploadDestination;
+  }
 
   /**
    * The regex used to extract the filename from the content disposition header.
    *
    * @var string
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\file\Upload\ContentDispositionFilenameParser::REQUEST_HEADER_FILENAME_REGEX
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3380380
    */
   const REQUEST_HEADER_FILENAME_REGEX = '@\bfilename(?<star>\*?)=\"(?<filename>.+)\"@';
 
@@ -56,6 +73,12 @@ class TemporaryJsonapiFileFieldUploader {
    * The amount of bytes to read in each iteration when streaming file data.
    *
    * @var int
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   * \Drupal\file\Upload\InputStreamFileWriterInterface::DEFAULT_BYTES_TO_READ
+   * instead.
+   *
+   * @see https://www.drupal.org/node/3380607
    */
   const BYTES_TO_READ = 8192;
 
@@ -109,6 +132,18 @@ class TemporaryJsonapiFileFieldUploader {
   protected $eventDispatcher;
 
   /**
+   * The file validator.
+   *
+   * @var \Drupal\file\Validation\FileValidatorInterface
+   */
+  protected FileValidatorInterface $fileValidator;
+
+  /**
+   * The input stream file writer.
+   */
+  protected InputStreamFileWriterInterface $inputStreamFileWriter;
+
+  /**
    * Constructs a FileUploadResource instance.
    *
    * @param \Psr\Log\LoggerInterface $logger
@@ -123,10 +158,15 @@ class TemporaryJsonapiFileFieldUploader {
    *   The lock service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|null $event_dispatcher
    *   (optional) The event dispatcher.
+   * @param \Drupal\file\Validation\FileValidatorInterface|null $file_validator
+   *   The file validator.
+   * @param \Drupal\file\Upload\InputStreamFileWriterInterface|null $input_stream_file_writer
+   *   The stream file uploader.
    */
-  public function __construct(LoggerInterface $logger, FileSystemInterface $file_system, $mime_type_guesser, Token $token, LockBackendInterface $lock, ConfigFactoryInterface $config_factory, EventDispatcherInterface $event_dispatcher = NULL) {
+  public function __construct(LoggerInterface $logger, FileSystemInterface $file_system, $mime_type_guesser, Token $token, LockBackendInterface $lock, ConfigFactoryInterface $config_factory, ?EventDispatcherInterface $event_dispatcher = NULL, ?FileValidatorInterface $file_validator = NULL, ?InputStreamFileWriterInterface $input_stream_file_writer = NULL) {
+    @\trigger_error(__CLASS__ . ' is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3445266', E_USER_DEPRECATED);
     $this->logger = $logger;
     $this->fileSystem = $file_system;
     $this->mimeTypeGuesser = $mime_type_guesser;
@@ -137,6 +177,16 @@ class TemporaryJsonapiFileFieldUploader {
       $event_dispatcher = \Drupal::service('event_dispatcher');
     }
     $this->eventDispatcher = $event_dispatcher;
+    if (!$file_validator) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $file_validator argument is deprecated in drupal:10.2.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/3363700', E_USER_DEPRECATED);
+      $file_validator = \Drupal::service('file.validator');
+    }
+    $this->fileValidator = $file_validator;
+    if (!$input_stream_file_writer) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $input_stream_file_writer argument is deprecated in drupal:10.3.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/3380607', E_USER_DEPRECATED);
+      $input_stream_file_writer = \Drupal::service('file.input_stream_file_writer');
+    }
+    $this->inputStreamFileWriter = $input_stream_file_writer;
   }
 
   /**
@@ -161,14 +211,14 @@ class TemporaryJsonapiFileFieldUploader {
   public function handleFileUploadForField(FieldDefinitionInterface $field_definition, $filename, AccountInterface $owner) {
     assert(is_a($field_definition->getClass(), FileFieldItemList::class, TRUE));
     $settings = $field_definition->getSettings();
-    $destination = $this->getUploadLocation($settings);
+    $destination = $this->getUploadDestination($field_definition);
 
     // Check the destination file path is writable.
     if (!$this->fileSystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY)) {
       throw new HttpException(500, 'Destination file path is not writable');
     }
 
-    $validators = $this->getUploadValidators($field_definition);
+    $validators = $this->getFileUploadValidators($field_definition->getSettings());
 
     $prepared_filename = $this->prepareFilename($filename, $validators);
 
@@ -180,7 +230,7 @@ class TemporaryJsonapiFileFieldUploader {
 
     $temp_file_path = $this->streamUploadData();
 
-    $file_uri = $this->fileSystem->getDestinationFilename($file_uri, FileSystemInterface::EXISTS_RENAME);
+    $file_uri = $this->fileSystem->getDestinationFilename($file_uri, FileExists::Rename);
 
     // Lock based on the prepared file URI.
     $lock_id = $this->generateLockIdFromFileUri($file_uri);
@@ -193,13 +243,7 @@ class TemporaryJsonapiFileFieldUploader {
     $file = File::create([]);
     $file->setOwnerId($owner->id());
     $file->setFilename($prepared_filename);
-    if ($this->mimeTypeGuesser instanceof MimeTypeGuesserInterface) {
-      $file->setMimeType($this->mimeTypeGuesser->guessMimeType($prepared_filename));
-    }
-    else {
-      @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
-      $file->setMimeType($this->mimeTypeGuesser->guess($prepared_filename));
-    }
+    $file->setMimeType($this->mimeTypeGuesser->guessMimeType($prepared_filename));
     $file->setFileUri($temp_file_path);
     // Set the size. This is done in File::preSave() but we validate the file
     // before it is saved.
@@ -207,35 +251,29 @@ class TemporaryJsonapiFileFieldUploader {
 
     // Validate the file against field-level validators first while the file is
     // still a temporary file. Validation is split up in 2 steps to be the same
-    // as in _file_save_upload_single().
+    // as in \Drupal\file\Upload\FileUploadHandler::handleFileUpload().
     // For backwards compatibility this part is copied from ::validate() to
     // leave that method behavior unchanged.
     // @todo Improve this with a file uploader service in
     //   https://www.drupal.org/project/drupal/issues/2940383
-    $errors = file_validate($file, $validators);
-    if (!empty($errors)) {
-      $violations = new EntityConstraintViolationList($file);
-      $translator = new DrupalTranslator();
-      $entity = EntityAdapter::createFromEntity($file);
-      foreach ($errors as $error) {
-        $violation = new ConstraintViolation($translator->trans($error),
-          $error,
-          [],
-          $entity,
-          '',
-          NULL
-        );
-        $violations->add($violation);
-      }
+    $violations = $this->fileValidator->validate($file, $validators);
+    if (count($violations) > 0) {
       return $violations;
     }
 
     $file->setFileUri($file_uri);
+
+    // Update the filename with any changes as a result of security or renaming
+    // due to an existing file.
+    // @todo Remove this duplication by replacing with FileUploadHandler. See
+    // https://www.drupal.org/project/drupal/issues/3401734
+    $file->setFilename($this->fileSystem->basename($file->getFileUri()));
+
     // Move the file to the correct location after validation. Use
-    // FileSystemInterface::EXISTS_ERROR as the file location has already been
+    // FileExists::Error as the file location has already been
     // determined above in FileSystem::getDestinationFilename().
     try {
-      $this->fileSystem->move($temp_file_path, $file_uri, FileSystemInterface::EXISTS_ERROR);
+      $this->fileSystem->move($temp_file_path, $file_uri, FileExists::Error);
     }
     catch (FileException $e) {
       throw new HttpException(500, 'Temporary file could not be moved to file location');
@@ -269,35 +307,16 @@ class TemporaryJsonapiFileFieldUploader {
    *
    * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
    *   Thrown when the 'Content-Disposition' request header is invalid.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\file\Upload\ContentDispositionFilenameParser::parseFilename()
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3380380
    */
   public function validateAndParseContentDispositionHeader(Request $request) {
-    // First, check the header exists.
-    if (!$request->headers->has('content-disposition')) {
-      throw new BadRequestHttpException('"Content-Disposition" header is required. A file name in the format "filename=FILENAME" must be provided.');
-    }
-
-    $content_disposition = $request->headers->get('content-disposition');
-
-    // Parse the header value. This regex does not allow an empty filename.
-    // i.e. 'filename=""'. This also matches on a word boundary so other keys
-    // like 'not_a_filename' don't work.
-    if (!preg_match(static::REQUEST_HEADER_FILENAME_REGEX, $content_disposition, $matches)) {
-      throw new BadRequestHttpException('No filename found in "Content-Disposition" header. A file name in the format "filename=FILENAME" must be provided.');
-    }
-
-    // Check for the "filename*" format. This is currently unsupported.
-    if (!empty($matches['star'])) {
-      throw new BadRequestHttpException('The extended "filename*" format is currently not supported in the "Content-Disposition" header.');
-    }
-
-    // Don't validate the actual filename here, that will be done by the upload
-    // validators in validate().
-    // @see \Drupal\file\Plugin\rest\resource\FileUploadResource::validate()
-    $filename = $matches['filename'];
-
-    // Make sure only the filename component is returned. Path information is
-    // stripped as per https://tools.ietf.org/html/rfc6266#section-4.3.
-    return $this->fileSystem->basename($filename);
+    @trigger_error('Calling ' . __METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\file\Upload\ContentDispositionFilenameParser::parseFilename() instead. See https://www.drupal.org/node/3380380', E_USER_DEPRECATED);
+    return ContentDispositionFilenameParser::parseFilename($request);
   }
 
   /**
@@ -315,7 +334,7 @@ class TemporaryJsonapiFileFieldUploader {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The file upload access result.
    */
-  public static function checkFileUploadAccess(AccountInterface $account, FieldDefinitionInterface $field_definition, EntityInterface $entity = NULL) {
+  public static function checkFileUploadAccess(AccountInterface $account, FieldDefinitionInterface $field_definition, ?EntityInterface $entity = NULL) {
     assert(is_null($entity) ||
       $field_definition->getTargetEntityTypeId() === $entity->getEntityTypeId() &&
       // Base fields do not have target bundles.
@@ -342,51 +361,22 @@ class TemporaryJsonapiFileFieldUploader {
    *   opened, or the temporary file cannot be written.
    */
   protected function streamUploadData() {
-    // 'rb' is needed so reading works correctly on Windows environments too.
-    $file_data = fopen('php://input', 'rb');
-
-    $temp_file_path = $this->fileSystem->tempnam('temporary://', 'file');
-    if ($temp_file_path === FALSE) {
-      $this->logger->error('Temporary file could not be created for file upload.');
-      throw new HttpException(500, 'Temporary file could not be created');
+    // Catch and throw the exceptions that JSON API module expects.
+    try {
+      $temp_file_path = $this->inputStreamFileWriter->writeStreamToFile();
     }
-    $temp_file = fopen($temp_file_path, 'wb');
-
-    if ($temp_file) {
-      while (!feof($file_data)) {
-        $read = fread($file_data, static::BYTES_TO_READ);
-
-        if ($read === FALSE) {
-          // Close the file streams.
-          fclose($temp_file);
-          fclose($file_data);
-          $this->logger->error('Input data could not be read');
-          throw new HttpException(500, 'Input file data could not be read.');
-        }
-
-        if (fwrite($temp_file, $read) === FALSE) {
-          // Close the file streams.
-          fclose($temp_file);
-          fclose($file_data);
-          $this->logger->error('Temporary file data for "%path" could not be written', ['%path' => $temp_file_path]);
-          throw new HttpException(500, 'Temporary file data could not be written.');
-        }
-      }
-
-      // Close the temp file stream.
-      fclose($temp_file);
+    catch (UploadException $e) {
+      $this->logger->error('Input data could not be read');
+      throw new HttpException(500, 'Input file data could not be read', $e);
     }
-    else {
-      // Close the input file stream since we can't proceed with the upload.
-      // Don't try to close $temp_file since it's FALSE at this point.
-      fclose($file_data);
-      $this->logger->error('Temporary file "%path" could not be opened for file upload.', ['%path' => $temp_file_path]);
-      throw new HttpException(500, 'Temporary file could not be opened');
+    catch (CannotWriteFileException $e) {
+      $this->logger->error('Temporary file data for could not be written');
+      throw new HttpException(500, 'Temporary file data could not be written', $e);
     }
-
-    // Close the input stream.
-    fclose($file_data);
-
+    catch (NoFileException $e) {
+      $this->logger->error('Temporary file could not be opened for file upload');
+      throw new HttpException(500, 'Temporary file could not be opened', $e);
+    }
     return $temp_file_path;
   }
 
@@ -401,7 +391,7 @@ class TemporaryJsonapiFileFieldUploader {
    * @param \Drupal\file\FileInterface $file
    *   The file entity to validate.
    * @param array $validators
-   *   An array of upload validators to pass to file_validate().
+   *   An array of upload validators to pass to FileValidator.
    *
    * @return \Drupal\Core\Entity\EntityConstraintViolationListInterface
    *   The list of constraint violations, if any.
@@ -414,20 +404,7 @@ class TemporaryJsonapiFileFieldUploader {
     $violations->filterByFieldAccess();
 
     // Validate the file based on the field definition configuration.
-    $errors = file_validate($file, $validators);
-    if (!empty($errors)) {
-      $translator = new DrupalTranslator();
-      foreach ($errors as $error) {
-        $violation = new ConstraintViolation($translator->trans($error),
-          $error,
-          [],
-          EntityAdapter::createFromEntity($file),
-          '',
-          NULL
-        );
-        $violations->add($violation);
-      }
-    }
+    $violations->addAll($this->fileValidator->validate($file, $validators));
 
     return $violations;
   }
@@ -446,7 +423,7 @@ class TemporaryJsonapiFileFieldUploader {
   protected function prepareFilename($filename, array &$validators) {
     // The actual extension validation occurs in
     // \Drupal\jsonapi\Controller\TemporaryJsonapiFileFieldUploader::validate().
-    $extensions = $validators['file_validate_extensions'][0] ?? '';
+    $extensions = $validators['FileExtension']['extensions'] ?? '';
     $event = new FileUploadSanitizeNameEvent($filename, $extensions);
     $this->eventDispatcher->dispatch($event);
     return $event->getFilename();
@@ -461,51 +438,20 @@ class TemporaryJsonapiFileFieldUploader {
    * @return string
    *   An un-sanitized file directory URI with tokens replaced. The result of
    *   the token replacement is then converted to plain text and returned.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\file\Upload\FileUploadLocationTrait::getUploadLocation() instead.
+   *
+   * @see https://www.drupal.org/node/3406099
    */
   protected function getUploadLocation(array $settings) {
+    @\trigger_error(__METHOD__ . ' is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\file\Upload\FileUploadLocationTrait::getUploadLocation() instead. See https://www.drupal.org/node/3406099', E_USER_DEPRECATED);
     $destination = trim($settings['file_directory'], '/');
 
     // Replace tokens. As the tokens might contain HTML we convert it to plain
     // text.
     $destination = PlainTextOutput::renderFromHtml($this->token->replace($destination, [], [], new BubbleableMetadata()));
     return $settings['uri_scheme'] . '://' . $destination;
-  }
-
-  /**
-   * Retrieves the upload validators for a field definition.
-   *
-   * This is copied from \Drupal\file\Plugin\Field\FieldType\FileItem as there
-   * is no entity instance available here that a FileItem would exist for.
-   *
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
-   *   The field definition for which to get validators.
-   *
-   * @return array
-   *   An array suitable for passing to file_save_upload() or the file field
-   *   element's '#upload_validators' property.
-   */
-  protected function getUploadValidators(FieldDefinitionInterface $field_definition) {
-    $validators = [
-      // Add in our check of the file name length.
-      'file_validate_name_length' => [],
-    ];
-    $settings = $field_definition->getSettings();
-
-    // Cap the upload size according to the PHP limit.
-    $max_filesize = Bytes::toNumber(Environment::getUploadMaxSize());
-    if (!empty($settings['max_filesize'])) {
-      $max_filesize = min($max_filesize, Bytes::toNumber($settings['max_filesize']));
-    }
-
-    // There is always a file size limit due to the PHP server limit.
-    $validators['file_validate_size'] = [$max_filesize];
-
-    // Add the extension check if necessary.
-    if (!empty($settings['file_extensions'])) {
-      $validators['file_validate_extensions'] = [$settings['file_extensions']];
-    }
-
-    return $validators;
   }
 
   /**

@@ -6,13 +6,13 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
+use Drupal\Tests\jsonapi\Functional\JsonApiFunctionalTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\jsonapi_extras\Entity\JsonapiResourceConfig;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\jsonapi\Functional\JsonApiFunctionalTestBase;
 use Drupal\user\Entity\User;
 use Symfony\Component\Routing\Route;
 
@@ -304,7 +304,7 @@ class JsonApiExtrasFunctionalTest extends JsonApiFunctionalTestBase {
     $this->assertSession()->statusCodeEquals(404);
     $output = Json::decode($this->drupalGet('/api/taxonomy_term/tags/' . $this->tags[0]->uuid() . '/relationships/vid'));
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSame(NULL, $output['data']);
+    $this->assertNull($output['data']);
 
     // 14. Test a disabled related resource of multiple cardinality.
     $this->tags[1]->vocabs->set(0, 'tags');

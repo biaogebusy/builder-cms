@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm\Form;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\file_mdm\Plugin\FileMetadataPluginManager;
+use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\file_mdm\Plugin\FileMetadataPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -19,54 +21,42 @@ class SettingsForm extends ConfigFormBase {
    *
    * @var \Drupal\file_mdm\Plugin\FileMetadataPluginInterface[]
    */
-  protected $metadataPlugins = [];
+  protected array $metadataPlugins = [];
 
-  /**
-   * Constructs a SettingsForm object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\file_mdm\Plugin\FileMetadataPluginManager $manager
-   *   The file metadata plugin manager.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, FileMetadataPluginManager $manager) {
-    parent::__construct($config_factory);
+  public static function create(ContainerInterface $container) {
+    $instance = parent::create($container);
+    $manager = $container->get(FileMetadataPluginManagerInterface::class);
     foreach ($manager->getDefinitions() as $id => $definition) {
-      $this->metadataPlugins[$id] = $manager->createInstance($id);
+      $instance->metadataPlugins[$id] = $manager->createInstance($id);
     }
-    uasort($this->metadataPlugins, function ($a, $b) {
+    uasort($instance->metadataPlugins, function ($a, $b) {
       return Unicode::strcasecmp((string) $a->getPluginDefinition()['title'], (string) $b->getPluginDefinition()['title']);
     });
+    return $instance;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('plugin.manager.file_metadata')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getFormId() {
     return 'file_mdm_settings';
   }
 
-  /**
-   * {@inheritdoc}
-   */
   protected function getEditableConfigNames() {
     return ['file_mdm.settings'];
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $config = $this->config('file_mdm.settings');
+
+    // Missing file logging. Only take for options log levels ERROR or below.
+    $levelOptions = array_slice(RfcLogLevel::getLevels(), 3, NULL, TRUE);
+    krsort($levelOptions);
+    $form['missing_file_log_level'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Missing file logging'),
+      '#description' => $this->t('Log level to use if a file does not exist'),
+      '#default_value' => $config->get('missing_file_log_level'),
+      '#options' => [-1 => $this->t('- None -')] + $levelOptions,
+    ];
+
     // Cache metadata.
     $form['metadata_cache'] = [
       '#type' => 'details',
@@ -77,7 +67,7 @@ class SettingsForm extends ConfigFormBase {
     ];
     $form['metadata_cache']['settings'] = [
       '#type' => 'file_mdm_caching',
-      '#default_value' => $this->config('file_mdm.settings')->get('metadata_cache'),
+      '#default_value' => $config->get('metadata_cache'),
     ];
 
     // Settings tabs.
@@ -103,9 +93,6 @@ class SettingsForm extends ConfigFormBase {
     return parent::buildForm($form, $form_state);
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
     // Call the form validation handler for each of the plugins.
@@ -114,16 +101,19 @@ class SettingsForm extends ConfigFormBase {
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Call the form submit handler for each of the plugins.
     foreach ($this->metadataPlugins as $plugin) {
       $plugin->submitConfigurationForm($form, $form_state);
     }
 
-    $this->config('file_mdm.settings')->set('metadata_cache', $form_state->getValue(['metadata_cache', 'settings']));
+    $this->config('file_mdm.settings')
+      ->set('metadata_cache', $form_state->getValue(
+        ['metadata_cache', 'settings']
+      ))
+      ->set('missing_file_log_level', $form_state->getValue(
+        ['missing_file_log_level']
+      ));
 
     // Only save settings if they have changed to prevent unnecessary cache
     // invalidations.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -36,6 +38,7 @@ EOD;
 \x{205f}\x{3000}
 EOD;
 
+// phpcs:disable
   /**
    * Unicode-safe preg_match().
    *
@@ -43,10 +46,14 @@ EOD;
    * but return offsets in characters, where preg_match would return offsets
    * in bytes.
    *
+   * @param array<array<int, int|string|null>|string|null> $matches
+   * @param 0|256|512|768 $flags
+   *
    * @see http://php.net/manual/en/function.preg-match.php
    * @see http://drupal.org/node/465638
    */
-  public static function unicodePregMatch($pattern, $subject, &$matches, $flags = 0, $offset = 0) {
+  public static function unicodePregMatch(string $pattern, string $subject, array &$matches, int $flags = 0, int $offset = 0): mixed {
+// phpcs:enable
     // Convert the offset value from characters to bytes.
     // NOTE - strlen is used on purpose here to get string length in bytes.
     // @see https://www.drupal.org/node/465638#comment-1600860

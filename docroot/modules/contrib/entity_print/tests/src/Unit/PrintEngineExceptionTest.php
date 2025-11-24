@@ -39,7 +39,7 @@ class PrintEngineExceptionTest extends UnitTestCase {
    * @return array
    *   An array of possible exception messages.
    */
-  public function authorisationExceptions() {
+  public static function authorisationExceptions() {
     return [
       'Dompdf' => ['Failed to generate PDF: file_get_contents(http://d8.dev/sites/default/files/css/css_qm-4SpSW1uLvtwb-T4OPS48NMb2DSFqwLd5C3MLRLuY.css?om2pmk): failed to open stream: HTTP request failed! HTTP/1.1 401 Unauthorized , Unable to load css file http://d8.dev/sites/default/files/css/css_qm-4SpSW1uLvtwb-T4OPS48NMb2DSFqwLd5C3MLRLuY.css?om2pmk'],
       'wkhtmltopdf' => ['Failed to generate PDF: Loading pages (1/6) [> ] 0% [======> ] 10% [==========> ] 18% Error: Invalid username or password [============================================================] 100% Counting pages (2/6) [============================================================] Object 1 of 1 Resolving links (4/6) [============================================================] Object 1 of 1 Loading headers and footers (5/6) Printing pages (6/6) [> ] Preparing [============================================================] Page 1 of 1 Done Exit with code 1 due to network error: AuthenticationRequiredError'],

@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldType;
 
-use Drupal\commerce_order\Adjustment;
 use Drupal\Core\Field\FieldItemList;
+use Drupal\commerce_order\Adjustment;
 
 /**
  * Represents a list of adjustment item field values.

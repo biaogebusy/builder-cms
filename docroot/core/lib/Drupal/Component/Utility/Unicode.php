@@ -131,9 +131,6 @@ EOD;
     }
 
     // Check mbstring configuration.
-    if (ini_get('mbstring.func_overload') != 0) {
-      return 'mbstring.func_overload';
-    }
     if (ini_get('mbstring.encoding_translation') != 0) {
       return 'mbstring.encoding_translation';
     }
@@ -166,7 +163,7 @@ EOD;
     ];
 
     foreach ($bomMap as $bom => $encoding) {
-      if (strpos($data, $bom) === 0) {
+      if (str_starts_with($data, $bom)) {
         return $encoding;
       }
     }
@@ -294,13 +291,13 @@ EOD;
    *   adding an ellipsis, if $add_ellipsis is TRUE). Has no effect if $wordsafe
    *   is FALSE. This can be used to prevent having a very short resulting string
    *   that will not be understandable. For instance, if you are truncating the
-   *   string "See myverylongurlexample.com for more information" to a word-safe
+   *   string "See MyVeryLongURLExample.com for more information" to a word-safe
    *   return length of 20, the only available word boundary within 20 characters
    *   is after the word "See", which wouldn't leave a very informative string. If
-   *   you had set $min_wordsafe_length to 10, though, the function would realise
+   *   you had set $min_wordsafe_length to 10, though, the function would realize
    *   that "See" alone is too short, and would then just truncate ignoring word
-   *   boundaries, giving you "See myverylongurl..." (assuming you had set
-   *   $add_ellipses to TRUE).
+   *   boundaries, giving you "See MyVeryLongURL..." (assuming you had set
+   *   $add_ellipsis to TRUE).
    *
    * @return string
    *   The truncated string.
@@ -368,85 +365,6 @@ EOD;
    */
   public static function strcasecmp($str1, $str2) {
     return strcmp(mb_strtoupper($str1), mb_strtoupper($str2));
-  }
-
-  /**
-   * Encodes MIME/HTTP headers that contain incorrectly encoded characters.
-   *
-   * For example, Unicode::mimeHeaderEncode('tést.txt') returns
-   * "=?UTF-8?B?dMOpc3QudHh0?=".
-   *
-   * See http://www.rfc-editor.org/rfc/rfc2047.txt for more information.
-   *
-   * Notes:
-   * - Only encode strings that contain non-ASCII characters.
-   * - We progressively cut-off a chunk with self::truncateBytes(). This ensures
-   *   each chunk starts and ends on a character boundary.
-   * - Using \n as the chunk separator may cause problems on some systems and
-   *   may have to be changed to \r\n or \r.
-   *
-   * @param string $string
-   *   The header to encode.
-   * @param bool $shorten
-   *   If TRUE, only return the first chunk of a multi-chunk encoded string.
-   *
-   * @return string
-   *   The mime-encoded header.
-   *
-   * @deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use
-   *   \Symfony\Component\Mime\Header\UnstructuredHeader instead.
-   *
-   * @see https://www.drupal.org/node/3207439
-   */
-  public static function mimeHeaderEncode($string, $shorten = FALSE) {
-    @trigger_error('\Drupal\Component\Utility\Unicode::mimeHeaderEncode() is deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use \Symfony\Component\Mime\Header\UnstructuredHeader instead. See https://www.drupal.org/node/3207439', E_USER_DEPRECATED);
-    if (preg_match('/[^\x20-\x7E]/', $string)) {
-      // floor((75 - strlen("=?UTF-8?B??=")) * 0.75);
-      $chunk_size = 47;
-      $len = strlen($string);
-      $output = '';
-      while ($len > 0) {
-        $chunk = static::truncateBytes($string, $chunk_size);
-        $output .= ' =?UTF-8?B?' . base64_encode($chunk) . "?=\n";
-        if ($shorten) {
-          break;
-        }
-        $c = strlen($chunk);
-        $string = substr($string, $c);
-        $len -= $c;
-      }
-      return trim($output);
-    }
-    return $string;
-  }
-
-  /**
-   * Decodes MIME/HTTP encoded header values.
-   *
-   * @param string $header
-   *   The header to decode.
-   *
-   * @return string
-   *   The mime-decoded header.
-   *
-   * @deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use
-   *   iconv_mime_decode() instead.
-   *
-   * @see https://www.drupal.org/node/3207439
-   */
-  public static function mimeHeaderDecode($header) {
-    @trigger_error('\Drupal\Component\Utility\Unicode::mimeHeaderDecode() is deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use iconv_mime_decode() instead. See https://www.drupal.org/node/3207439', E_USER_DEPRECATED);
-    $callback = function ($matches) {
-      $data = (strtolower($matches[2]) == 'b') ? base64_decode($matches[3]) : str_replace('_', ' ', quoted_printable_decode($matches[3]));
-      if (strtolower($matches[1]) != 'utf-8') {
-        $data = static::convertToUtf8($data, $matches[1]);
-      }
-      return $data;
-    };
-    // First step: encoded chunks followed by other encoded chunks (need to collapse whitespace)
-    $header = preg_replace_callback('/=\?([^?]+)\?([Qq]|[Bb])\?([^?]+|\?(?!=))\?=\s+(?==\?)/', $callback, $header);
-    // Second step: remaining chunks (do not collapse whitespace)
-    return preg_replace_callback('/=\?([^?]+)\?([Qq]|[Bb])\?([^?]+|\?(?!=))\?=/', $callback, $header);
   }
 
   /**

@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.recycleetfrecord.status.query request
  *
  * @author auto create
- * @since 1.0, 2024-03-26 21:27:03
+ * @since 1.0, 2025-01-14 14:30:19
  */
 class AlipayCommerceRecycleetfrecordStatusQueryRequest
 {

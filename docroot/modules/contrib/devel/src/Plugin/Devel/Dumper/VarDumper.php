@@ -2,6 +2,7 @@
 
 namespace Drupal\devel\Plugin\Devel\Dumper;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\devel\DevelDumperBase;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
@@ -21,7 +22,7 @@ class VarDumper extends DevelDumperBase {
   /**
    * {@inheritdoc}
    */
-  public function export($input, $name = NULL) {
+  public function export(mixed $input, ?string $name = NULL): MarkupInterface|string {
     $cloner = new VarCloner();
     $dumper = 'cli' === PHP_SAPI ? new CliDumper() : new HtmlDumper();
 
@@ -29,7 +30,7 @@ class VarDumper extends DevelDumperBase {
     $dumper->dump($cloner->cloneVar($input), $output);
     $output = stream_get_contents($output, -1, 0);
 
-    if ($name) {
+    if ($name !== NULL && $name !== '') {
       $output = $name . ' => ' . $output;
     }
 
@@ -39,8 +40,8 @@ class VarDumper extends DevelDumperBase {
   /**
    * {@inheritdoc}
    */
-  public static function checkRequirements() {
-    return class_exists('Symfony\Component\VarDumper\Cloner\VarCloner', TRUE);
+  public static function checkRequirements(): bool {
+    return class_exists(VarCloner::class, TRUE);
   }
 
 }

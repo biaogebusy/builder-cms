@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\commerce_tax\FunctionalJavascript;
 
+use Drupal\Core\Url;
+use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 use Drupal\commerce\UrlData;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
-use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 
 /**
  * Tests the tax number widget and formatter.
@@ -87,7 +87,9 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
         'country_code' => 'RS',
         'postal_code' => '11000',
         'locality' => 'Belgrade',
+        // cspell:disable-next-line
         'address_line1' => 'Cetinjska 15',
+        // cspell:disable-next-line
         'given_name' => 'Dusan',
         'family_name' => 'Popov',
       ],
@@ -103,15 +105,17 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
     ]);
     $order_item->save();
 
-    $this->order = Order::create([
+    $order = Order::create([
       'type' => 'default',
+      'order_number' => '1',
       'store_id' => $this->store,
       'uid' => $this->adminUser,
       'billing_profile' => $this->customerProfile,
       'order_items' => [$order_item],
       'state' => 'completed',
     ]);
-    $this->order->save();
+    $order->save();
+    $this->order = $this->reloadEntity($order);
   }
 
   /**
@@ -198,6 +202,8 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
    * Tests the formatter.
    */
   public function testFormatter() {
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
+    $date_formatter = $this->container->get('date.formatter');
     $this->customerProfile->set('tax_number', [
       'type' => 'other',
       'value' => '122',
@@ -212,11 +218,12 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
     $state_field = $rendered_field->find('css', '.commerce-tax-number__verification-icon');
     $this->assertEmpty($state_field);
 
+    $verification_timestamp = strtotime('2019/08/08');
     $this->customerProfile->set('tax_number', [
       'type' => 'serbian_vat',
       'value' => '123',
       'verification_state' => VerificationResult::STATE_SUCCESS,
-      'verification_timestamp' => strtotime('2019/08/08'),
+      'verification_timestamp' => $verification_timestamp,
       'verification_result' => ['name' => 'Centarro LLC'],
     ]);
     $this->customerProfile->save();
@@ -233,14 +240,15 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
 
     // Confirm that the verification result can be viewed.
     $this->clickLink('123');
-    $this->assertSession()->pageTextContains('August 8, 2019 - 00:00');
+    $this->assertSession()->pageTextContains($date_formatter->format($verification_timestamp, 'long', '', $this->order->getStore()->getTimezone()));
     $this->assertSession()->pageTextContains('Centarro LLC');
 
+    $verification_timestamp = strtotime('2019/08/09');
     $this->customerProfile->set('tax_number', [
       'type' => 'serbian_vat',
       'value' => '124',
       'verification_state' => VerificationResult::STATE_FAILURE,
-      'verification_timestamp' => strtotime('2019/08/09'),
+      'verification_timestamp' => $verification_timestamp,
       'verification_result' => ['name' => 'Google LLC'],
     ]);
     $this->customerProfile->save();
@@ -257,14 +265,15 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
 
     // Confirm that the verification result can be viewed.
     $this->clickLink('124');
-    $this->assertSession()->pageTextContains('August 9, 2019 - 00:00');
+    $this->assertSession()->pageTextContains($date_formatter->format($verification_timestamp, 'long', '', $this->order->getStore()->getTimezone()));
     $this->assertSession()->pageTextContains('Google LLC');
 
+    $verification_timestamp = strtotime('2019/08/10');
     $this->customerProfile->set('tax_number', [
       'type' => 'serbian_vat',
       'value' => '125',
       'verification_state' => VerificationResult::STATE_UNKNOWN,
-      'verification_timestamp' => strtotime('2019/08/10'),
+      'verification_timestamp' => $verification_timestamp,
       'verification_result' => ['error' => 'http_429'],
     ]);
     $this->customerProfile->save();
@@ -281,7 +290,8 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
 
     // Confirm that the verification result can be viewed.
     $this->clickLink('125');
-    $this->assertSession()->pageTextContains('August 10, 2019 - 00:00');
+
+    $this->assertSession()->pageTextContains($date_formatter->format($verification_timestamp, 'long', '', $this->order->getStore()->getTimezone()));
     $this->assertSession()->pageTextContains('Too many requests.');
 
     // Confirm that the number can be reverified.
@@ -294,7 +304,7 @@ class TaxNumberTest extends CommerceWebDriverTestBase {
       'type' => 'serbian_vat',
       'value' => '126',
       'verification_state' => 'INVALID',
-      'verification_timestamp' => strtotime('2019/08/10'),
+      'verification_timestamp' => $verification_timestamp,
       'verification_result' => ['verification_id' => '123458'],
     ]);
     $this->customerProfile->save();

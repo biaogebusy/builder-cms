@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools;
 
 use Drupal\migrate\MigrateMessageInterface;
@@ -12,42 +14,30 @@ use Drupal\migrate\Row;
  */
 class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
 
-  /**
-   * List of specific source IDs to import.
-   *
-   * @var array
-   */
-  protected $idList;
-
-  /**
-   * IdMapFilter constructor.
-   *
-   * @param \Drupal\migrate\Plugin\MigrateIdMapInterface $id_map
-   *   The ID map.
-   * @param array $id_list
-   *   The id list to use in the filter.
-   */
-  public function __construct(MigrateIdMapInterface $id_map, array $id_list) {
+  public function __construct(
+    MigrateIdMapInterface $id_map,
+    protected array $idList,
+  ) {
     parent::__construct($id_map);
-    $this->idList = $id_list;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function accept() {
+  public function accept(): bool {
     // Row is included.
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     if (empty($this->idList) || in_array(array_values($this->currentSource()), $this->idList)) {
       return TRUE;
     }
+    return FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function saveIdMapping(Row $row, array $destination_id_values, $status = self::STATUS_IMPORTED, $rollback_action = self::ROLLBACK_DELETE) {
+  public function saveIdMapping(Row $row, array $destination_id_values, $status = self::STATUS_IMPORTED, $rollback_action = self::ROLLBACK_DELETE): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->saveIdMapping($row, $destination_id_values, $status, $rollback_action);
@@ -56,7 +46,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function saveMessage(array $source_id_values, $message, $level = MigrationInterface::MESSAGE_ERROR) {
+  public function saveMessage(array $source_id_values, $message, $level = MigrationInterface::MESSAGE_ERROR): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->saveMessage($source_id_values, $message, $level);
@@ -65,7 +55,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMessages(array $source_id_values = [], $level = NULL) {
+  public function getMessages(array $source_id_values = [], $level = NULL): \Traversable {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getMessages($source_id_values, $level);
@@ -74,7 +64,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function prepareUpdate() {
+  public function prepareUpdate(): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->prepareUpdate();
@@ -83,7 +73,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function processedCount() {
+  public function processedCount(): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->processedCount();
@@ -92,7 +82,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function importedCount() {
+  public function importedCount(): int {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->importedCount();
@@ -101,7 +91,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateCount() {
+  public function updateCount(): int {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->updateCount();
@@ -110,7 +100,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function errorCount() {
+  public function errorCount(): int {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->errorCount();
@@ -119,7 +109,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function messageCount() {
+  public function messageCount(): int {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->messageCount();
@@ -128,7 +118,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function delete(array $source_id_values, $messages_only = FALSE) {
+  public function delete(array $source_id_values, $messages_only = FALSE): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->delete($source_id_values, $messages_only);
@@ -137,7 +127,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteDestination(array $destination_id_values) {
+  public function deleteDestination(array $destination_id_values): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->deleteDestination($destination_id_values);
@@ -146,7 +136,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function clearMessages() {
+  public function clearMessages(): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->clearMessages();
@@ -155,7 +145,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRowBySource(array $source_id_values) {
+  public function getRowBySource(array $source_id_values): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getRowBySource($source_id_values);
@@ -164,7 +154,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRowByDestination(array $destination_id_values) {
+  public function getRowByDestination(array $destination_id_values): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getRowByDestination($destination_id_values);
@@ -173,7 +163,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRowsNeedingUpdate($count) {
+  public function getRowsNeedingUpdate($count): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getRowsNeedingUpdate($count);
@@ -182,7 +172,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function lookupSourceId(array $destination_id_values) {
+  public function lookupSourceId(array $destination_id_values): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->lookupSourceId($destination_id_values);
@@ -191,7 +181,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function lookupDestinationIds(array $source_id_values) {
+  public function lookupDestinationIds(array $source_id_values): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->lookupDestinationIds($source_id_values);
@@ -200,7 +190,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function currentDestination() {
+  public function currentDestination(): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->currentDestination();
@@ -209,16 +199,16 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function currentSource() {
+  public function currentSource(): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
-    return $map->currentSource();
+    return $map->currentSource() ?? [];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function destroy() {
+  public function destroy(): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->destroy();
@@ -227,7 +217,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getQualifiedMapTableName() {
+  public function getQualifiedMapTableName(): string {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getQualifiedMapTableName();
@@ -236,7 +226,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function setMessage(MigrateMessageInterface $message) {
+  public function setMessage(MigrateMessageInterface $message): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->setMessage($message);
@@ -245,7 +235,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function setUpdate(array $source_id_values) {
+  public function setUpdate(array $source_id_values): void {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     $map->setUpdate($source_id_values);
@@ -254,7 +244,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPluginId() {
+  public function getPluginId(): string {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getPluginId();
@@ -263,7 +253,7 @@ class IdMapFilter extends \FilterIterator implements MigrateIdMapInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPluginDefinition() {
+  public function getPluginDefinition(): array {
     $map = $this->getInnerIterator();
     \assert($map instanceof MigrateIdMapInterface);
     return $map->getPluginDefinition();

@@ -24,6 +24,7 @@ trait BlazyManagerUnitTestTrait {
     $this->languageManager    = $this->createMock('\Drupal\Core\Language\LanguageManager');
     $this->moduleHandler      = $this->createMock('\Drupal\Core\Extension\ModuleHandler');
     $this->token              = $this->createMock('\Drupal\Core\Utility\Token');
+    $this->libraries          = $this->createMock('\Drupal\blazy\Asset\LibrariesInterface');
 
     /* @phpstan-ignore-next-line */
     $this->token->expects($this->any())
@@ -41,6 +42,11 @@ trait BlazyManagerUnitTestTrait {
 
     // Since 2.16.
     $this->blazyManager = $this->createMock('\Drupal\blazy\BlazyManagerInterface');
+
+    /* @phpstan-ignore-next-line */
+    $this->blazyManager->expects($this->any())
+      ->method('libraries')
+      ->willReturn($this->libraries);
 
     /* @phpstan-ignore-next-line */
     $this->blazyManager->expects($this->any())

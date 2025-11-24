@@ -108,7 +108,7 @@ class StateItemTest extends FieldKernelTestBase {
    * @return array
    *   A list of testField function arguments.
    */
-  public function providerTestField() {
+  public static function providerTestField() {
     $data = [];
     $data['new->validation'] = ['new', ['create', 'cancel'], 'fulfillment', 'create', 'validation'];
     $data['new->canceled'] = ['new', ['create', 'cancel'], 'completed', 'cancel', 'canceled'];
@@ -142,7 +142,7 @@ class StateItemTest extends FieldKernelTestBase {
    * @return array
    *   A list of providerSettableOptions function arguments.
    */
-  public function providerSettableOptions() {
+  public static function providerSettableOptions() {
     $data = [];
     $data['new'] = ['new', ['canceled' => 'Canceled', 'validation' => 'Validation', 'new' => 'New']];
     $data['invalid'] = ['invalid', []];

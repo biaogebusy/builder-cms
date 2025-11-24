@@ -2,10 +2,10 @@
 
 namespace Drupal\ckeditor_font\Plugin\CKEditorPlugin;
 
-use Drupal\ckeditor\CKEditorPluginBase;
-use Drupal\ckeditor\CKEditorPluginConfigurableInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\editor\Entity\Editor;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 
 /**
  * Defines the "font" plugin.
@@ -19,7 +19,43 @@ use Drupal\editor\Entity\Editor;
  *   label = @Translation("Font settings")
  * )
  */
-class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginConfigurableInterface {
+class FontCKEditorButton {
+  /**
+   * The list of available modules.
+   *
+   * @var \Symfony\Component\DependencyInjection\ContainerInterface
+   */
+  protected $container;
+
+
+  /**
+   * The list of available modules.
+   *
+   * @var \Drupal\Core\Extension\ModuleExtensionList
+   */
+  protected $extensionListModule;
+
+  /**
+   * Class constructor.
+   *
+   * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
+   *   The list of available modules.
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The container.
+   */
+  public function __construct(ModuleExtensionList $extension_list_module, ContainerInterface $container) {
+    $this->container = $container;
+    $this->extensionListModule = $extension_list_module;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('extension.list.module')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -31,17 +67,17 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
   public function getButtons() {
     // Make sure that the path to the image matches the file structure of
     // the CKEditor plugin you are implementing.
-    $modulePath = \Drupal::service('extension.list.module')->getPath('ckeditor_font');
-    return array(
-      'Font' => array(
-        'label' => $this->t('Font Families'),
+    $modulePath = $this->extensionListModule->getPath('ckeditor_font');
+    return [
+      'Font' => [
+        'label' => t('Font Families'),
         'image' => $modulePath . '/icons/font.png',
-      ),
-      'FontSize' => array(
-        'label' => $this->t('Font Size'),
+      ],
+      'FontSize' => [
+        'label' => t('Font Size'),
         'image' => $modulePath . '/icons/fontsize.png',
-      ),
-    );
+      ],
+    ];
   }
 
   /**
@@ -59,19 +95,13 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
     // https://git.drupalcode.org/project/drupal/commit/1edf15f
     // -----------------------------------------------------------------------
     // Search sites/<domain>/*.
-    $directories[] = \Drupal::getContainer()->getParameter('site.path') . "/libraries/";
+    $directories[] = $this->container->getParameter('site.path') . "/libraries/";
 
     // Always search the root 'libraries' directory.
     $directories[] = 'libraries/';
 
-    // Installation profiles can place libraries into a 'libraries' directory.
-    if ($installProfile = \Drupal::installProfile()) {
-      $profile_path = \Drupal::service('extension.list.profile')->getPath($installProfile);
-      $directories[] = "$profile_path/libraries/";
-    }
-
     foreach ($directories as $dir) {
-      // Default where composer installs the library
+      // Default where composer installs the library.
       if (file_exists(DRUPAL_ROOT . '/' . $dir . 'font/plugin.js')) {
         return $dir . 'font';
       }
@@ -79,10 +109,10 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
       // Edge-case webform-like install paths
       // https://www.drupal.org/project/ckeditor_font/issues/3046772
       elseif (file_exists(DRUPAL_ROOT . '/' . $dir . 'ckeditor/plugins/font/plugin.js')) {
-        return $dir . 'ckeditor/plugins/font';        
+        return $dir . 'ckeditor/plugins/font';
       }
     }
-    
+
     return FALSE;
   }
 
@@ -100,29 +130,29 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
   /**
    * {@inheritdoc}
    */
-  function isInternal() {
+  public function isInternal() {
     return FALSE;
   }
 
   /**
    * {@inheritdoc}
    */
-  function getDependencies(Editor $editor) {
-    return array();
+  public function getDependencies(Editor $editor) {
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
-  function getLibraries(Editor $editor) {
-    return array();
+  public function getLibraries(Editor $editor) {
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function getConfig(Editor $editor) {
-    $config = array();
+    $config = [];
     $settings = $editor->getSettings();
     if (!isset($settings['plugins']['font']['font_names']) && !isset($settings['plugins']['font']['font_sizes'])) {
       return $config;
@@ -149,39 +179,42 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
    */
   public function settingsForm(array $form, FormStateInterface $form_state, Editor $editor) {
     // Defaults.
-    $config = array('font_names' => '', 'font_sizes' => '');
+    $config = ['font_names' => '', 'font_sizes' => ''];
     $settings = $editor->getSettings();
     if (isset($settings['plugins']['font'])) {
       $config = $settings['plugins']['font'];
     }
 
-    $form['font_names'] = array(
-      '#title' => $this->t('Font families'),
+    $form['font_names'] = [
+      '#title' => t('Font families'),
       '#type' => 'textarea',
       '#default_value' => $config['font_names'],
-      '#description' => $this->t('Enter fonts on new lines. Fonts must be added with the following syntax:<br><code>Primary font, fallback1, fallback2|Font Label</code>'),
-      '#element_validate' => array(
-        array($this, 'validateFontValue'),
-      ),
-    );
+      '#description' => t('Enter fonts on new lines. Fonts must be added with the following syntax:<br><code>Primary font, fallback1, fallback2|Font Label</code>'),
+      '#element_validate' => [
+        [$this, 'validateFontValue'],
+      ],
+    ];
 
-    $form['font_sizes'] = array(
-      '#title' => $this->t('Font sizes'),
+    $form['font_sizes'] = [
+      '#title' => t('Font sizes'),
       '#type' => 'textarea',
       '#default_value' => $config['font_sizes'],
-      '#description' => $this->t('Enter font sizes on new lines. Sizes must be added with the following syntax:<br><code>123px|Size label</code><br><code>123em|Size label</code><br><code>123%|Size label</code>'),
-      '#element_validate' => array(
-        array($this, 'validateFontSizeValue'),
-      ),
-    );
+      '#description' => t('Enter font sizes on new lines. Sizes must be added with the following syntax:<br><code>123px|Size label</code><br><code>123em|Size label</code><br><code>123%|Size label</code>'),
+      '#element_validate' => [
+        [$this, 'validateFontSizeValue'],
+      ],
+    ];
 
     return $form;
   }
 
   /**
-   * #element_validate handler for the "font" element in settingsForm().
+   * Validate handler for the "font" element in settingsForm().
+   *
    * @param array $element
-   * @param FormStateInterface $form_state
+   *   The font element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
   public function validateFontValue(array $element, FormStateInterface $form_state) {
     if ($this->generateFontStyleSetting($element['#value'], 'font') === FALSE) {
@@ -190,9 +223,12 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
   }
 
   /**
-   * #element_validate handler for the "font" element in settingsForm().
+   * Validate handler for the "font" element in settingsForm().
+   *
    * @param array $element
-   * @param FormStateInterface $form_state
+   *   The font element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
   public function validateFontSizeValue(array $element, FormStateInterface $form_state) {
     if ($this->generateFontStyleSetting($element['#value'], 'size') === FALSE) {
@@ -203,16 +239,17 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
   /**
    * Builds the "font_names" configuration part of the CKEditor JS settings.
    *
-   * @see getConfig()
-   *
    * @param string $fonts
    *   The "font_names" setting.
-   * @return array|FALSE
+   * @param string $type
+   *   The element type: font or size.
+   *
+   * @return array|false
    *   An array containing the "font_names" configuration, or FALSE when the
    *   syntax is invalid.
    */
   protected function generateFontStyleSetting($fonts, $type) {
-    $font_style = array();
+    $font_style = [];
 
     // Early-return when empty.
     $fonts = trim($fonts);
@@ -220,7 +257,7 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
       return $font_style;
     }
 
-    $fonts = str_replace(array("\r\n", "\r"), "\n", $fonts);
+    $fonts = str_replace(["\r\n", "\r"], "\n", $fonts);
     foreach (explode("\n", $fonts) as $font) {
       $font = trim($font);
 
@@ -233,14 +270,14 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
         case 'font':
           // Match for patterns:
           // font1, font2, font3|font label
-          // font1|font label
+          // font1|font label.
           $pattern = '@^\s*[a-zA-Z0-9\,\-\s]+\s*\|\s*.+\s*$@';
           break;
+
         case 'size':
-          // Match for patterns and font size keywords:
-          // 123px/pt/em/rem/%|Label
-          $fontSizeKeywords = ['xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large', 'xxx-large', 'larger', 'smaller', 'inherit', 'initial', 'revert', 'revert-layer', 'unset'];
-          $pattern = '@^(\s*\d+(\.?\d+)?(px|em|%|pt|rem)|('.implode('|', $fontSizeKeywords).'))\|.*$@';
+          // Match for patterns:
+          // 123px/pt/em/rem/%|Label.
+          $pattern = '@^\s*\d+(\.?\d+)?(px|em|%|pt|rem)\|.*$@';
           break;
       }
 
@@ -248,7 +285,7 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
         return FALSE;
       }
 
-      list($families, $label) = explode('|', $font);
+      [$families, $label] = explode('|', $font);
 
       // Build string for CKEditor.font_names.
       $font_name = $label ? $label . '/' : '';
@@ -258,4 +295,5 @@ class FontCKEditorButton extends CKEditorPluginBase implements CKEditorPluginCon
     }
     return $font_style;
   }
+
 }

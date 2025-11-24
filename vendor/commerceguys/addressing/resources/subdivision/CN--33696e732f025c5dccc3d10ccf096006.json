@@ -1,0 +1,59 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GZ",
+		"Qiandongnan Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cengong Xian": {
+			"local_name": "岑巩县"
+		},
+		"Congjiang Xian": {
+			"local_name": "从江县"
+		},
+		"Danzhai Xian": {
+			"local_name": "丹寨县"
+		},
+		"Huangping Xian": {
+			"local_name": "黄平县"
+		},
+		"Jianhe Xian": {
+			"local_name": "剑河县"
+		},
+		"Jinping Xian": {
+			"local_name": "锦屏县"
+		},
+		"Kaili Shi": {
+			"local_name": "凯里市"
+		},
+		"Leishan Xian": {
+			"local_name": "雷山县"
+		},
+		"Liping Xian": {
+			"local_name": "黎平县"
+		},
+		"Majiang Xian": {
+			"local_name": "麻江县"
+		},
+		"Rongjiang Xian": {
+			"local_name": "榕江县"
+		},
+		"Sansui Xian": {
+			"local_name": "三穗县"
+		},
+		"Shibing Xian": {
+			"local_name": "施秉县"
+		},
+		"Taijiang Xian": {
+			"local_name": "台江县"
+		},
+		"Tianzhu Xian": {
+			"local_name": "天柱县"
+		},
+		"Zhenyuan Xian": {
+			"local_name": "镇远县"
+		}
+	}
+}

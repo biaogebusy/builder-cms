@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
@@ -11,7 +13,7 @@ abstract class ActionResourceTestBase extends ConfigEntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['action', 'user'];
+  protected static $modules = ['user'];
 
   /**
    * {@inheritdoc}
@@ -76,6 +78,15 @@ abstract class ActionResourceTestBase extends ConfigEntityResourceTestBase {
   protected function getNormalizedPostEntity() {
     // @todo Update in https://www.drupal.org/node/2300677.
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedCacheContexts() {
+    return [
+      'user.permissions',
+    ];
   }
 
 }

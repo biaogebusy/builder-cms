@@ -1205,9 +1205,9 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      * // ... do something with the F-number.
      * </code>
      *
-     * @param integer $tag
+     * @param mixed $tag
      *            the offset to check.
-     * @return boolean whether the tag exists.
+     * @return bool whether the tag exists.
      */
     public function offsetExists($tag): bool
     {
@@ -1225,7 +1225,7 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      * $entry = $ifd[PelTag::FNUMBER];
      * </code>
      *
-     * @param integer $tag
+     * @param mixed $tag
      *            the tag to return. It is an error to ask for a tag
      *            which is not in the IFD, just like asking for a non-existant
      *            array entry.
@@ -1250,7 +1250,7 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      * Note that the actual array index passed is ignored! Instead the
      * {@link PelTag} from the entry is used.
      *
-     * @param integer $tag
+     * @param mixed $tag
      *            unused parameter
      * @param PelEntry $e
      *            the new value to be set
@@ -1258,12 +1258,11 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      */
     public function offsetSet($tag, $e): void
     {
-        if ($e instanceof PelEntry) {
-            $newTag = $e->getTag();
-            $this->entries[$newTag] = $e;
-        } else {
+        if (!$e instanceof PelEntry) {
             throw new PelInvalidArgumentException('Argument "%s" must be a PelEntry.', $e);
         }
+        $newTag = $e->getTag();
+        $this->entries[$newTag] = $e;
     }
 
     /**
@@ -1277,10 +1276,9 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      * unset($ifd[PelTag::EXPOSURE_BIAS_VALUE])
      * </code>
      *
-     * @param integer $offset
+     * @param mixed $offset
      *            the offset to delete.
      */
-    # [\ReturnTypeWillChange]
     public function offsetUnset($offset): void
     {
         unset($this->entries[$offset]);
@@ -1291,7 +1289,7 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      *
      * @param integer $tag
      *            the tag identifying the entry.
-     * @return PelEntry the entry associated with the tag, or null if no
+     * @return PelEntry|null the entry associated with the tag, or null if no
      *         such entry exists.
      */
     public function getEntry($tag)
@@ -1369,7 +1367,7 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
     /**
      * Return the IFD pointed to by this directory.
      *
-     * @return PelIfd the next IFD, following this IFD. If this is the
+     * @return PelIfd|null the next IFD, following this IFD. If this is the
      *         last IFD, null is returned.
      */
     public function getNextIfd()
@@ -1410,7 +1408,7 @@ class PelIfd implements \IteratorAggregate, \ArrayAccess
      *            the type of the sub IFD. This must be one of {@link
      *            PelIfd::EXIF}, {@link PelIfd::GPS}, or {@link
      *            PelIfd::INTEROPERABILITY}.
-     * @return PelIfd the IFD associated with the type, or null if that
+     * @return PelIfd|null the IFD associated with the type, or null if that
      *         sub IFD does not exist.
      */
     public function getSubIfd($type)

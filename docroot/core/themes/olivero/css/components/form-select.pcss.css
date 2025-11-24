@@ -3,7 +3,7 @@
  * Select input elements.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 :root {
   --form-element-select-icon: url("../../images/chevron-down.svg");
@@ -15,8 +15,8 @@ select {
   padding-block: 0;
   padding-inline-start: var(--sp);
   padding-inline-end: var(--sp3);
-  color: var(--color--gray-0);
-  border: 1px solid var(--color--gray-30);
+  color: var(--color-text-neutral-loud);
+  border: 1px solid var(--color--gray-60);
   border-radius: var(--border-radius);
   background-color: var(--color--white);
   background-image: var(--form-element-select-icon);
@@ -27,8 +27,8 @@ select {
   appearance: none;
 
   &:focus {
-    border: solid 2px var(--color--blue-50);
-    outline: solid 2px var(--color--blue-50);
+    border: solid 2px var(--color--primary-50);
+    outline: solid 2px var(--color--primary-50);
 
     @supports (outline-style: double) {
       border-width: 1px;
@@ -38,14 +38,9 @@ select {
     }
   }
 
-  /* Hides default chevron within Internet Explorer. */
-  &::-ms-expand {
-    display: none;
-  }
-
   &[disabled] {
-    color: var(--color--gray-30);
-    background-color: var(--color--gray-90);
+    color: var(--color--gray-60);
+    background-color: var(--color--gray-100);
   }
 
   &.error {
@@ -80,16 +75,6 @@ select {
     /* Lets browser set <select> appearance to whatever the browser's default is. */
     @supports (appearance: revert) {
       appearance: revert;
-    }
-  }
-
-  /* Necessary for Internet Explorer to show chevron. */
-  @media screen and (-ms-high-contrast: active) {
-    padding-inline-end: 0;
-
-    /* Re-enable default chevron for Internet Explorer. */
-    &::-ms-expand {
-      display: block;
     }
   }
 }

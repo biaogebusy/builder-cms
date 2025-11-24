@@ -2,16 +2,18 @@
 
 namespace Drupal\xls_serialization\Encoder;
 
-use Drupal\views\ViewExecutable;
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Utility\Html;
+use Drupal\views\ViewExecutable;
+use Drupal\xls_serialization\XlsSerializationConstants;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\StringValueBinder;
 use PhpOffice\PhpSpreadsheet\Document\Properties;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\Serializer\Encoder\EncoderInterface;
 
 /**
@@ -27,6 +29,20 @@ class Xls implements EncoderInterface {
   protected static $format = 'xls';
 
   /**
+   * The configuration factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The module configuration.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $config = NULL;
+
+  /**
    * Format to write XLS files as.
    *
    * @var string
@@ -34,17 +50,48 @@ class Xls implements EncoderInterface {
   protected $xlsFormat = 'Xlsx';
 
   /**
+   * Whether to strip tags from values or not. Defaults to TRUE.
+   *
+   * @var bool
+   */
+  protected $stripTags = TRUE;
+
+  /**
+   * Whether to trim values or not. Defaults to TRUE.
+   *
+   * @var bool
+   */
+  protected $trimValues = TRUE;
+
+  /**
    * Constructs an XLS encoder.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration factory service.
    * @param string $xls_format
    *   The XLS format to use.
    */
-  public function __construct($xls_format = 'Xlsx') {
-    // Temporary fix until it wold be fixed at views_data_export.
-    if ($xls_format == 'Excel2007') {
+  public function __construct($config_factory, $xls_format = 'Xlsx') {
+    $this->configFactory = $config_factory;
+    // Temporary fix until it is fixed in views_data_export module.
+    if ($xls_format == XlsSerializationConstants::EXCEL_2007_FORMAT) {
       $xls_format = 'Xlsx';
     }
     $this->xlsFormat = $xls_format;
+  }
+
+  /**
+   * Returns the module configuration object.
+   *
+   * @return \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   *   The module configuration object.
+   */
+  protected function getConfig() {
+    if ($this->config === NULL) {
+      // Get module config.
+      $this->config = $this->configFactory->get('xls_serialization.configuration');
+    }
+    return $this->config;
   }
 
   /**
@@ -74,19 +121,24 @@ class Xls implements EncoderInterface {
       // Set headers.
       $this->setHeaders($sheet, $data, $context);
 
+      if (isset($context['views_style_plugin']->options['xls_settings'])) {
+        $this->setSettings($context['views_style_plugin']->options['xls_settings']);
+      }
+
       // Set the data.
       $this->setData($sheet, $data);
 
       // Set the width of every column with data in it to AutoSize.
-      $this->setColumnsAutoSize($sheet);
+      if (empty($this->getConfig()->get('xls_serialization_autosize'))) {
+        $this->setColumnsAutoSize($sheet);
+      }
+
+      // Set rows to auto-height.
+      $this->setRowsAutoHeight($sheet);
 
       if (isset($context['views_style_plugin'])) {
-        if (isset($context['views_style_plugin']->options['xls_settings'])) {
-          $this->setSettings($context['views_style_plugin']->options['xls_settings']);
-          // Set any metadata passed in via the context.
-          if (isset($context['views_style_plugin']->options['xls_settings']['metadata'])) {
-            $this->setMetaData($xls->getProperties(), $context['views_style_plugin']->options['xls_settings']['metadata']);
-          }
+        if (isset($context['views_style_plugin']->options['xls_settings']['metadata'])) {
+          $this->setMetaData($xls->getProperties(), $context['views_style_plugin']->options['xls_settings']['metadata']);
         }
 
         if (!empty($context['views_style_plugin']->view)) {
@@ -128,7 +180,7 @@ class Xls implements EncoderInterface {
             }
           }
           if (isset($conditional_styles)) {
-            $this->setConditionalFormating($sheet, $conditional_styles);
+            $this->setConditionalFormatting($sheet, $conditional_styles);
           }
         }
       }
@@ -168,7 +220,7 @@ class Xls implements EncoderInterface {
     // Extract headers from the data.
     $headers = $this->extractHeaders($data, $context);
     foreach ($headers as $column => $header) {
-      $sheet->setCellValueByColumnAndRow(++$column, 1, $this->formatValue($header));
+      $sheet->setCellValue([++$column, 1], $this->formatValue($header));
     }
   }
 
@@ -259,8 +311,13 @@ class Xls implements EncoderInterface {
     foreach ($data as $i => $row) {
       $column = 1;
       foreach ($row as $value) {
+        $formattedValue = $this->formatValue($value);
+        $valueBinder = NULL;
+        if (is_string($formattedValue) && strlen($formattedValue) > 1 && $formattedValue[0] === '=') {
+          $valueBinder = new StringValueBinder();
+        }
         // Since headers have been added, rows are offset here by 2.
-        $sheet->setCellValueByColumnAndRow($column, $i + 2, $this->formatValue($value));
+        $sheet->setCellValue([$column, $i + 2], $formattedValue, $valueBinder);
         $column++;
       }
     }
@@ -276,10 +333,13 @@ class Xls implements EncoderInterface {
    *   The formatted value.
    */
   protected function formatValue($value) {
-    // @todo Make these filters configurable.
-    $value = Html::decodeEntities($value);
-    $value = strip_tags($value);
-    $value = trim($value);
+    if ($this->stripTags) {
+      $value = Html::decodeEntities($value);
+      $value = strip_tags($value);
+    }
+    if ($this->trimValues) {
+      $value = trim($value);
+    }
 
     return $value;
   }
@@ -325,13 +385,21 @@ class Xls implements EncoderInterface {
    */
   protected function setSettings(array $settings) {
     // Temporary fix this until it would be fixed at the views_data_export.
-    if ($settings['xls_format'] == 'Excel2007') {
-      $settings['xls_format'] = 'Xlsx';
+    if (isset($settings['xls_format'])) {
+      if ($settings['xls_format'] == XlsSerializationConstants::EXCEL_2007_FORMAT) {
+        $settings['xls_format'] = 'Xlsx';
+      }
+      if ($settings['xls_format'] == XlsSerializationConstants::EXCEL_5_FORMAT) {
+        $settings['xls_format'] = 'Xls';
+      }
+      $this->xlsFormat = $settings['xls_format'];
     }
-    if ($settings['xls_format'] == 'Excel5') {
-      $settings['xls_format'] = 'Xls';
+    if (isset($settings['strip_tags'])) {
+      $this->stripTags = $settings['strip_tags'];
     }
-    $this->xlsFormat = $settings['xls_format'];
+    if (isset($settings['trim'])) {
+      $this->trimValues = $settings['trim'];
+    }
   }
 
   /**
@@ -345,6 +413,19 @@ class Xls implements EncoderInterface {
       $column_index = $column->getColumnIndex();
       $sheet->getColumnDimension($column_index)->setAutoSize(TRUE);
     }
+  }
+
+  /**
+   * Sets height of all rows to automatic and enables text wrapping.
+   *
+   * @param \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet
+   *   The worksheet to set the column width to AutoSize for.
+   */
+  protected function setRowsAutoHeight(Worksheet $sheet) {
+    foreach ($sheet->getRowDimensions() as $row_id) {
+      $row_id->setRowHeight(-1);
+    }
+    $sheet->getStyle('A1:' . $sheet->getHighestColumn() . $sheet->getHighestRow())->getAlignment()->setWrapText(TRUE);
   }
 
   /**
@@ -389,7 +470,6 @@ class Xls implements EncoderInterface {
         ],
       ],
     ];
-
     $sheet->getStyle('A1:' . $sheet->getHighestDataColumn() . '1')->applyFromArray($style);
   }
 
@@ -428,7 +508,7 @@ class Xls implements EncoderInterface {
    *
    * @throws \PhpOffice\PhpSpreadsheet\Exception
    */
-  protected function setConditionalFormating(Worksheet $sheet, array $conditional_styles) {
+  protected function setConditionalFormatting(Worksheet $sheet, array $conditional_styles) {
     $highest_data_column = $sheet->getHighestDataColumn();
     $highest_data_row = $sheet->getHighestDataRow();
     $current_conditional_styles = $sheet->getStyle('A2')->getConditionalStyles();
@@ -466,7 +546,7 @@ class Xls implements EncoderInterface {
    *   The label in the view if available, field name otherwise.
    */
   protected function getViewFieldLabel(ViewExecutable $view, $field_name) {
-    return isset($view->field[$field_name]->options['label']) ? $view->field[$field_name]->options['label'] : $field_name;
+    return $view->field[$field_name]->options['label'] ?? $field_name;
   }
 
   /**
@@ -492,15 +572,15 @@ class Xls implements EncoderInterface {
    * or be blank.
    *
    * @param string $title
-   *   The orginal worksheet value.
+   *   The original worksheet value.
    *
    * @return string
    *   The validated worksheet title
    */
   protected function validateWorksheetTitle($title) {
-    $title = preg_replace('[:\\*/\[\]?]', '', $title);
+    $title = preg_replace('/[:\*\/\\\[\]\?]+/', '', $title);
 
-    return substr($title, 0, 30);
+    return trim(mb_substr($title, 0, 30));
   }
 
 }

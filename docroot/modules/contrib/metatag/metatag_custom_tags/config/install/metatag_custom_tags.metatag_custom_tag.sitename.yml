@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies: {  }
+id: sitename
+label: Sitename
+description: 'The name of the site.'
+htmlElement: meta
+htmlValueAttribute: content
+attributes:
+  -
+    name: name
+    value: sitename

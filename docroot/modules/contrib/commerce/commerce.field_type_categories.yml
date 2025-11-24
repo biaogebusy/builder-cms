@@ -1,0 +1,11 @@
+commerce:
+  label: 'Commerce'
+  description: 'Commerce related field types.'
+  weight: -40
+  libraries:
+    - commerce/field-ui
+
+plugin:
+  label: 'Plugin'
+  description: 'Plugin configurations'
+  weight: -40

@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Specify the type of interlacing scheme.
- *
- * @ImageEffect(
- *   id = "image_effects_interlace",
- *   label = @Translation("Interlace"),
- *   description = @Translation("Specify the type of interlacing scheme.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_interlace',
+  label: new TranslatableMarkup('Interlace'),
+  description: new TranslatableMarkup('Specify the type of interlacing scheme.'),
+)]
 class InterlaceImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**

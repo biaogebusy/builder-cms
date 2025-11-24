@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_log\EventSubscriber;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce\Event\CommerceEvents;
 use Drupal\commerce\Event\PostMailSendEvent;
 use Drupal\commerce_log\LogTemplateManagerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -43,7 +43,7 @@ class OrderMailEventSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [
       CommerceEvents::POST_MAIL_SEND => ['onMailSend'],
     ];

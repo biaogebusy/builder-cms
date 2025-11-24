@@ -2,21 +2,22 @@
 
 namespace Drupal\comment\Plugin\views\wizard;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsWizard;
 use Drupal\views\Plugin\views\wizard\WizardPluginBase;
 
 /**
- * @todo: replace numbers with constants.
+ * @todo replace numbers with constants.
  */
 
 /**
  * Tests creating comment views with the wizard.
- *
- * @ViewsWizard(
- *   id = "comment",
- *   base_table = "comment_field_data",
- *   title = @Translation("Comments")
- * )
  */
+#[ViewsWizard(
+  id: 'comment',
+  base_table: 'comment_field_data',
+  title: new TranslatableMarkup('Comments')
+)]
 class Comment extends WizardPluginBase {
 
   /**

@@ -213,7 +213,7 @@ abstract class OptionsBase extends WebformElementBase {
 
     // Make sure submitted value is not lost if the element's #options were
     // altered after the submission was completed.
-    // This only applies to the main webforom element with a #webform_key
+    // This only applies to the main webform element with a #webform_key
     // and not a webform composite's sub elements.
     $is_completed = $webform_submission && $webform_submission->isCompleted();
     $has_default_value = (isset($element['#default_value']) && $element['#default_value'] !== '' && $element['#default_value'] !== NULL);

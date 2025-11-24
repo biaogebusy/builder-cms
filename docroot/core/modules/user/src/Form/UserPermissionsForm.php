@@ -2,6 +2,7 @@
 
 namespace Drupal\user\Form;
 
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -46,11 +47,17 @@ class UserPermissionsForm extends FormBase {
    *   The role storage.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Extension\ModuleExtensionList|null $moduleExtensionList
+   *   The module extension list.
    */
-  public function __construct(PermissionHandlerInterface $permission_handler, RoleStorageInterface $role_storage, ModuleHandlerInterface $module_handler) {
+  public function __construct(PermissionHandlerInterface $permission_handler, RoleStorageInterface $role_storage, ModuleHandlerInterface $module_handler, protected ?ModuleExtensionList $moduleExtensionList = NULL) {
     $this->permissionHandler = $permission_handler;
     $this->roleStorage = $role_storage;
     $this->moduleHandler = $module_handler;
+    if ($this->moduleExtensionList === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $moduleExtensionList argument is deprecated in drupal:10.3.0 and will be required in drupal:12.0.0. See https://www.drupal.org/node/3310017', E_USER_DEPRECATED);
+      $this->moduleExtensionList = \Drupal::service('extension.list.module');
+    }
   }
 
   /**
@@ -60,7 +67,8 @@ class UserPermissionsForm extends FormBase {
     return new static(
       $container->get('user.permissions'),
       $container->get('entity_type.manager')->getStorage('user_role'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('extension.list.module'),
     );
   }
 
@@ -78,7 +86,7 @@ class UserPermissionsForm extends FormBase {
    *   An array of role objects.
    */
   protected function getRoles() {
-    return $this->roleStorage->loadMultiple();
+    return $this->roleStorage->loadMultipleOverrideFree();
   }
 
   /**
@@ -142,6 +150,27 @@ class UserPermissionsForm extends FormBase {
       '#type' => 'system_compact_link',
     ];
 
+    $form['filters'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['table-filter', 'js-show'],
+      ],
+    ];
+
+    $form['filters']['text'] = [
+      '#type' => 'search',
+      '#title' => $this->t('Filter permissions'),
+      '#title_display' => 'invisible',
+      '#size' => 30,
+      '#placeholder' => $this->t('Filter by permission name'),
+      '#description' => $this->t('Enter permission name'),
+      '#attributes' => [
+        'class' => ['table-filter-text'],
+        'data-table' => '#permissions',
+        'autocomplete' => 'off',
+      ],
+    ];
+
     $form['permissions'] = [
       '#type' => 'table',
       '#header' => [$this->t('Permission')],
@@ -165,7 +194,7 @@ class UserPermissionsForm extends FormBase {
             'class' => ['module'],
             'id' => 'module-' . $provider,
           ],
-          '#markup' => $this->moduleHandler->getName($provider),
+          '#markup' => $this->moduleExtensionList->getName($provider),
         ],
       ];
       foreach ($permissions as $perm => $perm_item) {
@@ -177,7 +206,7 @@ class UserPermissionsForm extends FormBase {
         ];
         $form['permissions'][$perm]['description'] = [
           '#type' => 'inline_template',
-          '#template' => '<div class="permission"><span class="title">{{ title }}</span>{% if description or warning %}<div class="description">{% if warning %}<em class="permission-warning">{{ warning }}</em> {% endif %}{{ description }}</div>{% endif %}</div>',
+          '#template' => '<div class="permission"><span class="title table-filter-text-source">{{ title }}</span>{% if description or warning %}<div class="description">{% if warning %}<em class="permission-warning">{{ warning }}</em> {% endif %}{{ description }}</div>{% endif %}</div>',
           '#context' => [
             'title' => $perm_item['title'],
           ],

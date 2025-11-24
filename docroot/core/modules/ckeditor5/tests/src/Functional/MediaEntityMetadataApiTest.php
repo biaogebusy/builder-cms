@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\Functional;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
@@ -16,6 +18,7 @@ use Drupal\Tests\ckeditor5\Traits\SynchronizeCsrfTokenSeedTrait;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\user\RoleInterface;
+use Drupal\user\Entity\User;
 use Symfony\Component\Validator\ConstraintViolation;
 
 /**
@@ -73,7 +76,7 @@ class MediaEntityMetadataApiTest extends BrowserTestBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $adminUser;
+  protected User $adminUser;
 
   /**
    * @var \Drupal\Component\Uuid\UuidInterface
@@ -209,7 +212,7 @@ class MediaEntityMetadataApiTest extends BrowserTestBase {
   /**
    * Tests the media entity metadata API.
    */
-  public function testApi() {
+  public function testApi(): void {
     $path = '/ckeditor5/filtered_html/media-entity-metadata';
     $token = $this->container->get('csrf_token')->get(ltrim($path, '/'));
     $uuid = $this->mediaImage->uuid();
@@ -254,7 +257,7 @@ class MediaEntityMetadataApiTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(404);
 
     // Ensure that invalid UUID returns 400.
-    $this->drupalGet($path, ['query' => ['uuid' => '🦙', 'token' => $token]]);
+    $this->drupalGet($path, ['query' => ['uuid' => 'ðŸ¦™', 'token' => $token]]);
     $this->assertSession()->statusCodeEquals(400);
 
     // Ensure that users that don't have access to the filter format receive
@@ -278,7 +281,7 @@ class MediaEntityMetadataApiTest extends BrowserTestBase {
   public function testApiTranslation(): void {
     $this->container->get('module_installer')->install(['language', 'content_translation']);
     $this->resetAll();
-    ConfigurableLanguage::create(['id' => 'fi'])->save();
+    ConfigurableLanguage::createFromLangcode('fi')->save();
     $this->container->get('config.factory')->getEditable('language.negotiation')
       ->set('url.source', 'path_prefix')
       ->set('url.prefixes.fi', 'fi')

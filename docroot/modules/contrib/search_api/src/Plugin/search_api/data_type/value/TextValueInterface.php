@@ -5,7 +5,7 @@ namespace Drupal\search_api\Plugin\search_api\data_type\value;
 /**
  * Provides an interface for fulltext field values.
  */
-interface TextValueInterface {
+interface TextValueInterface extends \Stringable {
 
   /**
    * Retrieves the currently stored text value.
@@ -73,7 +73,7 @@ interface TextValueInterface {
    *
    * @return $this
    */
-  public function setTokens(array $tokens = NULL);
+  public function setTokens(?array $tokens = NULL);
 
   /**
    * Retrieves the properties set for this text value.

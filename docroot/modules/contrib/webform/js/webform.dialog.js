@@ -80,7 +80,7 @@
         var element_settings = {};
         element_settings.progress = {type: 'fullscreen'};
         element_settings.url = href;
-        element_settings.event = 'click';
+        element_settings.event = 'touchstart click';
         element_settings.dialogType = $a.data('dialog-type') || 'modal';
         element_settings.dialog = options;
         element_settings.element = this;

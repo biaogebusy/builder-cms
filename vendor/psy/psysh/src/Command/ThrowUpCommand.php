@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,8 +29,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ThrowUpCommand extends Command
 {
-    private $parser;
-    private $printer;
+    private CodeArgumentParser $parser;
+    private Printer $printer;
 
     /**
      * {@inheritdoc}
@@ -82,7 +82,7 @@ HELP
         $throwStmt = new Expression(new Throw_(new New_(new FullyQualifiedName(ThrowUpException::class), $args)));
         $throwCode = $this->printer->prettyPrint([$throwStmt]);
 
-        $shell = $this->getApplication();
+        $shell = $this->getShell();
         $shell->addCode($throwCode, !$shell->hasCode());
 
         return 0;
@@ -118,7 +118,7 @@ HELP
 
         // Allow throwing via a string, e.g. `throw-up "SUP"`
         if ($expr instanceof String_) {
-            return [new New_(new FullyQualifiedName(\Exception::class), $args)];
+            return [new Arg(new New_(new FullyQualifiedName(\Exception::class), $args))];
         }
 
         return $args;

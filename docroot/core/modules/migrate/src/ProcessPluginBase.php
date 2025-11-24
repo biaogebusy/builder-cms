@@ -21,7 +21,7 @@ use Drupal\migrate\Plugin\MigrateProcessInterface;
  * @see https://www.drupal.org/node/2129651
  * @see \Drupal\migrate\Plugin\MigratePluginManager
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- * @see \Drupal\migrate\Annotation\MigrateProcessPlugin
+ * @see \Drupal\migrate\Attribute\MigrateProcess
  * @see \Drupal\migrate\Plugin\migrate\process\SkipOnEmpty
  * @see d7_field_formatter_settings.yml
  * @see plugin_api
@@ -29,6 +29,13 @@ use Drupal\migrate\Plugin\MigrateProcessInterface;
  * @ingroup migration
  */
 abstract class ProcessPluginBase extends PluginBase implements MigrateProcessInterface {
+
+  /**
+   * Determines if processing of the pipeline is stopped.
+   *
+   * @var bool
+   */
+  protected bool $stopPipeline = FALSE;
 
   /**
    * {@inheritdoc}
@@ -51,6 +58,27 @@ abstract class ProcessPluginBase extends PluginBase implements MigrateProcessInt
    */
   public function multiple() {
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPipelineStopped(): bool {
+    return $this->stopPipeline;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function reset(): void {
+    $this->stopPipeline = FALSE;
+  }
+
+  /**
+   * Stops pipeline processing after this plugin finishes.
+   */
+  protected function stopPipeline(): void {
+    $this->stopPipeline = TRUE;
   }
 
 }

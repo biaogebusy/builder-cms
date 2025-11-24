@@ -8,8 +8,8 @@
   'use strict';
 
   var ID = 'b-pinterest';
-  var ID_ONCE = NICK;
   var NICK = ID;
+  var ID_ONCE = NICK;
   var DATA_PIN_DO = '[data-pin-do]';
   var DATA_PIN_HREF = '[data-pin-href]';
   var DATA_TOKEN = 'data-b-token';

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -49,7 +51,7 @@ class NodeAccessLanguageFallbackTest extends NodeTestBase {
   /**
    * Tests node access fallback handling with multiple node languages.
    */
-  public function testNodeAccessLanguageFallback() {
+  public function testNodeAccessLanguageFallback(): void {
     // The node_access_test module allows nodes to be marked private. We need to
     // ensure that system honors the fallback system of node access properly.
     // Note that node_access_test_language is language-sensitive and does not

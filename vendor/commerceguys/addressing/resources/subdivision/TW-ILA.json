@@ -1,0 +1,46 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"ILA"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Sanxing Township": {
+			"local_name": "三星鄉"
+		},
+		"Datong Township": {
+			"local_name": "大同鄉"
+		},
+		"Wujie Township": {
+			"local_name": "五結鄉"
+		},
+		"Dongshan Township": {
+			"local_name": "冬山鄉"
+		},
+		"Zhuangwei Township": {
+			"local_name": "壯圍鄉"
+		},
+		"Yilan City": {
+			"local_name": "宜蘭市"
+		},
+		"Nan'ao Township": {
+			"local_name": "南澳鄉"
+		},
+		"Yuanshan Township": {
+			"local_name": "員山鄉"
+		},
+		"Toucheng Township": {
+			"local_name": "頭城鎮"
+		},
+		"Jiaoxi Township": {
+			"local_name": "礁溪鄉"
+		},
+		"Luodong Township": {
+			"local_name": "羅東鎮"
+		},
+		"Su'ao Township": {
+			"local_name": "蘇澳鎮"
+		}
+	}
+}

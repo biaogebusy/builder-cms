@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d6;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -45,7 +47,7 @@ class MigrateFieldFormatterSettingsTest extends MigrateDrupal6TestBase {
   /**
    * Tests that migrated entity display settings can be loaded using D8 API's.
    */
-  public function testEntityDisplaySettings() {
+  public function testEntityDisplaySettings(): void {
     // Run tests.
     $field_name = "field_test";
     $expected = [

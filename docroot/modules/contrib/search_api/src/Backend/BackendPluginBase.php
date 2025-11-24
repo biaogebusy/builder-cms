@@ -17,28 +17,24 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Defines a base class for backend plugins.
  *
- * Plugins extending this class need to define a plugin definition array through
- * annotation. These definition arrays may be altered through
- * hook_search_api_backend_info_alter(). The definition includes the following
- * keys:
- * - id: The unique, system-wide identifier of the backend class.
- * - label: The human-readable name of the backend class, translated.
- * - description: A human-readable description for the backend class,
- *   translated.
+ * Plugins extending this class need to provide the plugin definition using the
+ * \Drupal\search_api\Attribute\SearchApiBackend attribute. These definitions
+ * may be altered using the "search_api.gathering_backends" event.
  *
  * A complete plugin definition should be written as in this example:
  *
  * @code
- * @SearchApiBackend(
- *   id = "my_backend",
- *   label = @Translation("My backend"),
- *   description = @Translation("Searches with SuperSearch™.")
- * )
+ * #[SearchApiBackend(
+ *   id: 'my_backend',
+ *   label: new TranslatableMarkup('My backend'),
+ *   description: new TranslatableMarkup('Searches with SuperSearch™.'),
+ * )]
  * @endcode
  *
- * @see \Drupal\search_api\Annotation\SearchApiBackend
+ * @see \Drupal\search_api\Attribute\SearchApiBackend
  * @see \Drupal\search_api\Backend\BackendPluginManager
  * @see \Drupal\search_api\Backend\BackendInterface
+ * @see \Drupal\search_api\Event\SearchApiEvents::GATHERING_BACKENDS
  * @see plugin_api
  */
 abstract class BackendPluginBase extends ConfigurablePluginBase implements BackendInterface {
@@ -220,12 +216,13 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * {@inheritdoc}
    */
   public function preDelete() {
+    $server = $this->getServer();
     try {
-      $this->getServer()->deleteAllItems();
+      $server->deleteAllItems();
     }
     catch (SearchApiException $e) {
       $vars = [
-        '%server' => $this->getServer()->label(),
+        '%server' => $server->label() ?? $server->id(),
       ];
       $this->logException($e, '%type while deleting items from server %server: @message in %function (line %line of %file).', $vars);
       $this->getMessenger()->addError($this->t('Deleting some of the items on the server failed. Check the logs for details. The server was still removed.'));
@@ -280,7 +277,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    * @return \Drupal\search_api\Item\FieldInterface[]
    *   An array of field objects for all "magic" fields, keyed by field IDs.
    */
-  protected function getSpecialFields(IndexInterface $index, ItemInterface $item = NULL) {
+  protected function getSpecialFields(IndexInterface $index, ?ItemInterface $item = NULL) {
     $field_info = [
       'type' => 'string',
       'original type' => 'string',
@@ -334,7 +331,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    *
    * Prevents the server entity from being serialized.
    */
-  public function __sleep() {
+  public function __sleep(): array {
     if ($this->server) {
       $this->serverId = $this->server->id();
     }
@@ -349,7 +346,7 @@ abstract class BackendPluginBase extends ConfigurablePluginBase implements Backe
    *
    * Reloads the server entity.
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     parent::__wakeup();
 
     if ($this->serverId) {

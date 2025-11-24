@@ -2,11 +2,18 @@
 
 namespace Drupal\private_message\Mapper;
 
+@trigger_error(__NAMESPACE__ . '\PrivateMessageMapperInterface is deprecated in private_message:4.0.0 and is removed from private_message:5.0.0. No replacement is provided. See https://www.drupal.org/node/3490530', E_USER_DEPRECATED);
+
 use Drupal\private_message\Entity\PrivateMessageInterface;
 use Drupal\user\UserInterface;
 
 /**
  * Interface for the Private Message Thread mapper class.
+ *
+ * @deprecated in private_message:4.0.0 and is removed from
+ *   private_message:5.0.0. No replacement is provided.
+ *
+ * @see https://www.drupal.org/node/3490530
  */
 interface PrivateMessageMapperInterface {
 
@@ -68,24 +75,6 @@ interface PrivateMessageMapperInterface {
   public function checkForNextThread(UserInterface $user, $timestamp);
 
   /**
-   * Get a list of account IDs whose account names begin with the given string.
-   *
-   * Only accounts that have 'Use private messaging system' permission will be
-   * returned, and the viewing user must have both 'View user information' and
-   * 'access user profiles' to get any results at all.
-   *
-   * @param string $string
-   *   The string to search for.
-   * @param int $count
-   *   The number of results to return.
-   *
-   * @return int[]
-   *   An array of account IDs for accounts whose account names begin
-   *   with the given string.
-   */
-  public function getUserIdsFromString($string, $count);
-
-  /**
    * Retrieve a list of recently updated private message thread IDs.
    *
    * The last updated timestamp will also be returned. If any ids are provided
@@ -106,22 +95,6 @@ interface PrivateMessageMapperInterface {
    *   - updated: The timestamp at which the thread was last updated
    */
   public function getUpdatedInboxThreadIds(array $existingThreadIds, $count = FALSE);
-
-  /**
-   * Determine whether or not the given username exists.
-   *
-   * The user must also have the 'use private messaging system' permission.
-   *
-   * @param string $username
-   *   The username to be validated.
-   *
-   * @return bool
-   *   - TRUE if the belongs to an account that has the 'use private messaging
-   *     system' permission
-   *   - FALSE if the account doesn't exist, or does not have the required
-   *     permission
-   */
-  public function checkPrivateMessageMemberExists($username);
 
   /**
    * Get the current user's unread thread count.
@@ -154,6 +127,22 @@ interface PrivateMessageMapperInterface {
    *   The number of threads updated since the given timestamp
    */
   public function getUnreadMessageCount($uid, $lastCheckTimestamp);
+
+  /**
+   * Get the current user's unread message count by thread id.
+   *
+   * Retrieves the number of the current user's messages that have been updated
+   * since user last thread access.
+   *
+   * @param int $uid
+   *   The user ID of the user whose count should be retrieved.
+   * @param int $thread_id
+   *   The thread ID which messages should be checked.
+   *
+   * @return int
+   *   The number of threads updated since the given timestamp
+   */
+  public function getThreadUnreadMessageCount($uid, $thread_id);
 
   /**
    * Load the thread id of the thread that a private message belongs to.

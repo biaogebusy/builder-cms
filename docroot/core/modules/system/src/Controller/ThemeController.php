@@ -11,7 +11,6 @@ use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Extension\ThemeInstallerInterface;
 use Drupal\system\Form\ThemeExperimentalConfirmForm;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -58,18 +57,6 @@ class ThemeController extends ControllerBase {
     $this->themeList = $theme_list;
     $this->configFactory = $config_factory;
     $this->themeInstaller = $theme_installer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('theme_handler'),
-      $container->get('extension.list.theme'),
-      $container->get('config.factory'),
-      $container->get('theme_installer')
-    );
   }
 
   /**
@@ -234,7 +221,7 @@ class ThemeController extends ControllerBase {
         $admin_theme = $config->get('admin');
         if (!empty($admin_theme) && $admin_theme != $theme) {
           $this->messenger()
-            ->addStatus($this->t('Please note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', [
+            ->addStatus($this->t('Note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', [
               '%admin_theme' => $themes[$admin_theme]->info['name'],
               '%selected_theme' => $themes[$theme]->info['name'],
             ]));

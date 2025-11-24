@@ -2,37 +2,45 @@
 
 namespace Drupal\file\Plugin\rest\resource;
 
-use Drupal\Component\Utility\Bytes;
+use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Utility\Crypt;
-use Drupal\Component\Utility\Environment;
-use Drupal\Core\Config\Config;
+use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\File\Exception\FileException;
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Lock\LockBackendInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Utility\Token;
-use Drupal\file\FileInterface;
 use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
+use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\Exception\FileExistsException;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\MimeType\MimeTypeGuesser;
+use Drupal\Core\Lock\LockAcquiringException;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Utility\Token;
+use Drupal\file\Entity\File;
+use Drupal\file\Upload\ContentDispositionFilenameParser;
+use Drupal\file\Upload\FileUploadHandler;
+use Drupal\file\Upload\FileUploadLocationTrait;
+use Drupal\file\Upload\InputStreamFileWriterInterface;
+use Drupal\file\Upload\InputStreamUploadedFile;
+use Drupal\file\Validation\FileValidatorInterface;
+use Drupal\file\Validation\FileValidatorSettingsTrait;
+use Drupal\rest\Attribute\RestResource;
 use Drupal\rest\ModifiedResourceResponse;
 use Drupal\rest\Plugin\ResourceBase;
-use Drupal\Component\Render\PlainTextOutput;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\file\Entity\File;
 use Drupal\rest\Plugin\rest\resource\EntityResourceValidationTrait;
 use Drupal\rest\RequestHandler;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\File\Exception\CannotWriteFileException;
+use Symfony\Component\HttpFoundation\File\Exception\NoFileException;
+use Symfony\Component\HttpFoundation\File\Exception\UploadException;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
 use Symfony\Component\Routing\Route;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * File upload resource.
@@ -44,26 +52,36 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *     to be later moved when they are referenced from a file field.
  *   - Permission to upload a file can be determined by a users field level
  *     create access to the file field.
- *
- * @RestResource(
- *   id = "file:upload",
- *   label = @Translation("File Upload"),
- *   serialization_class = "Drupal\file\Entity\File",
- *   uri_paths = {
- *     "create" = "/file/upload/{entity_type_id}/{bundle}/{field_name}"
- *   }
- * )
  */
+#[RestResource(
+  id: "file:upload",
+  label: new TranslatableMarkup("File Upload"),
+  serialization_class: File::class,
+  uri_paths: [
+    "create" => "/file/upload/{entity_type_id}/{bundle}/{field_name}",
+  ]
+)]
 class FileUploadResource extends ResourceBase {
 
+  use DeprecatedServicePropertyTrait;
+  use FileValidatorSettingsTrait;
   use EntityResourceValidationTrait {
     validate as resourceValidate;
+  }
+  use FileUploadLocationTrait {
+    getUploadLocation as getUploadDestination;
   }
 
   /**
    * The regex used to extract the filename from the content disposition header.
    *
    * @var string
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\file\Upload\ContentDispositionFilenameParser::REQUEST_HEADER_FILENAME_REGEX
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3380380
    */
   const REQUEST_HEADER_FILENAME_REGEX = '@\bfilename(?<star>\*?)=\"(?<filename>.+)\"@';
 
@@ -71,117 +89,52 @@ class FileUploadResource extends ResourceBase {
    * The amount of bytes to read in each iteration when streaming file data.
    *
    * @var int
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   * \Drupal\file\Upload\InputStreamFileWriterInterface::DEFAULT_BYTES_TO_READ
+   * instead.
+   *
+   * @see https://www.drupal.org/node/3380607
    */
   const BYTES_TO_READ = 8192;
 
   /**
-   * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystem
+   * {@inheritdoc}
    */
-  protected $fileSystem;
+  protected array $deprecatedProperties = [
+    'currentUser' => 'current_user',
+    'mimeTypeGuesser' => 'file.mime_type.guesser',
+    'token' => 'token',
+    'lock' => 'lock',
+    'eventDispatcher' => 'event_dispatcher',
+  ];
 
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The currently authenticated user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
-
-  /**
-   * The MIME type guesser.
-   *
-   * @var \Symfony\Component\Mime\MimeTypeGuesserInterface
-   */
-  protected $mimeTypeGuesser;
-
-  /**
-   * The token replacement instance.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected $token;
-
-  /**
-   * The lock service.
-   *
-   * @var \Drupal\Core\Lock\LockBackendInterface
-   */
-  protected $lock;
-
-  /**
-   * @var \Drupal\Core\Config\ImmutableConfig
-   */
-  protected $systemFileConfig;
-
-  /**
-   * The event dispatcher to dispatch the filename sanitize event.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * Constructs a FileUploadResource instance.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param array $serializer_formats
-   *   The available serialization formats.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   A logger instance.
-   * @param \Drupal\Core\File\FileSystemInterface $file_system
-   *   The file system service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The entity field manager.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The currently authenticated user.
-   * @param \Symfony\Component\Mime\MimeTypeGuesserInterface $mime_type_guesser
-   *   The MIME type guesser.
-   * @param \Drupal\Core\Utility\Token $token
-   *   The token replacement instance.
-   * @param \Drupal\Core\Lock\LockBackendInterface $lock
-   *   The lock service.
-   * @param \Drupal\Core\Config\Config $system_file_config
-   *   The system file configuration.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
-   *   The event dispatcher service.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, $serializer_formats, LoggerInterface $logger, FileSystemInterface $file_system, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, AccountInterface $current_user, $mime_type_guesser, Token $token, LockBackendInterface $lock, Config $system_file_config, EventDispatcherInterface $event_dispatcher = NULL) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    $serializer_formats,
+    LoggerInterface $logger,
+    protected FileSystemInterface $fileSystem,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected EntityFieldManagerInterface $entityFieldManager,
+    protected FileValidatorInterface | AccountInterface $fileValidator,
+    protected InputStreamFileWriterInterface | MimeTypeGuesser $inputStreamFileWriter,
+    protected FileUploadHandler | Token $fileUploadHandler,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $serializer_formats, $logger);
-    $this->fileSystem = $file_system;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->currentUser = $current_user;
-    $this->mimeTypeGuesser = $mime_type_guesser;
-    $this->token = $token;
-    $this->lock = $lock;
-    $this->systemFileConfig = $system_file_config;
-    if (!$event_dispatcher) {
-      @trigger_error('The event dispatcher service should be passed to FileUploadResource::__construct() since 9.2.0. This will be required in Drupal 10.0.0. See https://www.drupal.org/node/3032541', E_USER_DEPRECATED);
-      $event_dispatcher = \Drupal::service('event_dispatcher');
+    if (!$fileValidator instanceof FileValidatorInterface) {
+      @trigger_error('Passing a \Drupal\Core\Session\AccountInterface to ' . __METHOD__ . '() as argument 9 is deprecated in drupal:10.3.0 and will be removed before drupal:11.0.0. Pass a \Drupal\file\Validation\FileValidatorInterface instead. See https://www.drupal.org/node/3402032', E_USER_DEPRECATED);
+      $this->fileValidator = \Drupal::service('file.validator');
     }
-    $this->eventDispatcher = $event_dispatcher;
+    if (!$inputStreamFileWriter instanceof InputStreamFileWriterInterface) {
+      @trigger_error('Passing a \Drupal\Core\File\MimeType\MimeTypeGuesser to ' . __METHOD__ . '() as argument 10 is deprecated in drupal:10.3.0 and will be removed before drupal:11.0.0. Pass an \Drupal\file\Upload\InputStreamFileWriterInterface instead. See https://www.drupal.org/node/3402032', E_USER_DEPRECATED);
+      $this->inputStreamFileWriter = \Drupal::service('file.input_stream_file_writer');
+    }
+    if (!$fileUploadHandler instanceof FileUploadHandler) {
+      @trigger_error('Passing a \Drupal\Core\Utility\Token to ' . __METHOD__ . '() as argument 11 is deprecated in drupal:10.3.0 and will be removed before drupal:11.0.0. Pass an \Drupal\file\Upload\FileUploadHandler instead. See https://www.drupal.org/node/3402032', E_USER_DEPRECATED);
+      $this->fileUploadHandler = \Drupal::service('file.upload_handler');
+    }
   }
 
   /**
@@ -197,12 +150,9 @@ class FileUploadResource extends ResourceBase {
       $container->get('file_system'),
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
-      $container->get('current_user'),
-      $container->get('file.mime_type.guesser'),
-      $container->get('token'),
-      $container->get('lock'),
-      $container->get('config.factory')->get('system.file'),
-      $container->get('event_dispatcher')
+      $container->get('file.validator'),
+      $container->get('file.input_stream_file_writer'),
+      $container->get('file.upload_handler'),
     );
   }
 
@@ -238,89 +188,67 @@ class FileUploadResource extends ResourceBase {
    *   or when temporary files cannot be moved to their new location.
    */
   public function post(Request $request, $entity_type_id, $bundle, $field_name) {
-    $filename = $this->validateAndParseContentDispositionHeader($request);
-
     $field_definition = $this->validateAndLoadFieldDefinition($entity_type_id, $bundle, $field_name);
-
-    $destination = $this->getUploadLocation($field_definition->getSettings());
+    $destination = $this->getUploadDestination($field_definition);
 
     // Check the destination file path is writable.
     if (!$this->fileSystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY)) {
       throw new HttpException(500, 'Destination file path is not writable');
     }
 
-    $validators = $this->getUploadValidators($field_definition);
-
-    $prepared_filename = $this->prepareFilename($filename, $validators);
-
-    // Create the file.
-    $file_uri = "{$destination}/{$prepared_filename}";
-
-    $temp_file_path = $this->streamUploadData();
-
-    $file_uri = $this->fileSystem->getDestinationFilename($file_uri, FileSystemInterface::EXISTS_RENAME);
-
-    // Lock based on the prepared file URI.
-    $lock_id = $this->generateLockIdFromFileUri($file_uri);
-
-    if (!$this->lock->acquire($lock_id)) {
-      throw new HttpException(503, sprintf('File "%s" is already locked for writing', $file_uri), NULL, ['Retry-After' => 1]);
+    $settings = $field_definition->getSettings();
+    $validators = $this->getFileUploadValidators($settings);
+    if (!array_key_exists('FileExtension', $validators) && $settings['file_extensions'] === '') {
+      // An empty string means 'all file extensions' but the FileUploadHandler
+      // needs the FileExtension entry to be present and empty in order for this
+      // to be respected. An empty array means 'all file extensions'.
+      // @see \Drupal\file\Upload\FileUploadHandler::handleExtensionValidation
+      $validators['FileExtension'] = [];
     }
 
-    // Begin building file entity.
-    $file = File::create([]);
-    $file->setOwnerId($this->currentUser->id());
-    $file->setFilename($prepared_filename);
-    if ($this->mimeTypeGuesser instanceof MimeTypeGuesserInterface) {
-      $file->setMimeType($this->mimeTypeGuesser->guessMimeType($prepared_filename));
-    }
-    else {
-      $file->setMimeType($this->mimeTypeGuesser->guess($prepared_filename));
-      @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
-    }
-    $file->setFileUri($temp_file_path);
-    // Set the size. This is done in File::preSave() but we validate the file
-    // before it is saved.
-    $file->setSize(@filesize($temp_file_path));
-
-    // Validate the file against field-level validators first while the file is
-    // still a temporary file. Validation is split up in 2 steps to be the same
-    // as in _file_save_upload_single().
-    // For backwards compatibility this part is copied from ::validate() to
-    // leave that method behavior unchanged.
-    // @todo Improve this with a file uploader service in
-    //   https://www.drupal.org/project/drupal/issues/2940383
-    $errors = file_validate($file, $validators);
-
-    if (!empty($errors)) {
-      $message = "Unprocessable Entity: file validation failed.\n";
-      $message .= implode("\n", array_map([PlainTextOutput::class, 'renderFromHtml'], $errors));
-
-      throw new UnprocessableEntityHttpException($message);
-    }
-
-    $file->setFileUri($file_uri);
-    // Move the file to the correct location after validation. Use
-    // FileSystemInterface::EXISTS_ERROR as the file location has already been
-    // determined above in FileSystem::getDestinationFilename().
     try {
-      $this->fileSystem->move($temp_file_path, $file_uri, FileSystemInterface::EXISTS_ERROR);
+      $filename = ContentDispositionFilenameParser::parseFilename($request);
+      $tempPath = $this->inputStreamFileWriter->writeStreamToFile();
+      $uploadedFile = new InputStreamUploadedFile($filename, $filename, $tempPath, @filesize($tempPath));
+
+      $result = $this->fileUploadHandler->handleFileUpload($uploadedFile, $validators, $destination, FileExists::Rename, FALSE);
+    }
+    catch (LockAcquiringException $e) {
+      throw new HttpException(503, $e->getMessage(), NULL, ['Retry-After' => 1]);
+    }
+    catch (UploadException $e) {
+      $this->logger->error('Input data could not be read');
+      throw new HttpException(500, 'Input file data could not be read', $e);
+    }
+    catch (CannotWriteFileException $e) {
+      $this->logger->error('Temporary file data for could not be written');
+      throw new HttpException(500, 'Temporary file data could not be written', $e);
+    }
+    catch (NoFileException $e) {
+      $this->logger->error('Temporary file could not be opened for file upload');
+      throw new HttpException(500, 'Temporary file could not be opened', $e);
+    }
+    catch (FileExistsException $e) {
+      throw new HttpException(statusCode: 500, message: $e->getMessage(), previous: $e);
     }
     catch (FileException $e) {
       throw new HttpException(500, 'Temporary file could not be moved to file location');
     }
 
-    // Second step of the validation on the file object itself now.
-    $this->resourceValidate($file);
+    if ($result->hasViolations()) {
+      $message = "Unprocessable Entity: file validation failed.\n";
+      $errors = [];
+      foreach ($result->getViolations() as $violation) {
+        $errors[] = PlainTextOutput::renderFromHtml($violation->getMessage());
+      }
+      $message .= implode("\n", $errors);
 
-    $file->save();
-
-    $this->lock->release($lock_id);
-
+      throw new UnprocessableEntityHttpException($message);
+    }
     // 201 Created responses return the newly created entity in the response
     // body. These responses are not cacheable, so we add no cacheability
     // metadata here.
-    return new ModifiedResourceResponse($file, 201);
+    return new ModifiedResourceResponse($result->getFile(), 201);
   }
 
   /**
@@ -332,49 +260,30 @@ class FileUploadResource extends ResourceBase {
    * @throws \Symfony\Component\HttpKernel\Exception\HttpException
    *   Thrown when input data cannot be read, the temporary file cannot be
    *   opened, or the temporary file cannot be written.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no
+   *   replacement.
+   *
+   * @see https://www.drupal.org/node/3402032
    */
-  protected function streamUploadData() {
-    // 'rb' is needed so reading works correctly on Windows environments too.
-    $file_data = fopen('php://input', 'rb');
-
-    $temp_file_path = $this->fileSystem->tempnam('temporary://', 'file');
-    $temp_file = fopen($temp_file_path, 'wb');
-
-    if ($temp_file) {
-      while (!feof($file_data)) {
-        $read = fread($file_data, static::BYTES_TO_READ);
-
-        if ($read === FALSE) {
-          // Close the file streams.
-          fclose($temp_file);
-          fclose($file_data);
-          $this->logger->error('Input data could not be read');
-          throw new HttpException(500, 'Input file data could not be read');
-        }
-
-        if (fwrite($temp_file, $read) === FALSE) {
-          // Close the file streams.
-          fclose($temp_file);
-          fclose($file_data);
-          $this->logger->error('Temporary file data for "%path" could not be written', ['%path' => $temp_file_path]);
-          throw new HttpException(500, 'Temporary file data could not be written');
-        }
-      }
-
-      // Close the temp file stream.
-      fclose($temp_file);
+  protected function streamUploadData(): string {
+    @\trigger_error('Calling ' . __METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3402032', E_USER_DEPRECATED);
+    // Catch and throw the exceptions that REST expects.
+    try {
+      $temp_file_path = $this->inputStreamFileWriter->writeStreamToFile();
     }
-    else {
-      // Close the input file stream since we can't proceed with the upload.
-      // Don't try to close $temp_file since it's FALSE at this point.
-      fclose($file_data);
-      $this->logger->error('Temporary file "%path" could not be opened for file upload', ['%path' => $temp_file_path]);
-      throw new HttpException(500, 'Temporary file could not be opened');
+    catch (UploadException $e) {
+      $this->logger->error('Input data could not be read');
+      throw new HttpException(500, 'Input file data could not be read', $e);
     }
-
-    // Close the input stream.
-    fclose($file_data);
-
+    catch (CannotWriteFileException $e) {
+      $this->logger->error('Temporary file data for could not be written');
+      throw new HttpException(500, 'Temporary file data could not be written', $e);
+    }
+    catch (NoFileException $e) {
+      $this->logger->error('Temporary file could not be opened for file upload');
+      throw new HttpException(500, 'Temporary file could not be opened', $e);
+    }
     return $temp_file_path;
   }
 
@@ -389,35 +298,16 @@ class FileUploadResource extends ResourceBase {
    *
    * @throws \Symfony\Component\HttpKernel\Exception\BadRequestHttpException
    *   Thrown when the 'Content-Disposition' request header is invalid.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\file\Upload\ContentDispositionFilenameParser::parseFilename()
+   *   instead.
+   *
+   * @see https://www.drupal.org/node/3380380
    */
   protected function validateAndParseContentDispositionHeader(Request $request) {
-    // Firstly, check the header exists.
-    if (!$request->headers->has('content-disposition')) {
-      throw new BadRequestHttpException('"Content-Disposition" header is required. A file name in the format "filename=FILENAME" must be provided');
-    }
-
-    $content_disposition = $request->headers->get('content-disposition');
-
-    // Parse the header value. This regex does not allow an empty filename.
-    // i.e. 'filename=""'. This also matches on a word boundary so other keys
-    // like 'not_a_filename' don't work.
-    if (!preg_match(static::REQUEST_HEADER_FILENAME_REGEX, $content_disposition, $matches)) {
-      throw new BadRequestHttpException('No filename found in "Content-Disposition" header. A file name in the format "filename=FILENAME" must be provided');
-    }
-
-    // Check for the "filename*" format. This is currently unsupported.
-    if (!empty($matches['star'])) {
-      throw new BadRequestHttpException('The extended "filename*" format is currently not supported in the "Content-Disposition" header');
-    }
-
-    // Don't validate the actual filename here, that will be done by the upload
-    // validators in validate().
-    // @see \Drupal\file\Plugin\rest\resource\FileUploadResource::validate()
-    $filename = $matches['filename'];
-
-    // Make sure only the filename component is returned. Path information is
-    // stripped as per https://tools.ietf.org/html/rfc6266#section-4.3.
-    return $this->fileSystem->basename($filename);
+    @trigger_error('Calling ' . __METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\file\Upload\ContentDispositionFilenameParser::parseFilename() instead. See https://www.drupal.org/node/3380380', E_USER_DEPRECATED);
+    return ContentDispositionFilenameParser::parseFilename($request);
   }
 
   /**
@@ -463,38 +353,6 @@ class FileUploadResource extends ResourceBase {
   }
 
   /**
-   * Validates the file.
-   *
-   * @todo this method is unused in this class because file validation needs to
-   *   be split up in 2 steps in ::post(). Add a deprecation notice as soon as a
-   *   central core file upload service can be used in this class.
-   *   See https://www.drupal.org/project/drupal/issues/2940383
-   *
-   * @param \Drupal\file\FileInterface $file
-   *   The file entity to validate.
-   * @param array $validators
-   *   An array of upload validators to pass to file_validate().
-   *
-   * @throws \Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException
-   *   Thrown when there are file validation errors.
-   */
-  protected function validate(FileInterface $file, array $validators) {
-    $this->resourceValidate($file);
-
-    // Validate the file based on the field definition configuration.
-    $errors = file_validate($file, $validators);
-
-    if (!empty($errors)) {
-      $message = "Unprocessable Entity: file validation failed.\n";
-      $message .= implode("\n", array_map(function ($error) {
-        return PlainTextOutput::renderFromHtml($error);
-      }, $errors));
-
-      throw new UnprocessableEntityHttpException($message);
-    }
-  }
-
-  /**
    * Prepares the filename to strip out any malicious extensions.
    *
    * @param string $filename
@@ -504,12 +362,18 @@ class FileUploadResource extends ResourceBase {
    *
    * @return string
    *   The prepared/munged filename.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no
+   *   replacement.
+   *
+   * @see https://www.drupal.org/node/3402032
+   * @see https://www.drupal.org/node/3402032
    */
   protected function prepareFilename($filename, array &$validators) {
-    // The actual extension validation occurs in
-    // \Drupal\file\Plugin\rest\resource\FileUploadResource::validate().
-    $extensions = $validators['file_validate_extensions'][0] ?? '';
+    @\trigger_error('Calling ' . __METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3402032', E_USER_DEPRECATED);
+    $extensions = $validators['FileExtension']['extensions'] ?? '';
     $event = new FileUploadSanitizeNameEvent($filename, $extensions);
+    // @phpstan-ignore-next-line
     $this->eventDispatcher->dispatch($event);
     return $event->getFilename();
   }
@@ -523,51 +387,21 @@ class FileUploadResource extends ResourceBase {
    * @return string
    *   An un-sanitized file directory URI with tokens replaced. The result of
    *   the token replacement is then converted to plain text and returned.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use
+   * \Drupal\file\Upload\FileUploadLocationTrait::getUploadLocation() instead.
+   *
+   * @see https://www.drupal.org/node/3406099
    */
   protected function getUploadLocation(array $settings) {
+    @\trigger_error(__METHOD__ . ' is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. Use \Drupal\file\Upload\FileUploadLocationTrait::getUploadLocation() instead. See https://www.drupal.org/node/3406099', E_USER_DEPRECATED);
     $destination = trim($settings['file_directory'], '/');
 
     // Replace tokens. As the tokens might contain HTML we convert it to plain
     // text.
+    // @phpstan-ignore-next-line
     $destination = PlainTextOutput::renderFromHtml($this->token->replace($destination, []));
     return $settings['uri_scheme'] . '://' . $destination;
-  }
-
-  /**
-   * Retrieves the upload validators for a field definition.
-   *
-   * This is copied from \Drupal\file\Plugin\Field\FieldType\FileItem as there
-   * is no entity instance available here that a FileItem would exist for.
-   *
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
-   *   The field definition for which to get validators.
-   *
-   * @return array
-   *   An array suitable for passing to file_save_upload() or the file field
-   *   element's '#upload_validators' property.
-   */
-  protected function getUploadValidators(FieldDefinitionInterface $field_definition) {
-    $validators = [
-      // Add in our check of the file name length.
-      'file_validate_name_length' => [],
-    ];
-    $settings = $field_definition->getSettings();
-
-    // Cap the upload size according to the PHP limit.
-    $max_filesize = Bytes::toNumber(Environment::getUploadMaxSize());
-    if (!empty($settings['max_filesize'])) {
-      $max_filesize = min($max_filesize, Bytes::toNumber($settings['max_filesize']));
-    }
-
-    // There is always a file size limit due to the PHP server limit.
-    $validators['file_validate_size'] = [$max_filesize];
-
-    // Add the extension check if necessary.
-    if (!empty($settings['file_extensions'])) {
-      $validators['file_validate_extensions'] = [$settings['file_extensions']];
-    }
-
-    return $validators;
   }
 
   /**

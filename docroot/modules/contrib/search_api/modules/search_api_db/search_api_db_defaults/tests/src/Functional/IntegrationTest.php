@@ -5,19 +5,21 @@ namespace Drupal\Tests\search_api_db_defaults\Functional;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\Tests\BrowserTestBase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the correct installation of the default configs.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class IntegrationTest extends BrowserTestBase {
 
-  use StringTranslationTrait, CommentTestTrait, EntityReferenceTestTrait;
+  use StringTranslationTrait, CommentTestTrait, EntityReferenceFieldCreationTrait;
 
   /**
    * The profile to install as a basis for testing.
@@ -76,11 +78,13 @@ class IntegrationTest extends BrowserTestBase {
     $this->drupalGet('admin/modules');
     $this->submitForm($edit_enable, 'Install');
 
-    $this->assertSession()->pageTextContains('Some required modules must be enabled');
+    $expected_page_title = 'Some required modules must be installed';
+    $expected_success_message = '3 modules have been installed: Database Search Defaults, Database Search, Search API';
+    $this->assertSession()->pageTextContains($expected_page_title);
 
     $this->submitForm([], 'Continue');
 
-    $this->assertSession()->pageTextContains('3 modules have been enabled: Database Search Defaults, Database Search, Search API');
+    $this->assertSession()->pageTextContains($expected_success_message);
 
     $this->rebuildContainer();
 
@@ -109,7 +113,7 @@ class IntegrationTest extends BrowserTestBase {
 
     $this->drupalLogout();
     $this->drupalGet('search/content');
-    $this->assertSession()->pageTextContains('Please enter some keywords to search.');
+    $this->assertSession()->pageTextContains('Enter some keywords to search.');
     $this->assertSession()->pageTextNotContains($title);
     $this->assertSession()->responseNotContains('Error message');
     // @todo This suddenly stopped working due to #2568889. Figure out the new
@@ -121,7 +125,7 @@ class IntegrationTest extends BrowserTestBase {
     $this->submitForm(['keys' => 'test'], 'Search');
     $this->assertSession()->pageTextContains($title);
     $this->assertSession()->responseNotContains('Error message');
-    $this->assertSession()->pageTextNotContains('Please enter some keywords.');
+    $this->assertSession()->pageTextNotContains('Enter some keywords.');
     $this->assertSession()->pageTextNotContains('Your search yielded no results.');
 
     // Uninstall the module.

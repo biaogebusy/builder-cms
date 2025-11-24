@@ -16,9 +16,7 @@ use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 class ImportPolicyPluginManager extends DefaultPluginManager {
 
   /**
-   * Provides default values for all style_plugin plugins.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected $defaults = [
     'label' => '',

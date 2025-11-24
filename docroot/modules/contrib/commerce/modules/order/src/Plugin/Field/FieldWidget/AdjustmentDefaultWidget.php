@@ -2,24 +2,40 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldWidget;
 
-use Drupal\commerce_order\Adjustment;
-use Drupal\commerce_price\Price;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_order\Adjustment;
+use Drupal\commerce_price\Price;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of 'commerce_adjustment_default'.
- *
- * @FieldWidget(
- *   id = "commerce_adjustment_default",
- *   label = @Translation("Adjustment"),
- *   field_types = {
- *     "commerce_adjustment"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_adjustment_default",
+  label: new TranslatableMarkup("Adjustment"),
+  field_types: ["commerce_adjustment"],
+)]
 class AdjustmentDefaultWidget extends WidgetBase {
+
+  /**
+   * The adjustment type manager.
+   *
+   * @var \Drupal\commerce_order\AdjustmentTypeManager
+   */
+  protected $adjustmentTypeManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->adjustmentTypeManager = $container->get('plugin.manager.commerce_adjustment_type');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -32,13 +48,10 @@ class AdjustmentDefaultWidget extends WidgetBase {
     $element['#attributes']['class'][] = 'form--inline';
     $element['#attached']['library'][] = 'commerce_price/admin';
 
-    /** @var \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager */
-    $plugin_manager = \Drupal::service('plugin.manager.commerce_adjustment_type');
-
     $types = [
       '_none' => $this->t('- Select -'),
     ];
-    foreach ($plugin_manager->getDefinitions() as $id => $definition) {
+    foreach ($this->adjustmentTypeManager->getDefinitions() as $id => $definition) {
       if (!empty($definition['has_ui'])) {
         $types[$id] = $definition['label'];
       }
@@ -97,7 +110,7 @@ class AdjustmentDefaultWidget extends WidgetBase {
     $element['definition']['included'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Included in the base price'),
-      '#default_value' => ($adjustment) ? $adjustment->isIncluded() : FALSE,
+      '#default_value' => $adjustment && $adjustment->isIncluded(),
     ];
 
     return $element;

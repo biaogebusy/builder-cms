@@ -23,7 +23,7 @@ interface FieldGroupFormatterInterface extends PluginInspectionInterface {
    * @param array $element
    *   The field group render array.
    * @param object $processed_object
-   *   The object / entity beïng processed.
+   *   The object / entity being processed.
    */
   public function process(array &$element, $processed_object);
 
@@ -36,7 +36,7 @@ interface FieldGroupFormatterInterface extends PluginInspectionInterface {
    * @param array $element
    *   The field group render array.
    * @param object $rendering_object
-   *   The object / entity beïng rendered.
+   *   The object / entity being rendered.
    */
   public function preRender(array &$element, $rendering_object);
 

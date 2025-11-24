@@ -3,9 +3,9 @@
 namespace Drupal\flag\Plugin\ActionLink;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\flag\FlagInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -76,8 +76,8 @@ class AJAXactionLink extends Reload {
   /**
    * {@inheritdoc}
    */
-  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity) {
-    $build = parent::getAsFlagLink($flag, $entity);
+  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL): array {
+    $build = parent::getAsFlagLink($flag, $entity, $view_mode);
     $build['#attached']['library'][] = 'flag/flag.link_ajax';
     $build['#attributes']['class'][] = 'use-ajax';
     return $build;

@@ -7,9 +7,9 @@
   padding: 15px 20px 15px 35px; /* LTR */
   word-wrap: break-word;
   border: 1px solid;
-  border-width: 1px 1px 1px 0;  /* LTR */
+  border-width: 1px 1px 1px 0; /* LTR */
   border-radius: 2px;
-  background: no-repeat 10px 17px;  /* LTR */
+  background: no-repeat 10px 17px; /* LTR */
   overflow-wrap: break-word;
 }
 [dir="rtl"] .messages {
@@ -30,10 +30,9 @@
 .messages__item + .messages__item {
   margin-top: 0.769em;
 }
-/* See .color-success in Seven's colors.css */
 .messages--status {
   color: #325e1c;
-  border-color: #c9e1bd #c9e1bd #c9e1bd transparent;  /* LTR */
+  border-color: #c9e1bd #c9e1bd #c9e1bd transparent; /* LTR */
   background-color: #f3faef;
   background-image: url(../../images/icons/check.svg);
   box-shadow: -8px 0 0 #77b259; /* LTR */
@@ -43,10 +42,9 @@
   border-color: #c9e1bd transparent #c9e1bd #c9e1bd;
   box-shadow: 8px 0 0 #77b259;
 }
-/* See .color-warning in Seven's colors.css */
 .messages--warning {
   color: #734c00;
-  border-color: #f4daa6 #f4daa6 #f4daa6 transparent;  /* LTR */
+  border-color: #f4daa6 #f4daa6 #f4daa6 transparent; /* LTR */
   background-color: #fdf8ed;
   background-image: url(../../images/icons/warning.svg);
   box-shadow: -8px 0 0 #e09600; /* LTR */
@@ -55,10 +53,9 @@
   border-color: #f4daa6 transparent #f4daa6 #f4daa6;
   box-shadow: 8px 0 0 #e09600;
 }
-/* See .color-error in Seven's colors.css */
 .messages--error {
   color: #a51b00;
-  border-color: #f9c9bf #f9c9bf #f9c9bf transparent;  /* LTR */
+  border-color: #f9c9bf #f9c9bf #f9c9bf transparent; /* LTR */
   background-color: #fcf4f2;
   background-image: url(../../images/icons/error.svg);
   box-shadow: -8px 0 0 #e62600; /* LTR */

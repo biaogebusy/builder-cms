@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config\Functional;
 
 use Drupal\Core\Site\Settings;
@@ -23,9 +25,7 @@ class ConfigImportUploadTest extends BrowserTestBase {
   protected $webUser;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['config'];
 
@@ -47,7 +47,7 @@ class ConfigImportUploadTest extends BrowserTestBase {
   /**
    * Tests importing configuration.
    */
-  public function testImport() {
+  public function testImport(): void {
     // Verify access to the config upload form.
     $this->drupalGet('admin/config/development/configuration/full/import');
     $this->assertSession()->statusCodeEquals(200);
@@ -68,6 +68,27 @@ class ConfigImportUploadTest extends BrowserTestBase {
     // disabled.
     $submit_is_disabled = $this->cssSelect('form.config-import-form input[type="submit"]:disabled');
     $this->assertCount(1, $submit_is_disabled, 'The submit button is disabled.');
+  }
+
+  /**
+   * Tests importing tarball with non-config contents.
+   */
+  public function testImportTarballFiltering(): void {
+    $this->drupalGet('admin/config/development/configuration/full/import');
+    $this->assertSession()->statusCodeEquals(200);
+
+    $tarball = __DIR__ . '/../../fixtures/not_just_config.tar.gz';
+    $edit = ['files[import_tarball]' => $tarball];
+    $this->drupalGet('admin/config/development/configuration/full/import');
+    $this->submitForm($edit, 'Upload');
+
+    $sync_directory = Settings::get('config_sync_directory');
+    $this->assertFileExists($sync_directory . DIRECTORY_SEPARATOR . 'config.one.yml');
+    $this->assertFileExists($sync_directory . DIRECTORY_SEPARATOR . 'config.two.yml');
+    $this->assertFileExists($sync_directory . DIRECTORY_SEPARATOR . 'executable.yml');
+    $this->assertFalse(is_executable($sync_directory . DIRECTORY_SEPARATOR . 'executable.yml'));
+    $this->assertFileDoesNotExist($sync_directory . DIRECTORY_SEPARATOR . 'script.sh');
+    $this->assertFalse(is_executable($sync_directory . DIRECTORY_SEPARATOR . 'script.sh'));
   }
 
 }

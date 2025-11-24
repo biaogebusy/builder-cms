@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NM",
+		"Tongliao Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Holingol Shi": {
+			"local_name": "霍林郭勒市"
+		},
+		"Kailu Xian": {
+			"local_name": "开鲁县"
+		},
+		"Horqin Qu": {
+			"local_name": "科尔沁区"
+		},
+		"Horqin Zuoyi Houqi": {
+			"local_name": "科尔沁左翼后旗"
+		},
+		"Horqin Zuoyi Zhongqi": {
+			"local_name": "科尔沁左翼中旗"
+		},
+		"Hure Qi": {
+			"local_name": "库伦旗"
+		},
+		"Naiman Qi": {
+			"local_name": "奈曼旗"
+		},
+		"Jarud Qi": {
+			"local_name": "扎鲁特旗"
+		}
+	}
+}

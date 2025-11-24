@@ -6,8 +6,8 @@ dependencies:
 id: test_dynamic_entity_reference_entity_test_rev_view
 label: test_dynamic_entity_reference_entity_test_rev_view
 module: views
-description: ''
-tag: ''
+description: ""
+tag: ""
 base_table: entity_test
 base_field: id
 display:
@@ -19,25 +19,25 @@ display:
     display_options:
       access:
         type: none
-        options: {  }
+        options: {}
       cache:
         type: tag
-        options: {  }
+        options: {}
       query:
         type: views_query
         options:
           disable_sql_rewrite: false
           distinct: false
           replica: false
-          query_comment: ''
-          query_tags: {  }
+          query_comment: ""
+          query_tags: {}
       exposed_form:
         type: basic
         options:
           submit_button: Apply
           reset_button: false
           reset_button_label: Reset
-          exposed_sorts_label: 'Sort by'
+          exposed_sorts_label: "Sort by"
           expose_sort_order: true
           sort_asc_label: Asc
           sort_desc_label: Desc
@@ -50,30 +50,30 @@ display:
           total_pages: null
           expose:
             items_per_page: false
-            items_per_page_label: 'Items per page'
-            items_per_page_options: '5, 10, 25, 50'
+            items_per_page_label: "Items per page"
+            items_per_page_options: "5, 10, 25, 50"
             items_per_page_options_all: false
-            items_per_page_options_all_label: '- All -'
+            items_per_page_options_all_label: "- All -"
             offset: false
             offset_label: Offset
           tags:
-            previous: '‹ previous'
-            next: 'next ›'
-            first: '« first'
-            last: 'last »'
+            previous: "‹ previous"
+            next: "next ›"
+            first: "« first"
+            last: "last »"
           quantity: 9
       style:
         type: default
         options:
-          grouping: {  }
-          row_class: ''
+          grouping: {}
+          row_class: ""
           default_row_class: true
           uses_fields: false
       row:
         type: fields
         options:
-          inline: {  }
-          separator: ''
+          inline: {}
+          separator: ""
           hide_empty: false
           default_field_elements: true
       fields:
@@ -92,11 +92,11 @@ display:
           entity_field: id
           plugin_id: field
           relationship: reverse__entity_test_mul__field_test_mul
-      filters: {  }
-      sorts: {  }
-      header: {  }
-      footer: {  }
-      empty: {  }
+      filters: {}
+      sorts: {}
+      header: {}
+      footer: {}
+      empty: {}
       relationships:
         reverse__entity_test_mul__field_test_mul:
           id: reverse__entity_test_mul__field_test_mul
@@ -108,12 +108,12 @@ display:
           required: false
           entity_type: entity_test
           plugin_id: entity_reverse
-      arguments: {  }
-      display_extenders: {  }
+      arguments: {}
+      display_extenders: {}
     cache_metadata:
       contexts:
         - entity_test_view_grants
-        - 'languages:language_content'
-        - 'languages:language_interface'
+        - "languages:language_content"
+        - "languages:language_interface"
         - url.query_args
       cacheable: false

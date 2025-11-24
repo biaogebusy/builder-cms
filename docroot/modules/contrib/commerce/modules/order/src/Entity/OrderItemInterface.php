@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_order\Entity;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\commerce_order\EntityAdjustableInterface;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Entity\EntityChangedInterface;
-use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
  * Defines the interface for order items.
@@ -65,10 +65,22 @@ interface OrderItemInterface extends ContentEntityInterface, EntityAdjustableInt
    *
    * @param string $title
    *   The order item title.
+   * @param bool $override
+   *   Whether the title should be overridden.
    *
    * @return $this
    */
-  public function setTitle($title);
+  public function setTitle($title, bool $override = FALSE);
+
+  /**
+   * Gets whether the order item title is overridden.
+   *
+   * Overridden title are not updated when the order is refreshed.
+   *
+   * @return bool
+   *   TRUE if the title is overridden, FALSE otherwise.
+   */
+  public function isTitleOverridden(): bool;
 
   /**
    * Gets the order item quantity.

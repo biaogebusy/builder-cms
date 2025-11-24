@@ -33,7 +33,7 @@ interface SmsMessageInterface {
   /**
    * Adds multiple recipients to the SMS message.
    *
-   * @param array $recipients
+   * @param string[] $recipients
    *   An array of recipients to add.
    *
    * @return $this
@@ -85,7 +85,7 @@ interface SmsMessageInterface {
   /**
    * Get direction of the message.
    *
-   * @return int
+   * @return int|null
    *   See \Drupal\sms\Direction constants for potential values.
    */
   public function getDirection();
@@ -163,7 +163,7 @@ interface SmsMessageInterface {
    * @return $this
    *   The called SMS message object.
    */
-  public function setResult(SmsMessageResultInterface $result = NULL);
+  public function setResult(?SmsMessageResultInterface $result = NULL);
 
   /**
    * Gets the name of the sender of this SMS message.
@@ -242,7 +242,7 @@ interface SmsMessageInterface {
   /**
    * Set the user who created the SMS message.
    *
-   * @param int $uid
+   * @param int|null $uid
    *   The ID of a user entity.
    *
    * @return $this

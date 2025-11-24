@@ -119,19 +119,13 @@ class AliasUniquifier implements AliasUniquifierInterface {
       $source,
       $langcode,
     ];
-    if (method_exists($this->moduleHandler, 'invokeAllWith')) {
-      $implementations = [];
-      $this->moduleHandler->invokeAllWith(
-        'pathauto_is_alias_reserved',
-        function (callable $hook, string $module) use (&$implementations) {
-          $implementations[] = $module;
-        }
-      );
-    }
-    else {
-      // Use the deprecated getImplementations() for Drupal < 9.4.
-      $implementations = $this->moduleHandler->getImplementations('pathauto_is_alias_reserved');
-    }
+    $implementations = [];
+    $this->moduleHandler->invokeAllWith(
+      'pathauto_is_alias_reserved',
+      function (callable $hook, string $module) use (&$implementations) {
+        $implementations[] = $module;
+      }
+    );
     foreach ($implementations as $module) {
 
       $result = $this->moduleHandler->invoke($module, 'pathauto_is_alias_reserved', $args);

@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HB",
+		"Enshi Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Badong Xian": {
+			"local_name": "巴东县"
+		},
+		"Enshi Shi": {
+			"local_name": "恩施市"
+		},
+		"Hefeng Xian": {
+			"local_name": "鹤峰县"
+		},
+		"Jianshi Xian": {
+			"local_name": "建始县"
+		},
+		"Laifeng Xian": {
+			"local_name": "来凤县"
+		},
+		"Lichuan Shi": {
+			"local_name": "利川市"
+		},
+		"Xianfeng Xian": {
+			"local_name": "咸丰县"
+		},
+		"Xuan'en Xian": {
+			"local_name": "宣恩县"
+		}
+	}
+}

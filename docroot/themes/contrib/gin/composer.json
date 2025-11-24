@@ -33,7 +33,7 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "drupal/gin_toolbar": "^1.0@beta"
+        "drupal/gin_toolbar": "^2.0"
     },
     "scripts": {
         "phpcs": "phpcs -s --runtime-set ignore_warnings_on_exit 1 --runtime-set ignore_errors_on_exit 0 'web/modules/custom'"

@@ -3,11 +3,11 @@
 namespace Drupal\page_manager\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Plugin\Context\Context;
+use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\page_manager\Context\ContextDefinitionFactory;
 use Drupal\page_manager\Event\PageManagerContextEvent;
-use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\page_manager\Event\PageManagerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -61,7 +61,7 @@ class RouteParamContext implements EventSubscriberInterface {
     if ($route && $route_contexts = $route->getOption('parameters')) {
       foreach ($route_contexts as $route_context_name => $route_context) {
         // Skip this parameter.
-        if ($route_context_name == 'page_manager_page_variant' || $route_context_name == 'page_manager_page') {
+        if ($route_context_name == '_page_manager_page_variant' || $route_context_name == '_page_manager_page') {
           continue;
         }
 
@@ -87,7 +87,7 @@ class RouteParamContext implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[PageManagerEvents::PAGE_CONTEXT][] = 'onPageContext';
     return $events;
   }

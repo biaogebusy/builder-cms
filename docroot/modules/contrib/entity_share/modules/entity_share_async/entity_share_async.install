@@ -28,5 +28,5 @@ function entity_share_async_update_8301() {
   $queue = \Drupal::queue(QueueHelperInterface::QUEUE_NAME);
   $queue->deleteQueue();
 
-  \Drupal::messenger()->addStatus(t('Entities will need to be remarked for asynchronous import.'));
+  \Drupal::messenger()->addStatus(\t('Entities will need to be remarked for asynchronous import.'));
 }

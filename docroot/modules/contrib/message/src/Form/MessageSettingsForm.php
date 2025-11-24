@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Configure file system settings for this site.
  */
-class MessageSettingsForm extends ConfigFormBase {
+final class MessageSettingsForm extends ConfigFormBase {
 
   /**
    * The entity type manager.
@@ -69,9 +69,11 @@ class MessageSettingsForm extends ConfigFormBase {
     ConfigFactoryInterface $config_factory,
     EntityTypeManagerInterface $entity_type_manager,
     MessagePurgePluginManager $purge_manager,
-    ?TypedConfigManagerInterface $config_type_manager = NULL) {
+    ?TypedConfigManagerInterface $config_type_manager = NULL,
+  ) {
 
     if (version_compare(\Drupal::VERSION, '10.2.0', '<')) {
+      // @phpstan-ignore-next-line
       parent::__construct($config_factory);
     }
     else {
@@ -86,7 +88,7 @@ class MessageSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
+    return new self(
       $container->get('config.factory'),
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.message.purge'),

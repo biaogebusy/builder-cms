@@ -4,12 +4,46 @@ namespace Drupal\flag\Controller;
 
 use Drupal\Core\Config\Entity\DraggableListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\flag\FlagInterface;
+use Drupal\user\RoleInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a entity list page for Flags.
  */
 class FlagListBuilder extends DraggableListBuilder {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * Constructs a new FlagListBuilder object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
+   */
+  public function __construct(EntityTypeInterface $entity_type, EntityTypeManagerInterface $entity_type_manager) {
+    parent::__construct($entity_type, $entity_type_manager->getStorage($entity_type->id()));
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -49,8 +83,9 @@ class FlagListBuilder extends DraggableListBuilder {
   protected function getFlagRoles(FlagInterface $flag) {
     $all_roles = [];
 
+    $user_roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
     foreach (array_keys($flag->actionPermissions()) as $perm) {
-      $roles = user_roles(FALSE, $perm);
+      $roles = array_filter($user_roles, fn(RoleInterface $role) => $role->hasPermission($perm));
 
       foreach ($roles as $rid => $role) {
         $all_roles[$rid] = $role->label();
@@ -82,8 +117,7 @@ class FlagListBuilder extends DraggableListBuilder {
    */
   protected function getFlagType(FlagInterface $flag) {
     // Get the flaggable entity type definition.
-    $flaggable_entity_type = \Drupal::entityTypeManager()
-      ->getDefinition($flag->getFlaggableEntityTypeId());
+    $flaggable_entity_type = $this->entityTypeManager->getDefinition($flag->getFlaggableEntityTypeId());
 
     return [
       '#markup' => $flaggable_entity_type->getLabel(),
@@ -118,24 +152,26 @@ class FlagListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\flag\FlagInterface $flag */
+    $flag = $entity;
 
-    $row['label'] = $entity->label();
+    $row['label'] = $flag->label();
 
-    $row['flag_type'] = $this->getFlagType($entity);
+    $row['flag_type'] = $this->getFlagType($flag);
 
-    $row['roles'] = $this->getFlagRoles($entity);
+    $row['roles'] = $this->getFlagRoles($flag);
 
-    $row['bundles'] = $this->getBundles($entity);
+    $row['bundles'] = $this->getBundles($flag);
 
     $row['global'] = [
-      '#markup' => $entity->isGlobal() ? $this->t('Global') : $this->t('Personal'),
+      '#markup' => $flag->isGlobal() ? $this->t('Global') : $this->t('Personal'),
     ];
 
     $row['status'] = [
-      '#markup' => $entity->status() ? $this->t('Enabled') : $this->t('Disabled'),
+      '#markup' => $flag->status() ? $this->t('Enabled') : $this->t('Disabled'),
     ];
 
-    return $row + parent::buildRow($entity);
+    return $row + parent::buildRow($flag);
   }
 
 }

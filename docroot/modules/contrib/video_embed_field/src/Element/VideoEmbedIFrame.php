@@ -2,7 +2,7 @@
 
 namespace Drupal\video_embed_field\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -10,7 +10,7 @@ use Drupal\Core\Template\Attribute;
  *
  * @RenderElement("video_embed_iframe")
  */
-class VideoEmbedIFrame extends RenderElement {
+class VideoEmbedIFrame extends RenderElementBase {
 
   /**
    * {@inheritdoc}

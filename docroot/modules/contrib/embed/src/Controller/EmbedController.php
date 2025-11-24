@@ -2,6 +2,7 @@
 
 namespace Drupal\embed\Controller;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -66,7 +67,7 @@ class EmbedController extends ControllerBase {
   public static function create(ContainerInterface $container): self {
     return new static(
       $container->get('renderer'),
-      $container->get('csrf_token')
+      $container->get('csrf_token'),
     );
   }
 
@@ -87,7 +88,7 @@ class EmbedController extends ControllerBase {
    *   The preview of the embedded item specified by the data attributes.
    */
   public function preview(Request $request, FilterFormatInterface $filter_format) {
-    $this->checkCsrf($request, \Drupal::currentUser());
+    $this->checkCsrf($request, $this->currentUser());
 
     $text = $request->get('text') ?: $request->get('value');
     if (empty($text)) {
@@ -107,7 +108,13 @@ class EmbedController extends ControllerBase {
       return $response;
     }
     else {
-      $html = $this->renderer->renderPlain($build);
+      $html = DeprecationHelper::backwardsCompatibleCall(
+        currentVersion: \Drupal::VERSION,
+        deprecatedVersion: '10.3',
+        currentCallable: fn() => $this->renderer->renderInIsolation($build),
+        deprecatedCallable: fn() => $this->renderer->renderPlain($build),
+      );
+
       // Note that we intentionally do not use:
       // - \Drupal\Core\Cache\CacheableResponse because caching it on the server
       //   side is wasteful, hence there is no need for cacheability metadata.

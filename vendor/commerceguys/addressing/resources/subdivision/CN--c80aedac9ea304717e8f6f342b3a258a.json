@@ -1,0 +1,47 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HA",
+		"Xinxiang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Fengqiu Xian": {
+			"local_name": "封丘县"
+		},
+		"Fengquan Qu": {
+			"local_name": "凤泉区"
+		},
+		"Hongqi Qu": {
+			"local_name": "红旗区"
+		},
+		"Huixian Shi": {
+			"local_name": "辉县市"
+		},
+		"Huojia Xian": {
+			"local_name": "获嘉县"
+		},
+		"Muye Qu": {
+			"local_name": "牧野区"
+		},
+		"Weibin Qu": {
+			"local_name": "卫滨区"
+		},
+		"Weihui Shi": {
+			"local_name": "卫辉市"
+		},
+		"Xinxiang Xian": {
+			"local_name": "新乡县"
+		},
+		"Yanjin Xian": {
+			"local_name": "延津县"
+		},
+		"Yuanyang Xian": {
+			"local_name": "原阳县"
+		},
+		"Changyuan Xian": {
+			"local_name": "长垣县"
+		}
+	}
+}

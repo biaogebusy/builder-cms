@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Plugin;
 
 use Drupal\Core\Url;
@@ -25,9 +27,7 @@ class DisplayFeedTest extends ViewTestBase {
   public static $testViews = ['test_display_feed', 'test_attached_disabled', 'test_feed_icon'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'node', 'views', 'views_test_rss'];
 
@@ -51,7 +51,7 @@ class DisplayFeedTest extends ViewTestBase {
   /**
    * Tests the rendered output.
    */
-  public function testFeedOutput() {
+  public function testFeedOutput(): void {
     $this->drupalCreateContentType(['type' => 'page']);
 
     // Verify a title with HTML entities is properly escaped.
@@ -114,7 +114,7 @@ class DisplayFeedTest extends ViewTestBase {
   /**
    * Tests the rendered output for fields display.
    */
-  public function testFeedFieldOutput() {
+  public function testFeedFieldOutput(): void {
     $this->drupalCreateContentType(['type' => 'page']);
 
     // Verify a title with HTML entities is properly escaped.
@@ -156,7 +156,7 @@ class DisplayFeedTest extends ViewTestBase {
   /**
    * Tests that nothing is output when the feed display is disabled.
    */
-  public function testDisabledFeed() {
+  public function testDisabledFeed(): void {
     $this->drupalCreateContentType(['type' => 'page']);
     $this->drupalCreateNode();
 
@@ -187,7 +187,7 @@ class DisplayFeedTest extends ViewTestBase {
   /**
    * Tests that the feed display works when the linked display is disabled.
    */
-  public function testDisabledLinkedDisplay() {
+  public function testDisabledLinkedDisplay(): void {
     $view = Views::getView('test_attached_disabled');
     $view->setDisplay();
     // Disable the page and link the feed to the page.
@@ -202,6 +202,40 @@ class DisplayFeedTest extends ViewTestBase {
     // Ensure the feed can still be reached.
     $this->drupalGet('test-attached-disabled.xml');
     $this->assertSession()->statusCodeEquals(200);
+  }
+
+  /**
+   * Tests the cacheability of the feed display.
+   */
+  public function testFeedCacheability(): void {
+    // Test as an anonymous user.
+    $this->drupalLogout();
+
+    // Set the page cache max age to a value greater than zero.
+    $config = $this->config('system.performance');
+    $config->set('cache.page.max_age', 300);
+    $config->save();
+
+    // Uninstall all page cache modules that could cache the HTTP response
+    // headers.
+    \Drupal::service('module_installer')->uninstall([
+      'page_cache',
+      'dynamic_page_cache',
+    ]);
+
+    // Reset all so that the config and module changes are active.
+    $this->resetAll();
+
+    $url = 'test-feed-display.xml';
+    $this->drupalGet($url);
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->responseHeaderEquals('Cache-Control', 'max-age=300, public');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'application/rss+xml; charset=utf-8');
+
+    // Visit the page again to get the cached response.
+    $this->drupalGet($url);
+    $this->assertSession()->responseHeaderEquals('Cache-Control', 'max-age=300, public');
+    $this->assertSession()->responseHeaderEquals('Content-Type', 'application/rss+xml; charset=utf-8');
   }
 
 }

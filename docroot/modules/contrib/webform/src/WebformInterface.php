@@ -812,7 +812,7 @@ interface WebformInterface extends ConfigEntityInterface, EntityWithPluginCollec
    * Get webform element's selectors as options.
    *
    * @param array $options
-   *   (Optional) Options to be appled to element selectors.
+   *   (Optional) Options to be applied to element selectors.
    *
    * @return array
    *   Webform elements selectors as options.

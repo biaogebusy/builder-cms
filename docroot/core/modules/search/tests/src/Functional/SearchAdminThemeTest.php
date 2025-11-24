@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -18,7 +20,13 @@ class SearchAdminThemeTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['node', 'search', 'search_extra_type', 'user'];
+  protected static $modules = [
+    'help',
+    'node',
+    'search',
+    'search_extra_type',
+    'user',
+  ];
 
   /**
    * {@inheritdoc}
@@ -48,6 +56,7 @@ class SearchAdminThemeTest extends BrowserTestBase {
     $user = $this->drupalCreateUser([
       'access content',
       'search content',
+      'access help pages',
       'access user profiles',
       'view the administration theme',
     ]);
@@ -62,7 +71,7 @@ class SearchAdminThemeTest extends BrowserTestBase {
    * @see \Drupal\search_extra_type\Plugin\Search\SearchExtraTypeSearch
    * @see \Drupal\user\Plugin\Search\UserSearch
    */
-  public function testSearchUsingAdminTheme() {
+  public function testSearchUsingAdminTheme(): void {
     /** @var \Drupal\search\SearchPageRepositoryInterface $repository */
     $repository = \Drupal::service('search.search_page_repository');
     $pages = $repository->getActiveSearchPages();
@@ -70,6 +79,7 @@ class SearchAdminThemeTest extends BrowserTestBase {
     $page_ids = [
       'node_search' => FALSE,
       'dummy_search_type' => TRUE,
+      'help_search' => TRUE,
       'user_search' => FALSE,
     ];
     foreach ($page_ids as $page_id => $use_admin_theme) {

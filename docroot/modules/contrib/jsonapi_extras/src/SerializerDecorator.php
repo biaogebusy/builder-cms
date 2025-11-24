@@ -70,70 +70,70 @@ class SerializerDecorator implements SerializerInterface, NormalizerInterface, D
   /**
    * {@inheritdoc}
    */
-  public function decode($data, $format, array $context = []) {
+  public function decode($data, $format, array $context = []): mixed {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function denormalize($data, $class, $format = NULL, array $context = []) {
+  public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deserialize($data, $type, $format, array $context = []) {
+  public function deserialize($data, $type, $format, array $context = []): mixed {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function encode($data, $format, array $context = []) {
+  public function encode($data, $format, array $context = []): string {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, $format = NULL, array $context = []): array|bool|string|int|float|null|\ArrayObject {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsDecoding($format) {
+  public function supportsDecoding($format, array $context = []): bool {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function serialize($data, $format, array $context = []) {
+  public function serialize($data, $format, array $context = []): string {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsDenormalization($data, $type, $format = NULL) {
+  public function supportsDenormalization($data, string $type, ?string $format = NULL, array $context = []): bool {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsEncoding($format) {
+  public function supportsEncoding($format, array $context = []): bool {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsNormalization($data, $format = NULL) {
+  public function supportsNormalization($data, ?string $format = NULL, $context = []): bool {
     return $this->relay(__FUNCTION__, func_get_args());
   }
 

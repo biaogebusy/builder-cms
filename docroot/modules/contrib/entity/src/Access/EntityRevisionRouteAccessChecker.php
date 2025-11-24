@@ -51,7 +51,7 @@ class EntityRevisionRouteAccessChecker implements AccessInterface {
   /**
    * {@inheritdoc}
    */
-  public function access(Route $route, AccountInterface $account, RouteMatchInterface $route_match = NULL) {
+  public function access(Route $route, AccountInterface $account, ?RouteMatchInterface $route_match = NULL) {
     if (empty($route_match)) {
       $route_match = $this->routeMatch;
     }

@@ -70,7 +70,7 @@ class MetatagFieldDeriver extends DeriverBase implements ContainerDeriverInterfa
       ->fetchAllKeyed(0, 0);
     foreach ($entity_type_ids as $entity_type_id) {
       // Skip if the entity type is missing.
-      if (!($entity_type_definition = $this->entityTypeManager->getDefinition($entity_type_id, FALSE))) {
+      if (!$this->entityTypeManager->getDefinition($entity_type_id, FALSE)) {
         continue;
       }
 

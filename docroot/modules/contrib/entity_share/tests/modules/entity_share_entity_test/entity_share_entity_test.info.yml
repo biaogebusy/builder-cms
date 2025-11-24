@@ -5,7 +5,7 @@ package: 'Testing'
 dependencies:
   - drupal:entity_test
 
-# Information added by Drupal.org packaging script on 2023-04-11
-version: '8.x-3.0'
+# Information added by Drupal.org packaging script on 2025-08-13
+version: '4.0.0-alpha1'
 project: 'entity_share'
-datestamp: 1681198396
+datestamp: 1755088824

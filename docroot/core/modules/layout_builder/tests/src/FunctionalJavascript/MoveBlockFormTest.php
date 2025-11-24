@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+
+// cspell:ignore fieldbody fieldlinks
 
 /**
  * Tests moving blocks via the form.
@@ -94,7 +98,7 @@ class MoveBlockFormTest extends WebDriverTestBase {
   /**
    * Tests moving a block.
    */
-  public function testMoveBlock() {
+  public function testMoveBlock(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 

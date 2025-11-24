@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\pathauto\FunctionalJavascript;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Url;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\pathauto\Entity\PathautoPattern;
@@ -49,6 +48,8 @@ class PathautoUiTest extends WebDriverTestBase {
     $permissions = [
       'administer pathauto',
       'administer url aliases',
+      'bulk delete aliases',
+      'bulk update aliases',
       'create url aliases',
       'administer nodes',
       'bypass node access',
@@ -202,9 +203,9 @@ class PathautoUiTest extends WebDriverTestBase {
     $this->clickLink('Delete');
     $this->assertSession()->assertWaitOnAjaxRequest();
     if (version_compare(\Drupal::VERSION, '10.1', '>=')) {
-      $this->assertSession()->pageTextContains('This action cannot be undone.');
-      $this->getSession()->getPage()->find('css', '.ui-dialog-buttonpane')->findButton('Delete')->press();
-      $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->assertNotEmpty($this->assertSession()->waitForElementVisible('css', '#drupal-modal'));
+      $this->assertSession()->elementContains('css', '#drupal-modal', 'This action cannot be undone.');
+      $this->assertSession()->elementExists('css', '.ui-dialog-buttonpane')->pressButton('Delete');
     }
     else {
       $address = Url::fromRoute('entity.pathauto_pattern.delete_form', ['pathauto_pattern' => 'page_pattern'], [$destination_query]);

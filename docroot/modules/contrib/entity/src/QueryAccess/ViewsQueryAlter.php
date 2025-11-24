@@ -233,7 +233,7 @@ class ViewsQueryAlter implements ContainerInjectionInterface {
   }
 
   /**
-   * Applies the cacheablity metadata to the current request.
+   * Applies the cacheability metadata to the current request.
    *
    * @param \Drupal\Core\Cache\CacheableMetadata $cacheable_metadata
    *   The cacheability metadata.

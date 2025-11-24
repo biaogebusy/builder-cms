@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
 /**
  * @file
  * Provides integration between the SMS Framework and Drupal users.
  */
+
+declare(strict_types = 1);
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\sms\Entity\SmsMessageInterface as SmsMessageEntityInterface;
@@ -14,7 +14,7 @@ use Drupal\sms\Entity\PhoneNumberSettingsInterface;
 /**
  * Implements hook_entity_presave().
  */
-function sms_user_entity_presave(EntityInterface $entity) {
+function sms_user_entity_presave(EntityInterface $entity): void {
   // Delay sending SMS message if active hours are enabled.
   if ($entity instanceof SmsMessageEntityInterface) {
     /** @var \Drupal\sms_user\ActiveHoursInterface $active_hours */
@@ -26,7 +26,7 @@ function sms_user_entity_presave(EntityInterface $entity) {
 /**
  * Implements hook_entity_insert().
  */
-function sms_user_entity_insert(EntityInterface $entity) {
+function sms_user_entity_insert(EntityInterface $entity): void {
   // Rebuild dynamic menu links if phone number settings for 'user' added.
   if ($entity instanceof PhoneNumberSettingsInterface && $entity->getPhoneNumberEntityTypeId() == 'user') {
     /** @var \Drupal\Core\Menu\MenuLinkManagerInterface $menu_link */

@@ -20,3 +20,6 @@ domain.json
 
 # Ignore npm debugs
 npm-debug.log
+
+# Ignore JetBrains`s IDE files
+.idea

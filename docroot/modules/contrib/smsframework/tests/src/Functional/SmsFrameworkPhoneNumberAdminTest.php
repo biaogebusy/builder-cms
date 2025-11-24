@@ -43,7 +43,6 @@ final class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkBrowserTestBase
       'administer smsframework',
     ]);
     $this->drupalLogin($account);
-
   }
 
   /**
@@ -112,8 +111,7 @@ final class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkBrowserTestBase
     $this->assertSession()->addressEquals('admin/config/smsframework/phone_number');
     $t_args = ['%id' => 'entity_test.entity_test'];
     $this->assertSession()->responseContains(t('Phone number settings %id created.', $t_args));
-    $this->assertSession()->responseContains('<td>entity_test</td>
-                      <td>entity_test</td>', 'Phone number settings displayed as row.');
+    $this->assertSession()->responseContains('<td>entity_test</td>');
     $this->assertSession()->linkByHrefExists('admin/config/smsframework/phone_number/entity_test.entity_test');
     $this->assertSession()->linkByHrefExists('admin/config/smsframework/phone_number/entity_test.entity_test/delete');
 
@@ -126,14 +124,14 @@ final class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkBrowserTestBase
     $this->assertSession()->fieldExists('field_mapping[phone_number]');
     $this->assertSession()->fieldNotExists('entity_bundle');
     $optionElement = $this->assertSession()->optionExists('edit-field-mapping-phone-number', 'phone_number');
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
 
     // Ensure edit form is saving correctly.
     $this->drupalGet('admin/config/smsframework/phone_number/entity_test.entity_test');
     $this->submitForm([
       'code_lifetime' => '7777',
     ], 'Save');
-    $this->assertEquals(7777, $this->config('sms.phone.entity_test.entity_test')->get('verification_code_lifetime'));
+    static::assertEquals(7777, $this->config('sms.phone.entity_test.entity_test')->get('verification_code_lifetime'));
 
     // Delete new phone number settings.
     $this->drupalGet('admin/config/smsframework/phone_number/entity_test.entity_test/delete');
@@ -171,13 +169,13 @@ final class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkBrowserTestBase
 
     $field_name_telephone .= '_2';
     $field_config = $field_storage->load('entity_test.' . $field_name_telephone);
-    $this->assertTrue($field_config instanceof FieldStorageConfigInterface, 'Field config created.');
+    static::assertTrue($field_config instanceof FieldStorageConfigInterface, 'Field config created.');
 
     // Ensure field name is associated with config.
     $this->drupalGet('admin/config/smsframework/phone_number/entity_test.entity_test');
     $this->assertSession()->statusCodeEquals(200);
     $optionElement = $this->assertSession()->optionExists('edit-field-mapping-phone-number', $field_name_telephone);
-    $this->assertTrue($optionElement->hasAttribute('selected'));
+    static::assertTrue($optionElement->hasAttribute('selected'));
   }
 
 }

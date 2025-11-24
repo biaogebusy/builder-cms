@@ -2,7 +2,7 @@ name: Video Embed Field
 type: module
 description: 'Provides a field type for displaying videos from 3rd party providers such as YouTube and Vimeo.'
 package: Video Embed Field
-core_version_requirement: ^9.2 || ^10
+core_version_requirement: ^10.3 || ^11
 dependencies:
   - drupal:field
   - drupal:image
@@ -11,7 +11,7 @@ dependencies:
 test_dependencies:
   - colorbox:colorbox
 
-# Information added by Drupal.org packaging script on 2022-12-19
-version: '8.x-2.5'
+# Information added by Drupal.org packaging script on 2025-11-04
+version: '3.0.0-beta3'
 project: 'video_embed_field'
-datestamp: 1671413313
+datestamp: 1762283620

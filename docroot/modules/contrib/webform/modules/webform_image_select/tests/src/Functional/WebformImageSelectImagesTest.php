@@ -38,35 +38,35 @@ class WebformImageSelectImagesTest extends WebformElementBrowserTestBase {
     $this->drupalLogin($normal_user);
 
     // Check get element images.
-    $kittens = Yaml::decode("kitten_1:
-  text: 'Cute Kitten 1'
-  src: 'http://placekitten.com/220/200'
-kitten_2:
-  text: 'Cute Kitten 2'
-  src: 'http://placekitten.com/180/200'
-kitten_3:
-  text: 'Cute Kitten 3'
-  src: 'http://placekitten.com/130/200'
-kitten_4:
-  text: 'Cute Kitten 4'
-  src: 'http://placekitten.com/270/200'");
-    $element = ['#images' => $kittens];
-    $this->assertEquals(WebformImageSelectImages::getElementImages($element), $kittens);
-    $element = ['#images' => 'kittens'];
-    $this->assertEquals(WebformImageSelectImages::getElementImages($element), $kittens);
+    $dogs = Yaml::decode("dog_1:
+  text: 'Cute Dog 1'
+  src: 'https://placedog.net/220/200'
+dog_2:
+  text: 'Cute Dog 2'
+  src: 'https://placedog.net/180/200'
+dog_3:
+  text: 'Cute Dog 3'
+  src: 'https://placedog.net/130/200'
+dog_4:
+  text: 'Cute Dog 4'
+  src: 'https://placedog.net/270/200'");
+    $element = ['#images' => $dogs];
+    $this->assertEquals(WebformImageSelectImages::getElementImages($element), $dogs);
+    $element = ['#images' => 'dogs'];
+    $this->assertEquals(WebformImageSelectImages::getElementImages($element), $dogs);
     $element = ['#images' => 'not-found'];
     $this->assertEquals(WebformImageSelectImages::getElementImages($element), []);
 
     $dogs = Yaml::decode("dog_1:
   text: 'Cute Dog 1'
   src: 'http://placedog.net/220/200'
-dog_2:
+dog_test_2:
   text: 'Cute Dog 2'
   src: 'http://placedog.net/180/200'
-dog_3:
+dog_test_3:
   text: 'Cute Dog 3'
   src: 'http://placedog.net/130/200'
-dog_4:
+dog_test_4:
   text: 'Cute Dog 4'
   src: 'http://placedog.net/270/200'");
 
@@ -78,8 +78,8 @@ dog_4:
     $webform_images = WebformImageSelectImages::create([
       'langcode' => 'en',
       'status' => WebformInterface::STATUS_OPEN,
-      'id' => 'dogs',
-      'title' => 'Dogs',
+      'id' => 'dogs_test',
+      'title' => 'Dogs Test',
       'images' => Yaml::encode($dogs),
     ]);
     $webform_images->save();
@@ -117,7 +117,7 @@ dog_4:
     $element = ['#images' => 'animals'];
     $images = WebformImageSelectImages::getElementImages($element);
     $this->debug($images);
-    $this->assertEquals(array_keys($images), ['kitten_1', 'kitten_2', 'kitten_3', 'kitten_4', 'dog_1', 'dog_2', 'dog_3', 'dog_4']);
+    $this->assertEquals(array_keys($images), ['dog_1', 'dog_2', 'dog_3', 'dog_4', 'bear_1', 'bear_2', 'bear_3', 'bear_4']);
   }
 
 }

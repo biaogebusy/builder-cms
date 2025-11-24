@@ -132,6 +132,12 @@ class AggregatedFieldProperty extends ConfigurablePropertyBase {
       'separator' => stripcslashes($form_state->getValue('separator')),
       'fields' => array_keys(array_filter($form_state->getValue('fields'))),
     ];
+    // Do not store the default value for "separator" if it is not even used.
+    // This avoids needlessly cluttering the config export.
+    if ($values['type'] !== 'concat'
+        && $values['separator'] === $this->defaultConfiguration()['separator']) {
+      unset($values['separator']);
+    }
     $field->setConfiguration($values);
   }
 
@@ -172,35 +178,31 @@ class AggregatedFieldProperty extends ConfigurablePropertyBase {
    *   on $info, their labels, their data types or their descriptions.
    */
   protected function getTypes($info = 'label') {
-    switch ($info) {
-      case 'label':
-        return [
-          'union' => $this->t('Union'),
-          'concat' => $this->t('Concatenation'),
-          'sum' => $this->t('Sum'),
-          'count' => $this->t('Count'),
-          'max' => $this->t('Maximum'),
-          'min' => $this->t('Minimum'),
-          'first' => $this->t('First'),
-          'last' => $this->t('Last'),
-          'first_char' => $this->t('First letter'),
-        ];
-
-      case 'description':
-        return [
-          'union' => $this->t('The Union aggregation does an union operation of all the values of the field. 2 fields with 2 values each become 1 field with 4 values.'),
-          'concat' => $this->t('The Concatenation aggregation concatenates the text data of all contained fields.'),
-          'sum' => $this->t('The Sum aggregation adds the values of all contained fields numerically.'),
-          'count' => $this->t('The Count aggregation takes the total number of contained field values as the aggregated field value.'),
-          'max' => $this->t('The Maximum aggregation computes the numerically largest contained field value.'),
-          'min' => $this->t('The Minimum aggregation computes the numerically smallest contained field value.'),
-          'first' => $this->t('The First aggregation will simply keep the first encountered field value.'),
-          'last' => $this->t('The Last aggregation will keep the last encountered field value.'),
-          'first_char' => $this->t('The “First letter” aggregation uses just the first letter of the first encountered field value as the aggregated value. This can, for example, be used to build a Glossary view.'),
-        ];
-
-    }
-    return [];
+    return match ($info) {
+      'label' => [
+        'union' => $this->t('Union'),
+        'concat' => $this->t('Concatenation'),
+        'sum' => $this->t('Sum'),
+        'count' => $this->t('Count'),
+        'max' => $this->t('Maximum'),
+        'min' => $this->t('Minimum'),
+        'first' => $this->t('First'),
+        'last' => $this->t('Last'),
+        'first_char' => $this->t('First letter'),
+      ],
+      'description' => [
+        'union' => $this->t('The Union aggregation does an union operation of all the values of the field. 2 fields with 2 values each become 1 field with 4 values.'),
+        'concat' => $this->t('The Concatenation aggregation concatenates the text data of all contained fields.'),
+        'sum' => $this->t('The Sum aggregation adds the values of all contained fields numerically.'),
+        'count' => $this->t('The Count aggregation takes the total number of contained field values as the aggregated field value.'),
+        'max' => $this->t('The Maximum aggregation computes the numerically largest contained field value.'),
+        'min' => $this->t('The Minimum aggregation computes the numerically smallest contained field value.'),
+        'first' => $this->t('The First aggregation will simply keep the first encountered field value.'),
+        'last' => $this->t('The Last aggregation will keep the last encountered field value.'),
+        'first_char' => $this->t('The “First letter” aggregation uses just the first letter of the first encountered field value as the aggregated value. This can, for example, be used to build a Glossary view.'),
+      ],
+      default => [],
+    };
   }
 
   /**

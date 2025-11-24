@@ -1,0 +1,65 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Miaoli County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dahu Township": {
+			"local_name": "大湖鄉"
+		},
+		"Gongguan Township": {
+			"local_name": "公館鄉"
+		},
+		"Houlong Township": {
+			"local_name": "後龍鎮"
+		},
+		"Miaoli City": {
+			"local_name": "苗栗市"
+		},
+		"Nanzhuang Township": {
+			"local_name": "南庄鄉"
+		},
+		"Sanwan Township": {
+			"local_name": "三灣鄉"
+		},
+		"Sanyi Township": {
+			"local_name": "三義鄉"
+		},
+		"Shitan Township": {
+			"local_name": "獅潭鄉"
+		},
+		"Tai'an Township": {
+			"local_name": "泰安鄉"
+		},
+		"Tongxiao Township": {
+			"local_name": "通霄鎮"
+		},
+		"Tongluo Township": {
+			"local_name": "銅鑼鄉"
+		},
+		"Toufen City": {
+			"local_name": "頭份市"
+		},
+		"Touwu Township": {
+			"local_name": "頭屋鄉"
+		},
+		"Xihu Township": {
+			"local_name": "西湖鄉"
+		},
+		"Yuanli Township": {
+			"local_name": "苑裡鎮"
+		},
+		"Zaoqiao Township": {
+			"local_name": "造橋鄉"
+		},
+		"Zhunan Township": {
+			"local_name": "竹南鎮"
+		},
+		"Zhuolan Township": {
+			"local_name": "卓蘭鎮"
+		}
+	}
+}

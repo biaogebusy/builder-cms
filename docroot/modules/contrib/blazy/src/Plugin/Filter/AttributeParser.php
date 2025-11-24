@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Plugin\Filter;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\internals\Internals;
-use Drupal\Component\Utility\Crypt;
 
 /**
  * Provides filter attribute utilities.
@@ -71,6 +71,7 @@ class AttributeParser {
    */
   public static function getAttribute(\DOMElement $node, array $excludes = []): array {
     $attributes = [];
+    /* @phpstan-ignore-next-line */
     if (property_exists($node->attributes, 'length')
       && $node->attributes->length > 0) {
       foreach ($node->attributes as $attribute) {
@@ -113,10 +114,6 @@ class AttributeParser {
         $blazies->set('is.grid', $is_grid);
 
         if (!empty($settings['style'])) {
-          // Babysits typo due to hardcoding. The expected is flex, not flexbox.
-          if ($settings['style'] == 'flexbox') {
-            $settings['style'] = 'flex';
-          }
           Internals::toNativeGrid($settings);
         }
       }

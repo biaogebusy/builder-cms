@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Component\Serialization\Json;
@@ -17,7 +19,7 @@ class FormHelperTest extends UnitTestCase {
    *
    * @covers ::rewriteStatesSelector
    */
-  public function testRewriteStatesSelector() {
+  public function testRewriteStatesSelector(): void {
 
     // Simple selectors.
     $value = ['value' => 'medium'];
@@ -87,7 +89,7 @@ class FormHelperTest extends UnitTestCase {
    * @covers ::processStates
    * @dataProvider providerElements
    */
-  public function testProcessStates($elements, $key) {
+  public function testProcessStates($elements, $key): void {
     $json = Json::encode($elements['#states']);
     FormHelper::processStates($elements);
     $this->assertEquals(['core/drupal.states'], $elements['#attached']['library']);
@@ -97,7 +99,7 @@ class FormHelperTest extends UnitTestCase {
   /**
    * Provides a list of elements to test.
    */
-  public function providerElements() {
+  public static function providerElements() {
     return [
       [
         [
@@ -118,6 +120,8 @@ class FormHelperTest extends UnitTestCase {
               ':input[name="foo"]' => ['value' => 'bar'],
             ],
           ],
+          '#markup' => '',
+          '#input' => TRUE,
         ],
         '#wrapper_attributes',
       ],

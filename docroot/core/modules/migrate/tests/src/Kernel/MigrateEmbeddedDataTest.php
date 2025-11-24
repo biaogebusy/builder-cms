@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -12,16 +14,14 @@ use Drupal\KernelTests\KernelTestBase;
 class MigrateEmbeddedDataTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['migrate'];
 
   /**
    * Tests the embedded_data source plugin.
    */
-  public function testEmbeddedData() {
+  public function testEmbeddedData(): void {
     $data_rows = [
       ['key' => '1', 'field1' => 'f1value1', 'field2' => 'f2value1'],
       ['key' => '2', 'field1' => 'f1value2', 'field2' => 'f2value2'],
@@ -58,7 +58,7 @@ class MigrateEmbeddedDataTest extends KernelTestBase {
     $this->assertSame($data_rows, $results);
 
     // Validate the public APIs.
-    $this->assertSame(count($data_rows), $source->count());
+    $this->assertSameSize($data_rows, $source);
     $this->assertSame($ids, $source->getIds());
     $expected_fields = [
       'key' => 'key',

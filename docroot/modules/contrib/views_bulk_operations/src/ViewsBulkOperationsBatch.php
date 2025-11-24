@@ -3,30 +3,14 @@
 namespace Drupal\views_bulk_operations;
 
 use Drupal\Core\Url;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionCompletedTrait;
 
 /**
  * Defines module Batch API methods.
  */
 class ViewsBulkOperationsBatch {
 
-  /**
-   * Translation function wrapper.
-   *
-   * @see \Drupal\Core\StringTranslation\TranslationInterface:translate()
-   */
-  public static function t($string, array $args = [], array $options = []) {
-    return \Drupal::translation()->translate($string, $args, $options);
-  }
-
-  /**
-   * Set message function wrapper.
-   *
-   * @see \Drupal\Core\Messenger\MessengerInterface
-   */
-  public static function message($message = NULL, $type = 'status', $repeat = TRUE) {
-    \Drupal::messenger()->addMessage($message, $type, $repeat);
-  }
+  use ViewsBulkOperationsActionCompletedTrait;
 
   /**
    * Gets the list of entities to process.
@@ -38,13 +22,13 @@ class ViewsBulkOperationsBatch {
    * @param array $context
    *   Batch context.
    */
-  public static function getList(array $data, array &$context) {
+  public static function getList(array $data, array &$context): void {
     // Initialize batch.
     if (empty($context['sandbox'])) {
       $context['sandbox']['processed'] = 0;
       $context['sandbox']['page'] = 0;
-      $context['sandbox']['total'] = $data['exclude_mode'] ? $data['total_results'] - count($data['exclude_list']) : $data['total_results'];
-      $context['sandbox']['npages'] = ceil($data['total_results'] / $data['batch_size']);
+      $context['sandbox']['total'] = $data['exclude_mode'] ? $data['total_results'] - \count($data['exclude_list']) : $data['total_results'];
+      $context['sandbox']['npages'] = \ceil($data['total_results'] / $data['batch_size']);
       $context['results'] = $data;
     }
 
@@ -53,7 +37,7 @@ class ViewsBulkOperationsBatch {
 
     // Populate queue.
     $list = $actionProcessor->getPageList($context['sandbox']['page']);
-    $count = count($list);
+    $count = \count($list);
 
     foreach ($list as $item) {
       $context['results']['list'][] = $item;
@@ -65,7 +49,7 @@ class ViewsBulkOperationsBatch {
     if ($context['sandbox']['page'] <= $context['sandbox']['npages']) {
       $context['finished'] = 0;
       $context['finished'] = $context['sandbox']['processed'] / $context['sandbox']['total'];
-      $context['message'] = static::t('Prepared @count of @total entities for processing.', [
+      $context['message'] = static::translate('Prepared @count of @total entities for processing.', [
         '@count' => $context['sandbox']['processed'],
         '@total' => $context['sandbox']['total'],
       ]);
@@ -83,7 +67,7 @@ class ViewsBulkOperationsBatch {
    * @param array $operations
    *   Performed operations array.
    */
-  public static function saveList($success, array $results, array $operations) {
+  public static function saveList($success, array $results, array $operations): void {
     if ($success) {
       $results['redirect_url'] = $results['redirect_after_processing'];
       unset($results['redirect_after_processing']);
@@ -103,13 +87,13 @@ class ViewsBulkOperationsBatch {
    * @param array $context
    *   Batch context.
    */
-  public static function operation(array $data, array &$context) {
+  public static function operation(array $data, array &$context): void {
     // Initialize batch.
     if (empty($context['sandbox'])) {
       $context['sandbox']['processed'] = 0;
       $context['results']['operations'] = [];
       $context['sandbox']['page'] = 0;
-      $context['sandbox']['npages'] = ceil($data['total_results'] / $data['batch_size']);
+      $context['sandbox']['npages'] = \ceil($data['total_results'] / $data['batch_size']);
     }
 
     // Get entities to process.
@@ -120,13 +104,8 @@ class ViewsBulkOperationsBatch {
     $count = $actionProcessor->populateQueue($data, $context);
 
     $batch_results = $actionProcessor->process();
-    if (!empty($batch_results)) {
-      // Convert translatable markup to strings in order to allow
-      // correct operation of array_count_values function.
-      foreach ($batch_results as $result) {
-        $context['results']['operations'][] = (string) $result;
-      }
-    }
+    $context['results'] = $actionProcessor->processResults($batch_results, $context['results']);
+
     $context['sandbox']['processed'] += $count;
     $context['sandbox']['page']++;
 
@@ -134,41 +113,10 @@ class ViewsBulkOperationsBatch {
       $context['finished'] = 0;
 
       $context['finished'] = $context['sandbox']['processed'] / $context['sandbox']['total'];
-      $context['message'] = static::t('Processed @count of @total entities.', [
+      $context['message'] = static::translate('Processed @count of @total entities.', [
         '@count' => $context['sandbox']['processed'],
         '@total' => $context['sandbox']['total'],
       ]);
-    }
-  }
-
-  /**
-   * Batch finished callback.
-   *
-   * @param bool $success
-   *   Was the process successful?
-   * @param array $results
-   *   Batch process results array.
-   * @param array $operations
-   *   Performed operations array.
-   */
-  public static function finished($success, array $results, array $operations) {
-    if ($success) {
-      $operations = array_count_values($results['operations']);
-      $details = [];
-      foreach ($operations as $op => $count) {
-        $details[] = $op . ' (' . $count . ')';
-      }
-      $message = static::t('Action processing results: @operations.', [
-        '@operations' => implode(', ', $details),
-      ]);
-      static::message($message);
-      if (isset($results['redirect_url'])) {
-        return new RedirectResponse($results['redirect_url']->setAbsolute()->toString());
-      }
-    }
-    else {
-      $message = static::t('Finished with an error.');
-      static::message($message, 'error');
     }
   }
 
@@ -177,9 +125,12 @@ class ViewsBulkOperationsBatch {
    *
    * @param array $view_data
    *   Processed view data.
+   *
+   * @return mixed[]
+   *   Batch API batch definition.
    */
-  public static function getBatch(array &$view_data) {
-    $current_class = get_called_class();
+  public static function getBatch(array &$view_data): array {
+    $current_class = static::class;
 
     // Prepopulate results.
     if (empty($view_data['list'])) {
@@ -192,14 +143,14 @@ class ViewsBulkOperationsBatch {
       ]);
 
       $batch = [
-        'title' => static::t('Prepopulating entity list for processing.'),
+        'title' => static::translate('Prepopulating entity list for processing.'),
         'operations' => [
           [
             [$current_class, 'getList'],
             [$view_data],
           ],
         ],
-        'progress_message' => static::t('Prepopulating, estimated time left: @estimate, elapsed: @elapsed.'),
+        'progress_message' => static::translate('Prepopulating, estimated time left: @estimate, elapsed: @elapsed.'),
         'finished' => [$current_class, 'saveList'],
       ];
     }
@@ -207,15 +158,15 @@ class ViewsBulkOperationsBatch {
     // Execute action.
     else {
       $batch = [
-        'title' => static::t('Performing @operation on selected entities.', ['@operation' => $view_data['action_label']]),
+        'title' => static::translate('Performing @operation on selected entities.', ['@operation' => $view_data['action_label']]),
         'operations' => [
           [
             [$current_class, 'operation'],
             [$view_data],
           ],
         ],
-        'progress_message' => static::t('Processing, estimated time left: @estimate, elapsed: @elapsed.'),
-        'finished' => [$current_class, 'finished'],
+        'progress_message' => static::translate('Processing, estimated time left: @estimate, elapsed: @elapsed.'),
+        'finished' => $view_data['finished_callback'],
       ];
     }
 

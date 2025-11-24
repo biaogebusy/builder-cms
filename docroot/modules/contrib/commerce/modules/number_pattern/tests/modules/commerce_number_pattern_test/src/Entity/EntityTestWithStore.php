@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_number_pattern_test\Entity;
 
-use Drupal\commerce_store\Entity\EntityStoreInterface;
-use Drupal\commerce_store\Entity\StoreInterface;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\commerce_store\Entity\EntityStoreInterface;
+use Drupal\commerce_store\Entity\StoreInterface;
 
 /**
  * Defines a test entity class with store.

@@ -2,13 +2,13 @@
 
 namespace Drupal\autologout\Plugin\Block;
 
-use Drupal\autologout\AutologoutManager;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBuilder;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\autologout\AutologoutManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -77,16 +77,7 @@ class AutologoutWarningBlock extends BlockBase implements ContainerFactoryPlugin
    * @param \Drupal\Core\Form\FormBuilder $builder
    *   The FormBuilder service.
    */
-  public function __construct(
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    ModuleHandlerInterface $module_handler,
-    DateFormatterInterface $date_formatter,
-    Config $autologout_settings,
-    AutologoutManager $manager,
-    FormBuilder $builder
-  ) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, DateFormatterInterface $date_formatter, Config $autologout_settings, AutologoutManager $manager, FormBuilder $builder) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->moduleHandler = $module_handler;
     $this->dateFormatter = $date_formatter;
@@ -98,12 +89,7 @@ class AutologoutWarningBlock extends BlockBase implements ContainerFactoryPlugin
   /**
    * {@inheritdoc}
    */
-  public static function create(
-    ContainerInterface $container,
-    array $configuration,
-    $plugin_id,
-    $plugin_definition
-  ) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
       $configuration,
       $plugin_id,
@@ -112,7 +98,7 @@ class AutologoutWarningBlock extends BlockBase implements ContainerFactoryPlugin
       $container->get('date.formatter'),
       $container->get('config.factory')->get('autologout.settings'),
       $container->get('autologout.manager'),
-      $container->get('form_builder')
+      $container->get('form_builder'),
     );
   }
 

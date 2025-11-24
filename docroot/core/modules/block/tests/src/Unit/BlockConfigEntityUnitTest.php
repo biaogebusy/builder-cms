@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -61,6 +63,8 @@ class BlockConfigEntityUnitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->entityTypeId = $this->randomMachineName();
 
     $this->entityType = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
@@ -90,7 +94,7 @@ class BlockConfigEntityUnitTest extends UnitTestCase {
   /**
    * @covers ::calculateDependencies
    */
-  public function testCalculateDependencies() {
+  public function testCalculateDependencies(): void {
     $this->themeHandler->themeExists('stark')->willReturn(TRUE);
     $values = ['theme' => 'stark'];
     // Mock the entity under test so that we can mock getPluginCollections().

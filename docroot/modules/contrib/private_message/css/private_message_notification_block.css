@@ -1,26 +1,35 @@
 .block-private-message-notification-block {
-  height: 30px;
-  width: 32.75px;
   position: relative;
-  overflow: hidden; }
-  .block-private-message-notification-block .private-message-notification-image {
-    height: 30px;
-    width: 65.5px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    max-width: none; }
-  .block-private-message-notification-block .private-message-page-link {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    text-align: center;
-    line-height: 26px;
-    color: #000; }
-  .block-private-message-notification-block .unread-threads .private-message-notification-image {
-    left: auto;
-    right: 0; }
-  .block-private-message-notification-block .unread-threads .private-message-page-link {
-    color: #FF0000; }
+  overflow: hidden;
+  width: 32.75px;
+  height: 30px;
+}
+.block-private-message-notification-block .private-message-notification-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 65.5px;
+  max-width: none;
+  height: 30px;
+}
+.block-private-message-notification-block .private-message-page-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  color: #000;
+  line-height: 26px;
+}
+.block-private-message-notification-block
+  .unread-threads
+  .private-message-notification-image {
+  right: 0;
+  left: auto;
+}
+.block-private-message-notification-block
+  .unread-threads
+  .private-message-page-link {
+  color: #f00;
+}

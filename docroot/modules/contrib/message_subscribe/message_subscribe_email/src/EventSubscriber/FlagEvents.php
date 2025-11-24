@@ -46,7 +46,7 @@ class FlagEvents implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[Flag::ENTITY_FLAGGED] = ['onFlag', 50];
     $events[Flag::ENTITY_UNFLAGGED] = ['onUnflag', 50];
     return $events;

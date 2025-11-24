@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_tax;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Datetime\DrupalDateTime;
 
 /**
  * Represents a tax rate percentage.

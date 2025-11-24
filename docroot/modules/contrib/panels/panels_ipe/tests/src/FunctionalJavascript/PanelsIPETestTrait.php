@@ -297,4 +297,25 @@ trait PanelsIPETestTrait {
     $this->assertJsCondition($condition, 10000);
   }
 
+  /**
+   * Generate random CSS properties (HTML Id., classes, style).
+   *
+   * @param int $class_item_count
+   *   Class item counter.
+   *
+   * @return array
+   *   Keyed array with generated CSS properties.
+   */
+  public function generateCssProperties($class_item_count = 5) {
+    $result = [];
+    $result['html_id'] = strtolower($this->randomMachineName());
+    $css_classes_array = [];
+    for ($i = 0; $i < $class_item_count; $i++) {
+      $css_classes_array[] = strtolower($this->randomMachineName());
+    }
+    $result['css_classes'] = implode(' ', $css_classes_array);
+    $result['css_style'] = strtolower($this->randomMachineName() . ': ' . $this->randomMachineName());
+    return $result;
+  }
+
 }

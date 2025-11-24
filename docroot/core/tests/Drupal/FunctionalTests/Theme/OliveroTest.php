@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Theme;
 
 use Drupal\Tests\BrowserTestBase;
@@ -27,6 +29,8 @@ class OliveroTest extends BrowserTestBase {
    */
   protected static $modules = [
     'olivero_test',
+    'pager_test',
+    'dblog',
   ];
 
   /**
@@ -34,7 +38,7 @@ class OliveroTest extends BrowserTestBase {
    *
    * @see olivero.libraries.yml
    */
-  public function testBaseLibraryAvailable() {
+  public function testBaseLibraryAvailable(): void {
     $this->drupalGet('');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->responseContains('olivero/css/base/base.css');
@@ -44,7 +48,7 @@ class OliveroTest extends BrowserTestBase {
   /**
    * Test Olivero's configuration schema.
    */
-  public function testConfigSchema() {
+  public function testConfigSchema(): void {
     // Required configuration.
     $this->drupalGet('');
     $this->assertSession()->statusCodeEquals(200);
@@ -53,7 +57,7 @@ class OliveroTest extends BrowserTestBase {
 
     // Optional configuration.
     \Drupal::service('module_installer')->install(
-      ['search', 'image', 'book', 'help', 'node']
+      ['search', 'image', 'help', 'node']
     );
     $this->rebuildAll();
     $this->drupalLogin(
@@ -69,7 +73,7 @@ class OliveroTest extends BrowserTestBase {
    *
    * @see olivero.libraries.yml
    */
-  public function testPreprocessBlock() {
+  public function testPreprocessBlock(): void {
     $this->drupalGet('');
     $this->assertSession()->statusCodeEquals(200);
 
@@ -117,7 +121,7 @@ class OliveroTest extends BrowserTestBase {
   /**
    * Tests that the Olivero theme can be uninstalled.
    */
-  public function testIsUninstallable() {
+  public function testIsUninstallable(): void {
     $this->drupalLogin($this->drupalCreateUser([
       'access administration pages',
       'administer themes',
@@ -127,6 +131,35 @@ class OliveroTest extends BrowserTestBase {
     $this->cssSelect('a[title="Install <strong>Test theme</strong> as default theme"]')[0]->click();
     $this->cssSelect('a[title="Uninstall Olivero theme"]')[0]->click();
     $this->assertSession()->pageTextContains('The Olivero theme has been uninstalled.');
+  }
+
+  /**
+   * Tests pager attribute is present using pager_test.
+   */
+  public function testPagerAttribute(): void {
+    // Insert 300 log messages.
+    $logger = \Drupal::logger('pager_test');
+    for ($i = 0; $i < 300; $i++) {
+      $logger->debug($this->randomString());
+    }
+
+    $this->drupalLogin($this->drupalCreateUser(['access site reports']));
+
+    $this->drupalGet('pager-test/multiple-pagers', ['query' => ['page' => 1]]);
+    $this->assertSession()->statusCodeEquals(200);
+    $elements = $this->xpath('//ul[contains(@class, :class)]/li', [':class' => 'pager__items']);
+    $this->assertNotEmpty($elements, 'Pager found.');
+
+    // Check all links for pager-test attribute.
+    foreach ($elements as $element) {
+      $link = $element->find('css', 'a');
+      // Current page does not have a link.
+      if (empty($link)) {
+        continue;
+      }
+      $this->assertTrue($link->hasAttribute('pager-test'), 'Pager item has attribute pager-test');
+      $this->assertTrue($link->hasClass('lizards'));
+    }
   }
 
 }

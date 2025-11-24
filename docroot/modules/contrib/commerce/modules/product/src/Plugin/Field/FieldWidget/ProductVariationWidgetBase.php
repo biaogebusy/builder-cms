@@ -2,17 +2,17 @@
 
 namespace Drupal\commerce_product\Plugin\Field\FieldWidget;
 
-use Drupal\commerce_product\Ajax\UpdateProductUrlCommand;
-use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\commerce_product\Event\ProductVariationAjaxChangeEvent;
-use Drupal\commerce_product\Event\ProductEvents;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\commerce_product\Ajax\UpdateProductUrlCommand;
+use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\commerce_product\Entity\ProductVariation;
+use Drupal\commerce_product\Event\ProductEvents;
+use Drupal\commerce_product\Event\ProductVariationAjaxChangeEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

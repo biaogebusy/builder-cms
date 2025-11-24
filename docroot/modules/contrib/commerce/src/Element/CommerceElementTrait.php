@@ -41,7 +41,7 @@ trait CommerceElementTrait {
     // The #validate callbacks of the complete form run last.
     // That allows executeElementSubmitHandlers() to be completely certain that
     // the form has passed validation before proceeding.
-    $complete_form['#validate'][] = [get_class(), 'executeElementSubmitHandlers'];
+    $complete_form['#validate'][] = [static::class, 'executeElementSubmitHandlers'];
     $complete_form['#commerce_element_submit_attached'] = TRUE;
 
     return $element;

@@ -40,10 +40,14 @@ class DefaultEntityLocalTaskProvider implements EntityLocalTaskProviderInterface
   public function buildLocalTasks(EntityTypeInterface $entity_type) {
     // Note: delete-form was intentionally omitted, to match core. See #1834002.
     $link_templates = [];
-    foreach (['canonical', 'edit-form', 'duplicate-form', 'version-history'] as $rel) {
+    foreach (['canonical', 'edit-form', 'duplicate-form'] as $rel) {
       if ($entity_type->hasLinkTemplate($rel)) {
         $link_templates[] = str_replace('-', '_', $rel);
       }
+    }
+
+    if (version_compare(\Drupal::VERSION, 10.1, '<') && $entity_type->hasLinkTemplate('version-history')) {
+      $link_templates[] = 'version_history';
     }
 
     $tasks = [];

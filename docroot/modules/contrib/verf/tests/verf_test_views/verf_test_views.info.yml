@@ -6,6 +6,9 @@ dependencies:
   - drupal:node
   - drupal:views
   - verf:verf
-core: 8.x
 hidden: true
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^10 || ^11
+# Information added by Drupal.org packaging script on 2025-01-31
+version: '2.1.0'
+project: 'verf'
+datestamp: 1738325529

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Plugin;
 
 /**
@@ -17,7 +19,7 @@ class DerivativeTest extends PluginTestBase {
   /**
    * Tests getDefinitions() and getDefinition() with a derivativeDecorator.
    */
-  public function testDerivativeDecorator() {
+  public function testDerivativeDecorator(): void {
     // Ensure that getDefinitions() returns the expected definitions.
     $this->assertEquals($this->mockBlockExpectedDefinitions, $this->mockBlockManager->getDefinitions());
 

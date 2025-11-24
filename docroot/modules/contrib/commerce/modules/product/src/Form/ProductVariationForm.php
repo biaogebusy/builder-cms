@@ -40,10 +40,11 @@ class ProductVariationForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $save_return = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->messenger()->addMessage($this->t('Saved the %label variation.', ['%label' => $this->entity->label()]));
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
+    return $save_return;
   }
 
 }

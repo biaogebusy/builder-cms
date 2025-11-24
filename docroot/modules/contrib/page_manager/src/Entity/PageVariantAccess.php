@@ -54,6 +54,7 @@ class PageVariantAccess extends EntityAccessControlHandler implements EntityHand
    * Wraps the context handler.
    *
    * @return \Drupal\Core\Plugin\Context\ContextHandlerInterface
+   *   The context handler.
    */
   protected function contextHandler() {
     return $this->contextHandler;

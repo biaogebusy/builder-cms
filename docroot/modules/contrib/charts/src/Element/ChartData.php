@@ -2,14 +2,14 @@
 
 namespace Drupal\charts\Element;
 
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 
 /**
  * Provides a chart data render element.
  *
  * @RenderElement("chart_data")
  */
-class ChartData extends RenderElement {
+class ChartData extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -23,7 +23,7 @@ class ChartData extends RenderElement {
       '#show_in_legend' => TRUE,
       // Show inline labels next to the data.
       '#show_labels' => FALSE,
-      // If building multicharts. The chart type, e.g. pie.
+      // If building multiple charts. The chart type, e.g. pie.
       '#chart_type' => NULL,
       // Line chart only.
       '#line_width' => 1,

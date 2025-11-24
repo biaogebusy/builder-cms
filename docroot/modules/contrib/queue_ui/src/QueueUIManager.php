@@ -6,6 +6,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\QueueInterface;
 
 /**
  * Defines the queue worker manager.
@@ -18,13 +19,6 @@ use Drupal\Core\Queue\QueueFactory;
 class QueueUIManager extends DefaultPluginManager {
 
   /**
-   * The queue service.
-   *
-   * @var \Drupal\Core\Queue\QueueFactory
-   */
-  protected $queueService;
-
-  /**
    * Constructs an QueueWorkerManager object.
    *
    * @param \Traversable $namespaces
@@ -34,15 +28,19 @@ class QueueUIManager extends DefaultPluginManager {
    *   Cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
-   * @param \Drupal\Core\Queue\QueueFactory $queue
+   * @param \Drupal\Core\Queue\QueueFactory $queueService
    *   The queue service.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, QueueFactory $queue) {
+  public function __construct(
+    \Traversable $namespaces,
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+    protected QueueFactory $queueService,
+  ) {
     parent::__construct('Plugin/QueueUI', $namespaces, $module_handler, 'Drupal\queue_ui\QueueUIInterface', 'Drupal\queue_ui\Annotation\QueueUI');
 
     $this->setCacheBackend($cache_backend, 'queue_ui_plugins');
     $this->alterInfo('queue_ui_info');
-    $this->queueService = $queue;
   }
 
   /**
@@ -51,16 +49,16 @@ class QueueUIManager extends DefaultPluginManager {
    * @param string $queueName
    *   The name of the queue being inspected.
    *
-   * @return bool|object
+   * @return false|object
    *   An object of queue class name
    */
-  public function fromQueueName($queueName) {
+  public function fromQueueName(string $queueName): object|false {
     $queue = $this->queueService->get($queueName);
 
     try {
       foreach ($this->getDefinitions() as $definition) {
-        if ($definition['class_name'] == $this->queueClassName($queue)) {
-          return parent::createInstance($definition['id']);
+        if ($definition['class_name'] === $this->queueClassName($queue)) {
+          return $this->createInstance($definition['id']);
         }
       }
     }
@@ -73,13 +71,13 @@ class QueueUIManager extends DefaultPluginManager {
   /**
    * Get the queue class name.
    *
-   * @var array $queue
-   *   An arrayof queue information.
+   * @var \Drupal\Core\Queue\QueueInterface $queue
+   *   An array of queue information.
    *
-   * @return mixed
+   * @return string|null
    *   A mixed value of queue class
    */
-  public function queueClassName($queue) {
+  public function queueClassName(QueueInterface $queue): ?string {
     $namespace = explode('\\', get_class($queue));
     return array_pop($namespace);
   }

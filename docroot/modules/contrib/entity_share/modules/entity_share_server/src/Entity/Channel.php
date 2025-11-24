@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_server\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\entity_share\EntityShareInterface;
 
 /**
  * Defines the Channel entity.
@@ -150,7 +151,7 @@ class Channel extends ConfigEntityBase implements ChannelInterface {
    *
    * @var int
    */
-  protected $channel_maxsize = 50;
+  protected $channel_maxsize = EntityShareInterface::JSON_API_PAGER_SIZE_MAX;
 
   /**
    * Authorized all the users with the permission 'Access channels list'.
@@ -178,7 +179,7 @@ class Channel extends ConfigEntityBase implements ChannelInterface {
    */
   public function removeAuthorizedRole($role) {
     $authorized_roles = $this->authorized_roles;
-    $key = array_search($role, $authorized_roles);
+    $key = \array_search($role, $authorized_roles, TRUE);
     if ($key !== FALSE) {
       unset($authorized_roles[$key]);
       $this->set('authorized_roles', $authorized_roles);
@@ -193,7 +194,7 @@ class Channel extends ConfigEntityBase implements ChannelInterface {
    */
   public function removeAuthorizedUser($uuid) {
     $authorized_users = $this->authorized_users;
-    $key = array_search($uuid, $authorized_users);
+    $key = \array_search($uuid, $authorized_users, TRUE);
     if ($key !== FALSE) {
       unset($authorized_users[$key]);
       $this->set('authorized_users', $authorized_users);

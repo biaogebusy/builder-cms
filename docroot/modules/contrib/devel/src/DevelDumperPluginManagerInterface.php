@@ -6,7 +6,7 @@ use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Component\Plugin\PluginManagerInterface;
 
 /**
- * Interface DevelDumperPluginManagerInterface.
+ * Interface for DevelDumper plugin manager.
  */
 interface DevelDumperPluginManagerInterface extends PluginManagerInterface, FallbackPluginManagerInterface {
 
@@ -19,6 +19,6 @@ interface DevelDumperPluginManagerInterface extends PluginManagerInterface, Fall
    * @return bool
    *   TRUE if the plugin is supported, FALSE otherwise.
    */
-  public function isPluginSupported($plugin_id);
+  public function isPluginSupported($plugin_id): bool;
 
 }

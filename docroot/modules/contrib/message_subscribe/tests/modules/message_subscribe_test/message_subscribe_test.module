@@ -41,6 +41,7 @@ function message_subscribe_test_message_subscribe_get_subscribers_alter(array &$
  * Implements hook_message_subscribe_message_alter().
  */
 function message_subscribe_test_message_subscribe_message_alter(MessageInterface $message, DeliveryCandidateInterface $delivery_candidate) {
-  $calls = \Drupal::state()->get('message_subscribe_test.message_alter_hook_called', 0);
-  \Drupal::state()->set('message_subscribe_test.message_alter_hook_called', $calls + 1);
+  $state = \Drupal::state();
+  $calls = $state->get('message_subscribe_test.message_alter_hook_called', 0);
+  $state->set('message_subscribe_test.message_alter_hook_called', $calls + 1);
 }

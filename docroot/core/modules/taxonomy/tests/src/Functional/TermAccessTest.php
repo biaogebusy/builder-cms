@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\taxonomy\Entity\Term;
@@ -23,7 +25,7 @@ class TermAccessTest extends TaxonomyTestBase {
   /**
    * Tests access control functionality for taxonomy terms.
    */
-  public function testTermAccess() {
+  public function testTermAccess(): void {
     $assert_session = $this->assertSession();
 
     $vocabulary = $this->createVocabulary();

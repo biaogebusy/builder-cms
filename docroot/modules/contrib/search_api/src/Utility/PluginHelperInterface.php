@@ -16,7 +16,7 @@ interface PluginHelperInterface {
    *   The index for which to create the plugin.
    * @param string $plugin_id
    *   The plugin's ID.
-   * @param array $configuration
+   * @param array<string, mixed> $configuration
    *   (optional) The configuration to set for the plugin.
    *
    * @return \Drupal\search_api\Datasource\DatasourceInterface
@@ -34,7 +34,7 @@ interface PluginHelperInterface {
    *   The index for which to create the plugin.
    * @param string $plugin_id
    *   The plugin's ID.
-   * @param array $configuration
+   * @param array<string, mixed> $configuration
    *   (optional) The configuration to set for the plugin.
    *
    * @return \Drupal\search_api\Processor\ProcessorInterface
@@ -52,7 +52,7 @@ interface PluginHelperInterface {
    *   The index for which to create the plugin.
    * @param string $plugin_id
    *   The plugin's ID.
-   * @param array $configuration
+   * @param array<string, mixed> $configuration
    *   (optional) The configuration to set for the plugin.
    *
    * @return \Drupal\search_api\Tracker\TrackerInterface
@@ -71,7 +71,7 @@ interface PluginHelperInterface {
    * @param string[]|null $plugin_ids
    *   (optional) The IDs of the plugins to create, or NULL to create instances
    *   for all known plugins of this type.
-   * @param array $configurations
+   * @param array<string, array<string, mixed>> $configurations
    *   (optional) The configurations to set for the plugins, keyed by plugin ID.
    *   Missing configurations are either taken from the index's stored settings,
    *   if they are present there, or default to an empty array.
@@ -82,7 +82,7 @@ interface PluginHelperInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an unknown plugin ID is given.
    */
-  public function createDatasourcePlugins(IndexInterface $index, array $plugin_ids = NULL, array $configurations = []);
+  public function createDatasourcePlugins(IndexInterface $index, ?array $plugin_ids = NULL, array $configurations = []);
 
   /**
    * Creates multiple processor plugin objects for this index.
@@ -92,7 +92,7 @@ interface PluginHelperInterface {
    * @param string[]|null $plugin_ids
    *   (optional) The IDs of the processors to create, or NULL to create
    *   instances for all known processors that support the given index.
-   * @param array $configurations
+   * @param array<string, array<string, mixed>> $configurations
    *   (optional) The configurations to set for the plugins, keyed by plugin ID.
    *   Missing configurations are either taken from the index's stored settings,
    *   if they are present there, or default to an empty array.
@@ -103,7 +103,7 @@ interface PluginHelperInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an unknown plugin ID is given.
    */
-  public function createProcessorPlugins(IndexInterface $index, array $plugin_ids = NULL, array $configurations = []);
+  public function createProcessorPlugins(IndexInterface $index, ?array $plugin_ids = NULL, array $configurations = []);
 
   /**
    * Creates multiple tracker plugin objects for this index.
@@ -113,7 +113,7 @@ interface PluginHelperInterface {
    * @param string[]|null $plugin_ids
    *   (optional) The IDs of the plugins to create, or NULL to create instances
    *   for all known plugins of this type.
-   * @param array $configurations
+   * @param array<string, array<string, mixed>> $configurations
    *   (optional) The configurations to set for the plugins, keyed by plugin ID.
    *   Missing configurations are either taken from the index's stored settings,
    *   if they are present there, or default to an empty array.
@@ -124,6 +124,6 @@ interface PluginHelperInterface {
    * @throws \Drupal\search_api\SearchApiException
    *   Thrown if an unknown plugin ID is given.
    */
-  public function createTrackerPlugins(IndexInterface $index, array $plugin_ids = NULL, array $configurations = []);
+  public function createTrackerPlugins(IndexInterface $index, ?array $plugin_ids = NULL, array $configurations = []);
 
 }

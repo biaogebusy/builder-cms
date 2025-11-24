@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.data.custommetric.sync request
  *
  * @author auto create
- * @since 1.0, 2024-01-02 20:53:04
+ * @since 1.0, 2025-08-13 16:32:41
  */
 class AlipayCommerceDataCustommetricSyncRequest
 {

@@ -2,20 +2,21 @@
 
 namespace Drupal\commerce_product\Plugin\Commerce\Condition;
 
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 
 /**
  * Provides the product variation type condition for order items.
- *
- * @CommerceCondition(
- *   id = "order_item_variation_type",
- *   label = @Translation("Product variation type"),
- *   display_label = @Translation("Product variation types"),
- *   category = @Translation("Products"),
- *   entity_type = "commerce_order_item",
- * )
  */
+#[CommerceCondition(
+  id: "order_item_variation_type",
+  label: new TranslatableMarkup("Product variation type"),
+  entity_type: "commerce_order_item",
+  display_label: new TranslatableMarkup("Product variation types"),
+  category: new TranslatableMarkup("Products"),
+)]
 class OrderItemVariationType extends ConditionBase {
 
   use VariationTypeTrait;

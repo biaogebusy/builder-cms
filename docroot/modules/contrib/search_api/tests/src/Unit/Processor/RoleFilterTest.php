@@ -52,12 +52,12 @@ class RoleFilterTest extends UnitTestCase {
     $node_datasource = $this->createMock(DatasourceInterface::class);
     $node_datasource->expects($this->any())
       ->method('getEntityTypeId')
-      ->will($this->returnValue('node'));
+      ->willReturn('node');
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $node_datasource */
     $user_datasource = $this->createMock(DatasourceInterface::class);
     $user_datasource->expects($this->any())
       ->method('getEntityTypeId')
-      ->will($this->returnValue('user'));
+      ->willReturn('user');
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $user_datasource */
 
     $fields_helper = \Drupal::getContainer()->get('search_api.fields_helper');
@@ -75,7 +75,7 @@ class RoleFilterTest extends UnitTestCase {
       ->getMock();
     $account1->expects($this->any())
       ->method('getRoles')
-      ->will($this->returnValue(['authenticated' => 'authenticated', 'editor' => 'editor']));
+      ->willReturn(['authenticated' => 'authenticated', 'editor' => 'editor']);
     /** @var \Drupal\user\UserInterface $account1 */
     $item->setOriginalObject(EntityAdapter::createFromEntity($account1));
     $this->items[$item->getId()] = $item;
@@ -86,7 +86,7 @@ class RoleFilterTest extends UnitTestCase {
       ->getMock();
     $account2->expects($this->any())
       ->method('getRoles')
-      ->will($this->returnValue(['authenticated' => 'authenticated']));
+      ->willReturn(['authenticated' => 'authenticated']);
     /** @var \Drupal\user\UserInterface $account2 */
     $item->setOriginalObject(EntityAdapter::createFromEntity($account2));
     $this->items[$item->getId()] = $item;

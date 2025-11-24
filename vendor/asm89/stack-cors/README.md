@@ -6,7 +6,7 @@ http-{foundation,kernel} using application. It attempts to implement the
 
 [W3C Recommendation]: http://www.w3.org/TR/cors/
 
-Master [![Build Status](https://secure.travis-ci.org/asm89/stack-cors.png?branch=master)](http://travis-ci.org/asm89/stack-cors)
+Build status: ![.github/workflows/run-tests.yml](https://github.com/asm89/stack-cors/workflows/.github/workflows/run-tests.yml/badge.svg)
 
 ## Installation
 
@@ -22,19 +22,21 @@ This package can be used as a library or as [stack middleware].
 
 | Option                 | Description                                                | Default value |
 |------------------------|------------------------------------------------------------|---------------|
-| allowedMethods         | Matches the request method.                                | `array()`     |
-| allowedOrigins         | Matches the request origin.                                | `array()`     |
-| allowedOriginsPatterns | Matches the request origin with `preg_match`.              | `array()`  |
-| allowedHeaders         | Sets the Access-Control-Allow-Headers response header.     | `array()`     |
-| exposedHeaders         | Sets the Access-Control-Expose-Headers response header.    | `false`       |
-| maxAge                 | Sets the Access-Control-Max-Age response header.           | `false`       |
-| supportsCredentials    | Sets the Access-Control-Allow-Credentials header.          | `false`       |
+| `allowedMethods`         | Matches the request method.                                | `[]`          |
+| `allowedOrigins`         | Matches the request origin.                                | `[]`          |
+| `allowedOriginsPatterns` | Matches the request origin with `preg_match`.              | `[]`          |
+| `allowedHeaders`         | Sets the Access-Control-Allow-Headers response header.     | `[]`          |
+| `exposedHeaders`         | Sets the Access-Control-Expose-Headers response header.    | `false`       |
+| `maxAge`                 | Sets the Access-Control-Max-Age response header.<br/>Set to `null` to omit the header/use browser default.           | `0`       |
+| `supportsCredentials`    | Sets the Access-Control-Allow-Credentials header.          | `false`       |
 
 The _allowedMethods_ and _allowedHeaders_ options are case-insensitive.
 
 You don't need to provide both _allowedOrigins_ and _allowedOriginsPatterns_. If one of the strings passed matches, it is considered a valid origin.
 
-If `array('*')` is provided to _allowedMethods_, _allowedOrigins_ or _allowedHeaders_ all methods / origins / headers are allowed.
+If `['*']` is provided to _allowedMethods_, _allowedOrigins_ or _allowedHeaders_ all methods / origins / headers are allowed.
+
+If _supportsCredentials_ is `true`, you must [explicitly set](https://fetch.spec.whatwg.org/#cors-protocol-and-credentials) `allowedHeaders` for any headers which are not CORS safelisted.
 
 ### Example: using the library
 
@@ -43,15 +45,15 @@ If `array('*')` is provided to _allowedMethods_, _allowedOrigins_ or _allowedHea
 
 use Asm89\Stack\CorsService;
 
-$cors = new CorsService(array(
-    'allowedHeaders'         => array('x-allowed-header', 'x-other-allowed-header'),
-    'allowedMethods'         => array('DELETE', 'GET', 'POST', 'PUT'),
-    'allowedOrigins'         => array('localhost'),
-    'allowedOriginsPatterns' => array('/localhost:\d/'),
+$cors = new CorsService([
+    'allowedHeaders'         => ['x-allowed-header', 'x-other-allowed-header'],
+    'allowedMethods'         => ['DELETE', 'GET', 'POST', 'PUT'],
+    'allowedOrigins'         => ['http://localhost'],
+    'allowedOriginsPatterns' => ['/localhost:\d/'],
     'exposedHeaders'         => false,
-    'maxAge'                 => false,
-    'supportsCredentials'    => false,
-));
+    'maxAge'                 => 600,
+    'supportsCredentials'    => true,
+]);
 
 $cors->addActualRequestHeaders(Response $response, $origin);
 $cors->handlePreflightRequest(Request $request);
@@ -67,17 +69,17 @@ $cors->isPreflightRequest(Request $request);
 
 use Asm89\Stack\Cors;
 
-$app = new Cors($app, array(
-    // you can use array('*') to allow any headers
-    'allowedHeaders'      => array('x-allowed-header', 'x-other-allowed-header'),
-    // you can use array('*') to allow any methods
-    'allowedMethods'      => array('DELETE', 'GET', 'POST', 'PUT'),
-    // you can use array('*') to allow requests from any origin
-    'allowedOrigins'      => array('localhost'),
+$app = new Cors($app, [
+    // you can use ['*'] to allow any headers
+    'allowedHeaders'      => ['x-allowed-header', 'x-other-allowed-header'],
+    // you can use ['*'] to allow any methods
+    'allowedMethods'      => ['DELETE', 'GET', 'POST', 'PUT'],
+    // you can use ['*'] to allow requests from any origin
+    'allowedOrigins'      => ['localhost'],
     // you can enter regexes that are matched to the origin request header
-    'allowedOriginsPatterns' => array('/localhost:\d/'),
+    'allowedOriginsPatterns' => ['/localhost:\d/'],
     'exposedHeaders'      => false,
-    'maxAge'              => false,
+    'maxAge'              => 600,
     'supportsCredentials' => false,
-));
+]);
 ```

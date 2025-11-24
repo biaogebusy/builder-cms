@@ -7,10 +7,9 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Field\FormatterPluginManager;
 use Drupal\Core\Field\WidgetPluginManager;
+use Drupal\Core\Theme\Registry;
 use Drupal\Core\Url;
 use Drupal\devel\DevelDumperManagerInterface;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,72 +19,50 @@ class DevelController extends ControllerBase {
 
   /**
    * The dumper service.
-   *
-   * @var \Drupal\devel\DevelDumperManagerInterface
    */
-  protected $dumper;
+  protected DevelDumperManagerInterface $dumper;
 
   /**
    * The entity type bundle info service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    */
-  protected $entityTypeBundleInfo;
+  protected EntityTypeBundleInfoInterface $entityTypeBundleInfo;
 
   /**
    * The field type plugin manager service.
-   *
-   * @var \Drupal\Core\Field\FieldTypePluginManagerInterface
    */
-  protected $fieldTypeManager;
+  protected FieldTypePluginManagerInterface $fieldTypeManager;
 
   /**
    * The field formatter plugin manager.
-   *
-   * @var \Drupal\Core\Field\FormatterPluginManager
    */
-  protected $formatterPluginManager;
+  protected FormatterPluginManager $formatterPluginManager;
 
   /**
    * The field widget plugin manager.
-   *
-   * @var \Drupal\Core\Field\WidgetPluginManager
    */
-  protected $widgetPluginManager;
+  protected WidgetPluginManager $widgetPluginManager;
 
   /**
-   * EntityDebugController constructor.
-   *
-   * @param \Drupal\devel\DevelDumperManagerInterface $dumper
-   *   The dumper service.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info service.
-   * @param \Drupal\Core\Field\FieldTypePluginManagerInterface $field_type_manager
-   *   The field type manager service.
-   * @param \Drupal\Core\Field\FormatterPluginManager $formatter_plugin_manager
-   *   The field formatter plugin manager.
-   * @param \Drupal\Core\Field\WidgetPluginManager $widget_plugin_manager
-   *   The field widget plugin manager.
+   * The theme registry.
    */
-  public function __construct(DevelDumperManagerInterface $dumper, EntityTypeBundleInfoInterface $entity_type_bundle_info, FieldTypePluginManagerInterface $field_type_manager, FormatterPluginManager $formatter_plugin_manager, WidgetPluginManager $widget_plugin_manager) {
-    $this->dumper = $dumper;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->fieldTypeManager = $field_type_manager;
-    $this->formatterPluginManager = $formatter_plugin_manager;
-    $this->widgetPluginManager = $widget_plugin_manager;
-  }
+  protected Registry $themeRegistry;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('devel.dumper'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('plugin.manager.field.field_type'),
-      $container->get('plugin.manager.field.formatter'),
-      $container->get('plugin.manager.field.widget')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->dumper = $container->get('devel.dumper');
+    $instance->entityTypeBundleInfo = $container->get('entity_type.bundle.info');
+    $instance->fieldTypeManager = $container->get('plugin.manager.field.field_type');
+    $instance->formatterPluginManager = $container->get('plugin.manager.field.formatter');
+    $instance->widgetPluginManager = $container->get('plugin.manager.field.widget');
+    $instance->currentUser = $container->get('current_user');
+    $instance->stringTranslation = $container->get('string_translation');
+    $instance->themeRegistry = $container->get('theme.registry');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+
+    return $instance;
   }
 
   /**
@@ -93,7 +70,10 @@ class DevelController extends ControllerBase {
    */
   public function cacheClear() {
     drupal_flush_all_caches();
+
+    // @todo Use DI for messenger once https://www.drupal.org/project/drupal/issues/2940148 is resolved.
     $this->messenger()->addMessage($this->t('Cache cleared.'));
+
     return $this->redirect('<front>');
   }
 
@@ -103,8 +83,8 @@ class DevelController extends ControllerBase {
    * @return array
    *   The complete theme registry as renderable.
    */
-  public function themeRegistry() {
-    $hooks = theme_get_registry();
+  public function themeRegistry(): array {
+    $hooks = $this->themeRegistry->get();
     ksort($hooks);
     return $this->dumper->exportAsRenderable($hooks);
   }
@@ -116,11 +96,13 @@ class DevelController extends ControllerBase {
    *   Array of page elements to render.
    */
   public function fieldInfoPage() {
-    $fields = FieldStorageConfig::loadMultiple();
+    $fields = $this->entityTypeManager->getStorage('field_storage_config')
+      ->loadMultiple();
     ksort($fields);
     $output['fields'] = $this->dumper->exportAsRenderable($fields, $this->t('Fields'));
 
-    $field_instances = FieldConfig::loadMultiple();
+    $field_instances = $this->entityTypeManager->getStorage('field_config')
+      ->loadMultiple();
     ksort($field_instances);
     $output['instances'] = $this->dumper->exportAsRenderable($field_instances, $this->t('Instances'));
 
@@ -149,8 +131,8 @@ class DevelController extends ControllerBase {
    * @return array
    *   Array of page elements to render.
    */
-  public function stateSystemPage() {
-    $can_edit = $this->currentUser()->hasPermission('administer site configuration');
+  public function stateSystemPage(): array {
+    $can_edit = $this->currentUser->hasPermission('administer site configuration');
 
     $header = [
       'name' => $this->t('Name'),

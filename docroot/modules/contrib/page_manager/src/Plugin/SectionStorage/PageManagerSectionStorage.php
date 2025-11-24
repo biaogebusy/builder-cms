@@ -232,7 +232,6 @@ class PageManagerSectionStorage extends SectionStorageBase implements ContainerF
    * {@inheritdoc}
    */
   public function getSectionListFromId($id) {
-    // @todo
     // This is deprecated and can be removed before Drupal 9.0.0.
   }
 
@@ -240,7 +239,6 @@ class PageManagerSectionStorage extends SectionStorageBase implements ContainerF
    * {@inheritdoc}
    */
   public function extractIdFromRoute($value, $definition, $name, array $defaults) {
-    // @todo
     // This is deprecated and can be removed before Drupal 9.0.0.
   }
 
@@ -254,7 +252,7 @@ class PageManagerSectionStorage extends SectionStorageBase implements ContainerF
       if (!$context->hasContextValue()) {
         $data_type = $context->getContextDefinition()->getDataType();
         if (strpos((string) $data_type, 'entity:') === 0) {
-          list(, $entity_type_id) = explode(':', $data_type, 2);
+          [, $entity_type_id] = explode(':', $data_type, 2);
 
           $bundle = $entity_type_id;
           if ($this->entityTypeManager->getDefinition($entity_type_id)->hasKey('bundle')) {

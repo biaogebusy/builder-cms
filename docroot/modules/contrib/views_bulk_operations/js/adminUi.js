@@ -12,18 +12,20 @@
    */
   Drupal.behaviors.views_bulk_operations = {
     attach: function (context, settings) {
-      $('.views-bulk-operations-ui').once('views-bulk-operations-ui').each(Drupal.viewsBulkOperationsUi);
+      once('views-bulk-operations-ui', '.views-bulk-operations-ui', context).forEach(Drupal.viewsBulkOperationsUi);
     }
   };
 
   /**
    * Callback used in {@link Drupal.behaviors.views_bulk_operations}.
+   *
+   * @param {object} element
    */
-  Drupal.viewsBulkOperationsUi = function () {
-    var uiElement = $(this);
+  Drupal.viewsBulkOperationsUi = function (element) {
+    var $uiElement = $(element);
 
     // Select / deselect all functionality.
-    var actionsElementWrapper = uiElement.find('details.vbo-actions-widget > .details-wrapper');
+    var actionsElementWrapper = $uiElement.find('details.vbo-actions-widget > .details-wrapper');
     if (actionsElementWrapper.length) {
       var checked = false;
       var allHandle = $('<a href="#" class="vbo-all-switch">' + Drupal.t('Select / deselect all') + '</a>');

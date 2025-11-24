@@ -11,14 +11,19 @@
   "minimum-stability": "dev",
   "authors": [
     {
+      "name": "Paul McKibben",
+      "homepage": "https://www.drupal.org/u/paulmckibben",
+      "role": "Maintainer"
+    },
+    {
       "name": "Neslee Canil Pinto",
       "homepage": "https://www.drupal.org/u/neslee-canil-pinto",
-      "role": "Maintainer"
+      "role": "Former Maintainer"
     },
     {
       "name": "Fredrik Jonsson",
       "homepage": "https://www.drupal.org/u/frjo",
-      "role": "Maintainer"
+      "role": "Former Maintainer"
     }
   ],
   "repositories": [
@@ -36,7 +41,7 @@
     }
   ],
   "require": {
-      "drupal/core": "^8.8 || ^9"
+    "drupal/core": "^10 || ^11"
   },
   "suggest": {
     "jackmoore/colorbox": "The Colorbox library is required to use the drupal/colorbox module."
@@ -44,7 +49,7 @@
   "extra": {
     "drush": {
       "services": {
-        "drush.services.yml": "^9"
+        "drush.services.yml": "^10 || ^11"
       }
     }
   }

@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_price\Kernel;
 
-use Drupal\commerce_price\Price;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_price\Price;
 
 /**
  * Tests the price twig filter.

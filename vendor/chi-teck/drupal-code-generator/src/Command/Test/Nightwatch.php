@@ -1,28 +1,34 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Test;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 use DrupalCodeGenerator\Utils;
 
-/**
- * Implements test:nightwatch command.
- */
-final class Nightwatch extends ModuleGenerator {
-
-  protected string $name = 'test:nightwatch';
-  protected string $description = 'Generates a nightwatch test';
-  protected string $alias = 'nightwatch-test';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/test/nightwatch';
+#[Generator(
+  name: 'test:nightwatch',
+  description: 'Generates a nightwatch test',
+  aliases: ['nightwatch-test'],
+  templatePath: Application::TEMPLATE_PATH . '/Test/_nightwatch',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Nightwatch extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['test_name'] = Utils::camelize($this->ask('Test name', 'example'), FALSE);
-    $this->addFile('tests/src/Nightwatch/{test_name}Test.js', 'nightwatch');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
+    $vars['test_name'] = Utils::camelize($ir->ask('Test name', 'example'), FALSE);
+    $assets->addFile('tests/src/Nightwatch/{test_name}Test.js', 'nightwatch.twig');
   }
 
 }

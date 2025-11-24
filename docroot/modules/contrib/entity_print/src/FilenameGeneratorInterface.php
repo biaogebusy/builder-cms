@@ -19,12 +19,12 @@ interface FilenameGeneratorInterface {
    *
    * @param \Drupal\Core\Entity\EntityInterface[] $entities
    *   An array of entities to generate a filename for.
-   * @param callable $entity_label_callback
+   * @param callable|null $entity_label_callback
    *   (optional) A function to generate the label for an individual entity.
    *
    * @return string
    *   The generated filename.
    */
-  public function generateFilename(array $entities, callable $entity_label_callback = NULL);
+  public function generateFilename(array $entities, ?callable $entity_label_callback = NULL);
 
 }

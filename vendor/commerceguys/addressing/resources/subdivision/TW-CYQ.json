@@ -1,0 +1,64 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"CYQ"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Dalin Township": {
+			"local_name": "大林鎮"
+		},
+		"Dapu Township": {
+			"local_name": "大埔鄉"
+		},
+		"Zhongpu Township": {
+			"local_name": "中埔鄉"
+		},
+		"Liujiao Township": {
+			"local_name": "六腳鄉"
+		},
+		"Taibao City": {
+			"local_name": "太保市"
+		},
+		"Shuishang Township": {
+			"local_name": "水上鄉"
+		},
+		"Budai Township": {
+			"local_name": "布袋鎮"
+		},
+		"Minxiong Township": {
+			"local_name": "民雄鄉"
+		},
+		"Puzi City": {
+			"local_name": "朴子市"
+		},
+		"Zhuqi Township": {
+			"local_name": "竹崎鄉"
+		},
+		"Dongshi Township": {
+			"local_name": "東石鄉"
+		},
+		"Alishan Township": {
+			"local_name": "阿里山鄉"
+		},
+		"Meishan Township": {
+			"local_name": "梅山鄉"
+		},
+		"Lucao Township": {
+			"local_name": "鹿草鄉"
+		},
+		"Fanlu Township": {
+			"local_name": "番路鄉"
+		},
+		"Xingang Township": {
+			"local_name": "新港鄉"
+		},
+		"Xikou Township": {
+			"local_name": "溪口鄉"
+		},
+		"Yizhu Township": {
+			"local_name": "義竹鄉"
+		}
+	}
+}

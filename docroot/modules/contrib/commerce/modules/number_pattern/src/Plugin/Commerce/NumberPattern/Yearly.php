@@ -2,17 +2,18 @@
 
 namespace Drupal\commerce_number_pattern\Plugin\Commerce\NumberPattern;
 
-use Drupal\commerce_number_pattern\Sequence;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_number_pattern\Attribute\CommerceNumberPattern;
+use Drupal\commerce_number_pattern\Sequence;
 
 /**
  * Provides a yearly number pattern.
- *
- * @CommerceNumberPattern(
- *   id = "yearly",
- *   label = @Translation("Yearly (Reset every year)"),
- * )
  */
+#[CommerceNumberPattern(
+  id: "yearly",
+  label: new TranslatableMarkup("Yearly (Reset every year)"),
+)]
 class Yearly extends SequentialNumberPatternBase {
 
   /**

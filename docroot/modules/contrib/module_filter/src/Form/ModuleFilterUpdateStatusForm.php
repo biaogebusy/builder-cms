@@ -13,14 +13,14 @@ class ModuleFilterUpdateStatusForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'module_filter_update_status_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['filters'] = [
       '#type' => 'container',
       '#attributes' => [

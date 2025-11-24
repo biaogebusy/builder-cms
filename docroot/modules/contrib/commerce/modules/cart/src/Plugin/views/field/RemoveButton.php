@@ -2,8 +2,9 @@
 
 namespace Drupal\commerce_cart\Plugin\views\field;
 
-use Drupal\commerce_cart\CartManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_cart\CartManagerInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Plugin\views\field\UncacheableFieldHandlerTrait;
 use Drupal\views\ResultRow;
@@ -11,9 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a form element for removing the order item.
- *
- * @ViewsField("commerce_order_item_remove_button")
  */
+#[ViewsField("commerce_order_item_remove_button")]
 class RemoveButton extends FieldPluginBase {
 
   use UncacheableFieldHandlerTrait;

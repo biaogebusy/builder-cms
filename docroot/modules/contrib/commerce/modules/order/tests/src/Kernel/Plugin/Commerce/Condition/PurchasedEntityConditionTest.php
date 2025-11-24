@@ -38,7 +38,7 @@ class PurchasedEntityConditionTest extends OrderKernelTestBase {
    * @return \Generator
    *   The data.
    */
-  public function derivativeData(): \Generator {
+  public static function derivativeData(): \Generator {
     yield [
       'order_purchased_entity',
       'commerce_product_variation',

@@ -11,6 +11,7 @@ use Drupal\entity_print\PrintEngineException;
 use mikehaertl\wkhtmlto\Pdf;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * PHP wkhtmltopdf plugin.
@@ -67,7 +68,11 @@ class PhpWkhtmlToPdf extends PdfEngineBase implements AlignableHeaderFooterInter
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ExportTypeInterface $export_type, Request $request) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ExportTypeInterface $export_type, Request $request, SessionInterface $session) {
+    // Ensure request includes the session (eg running in CLI).
+    if (!$request->hasSession()) {
+      $request->setSession($session);
+    }
     $this->request = $request;
 
     parent::__construct($configuration, $plugin_id, $plugin_definition, $export_type);
@@ -122,8 +127,8 @@ class PhpWkhtmlToPdf extends PdfEngineBase implements AlignableHeaderFooterInter
 
     // When embedding images from Drupal's private file system, the library
     // fails because it's seen as an anonymous user. See DomPDF for details.
-    $session = $this->request->getSession();
-    if ($session) {
+    if ($this->request->hasSession()) {
+      $session = $this->request->getSession();
       $options = [
         'cookie' => [
           $session->getName() => $session->getId(),
@@ -150,7 +155,8 @@ class PhpWkhtmlToPdf extends PdfEngineBase implements AlignableHeaderFooterInter
       $plugin_definition,
       $container->get('plugin.manager.entity_print.export_type')
         ->createInstance($plugin_definition['export_type']),
-      $container->get('request_stack')->getCurrentRequest()
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('session'),
     );
   }
 
@@ -292,6 +298,7 @@ class PhpWkhtmlToPdf extends PdfEngineBase implements AlignableHeaderFooterInter
    */
   public function addPage($content) {
     $this->pdf->addPage($content);
+    return $this;
   }
 
   /**

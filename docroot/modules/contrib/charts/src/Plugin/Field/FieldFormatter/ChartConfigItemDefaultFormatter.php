@@ -2,23 +2,22 @@
 
 namespace Drupal\charts\Plugin\Field\FieldFormatter;
 
-use Drupal\charts\Element\Chart;
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\charts\Element\Chart;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * Plugin implementation of the "chart_config_default" formatter.
- *
- * @FieldFormatter(
- *   id = "chart_config_default",
- *   label = @Translation("Default"),
- *   field_types = {
- *     "chart_config",
- *   },
- * )
+ * Defines the default field formatter for chart configurations.
  */
+#[FieldFormatter(
+  id: "chart_config_default",
+  label: new TranslatableMarkup("Default"),
+  field_types: ["chart_config"]
+)]
 class ChartConfigItemDefaultFormatter extends FormatterBase {
 
   /**
@@ -30,6 +29,7 @@ class ChartConfigItemDefaultFormatter extends FormatterBase {
     $entity_uuid = $entity->uuid();
     $entity_type_id = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
+    $field_name = $items->getName();
     $chart_id = $entity_type_id . '__' . $bundle;
 
     foreach ($items as $delta => $item) {
@@ -37,6 +37,8 @@ class ChartConfigItemDefaultFormatter extends FormatterBase {
       $elements[$delta] = $this->viewElement($item, $chart_id);
       $elements[$delta]['#id'] = Html::getUniqueId($id);
       $elements[$delta]['#chart_id'] = $chart_id;
+      $elements[$delta]['#entity'] = $entity;
+      $elements[$delta]['#field_name'] = $field_name;
     }
 
     return $elements;

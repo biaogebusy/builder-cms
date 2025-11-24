@@ -2,7 +2,6 @@
 
 namespace Drupal\commerce_order\Controller;
 
-use Drupal\commerce_order\AddressBookInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -12,6 +11,7 @@ use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\commerce_order\AddressBookInterface;
 use Drupal\profile\Entity\ProfileInterface;
 use Drupal\profile\Entity\ProfileTypeInterface;
 use Drupal\user\UserInterface;
@@ -332,7 +332,7 @@ class AddressBookController implements ContainerInjectionInterface {
    * @return \Drupal\profile\Entity\ProfileTypeInterface[]
    *   The filtered profile types.
    */
-  protected function filterTypesByViewAccess(array $profile_types, UserInterface $owner, AccountInterface $account = NULL) {
+  protected function filterTypesByViewAccess(array $profile_types, UserInterface $owner, ?AccountInterface $account = NULL) {
     $storage = $this->entityTypeManager->getStorage('profile');
     $access_control_handler = $this->entityTypeManager->getAccessControlHandler('profile');
     foreach ($profile_types as $profile_type_id => $profile_type) {

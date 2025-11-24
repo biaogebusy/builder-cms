@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.security.data.innerouter.test.query request
  *
  * @author auto create
- * @since 1.0, 2021-09-02 18:10:27
+ * @since 1.0, 2024-08-30 11:25:26
  */
 class AlipaySecurityDataInnerouterTestQueryRequest
 {

@@ -2,12 +2,13 @@
 
 namespace Drupal\rest_views_search_api\Plugin\views\field;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rest_views\SerializedData;
 use Drupal\search_api\Plugin\views\field\SearchApiEntityField;
 
 /**
- * Display Search API Content Datasource field data in a serialized display.
+ * Display Search API Content DataSource field data in a serialized display.
  *
  * @ViewsField("search_api_field_export")
  *
@@ -44,6 +45,7 @@ class SearchApiEntityFieldExport extends SearchApiEntityField {
   /**
    * {@inheritdoc}
    */
+  // phpcs:ignore
   public function render_item($count, $item) {
     $rendered = $item['rendered'];
     if (isset($rendered['#type']) && $rendered['#type'] === 'data') {
@@ -55,7 +57,7 @@ class SearchApiEntityFieldExport extends SearchApiEntityField {
   /**
    * {@inheritdoc}
    */
-  public function renderText($alter) {
+  public function renderText($alter): SerializedData|MarkupInterface|string {
     if (isset($this->last_render) && $this->last_render instanceof SerializedData) {
       return $this->last_render;
     }
@@ -65,6 +67,7 @@ class SearchApiEntityFieldExport extends SearchApiEntityField {
   /**
    * {@inheritdoc}
    */
+  // phpcs:ignore
   public function multiple_options_form(&$form, FormStateInterface $form_state): void {
     // Initialize removed settings to avoid notices. Unset them afterward.
     $this->options['multi_type'] = $this->options['separator'] = NULL;

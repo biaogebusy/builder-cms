@@ -39,12 +39,12 @@ class RemoveCoreMetaTags extends BrowserTestBase {
     // Set up a vocabulary.
     $vocabulary = Vocabulary::create([
       'vid' => 'metatag_vocab',
-      'name' => $this->randomString(),
+      'name' => $this->randomTitle(),
     ]);
     $vocabulary->save();
     $term = Term::create([
       'vid' => $vocabulary->id(),
-      'name' => $this->randomString(),
+      'name' => $this->randomTitle(),
     ]);
     $term->save();
 

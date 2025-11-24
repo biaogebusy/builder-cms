@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm_exif;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\file_mdm\FileMetadataException;
-use Psr\Log\LoggerInterface;
 use lsolesen\pel\PelIfd;
 use lsolesen\pel\PelTag;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Provides a mapping service for EXIF ifds and tags.
@@ -16,123 +19,84 @@ use lsolesen\pel\PelTag;
 class ExifTagMapper implements ExifTagMapperInterface {
 
   /**
-   * The cache service.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected $cache;
-
-  /**
-   * The file_mdm logger.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * The string to IFD map.
    *
    * Maps IFDs or their aliases expressed as literals to the EXIF integer
    * identifier.
-   *
-   * @var array
    */
-  protected $stringToIfdMap;
+  protected array $stringToIfdMap;
 
   /**
    * The string to TAG map.
    *
    * Maps TAGs expressed as literals to the EXIF integer IFD/TAG identifiers.
-   *
-   * @var array
    */
-  protected $stringToTagMap;
+  protected array $stringToTagMap;
 
   /**
    * The supported metadata 'keys'.
    *
    * A simple array of IFD/TAG combinations, expressed as literals.
-   *
-   * @var array
    */
-  protected $supportedKeysMap;
+  protected array $supportedKeysMap;
 
   /**
    * The supported IFDs.
    *
    * A simple array of IFDs, expressed as literal/integer combinations.
-   *
-   * @var array
    */
-  protected $supportedIfdsMap;
+  protected array $supportedIfdsMap;
 
   /**
    * Constructs a ExifTagMapper object.
    *
    * @param \Psr\Log\LoggerInterface $logger
    *   The file_mdm logger.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_service
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache service.
    */
-  public function __construct(LoggerInterface $logger, ConfigFactoryInterface $config_factory, CacheBackendInterface $cache_service) {
-    $this->logger = $logger;
-    $this->configFactory = $config_factory;
-    $this->cache = $cache_service;
-  }
+  public function __construct(
+    #[Autowire(service: 'logger.channel.file_mdm')]
+    protected readonly LoggerInterface $logger,
+    protected readonly ConfigFactoryInterface $configFactory,
+    #[Autowire(service: 'cache.file_mdm')]
+    protected readonly CacheBackendInterface $cache,
+  ) {}
 
-  /**
-   * {@inheritdoc}
-   */
-  public function resolveKeyToIfdAndTag($key) {
-    if ($key === NULL) {
-      throw new FileMetadataException('Missing $key argument', NULL, __METHOD__);
-    }
+  public function resolveKeyToIfdAndTag(string|array $key): array {
     if (is_string($key)) {
       $tag = $this->stringToTag($key);
       return ['ifd' => $tag[0], 'tag' => $tag[1]];
     }
-    if (is_array($key)) {
-      if (!isset($key[0]) || !isset($key[1])) {
-        throw new FileMetadataException('Invalid $key array specified, must have two values', NULL, __METHOD__);
-      }
-      // Deal with ifd.
-      if (is_int($key[0])) {
-        $ifd = $key[0];
-      }
-      elseif (is_string($key[0])) {
-        $ifd = $this->stringToIfd($key[0]);
-      }
-      else {
-        throw new FileMetadataException('Invalid EXIF IFD specified, must be a string or an integer', NULL, __METHOD__);
-      }
-      // Deal with tag.
-      if (is_string($key[1])) {
-        $tag = $this->stringToTag($key[1])[1];
-      }
-      elseif (is_int($key[1])) {
-        $tag = $key[1];
-      }
-      else {
-        throw new FileMetadataException('Invalid EXIF TAG specified, must be a string or an integer', NULL, __METHOD__);
-      }
-      return ['ifd' => $ifd, 'tag' => $tag];
+    if (!isset($key[0]) || !isset($key[1])) {
+      throw new FileMetadataException('Invalid $key array specified, must have two values', NULL, __METHOD__);
     }
-    throw new FileMetadataException('Invalid $key argument, must be a string or an array', NULL, __METHOD__);
+    // Deal with ifd.
+    if (is_int($key[0])) {
+      $ifd = $key[0];
+    }
+    elseif (is_string($key[0])) {
+      $ifd = $this->stringToIfd($key[0]);
+    }
+    else {
+      throw new FileMetadataException('Invalid EXIF IFD specified, must be a string or an integer', NULL, __METHOD__);
+    }
+    // Deal with tag.
+    if (is_string($key[1])) {
+      $tag = $this->stringToTag($key[1])[1];
+    }
+    elseif (is_int($key[1])) {
+      $tag = $key[1];
+    }
+    else {
+      throw new FileMetadataException('Invalid EXIF TAG specified, must be a string or an integer', NULL, __METHOD__);
+    }
+    return ['ifd' => $ifd, 'tag' => $tag];
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getSupportedKeys(array $options = NULL) {
+  public function getSupportedKeys(array $options = NULL): array {
     if (isset($options['ifds'])) {
       return $this->getSupportedIfdsMap();
     }
@@ -154,8 +118,8 @@ class ExifTagMapper implements ExifTagMapperInterface {
    * @return array
    *   A simple array of IFDs, expressed as literal/integer combinations.
    */
-  protected function getSupportedIfdsMap() {
-    if (!$this->supportedIfdsMap) {
+  protected function getSupportedIfdsMap(): array {
+    if (!isset($this->supportedIfdsMap)) {
       $cache_id = 'supportedIfds';
       if ($cache = $this->getCache($cache_id)) {
         $this->supportedIfdsMap = $cache->data;
@@ -186,8 +150,8 @@ class ExifTagMapper implements ExifTagMapperInterface {
    * @return array
    *   A simple array of IFD/TAG combinations, expressed as literals.
    */
-  protected function getSupportedKeysMap() {
-    if (!$this->supportedKeysMap) {
+  protected function getSupportedKeysMap(): array {
+    if (!isset($this->supportedKeysMap)) {
       $cache_id = 'supportedKeys';
       if ($cache = $this->getCache($cache_id)) {
         $this->supportedKeysMap = $cache->data;
@@ -222,13 +186,12 @@ class ExifTagMapper implements ExifTagMapperInterface {
    * @throws \Drupal\file_mdm\FileMetadataException
    *   When the IFD/TAG combination could not be found.
    */
-  protected function stringToTag($value) {
-    $v = strtolower($value);
-    $tag = isset($this->getStringToTagMap()[$v]) ? $this->getStringToTagMap()[$v] : NULL;
-    if ($tag) {
-      return $tag;
+  protected function stringToTag(string $value): array {
+    $tag = $this->getStringToTagMap()[strtolower($value)] ?? NULL;
+    if (!$tag) {
+      throw new FileMetadataException("No EXIF TAG found for key '{$value}'", "EXIF");
     }
-    throw new FileMetadataException("No EXIF TAG found for key '{$value}'", "EXIF");
+    return $tag;
   }
 
   /**
@@ -240,8 +203,8 @@ class ExifTagMapper implements ExifTagMapperInterface {
    *   An associative array where keys are TAG literals, and values a simple
    *   array of IFD/TAG integer identifiers.
    */
-  protected function getStringToTagMap() {
-    if (!$this->stringToTagMap) {
+  protected function getStringToTagMap(): array {
+    if (!isset($this->stringToTagMap)) {
       $cache_id = 'stringToTag';
       if ($cache = $this->getCache($cache_id)) {
         $this->stringToTagMap = $cache->data;
@@ -275,7 +238,7 @@ class ExifTagMapper implements ExifTagMapperInterface {
    * @throws \Drupal\file_mdm\FileMetadataException
    *   When the IFD could not be found.
    */
-  protected function stringToIfd($value) {
+  protected function stringToIfd(string $value): int {
     $v = strtolower($value);
     if (isset($this->getStringToIfdMap()[$v])) {
       return $this->getStringToIfdMap()[$v];
@@ -292,8 +255,8 @@ class ExifTagMapper implements ExifTagMapperInterface {
    *   An associative array where keys are IFD literals, and values the IFD
    *   integer identifiers.
    */
-  protected function getStringToIfdMap() {
-    if (!$this->stringToIfdMap) {
+  protected function getStringToIfdMap(): array {
+    if (!isset($this->stringToIfdMap)) {
       $cache_id = 'stringToIfd';
       if ($cache = $this->getCache($cache_id)) {
         $this->stringToIfdMap = $cache->data;
@@ -322,7 +285,7 @@ class ExifTagMapper implements ExifTagMapperInterface {
    * @return object|null
    *   The cache item or NULL on failure.
    */
-  protected function getCache($id) {
+  protected function getCache(string $id): ?object {
     if ($cache = $this->cache->get("map:exif:{$id}")) {
       return $cache;
     }
@@ -341,7 +304,7 @@ class ExifTagMapper implements ExifTagMapperInterface {
    *
    * @return $this
    */
-  protected function setCache($id, $value) {
+  protected function setCache(string $id, mixed $value): static {
     $config = $this->configFactory->get('file_mdm_exif.file_metadata_plugin.exif');
     $this->cache->set("map:exif:{$id}", $value, Cache::PERMANENT, $config->getCacheTags());
     return $this;

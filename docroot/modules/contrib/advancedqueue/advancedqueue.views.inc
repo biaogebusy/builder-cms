@@ -73,6 +73,9 @@ function advancedqueue_views_data() {
     'field' => [
       'id' => 'advancedqueue_json',
     ],
+    'filter' => [
+      'id' => 'string',
+    ],
   ];
   $data['advancedqueue']['state'] = [
     'title' => t('State'),
@@ -176,6 +179,13 @@ function advancedqueue_views_data() {
     'help' => t('Provides available operations'),
     'field' => [
       'id' => 'advancedqueue_job_operations',
+    ],
+  ];
+  $data['advancedqueue']['advancedqueue_bulk_form'] = [
+    'title' => t('Advanced queue operations bulk form'),
+    'help' => t('Add a form element that lets you run operations on multiple queue items.'),
+    'field' => [
+      'id' => 'advancedqueue_bulk_form',
     ],
   ];
 

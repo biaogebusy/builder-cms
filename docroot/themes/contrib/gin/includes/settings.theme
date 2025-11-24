@@ -31,7 +31,7 @@ function gin_form_system_theme_settings_alter(&$form, FormStateInterface $form_s
   /*
    * //////////////////////////
    * General settings.
-   * * //////////////////////////
+   * * ////////////////////////
    */
   /** @var \Drupal\gin\GinSettings $settings */
   $settings = \Drupal::classResolver(GinSettings::class);
@@ -53,9 +53,11 @@ function gin_form_system_theme_settings_alter(&$form, FormStateInterface $form_s
   /*
    * //////////////////////////
    * Logo settings.
-   * * //////////////////////////
+   * * ////////////////////////
    */
-  $form['logo']['settings']['logo_upload']['#upload_validators'] = ['file_validate_extensions' => ['png gif jpg jpeg apng svg']];
+  if (isset($form['logo']['settings']['logo_upload']['#upload_validators']['file_validate_extensions'])) {
+    $form['logo']['settings']['logo_upload']['#upload_validators'] = ['file_validate_extensions' => ['png gif jpg jpeg apng svg']];
+  }
 
   // Upgrade path:
   // Move settings to new fields.

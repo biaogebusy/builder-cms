@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\entity_embed\Kernel;
 
@@ -25,18 +25,27 @@ class UpgradePathTest extends SmartDefaultSettingsTest {
     // The embed and node modules are required to install embed.button.node.yml.
     'embed',
     'node',
+    // Provides an editor plugin with ID ckeditor in order to satisfy config
+    // validation.
+    'entity_embed_ckeditor_test',
   ];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    if (version_compare(\Drupal::VERSION, '11.0', '>=')) {
+      // https://drupal.org/i/3239012
+      $this->markTestSkipped('CKEditor 4 to 5 upgrade path has been removed from Drupal 11.');
+    }
+
     parent::setUp();
 
     $this->installConfig(['entity_embed']);
 
     $filter_config_bad_filter_html = [
       'filter_html' => [
+        'id' => 'filter_html',
         'status' => 1,
         'settings' => [
           'allowed_html' => '<p> <br> <strong>',
@@ -73,6 +82,7 @@ class UpgradePathTest extends SmartDefaultSettingsTest {
       'name' => 'Entity Embed enabled on a well-configured format',
       'filters' => [
         'filter_html' => [
+          'id' => 'filter_html',
           'status' => 1,
           'settings' => [
             'allowed_html' => '<p> <br> <strong> <drupal-entity data-entity-type data-entity-uuid data-entity-embed-display data-entity-embed-display-settings data-view-mode data-align data-caption data-embed-button data-langcode alt title>',
@@ -133,7 +143,7 @@ class UpgradePathTest extends SmartDefaultSettingsTest {
   /**
    * {@inheritdoc}
    */
-  public function provider() {
+  public static function provider(): \Generator {
     $expected_ckeditor5_toolbar = [
       'items' => [
         'bold',

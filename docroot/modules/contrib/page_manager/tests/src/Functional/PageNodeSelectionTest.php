@@ -17,7 +17,7 @@ class PageNodeSelectionTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -123,7 +123,7 @@ class PageNodeSelectionTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->titleEquals(html_entity_decode($expected_title) . ' | Drupal');
     $this->assertSession()->pageTextContains($node2->body->value);
-    $this->assertSession()->responseContains('<h1 class="page-title">' . $expected_title . '</h1>');
+    $this->assertSession()->responseContains($expected_title);
 
     // Test cacheability metadata.
     $this->drupalGet('node/' . $node3->id());
@@ -138,7 +138,7 @@ class PageNodeSelectionTest extends BrowserTestBase {
     $this->drupalGet('node/' . $node2->id());
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->titleEquals(html_entity_decode($expected_title) . ' | Drupal');
-    $this->assertSession()->responseContains('<h1 class="page-title">' . $expected_title . '</h1>');
+    $this->assertSession()->responseContains($expected_title);
 
     // Ensure this doesn't affect the /node/add page.
     $this->drupalGet('node/add');

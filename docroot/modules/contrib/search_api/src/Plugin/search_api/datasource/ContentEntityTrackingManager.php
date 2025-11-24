@@ -6,6 +6,7 @@ namespace Drupal\search_api\Plugin\search_api\datasource;
 
 use Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -24,40 +25,33 @@ use Drupal\search_api\Utility\Utility;
 class ContentEntityTrackingManager {
 
   /**
-   * The entity type manager.
+   * The base ID of the datasources handled by this class.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * Can be overridden by subclasses to provide support for related datasources.
    */
-  protected $entityTypeManager;
+  protected const DATASOURCE_BASE_ID = 'entity';
+
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LanguageManagerInterface $languageManager,
+    protected TaskManagerInterface $taskManager,
+  ) {}
 
   /**
-   * The language manager.
+   * Computes the item ID for the given entity and language.
    *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * The Search API task manager.
+   * @param string $entity_type
+   *   The entity type ID.
+   * @param string|int $entity_id
+   *   The entity ID.
+   * @param string $langcode
+   *   The language ID of the entity.
    *
-   * @var \Drupal\search_api\Task\TaskManagerInterface
+   * @return string
+   *   The datasource-specific item ID.
    */
-  protected $taskManager;
-
-  /**
-   * Constructs a new class instance.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
-   *   The language manager.
-   * @param \Drupal\search_api\Task\TaskManagerInterface $taskManager
-   *   The task manager.
-   */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager, LanguageManagerInterface $languageManager, TaskManagerInterface $taskManager) {
-    $this->entityTypeManager = $entityTypeManager;
-    $this->languageManager = $languageManager;
-    $this->taskManager = $taskManager;
+  public static function formatItemId(string $entity_type, string|int $entity_id, string $langcode): string {
+    return ContentEntity::formatItemId($entity_type, $entity_id, $langcode);
   }
 
   /**
@@ -140,16 +134,21 @@ class ContentEntityTrackingManager {
     if (!$new) {
       // In case we don't have the original, fall back to the current entity,
       // and assume no new translations were added.
-      $original = $entity->original ?? $entity;
+      $original = DeprecationHelper::backwardsCompatibleCall(
+        \Drupal::VERSION,
+        '11.2',
+        fn () => $entity->getOriginal() ?: $entity,
+        fn () => $entity->original ?? $entity,
+      );
       $old_translations = array_keys($original->getTranslationLanguages());
     }
     $deleted_translations = array_diff($old_translations, $new_translations);
     $inserted_translations = array_diff($new_translations, $old_translations);
     $updated_translations = array_diff($new_translations, $inserted_translations);
 
-    $datasource_id = 'entity:' . $entity->getEntityTypeId();
-    $get_ids = function (string $langcode) use ($entity_id): string {
-      return $entity_id . ':' . $langcode;
+    $datasource_id = static::DATASOURCE_BASE_ID . ':' . $entity->getEntityTypeId();
+    $get_ids = function (string $langcode) use ($entity): string {
+      return static::formatItemId($entity->getEntityTypeId(), $entity->id(), $langcode);
     };
     $inserted_ids = array_map($get_ids, $inserted_translations);
     $updated_ids = array_map($get_ids, $updated_translations);
@@ -210,9 +209,9 @@ class ContentEntityTrackingManager {
     $item_ids = [];
     $entity_id = $entity->id();
     foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
-      $item_ids[] = $entity_id . ':' . $langcode;
+      $item_ids[] = static::formatItemId($entity->getEntityTypeId(), $entity_id, $langcode);
     }
-    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    $datasource_id = static::DATASOURCE_BASE_ID . ':' . $entity->getEntityTypeId();
     foreach ($indexes as $index) {
       $index->trackItemsDeleted($datasource_id, $item_ids);
     }
@@ -231,7 +230,7 @@ class ContentEntityTrackingManager {
   public function getIndexesForEntity(ContentEntityInterface $entity): array {
     // @todo This is called for every single entity insert, update or deletion
     //   on the whole site. Should maybe be cached?
-    $datasource_id = 'entity:' . $entity->getEntityTypeId();
+    $datasource_id = static::DATASOURCE_BASE_ID . ':' . $entity->getEntityTypeId();
     $entity_bundle = $entity->bundle();
     $has_bundles = $entity->getEntityType()->hasKey('bundle');
 
@@ -241,8 +240,7 @@ class ContentEntityTrackingManager {
       $indexes = $this->entityTypeManager->getStorage('search_api_index')
         ->loadMultiple();
     }
-    // @todo Remove $e once we depend on PHP 8.0+.
-    catch (InvalidPluginDefinitionException | PluginNotFoundException $e) {
+    catch (InvalidPluginDefinitionException | PluginNotFoundException) {
       // Can't really happen, but play it safe to appease static code analysis.
     }
 
@@ -257,7 +255,7 @@ class ContentEntityTrackingManager {
         try {
           $config = $index->getDatasource($datasource_id)->getConfiguration();
         }
-        catch (SearchApiException $e) {
+        catch (SearchApiException) {
           // Can't really happen, but play it safe to appease static code
           // analysis.
           unset($indexes[$index_id]);
@@ -281,11 +279,6 @@ class ContentEntityTrackingManager {
    * @param \Drupal\search_api\IndexInterface $index
    *   The index that was updated.
    *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   *   Thrown if a datasource referenced an unknown entity type.
-   * @throws \Drupal\search_api\SearchApiException
-   *   Never thrown, but static analysis tools think it could be.
-   *
    * @see search_api_search_api_index_update()
    */
   public function indexUpdate(IndexInterface $index) {
@@ -293,17 +286,24 @@ class ContentEntityTrackingManager {
       return;
     }
     /** @var \Drupal\search_api\IndexInterface $original */
-    $original = $index->original ?? NULL;
+    $original = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.2',
+      fn () => $index->getOriginal(),
+      fn () => $index->original ?? NULL,
+    );
     if (!$original || !$original->status()) {
       return;
     }
 
     foreach ($index->getDatasources() as $datasource_id => $datasource) {
-      if ($datasource->getBaseId() != 'entity'
-          || !$original->isValidDatasource($datasource_id)) {
+      if (
+        $datasource->getBaseId() != static::DATASOURCE_BASE_ID
+        || !$original->isValidDatasource($datasource_id)
+      ) {
         continue;
       }
-      $old_datasource = $original->getDatasource($datasource_id);
+      $old_datasource = $original->getDatasourceIfAvailable($datasource_id);
       $old_config = $old_datasource->getConfiguration();
       $new_config = $datasource->getConfiguration();
 
@@ -314,13 +314,18 @@ class ContentEntityTrackingManager {
         $insert_task = ContentEntityTaskManager::INSERT_ITEMS_TASK_TYPE;
         $delete_task = ContentEntityTaskManager::DELETE_ITEMS_TASK_TYPE;
         $settings = [];
-        $entity_type = $this->entityTypeManager
-          ->getDefinition($datasource->getEntityTypeId());
-        if ($entity_type->hasKey('bundle')) {
-          $settings['bundles'] = $datasource->getBundles();
+        try {
+          $entity_type = $this->entityTypeManager
+            ->getDefinition($datasource->getEntityTypeId());
+          if ($entity_type->hasKey('bundle')) {
+            $settings['bundles'] = $datasource->getBundles();
+          }
+          if ($entity_type->isTranslatable()) {
+            $settings['languages'] = $this->languageManager->getLanguages();
+          }
         }
-        if ($entity_type->isTranslatable()) {
-          $settings['languages'] = $this->languageManager->getLanguages();
+        catch (PluginNotFoundException) {
+          // Ignore.
         }
 
         // Determine which bundles/languages have been newly selected or
@@ -397,7 +402,7 @@ class ContentEntityTrackingManager {
     try {
       $config = $index->getDatasource($datasource_id)->getConfiguration();
     }
-    catch (SearchApiException $e) {
+    catch (SearchApiException) {
       // Can't really happen, but play it safe to appease static code analysis.
       return $item_ids;
     }

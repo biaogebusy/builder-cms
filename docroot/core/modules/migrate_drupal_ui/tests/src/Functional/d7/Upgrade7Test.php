@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional\d7;
 
 use Drupal\node\Entity\Node;
@@ -14,6 +16,7 @@ use Drupal\user\Entity\User;
  * The test method is provided by the MigrateUpgradeTestBase class.
  *
  * @group migrate_drupal_ui
+ * @group #slow
  */
 class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
 
@@ -21,14 +24,11 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'book',
     'config_translation',
     'content_translation',
     'datetime_range',
-    'forum',
     'language',
     'migrate_drupal_ui',
-    'statistics',
     'telephone',
   ];
 
@@ -56,12 +56,18 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
     $this->nodeStorage->delete($this->nodeStorage->loadMultiple());
 
     $this->loadFixture($this->getModulePath('migrate_drupal') . '/tests/fixtures/drupal7.php');
+
+    $this->expectedLoggedErrors = 27;
+    // If saving the logs, then set the admin user.
+    if ($this->outputLogs) {
+      $this->migratedAdminUserName = 'admin';
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getSourceBasePath() {
+  protected function getSourceBasePath(): string {
     return __DIR__ . '/files';
   }
 
@@ -83,33 +89,32 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
       'contact_form' => 3,
       'contact_message' => 0,
       'editor' => 2,
-      'field_config' => 91,
-      'field_storage_config' => 70,
+      'field_config' => 90,
+      'field_storage_config' => 69,
       'file' => 3,
       'filter_format' => 7,
       'image_style' => 7,
       'language_content_settings' => 24,
       'node' => 7,
       'node_type' => 8,
-      'search_page' => 2,
+      'search_page' => 3,
       'shortcut' => 6,
       'shortcut_set' => 2,
-      'action' => 27,
+      'action' => 24,
       'menu' => 7,
       'taxonomy_term' => 25,
       'taxonomy_vocabulary' => 8,
       'path_alias' => 8,
-      'tour' => 6,
       'user' => 4,
       'user_role' => 4,
       'menu_link_content' => 12,
       'view' => 14,
       'date_format' => 12,
-      'entity_form_display' => 24,
+      'entity_form_display' => 23,
       'entity_form_mode' => 1,
-      'entity_view_display' => 34,
-      'entity_view_mode' => 12,
-      'base_field_override' => 4,
+      'entity_view_display' => 33,
+      'entity_view_mode' => 11,
+      'base_field_override' => 2,
     ];
   }
 
@@ -135,7 +140,6 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
     return [
       'Block languages',
       'Block',
-      'Book',
       'Chaos tools',
       'Comment',
       'Contact',
@@ -150,7 +154,6 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
       'Field',
       'File',
       'Filter',
-      'Forum',
       'Image',
       'Internationalization',
       'Locale',
@@ -168,7 +171,6 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
       'Phone',
       'Search',
       'Shortcut',
-      'Statistics',
       'String translation',
       'Synchronize translations',
       'System',
@@ -201,11 +203,12 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
   protected function getMissingPaths() {
     return [
       'Aggregator',
-      // @todo Remove Color in https://www.drupal.org/project/drupal/issues/3270899
+      'Book',
       'Color',
-      // @todo Remove RDF in https://www.drupal.org/node/3267515
+      'Forum',
       'RDF',
       'References',
+      'Statistics',
       'Translation sets',
       'Variable realm',
       'Variable store',
@@ -222,7 +225,7 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
   /**
    * Executes all steps of migrations upgrade.
    */
-  public function testUpgradeAndIncremental() {
+  public function testUpgradeAndIncremental(): void {
     // Perform upgrade followed by an incremental upgrade.
     $this->doUpgradeAndIncremental();
 
@@ -230,8 +233,9 @@ class Upgrade7Test extends MigrateUpgradeExecuteTestBase {
     $this->assertUserLogIn(2, 'a password');
 
     $this->assertFollowUpMigrationResults();
-
+    $this->assertEntityRevisionsCount('node', 19);
     $this->assertEmailsSent();
+    $this->assertLogError();
   }
 
   /**

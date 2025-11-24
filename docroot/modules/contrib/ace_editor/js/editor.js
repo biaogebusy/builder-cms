@@ -2,6 +2,8 @@
     'use strict';
     // A page may contain multiple editors. editors variable store all of them as { id: editor_object }
     var editors = {};
+    // Store required elements to restore them later
+    var requiredElements = new Set();
     /**
      * @file
      * Defines AceEditor as a Drupal editor.
@@ -18,13 +20,19 @@
 
             // Creating a unique id for our new text editor
             var ace_editor_id = element_id+"-ace-editor";
-
+            // Handle the 'required' attribute
+            if (element.hasAttribute('required')) {
+              // Store the ID of the required element
+              requiredElements.add(element_id);
+              // Remove the 'required' attribute
+              element.removeAttribute('required');
+            }
             // We don't delete the original textarea, but hide it.
             $element.hide().css('visibility', 'hidden');
 
             // We introduce a dummy dom element to make our editor and attach inside form textarea wrapper.
             var editor_dummy = "<pre id='"+ace_editor_id+"'></pre>";
-            $element.closest(".form-textarea-wrapper").append(editor_dummy);
+            $element.closest(".js-form-type-textarea").append(editor_dummy);
 
             // Creating new editor, setting syntax and theme.
             var current_editor = editors[ace_editor_id] = ace.edit(ace_editor_id);
@@ -64,7 +72,11 @@
             else{
                 editors[ace_editor_id].destroy();
                 editors[ace_editor_id].container.remove();
-
+                // Restore the 'required' attribute if it was originally present
+                if (requiredElements.has(element_id)) {
+                  element.setAttribute('required', 'required');
+                  requiredElements.delete(element_id); // Remove from the set
+                }
                 $element.show().css('visibility', 'visible');
                 //element.removeAttribute('contentEditable');
             }

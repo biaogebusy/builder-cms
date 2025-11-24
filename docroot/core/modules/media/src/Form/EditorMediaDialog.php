@@ -23,6 +23,11 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
  * editor, this dialog allows users to set the alt text, alignment, and
  * captioning status for embedded media items.
  *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
+ * replacement.
+ *
+ * @see https://www.drupal.org/node/3291493
+ *
  * @internal
  *   This is an internal part of the media system in Drupal core and may be
  *   subject to change in minor releases. This class should not be
@@ -53,6 +58,7 @@ class EditorMediaDialog extends FormBase {
    *   The entity display repository.
    */
   public function __construct(EntityRepositoryInterface $entity_repository, EntityDisplayRepositoryInterface $entity_display_repository) {
+    @trigger_error(__NAMESPACE__ . '\EditorMediaDialog is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3291493', E_USER_DEPRECATED);
     $this->entityRepository = $entity_repository;
     $this->entityDisplayRepository = $entity_display_repository;
   }
@@ -84,7 +90,7 @@ class EditorMediaDialog extends FormBase {
    * @param \Drupal\editor\EditorInterface $editor
    *   The text editor to which this dialog corresponds.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EditorInterface $editor = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EditorInterface $editor = NULL) {
     // This form is special, in that the default values do not come from the
     // server side, but from the client side, from a text editor. We must cache
     // this data in form state, because when the form is rebuilt, we will be
@@ -197,12 +203,12 @@ class EditorMediaDialog extends FormBase {
       $warning = $this->t('There is nothing to configure for this media.');
       $form['no_access_notice'] = ['#markup' => $warning];
       if ($format->access('update')) {
-        $tparams = [
+        $arguments = [
           '@warning' => $warning,
           '@edit_url' => $format->toUrl('edit-form')->toString(),
           '%format' => $format->label(),
         ];
-        $form['no_access_notice']['#markup'] = $this->t('@warning <a href="@edit_url">Edit the text format %format</a> to modify the attributes that can be overridden.', $tparams);
+        $form['no_access_notice']['#markup'] = $this->t('@warning <a href="@edit_url">Edit the text format %format</a> to modify the attributes that can be overridden.', $arguments);
       }
     }
 

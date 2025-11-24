@@ -2,10 +2,8 @@
 
 namespace Drupal\core_context\Plugin\Field\FieldType;
 
-use Drupal\Component\Plugin\Context\Context;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 

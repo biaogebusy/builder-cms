@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests;
 
 use Drupal\Core\Database\Database;
@@ -42,11 +44,9 @@ class KernelTestBaseDatabaseDriverModuleTest extends KernelTestBase {
     if (!empty($connection_info)) {
       Database::renameConnection('default', 'simpletest_original_default');
       foreach ($connection_info as $target => $value) {
-        // Replace the full table prefix definition to ensure that no table
-        // prefixes of the test runner leak into the test.
-        $connection_info[$target]['prefix'] = [
-          'default' => $this->databasePrefix,
-        ];
+        // Replace the table prefix definition to ensure that no table of the
+        // test runner leak into the test.
+        $connection_info[$target]['prefix'] = $this->databasePrefix;
       }
     }
     return $connection_info;

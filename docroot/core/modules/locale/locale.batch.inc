@@ -5,10 +5,13 @@
  * Batch process to check the availability of remote or local po files.
  */
 
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\Exception\InvalidStreamWrapperException;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\Url;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
@@ -19,6 +22,43 @@ use Psr\Http\Message\UriInterface;
 // @todo Combine functions differently in files to avoid unnecessary includes.
 // Follow-up issue: https://www.drupal.org/node/1834298.
 require_once __DIR__ . '/locale.translation.inc';
+
+/**
+ * Implements callback_batch_operation().
+ *
+ * Checks for changed project versions, and cleans-up data from the old version.
+ * For example when a module is updated. This will make the translation import
+ * system use translations that match the current version.
+ *
+ * @param string $project
+ *   Machine name of the project for which to check the translation status.
+ * @param string $langcode
+ *   Language code of the language for which to check the translation.
+ * @param array|\ArrayAccess $context
+ *   The batch context.
+ */
+function locale_translation_batch_version_check(string $project, string $langcode, array|\ArrayAccess &$context) {
+  $locale_project = \Drupal::service('locale.project')->get($project);
+
+  if (empty($locale_project)) {
+    return;
+  }
+
+  $status = \Drupal::keyValue('locale.translation_status')->get($project);
+  if (!isset($status[$langcode])) {
+    return;
+  }
+
+  if ($locale_project['version'] == $status[$langcode]->version) {
+    return;
+  }
+
+  \Drupal::moduleHandler()->loadInclude('locale', 'bulk.inc');
+  locale_translation_status_delete_projects([$project]);
+  locale_translate_delete_translation_files([$project]);
+
+  $context['message'] = t('Checked version of %project.', ['%project' => $project]);
+}
 
 /**
  * Implements callback_batch_operation().
@@ -296,17 +336,29 @@ function locale_translation_http_check($uri) {
  *   Directory where the downloaded file will be saved. Defaults to the
  *   temporary file path.
  *
- * @return object
+ * @return object|false
  *   File object if download was successful. FALSE on failure.
  */
 function locale_translation_download_source($source_file, $directory = 'temporary://') {
-  if ($uri = system_retrieve_file($source_file->uri, $directory, FALSE, FileSystemInterface::EXISTS_REPLACE)) {
-    $file = clone($source_file);
-    $file->type = LOCALE_TRANSLATION_LOCAL;
-    $file->uri = $uri;
-    $file->directory = $directory;
-    $file->timestamp = filemtime($uri);
-    return $file;
+  try {
+    $data = (string) \Drupal::httpClient()->get($source_file->uri)->getBody();
+    /** @var \Drupal\Core\File\FileSystemInterface $fileSystem */
+    $fileSystem = \Drupal::service('file_system');
+    $filename = $fileSystem->basename($source_file->uri);
+    if ($uri = $fileSystem->saveData($data, $directory . $filename, FileExists::Replace)) {
+      $file = clone($source_file);
+      $file->type = LOCALE_TRANSLATION_LOCAL;
+      $file->uri = $uri;
+      $file->directory = $directory;
+      $file->timestamp = filemtime($uri);
+      return $file;
+    }
+  }
+  catch (ClientExceptionInterface $exception) {
+    \Drupal::messenger()->addError(t('Failed to fetch file due to error "%error"', ['%error' => $exception->getMessage()]));
+  }
+  catch (FileException | InvalidStreamWrapperException $e) {
+    \Drupal::messenger()->addError(t('Failed to save file due to error "%error"', ['%error' => $e->getMessage()]));
   }
   \Drupal::logger('locale')->error('Unable to download translation file @uri.', ['@uri' => $source_file->uri]);
   return FALSE;

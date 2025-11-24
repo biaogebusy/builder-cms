@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file_mdm_exif\Kernel;
 
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\file_mdm\FileMetadataInterface;
+use Drupal\file_mdm\FileMetadataManagerInterface;
+use Drupal\file_mdm_exif\ExifTagMapperInterface;
 use Drupal\Tests\file_mdm\Kernel\FileMetadataManagerTestBase;
 use lsolesen\pel\PelEntryAscii;
 use lsolesen\pel\PelEntryRational;
@@ -17,11 +21,6 @@ use lsolesen\pel\PelEntrySRational;
  */
 class FileMetadataExifTest extends FileMetadataManagerTestBase {
 
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
   protected static $modules = [
     'system',
     'file_mdm',
@@ -29,23 +28,20 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     'file_test',
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   public function setUp(): void {
     parent::setUp();
     $this->installConfig(['file_mdm_exif']);
   }
 
   /**
-   * Test EXIF plugin.
+   * Tests EXIF plugin.
    */
-  public function testExifPlugin() {
+  public function testExifPlugin(): void {
     // Prepare a copy of test files.
-    $this->fileSystem->copy('core/tests/fixtures/files/image-test.jpg', 'public://', FileSystemInterface::EXISTS_REPLACE);
-    $this->fileSystem->copy('core/tests/fixtures/files/image-test.png', 'public://', FileSystemInterface::EXISTS_REPLACE);
-    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/test-exif.jpeg', 'public://', FileSystemInterface::EXISTS_REPLACE);
-    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/test-exif.jpeg', 'temporary://', FileSystemInterface::EXISTS_REPLACE);
+    $this->fileSystem->copy('core/tests/fixtures/files/image-test.jpg', 'public://', FileExists::Replace);
+    $this->fileSystem->copy('core/tests/fixtures/files/image-test.png', 'public://', FileExists::Replace);
+    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/test-exif.jpeg', 'public://', FileExists::Replace);
+    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/test-exif.jpeg', 'temporary://', FileExists::Replace);
     // The image files that will be tested.
     $image_files = [
       [
@@ -119,14 +115,13 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
       ],
     ];
 
-    $fmdm = $this->container->get('file_metadata_manager');
+    $fmdm = $this->container->get(FileMetadataManagerInterface::class);
 
     // Walk through test files.
     foreach ($image_files as $image_file) {
       $file_metadata = $fmdm->uri($image_file['uri']);
       if (!$file_metadata) {
         $this->fail("File not found: {$image_file['uri']}");
-        continue;
       }
       if (isset($image_file['copy_to_temp'])) {
         $file_metadata->copyUriToTemp();
@@ -164,13 +159,13 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
   }
 
   /**
-   * Test writing metadata to JPEG file.
+   * Tests writing metadata to JPEG file.
    */
-  public function testJpegExifSaveToFile() {
-    $fmdm = $this->container->get('file_metadata_manager');
+  public function testJpegExifSaveToFile(): void {
+    $fmdm = $this->container->get(FileMetadataManagerInterface::class);
 
     // Copy test file to public://.
-    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/portrait-painting.jpg', 'public://', FileSystemInterface::EXISTS_REPLACE);
+    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/portrait-painting.jpg', 'public://', FileExists::Replace);
     $file_uri = 'public://portrait-painting.jpg';
     $file_metadata = $fmdm->uri($file_uri);
 
@@ -190,9 +185,10 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     $data['Artist'] = 'shot by foo!';
     $this->assertEquals(47, $this->countMetadataKeys($file_metadata, 'exif'));
     $this->assertNull($file_metadata->getMetadata('exif', 'artist'));
-    $artist_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('artist');
+    $artist_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('artist');
     $artist = new PelEntryAscii($artist_tag['tag'], $data['Artist']);
     $file_metadata->setMetadata('exif', 'artist', $artist);
+    $this->assertNotNull($file_metadata->getMetadata('exif', 'artist'));
     $this->assertEquals($data['Artist'], $file_metadata->getMetadata('exif', 'artist')['value']);
     $this->assertEquals(48, $this->countMetadataKeys($file_metadata, 'exif'));
     // Setting an unknown tag leads to failure.
@@ -207,10 +203,14 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     // Add the ImageDescription tag to IFD1.
     $data['THUMBNAIL']['ImageDescription'] = 'awesome!';
     $this->assertNull($file_metadata->getMetadata('exif', [1, 'imagedescription']));
-    $desc_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag([1, 'imagedescription']);
+    $desc_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag([1, 'imagedescription']);
     $desc = new PelEntryAscii($desc_tag['tag'], $data['THUMBNAIL']['ImageDescription']);
     $file_metadata->setMetadata('exif', [1, 'imagedescription'], $desc);
-    $this->assertEquals($data['THUMBNAIL']['ImageDescription'], $file_metadata->getMetadata('exif', [1, 'imagedescription'])['value']);
+    $this->assertNotNull($file_metadata->getMetadata('exif', [1, 'imagedescription']));
+    $this->assertEquals($data['THUMBNAIL']['ImageDescription'], $file_metadata->getMetadata('exif', [
+      1,
+      'imagedescription',
+    ])['value']);
     $this->assertEquals(48, $this->countMetadataKeys($file_metadata, 'exif'));
     // Remove the Compression tag from IFD1.
     unset($data['THUMBNAIL']['Compression']);
@@ -222,9 +222,13 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     // Add the BrightnessValue tag to EXIF.
     $data['BrightnessValue'] = '12/4';
     $this->assertNull($file_metadata->getMetadata('exif', ['exif', 'brightnessvalue']));
-    $brightness_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag(['exif', 'brightnessvalue']);
+    $brightness_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag([
+      'exif',
+      'brightnessvalue',
+    ]);
     $brightness = new PelEntrySRational($brightness_tag['tag'], [12, 4]);
     $file_metadata->setMetadata('exif', ['exif', 'brightnessvalue'], $brightness);
+    $this->assertNotNull($file_metadata->getMetadata('exif', ['exif', 'brightnessvalue']));
     $this->assertEquals($data['BrightnessValue'], $file_metadata->getMetadata('exif', ['exif', 'brightnessvalue'])['text']);
     $this->assertEquals(48, $this->countMetadataKeys($file_metadata, 'exif'));
     // Remove the ISOSpeedRatings tag from EXIF.
@@ -237,10 +241,17 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     // Add the RelatedImageFileFormat tag to INTEROP.
     $data['RelatedFileFormat'] = 'qux';
     $this->assertNull($file_metadata->getMetadata('exif', ['interop', 'RelatedImageFileFormat']));
-    $ff_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag(['interop', 'RelatedImageFileFormat']);
+    $ff_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag([
+      'interop',
+      'RelatedImageFileFormat',
+    ]);
     $ff = new PelEntryAscii($ff_tag['tag'], $data['RelatedFileFormat']);
     $file_metadata->setMetadata('exif', ['interop', 'RelatedImageFileFormat'], $ff);
-    $this->assertEquals($data['RelatedFileFormat'], $file_metadata->getMetadata('exif', ['interop', 'RelatedImageFileFormat'])['text']);
+    $this->assertNotNull($file_metadata->getMetadata('exif', ['interop', 'RelatedImageFileFormat']));
+    $this->assertEquals(
+      $data['RelatedFileFormat'],
+      $file_metadata->getMetadata('exif', ['interop', 'RelatedImageFileFormat'])['text']
+    );
     $this->assertEquals(48, $this->countMetadataKeys($file_metadata, 'exif'));
     // Remove the InteroperabilityIndex tag from INTEROP.
     unset($data['InterOperabilityIndex']);
@@ -254,10 +265,10 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     $this->assertNull($file_metadata->getMetadata('exif', 'GPSLatitude'));
     $this->assertNull($file_metadata->getMetadata('exif', 'GPSLongitudeRef'));
     $this->assertNull($file_metadata->getMetadata('exif', 'GPSLongitude'));
-    $atr_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('GPSLatitudeRef');
-    $at_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('GPSLatitude');
-    $otr_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('GPSLongitudeRef');
-    $ot_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('GPSLongitude');
+    $atr_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('GPSLatitudeRef');
+    $at_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('GPSLatitude');
+    $otr_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('GPSLongitudeRef');
+    $ot_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('GPSLongitude');
     $data['GPSLatitudeRef'] = 'N';
     $atr = new PelEntryAscii($atr_tag['tag'], $data['GPSLatitudeRef']);
     $data['GPSLatitude'] = ['46/1', '37/1', '59448/10000'];
@@ -270,6 +281,10 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     $file_metadata->setMetadata('exif', 'GPSLatitude', $at);
     $file_metadata->setMetadata('exif', 'GPSLongitudeRef', $otr);
     $file_metadata->setMetadata('exif', 'GPSLongitude', $ot);
+    $this->assertNotNull($file_metadata->getMetadata('exif', 'GPSLatitudeRef'));
+    $this->assertNotNull($file_metadata->getMetadata('exif', 'GPSLatitude'));
+    $this->assertNotNull($file_metadata->getMetadata('exif', 'GPSLongitudeRef'));
+    $this->assertNotNull($file_metadata->getMetadata('exif', 'GPSLongitude'));
     $this->assertEquals($data['GPSLatitudeRef'], $file_metadata->getMetadata('exif', 'GPSLatitudeRef')['text']);
     $this->assertEquals('46° 37\' 5.9448" (46.62°)', $file_metadata->getMetadata('exif', 'GPSLatitude')['text']);
     $this->assertEquals($data['GPSLongitudeRef'], $file_metadata->getMetadata('exif', 'GPSLongitudeRef')['text']);
@@ -297,7 +312,7 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
     $this->assertEquals($data['GPSLongitude'], $data_reloaded['GPSLongitude']);
 
     // Test writing metadata to a file that has no EXIF info.
-    $this->fileSystem->copy('core/tests/fixtures/files/image-2.jpg', 'public://', FileSystemInterface::EXISTS_REPLACE);
+    $this->fileSystem->copy('core/tests/fixtures/files/image-2.jpg', 'public://', FileExists::Replace);
     $test_2 = $fmdm->uri('public://image-2.jpg');
     $this->assertEquals(0, $this->countMetadataKeys($test_2, 'exif'));
     // Load EXIF metadata from previous file processed.
@@ -334,13 +349,13 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
   }
 
   /**
-   * Test writing metadata to TIFF file.
+   * Tests writing metadata to TIFF file.
    */
-  public function testTiffExifSaveToFile() {
-    $fmdm = $this->container->get('file_metadata_manager');
+  public function testTiffExifSaveToFile(): void {
+    $fmdm = $this->container->get(FileMetadataManagerInterface::class);
 
     // Copy test file to public://.
-    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/sample-1.tiff', 'public://', FileSystemInterface::EXISTS_REPLACE);
+    $this->fileSystem->copy($this->moduleList->getPath('file_mdm') . '/tests/files/sample-1.tiff', 'public://', FileExists::Replace);
     $file_uri = 'public://sample-1.tiff';
     $file_metadata = $fmdm->uri($file_uri);
 
@@ -365,7 +380,7 @@ class FileMetadataExifTest extends FileMetadataManagerTestBase {
 
     $this->assertEquals([8, 8, 8, 8], $file_metadata->getMetadata('exif', 'BitsPerSample')['value']);
     $data['BitsPerSample'] = [7, 6, 5, 4];
-    $bps_tag = $this->container->get('file_mdm_exif.tag_mapper')->resolveKeyToIfdAndTag('BitsPerSample');
+    $bps_tag = $this->container->get(ExifTagMapperInterface::class)->resolveKeyToIfdAndTag('BitsPerSample');
     $bps = new PelEntryShort($bps_tag['tag'], $data['BitsPerSample']);
     $this->assertTrue($file_metadata->setMetadata('exif', 'BitsPerSample', $bps));
     $this->assertEquals($data['BitsPerSample'], $file_metadata->getMetadata('exif', 'BitsPerSample')['value']);

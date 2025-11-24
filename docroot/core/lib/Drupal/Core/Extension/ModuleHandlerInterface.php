@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Extension;
 
+use Drupal\Core\DestructableInterface;
+
 /**
  * Interface for classes that manage a set of enabled modules.
  *
@@ -9,7 +11,7 @@ namespace Drupal\Core\Extension;
  * responsible for loading module files and maintaining information about module
  * dependencies and hook implementations.
  */
-interface ModuleHandlerInterface {
+interface ModuleHandlerInterface extends DestructableInterface {
 
   /**
    * Includes a module's .module file.
@@ -173,24 +175,6 @@ interface ModuleHandlerInterface {
   public function getHookInfo();
 
   /**
-   * Determines which modules are implementing a hook.
-   *
-   * @param string $hook
-   *   The name of the hook (e.g. "help" or "menu").
-   *
-   * @return array
-   *   An array with the names of the modules which are implementing this hook.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. Instead you
-   *   should use ModuleHandlerInterface::invokeAllWith() for hook invocations
-   *   or you should use ModuleHandlerInterface::hasImplementations() to
-   *   determine if hooks implementations exist.
-   *
-   * @see https://www.drupal.org/node/3000490
-   */
-  public function getImplementations($hook);
-
-  /**
    * Write the hook implementation info to the cache.
    */
   public function writeCache();
@@ -216,25 +200,6 @@ interface ModuleHandlerInterface {
    *   any implementations. Otherwise FALSE.
    */
   public function hasImplementations(string $hook, $modules = NULL): bool;
-
-  /**
-   * Returns whether a given module implements a given hook.
-   *
-   * @param string $module
-   *   The name of the module (without the .module extension).
-   * @param string $hook
-   *   The name of the hook (e.g. "help" or "menu").
-   *
-   * @return bool
-   *   TRUE if the module is both installed and enabled, and the hook is
-   *   implemented in that module.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. Use the
-   *   hasImplementations() methods instead with the $modules argument.
-   *
-   * @see https://www.drupal.org/node/3000490
-   */
-  public function implementsHook($module, $hook);
 
   /**
    * Executes a callback for each implementation of a hook.
@@ -348,22 +313,22 @@ interface ModuleHandlerInterface {
    * to be passed and alterable, modules provide additional variables assigned by
    * reference in the last $context argument:
    * @code
-   *   $context = array(
+   *   $context = [
    *     'alterable' => &$alterable,
    *     'unalterable' => $unalterable,
    *     'foo' => 'bar',
    *   );
-   *   $this->alter('mymodule_data', $alterable1, $alterable2, $context);
+   *   $this->alter('my_module_data', $alterable1, $alterable2, $context);
    * @endcode
    *
    * Note that objects are always passed by reference. If it is absolutely
    * required that no implementation alters a passed object in $context, then an
    * object needs to be cloned:
    * @code
-   *   $context = array(
+   *   $context = [
    *     'unalterable_object' => clone $object,
    *   );
-   *   $this->alter('mymodule_data', $data, $context);
+   *   $this->alter('my_module_data', $data, $context);
    * @endcode
    *
    * @param string|array $type
@@ -373,7 +338,7 @@ interface ModuleHandlerInterface {
    *   array, ordered first by module, and then for each module, in the order of
    *   values in $type. For example, when Form API is using $this->alter() to
    *   execute both hook_form_alter() and hook_form_FORM_ID_alter()
-   *   implementations, it passes array('form', 'form_' . $form_id) for $type.
+   *   implementations, it passes ['form', 'form_' . $form_id] for $type.
    * @param mixed $data
    *   The variable that will be passed to hook_TYPE_alter() implementations to be
    *   altered. The type of this variable depends on the value of the $type
@@ -406,7 +371,7 @@ interface ModuleHandlerInterface {
    *   array, ordered first by module, and then for each module, in the order of
    *   values in $type. For example, when Form API is using $this->alter() to
    *   execute both hook_form_alter() and hook_form_FORM_ID_alter()
-   *   implementations, it passes array('form', 'form_' . $form_id) for $type.
+   *   implementations, it passes ['form', 'form_' . $form_id] for $type.
    * @param mixed $data
    *   The variable that will be passed to hook_TYPE_alter() implementations to be
    *   altered. The type of this variable depends on the value of the $type
@@ -443,6 +408,11 @@ interface ModuleHandlerInterface {
    * @return string
    *   Returns the human readable name of the module or the machine name passed
    *   in if no matching module is found.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0.
+   *   Use \Drupal::service('extension.list.module')->getName($module) instead.
+   *
+   * @see https://www.drupal.org/node/3310017
    */
   public function getName($module);
 

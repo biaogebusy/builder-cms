@@ -5,10 +5,10 @@ namespace Drupal\address\Plugin\views\filter;
 use CommerceGuys\Addressing\AddressFormat\AddressFormatRepositoryInterface;
 use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
 use CommerceGuys\Addressing\Subdivision\SubdivisionRepositoryInterface;
+use Drupal\address\LabelHelper;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\address\LabelHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -131,7 +131,7 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     $this->formState = $form_state;
-
+    \Drupal::moduleHandler()->loadInclude('views_ui', 'inc', 'admin');
     $form['country'] = [
       '#type' => 'container',
       '#weight' => -300,
@@ -148,6 +148,7 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
       '#ajax' => [
         'callback' => [get_class($this), 'ajaxRefreshCountry'],
         'wrapper' => 'admin-area-value-options-ajax-wrapper',
+        'url' => views_ui_build_form_url($form_state),
       ],
     ];
 
@@ -226,6 +227,7 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
       '#ajax' => [
         'callback' => [get_class($this), 'ajaxRefreshCountry'],
         'wrapper' => 'admin-area-value-options-ajax-wrapper',
+        'url' => views_ui_build_form_url($form_state),
       ],
       '#states' => [
         'visible' => [
@@ -257,15 +259,20 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
    * {@inheritdoc}
    */
   public function validateOptionsForm(&$form, FormStateInterface $form_state) {
-    if (empty($form_state)) {
-      return;
-    }
     $is_exposed = !empty($this->options['exposed']);
 
-    $country_source = $form_state->getValue(['options', 'country', 'country_source']);
+    $country_source = $form_state->getValue([
+      'options',
+      'country',
+      'country_source',
+    ]);
     switch ($country_source) {
       case 'argument':
-        $country_argument = $form_state->getValue(['options', 'country', 'country_argument_id']);
+        $country_argument = $form_state->getValue([
+          'options',
+          'country',
+          'country_argument_id',
+        ]);
         if (empty($country_argument)) {
           $error = $this->t("The country contextual filter must be defined for this filter to work using 'contextual filter' for the 'Country source'.");
           $form_state->setError($form['country']['country_source'], $error);
@@ -277,7 +284,11 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
         break;
 
       case 'filter':
-        $country_filter = $form_state->getValue(['options', 'country', 'country_filter_id']);
+        $country_filter = $form_state->getValue([
+          'options',
+          'country',
+          'country_filter_id',
+        ]);
         if (empty($country_filter)) {
           $error = $this->t("The country filter must be defined for this filter to work using 'exposed filter' for the 'Country source'.");
           $form_state->setError($form['country']['country_source'], $error);
@@ -289,7 +300,11 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
         break;
 
       case 'static':
-        $country_code = $form_state->getValue(['options', 'country', 'country_static_code']);
+        $country_code = $form_state->getValue([
+          'options',
+          'country',
+          'country_static_code',
+        ]);
         if (empty($country_code)) {
           $error = $this->t('The predefined country must be set for this filter to work.');
           $form_state->setError($form['country']['country_static_code'], $error);
@@ -341,7 +356,11 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
     // ignore/disable the "reduce" option since it doesn't make any sense and
     // will cause problems if the stale configuration is saved.
     // Similarly, we clear out any selections for specific administrative areas.
-    $country_source = $form_state->getValue(['options', 'country', 'country_source']);
+    $country_source = $form_state->getValue([
+      'options',
+      'country',
+      'country_source',
+    ]);
     if ($country_source != 'static') {
       $form_state->setValue(['options', 'expose', 'reduce'], FALSE);
       $form_state->setValue(['options', 'value'], []);
@@ -429,7 +448,11 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
     $country_source = '';
     if (!empty($this->formState)) {
       // First, see if there's a legitimate value in the form state.
-      $form_value_country_source = $this->formState->getValue(['options', 'country', 'country_source']);
+      $form_value_country_source = $this->formState->getValue([
+        'options',
+        'country',
+        'country_source',
+      ]);
       if (!empty($form_value_country_source)) {
         $country_source = $form_value_country_source;
       }
@@ -583,7 +606,7 @@ class AdministrativeArea extends CountryAwareInOperatorBase {
    * @return array
    *   An array of country names, keyed by country code.
    */
-  public function getAdministrativeAreaCountries(array $available_countries = NULL) {
+  public function getAdministrativeAreaCountries(?array $available_countries = NULL) {
     if (!isset($available_countries)) {
       $available_countries = $this->getAvailableCountries();
     }

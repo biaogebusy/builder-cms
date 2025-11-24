@@ -72,15 +72,19 @@ class EckEntityAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
-    // Check edit permission on update operation.
     $operation = ($operation == 'update') ? 'edit' : $operation;
     $permissions[] = $operation . ' any ' . $entity->getEntityTypeId() . ' entities';
-    /** @var \Drupal\eck\Entity\EckEntity $entity */
     if ($entity->getOwnerId() == $account->id()) {
       $permissions[] = $operation . ' own ' . $entity->getEntityTypeId() . ' entities';
     }
+    $default_entity_access = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
 
-    return AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
+    // Unpublished entities require at least one of the default permissions:
+    // 'views own' or 'view any' and 'view unpublished'.
+    if ($operation == 'view' && !$entity->isPublished()) {
+      return AccessResult::allowedIf($default_entity_access && $account->hasPermission('view unpublished eck entities'));
+    }
+    return $default_entity_access;
   }
 
   /**

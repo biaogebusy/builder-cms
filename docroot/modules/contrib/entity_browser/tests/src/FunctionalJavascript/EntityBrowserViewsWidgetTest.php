@@ -71,7 +71,6 @@ class EntityBrowserViewsWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->pageTextContains('example.jpg');
     $this->assertSession()->fieldExists($field)->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->responseNotContains('HTTP/1.0 200 OK');
     $this->assertSession()->responseNotContains('Cache-Control: no-cache, private');
     // Test that the response contains the selected entity.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel\Migrate\d6;
 
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -44,7 +46,7 @@ class MigrateMenuLinkTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of menu links.
    */
-  public function testMenuLinks() {
+  public function testMenuLinks(): void {
     /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $menu_link */
     $menu_link = MenuLinkContent::load(139)->getTranslation('fr');
     $this->assertInstanceOf(MenuLinkContent::class, $menu_link);

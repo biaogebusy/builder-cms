@@ -2,11 +2,6 @@
 
 namespace Drupal\charts\Plugin\views\style;
 
-use Drupal\charts\ChartManager;
-use Drupal\charts\ChartViewsFieldInterface;
-use Drupal\charts\Element\BaseSettings;
-use Drupal\charts\Plugin\chart\Library\ChartInterface;
-use Drupal\charts\TypeManager;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
@@ -15,25 +10,32 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\charts\ChartManager;
+use Drupal\charts\ChartViewsFieldInterface;
+use Drupal\charts\Element\BaseSettings;
+use Drupal\charts\Plugin\chart\Library\ChartInterface;
+use Drupal\charts\Plugin\chart\Library\LibraryRetrieverTrait;
+use Drupal\charts\TypeManager;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsStyle;
 use Drupal\views\Plugin\views\field\EntityField;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Style plugin to render view as a chart.
- *
- * @ingroup views_style_plugins
- *
- * @ViewsStyle(
- *   id = "chart",
- *   title = @Translation("Chart"),
- *   help = @Translation("Render a chart of your data."),
- *   theme = "views_view_charts",
- *   display_types = { "normal" }
- * )
+ * Defines a Views style plugin for rendering charts.
  */
+#[ViewsStyle(
+  id: "chart",
+  title: new TranslatableMarkup("Chart"),
+  help: new TranslatableMarkup("Render a chart of your data."),
+  theme: "views_view_charts",
+  display_types: ["normal"]
+)]
 class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactoryPluginInterface {
+
+  use LibraryRetrieverTrait;
 
   /**
    * {@inheritdoc}
@@ -91,17 +93,17 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
    *   The plugin implementation definition.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
-   * @param \Drupal\charts\ChartManager $chart_manager
+   * @param \Drupal\charts\ChartManager $chartsManager
    *   The chart manager service.
    * @param \Drupal\charts\TypeManager $chart_type_manager
    *   The chart type manager.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $config_factory, ChartManager $chart_manager, TypeManager $chart_type_manager, RouteMatchInterface $route_match) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $config_factory, protected ChartManager $chartsManager, TypeManager $chart_type_manager, RouteMatchInterface $route_match) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->configFactory = $config_factory;
-    $this->chartManager = $chart_manager;
+    $this->chartManager = $this->chartsManager;
     $this->chartTypeManager = $chart_type_manager;
     $this->routeMatch = $route_match;
   }
@@ -131,8 +133,8 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
     $options['chart_settings'] = [
       'default' => $charts_default_settings,
     ];
+    $options['chart_settings']['library_type_options'] = [];
     $options['chart_settings']['fields']['allow_advanced_rendering'] = FALSE;
-
     $options['chart_settings']['library'] = '';
 
     // @todo ensure that chart extensions inherit defaults from parent
@@ -318,6 +320,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
       '#type' => 'chart',
       '#chart_type' => $chart_settings['type'],
       '#chart_library' => $chart_settings['library'],
+      '#library_type_options' => $chart_settings['library_type_options'] ?? [],
       '#chart_id' => $chart_id,
       '#id' => Html::getUniqueId('chart_' . $chart_id),
       '#stacking' => $chart_settings['fields']['stacking'] ?? '0',
@@ -330,6 +333,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
       '#tooltips' => $chart_settings['display']['tooltips'],
       '#data_labels' => $chart_settings['display']['data_labels'],
       '#data_markers' => $chart_settings['display']['data_markers'],
+      '#connect_nulls' => !empty($chart_settings['display']['connect_nulls']),
       // Colors only used if a grouped view or using a type such as a pie chart.
       '#colors' => $chart_settings['display']['colors'] ?? [],
       '#background' => $chart_settings['display']['background'] ?? 'transparent',
@@ -373,7 +377,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
           $data_row = [];
           if ($label_field_key) {
             // Labels need to be decoded; the charting library will re-encode.
-            $data_row[] = strip_tags($this->getField($row_number, $label_field_key), ENT_QUOTES);
+            $data_row[] = trim(strip_tags($this->getField($row_number, $label_field_key), ENT_QUOTES));
           }
           $data_row[] = $this->processNumberValueFromField($row_number, $data_field_key);
           $data[] = $data_row;
@@ -459,7 +463,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
     // Check if this display has any children charts that should be applied
     // on top of it.
     $children_displays = $this->getChildrenChartDisplays();
-    // Contains the different subviews of the attachments.
+    // Contains the different sub views of the attachments.
     $attachments = [];
 
     foreach ($children_displays as $child_display) {
@@ -468,7 +472,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
         continue;
       }
 
-      // Generate the subchart by executing the child display. We load a fresh
+      // Generate the sub chart by executing the child display. We load a fresh
       // view here to avoid collisions in shifting the current display while in
       // a display.
       $subview = $this->view->createDuplicate();
@@ -498,31 +502,32 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
         continue;
       }
 
-      $subchart = $subview->style_plugin->render();
+      $sub_chart = $subview->style_plugin->render();
       // Add attachment views to attachments array.
       array_push($attachments, $subview);
 
       // Create a secondary axis if needed.
-      if ($child_display_handler->options['inherit_yaxis'] !== '1' && isset($subchart['yaxis'])) {
-        $chart['secondary_yaxis'] = $subchart['yaxis'];
+      if ($child_display_handler->options['inherit_yaxis'] !== '1' && isset($sub_chart['yaxis'])) {
+        $chart['secondary_yaxis'] = $sub_chart['yaxis'];
         $chart['secondary_yaxis']['#opposite'] = TRUE;
       }
 
       // Merge in the child chart data.
-      foreach (Element::children($subchart) as $key) {
-        if ($subchart[$key]['#type'] === 'chart_data') {
+      foreach (Element::children($sub_chart) as $key) {
+        if ($sub_chart[$key]['#type'] === 'chart_data') {
           // This ensures that chart attachment data are placed correctly,
           // but it doesn't allow for chart attachment data to have x-axis
           // labels not already present in the parent chart.
           if (!empty($chart['xaxis']['#labels'])) {
-            $processed_data = $this->alignSubchartData($chart['xaxis']['#labels'], $subchart[$key]['#mapped_data'], $subchart[$key]['#data']);
-            $subchart[$key]['#data'] = $processed_data;
+            $processed_data = $this->alignSubChartData($chart['xaxis']['#labels'], $sub_chart[$key]['#mapped_data'], $sub_chart[$key]['#data']);
+            $sub_chart[$key]['#data'] = $processed_data;
           }
-          $chart[$key] = $subchart[$key];
-          // If the subchart is a different type than the parent chart, set
+          $chart[$key] = $sub_chart[$key];
+          $chart[$key]['#chart_attachment_id'] = $child_display_handler->display['id'];
+          // If the sub chart is a different type than the parent chart, set
           // the #chart_type property on the individual chart data elements.
-          if ($subchart['#chart_type'] !== $chart['#chart_type']) {
-            $chart[$key]['#chart_type'] = $subchart['#chart_type'];
+          if ($sub_chart['#chart_type'] !== $chart['#chart_type']) {
+            $chart[$key]['#chart_type'] = $sub_chart['#chart_type'];
           }
           if ($child_display_handler->options['inherit_yaxis'] !== '1') {
             $chart[$key]['#target_axis'] = 'secondary_yaxis';
@@ -635,10 +640,13 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
   public function calculateDependencies() {
     $dependencies = [];
 
-    if (!empty($this->options['chart_settings']['library'])) {
-      $plugin_definition = $this->chartManager->getDefinition($this->options['chart_settings']['library']);
-      $dependencies['module'] = [$plugin_definition['provider']];
+    if (empty($this->options['chart_settings']['library'])) {
+      return $dependencies;
     }
+
+    $library = $this->getLibrary($this->options['chart_settings']['library']);
+    $plugin_definition = $this->chartsManager->getDefinition($library);
+    $dependencies['module'] = [$plugin_definition['provider']];
 
     return $dependencies;
   }
@@ -692,7 +700,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
    * @return array
    *   The fields.
    */
-  private function getSelectedDataFields(array $data_providers) {
+  protected function getSelectedDataFields(array $data_providers) {
     return array_filter($data_providers, function ($value) {
 
       return !empty($value['enabled']);
@@ -742,7 +750,9 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
     $element_key_prefix = $this->view->current_display . '__' . $label_field_key;
     $chart_settings = $this->options['chart_settings'];
     foreach ($sets as $set_label => $data_set) {
-      $name = strtolower(Html::cleanCssIdentifier($set_label));
+      $name = strtolower(Html::cleanCssIdentifier('set-label-' . $set_label));
+      // Remove the added prefix after processing.
+      $name = substr($name, strlen('set-label-'));
       $element_key = $element_key_prefix . '__' . $name;
       $chart[$element_key] = [
         '#type' => 'chart_data',
@@ -873,7 +883,7 @@ class ChartsPluginStyleChart extends StylePluginBase implements ContainerFactory
    * @return array
    *   $processed_data
    */
-  private function alignSubchartData(array $parent_labels, array $child_mapped_data, array $data) {
+  private function alignSubChartData(array $parent_labels, array $child_mapped_data, array $data) {
     $child_labels = array_keys($child_mapped_data);
     if ($parent_labels === $child_labels) {
       return $data;

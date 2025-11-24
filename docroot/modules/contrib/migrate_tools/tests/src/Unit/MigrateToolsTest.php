@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_tools\Unit;
 
 use Drupal\migrate_tools\MigrateTools;
@@ -9,7 +11,7 @@ use Drupal\Tests\UnitTestCase;
  * @coversDefaultClass \Drupal\migrate_tools\MigrateTools
  * @group migrate_tools
  */
-class MigrateToolsTest extends UnitTestCase {
+final class MigrateToolsTest extends UnitTestCase {
 
   /**
    * @covers ::buildIdList
@@ -24,7 +26,7 @@ class MigrateToolsTest extends UnitTestCase {
   /**
    * Data provider for testBuildIdList.
    */
-  public function dataProviderIdList(): array {
+  public static function dataProviderIdList(): array {
     $cases = [];
     $cases[] = [
       'options' => [],

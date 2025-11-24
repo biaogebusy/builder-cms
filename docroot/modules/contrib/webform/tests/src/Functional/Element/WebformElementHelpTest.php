@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
+
 /**
  * Tests for element help.
  *
@@ -53,7 +55,12 @@ class WebformElementHelpTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<span class="fieldset-legend">help_radios<span class="webform-element-help js-webform-element-help" role="tooltip" tabindex="0" aria-label="help_radios" data-webform-help="&lt;div class=&quot;webform-element-help--title&quot;&gt;help_radios&lt;/div&gt;&lt;div class=&quot;webform-element-help--content&quot;&gt;{This is an example of help for radio buttons}&lt;/div&gt;"><span aria-hidden="true">?</span></span>');
 
     // Check details.
-    $assert_session->responseContains('<summary role="button" aria-controls="edit-help-details" aria-expanded="false" aria-pressed="false">help_details<span class="webform-element-help js-webform-element-help" role="tooltip" tabindex="0" aria-label="help_details" data-webform-help="&lt;div class=&quot;webform-element-help--title&quot;&gt;help_details&lt;/div&gt;&lt;div class=&quot;webform-element-help--content&quot;&gt;{This is an example of help for a details element}&lt;/div&gt;"><span aria-hidden="true">?</span>');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.3',
+      currentCallable: fn() => $assert_session->responseContains('<summary role="button" aria-controls="edit-help-details" aria-expanded="false">help_details<span class="webform-element-help js-webform-element-help" role="tooltip" tabindex="0" aria-label="help_details" data-webform-help="&lt;div class=&quot;webform-element-help--title&quot;&gt;help_details&lt;/div&gt;&lt;div class=&quot;webform-element-help--content&quot;&gt;{This is an example of help for a details element}&lt;/div&gt;"><span aria-hidden="true">?</span>'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<summary role="button" aria-controls="edit-help-details" aria-expanded="false" aria-pressed="false">help_details<span class="webform-element-help js-webform-element-help" role="tooltip" tabindex="0" aria-label="help_details" data-webform-help="&lt;div class=&quot;webform-element-help--title&quot;&gt;help_details&lt;/div&gt;&lt;div class=&quot;webform-element-help--content&quot;&gt;{This is an example of help for a details element}&lt;/div&gt;"><span aria-hidden="true">?</span>'),
+    );
 
     // Check section.
     $assert_session->responseContains('<h2 class="webform-section-title">help_section<span class="webform-element-help js-webform-element-help" role="tooltip" tabindex="0" aria-label="help_section" data-webform-help="&lt;div class=&quot;webform-element-help--title&quot;&gt;help_section&lt;/div&gt;&lt;div class=&quot;webform-element-help--content&quot;&gt;{This is an example of help for a section element}&lt;/div&gt;"><span aria-hidden="true">?</span></span>');

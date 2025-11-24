@@ -37,7 +37,7 @@ class PrepareLayout implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Only available in >= D9.1, see
     // https://www.drupal.org/project/layout_library/issues/3082434.
     if (class_exists('Drupal\layout_builder\Event\PrepareLayoutEvent')) {

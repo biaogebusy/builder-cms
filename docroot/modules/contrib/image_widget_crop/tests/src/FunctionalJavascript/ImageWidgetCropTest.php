@@ -75,7 +75,12 @@ class ImageWidgetCropTest extends WebDriverTestBase {
    * {@inheritdoc}
    */
   protected function createImageField($name, $type_name, $storage_settings = [], $field_settings = [], $widget_settings = [], $formatter_settings = [], $description = '') {
-    $this->traitCreateImageField($name, $type_name, $storage_settings, $field_settings, $widget_settings, $formatter_settings, $description);
+    if (version_compare(\Drupal::VERSION, '10.3', '>=')) {
+      $this->traitCreateImageField($name, 'node', $type_name, $storage_settings, $field_settings, $widget_settings, $formatter_settings, $description);
+    }
+    else {
+      $this->traitCreateImageField($name, $type_name, $storage_settings, $field_settings, $widget_settings, $formatter_settings, $description);
+    }
 
     $this->container->get('entity_display.repository')
       ->getFormDisplay('node', $type_name)

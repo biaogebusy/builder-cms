@@ -3,6 +3,7 @@
 namespace Drupal\file\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -11,6 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\ElementInfoManagerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\file\Element\ManagedFile;
 use Drupal\file\Entity\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -18,21 +20,18 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * Plugin implementation of the 'file_generic' widget.
- *
- * @FieldWidget(
- *   id = "file_generic",
- *   label = @Translation("File"),
- *   field_types = {
- *     "file"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'file_generic',
+  label: new TranslatableMarkup('File'),
+  field_types: ['file'],
+)]
 class FileWidget extends WidgetBase {
 
   /**
    * The element info manager.
    */
-  protected $elementInfo;
+  protected ElementInfoManagerInterface $elementInfo;
 
   /**
    * {@inheritdoc}
@@ -62,6 +61,15 @@ class FileWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
+    $element['notice'] = [
+      '#type' => 'container',
+      '#markup' => $this->t('The UploadProgress PHP extension must be enabled to configure the progress indicator. Check the <a href=":status">status report</a> for more information.', [':status' => Url::fromRoute('system.status')->toString()]),
+      '#weight' => 16,
+      '#access' => !extension_loaded('uploadprogress'),
+      '#attributes' => [
+        'role' => 'status',
+      ],
+    ];
     $element['progress_indicator'] = [
       '#type' => 'radios',
       '#title' => $this->t('Progress indicator'),
@@ -72,7 +80,7 @@ class FileWidget extends WidgetBase {
       '#default_value' => $this->getSetting('progress_indicator'),
       '#description' => $this->t('The throbber display does not show the status of uploads but takes up less space. The progress bar is helpful for monitoring progress on large uploads.'),
       '#weight' => 16,
-      '#access' => file_progress_implementation(),
+      '#disabled' => !extension_loaded('uploadprogress'),
     ];
     return $element;
   }
@@ -266,7 +274,7 @@ class FileWidget extends WidgetBase {
         '#upload_validators' => $element['#upload_validators'],
         '#cardinality' => $cardinality,
       ];
-      $element['#description'] = \Drupal::service('renderer')->renderPlain($file_upload_help);
+      $element['#description'] = \Drupal::service('renderer')->renderInIsolation($file_upload_help);
       $element['#multiple'] = $cardinality != 1 ? TRUE : FALSE;
       if ($cardinality != 1 && $cardinality != -1) {
         $element['#element_validate'] = [[static::class, 'validateMultipleCount']];
@@ -318,10 +326,18 @@ class FileWidget extends WidgetBase {
    */
   public static function value($element, $input, FormStateInterface $form_state) {
     if ($input) {
-      // Checkboxes lose their value when empty.
-      // If the display field is present make sure its unchecked value is saved.
       if (empty($input['display'])) {
-        $input['display'] = $element['#display_field'] ? 0 : 1;
+        // Updates the display field with the default value because
+        // #display_field is invisible.
+        if (empty($input['fids'])) {
+          $input['display'] = $element['#display_default'];
+        }
+        // Checkboxes lose their value when empty.
+        // If the display field is present, make sure its unchecked value is
+        // saved.
+        else {
+          $input['display'] = $element['#display_field'] ? 0 : 1;
+        }
       }
     }
 

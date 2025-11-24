@@ -1,15 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Template\TwigSandboxTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Template;
 
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Template\TwigSandboxPolicy;
 use Drupal\Core\Template\Loader\StringLoader;
+use Drupal\Tests\Core\Entity\ContentEntityBaseMockableClass;
 use Drupal\Tests\UnitTestCase;
 use Twig\Environment;
 use Twig\Extension\SandboxExtension;
@@ -49,7 +47,7 @@ class TwigSandboxTest extends UnitTestCase {
    *
    * @dataProvider getTwigEntityDangerousMethods
    */
-  public function testEntityDangerousMethods($template) {
+  public function testEntityDangerousMethods($template): void {
     $entity = $this->createMock('Drupal\Core\Entity\EntityInterface');
     $this->expectException(SecurityError::class);
     $this->twig->render($template, ['entity' => $entity]);
@@ -60,7 +58,7 @@ class TwigSandboxTest extends UnitTestCase {
    *
    * @return array
    */
-  public function getTwigEntityDangerousMethods() {
+  public static function getTwigEntityDangerousMethods() {
     return [
       ['{{ entity.delete }}'],
       ['{{ entity.save }}'],
@@ -71,7 +69,7 @@ class TwigSandboxTest extends UnitTestCase {
   /**
    * Tests that white listed classes can be extended.
    */
-  public function testExtendedClass() {
+  public function testExtendedClass(): void {
     $this->assertEquals(' class=&quot;kitten&quot;', $this->twig->render('{{ attribute.addClass("kitten") }}', ['attribute' => new TestAttribute()]));
   }
 
@@ -80,7 +78,7 @@ class TwigSandboxTest extends UnitTestCase {
    *
    * Currently "get", "has", and "is" are the only allowed prefixes.
    */
-  public function testEntitySafePrefixes() {
+  public function testEntitySafePrefixes(): void {
     $entity = $this->createMock('Drupal\Core\Entity\EntityInterface');
     $entity->expects($this->atLeastOnce())
       ->method('hasLinkTemplate')
@@ -110,8 +108,8 @@ class TwigSandboxTest extends UnitTestCase {
    * Currently the following methods are whitelisted: id, label, bundle, and
    * get.
    */
-  public function testEntitySafeMethods() {
-    $entity = $this->getMockBuilder('Drupal\Core\Entity\ContentEntityBase')
+  public function testEntitySafeMethods(): void {
+    $entity = $this->getMockBuilder(ContentEntityBaseMockableClass::class)
       ->disableOriginalConstructor()
       ->getMock();
     $entity->expects($this->atLeastOnce())
@@ -146,7 +144,7 @@ class TwigSandboxTest extends UnitTestCase {
   /**
    * Tests that safe methods inside Url objects can be called.
    */
-  public function testUrlSafeMethods() {
+  public function testUrlSafeMethods(): void {
     $url = $this->getMockBuilder('Drupal\Core\Url')
       ->disableOriginalConstructor()
       ->getMock();

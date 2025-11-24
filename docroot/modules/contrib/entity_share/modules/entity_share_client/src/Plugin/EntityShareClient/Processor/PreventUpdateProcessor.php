@@ -27,7 +27,7 @@ class PreventUpdateProcessor extends ImportProcessorPluginBase {
   /**
    * The machine name of the create only policy.
    */
-  const CREATE_ONLY_POLICY = 'create_only';
+  public const CREATE_ONLY_POLICY = 'create_only';
 
   /**
    * The entity type manager.
@@ -58,7 +58,7 @@ class PreventUpdateProcessor extends ImportProcessorPluginBase {
    */
   public function isEntityImportable(RuntimeImportContext $runtime_import_context, array $entity_json_data) {
     $field_mappings = $runtime_import_context->getFieldMappings();
-    $parsed_type = explode('--', $entity_json_data['type']);
+    $parsed_type = \explode('--', $entity_json_data['type']);
     $entity_type_id = $parsed_type[0];
     $entity_bundle = $parsed_type[1];
     // @todo Refactor in attributes to avoid getting entity keys each time.

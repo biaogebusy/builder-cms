@@ -72,7 +72,7 @@ class Upload extends WidgetBase {
       // more than one value.
       '#multiple' => $field_cardinality != 1 && $this->configuration['multiple'],
       '#upload_validators' => array_merge([
-        'file_validate_extensions' => [$this->configuration['extensions']],
+        'FileExtension' => ['extensions' => $this->configuration['extensions']],
       ], $upload_validators),
     ];
 

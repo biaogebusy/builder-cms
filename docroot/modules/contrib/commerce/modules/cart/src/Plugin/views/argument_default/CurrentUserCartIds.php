@@ -5,17 +5,18 @@ namespace Drupal\commerce_cart\Plugin\views\argument_default;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default argument plugin for the current user's carts.
- *
- * @ViewsArgumentDefault(
- *   id = "current_user_cart_ids",
- *   title = @Translation("Current user cart IDs")
- * )
  */
+#[ViewsArgumentDefault(
+  id: "current_user_cart_ids",
+  title: new TranslatableMarkup("Current user cart IDs")
+)]
 class CurrentUserCartIds extends ArgumentDefaultPluginBase implements CacheableDependencyInterface {
 
   /**

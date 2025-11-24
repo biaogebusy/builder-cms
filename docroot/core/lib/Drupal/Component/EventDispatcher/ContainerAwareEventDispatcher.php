@@ -2,12 +2,10 @@
 
 namespace Drupal\Component\EventDispatcher;
 
+use Psr\EventDispatcher\StoppableEventInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Contracts\EventDispatcher\Event as ContractsEvent;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface as ContractsEventDispatcherInterface;
 
 /**
  * A performance optimized container aware event dispatcher.
@@ -19,7 +17,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface as ContractsEvent
  *   <dt>Faster instantiation of the event dispatcher service</dt>
  *   <dd>
  *     Instead of calling <code>addSubscriberService</code> once for each
- *     subscriber, a precompiled array of listener definitions is passed
+ *     subscriber, a pre-compiled array of listener definitions is passed
  *     directly to the constructor. This is faster by roughly an order of
  *     magnitude. The listeners are collected and prepared using a compiler
  *     pass.
@@ -88,39 +86,8 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function dispatch($event/*, string $event_name = NULL*/) {
-    $event_name = 1 < \func_num_args() ? func_get_arg(1) : NULL;
-    if (\is_object($event)) {
-      $class_name = get_class($event);
-      $event_name = $event_name ?? $class_name;
-
-      $deprecation_message = 'Symfony\Component\EventDispatcher\Event is deprecated in drupal:9.1.0 and will be replaced by Symfony\Contracts\EventDispatcher\Event in drupal:10.0.0. A new Drupal\Component\EventDispatcher\Event class is available to bridge the two versions of the class. See https://www.drupal.org/node/3159012';
-
-      // Trigger a deprecation error if the deprecated Event class is used
-      // directly.
-      if ($class_name === 'Symfony\Component\EventDispatcher\Event') {
-        @trigger_error($deprecation_message, E_USER_DEPRECATED);
-      }
-      // Also try to trigger deprecation errors when classes are in the Drupal
-      // namespace and inherit directly from the deprecated class. If a class is
-      // in the Symfony namespace or a different one, we have to assume those
-      // will be updated by the dependency itself. Exclude the Drupal Event
-      // bridge class as a special case, otherwise it's pointless.
-      elseif ($class_name !== 'Drupal\Component\EventDispatcher\Event' && strpos($class_name, 'Drupal') !== FALSE) {
-        if (get_parent_class($event) === 'Symfony\Component\EventDispatcher\Event') {
-          @trigger_error($deprecation_message, E_USER_DEPRECATED);
-        }
-      }
-    }
-    elseif (\is_string($event) && (NULL === $event_name || $event_name instanceof ContractsEvent || $event_name instanceof Event)) {
-      @trigger_error('Calling the Symfony\Component\EventDispatcher\EventDispatcherInterface::dispatch() method with a string event name as the first argument is deprecated in drupal:9.1.0, an Event object will be required instead in drupal:10.0.0. See https://www.drupal.org/node/3154407', E_USER_DEPRECATED);
-      $swap = $event;
-      $event = $event_name ?? new Event();
-      $event_name = $swap;
-    }
-    else {
-      throw new \TypeError(sprintf('Argument 1 passed to "%s::dispatch()" must be an object, %s given.', ContractsEventDispatcherInterface::class, \gettype($event)));
-    }
+  public function dispatch(object $event, ?string $eventName = NULL): object {
+    $event_name = $eventName ?? get_class($event);
 
     if (isset($this->listeners[$event_name])) {
       // Sort listeners if necessary.
@@ -128,6 +95,8 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
         krsort($this->listeners[$event_name]);
         unset($this->unsorted[$event_name]);
       }
+
+      $stoppable = $event instanceof StoppableEventInterface;
 
       // Invoke listeners and resolve callables if necessary.
       foreach ($this->listeners[$event_name] as &$definitions) {
@@ -140,7 +109,7 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
           }
 
           call_user_func($definition['callable'], $event, $event_name, $this);
-          if ($event->isPropagationStopped()) {
+          if ($stoppable && $event->isPropagationStopped()) {
             return $event;
           }
         }
@@ -241,6 +210,9 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function addListener($event_name, $listener, $priority = 0) {
     $this->listeners[$event_name][$priority][] = ['callable' => $listener];
@@ -249,6 +221,9 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function removeListener($event_name, $listener) {
     if (!isset($this->listeners[$event_name])) {
@@ -286,6 +261,9 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function addSubscriber(EventSubscriberInterface $subscriber) {
     foreach ($subscriber->getSubscribedEvents() as $event_name => $params) {
@@ -305,6 +283,9 @@ class ContainerAwareEventDispatcher implements EventDispatcherInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function removeSubscriber(EventSubscriberInterface $subscriber) {
     foreach ($subscriber->getSubscribedEvents() as $event_name => $params) {

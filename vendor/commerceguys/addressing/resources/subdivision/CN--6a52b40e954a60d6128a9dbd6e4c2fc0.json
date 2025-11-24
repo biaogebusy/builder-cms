@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Keelung City"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anle District": {
+			"local_name": "安樂區"
+		},
+		"Nuannuan District": {
+			"local_name": "暖暖區"
+		},
+		"Qidu District": {
+			"local_name": "七堵區"
+		},
+		"Ren'ai District": {
+			"local_name": "仁愛區"
+		},
+		"Xinyi District": {
+			"local_name": "信義區"
+		},
+		"Zhongshan District": {
+			"local_name": "中山區"
+		},
+		"Zhongzheng District": {
+			"local_name": "中正區"
+		}
+	}
+}

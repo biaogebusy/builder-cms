@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -12,23 +14,21 @@ use Drupal\KernelTests\KernelTestBase;
 class ConfigDiffTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['config_test', 'system'];
 
   /**
    * Tests calculating the difference between two sets of configuration.
    */
-  public function testDiff() {
+  public function testDiff(): void {
     $active = $this->container->get('config.storage');
     $sync = $this->container->get('config.storage.sync');
     $config_name = 'config_test.system';
     $change_key = 'foo';
     $remove_key = '404';
     $add_key = 'biff';
-    $add_data = 'bangpow';
+    $add_data = 'bangPow';
     $change_data = 'foobar';
 
     // Install the default config.
@@ -108,7 +108,7 @@ class ConfigDiffTest extends KernelTestBase {
   /**
    * Tests calculating the difference between two sets of config collections.
    */
-  public function testCollectionDiff() {
+  public function testCollectionDiff(): void {
     /** @var \Drupal\Core\Config\StorageInterface $active */
     $active = $this->container->get('config.storage');
     /** @var \Drupal\Core\Config\StorageInterface $sync */
@@ -162,7 +162,7 @@ class ConfigDiffTest extends KernelTestBase {
       // Look through each line and try and find the key.
       if (is_array($haystack)) {
         foreach ($haystack as $item) {
-          if (strpos($item, $field . ':') === 0) {
+          if (str_starts_with($item, $field . ':')) {
             $match = TRUE;
             // Assert that the edit is of the type specified.
             $this->assertEquals($type, $edit->type, "The {$field} item in the diff is a {$type}");

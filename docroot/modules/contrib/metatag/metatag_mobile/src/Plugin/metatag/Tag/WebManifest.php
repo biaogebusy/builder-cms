@@ -24,7 +24,7 @@ class WebManifest extends LinkRelBase {
   /**
    * {@inheritdoc}
    */
-  public function output() {
+  public function output(): array {
     // Get the standard LinkRelBase output.
     $element = parent::output();
 

@@ -2,19 +2,18 @@
 
 /**
  * @file
- * Enhances the token API in core: adds a browseable UI, missing tokens, etc.
+ * Enhances the token API in core: adds a browsable UI, missing tokens, etc.
  */
 
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Menu\MenuLinkInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\menu_link_content\Entity\MenuLinkContent;
 use Drupal\menu_link_content\MenuLinkContentInterface;
 use Drupal\node\Entity\Node;
@@ -335,7 +334,7 @@ function token_form_action_form_alter(&$form, $form_state) {
 /**
  * Implements hook_form_FORM_ID_alter().
  *
- * Alters the user e-mail fields to add token context validation and
+ * Alters the user email fields to add token context validation and
  * adds the token tree for a better token UI and selection.
  */
 function token_form_user_admin_settings_alter(&$form, FormStateInterface $form_state) {
@@ -361,7 +360,7 @@ function token_form_user_admin_settings_alter(&$form, FormStateInterface $form_s
       case 'email_activated':
       case 'email_blocked':
       case 'email_canceled':
-        // These fieldsets have their e-mail elements inside a 'settings'
+        // These fieldsets have their email elements inside a 'settings'
         // sub-element, so switch to that element instead.
         $element = &$form[$key]['settings'];
         break;
@@ -447,7 +446,7 @@ function token_render_array_value($value, array $options = []) {
 }
 
 /**
- * Coyp of drupal_render_cache_set() that does not care about request method.
+ * Copy of drupal_render_cache_set() that does not care about request method.
  */
 function token_render_cache_set(&$markup, $elements) {
   // This should only run of drupal_render_cache_set() did not.
@@ -462,7 +461,7 @@ function token_render_cache_set(&$markup, $elements) {
 }
 
 /**
- * Loads menu link titles for all purents of a menu link plugin ID.
+ * Loads menu link titles for all parents of a menu link plugin ID.
  *
  * @param string $plugin_id
  *   The menu link plugin ID.
@@ -679,52 +678,107 @@ function token_node_menu_link_submit($entity_type, NodeInterface $node, &$form, 
     }
 
     $values = $form_state->getValue('menu');
-    if (!empty($values['enabled']) && trim($values['title'])) {
-      if (!empty($values['menu_parent'])) {
-        [$menu_name, $parent] = explode(':', $values['menu_parent'], 2);
-        $values['menu_name'] = $menu_name;
-        $values['parent'] = $parent;
-      }
-      // Construct an unsaved entity.
-      if ($entity_id = $form_state->getValue(['menu', 'entity_id'])) {
-        // Use the existing menu_link_content entity.
-        $entity = MenuLinkContent::load($entity_id);
-        // If the loaded MenuLinkContent doesn't have a translation for the
-        // Node's active langcode, create a new translation.
-        if ($entity->isTranslatable()) {
-          if (!$entity->hasTranslation($node->language()->getId())) {
-            $entity = $entity->addTranslation($node->language()->getId(), $entity->toArray());
-          }
-          else {
-            $entity = $entity->getTranslation($node->language()->getId());
-          }
+    $needs_save = FALSE;
+    if (empty($values['enabled']) || empty(trim($values['title']))) {
+      return;
+    }
+    if (!empty($values['menu_parent'])) {
+      [$menu_name, $parent] = explode(':', $values['menu_parent'], 2);
+      $values['menu_name'] = $menu_name;
+      $values['parent'] = $parent;
+    }
+    // Construct an unsaved entity.
+    if (!empty($values['entity_id'])) {
+      $entity = \Drupal::service('entity.repository')->getActive('menu_link_content', $values['entity_id']);
+      if ($entity->isTranslatable() && $node->isTranslatable()) {
+        if (!$entity->hasTranslation($node->language()->getId())) {
+          $entity = $entity->addTranslation($node->language()->getId(), $entity->toArray());
+        }
+        else {
+          $entity = $entity->getTranslation($node->language()->getId());
         }
       }
       else {
-        if ($node->isNew()) {
-          // Create a new menu_link_content entity.
-          $entity = MenuLinkContent::create([
-            // Lets just reference the UUID for now, the link is not important for
-            // token generation.
-            'link' => ['uri' => 'internal:/node/' . $node->uuid()],
-            'langcode' => $node->language()->getId(),
-          ]);
-        }
-        else {
-          // Create a new menu_link_content entity.
-          $entity = MenuLinkContent::create([
-            'link' => ['uri' => 'entity:node/' . $node->id()],
-            'langcode' => $node->language()->getId(),
-          ]);
+        // Ensure the entity matches the node language.
+        $entity = $entity->getUntranslated();
+        if ($entity->language()->getId() != $node->language()->getId()) {
+          $entity->set($entity->getEntityType()->getKey('langcode'), $node->language()->getId());
+          $needs_save = TRUE;
         }
       }
-      $entity->title->value = trim($values['title']);
-      $entity->description->value = trim($values['description'] ?? '');
-      $entity->menu_name->value = $values['menu_name'];
-      $entity->parent->value = $values['parent'];
-      $entity->weight->value = isset($values['weight']) ? $values['weight'] : 0;
+    }
+    else {
+      // Create a new menu_link_content entity.
+      if ($node->isNew()) {
+        $entity = MenuLinkContent::create([
+          // Lets just reference the UUID for now, the link is not important for
+          // token generation.
+          'link' => ['uri' => 'internal:/node/' . $node->uuid()],
+          'langcode' => $node->language()->getId(),
+        ]);
+      }
+      else {
+        $entity = MenuLinkContent::create([
+          'link' => ['uri' => 'entity:node/' . $node->id()],
+          'langcode' => $node->language()->getId(),
+        ]);
+      }
+      $entity->enabled->value = 1;
+      $needs_save = TRUE;
+    }
+    // Check if any value changed and only save if necessary.
+    if ($entity->get('title')->value != trim($values['title'])) {
+      $entity->set('title', trim($values['title']));
+      $needs_save = TRUE;
+    }
+    if ($entity->get('description')->value != trim($values['description'])) {
+      $entity->set('description', trim($values['description']));
+      $needs_save = TRUE;
+    }
+    if ($entity->get('menu_name')->value != $values['menu_name']) {
+      $entity->set('menu_name', $values['menu_name']);
+      $needs_save = TRUE;
+    }
+    if ($entity->get('parent')->value != $values['parent']) {
+      $entity->set('parent', $values['parent']);
+      $needs_save = TRUE;
+    }
+    if ($entity->get('weight')->value != ($values['weight'] ?? 0)) {
+      $entity->set('weight', $values['weight'] ?? 0);
+      $needs_save = TRUE;
+    }
+
+    if ($entity->isNew()) {
+      // @todo The menu link doesn't need to be changed in a workspace context.
+      //   Fix this in https://www.drupal.org/project/drupal/issues/3511204.
+      if (!$node->isDefaultRevision() && $node->hasLinkTemplate('latest-version')) {
+        // If a new menu link is created while saving the node as a pending draft
+        // (non-default revision), store it as a link to the latest version.
+        // That ensures that there is a regular, valid link target that is
+        // only visible to users with permission to view the latest version.
+        $entity->get('link')->uri = 'internal:/node/' . $node->id() . '/latest';
+        $needs_save = TRUE;
+      }
+    }
+    else {
+      if ($entity->isDefaultRevision() != $node->isDefaultRevision()) {
+        $entity->isDefaultRevision($node->isDefaultRevision());
+        $needs_save = TRUE;
+      }
+      if (!$entity->isDefaultRevision()) {
+        $entity->setNewRevision(TRUE);
+        $needs_save = TRUE;
+      }
+      elseif ($entity->get('link')->uri !== 'entity:node/' . $node->id()) {
+        $entity->get('link')->uri = 'entity:node/' . $node->id();
+        $needs_save = TRUE;
+      }
+    }
+
+    if ($needs_save) {
       $entity->isDefaultRevision($node->isDefaultRevision());
       $entity->save();
+
       $node->menu_link = $entity;
       // Leave this for _menu_ui_node_save() to pick up so we don't end up with
       // duplicate menu-links.
@@ -738,9 +792,22 @@ function token_node_menu_link_submit($entity_type, NodeInterface $node, &$form, 
  */
 function token_node_insert(NodeInterface $node) {
   if ($node->hasField('menu_link') && $menu_link = $node->menu_link->entity) {
-    // Update the menu-link to point to the now saved node.
-    $menu_link->link = 'entity:node/' . $node->id();
-    $menu_link->save();
+    if ($menu_link->link->uri == 'internal:/node/' . $node->uuid()) {
+      // Update the menu-link to point to the now saved node.
+      // @todo The menu link doesn't need to be changed in a workspace context.
+      //   Fix this in https://www.drupal.org/project/drupal/issues/3511204.
+      if (!$node->isDefaultRevision() && $node->hasLinkTemplate('latest-version')) {
+        // If a new menu link is created while saving the node as a pending draft
+        // (non-default revision), store it as a link to the latest version.
+        // That ensures that there is a regular, valid link target that is
+        // only visible to users with permission to view the latest version.
+        $menu_link->get('link')->uri = 'internal:/node/' . $node->id() . '/latest';
+      }
+      else {
+        $menu_link->link = 'entity:node/' . $node->id();
+      }
+      $menu_link->save();
+    }
   }
 }
 

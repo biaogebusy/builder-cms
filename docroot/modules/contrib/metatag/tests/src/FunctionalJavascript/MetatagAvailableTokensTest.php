@@ -35,7 +35,9 @@ class MetatagAvailableTokensTest extends WebDriverTestBase {
 
     // @todo This method exists on JsWebAssert() and is not available from the
     // assertSession() object?
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
+    $assert_session = $this->assertSession();
+    $assert_session->assertWaitOnAjaxRequest();
 
     $token_dialog = $page->find('css', '.token-tree-dialog');
 

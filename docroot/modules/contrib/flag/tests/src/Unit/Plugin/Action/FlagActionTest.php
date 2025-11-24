@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Unit\Plugin\Action;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\flag\FlagInterface;
 use Drupal\flag\FlagServiceInterface;
 use Drupal\flag\Plugin\Action\FlagAction;
-use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserInterface;
 
 /**
@@ -56,7 +58,7 @@ class FlagActionTest extends UnitTestCase {
     $plugin = new FlagAction($config, 'flag_action:' . $this->flag->id() . '_flag', [], $flag_service->reveal());
     $plugin->execute($entity);
 
-    // Test 'uflag' op.
+    // Test 'unflag' op.
     $config = [
       'flag_id' => $this->flag->id(),
       'flag_action' => 'unflag',

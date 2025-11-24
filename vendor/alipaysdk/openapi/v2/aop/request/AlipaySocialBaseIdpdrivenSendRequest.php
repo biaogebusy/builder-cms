@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.social.base.idpdriven.send request
  *
  * @author auto create
- * @since 1.0, 2022-11-02 17:59:22
+ * @since 1.0, 2025-04-21 15:34:46
  */
 class AlipaySocialBaseIdpdrivenSendRequest
 {

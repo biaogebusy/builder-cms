@@ -5,12 +5,13 @@ namespace Drupal\Core\FileTransfer;
 /**
  * The SSH connection class for the update module.
  */
+// phpcs:ignore Drupal.NamingConventions.ValidClassName.NoUpperAcronyms
 class SSH extends FileTransfer implements ChmodInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function __construct($jail, $username, $password, $hostname = "localhost", $port = 22) {
+  public function __construct($jail, $username, #[\SensitiveParameter] $password, $hostname = "localhost", $port = 22) {
     $this->username = $username;
     $this->password = $password;
     $this->hostname = $hostname;

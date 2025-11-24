@@ -127,6 +127,10 @@ class UrlTest extends BrowserTestBase {
     $block->getPlugin()->setConfigurationValue('label', 'prefix_[current-page:query:unicorns]_suffix');
     $block->save();
 
+    // Workaround due to VariationCache detecting an invalid cache redirect,
+    // refreshing static caches does not seem to be sufficient.
+    \Drupal::cache('render')->deleteAll();
+
     // Test the parameter token.
     $this->drupalGet($node1_url->setOption('query', ['unicorns' => 'fluffy']));
     $this->assertCacheContext('url.query_args');

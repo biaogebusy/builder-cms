@@ -76,7 +76,7 @@ class EmptyCartButtonTest extends OrderBrowserTestBase {
     $this->assertSession()->pageTextContains('$999.00');
     $this->assertSession()->pageTextContains('$222.00');
     $this->assertSession()->buttonExists('Empty cart');
-    $this->submitForm([], $this->t('Empty cart'));
+    $this->submitForm([], 'Empty cart');
     $this->assertSession()->pageTextContains($this->t('Your shopping cart is empty.'));
   }
 

@@ -8,12 +8,14 @@ use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Item\Item;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that various classes can be properly serialized and/or cloned.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class SerializationTest extends KernelTestBase {
 
   /**

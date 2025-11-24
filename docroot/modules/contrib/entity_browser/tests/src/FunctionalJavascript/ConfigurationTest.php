@@ -73,7 +73,6 @@ class ConfigurationTest extends WebDriverTestBase {
     $this->getSession()->executeScript("jQuery('.visually-hidden, .hidden').removeClass('visually-hidden hidden');");
     $this->assertSession()->fieldExists('name')->setValue('test_entity_browser');
     $this->assertSession()->selectExists('display')->selectOption('modal');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     // Make sure fields in details elements are visible.
     $this->getSession()->executeScript("jQuery('details').attr('open', 'open');");
     $this->assertSession()->fieldExists('display_configuration[width]')->setValue('700');
@@ -202,7 +201,6 @@ class ConfigurationTest extends WebDriverTestBase {
     $entity_type = $this->assertSession()->selectExists('selection_display_configuration[entity_type]')->selectOption('taxonomy_term');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->optionExists('selection_display_configuration[display_settings][view_mode]', 'default');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->optionExists('selection_display_configuration[display_settings][view_mode]', 'full');
 
     // Test view selection display.

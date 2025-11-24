@@ -2,6 +2,7 @@
 
 namespace Drupal\webform_devel\Commands;
 
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\State\StateInterface;
@@ -38,6 +39,13 @@ class WebformDevelCommands extends DrushCommands {
   protected $userData;
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The construct method.
    *
    * @param \Drupal\Core\File\FileSystemInterface $file_system
@@ -46,12 +54,15 @@ class WebformDevelCommands extends DrushCommands {
    *   Provides the state system.
    * @param \Drupal\user\UserDataInterface $user_data
    *   The user data service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    */
-  public function __construct(FileSystemInterface $file_system, StateInterface $state, UserDataInterface $user_data) {
+  public function __construct(FileSystemInterface $file_system, StateInterface $state, UserDataInterface $user_data, ModuleHandlerInterface $module_handler) {
     parent::__construct();
     $this->fileSystem = $file_system;
     $this->state = $state;
     $this->userData = $user_data;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -61,7 +72,7 @@ class WebformDevelCommands extends DrushCommands {
    * @aliases wfdcu,webform-devel-reset
    */
   public function develConfigUpdate() {
-    \Drupal::moduleHandler()->loadInclude('webform', 'inc', 'includes/webform.install');
+    $this->moduleHandler->loadInclude('webform', 'inc', 'includes/webform.install');
 
     $files = $this->fileSystem->scanDirectory(__DIR__ . '/../../../../', '/^webform\.webform\..*\.yml$/');
     $total = 0;

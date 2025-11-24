@@ -43,7 +43,6 @@ class FloodFactory {
    *   Return flood instance.
    */
   public function get() {
-    $class_name = $this->clientFactory->getClass(ClientFactory::REDIS_IMPL_FLOOD);
-    return new $class_name($this->clientFactory, $this->requestStack);
+    return new RedisFloodBackend($this->clientFactory, $this->requestStack);
   }
 }

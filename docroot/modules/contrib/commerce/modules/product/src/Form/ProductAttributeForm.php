@@ -2,13 +2,13 @@
 
 namespace Drupal\commerce_product\Form;
 
-use Drupal\commerce\EntityHelper;
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_product\ProductAttributeFieldManagerInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\BundleEntityFormBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\EntityHelper;
+use Drupal\commerce\InlineFormManager;
+use Drupal\commerce_product\ProductAttributeFieldManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ProductAttributeForm extends BundleEntityFormBase {
@@ -432,6 +432,8 @@ class ProductAttributeForm extends BundleEntityFormBase {
       $this->messenger()->addMessage($this->t('Updated the %label product attribute.', ['%label' => $this->entity->label()]));
       $form_state->setRedirectUrl($this->entity->toUrl('collection'));
     }
+
+    return $status;
   }
 
 }

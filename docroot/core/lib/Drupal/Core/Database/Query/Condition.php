@@ -12,6 +12,8 @@ class Condition implements ConditionInterface, \Countable {
 
   /**
    * Provides a map of condition operators to condition operator options.
+   *
+   * @var string[][]
    */
   protected static $conditionOperatorMap = [
     'BETWEEN' => ['delimiter' => ' AND '],
@@ -78,19 +80,8 @@ class Condition implements ConditionInterface, \Countable {
    *
    * @param string $conjunction
    *   The operator to use to combine conditions: 'AND' or 'OR'.
-   * @param bool $trigger_deprecation
-   *   If TRUE then trigger the deprecation warning.
-   *
-   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Creating an
-   *   instance of this class is deprecated.
-   *
-   * @see https://www.drupal.org/node/3159568
    */
-  public function __construct($conjunction, $trigger_deprecation = TRUE) {
-    if ($trigger_deprecation) {
-      @trigger_error('Creating an instance of this class is deprecated in drupal:9.1.0 and is removed in drupal:10.0.0. Use Database::getConnection()->condition() instead. See https://www.drupal.org/node/3159568', E_USER_DEPRECATED);
-    }
-
+  public function __construct($conjunction) {
     $this->conditions['#conjunction'] = $conjunction;
   }
 
@@ -115,6 +106,16 @@ class Condition implements ConditionInterface, \Countable {
     }
     if (empty($value) && is_array($value)) {
       throw new InvalidQueryException(sprintf("Query condition '%s %s ()' cannot be empty.", $field, $operator));
+    }
+    if (is_array($value) && in_array($operator, ['=', '<', '>', '<=', '>=', 'IS NULL', 'IS NOT NULL'], TRUE)) {
+      if (count($value) > 1) {
+        $value = implode(', ', $value);
+        throw new InvalidQueryException(sprintf("Query condition '%s %s %s' must have an array compatible operator.", $field, $operator, $value));
+      }
+      else {
+        $value = $value[0];
+        @trigger_error('Calling ' . __METHOD__ . '() without an array compatible operator is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3350985', E_USER_DEPRECATED);
+      }
     }
 
     $this->conditions[] = [
@@ -259,12 +260,12 @@ class Condition implements ConditionInterface, \Countable {
             $this->stringVersion = '( AND 1 = 0 )';
 
             // Conceptually throwing an exception caused by user input is bad
-            // as you result into a WSOD, which depending on your webserver
-            // configuration can result into the assumption that your site is
-            // broken.
+            // as you result into a 'white screen of death', which depending on
+            // your webserver configuration can result into the assumption that
+            // your site is broken.
             // On top of that the database API relies on __toString() which
             // does not allow to throw exceptions.
-            trigger_error('Invalid characters in query operator: ' . $condition['operator'], E_USER_ERROR);
+            trigger_error('Invalid characters in query operator: ' . $condition['operator'], E_USER_WARNING);
             return;
           }
 

@@ -1,10 +1,14 @@
 services:
   content_lock:
     class: Drupal\content_lock\ContentLock\ContentLock
-    arguments: ['@database', '@module_handler', '@date.formatter', '@current_user', '@config.factory', '@request_stack', '@entity_type.manager', '@messenger', '@datetime.time']
+    arguments: ['@database', '@module_handler', '@date.formatter', '@current_user', '@config.factory', '@request_stack', '@entity_type.manager', '@messenger', '@datetime.time', '@lock']
 
-  settings_save_event_subscriber:
-    class: '\Drupal\content_lock\EventSubscriber\SettingsSaveEventSubscriber'
-    arguments: ['@entity_type.manager']
+  Drupal\content_lock\EventSubscriber\SettingsSaveEventSubscriber:
+    arguments: ['@entity_type.manager', '@module_handler']
     tags:
       - { name: 'event_subscriber' }
+
+  Drupal\content_lock\Access\ContentLockViewsAccess:
+    arguments: ['@content_lock']
+    tags:
+      - { name: access_check, applies_to: _content_lock_enabled_access_checker }

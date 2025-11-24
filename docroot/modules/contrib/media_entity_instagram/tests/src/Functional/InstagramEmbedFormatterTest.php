@@ -14,14 +14,14 @@ class InstagramEmbedFormatterTest extends OEmbedFormatterTest {
   /**
    * {@inheritdoc}
    */
-  protected function getFixturesDirectory() {
+  protected function getFixturesDirectory(): string {
     return \Drupal::service('extension.list.module')->getPath('media_entity_instagram') . '/tests/fixtures/oembed';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function providerRender() {
+  public static function providerRender(): array {
     return [
       'Instagram' => [
         'https://instagram.com/p/B2huuS8AQVq',
@@ -33,6 +33,7 @@ class InstagramEmbedFormatterTest extends OEmbedFormatterTest {
             'width' => '658',
           ],
         ],
+        FALSE,
       ],
     ];
   }

@@ -4,32 +4,30 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Service;
 
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Component\Utility\Timer;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\entity_share_client\ImportContext;
 
 /**
  * Service to ease the usage of CLI tools.
  *
- * @package Drupal\entity_share_client
- *
  * @internal This service is not an api and may change at any time.
  */
-class EntityShareClientCliService {
+final class EntityShareClientCliService {
 
   /**
    * Drupal\Core\StringTranslation\TranslationManager definition.
    *
    * @var \Drupal\Core\StringTranslation\TranslationManager
    */
-  protected $stringTranslation;
+  private $stringTranslation;
 
   /**
    * The import service.
    *
    * @var \Drupal\entity_share_client\Service\ImportServiceInterface
    */
-  protected $importService;
+  private $importService;
 
   /**
    * Constructor.
@@ -65,9 +63,9 @@ class EntityShareClientCliService {
     Timer::start('io-pull');
     $import_context = new ImportContext($remote_id, $channel_id, $import_config_id);
     $this->importService->importChannel($import_context);
-    $batch =& batch_get();
+    $batch = &\batch_get();
     if ($batch) {
-      drush_backend_batch_process();
+      \drush_backend_batch_process();
       Timer::stop('io-pull');
       $input_output->success($translate('Channel successfully pulled. Execution time @time ms.', [
         '@time' => Timer::read('io-pull'),

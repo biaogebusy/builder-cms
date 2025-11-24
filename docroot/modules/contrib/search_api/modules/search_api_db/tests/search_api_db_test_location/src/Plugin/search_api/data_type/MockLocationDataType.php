@@ -2,19 +2,20 @@
 
 namespace Drupal\search_api_db_test_location\Plugin\search_api\data_type;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiDataType;
 use Drupal\search_api\DataType\DataTypePluginBase;
 
 /**
  * Provides a mock location data type for ease of testing.
  *
  * Mostly copied from the search_api_location module.
- *
- * @SearchApiDataType(
- *   id = "location",
- *   label = @Translation("Mock Latitude/Longitude"),
- *   description = @Translation("Mock location data type implementation."),
- * )
  */
+#[SearchApiDataType(
+  id: 'location',
+  label: new TranslatableMarkup('Mock Latitude/Longitude'),
+  description: new TranslatableMarkup('Mock location data type implementation.'),
+)]
 class MockLocationDataType extends DataTypePluginBase {
 
   /**

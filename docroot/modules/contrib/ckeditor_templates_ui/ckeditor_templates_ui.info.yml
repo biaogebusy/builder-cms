@@ -1,13 +1,12 @@
 name: CKEditor Templates User Interface
-description: Provide ui for adding ckeditor templates
+description: Provide ui for adding ckeditor 5 templates
 package: CKEditor
 type: module
 configure: entity.ckeditor_template.collection
 dependencies:
-- ckeditor_templates:ckeditor_templates
-core_version_requirement: ^9.3 || ^10
-
-# Information added by Drupal.org packaging script on 2023-03-26
-version: '8.x-1.5'
+- ckeditor5_template:ckeditor5_template
+core_version_requirement: ^10
+# Information added by Drupal.org packaging script on 2024-07-25
+version: '2.0.0-alpha4'
 project: 'ckeditor_templates_ui'
-datestamp: 1679845061
+datestamp: 1721893996

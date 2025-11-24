@@ -1,5 +1,5 @@
 diff.settings:
-  title: 'Diff'
+  title: "Diff"
   parent: system.admin_config_content
-  description: 'Configure how entity fields are compared.'
+  description: "Configure how entity fields are compared."
   route_name: diff.general_settings

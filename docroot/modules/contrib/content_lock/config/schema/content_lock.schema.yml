@@ -16,9 +16,15 @@ content_lock.settings:
     types_translation_lock:
       type: sequence
       label: 'Entity types with translation lock on'
+      sequence:
+        type: string
+        label: 'Entity type with translation lock on'
     types_js_lock:
       type: sequence
       label: 'Entity types with JS lock on'
+      sequence:
+        type: string
+        label: 'Entity type with JS lock on'
     form_op_lock:
       type: sequence
       label: 'Entity types'

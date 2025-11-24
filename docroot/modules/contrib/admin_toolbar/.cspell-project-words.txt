@@ -1,0 +1,43 @@
+# List of words excluded from cspell validation for the project Admin Toolbar.
+# Mostly contains custom names: variables, modules, users, etc...
+
+# Custom variable names, ids, keys or identifiers in paths or yaml files.
+hoverintent
+cssjs
+rendercache
+webprofiler
+
+# Ignore certain string values used for tests.
+amara
+atticus
+isla
+maeve
+posie
+soren
+zora
+zuzu
+
+# User names: contributors, maintainers, users (mostly in README.md files).
+adriancid
+Almaguer
+AODB
+bilel
+bolbol
+cherne
+chupacabra
+Dropteam
+Drupiter
+emerya
+fethi
+Jarraud
+khalil
+krout
+Livello
+matio
+Musa
+Risorsa
+Romain
+romainj
+Roze
+Taktak
+Wilfrid

@@ -5,6 +5,8 @@ namespace Drupal\views\Plugin\views\filter;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\PluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -12,9 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides filtering by language.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("language")
  */
+#[ViewsFilter("language")]
 class LanguageFilter extends InOperator implements ContainerFactoryPluginInterface {
 
   /**
@@ -30,7 +31,7 @@ class LanguageFilter extends InOperator implements ContainerFactoryPluginInterfa
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
@@ -71,13 +72,20 @@ class LanguageFilter extends InOperator implements ContainerFactoryPluginInterfa
    * {@inheritdoc}
    */
   public function query() {
-    // Don't filter by language in case the site is not multilingual, because
-    // there is no point in doing so.
+    // No point in displaying the language filter on monolingual sites,
+    // as only one language value is available.
     if (!$this->languageManager->isMultilingual()) {
       return;
     }
 
     parent::query();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access(AccountInterface $account): bool {
+    return $this->languageManager->isMultilingual() && parent::access($account);
   }
 
 }

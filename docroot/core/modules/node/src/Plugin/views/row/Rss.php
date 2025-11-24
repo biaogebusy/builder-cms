@@ -2,21 +2,22 @@
 
 namespace Drupal\node\Plugin\views\row;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsRow;
 use Drupal\views\Plugin\views\row\RssPluginBase;
 
 /**
  * Performs a node_view on the resulting object and formats it as an RSS item.
- *
- * @ViewsRow(
- *   id = "node_rss",
- *   title = @Translation("Content"),
- *   help = @Translation("Display the content with standard node view."),
- *   theme = "views_view_row_rss",
- *   register_theme = FALSE,
- *   base = {"node_field_data"},
- *   display_types = {"feed"}
- * )
  */
+#[ViewsRow(
+  id: "node_rss",
+  title: new TranslatableMarkup("Content"),
+  help: new TranslatableMarkup("Display the content with standard node view."),
+  theme: "views_view_row_rss",
+  register_theme: FALSE,
+  base: ["node_field_data"],
+  display_types: ["feed"]
+)]
 class Rss extends RssPluginBase {
 
   /**
@@ -24,14 +25,14 @@ class Rss extends RssPluginBase {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $base_table = 'node_field_data';
 
   /**
    * The base field for this row plugin.
-   *
-   * @var string
    */
-  public $base_field = 'nid';
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  public string $base_field = 'nid';
 
   /**
    * Stores the nodes loaded with preRender.
@@ -115,6 +116,9 @@ class Rss extends RssPluginBase {
     $build = \Drupal::entityTypeManager()
       ->getViewBuilder('node')
       ->view($node, $build_mode);
+    // Add rss key to cache to differentiate this from other caches.
+    $build['#cache']['keys'][] = 'view_rss';
+
     unset($build['#theme']);
 
     if (!empty($node->rss_namespaces)) {

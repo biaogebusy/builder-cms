@@ -585,6 +585,10 @@ class WebformElementStates extends FormElement {
 
     $values = $element['states']['#value'];
 
+    if (!is_array($values)) {
+      $values = [];
+    }
+
     // Add new state and condition.
     $values[] = [
       'state' => '',

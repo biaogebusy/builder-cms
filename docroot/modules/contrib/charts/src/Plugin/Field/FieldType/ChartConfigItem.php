@@ -2,22 +2,22 @@
 
 namespace Drupal\charts\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
- * Plugin implementation of the 'chart_config' field type.
- *
- * @FieldType(
- *   id = "chart_config",
- *   label = @Translation("Chart"),
- *   description = @Translation("An entity field containing data for a chart item"),
- *   default_widget = "chart_config_default",
- *   default_formatter = "chart_config_default"
- * )
+ * Defines the 'chart_config' field type.
  */
+#[FieldType(
+  id: "chart_config",
+  label: new TranslatableMarkup("Chart"),
+  description: new TranslatableMarkup("An entity field containing data for a chart item"),
+  default_widget: "chart_config_default",
+  default_formatter: "chart_config_default"
+)]
 class ChartConfigItem extends FieldItemBase {
 
   /**

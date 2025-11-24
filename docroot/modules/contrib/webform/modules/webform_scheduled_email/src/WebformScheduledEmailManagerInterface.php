@@ -280,7 +280,7 @@ interface WebformScheduledEmailManagerInterface {
    * @param int $send_limit
    *   The maximum number of emails to be sent.
    *   If set to 0 no emails will be sent.
-   *   Defaults to webform.settting->batch.default_batch_email_size.
+   *   Defaults to webform.settings->batch.default_batch_email_size.
    *
    * @return array
    *   An associative array containing cron task stats.

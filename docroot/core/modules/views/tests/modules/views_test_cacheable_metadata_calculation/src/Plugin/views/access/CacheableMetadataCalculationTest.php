@@ -6,19 +6,20 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsAccess;
 use Drupal\views\Plugin\views\access\AccessPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
 
 /**
  * Tests plugin that reports when cacheable metadata is being calculated.
- *
- * @ViewsAccess(
- *   id = "test_cacheable_metadata_access",
- *   title = @Translation("Cacheable metadata calculation test access plugin"),
- *   help = @Translation("Provides a test access plugin that reports when cacheable metadata is being calculated.")
- * )
  */
+#[ViewsAccess(
+  id: 'test_cacheable_metadata_access',
+  title: new TranslatableMarkup('Cacheable metadata calculation test access plugin'),
+  help: new TranslatableMarkup('Provides a test access plugin that reports when cacheable metadata is being calculated.'),
+)]
 class CacheableMetadataCalculationTest extends AccessPluginBase implements CacheableDependencyInterface {
 
   /**
@@ -34,7 +35,7 @@ class CacheableMetadataCalculationTest extends AccessPluginBase implements Cache
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\State\StateInterface $state

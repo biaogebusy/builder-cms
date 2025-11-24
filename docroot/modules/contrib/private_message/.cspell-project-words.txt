@@ -1,0 +1,33 @@
+# Identifiers
+messageid
+privatemessageactions
+privatemessageinbox
+privatemessagenotification
+
+# Third-party technologies
+Blackfire
+mailsystem
+xhprof
+
+# Contributor names and usernames
+Anmol
+Artem
+Claudiu
+Cristea
+Goel
+Hedding
+Jaypan
+Joulot
+Sylchuk
+Telaya
+anmolgoyal
+artem
+claudiu
+cristea
+edutrul
+heddn
+phjou
+sylchuk
+
+# Test strings
+Aerosmith

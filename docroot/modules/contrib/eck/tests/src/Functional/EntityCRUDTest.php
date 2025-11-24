@@ -24,10 +24,13 @@ class EntityCRUDTest extends FunctionalTestBase {
     ];
     $url = Url::fromRoute('eck.entity.add', $params);
     $values = ['title[0][value]' => 'testEntity'];
-    $this->drupalPostForm($url, $values, 'Save');
+    $this->drupalGet($url);
+    $this->submitForm($values, 'Save');
 
     $currentUrl = $this->getSession()->getCurrentUrl();
-    $this->assertRegExp('@/testtype/\d$@', $currentUrl);
+    $entity = \Drupal::entityTypeManager()->getStorage($entityTypeInfo['id'])->load(1);
+    $entityUrl = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+    $this->assertSame($entityUrl, $currentUrl);
   }
 
   /**
@@ -73,7 +76,7 @@ class EntityCRUDTest extends FunctionalTestBase {
     ];
 
     // Create entity.
-    $this->drupalPostForm(NULL, $values, 'Save');
+    $this->submitForm($values, 'Save');
     $this->assertSession()->statusCodeEquals(200);
 
     $view_url = $this->getSession()->getCurrentUrl();
@@ -98,7 +101,7 @@ class EntityCRUDTest extends FunctionalTestBase {
       'created[0][value][time]' => '02:37:10',
     ];
 
-    $this->drupalPostForm(NULL, $values, 'Save');
+    $this->submitForm($values, 'Save');
     $this->drupalGet($edit_url);
 
     foreach ($values as $value) {

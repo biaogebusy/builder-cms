@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\flag\Entity\Flag;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\flag\Traits\FlagCreateTrait;
 use Drupal\Tests\flag\Traits\FlagPermissionsTrait;
+use Drupal\flag\Entity\Flag;
 
 /**
  * Test the contextual links with Reload link type.
@@ -44,14 +45,14 @@ class FlagContextualLinksTest extends WebDriverTestBase {
   /**
    * The flag.
    *
-   * @var \Drupal\flag\Flaginterface
+   * @var \Drupal\flag\FlagInterface
    */
   protected $flag;
 
   /**
    * A user with Flag admin rights.
    *
-   * @var AccountInterface
+   * @var \Drupal\Core\Session\AccountInterface
    */
   protected $adminUser;
 
@@ -171,6 +172,7 @@ class FlagContextualLinksTest extends WebDriverTestBase {
    * @runInSeparateProcess
    */
   public function testFlagLinks() {
+    /** @var \Drupal\FunctionalJavascriptTests\JSWebAssert $assert_session */
     $assert_session = $this->assertSession();
 
     // Create an article, to which our contextual link will be attached.
@@ -189,14 +191,14 @@ class FlagContextualLinksTest extends WebDriverTestBase {
     $this->assertNotNull($main_contextual_button);
     $main_contextual_button->click();
 
-    // Expect the contextual links identifer for this node to contain flag_keys
+    // Expect the contextual links identifier for this node to contain flag_keys
     // metadata related to the flag action.
-    $flag_contextual_links_id = 'node:node=' . $node->id() . ':changed=' . $node->getChangedTime() . '&flag_keys=' . $this->flag->id() . '-flag&langcode=en';
+    $flag_contextual_links_id = 'node:node=' . $node->id() . '&view_mode=full:changed=' . $node->getChangedTime() . '&flag_keys=' . $this->flag->id() . '-flag&langcode=en';
 
     // Wait for the article contextual link button to appear.
     $contextual_edit = $assert_session
       ->waitForElementVisible('css', 'div[data-contextual-id="' . $flag_contextual_links_id . '"] button');
-    $this->assertNotNull($contextual_edit, new FormattableMarkup('Contextual link placeholder with id @id exists (flag).', ['@id' => $flag_contextual_links_id]));
+    $this->assertNotNull($contextual_edit, "Contextual link placeholder with id $flag_contextual_links_id exists (flag).");
 
     $contextual_edit->click();
 
@@ -207,10 +209,10 @@ class FlagContextualLinksTest extends WebDriverTestBase {
     $flag_link1->click();
 
     // Verify the contextual links data are updated to contain unflag links.
-    $unflag_contextual_links_id = 'node:node=' . $node->id() . ':changed=' . $node->getChangedTime() . '&flag_keys=' . $this->flag->id() . '-unflag&langcode=en';
+    $unflag_contextual_links_id = 'node:node=' . $node->id() . '&view_mode=full:changed=' . $node->getChangedTime() . '&flag_keys=' . $this->flag->id() . '-unflag&langcode=en';
     $contextual_edit2 = $assert_session
       ->waitForElementVisible('css', 'div[data-contextual-id="' . $unflag_contextual_links_id . '"]  button');
-    $this->assertNotNull($contextual_edit2, new FormattableMarkup('Contextual link placeholder with id @id exists (unflag).', ['@id' => $unflag_contextual_links_id]));
+    $this->assertNotNull($contextual_edit2, "Contextual link placeholder with id $unflag_contextual_links_id exists (unflag).");
 
     $contextual_edit2->click();
 
@@ -229,7 +231,7 @@ class FlagContextualLinksTest extends WebDriverTestBase {
     // metadata related to the flag action.
     $contextual_edit3 = $assert_session
       ->waitForElementVisible('css', 'div[data-contextual-id="' . $flag_contextual_links_id . '"] button');
-    $this->assertNotNull($contextual_edit3, new FormattableMarkup('Contextual link placeholder with id @id exists.', ['@id' => $flag_contextual_links_id]));
+    $this->assertNotNull($contextual_edit3, "Contextual link placeholder with id $flag_contextual_links_id exists.");
     $contextual_edit3->click();
 
     // The contextual link dialog will appear .. containing a flag link.

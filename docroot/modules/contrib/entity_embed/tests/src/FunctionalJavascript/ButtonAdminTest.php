@@ -116,7 +116,7 @@ class ButtonAdminTest extends WebDriverTestBase {
   /**
    * Data provider for ::testEmbedButtonAdmin().
    */
-  public function embedButtonAdminProvider() {
+  public static function embedButtonAdminProvider(): array {
     return [
       'article nodes embedded using teaser view mode' => [
         'node',

@@ -2,6 +2,8 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal\Core\Render\Attribute\RenderElement;
+
 /**
  * Provides a render element for a pager.
  *
@@ -13,6 +15,7 @@ namespace Drupal\Core\Render\Element;
  * Properties:
  * - #element: (optional, int) The pager ID, to distinguish between multiple
  *   pagers on the same page (defaults to 0).
+ * - #pagination_heading_level: (optional) A heading level for the pager.
  * - #parameters: (optional) An associative array of query string parameters to
  *   append to the pager.
  * - #quantity: The maximum number of numbered page links to create (defaults
@@ -27,10 +30,9 @@ namespace Drupal\Core\Render\Element;
  *   '#type' => 'pager',
  * ];
  * @endcode
- *
- * @RenderElement("pager")
  */
-class Pager extends RenderElement {
+#[RenderElement('pager')]
+class Pager extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -43,6 +45,8 @@ class Pager extends RenderElement {
       '#theme' => 'pager',
       // The pager ID, to distinguish between multiple pagers on the same page.
       '#element' => 0,
+      // The heading level to use for the pager.
+      '#pagination_heading_level' => 'h4',
       // An associative array of query string parameters to append to the pager
       // links.
       '#parameters' => [],

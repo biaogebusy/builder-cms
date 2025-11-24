@@ -43,7 +43,7 @@ class RouteSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Run before PageManagerRoutes.
     $events[RoutingEvents::ALTER][] = ['beforePageManagerRoutes', -155];
     // Run after PageManagerRoutes.

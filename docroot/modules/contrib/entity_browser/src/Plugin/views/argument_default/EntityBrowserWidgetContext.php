@@ -63,7 +63,7 @@ class EntityBrowserWidgetContext extends ArgumentDefaultPluginBase {
     $form['multiple'] = [
       '#type' => 'radios',
       '#title' => $this->t('Multiple values'),
-      '#description' => $this->t('Conjunction to use when handling multiple values. NOTE: for multiple values to work, at the bottom of this form expand the "More" fieldset and and check "Allow multiple values".'),
+      '#description' => $this->t('Conjunction to use when handling multiple values. NOTE: for multiple values to work, at the bottom of this form expand the "More" fieldset and check "Allow multiple values".'),
       '#default_value' => $this->options['multiple'],
       '#options' => [
         'or' => $this->t('OR'),

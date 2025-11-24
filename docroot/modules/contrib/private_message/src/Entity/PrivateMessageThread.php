@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Entity;
 
 use Drupal\Core\Cache\Cache;
@@ -44,39 +46,37 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function addMember(AccountInterface $account) {
+  public function addMember(AccountInterface $account): PrivateMessageThreadInterface {
     if (!$this->isMember($account->id())) {
       $this->get('members')->appendItem($account->id());
     }
-
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addMemberById($id) {
+  public function addMemberById(int|string $id): PrivateMessageThreadInterface {
     if (!$this->isMember($id)) {
       $this->get('members')->appendItem($id);
     }
-
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getMembers() {
+  public function getMembers(): array {
     return $this->get('members')->referencedEntities();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getMembersId() {
+  public function getMemberIds(): array {
     $members = [];
     foreach ($this->get('members')->getValue() as $member_item) {
-      $members[] = $member_item['target_id'];
+      $members[] = (int) $member_item['target_id'];
     }
     return $members;
   }
@@ -84,17 +84,25 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function isMember($id) {
-    return in_array($id, $this->getMembersId());
+  public function getMembersId(): array {
+    @trigger_error(__METHOD__ . '() is deprecated in private_message:4.0.0 and is removed from private_message:5.0.0. Use self::getMemberIds() instead. See https://www.drupal.org/node/3490530', E_USER_DEPRECATED);
+    return $this->getMemberIds();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addMessage(PrivateMessageInterface $privateMessage) {
+  public function isMember(int|string $id): bool {
+    return in_array((int) $id, $this->getMemberIds(), TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addMessage(PrivateMessageInterface $privateMessage): PrivateMessageThreadInterface {
     $this->get('private_messages')->appendItem($privateMessage->id());
     // Allow other modules to react on a new message in thread.
-    // @todo: inject when entity dependency serialization core issues resolved.
+    // @todo Inject when entity dependency serialization core issues resolved.
     \Drupal::moduleHandler()->invokeAll(
       'private_message_new_message',
       [$privateMessage, $this]
@@ -105,23 +113,34 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function addMessageById($id) {
+  public function addMessageById(int|string $id): PrivateMessageThreadInterface {
     $this->get('private_messages')->appendItem($id);
-
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getMessages() {
-    return $this->get('private_messages')->referencedEntities();
+  public function getMessages(bool $includeBlocked = FALSE): array {
+    $messages = array_values($this->get('private_messages')->referencedEntities());
+    if ($includeBlocked) {
+      return $messages;
+    }
+
+    $bannedUsers = \Drupal::service('private_message.ban_manager')->getBannedUsers(\Drupal::currentUser()->id());
+    return array_filter($messages, function ($message, $index) use ($bannedUsers) {
+      // The first message is always displayed, regardless of the ban status.
+      // This is to ensure that the thread display is not broken.
+      return $index === 0 || !in_array($message->getOwnerId(), $bannedUsers);
+    }, ARRAY_FILTER_USE_BOTH);
   }
 
   /**
    * {@inheritdoc}
    */
   public function filterNewestMessages() {
+    @trigger_error(__METHOD__ . "() is deprecated in private_message:4.0.0 and is removed from private_message:5.0.0. No replacement is provided. See https://www.drupal.org/node/3490530", E_USER_DEPRECATED);
+
     $messages = $this->getMessages();
     if (count($messages) > \Drupal::config('private_message_thread.settings')->get('message_count')) {
       $list = $this->get('private_messages');
@@ -142,11 +161,11 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function getNewestMessageCreationTimestamp() {
+  public function getNewestMessageCreationTimestamp(): int {
     $messages = $this->getMessages();
     $last_timestamp = 0;
     foreach ($messages as $message) {
-      $creation_date = $message->get('created')->value;
+      $creation_date = (int) $message->get('created')->value;
       $last_timestamp = max($creation_date, $last_timestamp);
     }
 
@@ -156,7 +175,7 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function addHistoryRecord(AccountInterface $account) {
+  public function addHistoryRecord(AccountInterface $account): void {
     \Drupal::database()->insert('pm_thread_history')
       ->fields([
         'uid' => $account->id(),
@@ -167,8 +186,8 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function getLastAccessTimestamp(AccountInterface $account) {
-    return \Drupal::database()->select('pm_thread_history', 'pm_thread_history')
+  public function getLastAccessTimestamp(AccountInterface $account): int {
+    return (int) \Drupal::database()->select('pm_thread_history', 'pm_thread_history')
       ->condition('uid', $account->id())
       ->condition('thread_id', $this->id())
       ->fields('pm_thread_history', ['access_timestamp'])
@@ -179,7 +198,7 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function updateLastAccessTime(AccountInterface $account) {
+  public function updateLastAccessTime(AccountInterface $account): PrivateMessageThreadInterface {
     \Drupal::database()->update('pm_thread_history')
       ->condition('uid', $account->id())
       ->condition('thread_id', $this->id())
@@ -191,8 +210,8 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function getLastDeleteTimestamp(AccountInterface $account) {
-    return \Drupal::database()->select('pm_thread_history', 'pm_thread_history')
+  public function getLastDeleteTimestamp(AccountInterface $account): int {
+    return (int) \Drupal::database()->select('pm_thread_history', 'pm_thread_history')
       ->condition('uid', $account->id())
       ->condition('thread_id', $this->id())
       ->fields('pm_thread_history', ['delete_timestamp'])
@@ -203,7 +222,7 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function updateLastDeleteTime(AccountInterface $account) {
+  public function updateLastDeleteTime(AccountInterface $account): PrivateMessageThreadInterface {
     \Drupal::database()->update('pm_thread_history')
       ->condition('uid', $account->id())
       ->condition('thread_id', $this->id())
@@ -216,24 +235,45 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
    * {@inheritdoc}
    */
   public function save() {
-    parent::save();
-
+    // @todo This should be investigated.
     $this->clearCacheTags();
+    return parent::save();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function delete() {
-    $this->deleteReferencedEntities();
-    parent::delete();
-    $this->clearCacheTags();
+  public static function preDelete(EntityStorageInterface $storage, array $entities): void {
+    parent::preDelete($storage, $entities);
+
+    // Delete the thread from the database, as well as all reference entities.
+    foreach ($entities as $entity) {
+      assert($entity instanceof PrivateMessageThreadInterface);
+      $messages = $entity->getMessages(TRUE);
+      foreach ($messages as $message) {
+        $message->delete();
+      }
+      \Drupal::database()->delete('pm_thread_history')
+        ->condition('thread_id', $entity->id())
+        ->execute();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function clearAccountHistory(AccountInterface $account = NULL) {
+  public static function postDelete(EntityStorageInterface $storage, array $entities): void {
+    parent::postDelete($storage, $entities);
+    foreach ($entities as $entity) {
+      assert($entity instanceof PrivateMessageThreadInterface);
+      $entity->clearCacheTags();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clearAccountHistory(?AccountInterface $account = NULL): void {
     if (!$account) {
       $account = \Drupal::currentUser();
     }
@@ -259,7 +299,7 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function filterUserDeletedMessages(AccountInterface $account) {
+  public function filterUserDeletedMessages(AccountInterface $account): array {
     $last_delete_timestamp = $this->getLastDeleteTimestamp($account);
     $messages = $this->getMessages();
     $start_index = FALSE;
@@ -281,19 +321,20 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function getUpdatedTime() {
-    return $this->get('updated')->value;
+  public function getUpdatedTime(): int {
+    return (int) $this->get('updated')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function clearCacheTags() {
+  public function clearCacheTags(): void {
     $tags = [];
 
     foreach ($this->getMembers() as $member) {
       $tags[] = 'private_message_inbox_block:uid:' . $member->id();
       $tags[] = 'private_message_notification_block:uid:' . $member->id();
+      $tags[] = 'private_message:status:uid:' . $member->id();
     }
 
     // Invalidate cache for list of private message threads.
@@ -305,8 +346,8 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public static function baseFieldDefinitions(EntityTypeInterface $entityType) {
-    $fields = parent::baseFieldDefinitions($entityType);
+  public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
+    $fields = parent::baseFieldDefinitions($entity_type);
 
     $fields['id']->setLabel(t('Private message thread ID'))
       ->setDescription(t('The private message thread ID.'));
@@ -346,6 +387,17 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    // Subject.
+    $fields['subject'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Subject'))
+      ->setSetting('max_length', 64)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -2,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     // Private messages in this thread.
     // Entity reference field, holds the reference to user objects.
     $fields['private_messages'] = BaseFieldDefinition::create('entity_reference')
@@ -366,7 +418,7 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
+  public function getCacheTags(): array {
     $tags = parent::getCacheTags();
     $tags[] = 'private_message_thread:' . $this->id() . ':view:uid:' . \Drupal::currentUser()->id();
 
@@ -374,22 +426,9 @@ class PrivateMessageThread extends ContentEntityBase implements PrivateMessageTh
   }
 
   /**
-   * Delete the thread from the database, as well as all reference entities.
-   */
-  protected function deleteReferencedEntities() {
-    $messages = $this->getMessages();
-    foreach ($messages as $message) {
-      $message->delete();
-    }
-    \Drupal::database()->delete('pm_thread_history')
-      ->condition('thread_id', $this->id())
-      ->execute();
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+  public function postSave(EntityStorageInterface $storage, $update = TRUE): void {
     parent::postSave($storage, $update);
     if (!$update) {
       $members = $this->getMembers();

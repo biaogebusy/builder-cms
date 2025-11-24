@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
-use Drupal\commerce_order\Entity\OrderItem;
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
+use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductType;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests promotion conditions.
@@ -174,7 +174,7 @@ class PromotionConditionTest extends OrderKernelTestBase {
     $product_type = ProductType::create([
       'id' => 'test',
       'label' => 'Test',
-      'variationType' => 'default',
+      'variationTypes' => ['default'],
     ]);
     $product_type->save();
     $first_variation = ProductVariation::create([

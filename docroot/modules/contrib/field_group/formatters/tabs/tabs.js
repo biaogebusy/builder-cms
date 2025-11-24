@@ -3,10 +3,7 @@
  * Provides the processing logic for tabs.
  */
 
-(function ($) {
-
-  'use strict';
-
+(($) => {
   Drupal.FieldGroup = Drupal.FieldGroup || {};
   Drupal.FieldGroup.Effects = Drupal.FieldGroup.Effects || {};
 
@@ -14,38 +11,47 @@
    * Implements Drupal.FieldGroup.processHook().
    */
   Drupal.FieldGroup.Effects.processTabs = {
-    execute: function (context, settings, group_info) {
-
-      if (group_info.context === 'form') {
-
+    execute(context, settings, groupInfo) {
+      if (groupInfo.context === 'form') {
         // Add required fields mark to any element containing required fields.
-        var direction = group_info.settings.direction;
-        $(context).find('[data-' + direction + '-tabs-panes]').each(function () {
-          var errorFocussed = false;
-          $(once('fieldgroup-effects', $(this).find('> details'))).each(function () {
-            var $this = $(this);
-            if (typeof $this.data(direction + 'Tab') !== 'undefined') {
+        const { direction } = groupInfo.settings;
+        $(context)
+          .find(`[data-${direction}-tabs-panes]`)
+          .each((indexTabs, tabs) => {
+            let errorFocussed = false;
+            $(once('fieldgroup-effects', $(tabs).find('> details'))).each(
+              (index, element) => {
+                const $this = $(element);
+                if (typeof $this.data(`${direction}Tab`) !== 'undefined') {
+                  if (
+                    element.matches('.required-fields') &&
+                    ($this.find('[required]').length > 0 ||
+                      $this.find('.form-required').length > 0)
+                  ) {
+                    $this
+                      .data(`${direction}Tab`)
+                      .link.find('strong:first')
+                      .addClass('form-required');
+                  }
 
-              if ($this.is('.required-fields') && ($this.find('[required]').length > 0 || $this.find('.form-required').length > 0)) {
-                $this.data(direction + 'Tab').link.find('strong:first').addClass('form-required');
-              }
+                  if ($('.error', $this).length) {
+                    $this
+                      .data(`${direction}Tab`)
+                      .link.parent()
+                      .addClass('error');
 
-              if ($('.error', $this).length) {
-                $this.data(direction + 'Tab').link.parent().addClass('error');
-
-                // Focus the first tab with error.
-                if (!errorFocussed) {
-                  Drupal.FieldGroup.setGroupWithfocus($this);
-                  $this.data(direction + 'Tab').focus();
-                  errorFocussed = true;
+                    // Focus the first tab with error.
+                    if (!errorFocussed) {
+                      Drupal.FieldGroup.setGroupWithFocus($this);
+                      $this.data(`${direction}Tab`).focus();
+                      errorFocussed = true;
+                    }
+                  }
                 }
-              }
-            }
+              },
+            );
           });
-        });
-
       }
-    }
+    },
   };
-
-})(jQuery, Modernizr);
+})(jQuery);

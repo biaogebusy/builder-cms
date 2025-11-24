@@ -8,5 +8,8 @@
   "support": {
     "issues": "https://www.drupal.org/project/issues/conflict",
     "source": "https://git.drupal.org/project/conflict.git"
+  },
+  "require-dev": {
+    "drupal/paragraphs": "^1.17"
   }
 }

@@ -29,7 +29,7 @@ class TestTaskWorker implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events['search_api.task.search_api_test_tasks.success'][] = ['success'];
     $events['search_api.task.search_api_test_tasks.fail'][] = ['fail'];
     $events['search_api.task.search_api_test_tasks.ignore'][] = ['ignore'];

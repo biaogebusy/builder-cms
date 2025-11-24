@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Adjust image contrast.
- *
- * @ImageEffect(
- *   id = "image_effects_contrast",
- *   label = @Translation("Contrast"),
- *   description = @Translation("Adjust image contrast.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_contrast',
+  label: new TranslatableMarkup('Contrast'),
+  description: new TranslatableMarkup('Adjust image contrast.'),
+)]
 class ContrastImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**

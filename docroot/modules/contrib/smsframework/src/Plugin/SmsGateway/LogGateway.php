@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\sms\Plugin\SmsGateway;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -32,14 +33,7 @@ class LogGateway extends SmsGatewayPluginBase implements ContainerFactoryPluginI
    *
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
-
-  /**
-   * Time.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
+  protected LoggerInterface $logger;
 
   /**
    * Constructs a LogGateway object.
@@ -55,11 +49,16 @@ class LogGateway extends SmsGatewayPluginBase implements ContainerFactoryPluginI
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   Time.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, LoggerChannelFactoryInterface $logger_factory, TimeInterface $time) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    array $plugin_definition,
+    LoggerChannelFactoryInterface $logger_factory,
+    protected TimeInterface $time,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $definition = $this->getPluginDefinition();
     $this->logger = $logger_factory->get($definition['provider'] . '.' . $definition['id']);
-    $this->time = $time;
   }
 
   /**

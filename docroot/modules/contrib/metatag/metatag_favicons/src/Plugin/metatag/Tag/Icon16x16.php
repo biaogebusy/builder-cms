@@ -14,8 +14,7 @@ namespace Drupal\metatag_favicons\Plugin\metatag\Tag;
  *   weight = 3,
  *   type = "image",
  *   secure = FALSE,
- *   multiple = FALSE,
- *   sizes = "16x16"
+ *   multiple = FALSE
  * )
  */
 class Icon16x16 extends LinkSizesBase {
@@ -23,7 +22,7 @@ class Icon16x16 extends LinkSizesBase {
   /**
    * {@inheritdoc}
    */
-  protected function iconSize() {
+  protected function iconSize(): string {
     return '16x16';
   }
 

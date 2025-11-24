@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Queue;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Queue\DatabaseQueue;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 
@@ -19,16 +22,14 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
   use DependencySerializationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user'];
 
   /**
    * @var \Drupal\Core\Queue\DatabaseQueue
    */
-  protected $queue;
+  protected DatabaseQueue $queue;
 
   /**
    * {@inheritdoc}
@@ -75,7 +76,6 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     // We only need a valid \Drupal\Core\Queue\DatabaseQueue object here, not
     // an actual valid queue.
@@ -91,7 +91,7 @@ class QueueSerializationTest extends KernelTestBase implements FormInterface {
   /**
    * Tests queue injection serialization.
    */
-  public function testQueueSerialization() {
+  public function testQueueSerialization(): void {
     $form_state = new FormState();
     $form_state->setRequestMethod('POST');
     $form_state->setCached();

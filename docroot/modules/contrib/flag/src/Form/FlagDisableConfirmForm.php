@@ -2,9 +2,9 @@
 
 namespace Drupal\flag\Form;
 
-use Drupal\flag\FlagInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\flag\FlagInterface;
 
 /**
  * Provides the flag enable/disable confirmation form.
@@ -14,15 +14,14 @@ class FlagDisableConfirmForm extends ConfirmFormBase {
   /**
    * The flag to be enabled or disabled.
    *
-   * @var Drupal\flag\FlagInterface
+   * @var \Drupal\flag\FlagInterface
    */
   protected $flag;
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state,
-                            FlagInterface $flag = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FlagInterface $flag = NULL) {
     $this->flag = $flag;
     return parent::buildForm($form, $form_state);
   }

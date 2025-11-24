@@ -2,8 +2,8 @@
 
 namespace Drupal\token;
 
-use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Security\TrustedCallbackInterface;
 
 class TokenFieldRender implements TrustedCallbackInterface {
 

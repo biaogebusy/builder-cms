@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
@@ -13,13 +17,12 @@ use Drupal\image\ConfigurableImageEffectBase;
  * Originally contributed to the imagecache_actions module by
  * dan http://coders.co.nz.
  * sydneyshan http://enigmadigital.net.au.
- *
- * @ImageEffect(
- *   id = "image_effects_color_shift",
- *   label = @Translation("Color Shift"),
- *   description = @Translation("Shift image colors.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_color_shift',
+  label: new TranslatableMarkup('Color Shift'),
+  description: new TranslatableMarkup('Shift image colors.'),
+)]
 class ColorShiftImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**

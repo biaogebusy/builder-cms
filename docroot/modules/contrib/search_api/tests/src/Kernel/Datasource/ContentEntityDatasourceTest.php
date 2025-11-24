@@ -8,6 +8,7 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests correct functionality of the content entity datasource.
@@ -16,6 +17,7 @@ use Drupal\Tests\search_api\Functional\ExampleContentTrait;
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ContentEntityDatasourceTest extends KernelTestBase {
 
   use ExampleContentTrait;
@@ -164,7 +166,7 @@ class ContentEntityDatasourceTest extends KernelTestBase {
       $this->assertInstanceOf(EntityAdapter::class, $item);
       $entity = $item->getValue();
       $this->assertInstanceOf(EntityTestMulRevChanged::class, $entity);
-      list($id, $langcode) = explode(':', $item_id);
+      [$id, $langcode] = explode(':', $item_id);
       $this->assertEquals($id, $entity->id());
       $this->assertEquals($langcode, $entity->language()->getId());
     }
@@ -306,7 +308,7 @@ class ContentEntityDatasourceTest extends KernelTestBase {
    *
    * @see \Drupal\search_api\Plugin\search_api\datasource\ContentEntity::getPartialItemIds()
    */
-  protected function getItemIds(array $bundles = NULL, array $languages = NULL) {
+  protected function getItemIds(?array $bundles = NULL, ?array $languages = NULL) {
     $discovered_ids = [];
     for ($page = 0;; ++$page) {
       $new_ids = $this->datasource->getPartialItemIds($page, $bundles, $languages);
@@ -336,7 +338,6 @@ class ContentEntityDatasourceTest extends KernelTestBase {
       'languages' => $language_config,
     ]);
     $method = new \ReflectionMethod($this->datasource, 'getLanguages');
-    $method->setAccessible(TRUE);
     /** @var \Drupal\Core\Language\LanguageInterface[] $returned */
     $returned = $method->invoke($this->datasource);
     foreach ($returned as $langcode => $language) {
@@ -355,7 +356,7 @@ class ContentEntityDatasourceTest extends KernelTestBase {
    *
    * @see \Drupal\Tests\search_api\Kernel\Datasource\ContentEntityDatasourceTest::testGetLanguages()
    */
-  public function getLanguagesDataProvider(): array {
+  public static function getLanguagesDataProvider(): array {
     return [
       'all' => [
         'language_config' => [

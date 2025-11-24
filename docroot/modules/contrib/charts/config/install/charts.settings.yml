@@ -36,6 +36,7 @@ charts_default_settings:
     tooltips: true
     tooltips_use_html: false
     data_markers: false
+    connect_nulls: false
     data_labels: false
     legend: false
     legend_position: right

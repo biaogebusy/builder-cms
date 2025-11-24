@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 
 /**
@@ -17,12 +20,12 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
   /**
    * A database connection used for monitoring processes.
    */
-  protected $monitor;
+  protected Connection $monitor;
 
   /**
    * The connection ID of the current test connection.
    */
-  protected $id;
+  protected int $id;
 
   /**
    * {@inheritdoc}
@@ -89,7 +92,39 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
    * @internal
    */
   protected function assertNoConnection(int $id): void {
-    $this->assertArrayNotHasKey($id, $this->monitor->query($this->getQuery()['processlist'])->fetchAllKeyed(0, 0));
+    // Wait up to 100ms to give the database engine sufficient time to react.
+    $this->assertTrue($this->waitFor(0.1, function () use ($id) {
+      $key = $this->monitor->query($this->getQuery()['processlist'])->fetchAllKeyed(0, 0);
+      return !array_key_exists($id, $key);
+    }));
+  }
+
+  /**
+   * Wait for a callback to return a truthy value.
+   *
+   * @param int|float $timeout
+   *   Number of seconds to wait for.
+   * @param callable $callback
+   *   The callback to call.
+   *
+   * @return mixed
+   *   The result of the callback.
+   */
+  protected function waitFor(int|float $timeout, callable $callback): mixed {
+    $start = microtime(TRUE);
+    $end = $start + $timeout;
+
+    do {
+      $result = call_user_func($callback, $this);
+
+      if ($result) {
+        break;
+      }
+
+      usleep(10000);
+    } while (microtime(TRUE) < $end);
+
+    return $result;
   }
 
   /**
@@ -100,8 +135,6 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
   public function testOpenClose(): void {
     // Close the connection.
     Database::closeConnection(static::TEST_TARGET_CONNECTION);
-    // Wait 20ms to give the database engine sufficient time to react.
-    usleep(20000);
 
     // Verify that we are back to the original connection count.
     $this->assertNoConnection($this->id);
@@ -116,8 +149,6 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
 
     // Close the connection.
     Database::closeConnection(static::TEST_TARGET_CONNECTION);
-    // Wait 20ms to give the database engine sufficient time to react.
-    usleep(20000);
 
     // Verify that we are back to the original connection count.
     $this->assertNoConnection($this->id);
@@ -132,8 +163,6 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
 
     // Close the connection.
     Database::closeConnection(static::TEST_TARGET_CONNECTION);
-    // Wait 20ms to give the database engine sufficient time to react.
-    usleep(20000);
 
     // Verify that we are back to the original connection count.
     $this->assertNoConnection($this->id);
@@ -165,8 +194,6 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
 
     // Close the connection.
     Database::closeConnection(static::TEST_TARGET_CONNECTION);
-    // Wait 20ms to give the database engine sufficient time to react.
-    usleep(20000);
 
     // Verify that we are back to the original connection count.
     $this->assertNoConnection($this->id);
@@ -175,10 +202,9 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
   /**
    * Tests pdo options override.
    */
-  public function testConnectionOpen() {
+  public function testConnectionOpen(): void {
     $reflection = new \ReflectionObject($this->connection);
     $connection_property = $reflection->getProperty('connection');
-    $connection_property->setAccessible(TRUE);
     $error_mode = $connection_property->getValue($this->connection)
       ->getAttribute(\PDO::ATTR_ERRMODE);
     // Ensure the default error mode is set to exception.
@@ -191,7 +217,6 @@ abstract class DriverSpecificConnectionUnitTestBase extends DriverSpecificKernel
 
     $reflection = new \ReflectionObject($test_connection);
     $connection_property = $reflection->getProperty('connection');
-    $connection_property->setAccessible(TRUE);
     $error_mode = $connection_property->getValue($test_connection)
       ->getAttribute(\PDO::ATTR_ERRMODE);
     // Ensure PDO connection options can be overridden.

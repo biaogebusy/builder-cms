@@ -2,28 +2,14 @@
 
 namespace Drupal\commerce_tax;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_store\Entity\StoreInterface;
 use Drupal\commerce_tax\Entity\TaxType;
 use Drupal\commerce_tax\Plugin\Commerce\TaxType\LocalTaxTypeInterface;
 use Drupal\commerce_tax\Resolver\ChainTaxRateResolverInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 class StoreTax implements StoreTaxInterface {
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The chain tax rate resolver.
-   *
-   * @var \Drupal\commerce_tax\Resolver\ChainTaxRateResolverInterface
-   */
-  protected $chainRateResolver;
 
   /**
    * The store tax types, keyed by store ID.
@@ -49,14 +35,15 @@ class StoreTax implements StoreTaxInterface {
   /**
    * Constructs a new StoreTax object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\commerce_tax\Resolver\ChainTaxRateResolverInterface $chain_rate_resolver
+   * @param \Drupal\commerce_tax\Resolver\ChainTaxRateResolverInterface $chainRateResolver
    *   The chain tax rate resolver.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ChainTaxRateResolverInterface $chain_rate_resolver) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->chainRateResolver = $chain_rate_resolver;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected ChainTaxRateResolverInterface $chainRateResolver,
+  ) {
   }
 
   /**

@@ -2,8 +2,8 @@
 
 namespace Drush\Symfony;
 
-use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Exception\RuntimeException;
+use Symfony\Component\Console\Input\ArgvInput;
 
 /**
  * UnvalidatedArgvInput is an ArgvInput that never reports errors when
@@ -29,7 +29,7 @@ class LessStrictArgvInput extends ArgvInput
      * @param array|null           $argv       An array of parameters from the CLI (in the argv format)
      * @param InputDefinition|null $definition A InputDefinition instance
      */
-    public function __construct(array $argv = null, InputDefinition $definition = null)
+    public function __construct(?array $argv = null, ?InputDefinition $definition = null)
     {
         // We have to duplicate the implementation of ArgvInput
         // because of liberal use of `private`
@@ -58,7 +58,7 @@ class LessStrictArgvInput extends ArgvInput
         return false;
     }
 
-    protected function setTokens(array $tokens)
+    protected function setTokens(array $tokens): void
     {
         $this->tokens = $tokens;
     }
@@ -66,7 +66,7 @@ class LessStrictArgvInput extends ArgvInput
     /**
      * {@inheritdoc}
      */
-    protected function parse()
+    protected function parse(): void
     {
         $parseOptions = true;
         $this->parsed = $this->tokens;
@@ -334,7 +334,7 @@ class LessStrictArgvInput extends ArgvInput
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $tokens = array_map(function ($token) {
             if (preg_match('{^(-[^=]+=)(.+)}', $token, $match)) {

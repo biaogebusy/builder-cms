@@ -73,7 +73,7 @@ class EntityReferenceHelper implements EntityReferenceHelperInterface {
     if ($entity_type_id == 'user') {
       return TRUE;
     }
-    elseif ($this->entityDefinitions[$entity_type_id]->getGroup() == 'configuration') {
+    if ($this->entityDefinitions[$entity_type_id]->getGroup() == 'configuration') {
       return TRUE;
     }
 

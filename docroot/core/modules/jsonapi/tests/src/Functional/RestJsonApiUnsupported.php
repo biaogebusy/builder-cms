@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Cache\CacheableMetadata;
@@ -62,7 +64,7 @@ class RestJsonApiUnsupported extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->config('system.logging')->set('error_level', ERROR_REPORTING_HIDE)->save();
@@ -86,7 +88,7 @@ class RestJsonApiUnsupported extends ResourceTestBase {
    *
    * @see \Drupal\jsonapi\EventSubscriber\JsonApiRequestValidator::validateQueryParams()
    */
-  public function testApiJsonNotSupportedInRest() {
+  public function testApiJsonNotSupportedInRest(): void {
     $this->assertSame(['json', 'xml'], $this->container->getParameter('serializer.formats'));
 
     $this->provisionResource(['api_json'], []);
@@ -102,7 +104,7 @@ class RestJsonApiUnsupported extends ResourceTestBase {
       FALSE,
       $response,
       ['4xx-response', 'config:system.logging', 'config:user.role.anonymous', 'http_response', 'node:1'],
-      ['url.query_args:_format', 'url.site', 'user.permissions'],
+      ['url.query_args', 'url.site', 'user.permissions'],
       'MISS',
       'MISS'
     );
@@ -116,7 +118,7 @@ class RestJsonApiUnsupported extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedUnauthorizedAccessMessage($method) {
+  protected function getExpectedUnauthorizedAccessMessage($method): string {
     return '';
   }
 

@@ -1,18 +1,14 @@
-import { spawn } from 'child_process';
-import path from 'path';
-import fs from 'fs';
-import mkdirp from 'mkdirp';
-import nightwatchSettings from './nightwatch.conf';
+const path = require('path');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
+const nightwatchSettings = require('./nightwatch.conf');
 
-export const commandAsWebserver = (command) => {
+const commandAsWebserver = (command) => {
   if (process.env.DRUPAL_TEST_WEBSERVER_USER) {
     return `sudo -u ${process.env.DRUPAL_TEST_WEBSERVER_USER} ${command}`;
   }
   return command;
 };
-
-export const drupalDbPrefix = null;
-export const drupalSitePath = null;
 
 module.exports = {
   afterEach: (browser, done) => {

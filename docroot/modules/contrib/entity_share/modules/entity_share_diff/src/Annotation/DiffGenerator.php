@@ -29,6 +29,7 @@ class DiffGenerator extends Plugin {
    * The human-readable name of the generator type.
    *
    * @var \Drupal\Core\Annotation\Translation
+   *
    * @ingroup plugin_translatable
    */
   public $label;

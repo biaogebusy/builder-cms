@@ -1,1 +1,1 @@
-!function(i){const n=i.hr=i.hr||{};n.dictionary=Object.assign(n.dictionary||{},{Source:"Izvorni kod"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));
+!function(i){const n=i.hr=i.hr||{};n.dictionary=Object.assign(n.dictionary||{},{"Show source":""})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));

@@ -1,0 +1,12 @@
+{
+    "name": "drupal/layout_library",
+    "description": "Provides a library of layouts for content-editors to select from",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/layout_library",
+    "support": {
+        "issues": "http://drupal.org/project/issues/layout_library",
+        "source": "https://git.drupalcode.org/project/layout_library"
+    }
+    
+}

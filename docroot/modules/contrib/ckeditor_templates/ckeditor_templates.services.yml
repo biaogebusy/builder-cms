@@ -1,0 +1,5 @@
+services:
+  plugin.manager.ckeditor_template:
+    class: Drupal\ckeditor_templates\CkeditorTemplatePluginManager
+    parent: default_plugin_manager
+    arguments: ['@language_manager']

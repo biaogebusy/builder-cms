@@ -43,20 +43,7 @@ class BundleEntityAccessControlHandlerTest extends UnitTestCase {
    *
    * @dataProvider accessProvider
    */
-  public function testAccess(EntityInterface $entity, $operation, $account, $allowed) {
-    $handler = new BundleEntityAccessControlHandler($entity->getEntityType());
-    $handler->setStringTranslation($this->getStringTranslationStub());
-    $result = $handler->access($entity, $operation, $account);
-    $this->assertEquals($allowed, $result);
-  }
-
-  /**
-   * Data provider for testAccess().
-   *
-   * @return array
-   *   A list of testAccess method arguments.
-   */
-  public function accessProvider() {
+  public function testAccess($operation, $uid, $permission, $allowed) {
     $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
     $entity_type->id()->willReturn('green_entity_bundle');
     $entity_type->getBundleOf()->willReturn('green_entity');
@@ -69,10 +56,25 @@ class BundleEntityAccessControlHandlerTest extends UnitTestCase {
     $entity->id()->willReturn('default');
     $entity->uuid()->willReturn('fake uuid');
     $entity->language()->willReturn(new Language(['id' => LanguageInterface::LANGCODE_NOT_SPECIFIED]));
+    $entity = $entity->reveal();
 
+    $account = $this->buildMockUser($uid, $permission)->reveal();
+
+    $handler = new BundleEntityAccessControlHandler($entity->getEntityType());
+    $handler->setStringTranslation($this->getStringTranslationStub());
+    $result = $handler->access($entity, $operation, $account);
+    $this->assertEquals($allowed, $result);
+  }
+
+  /**
+   * Data provider for testAccess().
+   *
+   * @return array
+   *   A list of testAccess method arguments.
+   */
+  public static function accessProvider() {
     // User with no access.
-    $user = $this->buildMockUser(1, 'access content');
-    $data[] = [$entity->reveal(), 'view label', $user->reveal(), FALSE];
+    $data[] = ['view label', 1, 'access content', FALSE];
 
     // Permissions which grant "view label" access.
     $permissions = [
@@ -85,8 +87,7 @@ class BundleEntityAccessControlHandlerTest extends UnitTestCase {
       'view any default green_entity',
     ];
     foreach ($permissions as $index => $permission) {
-      $user = $this->buildMockUser(10 + $index, $permission);
-      $data[] = [$entity->reveal(), 'view label', $user->reveal(), TRUE];
+      $data[] = ['view label', 10 + $index, $permission, TRUE];
     }
 
     return $data;

@@ -322,11 +322,11 @@
       // Delete the current block plugin collection so that a new one is pulled in.
       delete this.tabsView.tabViews['manage_content'].collection;
 
-      // Auto-click the new block, which we know is in the "Custom" category.
+      // Auto-click the new block, which we know is in the "Content block" category.
       // @todo When configurable categories are in, determine this from the
       // passed-in settings.
       this.tabsView.tabViews['manage_content'].autoClick = '[data-plugin-id="block_content:' + uuid + '"]';
-      this.tabsView.tabViews['manage_content'].activeCategory = Drupal.t('Custom');
+      this.tabsView.tabViews['manage_content'].activeCategory = Drupal.t('Content block');
 
       this.tabsView.tabViews['manage_content'].render();
     },

@@ -2,12 +2,12 @@
   font-size: var(--gin-font-size-xs);
   z-index: 501; /* on top of the Drupal world */
   position: sticky;
-  top: 0;
+  inset-block-start: 0;
   padding: 0;
   width: 100%;
   height: var(--gin-toolbar-secondary-height);
   background: rgba(#fff, .98);
-  border-bottom: 1px solid var(--gin-border-color-layer);
+  border-block-end: 1px solid var(--gin-border-color-layer);
 
   @supports (backdrop-filter: blur()) {
     opacity: .999; /* Fix Chrome issue with mask */
@@ -28,8 +28,9 @@
     backdrop-filter: none;
   }
 
-  .gin--navigation & {
-    margin-left: var(--gin-toolbar-x-offset);
+  .gin--navigation &,
+  .gin--core-navigation & {
+    margin-inline-start: var(--gin-toolbar-x-offset);
     width: calc(100% - var(--gin-toolbar-x-offset));
   }
 
@@ -45,7 +46,7 @@
   .node-preview-backlink {
     all: revert;
     position: relative;
-    padding-left: 1.75em;
+    padding-inline-start: 1.75em;
     text-decoration: none;
     font-weight: var(--gin-font-weight-normal);
     color: var(--gin-color-text-light);
@@ -63,8 +64,8 @@
       content: "";
       display: inline-block;
       position: absolute;
-      top: calc(50% - 1px);
-      left: 0;
+      inset-block-start: calc(50% - 1px);
+      inset-inline-start: 0;
       width: var(--gin-icon-size-toolbar-secondary);
       height: var(--gin-icon-size-toolbar-secondary);
       transform: translateY(-50%);
@@ -91,7 +92,7 @@
     align-items: center;
     justify-content: space-between;
     width: auto;
-    padding: var(--gin-spacing-m) 0;
+    padding: var(--gin-spacing-s) 0;
     margin: 0 var(--gin-spacing-m);
     height: 100%;
 
@@ -104,7 +105,7 @@
     }
 
     label {
-      padding-right: .5em;
+      padding-inline-end: .5em;
     }
   }
 
@@ -117,7 +118,10 @@
     border: 1px solid var(--gin-border-color-form-element);
     border-radius: var(--gin-border-s);
     box-sizing: border-box;
-    transition: var(--gin-transition);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: var(--gin-transition);
+    }
   }
 
   .js-hide {

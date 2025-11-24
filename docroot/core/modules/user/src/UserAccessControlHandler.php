@@ -3,7 +3,6 @@
 namespace Drupal\user;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Access\AccessResultNeutral;
 use Drupal\Core\Access\AccessResultReasonInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityAccessControlHandler;
@@ -51,17 +50,24 @@ class UserAccessControlHandler extends EntityAccessControlHandler {
     switch ($operation) {
       case 'view':
         // Only allow view access if the account is active.
-        if ($account->hasPermission('access user profiles') && $entity->isActive()) {
-          return AccessResult::allowed()->cachePerPermissions()->addCacheableDependency($entity);
+        $result = AccessResult::allowedIfHasPermission($account, 'access user profiles');
+
+        if ($result->isAllowed()) {
+          $result = $result->andIf(
+            AccessResult::allowedIf($entity->isActive())->addCacheableDependency($entity)
+          );
+
+          if ($result instanceof AccessResultReasonInterface) {
+            $result->setReason("The 'access user profiles' permission is required and the user must be active.");
+          }
+
+          if ($result->isAllowed()) {
+            return $result;
+          }
         }
+
         // Users can view own profiles at all times.
-        elseif ($account->id() == $entity->id()) {
-          return AccessResult::allowed()->cachePerUser();
-        }
-        else {
-          return AccessResultNeutral::neutral("The 'access user profiles' permission is required and the user must be active.")->cachePerPermissions()->addCacheableDependency($entity);
-        }
-        break;
+        return $result->orIf(AccessResult::allowedIf($account->id() == $entity->id())->addCacheContexts(['user']));
 
       case 'update':
         // Users can always edit their own account.
@@ -84,7 +90,7 @@ class UserAccessControlHandler extends EntityAccessControlHandler {
   /**
    * {@inheritdoc}
    */
-  protected function checkFieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  protected function checkFieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
     // Fields that are not implicitly allowed to administrative users.
     $explicit_check_fields = [
       'pass',
@@ -101,7 +107,7 @@ class UserAccessControlHandler extends EntityAccessControlHandler {
       case 'name':
         // Allow view access to anyone with access to the entity.
         // The username field is editable during the registration process.
-        if ($operation == 'view' || ($items && $items->getEntity()->isAnonymous())) {
+        if ($operation == 'view' || ($items && $items->getEntity()->isNew())) {
           return AccessResult::allowed()->cachePerPermissions();
         }
         // Allow edit access for the own user name if the permission is

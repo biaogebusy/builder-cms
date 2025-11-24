@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Xiangxi Zhou"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baojing Xian": {
+			"local_name": "保靖县"
+		},
+		"Fenghuang Xian": {
+			"local_name": "凤凰县"
+		},
+		"Guzhang Xian": {
+			"local_name": "古丈县"
+		},
+		"Huayuan Xian": {
+			"local_name": "花垣县"
+		},
+		"Jishou Shi": {
+			"local_name": "吉首市"
+		},
+		"Longshan Xian": {
+			"local_name": "龙山县"
+		},
+		"Luxi Xian": {
+			"local_name": "泸溪县"
+		},
+		"Yongshun Xian": {
+			"local_name": "永顺县"
+		}
+	}
+}

@@ -168,7 +168,7 @@ class WebformAddonsManager implements WebformAddonsManagerInterface {
     // Element: Tax Number.
     $projects['tax_number'] = [
       'title' => $this->t('Tax Number'),
-      'description' => $this->t('Defines a new plugin type to manage tax number valitation. Additionally provides a webform element that uses the same plugin'),
+      'description' => $this->t('Defines a new plugin type to manage tax number validation. Additionally provides a webform element that uses the same plugin'),
       'url' => Url::fromUri('https://www.drupal.org/project/tax_number'),
       'category' => 'element',
     ];
@@ -852,7 +852,7 @@ class WebformAddonsManager implements WebformAddonsManagerInterface {
     // Integrations: Ecomail webform.
     $projects['ecomail_webform'] = [
       'title' => $this->t('Ecomail webform'),
-      'description' => $this->t('Provides a Webform handler to add contact to the list of direct e-mailing service Ecomail.cz.'),
+      'description' => $this->t('Provides a Webform handler to add contact to the list of direct emailing service Ecomail.cz.'),
       'url' => Url::fromUri('https://www.drupal.org/project/ecomail_webform'),
       'category' => 'integration',
     ];
@@ -1713,10 +1713,10 @@ class WebformAddonsManager implements WebformAddonsManagerInterface {
     ];
 
     // Spam: Protected Submissions.
-    $projects['protected_submissions'] = [
-      'title' => $this->t('Protected Submissions'),
-      'description' => $this->t('A light-weight, non-intrusive spam protection module that enables rejection of webform submissions which contain preset patterns.'),
-      'url' => Url::fromUri('https://www.drupal.org/project/protected_submissions'),
+    $projects['protected_forms'] = [
+      'title' => $this->t('Protected Forms'),
+      'description' => $this->t('Protected Forms is a light-weight, non-intrusive spam protection module that enables rejection of node, comment, webform, user profile, contact form, private message and revision log submissions which contain undesired language characters or preset patterns.'),
+      'url' => Url::fromUri('https://www.drupal.org/project/protected_forms'),
       'category' => 'spam',
     ];
 
@@ -1829,7 +1829,7 @@ class WebformAddonsManager implements WebformAddonsManagerInterface {
     // Submissions: Webform double opt-in.
     $projects['webform_double_opt_in'] = [
       'title' => $this->t('Webform double opt-in'),
-      'description' => $this->t('Provides e-mail double opt-in functionality.'),
+      'description' => $this->t('Provides email double opt-in functionality.'),
       'url' => Url::fromUri('https://www.drupal.org/project/webform_double_opt_in'),
       'category' => 'submission',
     ];
@@ -2070,7 +2070,7 @@ class WebformAddonsManager implements WebformAddonsManagerInterface {
     ];
 
     // Utility: Webform Config Key Value.
-    $projects['	webform_config_key_value'] = [
+    $projects['webform_config_key_value'] = [
       'title' => $this->t('Webform Config Key Value'),
       'description' => $this->t('Use the KeyValueStorage to save webform config instead of yaml config storage, allowing webforms to be treated more like content than configuration and are excluded from the configuration imports/exports.'),
       'url' => Url::fromUri('https://www.drupal.org/sandbox/thtas/2994250'),

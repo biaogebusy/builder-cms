@@ -31,12 +31,17 @@ class TextIndent extends CKEditorPluginBase implements CKEditorPluginContextualI
    * NOTE: The keys of the returned array corresponds to the CKEditor button
    * names. They are the first argument of the editor.ui.addButton() or
    * editor.ui.addRichCombo() functions in the plugin.js file.
+   * 
+   * add by Douglas.lai 2022-06-07
+   * drupal_get_path() and drupal_get_filename() have been deprecated in favor of extension listing services
+   * see also:https://www.drupal.org/node/2940438
    */
   public function getButtons() {
     return [
       'textindent' => [
         'label' => $this->t('Text Indent'),
-        'image' => drupal_get_path('module', 'ckeditor_textindent') . '/js/plugins/textindent/icons/textindent.png',
+        #'image' => drupal_get_path('module', 'ckeditor_textindent') . '/js/plugins/textindent/icons/textindent.png',
+        'image' => \Drupal::service('extension.list.module')->getPath('ckeditor_textindent') . '/js/plugins/textindent/icons/textindent.png',
       ],
     ];
   }
@@ -45,7 +50,8 @@ class TextIndent extends CKEditorPluginBase implements CKEditorPluginContextualI
    * {@inheritdoc}
    */
   public function getFile() {
-    return drupal_get_path('module', 'ckeditor_textindent') . '/js/plugins/textindent/plugin.js';
+    #return drupal_get_path('module', 'ckeditor_textindent') . '/js/plugins/textindent/plugin.js';
+    return \Drupal::service('extension.list.module')->getPath('ckeditor_textindent') . '/js/plugins/textindent/plugin.js';
   }
 
   /**

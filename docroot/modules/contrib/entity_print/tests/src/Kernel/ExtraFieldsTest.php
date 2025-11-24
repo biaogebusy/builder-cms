@@ -73,11 +73,12 @@ class ExtraFieldsTest extends KernelTestBase {
    */
   public function testExtraFieldAccess() {
     $controller = NodeViewController::create($this->container);
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 
     // The View PDF links are rendered.
     $build = $controller->view($this->node, 'default');
-    $text = (string) $renderer->renderPlain($build);
+    $text = (string) $renderer->renderInIsolation($build);
     $this->assertStringContainsString('View PDF', $text);
 
     // Change to the anonymous user.
@@ -85,7 +86,7 @@ class ExtraFieldsTest extends KernelTestBase {
 
     // The View PDF links are not rendered because we don't have access.
     $build = $controller->view($this->node, 'default');
-    $text = (string) $renderer->renderPlain($build);
+    $text = (string) $renderer->renderInIsolation($build);
     $this->assertStringNotContainsString('View PDF', $text);
   }
 
@@ -94,9 +95,10 @@ class ExtraFieldsTest extends KernelTestBase {
    */
   public function testExtraFieldWeight() {
     $controller = NodeViewController::create($this->container);
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
     $build = $controller->view($this->node, 'default');
-    $text = (string) $renderer->renderPlain($build);
+    $text = (string) $renderer->renderInIsolation($build);
 
     $this->assertTrue(stripos($text, 'View PDF') < stripos($text, 'body text'), 'View PDF link appears first');
 
@@ -106,7 +108,7 @@ class ExtraFieldsTest extends KernelTestBase {
       ->save();
 
     $build = $controller->view($this->node, 'default');
-    $text = (string) $renderer->renderPlain($build);
+    $text = (string) $renderer->renderInIsolation($build);
     $this->assertTrue(stripos($text, 'View PDF') > stripos($text, 'body text'), 'View PDF link appears last');
   }
 

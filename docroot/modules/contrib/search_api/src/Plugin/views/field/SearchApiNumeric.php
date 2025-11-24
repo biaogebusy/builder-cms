@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\field;
 
+use Drupal\views\Attribute\ViewsField;
 use Drupal\Component\Gettext\PoItem;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\field\MultiItemsFieldHandlerInterface;
@@ -12,9 +13,8 @@ use Drupal\views\ViewExecutable;
  * Displays numeric data.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("search_api_numeric")
  */
+#[ViewsField('search_api_numeric')]
 class SearchApiNumeric extends NumericField implements MultiItemsFieldHandlerInterface {
 
   use SearchApiFieldTrait {
@@ -24,7 +24,7 @@ class SearchApiNumeric extends NumericField implements MultiItemsFieldHandlerInt
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     // In case we act as the fallback handler for an entity field, our
     // submitOptionsForm() method won't be called, which means the
     // "format_plural_string" option won't be saved correctly. Fix that here.

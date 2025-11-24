@@ -11,6 +11,8 @@ use Drupal\Core\State\StateInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+// cspell:ignore tnid
+
 /**
  * Drupal 7 node source from database.
  *
@@ -66,7 +68,7 @@ class Node extends FieldableEntity {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -79,7 +81,7 @@ class Node extends FieldableEntity {
   }
 
   /**
-   * The join options between the node and the node_revisions table.
+   * The join options between the node and the node_revision table.
    */
   const JOIN = '[n].[vid] = [nr].[vid]';
 

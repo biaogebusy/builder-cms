@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Tests\BrowserTestBase;
@@ -12,9 +14,7 @@ use Drupal\Tests\BrowserTestBase;
 class ElementsAccessTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test'];
 
@@ -26,7 +26,7 @@ class ElementsAccessTest extends BrowserTestBase {
   /**
    * Ensures that child values are still processed when #access = FALSE.
    */
-  public function testAccessFalse() {
+  public function testAccessFalse(): void {
     $this->drupalGet('form_test/vertical-tabs-access');
     $this->submitForm([], 'Submit');
     $this->assertSession()->pageTextNotContains('This checkbox inside a vertical tab does not have its default value.');

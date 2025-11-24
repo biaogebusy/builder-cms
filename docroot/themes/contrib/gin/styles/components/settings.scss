@@ -3,7 +3,7 @@
   .form-radios {
     display: flex;
     flex-wrap: wrap;
-    margin-top: var(--gin-spacing-xs);
+    margin-block-start: var(--gin-spacing-xs);
 
     .form-item--preset-accent-color {
       position: relative;
@@ -12,8 +12,8 @@
         cursor: pointer;
         width: 32px;
         height: 32px;
-        top: var(--gin-spacing-m);
-        margin-right: var(--gin-spacing-xs);
+        inset-block-start: var(--gin-spacing-m);
+        margin-inline-end: var(--gin-spacing-xs);
         border-color: transparent;
 
         &,
@@ -61,8 +61,8 @@
         visibility: hidden;
         z-index: 1;
         position: absolute;
-        top: 100%;
-        left: -10px;
+        inset-block-start: 100%;
+        inset-inline-start: -10px;
         padding: var(--gin-spacing-xs);
         color: var(--gin-color-contextual-text);
         background: var(--gin-color-contextual);
@@ -85,12 +85,13 @@
 [data-drupal-selector="edit-focus-group"] {
   .form-type--color,
   .form-type--textfield {
-    float: left;
-    margin: 0 0 0var(--gin-spacing-xs) 0;
+    float: inline-start;
+    margin: 0;
+    margin-block-end: var(--gin-spacing-xs);
   }
 
   .form-type--color {
-    margin-right: var(--gin-spacing-xs);
+    margin-inline-end: var(--gin-spacing-xs);
   }
 
   .fieldset__description {
@@ -103,7 +104,7 @@
   .form-radios {
     display: inline-flex;
     flex-wrap: wrap;
-    padding: .1875rem var(--gin-spacing-xs);
+    padding: 0 var(--gin-spacing-xxs);
     border: 1px solid var(--gin-border-color-form-element);
     border-radius: var(--gin-spacing-xl);
 
@@ -112,9 +113,8 @@
     }
 
     .form-type--radio {
-      margin-top: 0;
-      margin-left: 0;
-      margin-bottom: 0;
+      margin-block: 0;
+      margin-inline-start: 0;
     }
 
     .form-item__label {
@@ -139,15 +139,15 @@
       margin: 0;
       border: 0;
 
+      &:active + .form-item__label,
       &:focus + .form-item__label {
         box-shadow: 0 0 0 1px var(--gin-color-focus-border),
                     0 0 0 4px var(--gin-color-focus);
       }
 
       &:checked + .form-item__label {
-        font-weight: var(--gin-font-weight-bold);
-        color: var(--gin-color-primary-active);
-        background: var(--gin-color-primary-light-active);
+        color: var(--gin-color-button-text);
+        background: var(--gin-color-primary);
       }
     }
   }
@@ -159,21 +159,22 @@
   .form-radios {
     display: flex;
     flex-wrap: wrap;
-    margin-top: var(--gin-spacing-xs);
+    margin-block-start: var(--gin-spacing-xs);
 
     .form-item {
       position: relative;
       display: flex;
       flex-wrap: wrap;
       width: 140px;
-      margin: 0 var(--gin-spacing-s) 0 0;
+      margin: 0;
+      margin-inline-end: var(--gin-spacing-s);
 
       input {
         cursor: pointer;
         position: static;
         width: 140px;
         height: 100px;
-        margin-left: 0;
+        margin-inline-start: 0;
         border-radius: var(--gin-border-l);
         transform: none;
 
@@ -204,8 +205,8 @@
       .form-item__label {
         font-size: var(--gin-font-size-xxs);
         display: block;
-        margin-top: var(--gin-spacing-xs);
-        margin-bottom: var(--gin-spacing-m);
+        margin-block-start: var(--gin-spacing-xs);
+        margin-block-end: var(--gin-spacing-m);
       }
     }
   }
@@ -213,6 +214,57 @@
 
 // Settings: Toolbar selector.
 [data-drupal-selector="edit-classic-toolbar"] {
+  // Set warning if core navigation module is active.
+  &.gin-core-navigation--is-active {
+    position: relative;
+
+    #edit-classic-toolbar {
+      position: relative;
+      opacity: .5;
+
+      &::before {
+        content: '';
+        z-index: 2;
+        display: block;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        inset-block-start: 0;
+        inset-inline-start: 0;
+        cursor: not-allowed;
+      }
+    }
+
+    .fieldset__description {
+      pointer-events: none;
+      position: absolute;
+      inset-block-start: 3.5rem;
+      inset-inline-start: 2rem;
+      display: flex;
+      align-items: center;
+      gap: var(--gin-spacing-xs);
+      color: var(--gin-color-warning);
+      background-color: var(--gin-bg-warning);
+      padding:  var(--gin-spacing-xs) var(--gin-spacing-s);
+      border-radius: var(--gin-border-s);
+
+      &:before {
+        content: '';
+        display: block;
+        width: 1em;
+        height: 1em;
+        background-color: var(--gin-color-warning-light);
+        mask-image: icon('warning');
+        mask-repeat: no-repeat;
+        mask-position: center left;
+      }
+
+      .form-item__warning {
+        display: none;
+      }
+    }
+  }
+
   .form-radios .form-item input {
     // Standard: Sidebar
     &[data-gin-toolbar=vertical] {
@@ -286,6 +338,6 @@
 
 input[data-gin-toolbar="new"] + label .gin-new-flag {
   position: absolute;
-  top: -100px;
-  right: 8px;
+  inset-block-start: -100px;
+  inset-inline-end: var(--gin-spacing-xs);
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel;
 
 use Drupal\Core\Cache\Cache;
@@ -12,6 +14,8 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\User;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -54,7 +58,7 @@ class MenuLinkContentCacheabilityBubblingTest extends KernelTestBase {
   /**
    * Tests bubbleable metadata of menu links' outbound route/path processing.
    */
-  public function testOutboundPathAndRouteProcessing() {
+  public function testOutboundPathAndRouteProcessing(): void {
     $request_stack = \Drupal::requestStack();
     /** @var \Symfony\Component\Routing\RequestContext $request_context */
     $request_context = \Drupal::service('router.request_context');
@@ -62,6 +66,7 @@ class MenuLinkContentCacheabilityBubblingTest extends KernelTestBase {
     $request = Request::create('/');
     $request->attributes->set(RouteObjectInterface::ROUTE_NAME, '<front>');
     $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('/'));
+    $request->setSession(new Session(new MockArraySessionStorage()));
     $request_stack->push($request);
     $request_context->fromRequest($request);
 

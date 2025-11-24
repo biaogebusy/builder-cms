@@ -67,7 +67,7 @@ class PriceElementTest extends CommerceBrowserTestBase {
     $this->assertSession()->optionExists('amount[currency_code]', 'EUR');
     $element = $this->assertSession()->optionExists('amount[currency_code]', 'USD');
     $this->assertNotEmpty($element->isSelected());
-    // CHF is not in #availabe_currencies so it must not be present.
+    // CHF is not in #available_currencies, so it must not be present.
     $this->assertSession()->optionNotExists('amount[currency_code]', 'CHF');
 
     // Invalid submit.

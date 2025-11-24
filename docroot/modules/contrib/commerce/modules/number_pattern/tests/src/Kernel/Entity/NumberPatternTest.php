@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_number_pattern\Kernel\Entity;
 
+use Drupal\Tests\commerce_number_pattern\Kernel\NumberPatternKernelTestBase;
 use Drupal\commerce_number_pattern\Entity\NumberPattern;
 use Drupal\commerce_number_pattern\Plugin\Commerce\NumberPattern\NumberPatternInterface;
-use Drupal\Tests\commerce_number_pattern\Kernel\NumberPatternKernelTestBase;
 
 /**
  * Tests the number pattern entity.

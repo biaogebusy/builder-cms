@@ -2,6 +2,7 @@
 
 namespace Drupal\migrate_drupal\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -18,11 +19,8 @@ use Drupal\migrate\Row;
  * migration.
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "node_complete_node_translation_lookup"
- * )
  */
+#[MigrateProcess('node_complete_node_translation_lookup')]
 class NodeCompleteNodeTranslationLookup extends ProcessPluginBase {
 
   /**
@@ -30,6 +28,10 @@ class NodeCompleteNodeTranslationLookup extends ProcessPluginBase {
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
     if (is_array($value) && count($value) === 3) {
+      // If the language is 'und' then the node was not translated.
+      if ($value[2] === 'und') {
+        return NULL;
+      }
       unset($value[1]);
       return array_values($value);
     }

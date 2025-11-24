@@ -2,11 +2,11 @@
 
 namespace Drupal\blazy\Field;
 
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Render\Element;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\internals\Internals;
-use Drupal\Component\Utility\Xss;
-use Drupal\Core\Render\Element;
 
 /**
  * Provides common field API operation methods.
@@ -173,24 +173,6 @@ class BlazyField {
     }
 
     return [];
-  }
-
-  /**
-   * Returns file view or media due to being empty returned by view builder.
-   *
-   * @deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use
-   *   BlazyMedia::view() instead.
-   * @see https://www.drupal.org/node/3103018
-   */
-  public static function getOrViewMedia($file, array $settings, $rendered = TRUE) {
-    $data = [
-      '#entity' => $file,
-      '#settings' => $settings,
-    ];
-    if ($manager = Internals::service('blazy.media')) {
-      return $rendered ? $manager->view($data) : $manager->fromFile($data);
-    }
-    return $rendered ? [] : NULL;
   }
 
 }

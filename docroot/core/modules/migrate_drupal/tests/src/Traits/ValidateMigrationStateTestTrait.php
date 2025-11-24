@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Traits;
 
 use Drupal\Component\Discovery\YamlDiscovery;
@@ -30,7 +32,7 @@ trait ValidateMigrationStateTestTrait {
    * made for the two cases where migrations are yet to be written and where
    * migrations are not needed.
    */
-  public function testMigrationState() {
+  public function testMigrationState(): void {
 
     // Level separator of destination and source properties.
     $separator = ',';
@@ -123,7 +125,7 @@ trait ValidateMigrationStateTestTrait {
     // Assert that each discovered migration has a corresponding declaration
     // in a migrate_drupal.yml.
     foreach ($discovered_unique as $datum) {
-      $data = str_getcsv($datum);
+      $data = str_getcsv($datum, escape: '');
       $in_finished = in_array($datum, $declared_unique[MigrationState::FINISHED]);
       $in_not_finished = in_array($datum, $declared_unique[MigrationState::NOT_FINISHED]);
       $found = $in_finished || $in_not_finished;
@@ -135,7 +137,7 @@ trait ValidateMigrationStateTestTrait {
     // not finished.
     $discovered_not_finished = array_diff($discovered_unique, $declared_unique[MigrationState::FINISHED]);
     foreach ($discovered_not_finished as $datum) {
-      $data = str_getcsv($datum);
+      $data = str_getcsv($datum, escape: '');
       $this->assertContains($datum, $declared_unique[MigrationState::NOT_FINISHED], sprintf("No migration found for version '%s' with source_module '%s' and destination_module '%s' declared in module '%s'", $version, $data[1], $data[2], $data[0]));
     }
   }

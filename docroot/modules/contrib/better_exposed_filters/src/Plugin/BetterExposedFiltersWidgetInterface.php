@@ -33,7 +33,7 @@ interface BetterExposedFiltersWidgetInterface extends PluginFormInterface, Plugi
   /**
    * Verify this plugin can be used on the form element.
    *
-   * @param mixed $handler
+   * @param mixed|null $handler
    *   The handler type we are altering (e.g. filter, pager, sort).
    * @param array $options
    *   The options for this handler.
@@ -41,7 +41,7 @@ interface BetterExposedFiltersWidgetInterface extends PluginFormInterface, Plugi
    * @return bool
    *   If this plugin can be used.
    */
-  public static function isApplicable($handler = NULL, array $options = []);
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool;
 
   /**
    * Manipulate views exposed from element.

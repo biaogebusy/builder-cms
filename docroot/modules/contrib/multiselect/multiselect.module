@@ -17,29 +17,25 @@ function multiselect_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.multiselect':
       $output = '';
-      $output .= '<p>' . t('Provides a CCK and Form API widget for editing fields that allows users to select from a list of options in a left box and have them visually moved into the right box when options are chosen.') . '</p>';
-      $output .= '<h3>' . t('Methods of Implementing a Multiselect Widget') . '</h3>';
+      $output .= '<p>' . t('Provides a widget for editing fields that allows users to select from a list of options in a left box, and have them visually moved into the right box when options are chosen.') . '</p>';
+      $output .= '<h3>' . t('Methods of implementing a Multiselect widget') . '</h3>';
       $output .= '<dl>';
-      $output .= '<dt><h5>' . t('Method 1: Using CCK') . '</h5></dt>';
-      $output .= '<dd>' . t('When creating a new content field, select "Multiselect" as your widget type. You can use Multiselect on fields of type "list", "list_text", "list_number", "node_reference", "taxonomy_term_reference", and "user_reference".') . '</dd>';
-      $output .= '<dt><h5>' . t('Method 2: Coding Your Own Module') . '</h5></dt>';
-      $output .= '<dd>' . t('If you\'re developing a custom module and wish to use the Multiselect widget in place of a traditional "select" widget, you may use the Drupal 8 Form API.') . '</dd>';
+      $output .= '<dt><h5>' . t('Method 1: Using the Field management UI') . '</h5></dt>';
+      $output .= '<dd>' . t('When creating a new content field, select "Multiselect" as your widget type. You can use Multiselect on fields of type "list_string", "list_float", "list_integer", and "entity_reference".') . '</dd>';
+      $output .= '<dt><h5>' . t('Method 2: Coding your own module') . '</h5></dt>';
+      $output .= '<dd>' . t('If you\'re developing a custom module and wish to use the Multiselect widget in place of a traditional "select" widget, you may use the Form API, by specifying "\'#type\' => \'multiselect\',".') . '</dd>';
       $output .= '</dl>';
       return $output;
   }
 }
 
 /**
- * Implements hook_page_build().
+ * Implements hook_page_attachments().
  */
-function multiselect_page_build(&$page) {
+function multiselect_page_attachments(array &$attachments) {
   $config = \Drupal::config('multiselect.settings');
-  $page['#attached']['js'][] = [
-    'data' => [
-      'multiselect' => ['widths' => $config->get('multiselect.widths')],
-    ],
-    'type' => 'setting',
-  ];
+  $widths = $config->get('multiselect.widths');
+  $attachments['#attached']['drupalSettings']['multiselect']['widths'] = $widths;
 }
 
 /**
@@ -70,11 +66,18 @@ function template_preprocess_multiselect(array &$variables) {
   $element = $variables['element'];
   Element::setAttributes($element, ['id', 'name', 'size', 'required']);
 
+  $available_size = 10;
   $available_options = Multiselect::getOptions('available', $element);
-  $available_size = min(count($available_options), 10);
+  if (is_array($available_options) && count($available_options) < $available_size) {
+    $available_size = count($available_options);
+  }
 
+  $selected_size = 10;
   $selected_options = Multiselect::getOptions('selected', $element);
-  $selected_size = min(count($selected_options), 10);
+  if (is_array($selected_options) && count($selected_options) < $selected_size) {
+    $selected_size = count($selected_options);
+  }
+
   $total_size = $available_size + $selected_size;
 
   $variables['multiselect'] = [

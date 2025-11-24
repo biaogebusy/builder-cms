@@ -25,9 +25,10 @@ namespace Drupal\Core\Extension\Discovery;
  * @see ExtensionDiscovery::scan()
  * @see ExtensionDiscovery::scanDirectory()
  *
- * @todo Use RecursiveCallbackFilterIterator instead of the $acceptTests
- *   parameter forwarding once PHP 5.4 is available.
- *   https://www.drupal.org/node/2532228
+ * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
+ *   \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterCallback instead.
+ *
+ * @see https://www.drupal.org/node/3343023
  */
 class RecursiveExtensionFilterIterator extends \RecursiveFilterIterator {
 
@@ -92,6 +93,7 @@ class RecursiveExtensionFilterIterator extends \RecursiveFilterIterator {
    *   during the iteration.
    */
   public function __construct(\RecursiveIterator $iterator, array $skipped_folders = []) {
+    @trigger_error('The ' . __NAMESPACE__ . '\RecursiveExtensionFilterIterator is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Extension\Discovery\RecursiveExtensionFilterCallback instead. See https://www.drupal.org/node/3343023', E_USER_DEPRECATED);
     parent::__construct($iterator);
     $this->skippedFolders = array_merge($this->skippedFolders, $skipped_folders);
   }
@@ -136,7 +138,7 @@ class RecursiveExtensionFilterIterator extends \RecursiveFilterIterator {
     if ($name[0] == '.') {
       return FALSE;
     }
-    if ($this->isDir()) {
+    if ($this->current()->isDir()) {
       // If this is a subdirectory of a base search path, only recurse into the
       // fixed list of expected extension type directory names. Required for
       // scanning the top-level/root directory; without this condition, we would
@@ -154,14 +156,14 @@ class RecursiveExtensionFilterIterator extends \RecursiveFilterIterator {
       // config module to be overridden/replaced in a profile/site directory
       // (whereas it must be located directly in a modules directory).
       if ($name == 'config') {
-        return substr($this->current()->getPathname(), -14) == 'modules/config';
+        return str_ends_with($this->current()->getPathname(), 'modules/config');
       }
       // Accept the directory unless the folder is skipped.
       return !in_array($name, $this->skippedFolders, TRUE);
     }
     else {
       // Only accept extension info files.
-      return substr($name, -9) == '.info.yml';
+      return str_ends_with($name, '.info.yml');
     }
   }
 

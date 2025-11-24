@@ -45,15 +45,15 @@ commerce.commerce_condition.plugin.entity_bundle:
         label: 'Bundle'
 
 field.value.commerce_remote_id:
- type: mapping
- label: 'Default value'
- mapping:
-   provider:
-     type: string
-     label: 'Provider'
-   remote_id:
-     type: string
-     label: 'Remote ID'
+  type: mapping
+  label: 'Default value'
+  mapping:
+    provider:
+      type: string
+      label: 'Provider'
+    remote_id:
+      type: string
+      label: 'Remote ID'
 
 field.widget.settings.commerce_conditions:
   type: mapping

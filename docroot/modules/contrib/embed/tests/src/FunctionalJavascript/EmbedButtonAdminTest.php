@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\embed\FunctionalJavascript;
 
 use Drupal\editor\Entity\Editor;
@@ -28,7 +30,7 @@ class EmbedButtonAdminTest extends WebDriverTestBase {
     'embed',
     'embed_test',
     'editor',
-    'ckeditor',
+    'ckeditor5',
   ];
 
   /**
@@ -59,18 +61,14 @@ class EmbedButtonAdminTest extends WebDriverTestBase {
     ]);
     $format->save();
 
-    $editor_group = [
-      'name' => 'Embed',
-      'items' => [
-        'embed_test_default',
-      ],
-    ];
     $editor = Editor::create([
       'format' => 'embed_test',
-      'editor' => 'ckeditor',
+      'editor' => 'ckeditor5',
       'settings' => [
         'toolbar' => [
-          'rows' => [[$editor_group]],
+          'items' => [
+            'embed_test_default',
+          ],
         ],
       ],
     ]);
@@ -96,7 +94,7 @@ class EmbedButtonAdminTest extends WebDriverTestBase {
   /**
    * Tests the embed_button administration functionality.
    */
-  public function testEmbedButtonAdmin() {
+  public function testEmbedButtonAdmin(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -143,7 +141,10 @@ class EmbedButtonAdminTest extends WebDriverTestBase {
     $assert_session->pageTextNotContains($button_label);
   }
 
-  public function testButtonValidation() {
+  /**
+   * Test embed button validation.
+   */
+  public function testButtonValidation(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -171,7 +172,10 @@ class EmbedButtonAdminTest extends WebDriverTestBase {
     $this->assertSession()->fieldValueEquals('type_settings[aircraft_type]', 'rotorcraft');
   }
 
-  public function testCKEditorButtonConflict() {
+  /**
+   * Test adding an embed button that conflicts with a CKEditor core button.
+   */
+  public function testCkeditorButtonConflict(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -194,7 +198,7 @@ class EmbedButtonAdminTest extends WebDriverTestBase {
       'type_id' => 'embed_test_default',
     ];
     $this->submitForm($edit, 'Save');
-    $assert_session->pageTextContains('A CKEditor button with ID DrupalImage already exists.');
+    $assert_session->pageTextContains("The embed button $button_label has been added.");
   }
 
 }

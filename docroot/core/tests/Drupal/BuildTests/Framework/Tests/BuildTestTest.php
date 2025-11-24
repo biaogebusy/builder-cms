@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\BuildTests\Framework\Tests;
 
 use Drupal\BuildTests\Framework\BuildTestBase;
@@ -16,7 +18,7 @@ class BuildTestTest extends BuildTestBase {
   /**
    * Ensure that workspaces work.
    */
-  public function testWorkspace() {
+  public function testWorkspace(): void {
     $test_directory = 'test_directory';
 
     // Execute an empty command through the shell to build out a working
@@ -34,7 +36,7 @@ class BuildTestTest extends BuildTestBase {
   /**
    * @covers ::copyCodebase
    */
-  public function testCopyCodebase() {
+  public function testCopyCodebase(): void {
     $test_directory = 'copied_codebase';
     $this->copyCodebase(NULL, $test_directory);
     $full_path = $this->getWorkspaceDirectory() . '/' . $test_directory;
@@ -56,7 +58,7 @@ class BuildTestTest extends BuildTestBase {
    *
    * @covers ::copyCodebase
    */
-  public function testCopyCodebaseExclude() {
+  public function testCopyCodebaseExclude(): void {
     // Create a virtual file system containing items that should be
     // excluded. Exception being modules directory.
     vfsStream::setup('drupal', NULL, [
@@ -74,13 +76,6 @@ class BuildTestTest extends BuildTestBase {
           ],
         ],
       ],
-      'vendor' => [
-        'composer' => [
-          'composer' => [
-            'installed.json' => '"items": {"things"}',
-          ],
-        ],
-      ],
       'modules' => [
         'my_module' => [
           'vendor' => [
@@ -92,13 +87,17 @@ class BuildTestTest extends BuildTestBase {
       ],
     ]);
 
-    // Mock BuildTestBase so that it thinks our VFS is the Drupal root.
+    // Mock BuildTestBase so that it thinks our VFS is the Composer and Drupal
+    // roots.
     /** @var \PHPUnit\Framework\MockObject\MockBuilder|\Drupal\BuildTests\Framework\BuildTestBase $base */
     $base = $this->getMockBuilder(BuildTestBase::class)
-      ->onlyMethods(['getDrupalRoot'])
+      ->onlyMethods(['getDrupalRoot', 'getComposerRoot'])
       ->getMockForAbstractClass();
-    $base->expects($this->exactly(2))
+    $base->expects($this->exactly(1))
       ->method('getDrupalRoot')
+      ->willReturn(vfsStream::url('drupal'));
+    $base->expects($this->exactly(3))
+      ->method('getComposerRoot')
       ->willReturn(vfsStream::url('drupal'));
 
     $base->setUp();
@@ -127,9 +126,87 @@ class BuildTestTest extends BuildTestBase {
   }
 
   /**
+   * Tests copying codebase when Drupal and Composer roots are different.
+   *
+   * @covers ::copyCodebase
+   */
+  public function testCopyCodebaseDocRoot(): void {
+    // Create a virtual file system containing items that should be
+    // excluded. Exception being modules directory.
+    vfsStream::setup('drupal', NULL, [
+      'docroot' => [
+        'sites' => [
+          'default' => [
+            'files' => [
+              'a_file.txt' => 'some file.',
+            ],
+            'settings.php' => '<?php $settings = "stuff";',
+            'settings.local.php' => '<?php $settings = "override";',
+            'default.settings.php' => '<?php $settings = "default";',
+          ],
+          'simpletest' => [
+            'simpletest_hash' => [
+              'some_results.xml' => '<xml/>',
+            ],
+          ],
+        ],
+        'modules' => [
+          'my_module' => [
+            'vendor' => [
+              'my_vendor' => [
+                'composer.json' => "{\n}",
+              ],
+            ],
+          ],
+        ],
+      ],
+      'vendor' => [
+        'test.txt' => 'File exists',
+      ],
+    ]);
+
+    // Mock BuildTestBase so that it thinks our VFS is the Composer and Drupal
+    // roots.
+    /** @var \PHPUnit\Framework\MockObject\MockBuilder|\Drupal\BuildTests\Framework\BuildTestBase $base */
+    $base = $this->getMockBuilder(BuildTestBase::class)
+      ->onlyMethods(['getDrupalRoot', 'getComposerRoot'])
+      ->getMockForAbstractClass();
+    $base->expects($this->exactly(3))
+      ->method('getDrupalRoot')
+      ->willReturn(vfsStream::url('drupal/docroot'));
+    $base->expects($this->exactly(5))
+      ->method('getComposerRoot')
+      ->willReturn(vfsStream::url('drupal'));
+
+    $base->setUp();
+
+    // Perform the copy.
+    $base->copyCodebase();
+    $full_path = $base->getWorkspaceDirectory();
+
+    $this->assertDirectoryExists($full_path . '/docroot');
+
+    // Verify expected files exist.
+    $this->assertFileExists($full_path . DIRECTORY_SEPARATOR . 'docroot/modules/my_module/vendor/my_vendor/composer.json');
+    $this->assertFileExists($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/default.settings.php');
+    $this->assertFileExists($full_path . DIRECTORY_SEPARATOR . 'vendor');
+
+    // Verify expected files do not exist
+    $this->assertFileDoesNotExist($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/settings.php');
+    $this->assertFileDoesNotExist($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/settings.local.php');
+    $this->assertFileDoesNotExist($full_path . DIRECTORY_SEPARATOR . 'docroot/sites/default/files');
+
+    // Ensure that the workspace Drupal root is calculated correctly.
+    $this->assertSame($full_path . '/docroot/', $base->getWorkspaceDrupalRoot());
+    $this->assertSame('docroot/', $base->getWorkingPathDrupalRoot());
+
+    $base->tearDown();
+  }
+
+  /**
    * @covers ::findAvailablePort
    */
-  public function testPortMany() {
+  public function testPortMany(): void {
     $iterator = (new Finder())->in($this->getDrupalRoot())
       ->ignoreDotFiles(FALSE)
       ->exclude(['sites/simpletest'])
@@ -157,13 +234,12 @@ class BuildTestTest extends BuildTestBase {
   /**
    * @covers ::standUpServer
    */
-  public function testStandUpServer() {
+  public function testStandUpServer(): void {
     // Stand up a server with working directory 'first'.
     $this->standUpServer('first');
 
     // Get the process object for the server.
     $ref_process = new \ReflectionProperty(parent::class, 'serverProcess');
-    $ref_process->setAccessible(TRUE);
     $first_process = $ref_process->getValue($this);
 
     // Standing up the server again should not change the server process.

@@ -2,13 +2,12 @@
 
 namespace Drupal\flag\Event;
 
-use Drupal\flag\FlagInterface;
 use Drupal\Component\EventDispatcher\Event;
+use Drupal\flag\FlagInterface;
 
 /**
  * Base Event from which other flag event are defined.
  */
-
 abstract class FlagEventBase extends Event {
 
   /**

@@ -52,7 +52,7 @@ class SkipImported extends ImportProcessorPluginBase {
    */
   public function isEntityImportable(RuntimeImportContext $runtime_import_context, array $entity_data) {
     $entity_uuid = $entity_data['id'];
-    $parsed_type = explode('--', $entity_data['type']);
+    $parsed_type = \explode('--', $entity_data['type']);
     $entity_type_id = $parsed_type[0];
     $resource_type = $this->resourceTypeRepository->get(
       $parsed_type[0],

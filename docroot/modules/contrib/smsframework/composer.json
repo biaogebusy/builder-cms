@@ -21,14 +21,30 @@
     }
   ],
   "require": {
-    "php": ">=7.4",
-    "drupal/core": "^9.2",
-    "drupal/dynamic_entity_reference": "^1 || ^2"
+    "php": ">=8.1",
+    "drupal/core": "^10.3 || ^11",
+    "drupal/dynamic_entity_reference": "^3 || ^4"
+  },
+  "require-dev": {
+      "mglaman/phpstan-drupal": "^1",
+      "previousnext/coding-standard": "^1.0",
+      "phpstan/phpstan": "^1.11",
+      "phpstan/phpstan-deprecation-rules": "*",
+      "phpstan/extension-installer": "^1.4"
   },
   "replace": {
     "drupal/sms_blast": "self.version",
     "drupal/sms_devel": "self.version",
     "drupal/sms_sendtophone": "self.version",
     "drupal/sms_user": "self.version"
-  }
+  },
+  "config": {
+    "allow-plugins": {
+      "phpstan/extension-installer": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+    "conflict": {
+        "drupal/coder": "<8.3.26"
+    }
 }

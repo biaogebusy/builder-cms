@@ -33,16 +33,16 @@ body.page-admin-people-permissions {
 .fpa-left-section,
 .fpa-right-section {
   display: table-cell;
-  border: 1px solid #D6DBDE;
+  border: 1px solid #d6dbde;
   vertical-align: top;
 }
 .fpa-left-section {
-  background-color: #F6F6F6;
+  background-color: #f6f6f6;
   width: 1px;
   /* Keep column as small as possible. Table cells automatically push wider. */
 }
 .fpa-left-section .item-list ul {
-  background-color: #EFEFEF;
+  background-color: #efefef;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -50,7 +50,7 @@ body.page-admin-people-permissions {
 }
 .fpa-left-section .item-list li {
   background-color: inherit;
-  border-bottom: 1px solid #D6DBDE;
+  border-bottom: 1px solid #d6dbde;
   cursor: pointer;
   font-size: 90%;
   line-height: 100%;

@@ -85,7 +85,7 @@ class MessageTemplate extends ConfigEntityBundleBase implements MessageTemplateI
   protected $description;
 
   /**
-   * The serialised text of the message template.
+   * The serialized text of the message template.
    *
    * @var array
    */
@@ -147,7 +147,7 @@ class MessageTemplate extends ConfigEntityBundleBase implements MessageTemplateI
    * - 'token options': Array with options to be passed to
    *    token_replace().
    *
-   * Tokens settings assigned to message-template can be overriden by the ones
+   * Tokens settings assigned to message-template can be overridden by the ones
    * assigned to the message.
    *
    * @var array
@@ -264,8 +264,8 @@ class MessageTemplate extends ConfigEntityBundleBase implements MessageTemplateI
     if ($language_manager instanceof ConfigurableLanguageManagerInterface) {
 
       if ($langcode == Language::LANGCODE_NOT_SPECIFIED) {
-        // Get the default language code when not specified.
-        $langcode = $language_manager->getDefaultLanguage()->getId();
+        // Get the current language code when not specified.
+        $langcode = $language_manager->getCurrentLanguage()->getId();
       }
 
       if ($this->langcode !== $langcode) {
@@ -289,7 +289,14 @@ class MessageTemplate extends ConfigEntityBundleBase implements MessageTemplateI
         '#format' => $item['format'] ?? 'plain_text',
         '#langcode' => $langcode,
       ];
-      $text[$key] = \Drupal::service('renderer')->renderPlain($build);
+      if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+        // @phpstan-ignore-next-line
+        $text[$key] = \Drupal::service('renderer')->renderPlain($build);
+      }
+      else {
+        $text[$key] = \Drupal::service('renderer')->renderInIsolation($build);
+      }
+
     }
 
     if (isset($delta)) {

@@ -6,8 +6,10 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\domain\DomainLoader;
+use Drupal\domain\DomainStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ThemeHandlerInterface;
 
 /**
  * Configuration page for Switch page theme settings.
@@ -22,11 +24,11 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
   protected $moduleHandler;
 
   /**
-   * The Domain loader.
+   * The Domain storage service.
    *
-   * @var \Drupal\domain\DomainLoader
+   * @var \Drupal\domain\DomainStorageInterface
    */
-  protected $domainLoader;
+  protected $domainStorage;
 
   /**
    * The language manager.
@@ -36,16 +38,36 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
   protected $languageManager;
 
   /**
-   * {@inheritdoc}
+   * The theme handler.
+   *
+   * @var \Drupal\Core\Extension\ThemeHandlerInterface
    */
-  public function __construct(ModuleHandlerInterface $module_handler, DomainLoader $domain_loader = NULL, LanguageManagerInterface $language_manager = NULL) {
+  protected $themeHandler;
+
+  /**
+   * Construct function.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory load.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   * @param \Drupal\domain\DomainLoader $domain_loader
+   *   The domain loader.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager service.
+   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
+   *   The theme handler.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, DomainStorageInterface $domain_storage = NULL, LanguageManagerInterface $language_manager = NULL, ThemeHandlerInterface $theme_handler = NULL) {
+    parent::__construct($config_factory);
     $this->moduleHandler = $module_handler;
-    if ($domain_loader) {
-      $this->domainLoader = $domain_loader;
+    if ($domain_storage) {
+      $this->domainStorage = $domain_storage;
     }
     if ($language_manager) {
       $this->languageManager = $language_manager;
     }
+    $this->themeHandler = $theme_handler;
   }
 
   /**
@@ -54,16 +76,18 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     $domainServices = NULL;
     $languageServices = NULL;
-    if ($container->has('domain.loader')) {
-      $domainServices = $container->get('domain.loader');
+    if ($container->has('domain.negotiator')) {
+      $domainServices = $container->get('entity_type.manager')->getStorage('domain');
     }
     if ($container->has('language_manager')) {
       $languageServices = $container->get('language_manager');
     }
     return new static(
+      $container->get('config.factory'),
       $container->get('module_handler'),
       $domainServices,
-      $languageServices
+      $languageServices,
+      $container->get('theme_handler')
     );
   }
 
@@ -94,7 +118,6 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
    *   Current state of form.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $form = parent::buildForm($form, $form_state);
     // Fetch configurations if saved.
     $config = $this->config('switch_page_theme.settings');
 
@@ -108,13 +131,14 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
     }
     $form['desc'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('<b>Enabled:</b> Rule will work only if checkbox is checked.<br><b>Pages:</b> Enter one path per line. The "*" character is a wildcard. Example paths are "/node/1" for an individual piece of content or "/node/*" for every piece of content. "@front" is the front page.<br><b>@availableSettings:</b> Select none to allow all.<br><br>Theme with highest weight will be applied on the page.', ['@availableSettings' => $availableSettings, '@front' => '<front>']),
+      '#markup' => $this->t('<b>Enabled:</b> Rule will work only if checkbox is checked.<br><b>Pages:</b> Enter one path per line. The "*" character is a wildcard. Example paths are "/node/1" for an individual piece of content or "/node/*" for every piece of content. "@front" is the front page.<br><b>Theme key:</b> Enter the theme key value to access the selected theme, e.g. Pass AAABBBCCC in the theme key field to access the theme on URL?theme_key=AAABBBCCC.<br><b>@availableSettings:</b> Select none to allow all.<br><br>Theme with highest weight will be applied on the page.', ['@availableSettings' => $availableSettings, '@front' => '<front>']),
     ];
 
     // Create headers for table.
     $header = [
       $this->t('Enabled'),
       $this->t('pages'),
+      $this->t('Theme Key'),
       $this->t('Themes'),
       $this->t('Roles'),
     ];
@@ -143,7 +167,7 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
     ];
 
     // Available themes.
-    $themes = \Drupal::service('theme_handler')->listInfo();
+    $themes = $this->themeHandler->listInfo();
     $themeNames[''] = '--Select--';
     foreach ($themes as $key => $value) {
       $themeNames[$key] = $value->info['name'];
@@ -154,7 +178,7 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
     if (empty($spt_table)) {
       // Set data from configuration on page load.
       // Set empty element if no configurations are set.
-      if (NULL !== $config->get('spt_table')) {
+      if (!empty($config->get('spt_table'))) {
         $spt_table = $config->get('spt_table');
         $form_state->set('spt_table', $spt_table);
       }
@@ -164,6 +188,28 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
       }
     }
 
+    // Provide ability to remove first element.
+    // Set Pages & Theme to required based on condition.
+    $required = TRUE;
+    if (isset($spt_table['removed']) && $spt_table['removed']) {
+      // Not required if first element is empty.
+      $first_element = reset($spt_table);
+      $req_roles = FALSE;
+      if ($first_element['pages'] == '' && $first_element['theme_key'] == '' && $first_element['theme'] == '' && $first_element['status'] == '') {
+        foreach ($first_element['roles'] as $key => $value) {
+          if ($value != 0) {
+            $req_roles = TRUE;
+          }
+        }
+        if (!$req_roles) {
+          $required = FALSE;
+        }
+      }
+      unset($spt_table['removed']);
+    }
+    // Don't allow to add multiple elements after all rows are removed.
+    if (count($spt_table) > 1) { $required = TRUE; }
+
     // Create row for table.
     foreach ($spt_table as $i => $value) {
       $form['spt_table'][$i]['#attributes']['class'][] = 'draggable';
@@ -171,17 +217,25 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
         '#type' => 'checkbox',
         '#title' => $this->t('Status'),
         '#title_display' => 'invisible',
-        '#default_value' => isset($value['status']) ? $value['status'] : [],
+        '#default_value' => isset($value['status']) ? $value['status'] : NULL,
       ];
 
       $form['spt_table'][$i]['pages'] = [
         '#type' => 'textarea',
         '#title' => $this->t('Pages'),
         '#title_display' => 'invisible',
-        '#required' => TRUE,
+        '#required' => $required,
         '#cols' => '5',
         '#rows' => '5',
         '#default_value' => isset($value['pages']) ? $value['pages'] : [],
+      ];
+
+      $form['spt_table'][$i]['theme_key'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Theme Key'),
+        '#title_display' => 'invisible',
+        '#size' => 20,
+        '#default_value' => isset($value['theme_key']) ? $value['theme_key'] : [],
       ];
 
       $form['spt_table'][$i]['theme'] = [
@@ -189,7 +243,7 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
         '#title' => $this->t('Theme'),
         '#title_display' => 'invisible',
         '#options' => $themeNames,
-        '#required' => TRUE,
+        '#required' => $required,
         '#default_value' => isset($value['theme']) ? $value['theme'] : [],
       ];
 
@@ -202,8 +256,9 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
       ];
 
       // Add Domains if domain module is available.
+      $domainNames = [];
       if ($this->moduleHandler->moduleExists('domain')) {
-        foreach ($this->domainLoader->loadMultiple() as $domain_key => $domain) {
+        foreach ($this->domainStorage->loadMultiple() as $domain_key => $domain) {
           $domainNames[$domain_key] = $domain->getHostname();
         }
 
@@ -218,6 +273,7 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
 
       // Add Language if site is multilingual.
       if ($this->languageManager->isMultilingual() || $this->moduleHandler->moduleExists('language')) {
+        $langNames = [];
         foreach ($this->languageManager->getLanguages() as $langkey => $langvalue) {
           $langNames[$langkey] = $langvalue->getName();
         }
@@ -313,6 +369,8 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
     if (empty($spt_table)) {
       array_push($spt_table, "");
     }
+    // Set removed flag for removed item.
+    $spt_table['removed'] = TRUE;
     $form_state->set('spt_table', $spt_table);
     $form_state->setRebuild();
   }
@@ -321,6 +379,7 @@ class SwitchPageThemeSettingForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $form_state->cleanValues();
     // Retrieve the configuration.
     $this->config('switch_page_theme.settings')
       // Set the submitted configuration setting.

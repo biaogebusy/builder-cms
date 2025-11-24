@@ -11,19 +11,19 @@
  */
 
 .draggable:hover {
-  background-color: #f7f9fa;
+  background-color: var(--color--gray-100);
 }
 
 .draggable.drag {
-  background-color: #f1f4f7;
+  background-color: var(--color--gray-100);
 }
 
 .draggable.drag-previous {
-  background-color: #e7edf1;
+  background-color: var(--color--gray-95);
 }
 
 .drag-previous a {
-  color: #313637; /* Ensure proper contrast. */
+  color: var(--color-text-neutral-medium); /* Ensure proper contrast. */
 }
 
 a.tabledrag-handle,
@@ -32,45 +32,26 @@ a.tabledrag-handle,
   height: 2.25rem;
 }
 
-[dir="ltr"] .draggable a.tabledrag-handle {
-  margin-left: 0;
-}
-
-[dir="rtl"] .draggable a.tabledrag-handle {
-  margin-right: 0;
+.draggable a.tabledrag-handle {
+  margin-inline-start: 0;
 }
 
 a.tabledrag-handle .handle {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: var(--sp2);
+  height: var(--sp2);
   margin: 0;
   background-position: 50% 5px;
 }
 
 .touchevents a.tabledrag-handle .handle {
-  height: 2.25rem;
+  height: var(--sp2);
   background-position: 50% 5px;
 }
 
-[dir="ltr"] .touchevents .draggable td {
-  padding-left: 0;
-}
-
-[dir="rtl"] .touchevents .draggable td {
-  padding-right: 0;
-}
-
-[dir="ltr"] .touchevents .draggable td {
-  padding-right: 0.5625rem;
-}
-
-[dir="rtl"] .touchevents .draggable td {
-  padding-left: 0.5625rem;
-}
-
 .touchevents .draggable td {
-  padding-top: 0.5625rem;
-  padding-bottom: 0.5625rem;
+  padding-block: var(--sp0-5);
+  padding-inline-start: 0;
+  padding-inline-end: var(--sp0-5);
 }
 
 .touchevents .draggable .menu-item__link {

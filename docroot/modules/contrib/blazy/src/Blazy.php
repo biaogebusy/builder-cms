@@ -2,28 +2,15 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\Deprecated\BlazyDeprecatedTrait;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Media\BlazyFile;
 use Drupal\blazy\Media\BlazyImage;
 use Drupal\blazy\Theme\Attributes;
 use Drupal\blazy\Utility\CheckItem;
 use Drupal\blazy\Utility\Sanitize;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides common public blazy utility and a few aliases for frequent methods.
- *
- * Was planned to be non-static since 1.x as blazy service, failed miserably
- * and removed at 2.x as service due to some design problems.
- * Since 2.17, we are preparing it for a service at 3.x, thus static methods
- * similar to BlazyInterface will need to be removed at 3.x so that it can be
- * made non-static and extends BlazyBase as a non-manager alternative. Those
- * deprecated methods are stored in BlazyDeprecatedTrait for easy removal.
- * Two reasons for the failures: no real motivations, and enjoying static
- * methods better. More reasons for re-enacting it as a service: a new
- * compelling motivation for blazy.skin service at 3.x for sub-modules
- * boilerplate reducers, and more cool kid features like flybox, hoverable
- * effects, skins etc.
  *
  * Using aliases allow Blazy to self-organize, or improve as needed. A good
  * sample is BlazyGrid relocation, or likely BlazySettings, etc. If you are
@@ -33,19 +20,46 @@ use Drupal\blazy\Utility\Sanitize;
  *     were proven to change to non-static overtime to overcome static class
  *     limitations, or design problems. Some were moved into BlazyInterface
  *     since early 2.16.
- *
- * @todo refactor as a service at 3.x for non-manager alternative.
  */
-class Blazy {
-
-  // @todo remove at blazy:3.0.
-  use BlazyDeprecatedTrait;
+class Blazy extends BlazyBase {
 
   /**
    * Alias for CheckItem::autoplay().
    */
   public static function autoplay($url, $check = TRUE): string {
     return CheckItem::autoplay($url, $check);
+  }
+
+  /**
+   * A wrapper for version_compare in Drupal context.
+   *
+   * @see Drupal\Component\Utility\DeprecationHelper
+   */
+  public static function versionGreaterThan($deprecatedVersion): bool {
+    $currentVersion = \Drupal::VERSION;
+    // Normalize the version string when it's a dev version to the first point
+    // release of that minor. E.g. 10.2.x-dev and 10.2-dev both translate
+    // to 10.2.0.
+    $normalizedVersion = str_ends_with($currentVersion, '-dev')
+      ? str_replace(['.x-dev', '-dev'], '.0', $currentVersion)
+      : $currentVersion;
+
+    return version_compare($normalizedVersion, $deprecatedVersion, '>=');
+  }
+
+  /**
+   * A deprecation helper copied from D10.3 for easy migration check.
+   *
+   * @see Drupal\Component\Utility\DeprecationHelper
+   */
+  public static function backwardsCompatibleCall(
+    string $deprecatedVersion,
+    callable $currentCallable,
+    callable $deprecatedCallable,
+  ): mixed {
+    return self::versionGreaterThan($deprecatedVersion)
+      ? $currentCallable()
+      : $deprecatedCallable();
   }
 
   /**
@@ -67,6 +81,20 @@ class Blazy {
    */
   public static function entitySettings(array &$settings, $entity): void {
     BlazyEntity::settings($settings, $entity);
+  }
+
+  /**
+   * Alias for Internals::fileExistsReplace().
+   */
+  public static function fileExistsReplace() {
+    return Internals::fileExistsReplace();
+  }
+
+  /**
+   * Alias for Internals::formatTitle().
+   */
+  public static function formatTitle($value, $url, array $settings): array {
+    return Internals::formatTitle($value, $url, $settings);
   }
 
   /**
@@ -180,8 +208,6 @@ class Blazy {
 
   /**
    * Returns a module installed version based on `hook_update_VERSION`.
-   *
-   * @requires drupal:9.3.0, no need a fallback.
    */
   public static function version($module): int {
     if ($service = Internals::service('update.update_hook_registry')) {

@@ -77,7 +77,7 @@ class IndexReindexConfirmForm extends EntityConfirmFormBase {
       $this->messenger->addError($this->t('Failed to queue items for reindexing on search index %name.', ['%name' => $index->label()]));
       $message = '%type while trying to queue items for reindexing on index %name: @message in %function (line %line of %file)';
       $variables = [
-        '%name' => $index->label(),
+        '%name' => $index->label() ?? $index->id(),
       ];
       $variables += Error::decodeException($e);
       $this->getLogger('search_api')->error($message, $variables);

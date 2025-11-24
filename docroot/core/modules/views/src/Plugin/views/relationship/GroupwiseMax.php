@@ -4,6 +4,7 @@ namespace Drupal\views\Plugin\views\relationship;
 
 use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsRelationship;
 use Drupal\views\Views;
 use Drupal\views\Entity\View;
 
@@ -56,10 +57,15 @@ use Drupal\views\Entity\View;
  * in the same way as node_comment_statistics.
  *
  * @ingroup views_relationship_handlers
- *
- * @ViewsRelationship("groupwise_max")
  */
+#[ViewsRelationship("groupwise_max")]
 class GroupwiseMax extends RelationshipPluginBase {
+
+  /**
+   * The namespace of the subquery.
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  public string $subquery_namespace;
 
   /**
    * {@inheritdoc}
@@ -125,8 +131,8 @@ class GroupwiseMax extends RelationshipPluginBase {
       // - base must the base that our relationship joins towards
       // - must have fields.
       if ($view->get('base_table') == $this->definition['base'] && !empty($view->getDisplay('default')['display_options']['fields'])) {
-        // TODO: check the field is the correct sort?
-        // or let users hang themselves at this stage and check later?
+        // @todo check the field is the correct sort?
+        //   or let users hang themselves at this stage and check later?
         $views[$view->id()] = $view->id();
       }
     }
@@ -264,9 +270,9 @@ class GroupwiseMax extends RelationshipPluginBase {
     $where = &$subquery->conditions();
     $this->alterSubqueryCondition($subquery, $where);
     // Not sure why, but our sort order clause doesn't have a table.
-    // TODO: the call to addHandler() above to add the sort handler is probably
-    // wrong -- needs attention from someone who understands it.
-    // In the meantime, this works, but with a leap of faith.
+    // @todo The call to addHandler() above to add the sort handler is probably
+    //   wrong -- needs attention from someone who understands it.
+    //   In the meantime, this works, but with a leap of faith.
     $orders = &$subquery->getOrderBy();
     foreach ($orders as $order_key => $order) {
       // But if we're using a whole view, we don't know what we have!
@@ -326,7 +332,7 @@ class GroupwiseMax extends RelationshipPluginBase {
   protected function conditionNamespace($string) {
     $parts = explode(' = ', $string);
     foreach ($parts as &$part) {
-      if (strpos($part, '.') !== FALSE) {
+      if (str_contains($part, '.')) {
         $part = '"' . str_replace('.', $this->subquery_namespace . '".', $part);
       }
     }
@@ -379,7 +385,7 @@ class GroupwiseMax extends RelationshipPluginBase {
     }
     $join = Views::pluginManager('join')->createInstance($id, $def);
 
-    // use a short alias for this:
+    // Use a short alias for this:
     $alias = $def['table'] . '_' . $this->table;
 
     $this->alias = $this->query->addRelationship($alias, $join, $this->definition['base'], $this->relationship);

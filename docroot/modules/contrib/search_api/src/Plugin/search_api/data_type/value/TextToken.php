@@ -67,9 +67,9 @@ class TextToken implements TextTokenInterface {
   }
 
   /**
-   * Implements the magic __toString() method.
+   * {@inheritdoc}
    */
-  public function __toString() {
+  public function __toString(): string {
     return $this->getText();
   }
 

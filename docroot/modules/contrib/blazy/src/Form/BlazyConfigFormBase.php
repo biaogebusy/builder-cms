@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Form;
 
-use Drupal\blazy\Utility\Sanitize;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\blazy\Utility\Sanitize;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -23,18 +23,22 @@ content:
     settings: {  }
     third_party_settings: {  }
     region: content
+  mail:
+    type: email_default
+    weight: 0
+    region: content
+    settings:
+      placeholder: ''
+      size: 60
+    third_party_settings: {  }
   order_items:
-    type: inline_entity_form_complex
+    type: commerce_order_items
     weight: 1
     settings:
-      override_labels: true
-      label_singular: 'order item'
-      label_plural: 'order items'
       allow_new: true
-      match_operator: CONTAINS
-      allow_existing: false
-      form_mode: default
-      removed_reference: 'delete'
+      collapsible: false
+      collapsed: false
+      allow_duplicate: false
     third_party_settings: {  }
     region: content
 hidden:

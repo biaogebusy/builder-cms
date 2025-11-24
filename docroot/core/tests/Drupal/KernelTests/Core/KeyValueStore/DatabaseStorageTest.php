@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\KeyValueStore;
 
 use Drupal\Core\Database\Database;
@@ -35,7 +37,8 @@ class DatabaseStorageTest extends StorageTestBase {
   /**
    * Tests asynchronous table creation.
    */
-  public function testConcurrent() {
+  public function testConcurrent(): void {
+    $this->markTestSkipped("Skipped due to frequent random test failures. See https://www.drupal.org/project/drupal/issues/3398063");
     if (!function_exists('pcntl_fork')) {
       $this->markTestSkipped('Requires the pcntl_fork() function');
     }

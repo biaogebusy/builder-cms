@@ -62,7 +62,7 @@ class IndexClearConfirmForm extends EntityConfirmFormBase {
       $this->messenger->addError($this->t('Failed to clear the search index %name.', ['%name' => $index->label()]));
       $message = '%type while trying to clear the index %name: @message in %function (line %line of %file)';
       $variables = [
-        '%name' => $index->label(),
+        '%name' => $index->label() ?? $index->id(),
       ];
       $variables += Error::decodeException($e);
       $this->getLogger('search_api')->error($message, $variables);

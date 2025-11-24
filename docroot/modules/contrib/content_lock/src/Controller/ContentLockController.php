@@ -3,7 +3,7 @@
 namespace Drupal\content_lock\Controller;
 
 use Drupal\content_lock\Ajax\LockFormCommand;
-use Drupal\content_lock\ContentLock\ContentLock;
+use Drupal\content_lock\ContentLock\ContentLockInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\AppendCommand;
 use Drupal\Core\Ajax\PrependCommand;
@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Class ContentLockController.
+ * Controller for Content Lock.
  *
  * @package Drupal\content_lock\Controller
  */
@@ -30,10 +30,10 @@ class ContentLockController extends ControllerBase {
   /**
    * EntityBreakLockForm constructor.
    *
-   * @param \Drupal\content_lock\ContentLock\ContentLock $lock_service
+   * @param \Drupal\content_lock\ContentLock\ContentLockInterface $lock_service
    *   Content lock service.
    */
-  public function __construct(ContentLock $lock_service) {
+  public function __construct(ContentLockInterface $lock_service) {
     $this->lockService = $lock_service;
   }
 
@@ -50,9 +50,16 @@ class ContentLockController extends ControllerBase {
    * Custom callback for the create lock route.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The content entity.
+   * @param string $langcode
+   *   The langcode.
+   * @param $form_op
+   *   The form operation.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The JSON response.
    *
    * @see \Drupal\content_lock\Routing\ContentLockRoutes::routes()
    */

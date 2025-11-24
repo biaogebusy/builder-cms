@@ -38,6 +38,119 @@ menu_test.callback_description_plain:
   requirements:
     _access: 'TRUE'
 
+menu_test.parent_test:
+  path: '/parent_test'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+  requirements:
+    _permission: 'access parent test page'
+
+menu_test.child1_test:
+  path: '/parent_test/child1_test'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::overview'
+    link_id: 'menu_test.parent_test.child1_test'
+    _title: 'Configuration'
+  requirements:
+    _permission: 'access child1 test page'
+
+menu_test.child2_test:
+  path: '/parent_test/child2_test'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+  requirements:
+    _permission: 'access child2 test page'
+
+menu_test.child3_test_block:
+  path: '/parent_test/child3_test'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+  requirements:
+    _access: 'TRUE'
+
+menu_test.child4_test:
+  path: '/parent_test/child4_test'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+  requirements:
+    _permission: 'access child4 test page'
+
+menu_test.grand_child4_test:
+  path: '/parent_test/child4_test/grand_child4_test'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+  requirements:
+    _permission: 'access grand child4 test page'
+
+menu_test.child4_test_overview:
+  path: '/parent_test/child4_test'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::overview'
+    link_id: 'menu_test.parent_test.child4_test'
+    _title: 'Configuration'
+  requirements:
+    _access: 'TRUE'
+
+menu_test.grand_child1_test:
+  path: '/parent_test/child_test/grand_child1_test'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+  requirements:
+    _permission: 'access grand child1 test page'
+
+menu_test.great_grand_child1_test:
+  path: '/parent_test/child_test/great_grand_child1_test'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+  requirements:
+    _permission: 'access great grand child1 test page'
+
+menu_test.grand_child2_test:
+  path: '/parent_test/child_test/grand_child2_test'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+  requirements:
+    _permission: 'access grand child2 test page'
+
+menu_test.grand_child3_test:
+  path: '/parent_test/child_test/grand_child3_test'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+  requirements:
+    _permission: 'access grand child3 test page'
+
+menu_test.parent_test_param:
+  path: '/parent_test_param/{param}'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    param: 'child_uses_default'
+  requirements:
+    _permission: 'access parent test page'
+
+menu_test.child_test_param:
+  path: '/parent_test_child_test_param/{param}'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+    param: 'my_default'
+  requirements:
+    _permission: 'access child1 test page'
+
+menu_test.parent_test_param_explicit:
+  path: '/parent_test_param_explicit/{param}'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    param: 'my_default'
+  requirements:
+    _permission: 'access parent test page'
+
+menu_test.child_test_param_explicit:
+  path: '/parent_test_child_test_param_explicit/{param}'
+  defaults:
+    _controller: '\Drupal\test_page_test\Controller\TestPageTestController::testPage'
+    param: 'my_default'
+  requirements:
+    _permission: 'access child1 test page'
+
 menu_test.menu_no_title_callback:
   path: '/menu_no_title_callback'
   defaults:
@@ -459,6 +572,14 @@ menu_test.breadcrumb2:
 
 menu_test.breadcrumb3:
   path: '/menu-test/breadcrumb1/breadcrumb2/breadcrumb3'
+  defaults:
+    _controller: '\Drupal\menu_test\Controller\MenuTestController::menuTestCallback'
+    _title: 'Normal title'
+  requirements:
+    _access: 'TRUE'
+
+menu_test.skippable-breadcrumb:
+  path: '/menu-test/skippable-breadcrumb'
   defaults:
     _controller: '\Drupal\menu_test\Controller\MenuTestController::menuTestCallback'
     _title: 'Normal title'

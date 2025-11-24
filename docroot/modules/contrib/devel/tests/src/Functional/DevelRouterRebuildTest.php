@@ -12,7 +12,7 @@ class DevelRouterRebuildTest extends DevelBrowserTestBase {
   /**
    * Test routes rebuild.
    */
-  public function testRouterRebuildConfirmForm() {
+  public function testRouterRebuildConfirmForm(): void {
     // Reset the state flag.
     \Drupal::state()->set('devel_test_route_rebuild', NULL);
 
@@ -27,7 +27,7 @@ class DevelRouterRebuildTest extends DevelBrowserTestBase {
     $route_rebuild_state = \Drupal::state()->get('devel_test_route_rebuild');
     $this->assertEmpty($route_rebuild_state);
 
-    $this->drupalPostForm('devel/menu/reset', [], 'Rebuild');
+    $this->submitForm([], 'Rebuild');
     $this->assertSession()->pageTextContains('The router has been rebuilt.');
     $route_rebuild_state = \Drupal::state()->get('devel_test_route_rebuild');
     $this->assertEquals('Router rebuild fired', $route_rebuild_state);

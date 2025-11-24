@@ -2,13 +2,13 @@
 
 namespace Drupal\flag\Plugin\ActionLink;
 
-use Drupal\Core\Url;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\flag\FlagInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Drupal\flag\FlagInterface;
 
 /**
- * Class FieldEntry
+ * Field Entry.
  *
  * @ActionLinkType(
  *  id = "field_entry",
@@ -22,7 +22,7 @@ class FieldEntry extends FormEntryTypeBase {
    * {@inheritdoc}
    */
   public function getUrl($action, FlagInterface $flag, EntityInterface $entity) {
-    switch($action) {
+    switch ($action) {
       case 'flag':
         return Url::fromRoute('flag.field_entry', [
           'flag' => $flag->id(),

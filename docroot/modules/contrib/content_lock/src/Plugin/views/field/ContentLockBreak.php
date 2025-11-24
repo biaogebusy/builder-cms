@@ -38,7 +38,7 @@ class ContentLockBreak extends FieldPluginBase {
       ]
     );
 
-    $break_link = Link::fromTextAndUrl('Break lock', $url);
+    $break_link = Link::fromTextAndUrl($this->t('Break lock'), $url);
     return $break_link->toString();
   }
 

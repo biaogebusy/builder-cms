@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
-use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\ReplaceImageTrait;
+use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD2 image replace operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_replace_image",
- *   toolkit = "gd",
- *   operation = "replace_image",
- *   label = @Translation("Replace image"),
- *   description = @Translation("Replace the current image with another one.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_replace_image',
+  toolkit: 'gd',
+  operation: 'replace_image',
+  label: new TranslatableMarkup('Replace image'),
+  description: new TranslatableMarkup('Replace the current image with another one.'),
+)]
 class ReplaceImage extends GDImageToolkitOperationBase {
 
   use ReplaceImageTrait;

@@ -17,6 +17,7 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * Ensures that Dynamic Entity References field works correctly.
  *
  * @group dynamic_entity_reference
+ * @group functional_javascript
  */
 class DynamicEntityReferenceTest extends WebDriverTestBase {
 
@@ -88,6 +89,52 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
   }
 
   /**
+   * Sets up field for testing.
+   */
+  protected function setupField(string $field_name, string $entity_type_id, string $bundle, array $storage_settings, array $field_settings, string $label): void {
+    // Add a new dynamic entity reference field.
+    $storage = FieldStorageConfig::create([
+      'entity_type' => $entity_type_id,
+      'field_name' => $field_name,
+      'id' => "$entity_type_id.$field_name",
+      'type' => 'dynamic_entity_reference',
+      'settings' => $storage_settings,
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+    ]);
+    $storage->save();
+    $config = FieldConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => $entity_type_id,
+      'bundle' => $bundle,
+      'id' => "$entity_type_id.$bundle.$field_name",
+      'label' => $label,
+      'settings' => $field_settings,
+    ]);
+    $config->save();
+    $display_repository = \Drupal::service('entity_display.repository');
+    $display_repository
+      ->getViewDisplay($entity_type_id, $bundle, 'default')
+      ->setComponent($field_name, [
+        'region' => 'content',
+        'type' => 'dynamic_entity_reference_label',
+      ])
+      ->save();
+    $display_repository
+      ->getFormDisplay($entity_type_id, $bundle, 'default')
+      ->setComponent($field_name, [
+        'region' => 'content',
+        'type' => 'dynamic_entity_reference_default',
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'match_limit' => 10,
+          'size' => 40,
+          'placeholder' => '',
+        ],
+      ])
+      ->save();
+  }
+
+  /**
    * Tests field settings of dynamic entity reference field.
    */
   public function testFieldSettings() {
@@ -101,70 +148,77 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
     // We will query on the first two characters of the second username.
     $autocomplete_query = mb_substr($this->anotherUser->label(), 0, 3);
     $this->testEntity = EntityTest::create([
-      // Make this partially match the second user name.
+      // Make this partially match the second username.
       'name' => $autocomplete_query . $this->randomMachineName(5),
       'type' => 'entity_test',
     ]);
     $this->testEntity->save();
 
     $this->drupalLogin($this->adminUser);
-    // Add a new dynamic entity reference field.
-    $this->drupalGet('entity_test/structure/entity_test/fields/add-field');
-    $select = $assert_session->selectExists('new_storage_type');
-    $select->selectOption('dynamic_entity_reference');
-    $label = $assert_session->fieldExists('label');
-    $label->setValue('Foobar');
-    // Wait for the machine name.
-    $assert_session->waitForElementVisible('css', '[name="label"] + * .machine-name-value');
-    $this->submitForm([], t('Save and continue'), 'field-ui-field-storage-add-form');
+    $this->setupField(
+      'field_foobar',
+      'entity_test',
+      'entity_test',
+      [
+        'entity_type_ids' => ['user', 'entity_test'],
+        'exclude_entity_types' => FALSE,
+      ],
+      [
+        'entity_test' => [
+          'handler' => 'default:entity_test',
+          'handler_settings' => [
+            'target_bundles' => [
+              'entity_test' => 'entity_test',
+            ],
+          ],
+        ],
+        'user' => [
+          'handler' => 'default:user',
+          'handler_settings' => [
+            'target_bundles' => [
+              'user' => 'user',
+            ],
+          ],
+        ],
+      ],
+      'Foobar'
+    );
+    $this->drupalGet('entity_test/structure/entity_test/fields/entity_test.entity_test.field_foobar');
     $page = $this->getSession()->getPage();
-    $entity_type_ids_select = $assert_session->selectExists('settings[entity_type_ids][]', $page);
-    $entity_type_ids_select->selectOption('user');
-    $entity_type_ids_select->selectOption('entity_test', TRUE);
-    $assert_session->selectExists('cardinality', $page)
-      ->selectOption(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
-    $page->uncheckField('settings[exclude_entity_types]');
-    $this->submitForm([], t('Save field settings'), 'field-storage-config-edit-form');
-    $page = $this->getSession()->getPage();
+    $page->checkField('set_default_value');
+    $assert_session->fieldExists('default_value_input[field_foobar][0][target_id]');
+    $assert_session->fieldNotExists('default_value_input[field_foobar][1][target_id]');
+    $this->submitForm([], 'Add another item');
+    $assert_session->assertWaitOnAjaxRequest(20000);
+    $assert_session->fieldExists('default_value_input[field_foobar][1][target_id]');
     $autocomplete_field = $page->findField('default_value_input[field_foobar][0][target_id]');
     $autocomplete_field_1 = $page->findField('default_value_input[field_foobar][1][target_id]');
     $target_type_select = $assert_session->selectExists('default_value_input[field_foobar][0][target_type]');
-    $this->assertSame($autocomplete_field->getAttribute('data-autocomplete-path'), $this->createAutoCompletePath('entity_test'));
-    $this->assertSame($autocomplete_field_1->getAttribute('data-autocomplete-path'), $this->createAutoCompletePath('entity_test'));
+    $entity_test_path = $this->createAutoCompletePath('entity_test');
+    $this->assertSame($autocomplete_field->getAttribute('data-autocomplete-path'), $entity_test_path);
+    $this->assertSame($autocomplete_field_1->getAttribute('data-autocomplete-path'), $entity_test_path);
     $target_type_select->selectOption('user');
     // Changing the selected value changes the autocomplete path for the
     // corresponding autocomplete field.
-    $this->assertSame($autocomplete_field->getAttribute('data-autocomplete-path'), $this->createAutoCompletePath('user'));
+    $this->assertSession()->assertNoElementAfterWait('css', sprintf('[name="default_value_input[field_foobar][0][target_id]"][data-autocomplete-path="%s"]', $entity_test_path));
+    $user_path = $this->createAutoCompletePath('user');
+    $this->assertSame($autocomplete_field->getAttribute('data-autocomplete-path'), $user_path);
     // Changing the selected value of delta 0 doesn't change the autocomplete
     // path for delta 1 autocomplete field.
-    $this->assertSame($autocomplete_field_1->getAttribute('data-autocomplete-path'), $this->createAutoCompletePath('entity_test'));
+    $this->assertSame($autocomplete_field_1->getAttribute('data-autocomplete-path'), $entity_test_path);
     $target_type_select->selectOption('entity_test');
     // Changing the selected value changes the autocomplete path for the
     // corresponding autocomplete field.
-    $this->assertSame($autocomplete_field->getAttribute('data-autocomplete-path'), $this->createAutoCompletePath('entity_test'));
+    $this->assertSession()->assertNoElementAfterWait('css', sprintf('[name="default_value_input[field_foobar][0][target_id]"][data-autocomplete-path="%s"]', $user_path));
+    $this->assertSame($autocomplete_field->getAttribute('data-autocomplete-path'), $entity_test_path);
     // Changing the selected value of delta 0 doesn't change the autocomplete
     // path for delta 1 autocomplete field.
-    $this->assertSame($autocomplete_field_1->getAttribute('data-autocomplete-path'), $this->createAutoCompletePath('entity_test'));
+    $this->assertSame($autocomplete_field_1->getAttribute('data-autocomplete-path'), $entity_test_path);
     $page = $this->getSession()->getPage();
-    $page->checkField('settings[entity_test][handler_settings][target_bundles][entity_test]');
-    $assert_session->assertWaitOnAjaxRequest(20000);
     $page->checkField('settings[entity_test][handler_settings][auto_create]');
-    $this->submitForm([], t('Save settings'), 'field-config-edit-form');
+    $this->submitForm([], 'Save settings');
     $assert_session->pageTextContains('Saved Foobar configuration');
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
-    $field_storage = FieldStorageConfig::loadByName('entity_test', 'field_foobar');
-    $this->assertEmpty($field_storage->getSetting('exclude_entity_types'));
-    $this->assertEquals($field_storage->getSetting('entity_type_ids'), [
-      'entity_test' => 'entity_test',
-      'user' => 'user',
-    ]);
-    $field_config = FieldConfig::loadByName('entity_test', 'entity_test', 'field_foobar');
-    $settings = $field_config->getSettings();
-    $this->assertEquals($settings['entity_test']['handler'], 'default:entity_test');
-    $this->assertNotEmpty($settings['entity_test']['handler_settings']);
-    $this->assertEquals($settings['entity_test']['handler_settings']['target_bundles'], ['entity_test' => 'entity_test']);
-    $this->assertTrue($settings['entity_test']['handler_settings']['auto_create']);
-    $this->assertEmpty($settings['entity_test']['handler_settings']['auto_create_bundle']);
     $this->drupalGet('entity_test/add');
     $autocomplete_field = $page->findField('field_foobar[0][target_id]');
     $entity_type_field = $page->findField('field_foobar[0][target_type]');
@@ -172,14 +226,14 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
     $entity_type_field->selectOption('user');
     $this->performAutocompleteQuery($autocomplete_query, $autocomplete_field);
     $this->selectAutocompleteOption();
-    $assert_session->pageTextContains($this->anotherUser->label());
+    $this->assertStringContainsString($this->anotherUser->label(), $autocomplete_field->getValue());
     // Change to entity_test, this should automatically clear the autocomplete
     // field.
     $entity_type_field->selectOption('entity_test');
     $this->assertEmpty($autocomplete_field->getValue());
     $this->performAutocompleteQuery($autocomplete_query, $autocomplete_field);
     $this->selectAutocompleteOption();
-    $assert_session->pageTextContains($this->testEntity->label());
+    $this->assertStringContainsString($this->testEntity->label(), $autocomplete_field->getValue());
   }
 
   /**
@@ -189,21 +243,26 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
     $assert_session = $this->assertSession();
     $this->drupalLogin($this->adminUser);
     $this->drupalCreateContentType(['type' => 'test_content']);
-    $this->drupalGet('/admin/structure/types/manage/test_content/fields/add-field');
-    $select = $assert_session->selectExists('new_storage_type');
-    $select->selectOption('dynamic_entity_reference');
-    $label = $assert_session->fieldExists('label');
-    $label->setValue('Foobar');
-    // Wait for the machine name.
-    $assert_session->waitForElementVisible('css', '[name="label"] + * .machine-name-value');
-    $this->submitForm([], t('Save and continue'), 'field-ui-field-storage-add-form');
-    $page = $this->getSession()->getPage();
-    $entity_type_ids_select = $assert_session->selectExists('settings[entity_type_ids][]', $page);
-    $entity_type_ids_select->selectOption('user');
-    $assert_session->selectExists('cardinality', $page)
-      ->selectOption(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
-    $page->uncheckField('settings[exclude_entity_types]');
-    $this->submitForm([], t('Save field settings'), 'field-storage-config-edit-form');
+    $this->setupField(
+      'field_foobar',
+      'node',
+      'test_content',
+      [
+        'entity_type_ids' => ['user'],
+        'exclude_entity_types' => FALSE,
+      ],
+      [
+        'user' => [
+          'handler' => 'default:user',
+          'handler_settings' => [
+            'target_bundles' => [
+              'user' => 'user',
+            ],
+          ],
+        ],
+      ],
+      'Foobar'
+    );
     $this->drupalGet('admin/structure/types/manage/test_content/display');
     $page = $this->getSession()->getPage();
     $formats = $assert_session->selectExists('fields[field_foobar][type]', $page);
@@ -216,9 +275,8 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
     $assert_session->optionExists('fields[field_foobar][settings_edit_form][settings][user][view_mode]', 'compact', $page);
     $assert_session->optionExists('fields[field_foobar][settings_edit_form][settings][user][view_mode]', 'full', $page);
     // Edit field, turn on exclude entity types and check display again.
-    $this->drupalGet('admin/structure/types/manage/test_content/fields/node.test_content.field_foobar/storage');
-    $page->checkField('settings[exclude_entity_types]');
-    $this->submitForm([], t('Save field settings'), 'field-storage-config-edit-form');
+    $storage = FieldStorageConfig::loadByName('node', 'field_foobar');
+    $storage->setSetting('exclude_entity_types', TRUE)->save();
     $this->drupalGet('admin/structure/types/manage/test_content/display');
     $page = $this->getSession()->getPage();
     $formats = $assert_session->selectExists('fields[field_foobar][type]', $page);
@@ -264,6 +322,7 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
    */
   protected function createAutoCompletePath($target_type) {
     $selection_settings = [
+      'target_bundles' => [$target_type => $target_type],
       'match_operator' => 'CONTAINS',
       'match_limit' => 10,
     ];
@@ -277,7 +336,7 @@ class DynamicEntityReferenceTest extends WebDriverTestBase {
   }
 
   /**
-   * Peforms an autocomplete query on an element.
+   * Performs an autocomplete query on an element.
    *
    * @param string $autocomplete_query
    *   String to search for.

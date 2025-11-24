@@ -28,10 +28,10 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
    */
   public function testSkipQueue(): void {
     $gateway = $this->createGateway();
-    $this->assertFalse($gateway->getSkipQueue(), 'Default value does not skip queue.');
+    static::assertFalse($gateway->getSkipQueue(), 'Default value does not skip queue.');
 
     $gateway->setSkipQueue(TRUE);
-    $this->assertTrue($gateway->getSkipQueue());
+    static::assertTrue($gateway->getSkipQueue());
   }
 
   /**
@@ -41,10 +41,10 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway();
 
     // Default value.
-    $this->assertEquals(0, $gateway->getRetentionDuration(Direction::INCOMING));
+    static::assertEquals(0, $gateway->getRetentionDuration(Direction::INCOMING));
 
     $gateway->setRetentionDuration(Direction::INCOMING, 444);
-    $this->assertEquals(444, $gateway->getRetentionDuration(Direction::INCOMING));
+    static::assertEquals(444, $gateway->getRetentionDuration(Direction::INCOMING));
   }
 
   /**
@@ -54,10 +54,10 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway();
 
     // Default value.
-    $this->assertEquals(0, $gateway->getRetentionDuration(Direction::INCOMING));
+    static::assertEquals(0, $gateway->getRetentionDuration(Direction::INCOMING));
 
     $gateway->setRetentionDuration(Direction::OUTGOING, 999);
-    $this->assertEquals(999, $gateway->getRetentionDuration(Direction::OUTGOING));
+    static::assertEquals(999, $gateway->getRetentionDuration(Direction::OUTGOING));
   }
 
   /**
@@ -77,13 +77,13 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway(['plugin' => 'incoming']);
 
     $path = $gateway->getPushIncomingPath();
-    $this->assertTrue(strpos($path, '/sms/incoming/receive/') === 0);
+    static::assertTrue(strpos($path, '/sms/incoming/receive/') === 0);
 
     $new_path = '/' . $this->randomMachineName();
     $return = $gateway->setPushIncomingPath($new_path);
 
-    $this->assertTrue($return instanceof SmsGatewayInterface);
-    $this->assertEquals($new_path, $gateway->getPushIncomingPath());
+    static::assertTrue($return instanceof SmsGatewayInterface);
+    static::assertEquals($new_path, $gateway->getPushIncomingPath());
   }
 
   /**
@@ -91,7 +91,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
    */
   public function testSupportsIncoming(): void {
     $gateway = $this->createGateway(['plugin' => 'incoming']);
-    $this->assertTrue($gateway->supportsIncoming());
+    static::assertTrue($gateway->supportsIncoming());
   }
 
   /**
@@ -99,7 +99,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
    */
   public function testNotSupportsIncoming(): void {
     $gateway = $this->createGateway(['plugin' => 'capabilities_default']);
-    $this->assertFalse($gateway->supportsIncoming());
+    static::assertFalse($gateway->supportsIncoming());
   }
 
   /**
@@ -107,7 +107,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
    */
   public function testAutoCreateIncomingRoute(): void {
     $gateway = $this->createGateway(['plugin' => 'incoming']);
-    $this->assertTrue($gateway->autoCreateIncomingRoute());
+    static::assertTrue($gateway->autoCreateIncomingRoute());
   }
 
   /**
@@ -115,7 +115,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
    */
   public function testNoAutoCreateIncomingRoute(): void {
     $gateway = $this->createGateway(['plugin' => 'capabilities_default']);
-    $this->assertFalse($gateway->autoCreateIncomingRoute());
+    static::assertFalse($gateway->autoCreateIncomingRoute());
   }
 
   /**
@@ -125,13 +125,13 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway();
 
     $path = $gateway->getPushReportPath();
-    $this->assertTrue(strpos($path, '/sms/delivery-report/receive/') === 0);
+    static::assertTrue(strpos($path, '/sms/delivery-report/receive/') === 0);
 
     $new_path = '/' . $this->randomMachineName();
     $return = $gateway->setPushReportPath($new_path);
 
-    $this->assertTrue($return instanceof SmsGatewayInterface);
-    $this->assertEquals($new_path, $gateway->getPushReportPath());
+    static::assertTrue($return instanceof SmsGatewayInterface);
+    static::assertEquals($new_path, $gateway->getPushReportPath());
   }
 
   /**
@@ -139,7 +139,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
    */
   public function testPushReportUrl(): void {
     $gateway = $this->createGateway();
-    $this->assertTrue($gateway->getPushReportUrl() instanceof Url);
+    static::assertTrue($gateway->getPushReportUrl() instanceof Url);
   }
 
   /**
@@ -149,7 +149,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'memory',
     ]);
-    $this->assertTrue($gateway->supportsReportsPush());
+    static::assertTrue($gateway->supportsReportsPush());
   }
 
   /**
@@ -159,7 +159,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'capabilities_default',
     ]);
-    $this->assertFalse($gateway->supportsReportsPush());
+    static::assertFalse($gateway->supportsReportsPush());
   }
 
   /**
@@ -169,7 +169,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'memory',
     ]);
-    $this->assertTrue($gateway->supportsReportsPull());
+    static::assertTrue($gateway->supportsReportsPull());
   }
 
   /**
@@ -179,7 +179,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'capabilities_default',
     ]);
-    $this->assertFalse($gateway->supportsReportsPull());
+    static::assertFalse($gateway->supportsReportsPull());
   }
 
   /**
@@ -189,7 +189,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'memory',
     ]);
-    $this->assertEquals(-1, $gateway->getMaxRecipientsOutgoing());
+    static::assertEquals(-1, $gateway->getMaxRecipientsOutgoing());
   }
 
   /**
@@ -199,7 +199,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'capabilities_default',
     ]);
-    $this->assertEquals(1, $gateway->getMaxRecipientsOutgoing());
+    static::assertEquals(1, $gateway->getMaxRecipientsOutgoing());
   }
 
   /**
@@ -209,7 +209,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'memory',
     ]);
-    $this->assertEquals(TRUE, $gateway->supportsIncoming());
+    static::assertEquals(TRUE, $gateway->supportsIncoming());
   }
 
   /**
@@ -219,7 +219,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'capabilities_default',
     ]);
-    $this->assertEquals(FALSE, $gateway->supportsIncoming());
+    static::assertEquals(FALSE, $gateway->supportsIncoming());
   }
 
   /**
@@ -229,7 +229,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'memory_schedule_aware',
     ]);
-    $this->assertTrue($gateway->isScheduleAware());
+    static::assertTrue($gateway->isScheduleAware());
   }
 
   /**
@@ -239,7 +239,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'capabilities_default',
     ]);
-    $this->assertFalse($gateway->isScheduleAware());
+    static::assertFalse($gateway->isScheduleAware());
   }
 
   /**
@@ -249,7 +249,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'memory',
     ]);
-    $this->assertTrue($gateway->supportsCreditBalanceQuery());
+    static::assertTrue($gateway->supportsCreditBalanceQuery());
   }
 
   /**
@@ -259,7 +259,7 @@ final class SmsFrameworkGatewayEntityTest extends SmsFrameworkKernelBase {
     $gateway = $this->createGateway([
       'plugin' => 'capabilities_default',
     ]);
-    $this->assertFalse($gateway->supportsCreditBalanceQuery());
+    static::assertFalse($gateway->supportsCreditBalanceQuery());
   }
 
   /**

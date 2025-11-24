@@ -2,24 +2,23 @@
 
 namespace Drupal\commerce_order\Entity;
 
-use Drupal\commerce\Entity\CommerceContentEntityBase;
-use Drupal\commerce_order\Adjustment;
-use Drupal\commerce_order\Event\OrderLabelEvent;
-use Drupal\commerce_order\Exception\OrderVersionMismatchException;
-use Drupal\commerce_order\Event\OrderEvents;
-use Drupal\commerce_order\Event\OrderProfilesEvent;
-use Drupal\commerce_order\OrderBalanceFieldItemList;
-use Drupal\commerce_price\Price;
-use Drupal\commerce_store\Entity\StoreInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\commerce\Entity\CommerceContentEntityBase;
+use Drupal\commerce_order\Adjustment;
+use Drupal\commerce_order\Event\OrderEvents;
+use Drupal\commerce_order\Event\OrderLabelEvent;
+use Drupal\commerce_order\Event\OrderProfilesEvent;
+use Drupal\commerce_order\Exception\OrderVersionMismatchException;
+use Drupal\commerce_price\Price;
+use Drupal\commerce_store\Entity\StoreInterface;
+use Drupal\profile\Entity\ProfileInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
-use Drupal\profile\Entity\ProfileInterface;
 
 /**
  * Defines the order entity class.
@@ -124,7 +123,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getOrderNumber() {
-    return $this->get('order_number')->value;
+    if (!$this->get('order_number')->isEmpty()) {
+      return $this->get('order_number')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -139,7 +142,7 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getVersion() {
-    return $this->get('version')->value;
+    return (int) $this->get('version')->value;
   }
 
   /**
@@ -204,7 +207,7 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getCustomerId() {
-    return $this->get('uid')->target_id;
+    return (int) $this->get('uid')->target_id;
   }
 
   /**
@@ -219,7 +222,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getEmail() {
-    return $this->get('mail')->value;
+    if (!$this->get('mail')->isEmpty()) {
+      return $this->get('mail')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -234,7 +241,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getIpAddress() {
-    return $this->get('ip_address')->value;
+    if (!$this->get('ip_address')->isEmpty()) {
+      return $this->get('ip_address')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -380,7 +391,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    */
   public function addAdjustment(Adjustment $adjustment) {
     $this->get('adjustments')->appendItem($adjustment);
-    $this->recalculateTotalPrice();
+    // No point in recalculating the order total when the adjustment being added
+    // is already included since it doesn't affect the order total.
+    if (!$adjustment->isIncluded()) {
+      $this->recalculateTotalPrice();
+    }
     return $this;
   }
 
@@ -389,7 +404,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    */
   public function removeAdjustment(Adjustment $adjustment) {
     $this->get('adjustments')->removeAdjustment($adjustment);
-    $this->recalculateTotalPrice();
+    // No point in recalculating the order total when the adjustment being
+    // removed is already included since it doesn't affect the order total.
+    if (!$adjustment->isIncluded()) {
+      $this->recalculateTotalPrice();
+    }
     return $this;
   }
 
@@ -478,6 +497,22 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
       }
     }
     $this->total_price = $total_price;
+    $this->recalculateBalance();
+
+    return $this;
+  }
+
+  /**
+   * Recalculates the order balance.
+   *
+   * @return $this
+   */
+  protected function recalculateBalance() {
+    $balance = NULL;
+    if ($total_price = $this->getTotalPrice()) {
+      $balance = $total_price->subtract($this->getTotalPaid());
+    }
+    $this->set('balance', $balance);
 
     return $this;
   }
@@ -489,6 +524,8 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
     if (!$this->get('total_price')->isEmpty()) {
       return $this->get('total_price')->first()->toPrice();
     }
+
+    return NULL;
   }
 
   /**
@@ -503,6 +540,8 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
       // the field if the order currency changes before the order is placed.
       return new Price('0', $total_price->getCurrencyCode());
     }
+
+    return NULL;
   }
 
   /**
@@ -510,15 +549,22 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    */
   public function setTotalPaid(Price $total_paid) {
     $this->set('total_paid', $total_paid);
+    $this->recalculateBalance();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getBalance() {
+    if (!$this->get('balance')->isEmpty()) {
+      return $this->get('balance')->first()->toPrice();
+    }
     if ($total_price = $this->getTotalPrice()) {
+      // Provide a default without storing it, to avoid having to update
+      // the field if the order currency changes before the order is placed.
       return $total_price->subtract($this->getTotalPaid());
     }
+    return NULL;
   }
 
   /**
@@ -533,7 +579,8 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
     $balance = $this->getBalance();
     // Free orders are considered fully paid once they have been placed.
     if ($total_price->isZero()) {
-      return $this->getState()->getId() != 'draft';
+      $state_id = $this->getState()->getId();
+      return ($state_id != 'draft') && ($state_id != 'canceled');
     }
     else {
       return $balance->isNegative() || $balance->isZero();
@@ -619,7 +666,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    if (!$this->get('created')->isEmpty()) {
+      return (int) $this->get('created')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -634,7 +685,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getPlacedTime() {
-    return $this->get('placed')->value;
+    if (!$this->get('placed')->isEmpty()) {
+      return (int) $this->get('placed')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -649,7 +704,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getCompletedTime() {
-    return $this->get('completed')->value;
+    if (!$this->get('completed')->isEmpty()) {
+      return (int) $this->get('completed')->value;
+    }
+
+    return NULL;
   }
 
   /**
@@ -664,11 +723,26 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    * {@inheritdoc}
    */
   public function getCalculationDate() {
-    $timezone = $this->getStore()->getTimezone();
+    $timezone = $this->getStore()?->getTimezone();
     $timestamp = $this->getPlacedTime() ?: \Drupal::time()->getRequestTime();
     $date = DrupalDateTime::createFromTimestamp($timestamp, $timezone);
 
     return $date;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCustomerComments(): ?string {
+    return $this->get('customer_comments')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCustomerComments($comments): static {
+    $this->set('customer_comments', $comments);
+    return $this;
   }
 
   /**
@@ -681,7 +755,9 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
       $mismatch_exception = new OrderVersionMismatchException(sprintf('Attempted to save order %s with version %s. Current version is %s.', $this->id(), $this->getVersion(), $this->original->getVersion()));
       $log_only = $this->getEntityType()->get('log_version_mismatch');
       if ($log_only) {
-        watchdog_exception('commerce_order', $mismatch_exception);
+        \Drupal::logger('commerce_order')->error('<pre>%exception</pre>', [
+          '%exception' => $mismatch_exception->__toString(),
+        ]);
       }
       else {
         throw $mismatch_exception;
@@ -813,6 +889,10 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
         'type' => 'string',
         'weight' => 0,
       ])
+      ->setDisplayOptions('form', [
+        'type' => 'email_default',
+        'weight' => 0,
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -903,8 +983,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
       ->setLabel(t('Order balance'))
       ->setDescription(t('The order balance.'))
       ->setReadOnly(TRUE)
-      ->setComputed(TRUE)
-      ->setClass(OrderBalanceFieldItemList::class)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'commerce_price_default',
+        'weight' => 0,
+      ])
       ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -967,6 +1050,16 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
       ])
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['customer_comments'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Customer comments'))
+      ->setDisplayOptions('view', [
+        'type' => 'string',
+        'label' => 'above',
+        'settings' => [],
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     return $fields;
   }
 
@@ -989,11 +1082,11 @@ class Order extends CommerceContentEntityBase implements OrderInterface {
    *   The order.
    *
    * @return string
-   *   The workflow ID.
+   *   The workflow ID, "order_default" if it cannot be determined.
    */
   public static function getWorkflowId(OrderInterface $order) {
-    $workflow = OrderType::load($order->bundle())->getWorkflowId();
-    return $workflow;
+    $order_type = OrderType::load($order->bundle());
+    return $order_type?->getWorkflowId() ?? 'order_default';
   }
 
 }

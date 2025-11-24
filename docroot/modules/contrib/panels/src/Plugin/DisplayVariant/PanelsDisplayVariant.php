@@ -2,6 +2,7 @@
 
 namespace Drupal\panels\Plugin\DisplayVariant;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Render\HtmlEscapedText;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManager;
@@ -70,6 +71,13 @@ class PanelsDisplayVariant extends BlockDisplayVariant implements PluginWizardIn
    * @var \Drupal\Core\Layout\LayoutInterface
    */
   protected $layout;
+
+  /**
+   * The panel plugin.
+   *
+   * @var \Drupal\panels\Plugin\PanelsPattern\PanelsPatternInterface
+   */
+ protected $pattern;
 
   /**
    * Constructs a new PanelsDisplayVariant.
@@ -338,6 +346,24 @@ class PanelsDisplayVariant extends BlockDisplayVariant implements PluginWizardIn
     $build = $this->getBuilder()->build($this);
     $build['#title'] = $this->getRenderedPageTitle();
 
+    // Add CSS classes.
+    $css_classes = !empty($this->configuration['css_classes']) ? $this->configuration['css_classes'] : [];
+    foreach ($css_classes as $class) {
+      $build['#attributes']['class'][] = Html::cleanCssIdentifier($class);
+    }
+
+    // Add HTML Id.
+    $html_id = !empty($this->configuration['html_id']) ? $this->configuration['html_id'] : '';
+    if (!empty($html_id)) {
+      $build['#attributes']['id'] = Html::getId($html_id);
+    }
+
+    // Add CSS styles.
+    $css_styles = !empty($this->configuration['css_styles']) ? $this->configuration['css_styles'] : '';
+    if (!empty($css_styles)) {
+      $build['#attributes']['style'] = $css_styles;
+    }
+
     // Allow other module to alter the built panel.
     $this->moduleHandler->alter('panels_build', $build, $this);
 
@@ -381,6 +407,11 @@ class PanelsDisplayVariant extends BlockDisplayVariant implements PluginWizardIn
       $this->configuration['builder'] = $form_state->getValue('builder');
     }
     $this->configuration['page_title'] = $form_state->getValue('page_title');
+    $css_classes = $form_state->getValue('css_classes');
+    $css_classes = is_null($css_classes) ? '' : $css_classes;
+    $this->configuration['css_classes'] = preg_split('/\s+/', trim($css_classes));
+    $this->configuration['html_id'] = $form_state->getValue('html_id');
+    $this->configuration['css_styles'] = $form_state->getValue('css_styles');
   }
 
   /**
@@ -406,6 +437,9 @@ class PanelsDisplayVariant extends BlockDisplayVariant implements PluginWizardIn
       'page_title' => '',
       'storage_type' => '',
       'storage_id' => '',
+      'css_classes' => [],
+      'html_id' => '',
+      'css_styles' => '',
     ];
   }
 
@@ -534,6 +568,15 @@ class PanelsDisplayVariant extends BlockDisplayVariant implements PluginWizardIn
       }
     }
     return implode(':', $id);
+  }
+
+  public function id() {
+    // Explicit IPE/Panelizer Support.
+    if (!empty($this->getContexts()['@panelizer.entity_context:entity']) && $this->getContexts()['@panelizer.entity_context:entity']->hasContextValue()) {
+      return $this->getContexts()['@panelizer.entity_context:entity']->getContextValue()->uuid();
+    }
+    // If the panelizer context isn't available, just return our uuid.
+    return parent::id();
   }
 
 }

@@ -22,8 +22,9 @@ class EntityNoUuidDeletionTest extends EntityKernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'serialization',
+    'file',
     'jsonapi',
+    'serialization',
     'entity_share',
     'entity_share_client',
   ];

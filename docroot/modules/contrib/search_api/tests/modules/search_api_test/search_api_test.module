@@ -55,7 +55,7 @@ function search_api_test_entity_access(EntityInterface $entity, $operation, Acco
   // roles the user has access to, grant access, otherwise deny access.
   if (\Drupal::state()->get('search_api_test_add_role_access_control', FALSE)) {
     foreach ($account->getRoles() as $role) {
-      if (strpos($entity->label(), $role) !== FALSE) {
+      if (str_contains($entity->label(), $role)) {
         return AccessResult::allowed();
       }
     }
@@ -74,5 +74,14 @@ function search_api_test_search_api_server_load($servers) {
     if ($server->hasValidBackend()) {
       $server->getBackend();
     }
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for node.html.twig.
+ */
+function search_api_test_preprocess_node(&$variables) {
+  if (\Drupal::keyValue('search_api_test')->get('preprocess_node_error')) {
+    throw new \RuntimeException('search_api_test_preprocess_node');
   }
 }

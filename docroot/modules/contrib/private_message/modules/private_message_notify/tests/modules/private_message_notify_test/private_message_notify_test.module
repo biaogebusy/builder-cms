@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for Private Message Notify Test module.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_mail_alter().
+ */
+function private_message_notify_test_mail_alter(array &$message): void {
+  if ($message['module'] === 'message_notify' && $message['key'] === 'private_message_notification') {
+    $message['headers']['Content-Type'] = 'text/html';
+  }
+}

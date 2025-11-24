@@ -7,7 +7,7 @@ use Drupal\devel\DevelDumperManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class DumperTestController.
+ * Controller class for dumper_test module.
  *
  * @package Drupal\devel_dumper_test\Controller
  */
@@ -15,28 +15,17 @@ class DumperTestController extends ControllerBase {
 
   /**
    * The dumper manager.
-   *
-   * @var \Drupal\devel\DevelDumperManagerInterface
    */
-  protected $dumper;
-
-  /**
-   * Constructs a new DumperTestController object.
-   *
-   * @param \Drupal\devel\DevelDumperManagerInterface $devel_dumper_manager
-   *   The dumper manager.
-   */
-  public function __construct(DevelDumperManagerInterface $devel_dumper_manager) {
-    $this->dumper = $devel_dumper_manager;
-  }
+  protected DevelDumperManagerInterface $dumper;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('devel.dumper')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->dumper = $container->get('devel.dumper');
+
+    return $instance;
   }
 
   /**
@@ -45,7 +34,7 @@ class DumperTestController extends ControllerBase {
    * @return array
    *   The render array output.
    */
-  public function dump() {
+  public function dump(): array {
     $this->dumper->dump('Test output');
 
     return [
@@ -59,7 +48,7 @@ class DumperTestController extends ControllerBase {
    * @return array
    *   The render array output.
    */
-  public function message() {
+  public function message(): array {
     $this->dumper->message('Test output');
 
     return [
@@ -73,7 +62,7 @@ class DumperTestController extends ControllerBase {
    * @return array
    *   The render array output.
    */
-  public function debug() {
+  public function debug(): array {
     $this->dumper->debug('Test output');
 
     return [
@@ -87,7 +76,7 @@ class DumperTestController extends ControllerBase {
    * @return array
    *   The render array output.
    */
-  public function export() {
+  public function export(): array {
     return [
       '#markup' => $this->dumper->export('Test output'),
     ];
@@ -99,7 +88,7 @@ class DumperTestController extends ControllerBase {
    * @return array
    *   The render array output.
    */
-  public function exportRenderable() {
+  public function exportRenderable(): array {
     return $this->dumper->exportAsRenderable('Test output');
   }
 

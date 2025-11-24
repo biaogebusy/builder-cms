@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Render;
 
 use Drupal\Core\Url;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class RenderArrayNonHtmlSubscriberTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['render_array_non_html_subscriber_test'];
 
@@ -27,7 +27,7 @@ class RenderArrayNonHtmlSubscriberTest extends BrowserTestBase {
   /**
    * Tests handling of responses by events subscriber.
    */
-  public function testResponses() {
+  public function testResponses(): void {
     // Test that event subscriber does not interfere with normal requests.
     $url = Url::fromRoute('render_array_non_html_subscriber_test.render_array');
 
@@ -36,7 +36,7 @@ class RenderArrayNonHtmlSubscriberTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains("Controller response successfully rendered.");
 
     // Test that correct response code is returned for any non-HTML format.
-    foreach (['json', 'hal+json', 'xml', 'foo'] as $format) {
+    foreach (['json', 'xml', 'foo'] as $format) {
       $url = Url::fromRoute('render_array_non_html_subscriber_test.render_array', [
         '_format' => $format,
       ]);

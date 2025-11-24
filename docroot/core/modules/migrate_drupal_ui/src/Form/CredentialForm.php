@@ -14,8 +14,10 @@ use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\Exception\BadPluginDefinitionException;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\TransferException;
+use Psr\Http\Client\ClientExceptionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
+// cspell:ignore idconflict
 
 /**
  * Migrate Upgrade database credential form.
@@ -84,7 +86,6 @@ class CredentialForm extends MigrateUpgradeFormBase {
     if ($this->store->get('step') != 'credential') {
       return $this->restartUpgradeForm();
     }
-
     $form = parent::buildForm($form, $form_state);
     $form['actions']['submit']['#value'] = $this->t('Review upgrade');
 
@@ -172,7 +173,7 @@ class CredentialForm extends MigrateUpgradeFormBase {
           ':input[name=driver]' => ['value' => $key],
         ],
       ];
-      if ($key != 'sqlite') {
+      if (!str_ends_with($key, '\\sqlite')) {
         $form['database']['settings'][$key]['username']['#states'] = [
           'required' => [
             ':input[name=source_connection]' => ['value' => ''],
@@ -258,6 +259,7 @@ class CredentialForm extends MigrateUpgradeFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $connection = NULL;
     $source_connection = $form_state->getValue('source_connection');
     if ($source_connection) {
       $info = Database::getConnectionInfo($source_connection);
@@ -278,7 +280,6 @@ class CredentialForm extends MigrateUpgradeFormBase {
       $database['driver'] = $driver;
 
       // Validate the driver settings and just end here if we have any issues.
-      $connection = NULL;
       if ($errors = $drivers[$driver]->validateDatabaseSettings($database)) {
         foreach ($errors as $name => $message) {
           $this->errors[$name] = $message;
@@ -286,7 +287,7 @@ class CredentialForm extends MigrateUpgradeFormBase {
       }
     }
 
-    // Get the Drupal version of the source database so it can be validated.
+    // Check the connection with the source database.
     $error_key = $database['driver'] . '][database';
     if (!$this->errors) {
       try {
@@ -298,6 +299,23 @@ class CredentialForm extends MigrateUpgradeFormBase {
       }
     }
 
+    // Check that the source database is not the site database.
+    if (!$this->errors) {
+      $options = array_flip(['database', 'host', 'port', 'prefix', 'namespace']);
+      $source = array_map('strval', array_intersect_key(
+        $connection->getConnectionOptions(),
+        $options,
+      ));
+      $destination = array_map('strval', array_intersect_key(
+        Database::getConnection()->getConnectionOptions(),
+        $options,
+      ));
+      ksort($source);
+      ksort($destination);
+      if ($source === $destination) {
+        $this->errors[$error_key] = $this->t('Enter credentials for the database of the Drupal site you want to upgrade, not the new site.');
+      }
+    }
     // Get the Drupal version of the source database so it can be validated.
     if (!$this->errors) {
       $version = (string) $this->getLegacyDrupalVersion($connection);
@@ -360,7 +378,7 @@ class CredentialForm extends MigrateUpgradeFormBase {
         try {
           $this->httpClient->head($source);
         }
-        catch (TransferException $e) {
+        catch (ClientExceptionInterface $e) {
           $msg .= ' ' . $this->t('The server reports the following message: %error.', ['%error' => $e->getMessage()]);
           $this->errors[$element['#name']] = $msg;
         }
@@ -395,7 +413,11 @@ class CredentialForm extends MigrateUpgradeFormBase {
   protected function getDatabaseTypes() {
     // Make sure the install API is available.
     include_once DRUPAL_ROOT . '/core/includes/install.inc';
-    return drupal_get_database_types();
+    $database_types = [];
+    foreach (Database::getDriverList()->getInstallableList() as $name => $driver) {
+      $database_types[$name] = $driver->getInstallTasks();
+    }
+    return $database_types;
   }
 
   /**

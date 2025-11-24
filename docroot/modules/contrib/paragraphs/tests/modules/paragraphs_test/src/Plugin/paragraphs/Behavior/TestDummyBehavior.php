@@ -4,20 +4,21 @@ namespace Drupal\paragraphs_test\Plugin\paragraphs\Behavior;
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\paragraphs\Attribute\ParagraphsBehavior;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\ParagraphInterface;
 use Drupal\paragraphs\ParagraphsBehaviorBase;
 
 /**
  * Provides a test feature plugin.
- *
- * @ParagraphsBehavior(
- *   id = "test_dummy_behavior",
- *   label = @Translation("Test dummy plugin"),
- *   description = @Translation("Test dummy plugin"),
- *   weight = 2
- * )
  */
+#[ParagraphsBehavior(
+  id: 'test_dummy_behavior',
+  label: new TranslatableMarkup('Test dummy plugin'),
+  description: new TranslatableMarkup('Test dummy plugin'),
+  weight: 2,
+)]
 class TestDummyBehavior extends ParagraphsBehaviorBase {
 
   /**

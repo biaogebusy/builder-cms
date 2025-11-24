@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_payment\Controller;
 
+use Drupal\Core\Access\AccessException;
 use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsNotificationsInterface;
-use Drupal\Core\Access\AccessException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

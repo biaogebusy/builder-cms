@@ -12,7 +12,8 @@ use League\Csv\Reader;
  * Source for CSV files.
  *
  * Available configuration options:
- * - path: Path to the  CSV file. File streams are supported.
+ * - path: Path to the  CSV file. File streams are supported. Use /dev/null to
+ *   get an empty source (useful for migration_lookup).
  * - ids: Array of column names that uniquely identify each record. Column
  *   names used as IDs can only contain letters (uppercase and lowercase),
  *   numbers (0-9), and underscores. No spaces or other special characters
@@ -102,6 +103,12 @@ class CSV extends SourcePluginBase implements ConfigurableInterface {
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $migration);
     $this->setConfiguration($configuration);
+
+    // Replace /dev/null with an empty regular file.
+    if ($this->configuration['path'] === '/dev/null') {
+      $this->configuration['path'] = __DIR__ . '/empty.csv';
+      $this->configuration['header_offset'] = NULL;
+    }
 
     // Path is required.
     if (empty($this->configuration['path'])) {

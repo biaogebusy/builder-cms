@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Installer;
 
 use Drupal\Core\Database\Connection;
@@ -26,9 +28,9 @@ class InstallerRedirectTraitTest extends KernelTestBase {
    *   - Exceptions to be handled by shouldRedirectToInstaller()
    *   - Whether or not there is a database connection.
    *   - Whether or not there is database connection info.
-   *   - Whether or not there exists a sessions table in the database.
+   *   - Whether or not there exists a sequences table in the database.
    */
-  public function providerShouldRedirectToInstaller() {
+  public static function providerShouldRedirectToInstaller() {
     return [
       [TRUE, DatabaseNotFoundException::class, FALSE, FALSE],
       [TRUE, DatabaseNotFoundException::class, TRUE, FALSE],
@@ -66,15 +68,15 @@ class InstallerRedirectTraitTest extends KernelTestBase {
    * @covers ::shouldRedirectToInstaller
    * @dataProvider providerShouldRedirectToInstaller
    */
-  public function testShouldRedirectToInstaller($expected, $exception, $connection, $connection_info, $session_table_exists = TRUE) {
+  public function testShouldRedirectToInstaller($expected, $exception, $connection, $connection_info, $sequences_table_exists = TRUE): void {
     try {
       throw new $exception();
     }
     catch (\Exception $e) {
       // Mock the trait.
-      $trait = $this->getMockBuilder(InstallerRedirectTrait::class)
+      $trait = $this->getMockBuilder(InstallerRedirectTraitMockableClass::class)
         ->onlyMethods(['isCli'])
-        ->getMockForTrait();
+        ->getMock();
 
       // Make sure that the method thinks we are not using the cli.
       $trait->expects($this->any())
@@ -83,12 +85,10 @@ class InstallerRedirectTraitTest extends KernelTestBase {
 
       // Un-protect the method using reflection.
       $method_ref = new \ReflectionMethod($trait, 'shouldRedirectToInstaller');
-      $method_ref->setAccessible(TRUE);
 
       // Mock the database connection info.
       $db = $this->getMockForAbstractClass(Database::class);
       $property_ref = new \ReflectionProperty($db, 'databaseInfo');
-      $property_ref->setAccessible(TRUE);
       $property_ref->setValue($db, ['default' => $connection_info]);
 
       if ($connection) {
@@ -107,8 +107,8 @@ class InstallerRedirectTraitTest extends KernelTestBase {
 
           $schema->expects($this->any())
             ->method('tableExists')
-            ->with('sessions')
-            ->willReturn($session_table_exists);
+            ->with('sequences')
+            ->willReturn($sequences_table_exists);
 
           $connection->expects($this->any())
             ->method('schema')
@@ -124,5 +124,14 @@ class InstallerRedirectTraitTest extends KernelTestBase {
       $this->assertSame($expected, $method_ref->invoke($trait, $e, $connection));
     }
   }
+
+}
+
+/**
+ * A class using the InstallerRedirectTrait for mocking purposes.
+ */
+class InstallerRedirectTraitMockableClass {
+
+  use InstallerRedirectTrait;
 
 }

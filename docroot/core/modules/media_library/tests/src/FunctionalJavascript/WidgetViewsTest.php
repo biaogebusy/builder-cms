@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 /**
@@ -70,7 +72,7 @@ class WidgetViewsTest extends MediaLibraryTestBase {
   /**
    * Tests that the views in the Media library's widget work as expected.
    */
-  public function testWidgetViews() {
+  public function testWidgetViews(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -98,6 +100,13 @@ class WidgetViewsTest extends MediaLibraryTestBase {
     $this->waitForElementTextContains('.js-media-library-view .js-pager__items > li:nth-of-type(1)', 'Page 1');
     $this->assertCount(24, $this->getCheckboxes());
 
+    $page->checkField('Select Bear');
+    $this->pressInsertSelected('Added one media item.');
+    $assert_session->pageTextContains('Bear');
+    $assert_session->pageTextNotContains('Cat');
+    $assert_session->pageTextNotContains('Turtle');
+
+    $this->openMediaLibraryForField('field_unlimited_media');
     $this->switchToMediaLibraryTable();
 
     // Assert the 'Apply filter' button is not moved to the button pane.
@@ -107,20 +116,38 @@ class WidgetViewsTest extends MediaLibraryTestBase {
     $assert_session->pageTextContains('Bear');
     $assert_session->pageTextNotContains('Turtle');
 
-    // Assert the exposed filters can be applied.
+    // Assert the exposed filters can be applied and page is reset from second
+    // page.
+    $page->clickLink('Next page');
+    $this->waitForElementTextContains('.js-media-library-view .js-pager__items > li:nth-of-type(2)', 'Page 2');
+    $page->fillField('Name', 'Bear');
+    $page->pressButton('Apply filters');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->pageTextNotContains('Dog');
+    $assert_session->pageTextContains('Bear');
+    $assert_session->pageTextNotContains('Turtle');
+
+    // Test clearing the filters.
+    $page->fillField('Name', '');
+    $page->pressButton('Apply filters');
+    $assert_session->waitForLink('Next page');
+    $page->clickLink('Next page');
+    $this->waitForElementTextContains('.js-media-library-view .js-pager__items > li:nth-of-type(2)', 'Page 2');
+
+    // Assert the exposed filters are persisted when changing display.
     $page->fillField('Name', 'Dog');
     $page->pressButton('Apply filters');
-    $this->waitForText('Dog');
-    $this->waitForNoText('Bear');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->pageTextContains('Dog');
+    $assert_session->pageTextNotContains('Crocodile');
     $assert_session->pageTextNotContains('Turtle');
     $page->checkField('Select Dog');
     $assert_session->linkExists('Table');
     $this->switchToMediaLibraryGrid();
 
-    // Assert the exposed filters are persisted when changing display.
     $this->assertSame('Dog', $page->findField('Name')->getValue());
     $assert_session->pageTextContains('Dog');
-    $assert_session->pageTextNotContains('Bear');
+    $assert_session->pageTextNotContains('Crocodile');
     $assert_session->pageTextNotContains('Turtle');
     $assert_session->linkExists('Grid');
     $this->switchToMediaLibraryTable();
@@ -129,7 +156,7 @@ class WidgetViewsTest extends MediaLibraryTestBase {
     $this->pressInsertSelected('Added one media item.');
     // Ensure that the selection completed successfully.
     $assert_session->pageTextContains('Dog');
-    $assert_session->pageTextNotContains('Bear');
+    $assert_session->pageTextContains('Bear');
     $assert_session->pageTextNotContains('Turtle');
   }
 

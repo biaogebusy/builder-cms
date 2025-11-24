@@ -2,22 +2,21 @@
 
 namespace Drupal\commerce_price\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_list_price' widget.
- *
- * @FieldWidget(
- *   id = "commerce_list_price",
- *   label = @Translation("List price"),
- *   field_types = {
- *     "commerce_price"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_list_price",
+  label: new TranslatableMarkup("List price"),
+  field_types: ["commerce_price"],
+)]
 class ListPriceWidget extends WidgetBase {
 
   /**

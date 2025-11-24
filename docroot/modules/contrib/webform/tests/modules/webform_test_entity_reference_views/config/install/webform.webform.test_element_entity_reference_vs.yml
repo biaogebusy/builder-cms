@@ -95,7 +95,7 @@ css: |
     margin: 0 0 5px 0;
   }
 
-  /* Checkboex and radios */
+  /* Checkboxes and radios */
 
   .webform-entity-reference-options .fieldset-wrapper > div {
     display: flex;

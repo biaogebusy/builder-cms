@@ -3,11 +3,15 @@
 namespace Drupal\field_ui\Form;
 
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\TypedData\TypedDataManagerInterface;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\field_ui\FieldUI;
+use Drupal\field\FieldConfigInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -23,6 +27,24 @@ class FieldStorageConfigEditForm extends EntityForm {
    * @var \Drupal\field\FieldStorageConfigInterface
    */
   protected $entity;
+
+  /**
+   * FieldStorageConfigEditForm constructor.
+   *
+   * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typedDataManager
+   *   The typed data manager.
+   */
+  public function __construct(
+    protected TypedDataManagerInterface $typedDataManager,
+  ) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static($container->get('typed_data_manager'));
+  }
 
   /**
    * {@inheritdoc}
@@ -45,12 +67,15 @@ class FieldStorageConfigEditForm extends EntityForm {
    *   A nested array form elements comprising the form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   * @param string $field_config
+   * @param \Drupal\field\FieldConfigInterface|string $field_config
    *   The ID of the field config whose field storage config is being edited.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $field_config = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, FieldConfigInterface|string|null $field_config = NULL) {
     if ($field_config) {
-      $field = FieldConfig::load($field_config);
+      $field = $field_config;
+      if (is_string($field)) {
+        $field = FieldConfig::load($field_config);
+      }
       $form_state->set('field_config', $field);
 
       $form_state->set('entity_type_id', $field->getTargetEntityTypeId());
@@ -67,14 +92,10 @@ class FieldStorageConfigEditForm extends EntityForm {
     $form = parent::form($form, $form_state);
 
     $field_label = $form_state->get('field_config')->label();
-    $form['#title'] = $field_label;
-    $form['#prefix'] = '<p>' . $this->t('These settings apply to the %field field everywhere it is used. These settings impact the way that data is stored in the database and cannot be changed once data has been created.', ['%field' => $field_label]) . '</p>';
+    $form['#prefix'] = '<p>' . $this->t('These settings apply to the %field field everywhere it is used. Some also impact the way that data is stored and cannot be changed once data has been created.', ['%field' => $field_label]) . '</p>';
 
-    // See if data already exists for this field.
-    // If so, prevent changes to the field settings.
-    if ($this->entity->hasData()) {
-      $form['#prefix'] = '<div class="messages messages--error">' . $this->t('There is data for this field in the database. The field settings can no longer be changed.') . '</div>' . $form['#prefix'];
-    }
+    // Add the cardinality sub-form.
+    $form['cardinality_container'] = $this->getCardinalityForm();
 
     // Add settings provided by the field module. The field module is
     // responsible for not returning settings that cannot be changed if
@@ -91,12 +112,15 @@ class FieldStorageConfigEditForm extends EntityForm {
       'entity_id' => NULL,
     ];
     $entity = _field_create_entity_from_ids($ids);
-    $items = $entity->get($this->entity->getName());
+    if (!$this->entity->isNew()) {
+      $items = $entity->get($this->entity->getName());
+    }
+    else {
+      $field_config = $form_state->get('field_config');
+      $items = $this->typedDataManager->create($field_config, name: $this->entity->getName(), parent: EntityAdapter::createFromEntity($entity));
+    }
     $item = $items->first() ?: $items->appendItem();
     $form['settings'] += $item->storageSettingsForm($form, $form_state, $this->entity->hasData());
-
-    // Add the cardinality sub-form.
-    $form['cardinality_container'] = $this->getCardinalityForm();
 
     return $form;
   }
@@ -132,7 +156,7 @@ class FieldStorageConfigEditForm extends EntityForm {
       $form['cardinality'] = ['#markup' => $markup];
     }
     else {
-      $form['#element_validate'][] = '::validateCardinality';
+      $form['#element_validate'][] = [$this, 'validateCardinality'];
       $cardinality = $this->entity->getCardinality();
       $form['cardinality'] = [
         '#type' => 'select',
@@ -153,10 +177,10 @@ class FieldStorageConfigEditForm extends EntityForm {
         '#size' => 2,
         '#states' => [
           'visible' => [
-            ':input[name="cardinality"]' => ['value' => 'number'],
+            ':input[name="field_storage[subform][cardinality]"]' => ['value' => 'number'],
           ],
           'disabled' => [
-            ':input[name="cardinality"]' => ['value' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED],
+            ':input[id="field_storage[subform][cardinality]"]' => ['value' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED],
           ],
         ],
       ];
@@ -169,9 +193,13 @@ class FieldStorageConfigEditForm extends EntityForm {
    * {@inheritdoc}
    */
   protected function actions(array $form, FormStateInterface $form_state) {
+    if ($form_state instanceof SubformStateInterface) {
+      return [];
+    }
     $elements = parent::actions($form, $form_state);
-    $elements['submit']['#value'] = $this->t('Save field settings');
+    $elements['submit']['#value'] = $this->entity->isNew() ? $this->t('Continue') : $this->t('Save');
 
+    @trigger_error('Rendering ' . __CLASS__ . ' outside of a subform is deprecated in drupal:10.2.0 and is removed in drupal:11.0.0. See https://www.drupal.org/node/3391538', E_USER_DEPRECATED);
     return $elements;
   }
 
@@ -186,24 +214,33 @@ class FieldStorageConfigEditForm extends EntityForm {
   public function validateCardinality(array &$element, FormStateInterface $form_state) {
     $field_storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions($this->entity->getTargetEntityTypeId());
 
+    $cardinality = $form_state->getValue([
+      ...$element['#parents'],
+      'cardinality',
+    ]);
+    $cardinality_number = $form_state->getValue([
+      ...$element['#parents'],
+      'cardinality_number',
+    ]);
+
     // Validate field cardinality.
-    if ($form_state->getValue('cardinality') === 'number' && !$form_state->getValue('cardinality_number')) {
+    if ($cardinality === 'number' && !$cardinality_number) {
       $form_state->setError($element['cardinality_number'], $this->t('Number of values is required.'));
     }
     // If a specific cardinality is used, validate that there are no entities
     // with a higher delta.
-    elseif (!$this->entity->isNew() && isset($field_storage_definitions[$this->entity->getName()]) && $form_state->getValue('cardinality') != FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
+    elseif (!$this->entity->isNew() && isset($field_storage_definitions[$this->entity->getName()]) && $cardinality != FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED) {
 
       // Get a count of entities that have a value in a delta higher than the
       // one selected. Deltas start with 0, so the selected value does not
       // need to be incremented.
       $entities_with_higher_delta = \Drupal::entityQuery($this->entity->getTargetEntityTypeId())
         ->accessCheck(FALSE)
-        ->condition($this->entity->getName() . '.%delta', $form_state->getValue('cardinality'))
+        ->condition($this->entity->getName() . '.%delta', $cardinality_number)
         ->count()
         ->execute();
       if ($entities_with_higher_delta) {
-        $form_state->setError($element['cardinality_number'], $this->formatPlural($entities_with_higher_delta, 'There is @count entity with @delta or more values in this field.', 'There are @count entities with @delta or more values in this field.', ['@delta' => $form_state->getValue('cardinality') + 1]));
+        $form_state->setError($element['cardinality_number'], $this->formatPlural($entities_with_higher_delta, 'There is @count entity with @delta or more values in this field, so the allowed number of values cannot be set to @allowed.', 'There are @count entities with @delta or more values in this field, so the allowed number of values cannot be set to @allowed.', ['@delta' => $cardinality_number + 1, '@allowed' => $cardinality_number]));
       }
     }
   }
@@ -214,7 +251,7 @@ class FieldStorageConfigEditForm extends EntityForm {
   public function buildEntity(array $form, FormStateInterface $form_state) {
     // Save field cardinality.
     if (!$this->getEnforcedCardinality() && $form_state->getValue('cardinality') === 'number' && $form_state->getValue('cardinality_number')) {
-      $form_state->setValue('cardinality', $form_state->getValue('cardinality_number'));
+      $form_state->setValue('cardinality', (int) $form_state->getValue('cardinality_number'));
     }
 
     return parent::buildEntity($form, $form_state);
@@ -224,22 +261,7 @@ class FieldStorageConfigEditForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $field_label = $form_state->get('field_config')->label();
-    try {
-      $this->entity->save();
-      $this->messenger()->addStatus($this->t('Updated field %label field settings.', ['%label' => $field_label]));
-      $request = $this->getRequest();
-      if (($destinations = $request->query->get('destinations')) && $next_destination = FieldUI::getNextDestination($destinations)) {
-        $request->query->remove('destinations');
-        $form_state->setRedirectUrl($next_destination);
-      }
-      else {
-        $form_state->setRedirectUrl(FieldUI::getOverviewRouteInfo($form_state->get('entity_type_id'), $form_state->get('bundle')));
-      }
-    }
-    catch (\Exception $e) {
-      $this->messenger()->addStatus($this->t('Attempt to update field %label failed: %message.', ['%label' => $field_label, '%message' => $e->getMessage()]));
-    }
+    $this->entity->save();
   }
 
   /**

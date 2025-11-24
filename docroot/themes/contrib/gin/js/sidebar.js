@@ -6,6 +6,11 @@
   const toolbarVariant = drupalSettings.gin.toolbar_variant;
   const storageMobile = 'Drupal.gin.sidebarExpanded.mobile';
   const storageDesktop = 'Drupal.gin.sidebarExpanded.desktop';
+  const storageWidth = "Drupal.gin.sidebarWidth";
+  const resizer = document.getElementById('gin-sidebar-draggable');
+  const resizable = document.getElementById('gin_sidebar');
+  let isResizing = false;
+  let startX, startWidth;
 
   Drupal.behaviors.ginSidebar = {
     attach: function attach(context) {
@@ -39,7 +44,16 @@
           }
         });
 
-        window.onresize = Drupal.debounce(this.handleResize, 150);
+        // Resize observer.
+        const resizeHandler = new ResizeObserver(entries => {
+          for (let entry of entries) {
+            Drupal.debounce(this.handleResize(entry.contentRect), 150);
+          }
+        });
+        resizeHandler.observe(document.querySelector('html'));
+
+        // Init resizable sidebar.
+        this.resizeInit();
       });
 
       // Toolbar toggle
@@ -61,19 +75,24 @@
       // Set active state.
       if (document.querySelector('.meta-sidebar__trigger').classList.contains('is-active')) {
         Drupal.ginSidebar.collapseSidebar();
+        Drupal.ginStickyFormActions?.hideMoreActions();
       }
       else {
         Drupal.ginSidebar.showSidebar();
+        Drupal.ginStickyFormActions?.hideMoreActions();
       }
     },
 
     showSidebar: () => {
       const chooseStorage = window.innerWidth < breakpoint ? storageMobile : storageDesktop;
-      const showLabel = Drupal.t('Hide sidebar panel');
+      const hideLabel = Drupal.t('Hide sidebar panel');
       const sidebarTrigger = document.querySelector('.meta-sidebar__trigger');
 
-      sidebarTrigger.setAttribute('title', showLabel);
-      sidebarTrigger.querySelector('span').innerHTML = showLabel;
+      sidebarTrigger.querySelector('span').innerHTML = hideLabel;
+      sidebarTrigger.setAttribute('title', hideLabel);
+      if (sidebarTrigger.nextSibling) {
+        sidebarTrigger.nextSibling.innerHTML = hideLabel;
+      }
       sidebarTrigger.setAttribute('aria-expanded', 'true');
       sidebarTrigger.classList.add('is-active');
 
@@ -84,21 +103,26 @@
 
       // Check which toolbar is active.
       if (window.innerWidth < breakpointLarge) {
+        Drupal.ginCoreNavigation?.collapseToolbar();
+
         if (toolbarVariant === 'vertical') {
           Drupal.ginToolbar.collapseToolbar();
         } else if (toolbarVariant === 'new') {
-          Drupal.behaviors.navigation.collapseSidebar();
+          Drupal.behaviors.ginNavigation?.collapseSidebar();
         }
       }
     },
 
     collapseSidebar: () => {
       const chooseStorage = window.innerWidth < breakpoint ? storageMobile : storageDesktop;
-      const hideLabel = Drupal.t('Show sidebar panel');
+      const showLabel = Drupal.t('Show sidebar panel');
       const sidebarTrigger = document.querySelector('.meta-sidebar__trigger');
 
-      sidebarTrigger.setAttribute('title', hideLabel);
-      sidebarTrigger.querySelector('span').innerHTML = hideLabel;
+      sidebarTrigger.querySelector('span').innerHTML = showLabel;
+      sidebarTrigger.setAttribute('title', showLabel);
+      if (sidebarTrigger.nextSibling) {
+        sidebarTrigger.nextSibling.innerHTML = showLabel;
+      }
       sidebarTrigger.setAttribute('aria-expanded', 'false');
       sidebarTrigger.classList.remove('is-active');
 
@@ -108,11 +132,11 @@
       localStorage.setItem(chooseStorage, 'false');
     },
 
-    handleResize: () => {
+    handleResize: (windowSize = window) => {
       Drupal.ginSidebar.removeInlineStyles();
 
       // If small viewport, always collapse sidebar.
-      if (window.innerWidth < breakpoint) {
+      if (windowSize.width < breakpoint) {
         Drupal.ginSidebar.collapseSidebar();
       } else {
         // If large viewport, show sidebar if it was open before.
@@ -131,6 +155,50 @@
         elementToRemove.parentNode.removeChild(elementToRemove);
       }
     },
+
+    resizeInit: function () {
+      // Mouse
+      resizer.addEventListener('mousedown', this.resizeStart);
+      document.addEventListener('mousemove', this.resizeWidth);
+      document.addEventListener('mouseup', this.resizeEnd);
+
+      // Touch
+      resizer.addEventListener('touchstart', this.resizeStart);
+      document.addEventListener('touchmove', this.resizeWidth);
+      document.addEventListener('touchend', this.resizeEnd);
+    },
+
+    resizeStart: (e) => {
+      e.preventDefault();
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = parseInt(document.defaultView.getComputedStyle(resizable).width, 10);
+    },
+
+    resizeEnd: () => {
+      isResizing = false;
+      const setWidth = document.documentElement.style.getPropertyValue('--gin-sidebar-width');
+      const currentWidth = setWidth ? setWidth : resizable.style.width;
+      localStorage.setItem(storageWidth, currentWidth);
+      document.removeEventListener('mousemove', this.resizeWidth);
+      document.removeEventListener('touchend', this.resizeWidth);
+    },
+
+    resizeWidth: (e) => {
+      if (isResizing) {
+        let sidebarWidth = startWidth - (e.clientX - startX);
+
+        if (sidebarWidth <= 240) {
+          sidebarWidth = 240;
+        } else if (sidebarWidth >= 560) {
+          sidebarWidth = 560;
+        }
+
+        sidebarWidth = `${sidebarWidth}px`;
+        // resizable.style.width = sidebarWidth;
+        document.documentElement.style.setProperty('--gin-sidebar-width', sidebarWidth);
+      }
+    }
 
   };
 })(Drupal, drupalSettings, once);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\Tests\content_translation\Functional\ContentTranslationUITestBase;
@@ -49,6 +51,7 @@ class MediaTranslationUITest extends ContentTranslationUITestBase {
     $this->entityTypeId = 'media';
     $this->bundle = 'test';
     parent::setUp();
+    $this->doSetup();
   }
 
   /**

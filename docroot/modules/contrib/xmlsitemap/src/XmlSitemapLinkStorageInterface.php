@@ -45,7 +45,7 @@ interface XmlSitemapLinkStorageInterface {
    * @return bool
    *   TRUE if the link is changed, or FALSE otherwise.
    */
-  public function checkChangedLink(array $link, array $original_link = NULL, $flag = FALSE);
+  public function checkChangedLink(array $link, ?array $original_link = NULL, $flag = FALSE);
 
   /**
    * Check if there is a visible sitemap link given a certain set of conditions.
@@ -169,6 +169,6 @@ interface XmlSitemapLinkStorageInterface {
    * @return \Drupal\Core\Entity\Query\QueryInterface
    *   The entity query object.
    */
-  public function getEntityQuery(string $entity_type_id, array $bundles = [], SelectInterface $subquery = NULL, string $subquery_operator = 'IN'): QueryInterface;
+  public function getEntityQuery(string $entity_type_id, array $bundles = [], ?SelectInterface $subquery = NULL, string $subquery_operator = 'IN'): QueryInterface;
 
 }

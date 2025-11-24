@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductAttributeValue;
@@ -9,7 +10,6 @@ use Drupal\commerce_product\Entity\ProductType;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests the product variation title generation.
@@ -77,7 +77,7 @@ class ProductVariationGeneratedTitleTest extends CommerceKernelTestBase {
     $product_type = ProductType::create([
       'id' => 'generate_title',
       'label' => 'Generate title test',
-      'variationType' => $variation_type->id(),
+      'variationTypes' => [$variation_type->id()],
     ]);
     $product_type->save();
     $this->productType = $product_type;

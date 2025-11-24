@@ -1,0 +1,29 @@
+{
+    "name": "drupal/js_cookie",
+    "description": "Loading cookie-js library file.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev",
+    "homepage": "https://drupal.org/project/js-cookie",
+    "require": {
+        "js-cookie/js-cookie": "*"
+    },
+    "repositories": {
+        "js-cookie": {
+            "type": "package",
+            "package": {
+                "name": "js-cookie/js-cookie",
+                "version": "3.0.5",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "js-cookie"
+                },
+                "dist": {
+                    "url": "https://registry.npmjs.org/js-cookie/-/js-cookie-3.0.5.tgz",
+                    "type": "tar"
+                },
+                "license": "MIT"
+            }
+        }
+    }
+}

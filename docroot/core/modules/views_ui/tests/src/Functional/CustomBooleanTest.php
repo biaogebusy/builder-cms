@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\views\Views;
 
 /**
@@ -47,7 +48,7 @@ class CustomBooleanTest extends UITestBase {
   /**
    * Tests the setting and output of custom labels for boolean values.
    */
-  public function testCustomOption() {
+  public function testCustomOption(): void {
     // Add the boolean field handler to the test view.
     $view = Views::getView('test_view');
     $view->setDisplay();
@@ -104,15 +105,15 @@ class CustomBooleanTest extends UITestBase {
       $view = Views::getView('test_view');
       $output = $view->preview();
       $output = \Drupal::service('renderer')->renderRoot($output);
-      $this->{$values['test']}($values['true'], (string) $output, new FormattableMarkup('Expected custom boolean TRUE value %value in output for %type', ['%value' => $values['true'], '%type' => $type]));
-      $this->{$values['test']}($values['false'], (string) $output, new FormattableMarkup('Expected custom boolean FALSE value %value in output for %type', ['%value' => $values['false'], '%type' => $type]));
+      $this->{$values['test']}($values['true'], (string) $output, "Expected custom boolean TRUE value {$values['true']} in output for $type");
+      $this->{$values['test']}($values['false'], (string) $output, "Expected custom boolean FALSE value {$values['false']} in output for $type");
     }
   }
 
   /**
    * Tests the setting and output of custom labels for boolean values.
    */
-  public function testCustomOptionTemplate() {
+  public function testCustomOptionTemplate(): void {
     // Install theme to test with template system.
     \Drupal::service('theme_installer')->install(['views_test_theme']);
 
@@ -178,8 +179,8 @@ class CustomBooleanTest extends UITestBase {
       $view = Views::getView('test_view');
       $output = $view->preview();
       $output = \Drupal::service('renderer')->renderRoot($output);
-      $this->{$values['test']}($values['true'], (string) $output, new FormattableMarkup('Expected custom boolean TRUE value %value in output for %type', ['%value' => $values['true'], '%type' => $type]));
-      $this->{$values['test']}($values['false'], (string) $output, new FormattableMarkup('Expected custom boolean FALSE value %value in output for %type', ['%value' => $values['false'], '%type' => $type]));
+      $this->{$values['test']}($values['true'], (string) $output, "Expected custom boolean TRUE value {$values['true']} in output for $type");
+      $this->{$values['test']}($values['false'], (string) $output, "Expected custom boolean FALSE value {$values['false']} in output for $type");
 
       // Assert that we are using the correct template.
       $this->assertStringContainsString('llama', (string) $output);

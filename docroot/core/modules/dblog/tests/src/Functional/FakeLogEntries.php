@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\dblog\Functional;
 
 use Drupal\Core\Logger\RfcLogLevel;
@@ -29,7 +31,7 @@ trait FakeLogEntries {
    *   - 'link': String linking to view the result of the event.
    *   - 'uid': Int identifying the user id for the user.
    *   - 'request_uri': String identifying the location of the request.
-   *   - 'referer': String identifying the referring url.
+   *   - 'referer': String identifying the referring URL.
    *   - 'ip': String The ip address of the client machine triggering the log
    *     entry.
    *   - 'timestamp': Int unix timestamp.
@@ -50,7 +52,7 @@ trait FakeLogEntries {
       'request_uri' => $base_root . \Drupal::request()->getRequestUri(),
       'referer'     => \Drupal::request()->server->get('HTTP_REFERER'),
       'ip'          => '127.0.0.1',
-      'timestamp'   => REQUEST_TIME,
+      'timestamp'   => \Drupal::time()->getRequestTime(),
     ];
 
     $logger = $this->container->get('logger.dblog');

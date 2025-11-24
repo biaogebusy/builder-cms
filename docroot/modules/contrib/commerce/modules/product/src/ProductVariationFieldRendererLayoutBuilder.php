@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\commerce_product\Entity\ProductVariationInterface;
-use Drupal\commerce_product\Plugin\Block\VariationFieldBlock;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
+use Drupal\commerce_product\Plugin\Block\VariationFieldBlock;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\LayoutEntityHelperTrait;
 
@@ -32,6 +32,19 @@ class ProductVariationFieldRendererLayoutBuilder extends ProductVariationFieldRe
   public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityDisplayRepositoryInterface $entity_display_repository) {
     parent::__construct($entity_type_manager);
     $this->entityDisplayRepository = $entity_display_repository;
+  }
+
+  /**
+   * Sets the entity display repository.
+   *
+   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
+   *   The new entity display repository.
+   *
+   * @return $this
+   */
+  public function setEntityDisplayRepository(EntityDisplayRepositoryInterface $entity_display_repository) {
+    $this->entityDisplayRepository = $entity_display_repository;
+    return $this;
   }
 
   /**

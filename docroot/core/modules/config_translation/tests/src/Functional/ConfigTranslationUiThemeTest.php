@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class ConfigTranslationUiThemeTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'config_translation',
@@ -65,7 +65,7 @@ class ConfigTranslationUiThemeTest extends BrowserTestBase {
   /**
    * Tests that theme provided *.config_translation.yml files are found.
    */
-  public function testThemeDiscovery() {
+  public function testThemeDiscovery(): void {
     // Install the test theme and rebuild routes.
     $theme = 'config_translation_test_theme';
 
@@ -73,7 +73,7 @@ class ConfigTranslationUiThemeTest extends BrowserTestBase {
 
     $this->drupalGet('admin/appearance');
     $element = $this->assertSession()->elementExists('xpath', "//a[normalize-space()='Install and set as default' and contains(@href, '{$theme}')]");
-    $this->drupalGet($GLOBALS['base_root'] . $element->getAttribute('href'), ['external' => TRUE]);
+    $this->drupalGet($this->getAbsoluteUrl($element->getAttribute('href')), ['external' => TRUE]);
 
     $translation_base_url = 'admin/config/development/performance/translate';
     $this->drupalGet($translation_base_url);

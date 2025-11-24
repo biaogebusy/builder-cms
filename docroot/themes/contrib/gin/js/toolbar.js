@@ -7,25 +7,7 @@
   Drupal.behaviors.ginToolbar = {
     attach: (context) => {
       Drupal.ginToolbar.init(context);
-    },
-
-  };
-
-  /**
-   * Replaces the "Home" link with "Back to site" link.
-   *
-   * Back to site link points to the last non-administrative page the user
-   * visited within the same browser tab.
-   */
-  Drupal.behaviors.ginEscapeAdmin = {
-    attach: (context) => {
-      once('ginEscapeAdmin', '[data-gin-toolbar-escape-admin]', context).forEach(el => {
-        const escapeAdminPath = sessionStorage.getItem('escapeAdminPath');
-
-        if (drupalSettings.path.currentPathIsAdmin && escapeAdminPath !== null) {
-          el.setAttribute('href', escapeAdminPath);
-        }
-      });
+      Drupal.ginToolbar.initKeyboardShortcut(context);
     },
   };
 
@@ -49,14 +31,7 @@
           toolbarTrigger.classList.remove('is-active');
         }
 
-        // Show toolbar navigation with shortcut:
-        // OPTION + T (Mac) / ALT + T (Windows)
-        document.addEventListener('keydown', e => {
-          if (e.altKey === true && e.code === 'KeyT') {
-            this.toggleToolbar();
-          }
-        });
-
+        // this.initKeyboardShortcut();
         this.initDisplace();
       });
 
@@ -65,6 +40,18 @@
         e.preventDefault();
         this.toggleToolbar();
       }));
+    },
+
+    initKeyboardShortcut: function (context) {
+      once('ginToolbarKeyboardShortcutInit', '.toolbar-menu__trigger, .admin-toolbar__expand-button', context).forEach(() => {
+        // Show toolbar navigation with shortcut:
+        // OPTION + T (Mac) / ALT + T (Windows)
+        document.addEventListener('keydown', e => {
+          if (e.altKey === true && e.code === 'KeyT') {
+            this.toggleToolbar();
+          }
+        });
+      });
     },
 
     initDisplace: () => {

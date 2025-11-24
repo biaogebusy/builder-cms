@@ -5,11 +5,11 @@
  * Provides tax functionality.
  */
 
-use Drupal\commerce_tax\TaxableType;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_tax\TaxableType;
 use Drupal\field\FieldStorageConfigInterface;
 
 /**
@@ -43,8 +43,9 @@ function commerce_tax_entity_base_field_info(EntityTypeInterface $entity_type) {
 
     $fields['tax_registrations'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Tax registrations'))
-      ->setDescription(t('The countries where the store is additionally registered to collect taxes.'))
+      ->setDescription(t('The countries where the store is additionally registered to collect taxes. For further details see the <a href="https://docs.drupalcommerce.org/v2/user-guide/taxes/" target="_blank">Commerce Tax documentation</a>.'))
       ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
+      ->setSetting('display_description', TRUE)
       ->setSetting('allowed_values_function', ['\Drupal\commerce_store\Entity\Store', 'getAvailableCountries'])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
@@ -65,8 +66,16 @@ function commerce_tax_entity_base_field_info(EntityTypeInterface $entity_type) {
  * the field editable.
  */
 function commerce_tax_field_storage_config_access(FieldStorageConfigInterface $field_storage, $operation) {
-  if ($field_storage->id() == 'profile.tax_number' && $operation == 'delete') {
-    return AccessResult::forbidden();
+  if ($field_storage->id() === 'profile.tax_number' && $operation === 'delete') {
+    // Allow deleting the tax number field if there are no profiles with tax
+    // numbers set in the DB.
+    $profiles_count = \Drupal::entityTypeManager()->getStorage('profile')
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->exists('tax_number')
+      ->count()
+      ->execute();
+    return AccessResult::allowedIf($profiles_count === 0);
   }
   return AccessResult::neutral();
 }

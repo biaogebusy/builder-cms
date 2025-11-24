@@ -1,0 +1,130 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"KHH"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Sanmin District": {
+			"local_name": "三民區"
+		},
+		"Dashe District": {
+			"local_name": "大社區"
+		},
+		"Daliao District": {
+			"local_name": "大寮區"
+		},
+		"Dashu District": {
+			"local_name": "大樹區"
+		},
+		"Xiaogang District": {
+			"local_name": "小港區"
+		},
+		"Renwu District": {
+			"local_name": "仁武區"
+		},
+		"Neimen District": {
+			"local_name": "內門區"
+		},
+		"Liugui District": {
+			"local_name": "六龜區"
+		},
+		"Zuoying District": {
+			"local_name": "左營區"
+		},
+		"Yong'an District": {
+			"local_name": "永安區"
+		},
+		"Tianliao District": {
+			"local_name": "田寮區"
+		},
+		"Jiaxian District": {
+			"local_name": "甲仙區"
+		},
+		"Shanlin District": {
+			"local_name": "杉林區"
+		},
+		"Namaxia District": {
+			"local_name": "那瑪夏區"
+		},
+		"Gangshan District": {
+			"local_name": "岡山區"
+		},
+		"Dongsha Island": {
+			"local_name": "東沙島"
+		},
+		"Linyuan District": {
+			"local_name": "林園區"
+		},
+		"Alian District": {
+			"local_name": "阿蓮區"
+		},
+		"Qianjin District": {
+			"local_name": "前金區"
+		},
+		"Qianzhen District": {
+			"local_name": "前鎮區"
+		},
+		"Nansha Island": {
+			"local_name": "南沙島"
+		},
+		"Meinong District": {
+			"local_name": "美濃區"
+		},
+		"Lingya District": {
+			"local_name": "苓雅區"
+		},
+		"Maolin District": {
+			"local_name": "茂林區"
+		},
+		"Jiading District": {
+			"local_name": "茄萣區"
+		},
+		"Taoyuan District": {
+			"local_name": "桃源區"
+		},
+		"Ziguan District": {
+			"local_name": "梓官區"
+		},
+		"Niaosong District": {
+			"local_name": "鳥松區"
+		},
+		"Hunei District": {
+			"local_name": "湖內區"
+		},
+		"Xinxing District": {
+			"local_name": "新興區"
+		},
+		"Nanzi District": {
+			"local_name": "楠梓區"
+		},
+		"Luzhu District": {
+			"local_name": "路竹區"
+		},
+		"Gushan District": {
+			"local_name": "鼓山區"
+		},
+		"Qishan District": {
+			"local_name": "旗山區"
+		},
+		"Qijin District": {
+			"local_name": "旗津區"
+		},
+		"Fengshan District": {
+			"local_name": "鳳山區"
+		},
+		"Qiaotou District": {
+			"local_name": "橋頭區"
+		},
+		"Yanchao District": {
+			"local_name": "燕巢區"
+		},
+		"Mituo District": {
+			"local_name": "彌陀區"
+		},
+		"Yancheng District": {
+			"local_name": "鹽埕區"
+		}
+	}
+}

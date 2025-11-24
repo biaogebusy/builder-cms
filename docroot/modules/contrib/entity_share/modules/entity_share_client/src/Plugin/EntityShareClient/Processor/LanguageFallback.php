@@ -106,7 +106,7 @@ class LanguageFallback extends ImportProcessorPluginBase implements PluginFormIn
    */
   public function prepareEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
     $field_mappings = $runtime_import_context->getFieldMappings();
-    $parsed_type = explode('--', $entity_json_data['type']);
+    $parsed_type = \explode('--', $entity_json_data['type']);
     $entity_type_id = $parsed_type[0];
     $entity_bundle = $parsed_type[1];
     // @todo Refactor in attributes to avoid getting entity keys each time.
@@ -123,7 +123,7 @@ class LanguageFallback extends ImportProcessorPluginBase implements PluginFormIn
       return;
     }
     // We force the langcode.
-    elseif ($this->configuration['force_language']) {
+    if ($this->configuration['force_language']) {
       $entity_json_data['attributes'][$langcode_public_name] = $this->getLangcodeToInsert();
       return;
     }
@@ -134,7 +134,7 @@ class LanguageFallback extends ImportProcessorPluginBase implements PluginFormIn
     }
 
     // Check if we try to import an entity with langcode in a disabled language.
-    if (is_null($this->languageManager->getLanguage($data_langcode))) {
+    if ($this->languageManager->getLanguage($data_langcode) === NULL) {
       $entity_json_data['attributes'][$langcode_public_name] = $this->getLangcodeToInsert();
     }
   }
@@ -145,7 +145,7 @@ class LanguageFallback extends ImportProcessorPluginBase implements PluginFormIn
    * @return string
    *   The langcode to insert.
    */
-  protected function getLangcodeToInsert() : string {
+  protected function getLangcodeToInsert(): string {
     if (!$this->langcodeToInsert) {
       $langcode_to_insert = $this->configuration['fallback_language'];
       if ($langcode_to_insert == LanguageInterface::LANGCODE_SITE_DEFAULT) {

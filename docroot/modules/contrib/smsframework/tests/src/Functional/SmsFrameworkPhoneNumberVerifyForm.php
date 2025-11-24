@@ -48,14 +48,14 @@ final class SmsFrameworkPhoneNumberVerifyForm extends SmsFrameworkBrowserTestBas
 
     $this->createEntityWithPhoneNumber(
       $this->createPhoneNumberSettings('entity_test', 'entity_test'),
-      ['+123123123']
+      ['+123123123'],
     );
 
     $verification = $this->getLastVerification();
     $code = $verification->getCode();
 
-    $this->assertFalse($verification->getStatus(), 'Phone number verification is not verified.');
-    $this->assertFalse(empty($code), 'Verification code is set.');
+    static::assertFalse($verification->getStatus(), 'Phone number verification is not verified.');
+    static::assertFalse(empty($code), 'Verification code is set.');
 
     // Invalid code.
     $edit['code'] = $this->randomMachineName();
@@ -72,7 +72,7 @@ final class SmsFrameworkPhoneNumberVerifyForm extends SmsFrameworkBrowserTestBas
     // Reset verification code static cache.
     $this->resetAll();
     $verification = $this->getLastVerification();
-    $this->assertTrue($verification->getStatus(), 'Phone number is verified.');
+    static::assertTrue($verification->getStatus(), 'Phone number is verified.');
   }
 
   /**

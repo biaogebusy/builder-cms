@@ -1,5 +1,5 @@
 entity.menu.view_modes_settings:
-  title: 'View Modes Settings'
+  title: 'Manage view modes'
   route_name: entity.menu.view_modes_settings
   base_route: entity.menu.edit_form
   weight: 10

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\Tests\BrowserTestBase;
@@ -12,9 +14,7 @@ use Drupal\Tests\BrowserTestBase;
 class ThemeInfoTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['theme_test'];
 
@@ -56,9 +56,9 @@ class ThemeInfoTest extends BrowserTestBase {
   }
 
   /**
-   * Tests stylesheets-remove.
+   * Tests libraries-override.
    */
-  public function testStylesheets() {
+  public function testStylesheets(): void {
     $this->themeInstaller->install(['test_basetheme', 'test_subtheme']);
     $this->config('system.theme')
       ->set('default', 'test_subtheme')
@@ -87,7 +87,7 @@ class ThemeInfoTest extends BrowserTestBase {
   /**
    * Tests that changes to the info file are picked up.
    */
-  public function testChanges() {
+  public function testChanges(): void {
     $this->themeInstaller->install(['test_theme']);
     $this->config('system.theme')->set('default', 'test_theme')->save();
     $this->themeManager->resetActiveTheme();

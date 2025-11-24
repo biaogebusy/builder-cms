@@ -21,6 +21,12 @@ function locale_install() {
     \Drupal::configFactory()->getEditable('locale.settings')->set('translation.path', $directory)->save();
   }
   \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+
+  $t_args = [
+    ':translate_status' => base_path() . 'admin/reports/translations/check?destination=' . urlencode(base_path() . 'admin/reports/translations'),
+  ];
+  $message = t('Check <a href=":translate_status">available translations</a> for your language(s).', $t_args);
+  \Drupal::messenger()->addStatus($message);
 }
 
 /**
@@ -184,6 +190,7 @@ function locale_schema() {
     ],
     'indexes' => [
       'string_type' => ['sid', 'type'],
+      'type_name' => ['type', 'name'],
     ],
   ];
 
@@ -230,12 +237,14 @@ function locale_schema() {
         'not null' => FALSE,
         'default' => 0,
         'description' => 'Unix timestamp of the imported file.',
+        'size' => 'big',
       ],
       'last_checked' => [
         'type' => 'int',
         'not null' => FALSE,
         'default' => 0,
         'description' => 'Unix timestamp of the last time this translation was confirmed to be the most recent release available.',
+        'size' => 'big',
       ],
     ],
     'primary key' => ['project', 'langcode'],
@@ -308,19 +317,95 @@ function locale_requirements($phase) {
 }
 
 /**
- * Delete an unnecessary index on the locales_location table.
+ * Implements hook_update_last_removed().
  */
-function locale_update_9101() {
-  $schema = \Drupal::database()->schema();
-  $table = 'locales_location';
-  if ($schema->indexExists($table, 'string_id')) {
-    $schema->dropIndex($table, 'string_id');
+function locale_update_last_removed() {
+  return 9101;
+}
+
+/**
+ * Remove the year 2038 date limitation.
+ */
+function locale_update_10100(&$sandbox = NULL) {
+  $connection = \Drupal::database();
+  if ($connection->schema()->tableExists('locale_file') && $connection->databaseType() != 'sqlite') {
+    $new = [
+      'type' => 'int',
+      'not null' => FALSE,
+      'default' => 0,
+      'description' => 'Unix timestamp of the imported file.',
+      'size' => 'big',
+    ];
+    $connection->schema()->changeField('locale_file', 'timestamp', 'timestamp', $new);
+
+    $new = [
+      'type' => 'int',
+      'not null' => FALSE,
+      'default' => 0,
+      'description' => 'Unix timestamp of the last time this translation was confirmed to be the most recent release available.',
+      'size' => 'big',
+    ];
+    $connection->schema()->changeField('locale_file', 'last_checked', 'last_checked', $new);
   }
 }
 
 /**
- * Implements hook_update_last_removed().
+ * Add an index on locales_location on type and name.
  */
-function locale_update_last_removed() {
-  return 8800;
+function locale_update_10300() {
+  $spec = [];
+  $spec['locales_location'] = [
+    'description' => 'Location information for source strings.',
+    'fields' => [
+      'lid' => [
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Unique identifier of this location.',
+      ],
+      'sid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Unique identifier of this string.',
+      ],
+      'type' => [
+        'type' => 'varchar_ascii',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The location type (file, config, path, etc).',
+      ],
+      'name' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Type dependent location information (file name, path, etc).',
+      ],
+      'version' => [
+        'type' => 'varchar_ascii',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => 'none',
+        'description' => 'Version of Drupal where the location was found.',
+      ],
+    ],
+    'primary key' => ['lid'],
+    'foreign keys' => [
+      'locales_source' => [
+        'table' => 'locales_source',
+        'columns' => ['sid' => 'lid'],
+      ],
+    ],
+    'indexes' => [
+      'string_type' => ['sid', 'type'],
+      'type_name' => ['type', 'name'],
+    ],
+  ];
+  $schema = \Drupal::database()->schema();
+  // If the update has been manually applied, recreate the index using the
+  // current schema.
+  if ($schema->indexExists('locales_location', 'type_name')) {
+    $schema->dropIndex('locales_location', 'type_name');
+  }
+  $schema->addIndex('locales_location', 'type_name', ['type', 'name'], $spec['locales_location']);
 }

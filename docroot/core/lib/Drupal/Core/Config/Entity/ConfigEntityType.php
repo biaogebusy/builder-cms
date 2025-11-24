@@ -18,11 +18,13 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
    *
    * @see \Drupal\Core\Config\Entity\ConfigEntityTypeInterface::getConfigPrefix()
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $config_prefix;
 
   /**
    * {@inheritdoc}
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $static_cache = FALSE;
 
   /**
@@ -30,6 +32,7 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $lookup_keys = [];
 
   /**
@@ -37,6 +40,7 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $config_export = [];
 
   /**
@@ -95,28 +99,28 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
    * {@inheritdoc}
    */
   public function getBaseTable() {
-    return FALSE;
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRevisionDataTable() {
-    return FALSE;
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRevisionTable() {
-    return FALSE;
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDataTable() {
-    return FALSE;
+    return NULL;
   }
 
   /**
@@ -181,6 +185,25 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
    */
   public function getLookupKeys() {
     return $this->lookup_keys;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConstraints() {
+    $constraints = parent::getConstraints();
+
+    // If there is an ID key for this config entity type, make it immutable by
+    // default. Individual config entities can override this with an
+    // `ImmutableProperties` constraint in their definition that is either empty,
+    // or with an alternative set of immutable properties.
+    $id_key = $this->getKey('id');
+    if ($id_key) {
+      $constraints += [
+        'ImmutableProperties' => [$id_key],
+      ];
+    }
+    return $constraints;
   }
 
 }

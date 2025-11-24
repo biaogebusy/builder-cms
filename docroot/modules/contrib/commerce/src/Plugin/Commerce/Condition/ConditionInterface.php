@@ -32,6 +32,16 @@ interface ConditionInterface extends ConfigurableInterface, DependentPluginInter
   public function getDisplayLabel();
 
   /**
+   * Gets the condition description.
+   *
+   * Shown in the condition UI when enabling/disabling a condition.
+   *
+   * @return string|null
+   *   The condition description, NULL if not set.
+   */
+  public function getDescription(): ?string;
+
+  /**
    * Gets the condition entity type ID.
    *
    * This is the entity type ID of the entity passed to evaluate().

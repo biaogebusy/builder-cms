@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   api = "https://www.drupal.org/project/media_library_form_element",
  *   label = @Translation("Media library"),
  *   description = @Translation("Provides a form element for media library."),
- *   category = @Translation("Entity reference elements"),
+ *   category = "Entity reference elements",
  *   dependencies = {
  *     "media_library_form_element",
  *   },
@@ -88,7 +88,7 @@ class MediaLibrary extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  public function prepare(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
     $element['#allowed_bundles'] = $this->getMediaTypes($element);
@@ -130,7 +130,7 @@ class MediaLibrary extends WebformElementBase {
   /**
    * {@inheritdoc}
    */
-  protected function prepareElementValidateCallbacks(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
+  protected function prepareElementValidateCallbacks(array &$element, ?WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepareElementValidateCallbacks($element, $webform_submission);
 
     $element['#element_validate'][] = [get_class($this), 'validateMediaLibrary'];
@@ -165,7 +165,7 @@ class MediaLibrary extends WebformElementBase {
       ->condition('bundle', array_filter($element['#bundles']), 'IN')
       ->range(0, 50);
 
-    $result = $query->execute();
+    $result = $query->accessCheck(TRUE)->execute();
 
     if (!empty($result)) {
       return array_rand($result);

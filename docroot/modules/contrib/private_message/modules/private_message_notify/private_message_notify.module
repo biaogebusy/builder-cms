@@ -3,11 +3,9 @@
 /**
  * @file
  * Primary module hooks for Private Message Notify module.
- *
- * @DCG
- * This file is no longer required in Drupal 8.
- * @see https://www.drupal.org/node/2217931
  */
+
+declare(strict_types=1);
 
 use Drupal\private_message\Entity\PrivateMessageInterface;
 use Drupal\private_message\Entity\PrivateMessageThreadInterface;
@@ -15,7 +13,7 @@ use Drupal\private_message\Entity\PrivateMessageThreadInterface;
 /**
  * Implements hook_private_message_new_message().
  */
-function private_message_notify_private_message_new_message(PrivateMessageInterface $privateMessage, PrivateMessageThreadInterface $thread) {
+function private_message_notify_private_message_new_message(PrivateMessageInterface $privateMessage, PrivateMessageThreadInterface $thread): void {
   /** @var \Drupal\private_message_notify\Service\PrivateMessageNotifierInterface $notifier */
   $notifier = \Drupal::service('private_message_notify.notifier');
   $notifier->notify($privateMessage, $thread);

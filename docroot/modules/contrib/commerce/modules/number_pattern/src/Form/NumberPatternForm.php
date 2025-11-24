@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_number_pattern\Form;
 
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_number_pattern\NumberPatternManager;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\InlineFormManager;
+use Drupal\commerce_number_pattern\NumberPatternManager;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -180,10 +180,12 @@ class NumberPatternForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $status = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->messenger()->addMessage($this->t('Saved the %label number pattern.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.commerce_number_pattern.collection');
+
+    return $status;
   }
 
 }

@@ -1,0 +1,8 @@
+parameters:
+  level: 1
+  ignoreErrors:
+    # new static() is a best practice in Drupal, so we cannot fix that.
+    - "#^Unsafe usage of new static#"
+    # Fix this when we no longer support Drupal 9.
+    # See https://www.drupal.org/node/2932520
+    - "#^Call to deprecated function watchdog_exception#"

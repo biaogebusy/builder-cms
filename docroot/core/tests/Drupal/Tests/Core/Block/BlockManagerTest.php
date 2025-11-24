@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Block;
 
 use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
@@ -79,14 +81,13 @@ class BlockManagerTest extends UnitTestCase {
     ]);
     // Force the discovery object onto the block manager.
     $property = new \ReflectionProperty(BlockManager::class, 'discovery');
-    $property->setAccessible(TRUE);
     $property->setValue($this->blockManager, $discovery->reveal());
   }
 
   /**
    * @covers ::getDefinitions
    */
-  public function testDefinitions() {
+  public function testDefinitions(): void {
     $definitions = $this->blockManager->getDefinitions();
     $this->assertSame(['broken', 'block1', 'block2', 'block3'], array_keys($definitions));
   }
@@ -94,7 +95,7 @@ class BlockManagerTest extends UnitTestCase {
   /**
    * @covers ::getSortedDefinitions
    */
-  public function testSortedDefinitions() {
+  public function testSortedDefinitions(): void {
     $definitions = $this->blockManager->getSortedDefinitions();
     $this->assertSame(['block2', 'block3', 'block1'], array_keys($definitions));
   }
@@ -102,7 +103,7 @@ class BlockManagerTest extends UnitTestCase {
   /**
    * @covers ::getGroupedDefinitions
    */
-  public function testGroupedDefinitions() {
+  public function testGroupedDefinitions(): void {
     $definitions = $this->blockManager->getGroupedDefinitions();
     $this->assertSame(['Group 1', 'Group 2'], array_keys($definitions));
     $this->assertSame(['block2'], array_keys($definitions['Group 1']));
@@ -112,8 +113,8 @@ class BlockManagerTest extends UnitTestCase {
   /**
    * @covers ::handlePluginNotFound
    */
-  public function testHandlePluginNotFound() {
-    $this->logger->warning('The "%plugin_id" was not found', ['%plugin_id' => 'invalid'])->shouldBeCalled();
+  public function testHandlePluginNotFound(): void {
+    $this->logger->warning('The "%plugin_id" block plugin was not found', ['%plugin_id' => 'invalid'])->shouldBeCalled();
     $plugin = $this->blockManager->createInstance('invalid');
     $this->assertSame('broken', $plugin->getPluginId());
   }

@@ -63,7 +63,7 @@ class EntityToJsonApi {
     HttpKernelInterface $http_kernel,
     ResourceTypeRepositoryInterface $resource_type_repository,
     SessionInterface $session,
-    RequestStack $request_stack
+    RequestStack $request_stack,
   ) {
     $this->httpKernel = $http_kernel;
     $this->resourceTypeRepository = $resource_type_repository;

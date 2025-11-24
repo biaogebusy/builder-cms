@@ -108,7 +108,7 @@ class ProductAttributeTest extends ProductBrowserTestBase {
       'variation_types[default]' => 'default',
       'values[0][entity][name][0][value]' => 'Red',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->drupalGet('admin/commerce/config/product-variation-types/default/edit/fields');
     $this->assertSession()->pageTextContains('attribute_color');
 
@@ -116,7 +116,7 @@ class ProductAttributeTest extends ProductBrowserTestBase {
     $edit = [
       'variation_types[default]' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('admin/commerce/config/product-variation-types/default/edit/fields');
     $this->assertSession()->pageTextNotContains('attribute_color');
   }

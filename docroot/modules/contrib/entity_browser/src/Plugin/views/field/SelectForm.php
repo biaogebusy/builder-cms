@@ -126,7 +126,7 @@ class SelectForm extends FieldPluginBase {
 
         $render[$this->options['id']][$value] = [
           '#type' => 'checkbox',
-          '#title' => $this->t('Select this item'),
+          '#title' => trim($this->t('Select item @label', ['@label' => $row->_entity?->label() ?? ''])),
           '#title_display' => 'invisible',
           '#return_value' => $value,
           '#attributes' => ['name' => "entity_browser_select[$value]"],

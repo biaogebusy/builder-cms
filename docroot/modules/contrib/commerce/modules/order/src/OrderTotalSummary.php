@@ -3,24 +3,24 @@
 namespace Drupal\commerce_order;
 
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Event\OrderSummaryBuildTotalsEvent;
+use Drupal\commerce_order\Event\OrderEvents;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class OrderTotalSummary implements OrderTotalSummaryInterface {
 
   /**
-   * The adjustment transformer.
-   *
-   * @var \Drupal\commerce_order\AdjustmentTransformerInterface
-   */
-  protected $adjustmentTransformer;
-
-  /**
    * Constructs a new OrderTotalSummary object.
    *
-   * @param \Drupal\commerce_order\AdjustmentTransformerInterface $adjustment_transformer
+   * @param \Drupal\commerce_order\AdjustmentTransformerInterface $adjustmentTransformer
    *   The adjustment transformer.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(AdjustmentTransformerInterface $adjustment_transformer) {
-    $this->adjustmentTransformer = $adjustment_transformer;
+  public function __construct(
+    protected AdjustmentTransformerInterface $adjustmentTransformer,
+    protected EventDispatcherInterface $eventDispatcher,
+  ) {
   }
 
   /**
@@ -43,12 +43,17 @@ class OrderTotalSummary implements OrderTotalSummaryInterface {
     foreach ($adjustments as $index => $adjustment) {
       $adjustments[$index]['total'] = $adjustments[$index]['amount'];
     }
-
-    return [
+    // Create the totals array:
+    $totals = [
       'subtotal' => $order->getSubtotalPrice(),
       'adjustments' => $adjustments,
       'total' => $order->getTotalPrice(),
     ];
+    // Allow modifying the totals array built above via event subscribers.
+    $event = new OrderSummaryBuildTotalsEvent($order, $totals);
+    $this->eventDispatcher->dispatch($event, OrderEvents::ORDER_SUMMARY_BUILD_TOTALS);
+
+    return $event->getTotals();
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render;
 
 use Drupal\Core\Security\UntrustedCallbackException;
@@ -15,8 +17,8 @@ class RendererCallbackTest extends RendererTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->controllerResolver->expects($this->any())
-      ->method('getControllerFromDefinition')
+    $this->callableResolver->expects($this->any())
+      ->method('getCallableFromDefinition')
       ->willReturnArgument(0);
   }
 
@@ -25,12 +27,12 @@ class RendererCallbackTest extends RendererTestBase {
    *
    * @param array $render_array
    *   The render array with a callback.
-   * @param $expected_deprecation
+   * @param string $expected_deprecation
    *   The expected deprecation message triggered whilst rendering.
    *
    * @dataProvider providerTestCallback
    */
-  public function testCallback(array $render_array, $expected_deprecation) {
+  public function testCallback(array $render_array, string $expected_deprecation): void {
     $this->expectException(UntrustedCallbackException::class);
     $this->expectExceptionMessage($expected_deprecation);
     $this->renderer->renderRoot($render_array);
@@ -39,26 +41,38 @@ class RendererCallbackTest extends RendererTestBase {
   /**
    * Data provider for testCallback().
    */
-  public function providerTestCallback() {
+  public static function providerTestCallback(): array {
     return [
       'Procedural function pre render' => [
+        // We specifically test an untrusted callback here. We need to let
+        // PHPStan ignore it.
+        // @phpstan-ignore-next-line
         ['#pre_render' => ['\Drupal\Tests\Core\Render\callback'], '#type' => 'container'],
         'Render #pre_render callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was \Drupal\Tests\Core\Render\callback. See https://www.drupal.org/node/2966725',
       ],
       'Static object method post render' => [
+        // We specifically test an invalid callback here. We need to let PHPStan
+        // ignore it.
+        // @phpstan-ignore-next-line
         ['#post_render' => ['\Drupal\Tests\Core\Render\RendererCallbackTest::renderCallback'], '#type' => 'container'],
         'Render #post_render callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was \Drupal\Tests\Core\Render\RendererCallbackTest::renderCallback. See https://www.drupal.org/node/2966725',
       ],
       'Object method access callback' => [
-        ['#access_callback' => [$this, 'renderCallback'], '#type' => 'container'],
+        // We specifically test an invalid callback here. We need to let PHPStan
+        // ignore it.
+        // @phpstan-ignore-next-line
+        ['#access_callback' => [new static('test'), 'renderCallback'], '#type' => 'container'],
         'Render #access_callback callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was Drupal\Tests\Core\Render\RendererCallbackTest::renderCallback. See https://www.drupal.org/node/2966725',
       ],
       'Procedural function lazy builder' => [
+        // We specifically test an untrusted callback here. We need to let
+        // PHPStan ignore it.
+        // @phpstan-ignore-next-line
         ['#lazy_builder' => ['\Drupal\Tests\Core\Render\callback', []]],
         'Render #lazy_builder callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was \Drupal\Tests\Core\Render\callback. See https://www.drupal.org/node/2966725',
       ],
       'Invokable object access callback' => [
-        ['#access_callback' => $this, '#type' => 'container'],
+        ['#access_callback' => new static('test'), '#type' => 'container'],
         'Render #access_callback callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was Drupal\Tests\Core\Render\RendererCallbackTest. See https://www.drupal.org/node/2966725',
       ],
     ];

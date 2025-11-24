@@ -8,6 +8,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Render\Element;
@@ -21,25 +22,24 @@ use Drupal\sms\Provider\PhoneNumberVerificationInterface;
 class AdminSettingsForm extends ConfigFormBase {
 
   /**
-   * Phone number verification provider.
-   *
-   * @var \Drupal\sms\Provider\PhoneNumberVerificationInterface
-   */
-  protected $phoneNumberVerificationProvider;
-
-  /**
    * Constructs a new AdminSettingsForm.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The factory for configuration objects.
-   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification_provider
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
+   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phoneNumberVerificationProvider
    *   The phone number verification provider.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, PhoneNumberVerificationInterface $phone_number_verification_provider, MessengerInterface $messenger) {
-    parent::__construct($config_factory);
-    $this->phoneNumberVerificationProvider = $phone_number_verification_provider;
+  public function __construct(
+    ConfigFactoryInterface $configFactory,
+    TypedConfigManagerInterface $typedConfigManager,
+    protected PhoneNumberVerificationInterface $phoneNumberVerificationProvider,
+    MessengerInterface $messenger,
+  ) {
+    parent::__construct($configFactory, $typedConfigManager);
     $this->setMessenger($messenger);
   }
 
@@ -49,6 +49,7 @@ class AdminSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('sms.phone_number.verification'),
       $container->get('messenger'),
     );
@@ -143,7 +144,7 @@ class AdminSettingsForm extends ConfigFormBase {
         '#type' => 'select',
         '#title' => $this->t('Start time for @day', ['@day' => $day]),
         '#title_display' => 'invisible',
-        '#default_value' => isset($day_defaults[$day_lower]['start']) ? $day_defaults[$day_lower]['start'] : -1,
+        '#default_value' => $day_defaults[$day_lower]['start'] ?? -1,
         '#options' => $hours,
         '#empty_option' => $this->t('- Suspend messages for this day -'),
         '#empty_value' => -1,
@@ -152,7 +153,7 @@ class AdminSettingsForm extends ConfigFormBase {
         '#type' => 'select',
         '#title' => $this->t('Start time for @day', ['@day' => $day]),
         '#title_display' => 'invisible',
-        '#default_value' => isset($day_defaults[$day_lower]['end']) ? $day_defaults[$day_lower]['end'] : 24,
+        '#default_value' => $day_defaults[$day_lower]['end'] ?? 24,
         '#options' => $end_hours,
         '#states' => [
           'invisible' => [

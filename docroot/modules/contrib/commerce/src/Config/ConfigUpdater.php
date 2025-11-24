@@ -19,20 +19,6 @@ class ConfigUpdater implements ConfigUpdaterInterface {
   use StringTranslationTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The active config storage.
-   *
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $activeConfigStorage;
-
-  /**
    * The extension config storage for config/install config items.
    *
    * @var \Drupal\Core\Config\StorageInterface
@@ -47,13 +33,6 @@ class ConfigUpdater implements ConfigUpdaterInterface {
   protected $extensionOptionalConfigStorage;
 
   /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * List of current config entity types, keyed by prefix.
    *
    * @var string[]
@@ -63,19 +42,23 @@ class ConfigUpdater implements ConfigUpdaterInterface {
   /**
    * Constructs a new ConfigUpdater object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Config\StorageInterface $active_config_storage
+   * @param \Drupal\Core\Config\StorageInterface $activeConfigStorage
    *   The active config storage.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, StorageInterface $active_config_storage, ConfigFactoryInterface $config_factory) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->activeConfigStorage = $active_config_storage;
-    $this->extensionConfigStorage = new ExtensionInstallStorage($active_config_storage, InstallStorage::CONFIG_INSTALL_DIRECTORY, StorageInterface::DEFAULT_COLLECTION, TRUE, \Drupal::installProfile());
-    $this->extensionOptionalConfigStorage = new ExtensionInstallStorage($active_config_storage, InstallStorage::CONFIG_OPTIONAL_DIRECTORY, StorageInterface::DEFAULT_COLLECTION, TRUE, \Drupal::installProfile());
-    $this->configFactory = $config_factory;
+   * @param string|false|null $install_profile
+   *   The name of the currently active installation profile.
+ */
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected StorageInterface $activeConfigStorage,
+    protected ConfigFactoryInterface $configFactory,
+    $install_profile,
+  ) {
+    $this->extensionConfigStorage = new ExtensionInstallStorage($activeConfigStorage, InstallStorage::CONFIG_INSTALL_DIRECTORY, StorageInterface::DEFAULT_COLLECTION, TRUE, $install_profile);
+    $this->extensionOptionalConfigStorage = new ExtensionInstallStorage($activeConfigStorage, InstallStorage::CONFIG_OPTIONAL_DIRECTORY, StorageInterface::DEFAULT_COLLECTION, TRUE, $install_profile);
 
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type => $definition) {
       if ($definition->entityClassImplements(ConfigEntityInterface::class)) {

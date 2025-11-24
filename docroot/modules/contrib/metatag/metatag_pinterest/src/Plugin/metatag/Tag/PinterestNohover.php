@@ -24,7 +24,7 @@ class PinterestNohover extends MetaNameBase {
   /**
    * {@inheritdoc}
    */
-  public function form(array $element = []) {
+  public function form(array $element = []): array {
     $form = [
       '#type' => 'checkbox',
       '#title' => $this->label(),
@@ -36,6 +36,27 @@ class PinterestNohover extends MetaNameBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestFormXpath(): array {
+    return ["//input[@name='{$this->id}' and @type='checkbox']"];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputExistsXpath(): array {
+    return ["//" . $this->htmlTag . "[@" . $this->htmlNameAttribute . "='{$this->name}' and @content='nohover']"];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputValuesXpath(array $values): array {
+    return ["//" . $this->htmlTag . "[@" . $this->htmlNameAttribute . "='{$this->name}' and @content='nohover']"];
   }
 
 }

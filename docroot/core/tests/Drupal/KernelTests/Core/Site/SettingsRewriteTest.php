@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Site;
 
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Site\SettingsEditor;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
- * Tests the drupal_rewrite_settings() function.
+ * Tests the SettingsEditor::rewrite() function.
  *
  * @group system
  */
 class SettingsRewriteTest extends KernelTestBase {
 
   /**
-   * Tests the drupal_rewrite_settings() function.
+   * @covers \Drupal\Core\Site\SettingsEditor::rewrite
    */
-  public function testDrupalRewriteSettings() {
+  public function testDrupalRewriteSettings(): void {
     include_once $this->root . '/core/includes/install.inc';
     $site_path = $this->container->getParameter('site.path');
     $tests = [
@@ -98,7 +101,7 @@ EXPECTED
     foreach ($tests as $test) {
       $filename = Settings::get('file_public_path', $site_path . '/files') . '/mock_settings.php';
       file_put_contents($filename, "<?php\n" . $test['original'] . "\n");
-      drupal_rewrite_settings($test['settings'], $filename);
+      SettingsEditor::rewrite($filename, $test['settings']);
       $this->assertEquals("<?php\n" . $test['expected'] . "\n", file_get_contents($filename));
     }
 
@@ -118,7 +121,7 @@ EXPECTED
     file_put_contents($filename, "");
 
     // Write the setting to the file.
-    drupal_rewrite_settings($test['settings'], $filename);
+    SettingsEditor::rewrite($filename, $test['settings']);
 
     // Check that the result is just the php opening tag and the settings.
     $this->assertEquals("<?php\n" . $test['expected'] . "\n", file_get_contents($filename));

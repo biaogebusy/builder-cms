@@ -2,10 +2,10 @@
 
 namespace Drupal\blazy\Views;
 
-use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
 // @todo enable use Drupal\blazy\Field\BlazyElementTrait;
 use Drupal\Core\Url;
+use Drupal\blazy\Blazy;
+use Drupal\blazy\internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -36,7 +36,7 @@ abstract class BlazyStyleBase extends BlazyStyleVanilla implements BlazyStyleBas
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
@@ -305,8 +305,6 @@ abstract class BlazyStyleBase extends BlazyStyleVanilla implements BlazyStyleBas
 
       $tn_url = Blazy::url($tn_uri, $style);
 
-      // @todo remove the first here.
-      $sets['thumbnail_uri'] = $tn_uri;
       $blazies->set('thumbnail.id', $tn_style)
         ->set('thumbnail.uri', $tn_uri)
         ->set('thumbnail.url', $tn_url)

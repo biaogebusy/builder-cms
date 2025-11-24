@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -44,7 +46,7 @@ class LocaleTranslationProjectsTest extends KernelTestBase {
   /**
    * Tests locale_translation_clear_cache_projects().
    */
-  public function testLocaleTranslationClearCacheProjects() {
+  public function testLocaleTranslationClearCacheProjects(): void {
     $this->moduleHandler->loadInclude('locale', 'inc', 'locale.translation');
 
     $expected = [];

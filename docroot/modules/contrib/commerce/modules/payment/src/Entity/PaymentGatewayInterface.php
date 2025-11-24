@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_payment\Entity;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Defines the interface for payment gateway configuration entities.

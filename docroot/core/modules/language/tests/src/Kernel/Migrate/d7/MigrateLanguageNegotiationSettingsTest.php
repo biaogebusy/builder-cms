@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Migrate\d7;
 
 use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
@@ -20,7 +22,7 @@ class MigrateLanguageNegotiationSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of language types variables to language.types.yml.
    */
-  public function testLanguageTypes() {
+  public function testLanguageTypes(): void {
     $this->executeMigrations([
       'language',
       'd7_language_negotiation_settings',
@@ -52,7 +54,7 @@ class MigrateLanguageNegotiationSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migration with prefix negotiation.
    */
-  public function testLanguageNegotiationWithPrefix() {
+  public function testLanguageNegotiationWithPrefix(): void {
     $this->sourceDatabase->update('languages')
       ->fields(['domain' => ''])
       ->execute();
@@ -88,7 +90,7 @@ class MigrateLanguageNegotiationSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migration with domain negotiation.
    */
-  public function testLanguageNegotiationWithDomain() {
+  public function testLanguageNegotiationWithDomain(): void {
     $this->sourceDatabase->update('variable')
       ->fields(['value' => serialize(1)])
       ->condition('name', 'locale_language_negotiation_url_part')
@@ -116,7 +118,7 @@ class MigrateLanguageNegotiationSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests the migration with non-existent variables.
    */
-  public function testLanguageNegotiationWithNonExistentVariables() {
+  public function testLanguageNegotiationWithNonExistentVariables(): void {
     $this->sourceDatabase->delete('variable')
       ->condition('name', ['local_language_negotiation_url_part', 'local_language_negotiation_session_param'], 'IN')
       ->execute();

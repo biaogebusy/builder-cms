@@ -2,13 +2,31 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\ConditionManagerInterface;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the base class for order item offers.
  */
 abstract class OrderItemPromotionOfferBase extends PromotionOfferBase implements OrderItemPromotionOfferInterface {
+
+  /**
+   * The condition manager.
+   *
+   * @var \Drupal\commerce\ConditionManagerInterface
+   */
+  protected ConditionManagerInterface $conditionManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->conditionManager = $container->get('plugin.manager.commerce_condition');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -77,10 +95,9 @@ abstract class OrderItemPromotionOfferBase extends PromotionOfferBase implements
    * {@inheritdoc}
    */
   public function getConditions() {
-    $plugin_manager = \Drupal::service('plugin.manager.commerce_condition');
     $conditions = [];
     foreach ($this->configuration['conditions'] as $condition) {
-      $conditions[] = $plugin_manager->createInstance($condition['plugin'], $condition['configuration']);
+      $conditions[] = $this->conditionManager->createInstance($condition['plugin'], $condition['configuration']);
     }
     return $conditions;
   }

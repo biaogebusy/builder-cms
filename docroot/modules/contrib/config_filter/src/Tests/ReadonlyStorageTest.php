@@ -2,10 +2,10 @@
 
 namespace Drupal\config_filter\Tests;
 
-use Drupal\config_filter\Config\ReadOnlyStorage;
-use Drupal\config_filter\Exception\UnsupportedMethod;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\config_filter\Config\ReadOnlyStorage;
+use Drupal\config_filter\Exception\UnsupportedMethod;
 use Prophecy\Argument;
 use Prophecy\Prophecy\MethodProphecy;
 
@@ -54,16 +54,17 @@ class ReadonlyStorageTest extends UnitTestCase {
    * @return array
    *   The data.
    */
-  public function readMethodsProvider() {
+  public static function readMethodsProvider() {
+    $instance = new self("test");
     return [
-      ['exists', [$this->randomMachineName()], $this->randomMachineName()],
-      ['read', [$this->randomMachineName()], $this->randomArray()],
-      ['readMultiple', [$this->randomArray()], $this->randomArray()],
-      ['encode', [$this->randomArray()], $this->randomMachineName()],
-      ['decode', [$this->randomMachineName()], $this->randomArray()],
-      ['listAll', [$this->randomMachineName()], $this->randomArray()],
-      ['getAllCollectionNames', [], $this->randomArray()],
-      ['getCollectionName', [], $this->randomMachineName()],
+      ['exists', [$instance->randomMachineName()], $instance->randomMachineName()],
+      ['read', [$instance->randomMachineName()], $instance->randomArray()],
+      ['readMultiple', [$instance->randomArray()], $instance->randomArray()],
+      ['encode', [$instance->randomArray()], $instance->randomMachineName()],
+      ['decode', [$instance->randomMachineName()], $instance->randomArray()],
+      ['listAll', [$instance->randomMachineName()], $instance->randomArray()],
+      ['getAllCollectionNames', [], $instance->randomArray()],
+      ['getCollectionName', [], $instance->randomMachineName()],
     ];
   }
 
@@ -116,12 +117,13 @@ class ReadonlyStorageTest extends UnitTestCase {
    * @return array
    *   The data
    */
-  public function writeMethodsProvider() {
+  public static function writeMethodsProvider() {
+    $instance = new self("test");
     return [
-      ['write', [$this->randomMachineName(), $this->randomArray()]],
-      ['delete', [$this->randomMachineName()]],
-      ['rename', [$this->randomMachineName(), $this->randomMachineName()]],
-      ['deleteAll', [$this->randomMachineName()]],
+      ['write', [$instance->randomMachineName(), $instance->randomArray()]],
+      ['delete', [$instance->randomMachineName()]],
+      ['rename', [$instance->randomMachineName(), $instance->randomMachineName()]],
+      ['deleteAll', [$instance->randomMachineName()]],
     ];
   }
 

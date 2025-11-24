@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HA",
+		"Hebi Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Heshan Qu": {
+			"local_name": "鹤山区"
+		},
+		"Xun Xian": {
+			"local_name": "浚县"
+		},
+		"Qibin Qu": {
+			"local_name": "淇滨区"
+		},
+		"Qi Xian": {
+			"local_name": "淇县"
+		},
+		"Shancheng Qu": {
+			"local_name": "山城区"
+		}
+	}
+}

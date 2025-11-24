@@ -4,8 +4,8 @@ namespace Drupal\metatag\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\metatag\MetatagTagPluginManager;
 use Drupal\metatag\MetatagGroupPluginManager;
+use Drupal\metatag\MetatagTagPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -58,7 +58,7 @@ class MetatagController extends ControllerBase {
    * @return array
    *   The Metatag plugins report page.
    */
-  public function reportPlugins() {
+  public function reportPlugins(): array {
     // Get tags.
     $tag_definitions = $this->tagManager->getDefinitions();
     uasort($tag_definitions, [
@@ -147,6 +147,70 @@ class MetatagController extends ControllerBase {
         '#sticky' => TRUE,
       ];
     }
+
+    // Build metatags info.
+    $metatags_info = [];
+    $metatags_group_rows = [];
+    foreach ($group_definitions as $group_name => $group_definition) {
+      $metatags_group_row = [];
+      if (!empty($build[$group_name]['tags']['#rows'])) {
+        $metatags_number = count($build[$group_name]['tags']['#rows']) / 2;
+      }
+      $metatags_group_row['group_name'] = [
+        'data' => $group_definition['label'] . ' (' . $group_name . ')',
+        'nowrap' => 'nowrap',
+      ];
+      $metatags_group_row['metatags_number'] = [
+        'data' => $metatags_number ?? 0,
+        'nowrap' => 'nowrap',
+      ];
+      $metatags_group_rows[] = $metatags_group_row;
+    }
+    // Add total number of metatags.
+    $metatags_group_rows[] = [
+      'group_name' => [
+        'data' => [
+          'label' => [
+            '#markup' => $this->t('Total number of metatags'),
+            '#prefix' => '<strong>',
+            '#suffix' => '</strong>',
+          ],
+        ],
+        'nowrap' => 'nowrap',
+      ],
+      'metatag_number' => [
+        'data' => count($tag_definitions) ?? 0,
+        'nowrap' => 'nowrap',
+      ],
+    ];
+    // Add total number of groups.
+    $metatags_group_rows[] = [
+      'group_name' => [
+        'data' => [
+          'label' => [
+            '#markup' => $this->t('Total number of groups'),
+            '#prefix' => '<strong>',
+            '#suffix' => '</strong>',
+          ],
+        ],
+        'nowrap' => 'nowrap',
+      ],
+      'group_number' => [
+        'data' => count($group_definitions) ?? 0,
+        'nowrap' => 'nowrap',
+      ],
+    ];
+
+    $metatags_info['info'] = [
+      '#type' => 'table',
+      '#header' => [
+        ['data' => $this->t('Name of group')],
+        ['data' => $this->t('Number of metatags')],
+      ],
+      '#rows' => $metatags_group_rows,
+    ];
+    // Add metatags_info to build.
+    $build = array_merge($metatags_info, $build);
     return $build;
   }
 

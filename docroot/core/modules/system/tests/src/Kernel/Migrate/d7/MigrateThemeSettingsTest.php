@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
@@ -25,7 +27,7 @@ class MigrateThemeSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of theme settings to variables to configuration.
    */
-  public function testMigrateThemeSettings() {
+  public function testMigrateThemeSettings(): void {
     $config = $this->config('olivero.settings');
 
     $this->assertSame('', $config->get('favicon.path'));

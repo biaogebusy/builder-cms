@@ -19,9 +19,6 @@ interface MenuLinkContentServiceInterface {
    *   Menu id is a bundle for menu items that required to be updated.
    * @param bool $extras_enabled
    *   Flag of enabled functionality.
-   *
-   * @return bool
-   *   Success or failed result of update.
    */
   public function updateMenuItemsBundle($menu_id, $extras_enabled = TRUE);
 

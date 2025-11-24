@@ -22,13 +22,18 @@ class ResourceFieldEnhancerManager extends DefaultPluginManager {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler to invoke the alter hook with.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
+  public function __construct(
+    \Traversable $namespaces,
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+  ) {
     parent::__construct(
       'Plugin/jsonapi/FieldEnhancer',
       $namespaces,
       $module_handler,
       'Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerInterface',
-      'Drupal\jsonapi_extras\Annotation\ResourceFieldEnhancer'
+      'Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer',
+      'Drupal\jsonapi_extras\Annotation\ResourceFieldEnhancer',
     );
 
     $this->alterInfo('resource_field_enhancer_info');

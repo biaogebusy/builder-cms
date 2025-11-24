@@ -16,11 +16,13 @@ interface FlagLinkBuilderInterface {
    *   The entity ID for which the link should be shown.
    * @param string $flag_id
    *   The flag ID for which the link should be shown.
+   * @param string|null $view_mode
+   *   (optional) The view mode.
    *
    * @return array
    *   A render array for the action link, empty if the user does not have
    *   access.
    */
-  public function build($entity_type_id, $entity_id, $flag_id);
+  public function build($entity_type_id, $entity_id, $flag_id, $view_mode = NULL);
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Core\Render\Element;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class ValidationTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test'];
 
@@ -27,7 +27,7 @@ class ValidationTest extends BrowserTestBase {
   /**
    * Tests #element_validate and #validate.
    */
-  public function testValidate() {
+  public function testValidate(): void {
     $this->drupalGet('form-test/validate');
     // Verify that #element_validate handlers can alter the form and submitted
     // form values.
@@ -79,7 +79,7 @@ class ValidationTest extends BrowserTestBase {
   /**
    * Tests that a form with a disabled CSRF token can be validated.
    */
-  public function testDisabledToken() {
+  public function testDisabledToken(): void {
     $this->drupalGet('form-test/validate-no-token');
     $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains('The form_test_validate_no_token form has been submitted successfully.');
@@ -88,7 +88,7 @@ class ValidationTest extends BrowserTestBase {
   /**
    * Tests partial form validation through #limit_validation_errors.
    */
-  public function testValidateLimitErrors() {
+  public function testValidateLimitErrors(): void {
     $edit = [
       'test' => 'invalid',
       'test_numeric_index[0]' => 'invalid',
@@ -151,7 +151,7 @@ class ValidationTest extends BrowserTestBase {
   /**
    * Tests #pattern validation.
    */
-  public function testPatternValidation() {
+  public function testPatternValidation(): void {
     $textfield_error = 'One digit followed by lowercase letters field is not in the right format.';
     $tel_error = 'Everything except numbers field is not in the right format.';
     $password_error = 'Password field is not in the right format.';
@@ -217,7 +217,7 @@ class ValidationTest extends BrowserTestBase {
    *
    * @see \Drupal\form_test\Form\FormTestValidateRequiredForm
    */
-  public function testCustomRequiredError() {
+  public function testCustomRequiredError(): void {
     $form = \Drupal::formBuilder()->getForm('\Drupal\form_test\Form\FormTestValidateRequiredForm');
 
     // Verify that a custom #required error can be set.
@@ -234,8 +234,10 @@ class ValidationTest extends BrowserTestBase {
         $this->assertSession()->pageTextNotContains($form[$key]['#title'] . ' field is required.');
         $this->assertSession()->pageTextContains((string) $form[$key]['#form_test_required_error']);
       }
+      if (isset($form[$key]['#title'])) {
+        $this->assertSession()->pageTextNotContains('The submitted value in the ' . $form[$key]['#title'] . ' element is not allowed.');
+      }
     }
-    $this->assertSession()->pageTextNotContains('An illegal choice has been detected. Please contact the site administrator.');
 
     // Verify that no custom validation error appears with valid values.
     $edit = [
@@ -255,8 +257,10 @@ class ValidationTest extends BrowserTestBase {
         $this->assertSession()->pageTextNotContains($form[$key]['#title'] . ' field is required.');
         $this->assertSession()->pageTextNotContains((string) $form[$key]['#form_test_required_error']);
       }
+      if (isset($form[$key]['#title'])) {
+        $this->assertSession()->pageTextNotContains('The submitted value in the ' . $form[$key]['#title'] . ' element is not allowed.');
+      }
     }
-    $this->assertSession()->pageTextNotContains('An illegal choice has been detected. Please contact the site administrator.');
   }
 
 }

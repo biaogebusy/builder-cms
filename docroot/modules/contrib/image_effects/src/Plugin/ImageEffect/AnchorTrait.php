@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 /**
@@ -13,7 +15,7 @@ trait AnchorTrait {
    * @return array
    *   The array of anchor options.
    */
-  protected function anchorOptions() {
+  protected function anchorOptions(): array {
     return [
       'left-top' => $this->t('Top left'),
       'center-top' => $this->t('Top center'),

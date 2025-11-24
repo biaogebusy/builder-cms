@@ -10,9 +10,10 @@ declare(strict_types = 1);
 use Drupal\Core\Config\Entity\ConfigEntityType;
 use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Utility\UpdateException;
 use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface;
 use Drupal\entity_share_client\Entity\Remote;
-use Drupal\Core\Utility\UpdateException;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Implements hook_uninstall().
@@ -66,7 +67,7 @@ function entity_share_client_update_8303() {
   foreach ($remotes as $remote) {
     // Check that the remote config had not already been converted into the new
     // plugin system due to hook_update renaming.
-    if (!is_null($remote->get('auth'))) {
+    if ($remote->get('auth') !== NULL) {
       continue;
     }
 
@@ -93,8 +94,8 @@ function entity_share_client_update_8303() {
       $configuration['uuid'] = $remote->uuid();
     }
 
-    unset($remote->basic_auth_username);
-    unset($remote->basic_auth_password);
+    $remote->basic_auth_username = NULL;
+    $remote->basic_auth_password = NULL;
     $configuration['data'] = [
       'credential_provider' => 'entity_share',
       'storage_key' => $configuration['uuid'],
@@ -134,5 +135,38 @@ function entity_share_client_update_8304() {
 function entity_share_client_update_8305() {
   if (\Drupal::moduleHandler()->moduleExists('diff')) {
     \Drupal::service('module_installer')->install(['entity_share_diff']);
+  }
+}
+
+/**
+ * Creates the new entity import status view.
+ */
+function entity_share_client_update_8306() {
+  // Only create if the import status view doesn't exist and views is enabled.
+  if (\Drupal::moduleHandler()->moduleExists('views') && !\Drupal::service('entity_type.manager')->getStorage('view')->load('entity_share_client_entity_import_status')) {
+    $config_path = \Drupal::service('extension.list.module')->getPath('entity_share_client') . '/config/install/views.view.entity_share_client_entity_import_status.yml';
+    $data = Yaml::parseFile($config_path);
+    \Drupal::configFactory()->getEditable('views.view.entity_share_client_entity_import_status')->setData($data)->save(TRUE);
+    $message = 'The new import status view has been created.';
+  }
+  else {
+    $message = 'Not creating a import status since it already exists.';
+  }
+  return $message;
+}
+
+/**
+ * Init new login path config entry on remotes.
+ */
+function entity_share_client_update_8401() {
+  /** @var \Drupal\entity_share_client\Entity\RemoteInterface[] $remotes */
+  $remotes = Remote::loadMultiple();
+  foreach ($remotes as $remote) {
+    if ($remote->get('login_path') !== NULL) {
+      continue;
+    }
+
+    $remote->set('login_path', 'user/login');
+    $remote->save();
   }
 }

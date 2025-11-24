@@ -74,3 +74,14 @@ field.formatter.settings.commerce_price_calculated:
 
 views.filter.commerce_currency:
   type: views.filter.in_operator
+
+commerce.commerce_condition.plugin.current_currency:
+  type: commerce_condition_configuration
+  mapping:
+    currencies:
+      type: sequence
+      label: 'Currencies'
+      orderby: value
+      sequence:
+        type: string
+        label: 'Currency'

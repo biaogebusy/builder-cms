@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test;
 
 use Drupal\Tests\UnitTestCase;
@@ -38,7 +40,7 @@ class XdebugRequestTraitTest extends UnitTestCase {
    * @return iterable
    *   Test scenarios.
    */
-  public function extractCookiesDataProvider() {
+  public static function extractCookiesDataProvider() {
     yield 'no XDEBUG_CONFIG' => [[], []];
     yield 'empty string XDEBUG_CONFIG' => [['XDEBUG_CONFIG' => ''], []];
     yield 'only space string XDEBUG_CONFIG' => [['XDEBUG_CONFIG' => ' '], []];

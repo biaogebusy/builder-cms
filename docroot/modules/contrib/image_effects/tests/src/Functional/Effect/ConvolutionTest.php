@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
+use Drupal\imagemagick\ArgumentMode;
 
 /**
  * Convolution effect test.
@@ -14,7 +17,7 @@ class ConvolutionTest extends ImageEffectsTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     $toolkits = parent::providerToolkits();
     // @todo This effect does not work on GraphicsMagick.
     unset($toolkits['ImageMagick-graphicsmagick']);
@@ -33,7 +36,7 @@ class ConvolutionTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testConvolutionEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testConvolutionEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $original_uri = $this->getTestImageCopyUri('core/tests/fixtures/files/image-test.png');
@@ -76,9 +79,9 @@ class ConvolutionTest extends ImageEffectsTestBase {
       case 'imagemagick':
         // For the Imagemagick toolkit, check the command line argument has
         // been formatted properly.
-        $find = $image->getToolkit()->arguments()->find('/^./', NULL, ['image_toolkit_operation' => 'convolution']);
-        $arg = array_shift($find);
-        $this->assertEquals("-morphology Convolve '3x3:1,1,1 1,1,1 1,1,1'", $arg['argument']);
+        /** @var \Drupal\imagemagick\Plugin\ImageToolkit\ImagemagickToolkit $toolkit */
+        $toolkit = $image->getToolkit();
+        $this->assertStringContainsString("[-morphology] [Convolve] [3x3:1,1,1 1,1,1 1,1,1]", $toolkit->arguments()->toDebugString(ArgumentMode::PostSource));
         break;
 
     }
@@ -91,7 +94,7 @@ class ConvolutionTest extends ImageEffectsTestBase {
   /**
    * Test convolution effect parameters.
    */
-  public function testConvolutionEffectParameters() {
+  public function testConvolutionEffectParameters(): void {
     // Add convolution effect to the test image style.
     $effect = [
       'id' => 'image_effects_convolution',

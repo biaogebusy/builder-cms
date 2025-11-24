@@ -3,10 +3,10 @@
 namespace Drupal\commerce_price\Form;
 
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 class CurrencyForm extends EntityForm {
 
@@ -137,11 +137,13 @@ class CurrencyForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $currency = $this->entity;
-    $currency->save();
+    $status = $currency->save();
     $this->messenger()->addMessage($this->t('Saved the %label currency.', [
       '%label' => $currency->label(),
     ]));
     $form_state->setRedirect('entity.commerce_currency.collection');
+
+    return $status;
   }
 
 }

@@ -31,7 +31,7 @@ class WebformTranslationConfigManager implements WebformTranslationConfigManager
   use StringTranslationTrait;
 
   /**
-   * A unsaved webfofrm used to get element properties by element type.
+   * A unsaved webform used to get element properties by element type.
    *
    * @var \Drupal\webform\WebformInterface
    */

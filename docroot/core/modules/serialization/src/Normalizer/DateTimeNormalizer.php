@@ -30,11 +30,6 @@ class DateTimeNormalizer extends NormalizerBase implements DenormalizerInterface
   ];
 
   /**
-   * {@inheritdoc}
-   */
-  protected $supportedInterfaceOrClass = DateTimeInterface::class;
-
-  /**
    * The system's date configuration.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
@@ -54,7 +49,7 @@ class DateTimeNormalizer extends NormalizerBase implements DenormalizerInterface
   /**
    * {@inheritdoc}
    */
-  public function normalize($datetime, $format = NULL, array $context = []) {
+  public function normalize($datetime, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     assert($datetime instanceof DateTimeInterface);
     $drupal_date_time = $datetime->getDateTime();
     if ($drupal_date_time === NULL) {
@@ -74,7 +69,7 @@ class DateTimeNormalizer extends NormalizerBase implements DenormalizerInterface
    * @see ::normalize
    * @see \Drupal\Core\Datetime\DrupalDateTime::prepareTimezone()
    *
-   * @returns \DateTimeZone
+   * @return \DateTimeZone
    *   The timezone to use.
    */
   protected function getNormalizationTimezone() {
@@ -85,7 +80,7 @@ class DateTimeNormalizer extends NormalizerBase implements DenormalizerInterface
   /**
    * {@inheritdoc}
    */
-  public function denormalize($data, $class, $format = NULL, array $context = []) {
+  public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     // This only knows how to denormalize datetime strings and timestamps. If
     // something else is received, let validation constraints handle this.
     if (!is_string($data) && !is_numeric($data)) {
@@ -119,7 +114,18 @@ class DateTimeNormalizer extends NormalizerBase implements DenormalizerInterface
    * {@inheritdoc}
    */
   public function hasCacheableSupportsMethod(): bool {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use getSupportedTypes() instead. See https://www.drupal.org/node/3359695', E_USER_DEPRECATED);
+
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [
+      DateTimeInterface::class => TRUE,
+    ];
   }
 
 }

@@ -4,22 +4,21 @@ namespace Drupal\commerce_product\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_product_variation_attributes' widget.
- *
- * @FieldWidget(
- *   id = "commerce_product_variation_attributes",
- *   label = @Translation("Product variation attributes"),
- *   field_types = {
- *     "entity_reference"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_product_variation_attributes",
+  label: new TranslatableMarkup("Product variation attributes"),
+  field_types: ["entity_reference"],
+)]
 class ProductVariationAttributesWidget extends ProductVariationWidgetBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -42,6 +41,41 @@ class ProductVariationAttributesWidget extends ProductVariationWidgetBase implem
    * @var \Drupal\Core\Field\WidgetPluginManager
    */
   protected $fieldWidgetManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultSettings() {
+    return [
+      'hide_single' => FALSE,
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $element = parent::settingsForm($form, $form_state);
+    $element['hide_single'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t("Hide if there's only one product variation"),
+      '#default_value' => $this->getSetting('hide_single'),
+    ];
+
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = parent::settingsSummary();
+    if ($this->getSetting('hide_single')) {
+      $summary[] = $this->t("Hidden if there's only one product variation.");
+    }
+
+    return $summary;
+  }
 
   /**
    * {@inheritdoc}
@@ -76,7 +110,11 @@ class ProductVariationAttributesWidget extends ProductVariationWidgetBase implem
       // If there is 1 variation but there are attribute fields, then the
       // customer should still see the attribute widgets, to know what they're
       // buying (e.g a product only available in the Small size).
-      if (empty($this->attributeFieldManager->getFieldDefinitions($selected_variation->bundle()))) {
+      // If there are no attribute fields, or if the hide_single setting is
+      // enabled, then stop here and hide the attribute widgets.
+      if ($this->getSetting('hide_single') ||
+        empty($this->attributeFieldManager->getFieldDefinitions($selected_variation->bundle()))) {
+        $form_state->set('selected_variation', $selected_variation->id());
         $element['variation'] = [
           '#type' => 'value',
           '#value' => $selected_variation->id(),
@@ -161,6 +199,23 @@ class ProductVariationAttributesWidget extends ProductVariationWidgetBase implem
       }
       if (!isset($element['attributes'][$field_name]['#empty_value'])) {
         $attribute_element['#required'] = TRUE;
+      }
+
+      // During an AJAX rebuild, sometimes the selected radio button won't be
+      // present in the newly rebuilt #options, causing no option to be selected
+      // by default. In that case, select the first radio button as fallback.
+      if ($form_state->isRebuilding() && $attribute_element['#type'] === 'radios') {
+        // Get the selected radio button's key.
+        $key_exists = FALSE;
+        $parents = array_merge($element['#field_parents'], [$items->getName(), $delta, 'attributes', $field_name]);
+        $selected_radio_key = NestedArray::getValue($form_state->getUserInput(), $parents, $key_exists);
+
+        // Check if it doesn't exist in the #options.
+        if ($key_exists && !isset($attribute_element['#options'][$selected_radio_key])) {
+          // Set the first radio button as selected in the $form_state.
+          $first_radio_key = array_key_first($attribute_element['#options']);
+          NestedArray::setValue($form_state->getUserInput(), $parents, $first_radio_key);
+        }
       }
 
       $element['attributes'][$field_name] = $attribute_element;

@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\range\Kernel\Migrate\d6;
 
-use Drupal\node\Entity\Node;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldStorageConfigInterface;
+use Drupal\node\Entity\Node;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
 /**
@@ -69,7 +69,7 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
   /**
    * Data provider for testFieldMigration.
    */
-  public function fieldMigrationDataProvider() {
+  public static function fieldMigrationDataProvider() {
     return [
       'range_decimal' => [
         'node.field_decimal',
@@ -107,7 +107,7 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
   /**
    * Data provider for testFieldInstanceMigration.
    */
-  public function fieldInstanceMigrationDataProvider() {
+  public static function fieldInstanceMigrationDataProvider() {
     return [
       'range_decimal' => [
         'node.page.field_decimal',
@@ -169,7 +169,7 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
   /**
    * Data provider for testFieldWidgetMigration.
    */
-  public function fieldWidgetMigrationDataProvider() {
+  public static function fieldWidgetMigrationDataProvider() {
     return [
       'range_decimal' => [
         'node.page.default',
@@ -216,7 +216,7 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
   /**
    * Data provider for testFieldFormatterMigration.
    */
-  public function fieldFormatterMigrationDataProvider() {
+  public static function fieldFormatterMigrationDataProvider() {
     return [
       // Range decimal field type.
       'unformatted range_decimal' => [
@@ -376,7 +376,7 @@ class MigrateRangeFieldTest extends MigrateDrupal6TestBase {
   /**
    * Data provider for testFieldDataMigration.
    */
-  public function fieldDataMigrationDataProvider() {
+  public static function fieldDataMigrationDataProvider() {
     return [
       'range_decimal' => [
         'field_decimal',

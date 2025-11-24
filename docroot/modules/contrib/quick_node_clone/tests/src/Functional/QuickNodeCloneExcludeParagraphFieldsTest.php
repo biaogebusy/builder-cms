@@ -84,9 +84,9 @@ class QuickNodeCloneExcludeParagraphFieldsTest extends ParagraphsTestBase {
 
     // Create a node and add two Paragraphs.
     $this->drupalGet('node/add/paragraphed_test');
-    $title_value = $this->randomGenerator->word(10);
-    $text1 = $this->randomGenerator->word(10);
-    $text2 = $this->randomGenerator->word(10);
+    $title_value = 'The Original Page';
+    $text1 = 'This is text 1';
+    $text2 = 'This is text 2';
     $edit = [
       'title[0][value]' => $title_value,
       'field_paragraphs[0][subform][field_text1][0][value]' => $text1,

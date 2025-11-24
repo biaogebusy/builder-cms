@@ -5,10 +5,6 @@
   <file>diff.module</file>
   <file>diff.views.inc</file>
   <rule ref="PreviousNextDrupal" />
-
-  <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint">
-    <severity>0</severity>
-  </rule>
-
+  <rule ref="SlevomatCodingStandard.Commenting.UselessInheritDocComment"><severity>0</severity></rule>
   <arg name="report" value="full"/>
 </ruleset>

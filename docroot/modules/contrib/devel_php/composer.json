@@ -4,6 +4,6 @@
     "license": "GPL-2.0-or-later",
     "type": "drupal-module",
     "require": {
-        "drupal/devel": ">=2.1"
+        "drupal/devel": ">=5.2"
     }
 }

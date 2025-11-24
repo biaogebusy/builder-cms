@@ -9,6 +9,6 @@
         "source": "https://git.drupalcode.org/project/module_filter"
     },
     "require": {
-        "drupal/jquery_ui_autocomplete": "^2.0"
+        "drupal/jquery_ui_autocomplete": "^2.1"
     }
 }

@@ -7,8 +7,10 @@
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\search\SearchPageInterface;
 use Drupal\views\Form\ViewsForm;
+use Drupal\Core\Render\Element;
 
 /**
  * Implements hook_preprocess_HOOK() for HTML document templates.
@@ -37,7 +39,11 @@ function umami_preprocess_field(&$variables, $hook) {
       $element['#field_name'] == 'field_recipe_category' ||
       $element['#field_name'] == 'field_tags' ||
       $element['#field_name'] == 'field_difficulty') {
-      $variables['attributes']['class'] = 'label-items';
+      $variables['attributes']['class'][] = 'label-items';
+
+      if ($element['#view_mode'] == 'card' && $element['#field_name'] == 'field_difficulty') {
+        $variables['attributes']['class'][] = 'umami-card__label-items';
+      }
     }
   }
 }
@@ -47,7 +53,7 @@ function umami_preprocess_field(&$variables, $hook) {
  */
 function umami_preprocess_block(&$variables) {
   $variables['title_attributes']['class'][] = 'block__title';
-  // Add a class indicating the custom block bundle.
+  // Add a class indicating the content block bundle.
   if (isset($variables['elements']['content']['#block_content'])) {
     $variables['attributes']['class'][] = Html::getClass('block-type-' . $variables['elements']['content']['#block_content']->bundle());
   }
@@ -57,9 +63,33 @@ function umami_preprocess_block(&$variables) {
  * Implements hook_theme_suggestions_HOOK_alter() for block templates.
  */
 function umami_theme_suggestions_block_alter(array &$suggestions, array $variables) {
-  // Block suggestions for custom block bundles.
+  // Block suggestions for content block bundles.
   if (isset($variables['elements']['content']['#block_content'])) {
     array_splice($suggestions, 1, 0, 'block__bundle__' . $variables['elements']['content']['#block_content']->bundle());
+  }
+}
+
+/**
+ * Implements hook_umami_preprocess_block__bundle__banner_block().
+ */
+function umami_preprocess_block__bundle__banner_block(&$variables) {
+  if (isset($variables['content']['field_content_link'])) {
+    foreach (Element::children($variables['content']['field_content_link']) as $key) {
+      $variables['content']['field_content_link'][$key]['#attributes']['class'][] = 'button';
+      $variables['content']['field_content_link'][$key]['#attributes']['class'][] = 'button--primary';
+      $variables['content']['field_content_link'][$key]['#attributes']['class'][] = 'banner__button';
+    }
+  }
+}
+
+/**
+ * Implements hook_umami_preprocess_block__bundle__footer_promo_block().
+ */
+function umami_preprocess_block__bundle__footer_promo_block(&$variables) {
+  if (isset($variables['content']['field_content_link'])) {
+    foreach (Element::children($variables['content']['field_content_link']) as $key) {
+      $variables['content']['field_content_link'][$key]['#attributes']['class'][] = 'footer-block__link';
+    }
   }
 }
 
@@ -89,6 +119,13 @@ function umami_preprocess_breadcrumb(&$variables) {
 }
 
 /**
+ * Implements hook_preprocess_menu_local_task().
+ */
+function umami_preprocess_menu_local_task(&$variables) {
+  $variables['link']['#options']['attributes']['class'][] = 'tabs__link';
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function umami_form_search_block_form_alter(&$form, FormStateInterface $form_state) {
@@ -106,16 +143,7 @@ function umami_form_search_block_form_alter(&$form, FormStateInterface $form_sta
  */
 function umami_preprocess_links__media_library_menu(array &$variables) {
   foreach ($variables['links'] as &$link) {
-    // This conditional exists because the media-library-menu__link class is
-    // currently added by Classy, but Umami will eventually not use Classy as a
-    // base theme.
-    // @todo remove conditional, keep class addition in
-    //   https://drupal.org/node/3110137
-    // @see https://www.drupal.org/node/3109287
-    // @see classy_preprocess_links__media_library_menu()
-    if (!isset($link['link']['#options']['attributes']['class']) || !in_array('media-library-menu__link', $link['link']['#options']['attributes']['class'])) {
-      $link['link']['#options']['attributes']['class'][] = 'media-library-menu__link';
-    }
+    $link['link']['#options']['attributes']['class'][] = 'media-library-menu__link';
   }
 }
 
@@ -127,17 +155,8 @@ function umami_preprocess_links__media_library_menu(array &$variables) {
 function umami_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   $form_object = $form_state->getFormObject();
 
-  if ($form_object instanceof ViewsForm && strpos($form_object->getBaseFormId(), 'views_form_media_library') === 0) {
-    // The conditional below exists because the media-library-views-form class
-    // is currently added by Classy, but Umami will eventually not use Classy as
-    // a base theme.
-    // @todo remove conditional, keep class addition in
-    //   https://drupal.org/node/3110137
-    // @see https://www.drupal.org/node/3109287
-    // @see classy_form_alter()
-    if (!isset($form['#attributes']['class']) || !in_array('media-library-views-form', $form['#attributes']['class'])) {
-      $form['#attributes']['class'][] = 'media-library-views-form';
-    }
+  if ($form_object instanceof ViewsForm && str_starts_with($form_object->getBaseFormId(), 'views_form_media_library')) {
+    $form['#attributes']['class'][] = 'media-library-views-form';
   }
 }
 
@@ -149,7 +168,7 @@ function umami_form_alter(array &$form, FormStateInterface $form_state, $form_id
 function umami_preprocess_image_widget(&$variables) {
   if (!empty($variables['element']['fids']['#value'])) {
     $file = reset($variables['element']['#files']);
-    $variables['data']["file_{$file->id()}"]['filename']['#suffix'] = ' <span class="file-size">(' . format_size($file->getSize()) . ')</span> ';
+    $variables['data']["file_{$file->id()}"]['filename']['#suffix'] = ' <span class="file-size">(' . ByteSizeMarkup::create($file->getSize()) . ')</span> ';
   }
 }
 

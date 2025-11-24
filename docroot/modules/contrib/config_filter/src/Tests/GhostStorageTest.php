@@ -2,8 +2,8 @@
 
 namespace Drupal\config_filter\Tests;
 
-use Drupal\config_filter\Config\GhostStorage;
 use Drupal\Core\Config\StorageInterface;
+use Drupal\config_filter\Config\GhostStorage;
 use Prophecy\Argument;
 
 /**

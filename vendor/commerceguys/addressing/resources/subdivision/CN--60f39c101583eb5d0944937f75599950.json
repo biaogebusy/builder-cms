@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Huangshan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Huangshan Qu": {
+			"local_name": "黄山区"
+		},
+		"Huizhou Qu": {
+			"local_name": "徽州区"
+		},
+		"Qimen Xian": {
+			"local_name": "祁门县"
+		},
+		"She Xian": {
+			"local_name": "歙县"
+		},
+		"Tunxi Qu": {
+			"local_name": "屯溪区"
+		},
+		"Xiuning Xian": {
+			"local_name": "休宁县"
+		},
+		"Yi Xian": {
+			"local_name": "黟县"
+		}
+	}
+}

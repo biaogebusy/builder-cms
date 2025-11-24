@@ -17,39 +17,25 @@ class EntityTypeInfoController extends ControllerBase {
 
   /**
    * The dumper service.
-   *
-   * @var \Drupal\devel\DevelDumperManagerInterface
    */
-  protected $dumper;
+  protected DevelDumperManagerInterface $dumper;
 
   /**
    * The installed entity definition repository service.
-   *
-   * @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface
    */
-  protected $entityLastInstalledSchemaRepository;
-
-  /**
-   * EntityTypeInfoController constructor.
-   *
-   * @param \Drupal\devel\DevelDumperManagerInterface $dumper
-   *   The dumper service.
-   * @param \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $entityLastInstalledSchemaRepository
-   *   The installed entity definition repository service.
-   */
-  public function __construct(DevelDumperManagerInterface $dumper, EntityLastInstalledSchemaRepositoryInterface $entityLastInstalledSchemaRepository) {
-    $this->dumper = $dumper;
-    $this->entityLastInstalledSchemaRepository = $entityLastInstalledSchemaRepository;
-  }
+  protected EntityLastInstalledSchemaRepositoryInterface $entityLastInstalledSchemaRepository;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('devel.dumper'),
-      $container->get('entity.last_installed_schema.repository')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->dumper = $container->get('devel.dumper');
+    $instance->entityLastInstalledSchemaRepository = $container->get('entity.last_installed_schema.repository');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
@@ -58,7 +44,7 @@ class EntityTypeInfoController extends ControllerBase {
    * @return array
    *   A render array as expected by the renderer.
    */
-  public function entityTypeList() {
+  public function entityTypeList(): array {
     $headers = [
       $this->t('ID'),
       $this->t('Name'),
@@ -69,7 +55,7 @@ class EntityTypeInfoController extends ControllerBase {
 
     $rows = [];
 
-    foreach ($this->entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       $row['id'] = [
         'data' => $entity_type->id(),
         'filter' => TRUE,
@@ -150,8 +136,8 @@ class EntityTypeInfoController extends ControllerBase {
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    *   If the requested entity type is not defined.
    */
-  public function entityTypeDetail($entity_type_id) {
-    if (!$entity_type = $this->entityTypeManager()->getDefinition($entity_type_id, FALSE)) {
+  public function entityTypeDetail($entity_type_id): array {
+    if (!$entity_type = $this->entityTypeManager->getDefinition($entity_type_id, FALSE)) {
       throw new NotFoundHttpException();
     }
 
@@ -170,8 +156,8 @@ class EntityTypeInfoController extends ControllerBase {
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    *   If the requested entity type is not defined.
    */
-  public function entityTypeFields($entity_type_id) {
-    if (!$this->entityTypeManager()->getDefinition($entity_type_id, FALSE)) {
+  public function entityTypeFields($entity_type_id): array {
+    if (!$this->entityTypeManager->getDefinition($entity_type_id, FALSE)) {
       throw new NotFoundHttpException();
     }
 

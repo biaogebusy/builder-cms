@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Admin Toolbar Search module.
+ */
+
+/**
+ * Update settings: 'display_menu_item' and 'enable_keyboard_shortcut'.
+ */
+function admin_toolbar_search_update_8001() {
+  // Convert the 'display_menu_item' setting from integer to boolean and enable
+  // the 'enable_keyboard_shortcut' setting by default.
+  /** @var \Drupal\Core\Config\Config $admin_toolbar_search_config */
+  $admin_toolbar_search_config = \Drupal::service('config.factory')
+    ->getEditable('admin_toolbar_search.settings');
+  // Get the current value of 'display_menu_item' setting, which is an integer.
+  $display_menu_item = $admin_toolbar_search_config->get('display_menu_item');
+
+  // Update the configuration settings.
+  $admin_toolbar_search_config
+    // Convert the existing field value from an integer to a boolean.
+    ->set('display_menu_item', (bool) $display_menu_item)
+    // Enable the keyboard shortcut by default.
+    ->set('enable_keyboard_shortcut', TRUE)
+    ->save(TRUE);
+}

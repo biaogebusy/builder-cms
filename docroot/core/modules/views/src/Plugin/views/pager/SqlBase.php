@@ -35,7 +35,7 @@ abstract class SqlBase extends PagerPluginBase implements CacheableDependencyInt
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Pager\PagerManagerInterface $pager_manager
@@ -68,6 +68,7 @@ abstract class SqlBase extends PagerPluginBase implements CacheableDependencyInt
     $options['offset'] = ['default' => 0];
     $options['id'] = ['default' => 0];
     $options['total_pages'] = ['default' => ''];
+    $options['pagination_heading_level'] = ['default' => 'h4'];
     $options['expose'] = [
       'contains' => [
         'items_per_page' => ['default' => FALSE],
@@ -95,6 +96,14 @@ abstract class SqlBase extends PagerPluginBase implements CacheableDependencyInt
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     $pager_text = $this->displayHandler->getPagerText();
+    $form['pagination_heading_level'] = [
+      '#title' => $this->t('Heading Level'),
+      '#type' => 'select',
+      '#options' => $this->headingOptions,
+      '#default_value' => $this->options['pagination_heading_level'],
+      '#description' => $this->t('Choose a heading level equal to or one lower than the preceding header.'),
+      '#fieldset' => 'style_settings',
+    ];
     $form['items_per_page'] = [
       '#title' => $pager_text['items per page title'],
       '#type' => 'number',
@@ -227,7 +236,7 @@ abstract class SqlBase extends PagerPluginBase implements CacheableDependencyInt
     // Only accept integer values.
     $error = FALSE;
     $exposed_options = $form_state->getValue(['pager_options', 'expose', 'items_per_page_options']);
-    if (strpos($exposed_options, '.') !== FALSE) {
+    if (str_contains($exposed_options, '.')) {
       $error = TRUE;
     }
     $options = explode(',', $exposed_options);

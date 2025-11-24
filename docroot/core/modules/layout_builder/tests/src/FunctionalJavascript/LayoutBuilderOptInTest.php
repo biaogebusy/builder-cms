@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\Tests\layout_builder\Traits\EnableLayoutBuilderTrait;
 
 /**
  * Tests the ability for opting in and out of Layout Builder.
@@ -10,6 +13,8 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * @group layout_builder
  */
 class LayoutBuilderOptInTest extends WebDriverTestBase {
+
+  use EnableLayoutBuilderTrait;
 
   /**
    * {@inheritdoc}
@@ -46,7 +51,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
   /**
    * Tests the interaction between the two layout checkboxes.
    */
-  public function testCheckboxLogic() {
+  public function testCheckboxLogic(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -72,9 +77,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
     $assert_session->checkboxChecked('layout[allow_custom]');
 
     // Reset the checkboxes.
-    $page->uncheckField('layout[enabled]');
-    $page->pressButton('Save');
-    $page->pressButton('Confirm');
+    $this->disableLayoutBuilderFromUi('before', 'default');
     $assert_session->checkboxNotChecked('layout[enabled]');
     $assert_session->checkboxNotChecked('layout[allow_custom]');
 
@@ -89,7 +92,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
   /**
    * Tests the expected default values for enabling Layout Builder.
    */
-  public function testDefaultValues() {
+  public function testDefaultValues(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -169,7 +172,7 @@ class LayoutBuilderOptInTest extends WebDriverTestBase {
    * @return string
    *   The path.
    */
-  protected function getPathForFieldBlock($entity_type_id, $bundle, $view_mode, $field_name) {
+  protected function getPathForFieldBlock($entity_type_id, $bundle, $view_mode, $field_name): string {
     $delta = 0;
     /** @var \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface $display */
     $display = $this->container->get('entity_type.manager')->getStorage('entity_view_display')->load("$entity_type_id.$bundle.$view_mode");

@@ -14,7 +14,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 /**
  * Checks if referenced entities are valid.
  */
-class ValidDynamicReferenceConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
+final class ValidDynamicReferenceConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
 
   /**
    * The selection plugin manager.

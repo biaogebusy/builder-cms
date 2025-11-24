@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
@@ -21,9 +23,10 @@ class MigrationGroupListBuilder extends ConfigEntityListBuilder {
    * @return array
    *   A render array structure of header strings.
    *
-   * @see Drupal\Core\Entity\EntityListController::render()
+   * @see \Drupal\Core\Entity\Controller\EntityListController::render()
    */
-  public function buildHeader() {
+  public function buildHeader(): array {
+    $header = [];
     $header['label'] = $this->t('Migration Group');
     $header['machine_name'] = $this->t('Machine Name');
     $header['description'] = $this->t('Description');
@@ -42,7 +45,8 @@ class MigrationGroupListBuilder extends ConfigEntityListBuilder {
    *
    * @see \Drupal\Core\Entity\EntityListController::render()
    */
-  public function buildRow(EntityInterface $entity) {
+  public function buildRow(EntityInterface $entity): array {
+    $row = [];
     $row['label'] = $entity->label();
     $row['machine_name'] = $entity->id();
     $row['description'] = $entity->get('description');
@@ -54,7 +58,7 @@ class MigrationGroupListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultOperations(EntityInterface $entity) {
+  public function getDefaultOperations(EntityInterface $entity): array {
     $operations = parent::getDefaultOperations($entity);
     $operations['list'] = [
       'title' => $this->t('List migrations'),

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client;
 
+use Drupal\entity_share_client\Views\ViewsFilterOptions;
 use Drupal\views\EntityViewsData;
 
 /**
@@ -16,6 +17,71 @@ class EntityImportStatusViewsData extends EntityViewsData {
    */
   public function getViewsData() {
     $data = parent::getViewsData();
+
+    // Add a non-database field for the entity label.
+    $data['entity_import_status']['entity_label'] = [
+      'title' => $this->t('Imported entity label'),
+      'field' => [
+        'id' => 'entity_share_client_entity_label',
+        'real field' => 'entity_id',
+      ],
+    ];
+
+    // Add our custom field handlers for various fields.
+    $data['entity_import_status']['remote_website']['field'] = [
+      'id' => 'entity_share_client_config_entity_label',
+      'entity_type_id' => 'remote',
+    ];
+
+    $data['entity_import_status']['channel_id']['field'] = [
+      'id' => 'entity_share_client_channel',
+    ];
+
+    $data['entity_import_status']['entity_type_id']['field'] = [
+      'id' => 'entity_share_client_entity_type_id',
+    ];
+
+    $data['entity_import_status']['entity_bundle']['field'] = [
+      'id' => 'entity_share_client_entity_bundle',
+    ];
+
+    $data['entity_import_status']['entity_uuid']['field'] = [
+      'id' => 'entity_share_client_uuid',
+    ];
+
+    $data['entity_import_status']['policy']['field'] = [
+      'id' => 'entity_share_client_policy',
+    ];
+
+    // Add handlers and callbacks for various filters.
+    $data['entity_import_status']['remote_website']['filter'] = [
+      'id' => 'in_operator',
+      'options callback' => ViewsFilterOptions::class . '::filterOptionsRemoteWebsite',
+    ];
+
+    $data['entity_import_status']['channel_id']['filter'] = [
+      'id' => 'in_operator',
+      'options callback' => ViewsFilterOptions::class . '::filterOptionsChannel',
+    ];
+
+    $data['entity_import_status']['entity_type_id']['filter'] = [
+      'id' => 'in_operator',
+      'options callback' => ViewsFilterOptions::class . '::filterOptionsEntityTypeId',
+    ];
+
+    $data['entity_import_status']['last_import']['filter'] = [
+      'id' => 'date',
+    ];
+
+    $data['entity_import_status']['entity_bundle']['filter'] = [
+      'id' => 'in_operator',
+      'options callback' => ViewsFilterOptions::class . '::filterOptionsBundle',
+    ];
+
+    $data['entity_import_status']['policy']['filter'] = [
+      'id' => 'in_operator',
+      'options callback' => ViewsFilterOptions::class . '::filterOptionsPolicy',
+    ];
 
     // In addition to the basic entity views data, we also add relationships
     // to enable joining in the data tables for all content entity types.

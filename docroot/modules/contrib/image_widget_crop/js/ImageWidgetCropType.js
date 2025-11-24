@@ -422,7 +422,7 @@
     // Extend this instance with data from the wrapper.
     var data = this.$wrapper.data();
     for (var i in data) {
-      if (data.hasOwnProperty(i) && this.dataPrefix.test(i)) {
+      if (hasOwnProperty.call(data, i) && this.dataPrefix.test(i)) {
         // Remove Drupal + module prefix and lowercase the first letter.
         var prop = i.replace(this.dataPrefix, '');
         prop = prop.charAt(0).toLowerCase() + prop.slice(1);

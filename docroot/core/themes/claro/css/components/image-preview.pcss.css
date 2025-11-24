@@ -3,8 +3,6 @@
  * Image preview component.
  */
 
-@import "../base/variables.pcss.css";
-
 :root {
   --color-pattern: var(--color-gray-200);
   --size-pattern-square: calc(7rem / 16);
@@ -15,6 +13,16 @@
  */
 .image-preview {
   line-height: 0;
+
+  & img {
+    background-image: linear-gradient(-45deg, var(--color-pattern) 25%, transparent 26%), linear-gradient(-45deg, var(--color-pattern) 25%, transparent 26%), linear-gradient(135deg, var(--color-pattern) 25%, transparent 26%), linear-gradient(135deg, var(--color-pattern) 25%, transparent 26%);
+    background-position:
+      0 0,
+      var(--size-pattern-square) var(--size-pattern-square),
+      var(--size-pattern-square) var(--size-pattern-square),
+      0 0;
+    background-size: calc(var(--size-pattern-square) * 2) calc(var(--size-pattern-square) * 2);
+  }
 }
 
 .image-preview__img-wrapper {
@@ -24,30 +32,10 @@
   box-shadow: inset 0 0 var(--size-pattern-square) var(--color-pattern);
 }
 
-.image-preview img {
-  background-image:
-    linear-gradient(-45deg, var(--color-pattern) 25%, transparent 26%),
-    linear-gradient(-45deg, var(--color-pattern) 25%, transparent 26%),
-    linear-gradient(135deg, var(--color-pattern) 25%, transparent 26%),
-    linear-gradient(135deg, var(--color-pattern) 25%, transparent 26%);
-  background-position:
-    0 0,
-    var(--size-pattern-square) var(--size-pattern-square),
-    var(--size-pattern-square) var(--size-pattern-square),
-    0 0;
-  background-size: calc(var(--size-pattern-square) * 2) calc(var(--size-pattern-square) * 2);
-}
-
-@media screen and (-ms-high-contrast: active) {
-  .image-preview img {
-    background: none;
-  }
-}
-
 /**
  * Don't display file icon in image widgets.
  */
 .image-widget .file.file {
-  padding: 0; /* LTR and RTL */
+  padding: 0;
   background: none;
 }

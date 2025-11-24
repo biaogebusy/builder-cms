@@ -3,9 +3,10 @@
 namespace Drupal\Tests\unique_content_field_validation\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Test when a multi-value field has to be unique value in each item.
@@ -13,10 +14,13 @@ use Drupal\Tests\BrowserTestBase;
  * @group unique_content_field_validation
  */
 class EntityFieldUniqueMultipleValidationTest extends BrowserTestBase {
+
+  use StringTranslationTrait;
+
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * Modules to enable.
@@ -57,23 +61,13 @@ class EntityFieldUniqueMultipleValidationTest extends BrowserTestBase {
     // Create Basic page node type.
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
 
-    /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display */
-    $display = \Drupal::entityTypeManager()
-      ->getStorage('entity_view_display')
-      ->load('node.page.default');
-
     // Create test field.
     $field_storage = FieldStorageConfig::create([
       'field_name' => 'field_test',
       'entity_type' => 'node',
       'type' => 'text',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
-      'settings' => [
-        'unique' => FALSE,
-        'unique_text' => '',
-        'unique_multivalue' => TRUE,
-        'unique_multivalue_text' => 'Value is already set and each value needs to be unique',
-      ],
+      'settings' => [],
     ]);
     $field_storage->save();
 
@@ -82,17 +76,44 @@ class EntityFieldUniqueMultipleValidationTest extends BrowserTestBase {
       'bundle' => 'page',
       'label' => $this->randomMachineName(),
     ]);
+    $instance->setThirdPartySetting('unique_content_field_validation', 'unique', FALSE);
+    $instance->setThirdPartySetting('unique_content_field_validation', 'unique_text', '');
+    $instance->setThirdPartySetting('unique_content_field_validation', 'unique_multivalue', TRUE);
+    $instance->setThirdPartySetting('unique_content_field_validation', 'unique_multivalue_text', 'Value is already set and each value needs to be unique');
     $instance->save();
 
+    /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $view_display */
+    $view_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_view_display')
+      ->load('node.page.default');
+
     // Set the field visible on the display object.
-    $display_options = [
+    $view_display_options = [
       'type' => 'text_default',
       'label' => 'above',
     ];
-    $display->setComponent('field_test', $display_options);
+    $view_display->setComponent('field_test', $view_display_options);
 
     // Save display.
-    $display->save();
+    $view_display->save();
+
+    /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
+    $form_display = \Drupal::entityTypeManager()
+      ->getStorage('entity_form_display')
+      ->load('node.page.default');
+
+    // Set the field visible on the display object.
+    $form_display_options = [
+      'type' => 'text_textfield',
+      'region' => 'content',
+      'settings' => [
+        'size' => 10,
+      ],
+    ];
+    $form_display->setComponent('field_test', $form_display_options);
+
+    // Save display.
+    $form_display->save();
   }
 
   /**
@@ -105,14 +126,15 @@ class EntityFieldUniqueMultipleValidationTest extends BrowserTestBase {
 
     // Create a node.
     $edit = [];
+    $this->drupalGet('node/add/page');
+    $this->submitForm($edit, 'Add another item');
     $edit['title[0][value]'] = 'Multiple validation same field page';
     $edit['field_test[0][value]'] = 'test value';
     $edit['field_test[1][value]'] = 'test value';
-    $this->drupalGet('node/add/page');
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, $this->t('Save'));
 
     // Check that the Basic page has been created.
-    $this->assertSession()->pageTextContains(t('Value is already set and each value needs to be unique'));
+    $this->assertSession()->pageTextContains($this->t('Value is already set and each value needs to be unique'));
   }
 
 }

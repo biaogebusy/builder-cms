@@ -17,6 +17,8 @@ use Drupal\Core\Url;
 
 /**
  * Form controller for phone number settings.
+ *
+ * @property \Drupal\sms\Entity\PhoneNumberSettingsInterface $entity
  */
 class PhoneNumberSettingsForm extends EntityForm {
 
@@ -26,49 +28,24 @@ class PhoneNumberSettingsForm extends EntityForm {
   const CREATE_NEW_FIELD = '!create';
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * {@inheritdoc}
-   *
-   * @var \Drupal\sms\Entity\PhoneNumberSettingsInterface
-   */
-  protected $entity;
-
-  /**
    * Constructs a new PhoneNumberSettingsForm object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
    *   The entity type bundle info.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityFieldManagerInterface $entity_field_manager, MessengerInterface $messenger) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->entityFieldManager = $entity_field_manager;
+  public function __construct(
+    EntityTypeManagerInterface $entityTypeManager,
+    protected EntityTypeBundleInfoInterface $entityTypeBundleInfo,
+    protected EntityFieldManagerInterface $entityFieldManager,
+    MessengerInterface $messenger,
+  ) {
+    $this->setEntityTypeManager($entityTypeManager);
     $this->setMessenger($messenger);
   }
 
@@ -358,7 +335,7 @@ class PhoneNumberSettingsForm extends EntityForm {
     if ($entity_form_display) {
       $entity_form_display->setComponent(
         $field_name,
-        $definitions['form_display'][$config_key]
+        $definitions['form_display'][$config_key],
       );
       $entity_form_display->save();
     }

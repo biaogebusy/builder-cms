@@ -8,6 +8,7 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Session\AccountInterface;
+use Drupal\entity_share\EntityShareInterface;
 
 /**
  * Set a default max size to channels.
@@ -19,7 +20,7 @@ function entity_share_server_post_update_set_default_max_size() {
     ->loadMultiple();
 
   foreach ($channels as $channel) {
-    $channel->set('channel_maxsize', 50);
+    $channel->set('channel_maxsize', EntityShareInterface::JSON_API_PAGER_SIZE_MAX);
     $channel->save();
   }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Update;
 
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
@@ -72,26 +74,34 @@ class UpdateHookRegistryTest extends UnitTestCase {
   protected $keyValueFactory;
 
   /**
+   * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected KeyValueStoreInterface $equivalentUpdatesStore;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
     $this->keyValueFactory = $this->createMock(KeyValueFactoryInterface::class);
     $this->keyValueStore = $this->createMock(KeyValueStoreInterface::class);
+    $this->equivalentUpdatesStore = $this->createMock(KeyValueStoreInterface::class);
 
     $this->keyValueFactory
       ->method('get')
-      ->with('system.schema')
-      ->willReturn($this->keyValueStore);
+      ->willReturnMap([
+        ['system.schema', $this->keyValueStore],
+        ['core.equivalent_updates', $this->equivalentUpdatesStore],
+      ]);
   }
 
   /**
    * @covers ::getAvailableUpdates
    */
-  public function testGetVersions() {
+  public function testGetVersions(): void {
     $module_name = 'drupal\tests\core\update\under_test';
 
-    $update_registry = new UpdateHookRegistry([], $this->keyValueStore);
+    $update_registry = new UpdateHookRegistry([], $this->keyValueFactory);
 
     // Only under_test_update_X - passes through the filter.
     $expected = [1, 20, 3000];
@@ -106,7 +116,7 @@ class UpdateHookRegistryTest extends UnitTestCase {
    * @covers ::setInstalledVersion
    * @covers ::deleteInstalledVersion
    */
-  public function testGetInstalledVersion() {
+  public function testGetInstalledVersion(): void {
     $versions = [
       'module1' => 1,
       'module2' => 20,
@@ -134,7 +144,7 @@ class UpdateHookRegistryTest extends UnitTestCase {
         $versions[$key] = $value;
       });
 
-    $update_registry = new UpdateHookRegistry([], $this->keyValueStore);
+    $update_registry = new UpdateHookRegistry([], $this->keyValueFactory);
 
     $this->assertSame(3000, $update_registry->getInstalledVersion('module3'));
     $update_registry->setInstalledVersion('module3', 3001);

@@ -6,13 +6,15 @@ use Drupal\Core\Entity\EditorialContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Url;
+use Drupal\link\AttributeXss;
 use Drupal\link\LinkItemInterface;
 use Drupal\menu_link_content\MenuLinkContentInterface;
 
 /**
  * Defines the menu link content entity class.
  *
- * @property \Drupal\link\LinkItemInterface $link
+ * @property \Drupal\Core\Field\FieldItemList $link
  * @property \Drupal\Core\Field\FieldItemList $rediscover
  *
  * @ContentEntityType(
@@ -32,7 +34,8 @@ use Drupal\menu_link_content\MenuLinkContentInterface;
  *     "form" = {
  *       "default" = "Drupal\menu_link_content\Form\MenuLinkContentForm",
  *       "delete" = "Drupal\menu_link_content\Form\MenuLinkContentDeleteForm"
- *     }
+ *     },
+ *     "list_builder" = "Drupal\menu_link_content\MenuLinkListBuilder"
  *   },
  *   admin_permission = "administer menu",
  *   base_table = "menu_link_content",
@@ -91,7 +94,12 @@ class MenuLinkContent extends EditorialContentEntityBase implements MenuLinkCont
    * {@inheritdoc}
    */
   public function getUrlObject() {
-    return $this->link->first()->getUrl();
+    $url = $this->link->first()->getUrl();
+    assert($url instanceof Url);
+    if ($attributes = $url->getOption('attributes')) {
+      $url->setOption('attributes', AttributeXss::sanitizeAttributes($attributes));
+    }
+    return $url;
   }
 
   /**

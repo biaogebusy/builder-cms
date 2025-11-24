@@ -5,6 +5,7 @@ namespace Drupal\Tests\search_api\Kernel\Processor;
 use Drupal\node\Entity\Node;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "Add URL" processor at a higher level.
@@ -13,6 +14,7 @@ use Drupal\search_api\Utility\Utility;
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\processor\AddURL
  */
+#[RunTestsInSeparateProcesses]
 class AddURLKernelTest extends ProcessorTestBase {
 
   /**

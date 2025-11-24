@@ -3,19 +3,20 @@
 namespace Drupal\commerce_product\Plugin\EntityReferenceSelection;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\Attribute\EntityReferenceSelection;
 use Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Enables product variation selection by title or SKU.
- *
- * @EntityReferenceSelection(
- *   id = "default:commerce_product_variation",
- *   label = @Translation("Product variation selection"),
- *   entity_types = {"commerce_product_variation"},
- *   group = "default",
- *   weight = 1
- * )
  */
+#[EntityReferenceSelection(
+  id: 'default:commerce_product_variation',
+  label: new TranslatableMarkup('Product variation selection'),
+  group: 'default',
+  weight: 1,
+  entity_types: ['commerce_product_variation'],
+)]
 class ProductVariationSelection extends DefaultSelection {
 
   /**

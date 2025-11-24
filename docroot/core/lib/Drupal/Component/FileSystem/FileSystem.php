@@ -2,6 +2,8 @@
 
 namespace Drupal\Component\FileSystem;
 
+// cspell:ignore winnt
+
 /**
  * Provides file system functions.
  */
@@ -23,7 +25,7 @@ class FileSystem {
     }
 
     // Operating system specific dirs.
-    if (substr(PHP_OS, 0, 3) == 'WIN') {
+    if (str_starts_with(PHP_OS, 'WIN')) {
       $directories[] = 'c:\\windows\\temp';
       $directories[] = 'c:\\winnt\\temp';
     }

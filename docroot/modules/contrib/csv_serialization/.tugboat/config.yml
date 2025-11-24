@@ -1,7 +1,7 @@
 services:
   php:
     # Specify the version of Drupal you wish to use for Tugboat below.
-    image: q0rban/tugboat-drupal:9
+    image: q0rban/tugboat-drupal:10
     default: true
     http: false
     depends: mysql

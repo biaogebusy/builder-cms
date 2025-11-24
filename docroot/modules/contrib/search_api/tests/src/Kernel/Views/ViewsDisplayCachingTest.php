@@ -4,18 +4,22 @@ namespace Drupal\Tests\search_api\Kernel\Views;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\MemoryBackend;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\entity_test\Entity\EntityTestMulRevChanged;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
+use Drupal\Tests\search_api\Kernel\TestTimeService;
 use Drupal\views\Tests\AssertViewsCacheTagsTrait;
 use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Search API caching plugins for Views.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ViewsDisplayCachingTest extends KernelTestBase {
 
   use AssertViewsCacheTagsTrait;
@@ -44,9 +48,14 @@ class ViewsDisplayCachingTest extends KernelTestBase {
   /**
    * The cache backend used for testing.
    *
-   * @var \Drupal\Tests\search_api\Kernel\Views\TestMemoryBackend
+   * @var \Drupal\Core\Cache\MemoryBackend
    */
   protected $cache;
+
+  /**
+   * The time service used for testing.
+   */
+  protected TestTimeService $time;
 
   /**
    * {@inheritdoc}
@@ -94,8 +103,15 @@ class ViewsDisplayCachingTest extends KernelTestBase {
 
     // Use a test cache backend that allows to tamper with the request time so
     // we can test time based caching.
-    $this->cache = new TestMemoryBackend();
+    $this->time = new TestTimeService();
+    $this->container->set('datetime.time', $this->time);
+    $this->cache = new MemoryBackend($this->time);
     $this->container->set('cache.data', $this->cache);
+    // Starting with Drupal 10.3, the cache tags invalidator uses an internal
+    // list of cache bins, to which we need to add our cache.
+    /** @var \Drupal\Core\Cache\CacheTagsInvalidator $invalidator */
+    $invalidator = $this->container->get('cache_tags.invalidator');
+    $invalidator->addBin($this->cache);
 
     // Create some demo content and index it.
     $this->createDemoContent();
@@ -124,6 +140,9 @@ class ViewsDisplayCachingTest extends KernelTestBase {
 
     // Before the search is executed, the query should not be cached.
     $this->assertViewsResultsCacheNotPopulated($view);
+
+    // Drupal 10.3 added a new cache tag to all forms.
+    $expected_cache_tags[] = 'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form';
 
     // Execute the search and assert the cacheability metadata.
     $this->assertViewsCacheability($view, $expected_cache_tags, $expected_cache_contexts, $expected_max_age);
@@ -220,8 +239,12 @@ class ViewsDisplayCachingTest extends KernelTestBase {
       // When using 'time' based caching, pretend to be more than 1 hour in the
       // future.
       case 'time':
-        $this->cache->setRequestTime($this->cache->getRequestTime() + 3700);
+      case 'time_tag':
+        $this->time->advanceTime(3700);
         break;
+
+      default:
+        assert(FALSE);
     }
   }
 
@@ -248,8 +271,9 @@ class ViewsDisplayCachingTest extends KernelTestBase {
   protected function getView($id, $display_id) {
     /** @var \Drupal\views\ViewEntityInterface $view */
     $view = $this->entityTypeManager->getStorage('view')->load($id);
+    /** @var \Drupal\views\ViewExecutable $executable */
     $executable = $this->viewExecutableFactory->get($view);
-    $executable->setDisplay($display_id);
+    $this->assertTrue($executable->setDisplay($display_id));
     $executable->setExposedInput(['search_api_fulltext' => 'Glaive']);
     return $executable;
   }
@@ -311,7 +335,7 @@ class ViewsDisplayCachingTest extends KernelTestBase {
    *
    * @see ::testDisplayCacheability
    */
-  public function displayCacheabilityProvider() {
+  public static function displayCacheabilityProvider() {
     return [
       // First test case, using the 'none' caching plugin that is included with
       // Views. This is expected to disable caching.
@@ -370,6 +394,32 @@ class ViewsDisplayCachingTest extends KernelTestBase {
           // modified.
           'config:search_api.index.database_search_index',
           'config:views.view.search_api_test_cache',
+        ],
+        // No specific cache contexts are expected to be present.
+        [],
+        // It is expected that the cache max-age is set to 1 hour.
+        3600,
+        // It is expected that views results can be cached.
+        TRUE,
+      ],
+
+      // Test case using time and tag based caching. This should provide
+      // relevant cache tags so that the results can be cached, but be
+      // invalidated whenever relevant changes occur or after a predefined
+      // time period.
+      [
+        'time_tag',
+        [
+          // The cache should be invalidated when either index or view are
+          // modified.
+          'config:search_api.index.database_search_index',
+          'config:views.view.search_api_test_cache',
+          // The view shows an entity, so it should be invalidated when that
+          // entity changes.
+          'entity_test_mulrev_changed:1',
+          // Caches should also be invalidated if any items on the index are
+          // indexed or deleted.
+          'search_api_list:database_search_index',
         ],
         // No specific cache contexts are expected to be present.
         [],

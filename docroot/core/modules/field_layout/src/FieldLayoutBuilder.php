@@ -96,8 +96,8 @@ class FieldLayoutBuilder implements ContainerInjectionInterface {
     $layout_definition = $this->layoutPluginManager->getDefinition($display->getLayoutId(), FALSE);
     if ($layout_definition && $fields = $this->getFields($build, $display, 'form')) {
       $fill = [];
-      $fill['#process'][] = '\Drupal\Core\Render\Element\RenderElement::processGroup';
-      $fill['#pre_render'][] = '\Drupal\Core\Render\Element\RenderElement::preRenderGroup';
+      $fill['#process'][] = '\Drupal\Core\Render\Element\RenderElementBase::processGroup';
+      $fill['#pre_render'][] = '\Drupal\Core\Render\Element\RenderElementBase::preRenderGroup';
       // Add the regions to the $build in the correct order.
       $regions = array_fill_keys($layout_definition->getRegionNames(), $fill);
 
@@ -107,7 +107,12 @@ class FieldLayoutBuilder implements ContainerInjectionInterface {
         // moving the field in the form structure. If a #group is already set,
         // do not overwrite it.
         if (isset($regions[$field['region']]) && !isset($build[$name]['#group'])) {
-          $build[$name]['#group'] = $field['region'];
+          if (!empty($build['#parents'])) {
+            $build[$name]['#group'] = implode('][', array_merge($build['#parents'], ['_field_layout', $field['region']]));
+          }
+          else {
+            $build[$name]['#group'] = $field['region'];
+          }
         }
       }
       // Ensure this will not conflict with any existing array elements by

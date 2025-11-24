@@ -7,8 +7,8 @@ use Drupal\Core\Entity\ContentEntityFormInterface;
 /**
  * Provides the add to cart form interface.
  *
- * Extends the regular interface to allow the form ID to be overriden.
- * By default the form ID is suffixed with the order item's purchasable
+ * Extends the regular interface to allow the form ID to be overridden.
+ * By default, the form ID is suffixed with the order item's purchasable
  * entity ID, to achieve uniqueness. Callers can replace that form ID with
  * a more stable one, or to handle the case where the order item has no
  * purchasable entity, but multiple form instances are still desired.

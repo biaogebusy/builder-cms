@@ -6,6 +6,8 @@
  *   This is an internal part of the Blazy system and should only be used by
  *   blazy-related code in Blazy sub-modules.
  *   It is extending dBlazy as a separate plugin depending on $.viewport.
+ *
+ * @todo move into js/base folder.
  */
 
 (function ($, _win, _doc) {

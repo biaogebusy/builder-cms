@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -7,6 +9,7 @@ use Drupal\migrate\MigrateException;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\sqlite\Driver\Database\sqlite\Connection;
+use Drupal\TestTools\Random;
 
 /**
  * Tests query batching.
@@ -56,7 +59,7 @@ class QueryBatchTest extends KernelTestBase {
   /**
    * Tests a negative batch size throws an exception.
    */
-  public function testBatchSizeNegative() {
+  public function testBatchSizeNegative(): void {
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage('batch_size must be greater than or equal to zero');
     $plugin = $this->getPlugin(['batch_size' => -1]);
@@ -66,7 +69,7 @@ class QueryBatchTest extends KernelTestBase {
   /**
    * Tests a non integer batch size throws an exception.
    */
-  public function testBatchSizeNonInteger() {
+  public function testBatchSizeNonInteger(): void {
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage('batch_size must be greater than or equal to zero');
     $plugin = $this->getPlugin(['batch_size' => '1']);
@@ -76,7 +79,7 @@ class QueryBatchTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function queryDataProvider() {
+  public static function queryDataProvider() {
     // Define the parameters for building the data array. The first element is
     // the number of source data rows, the second is the batch size to set on
     // the plugin configuration.
@@ -104,7 +107,7 @@ class QueryBatchTest extends KernelTestBase {
       for ($i = 0; $i < $num_rows; $i++) {
         $tests[$data_set]['source_data'][$table][] = [
           'id' => $i,
-          'data' => $this->randomString(),
+          'data' => Random::string(),
         ];
       }
       $tests[$data_set]['expected_data'] = $tests[$data_set]['source_data'][$table];
@@ -148,14 +151,13 @@ class QueryBatchTest extends KernelTestBase {
    *
    * @dataProvider queryDataProvider
    */
-  public function testQueryBatch($source_data, $expected_data, $num_rows, $configuration, $expected_batch_size, $expected_batch_count) {
+  public function testQueryBatch($source_data, $expected_data, $num_rows, $configuration, $expected_batch_size, $expected_batch_count): void {
     $plugin = $this->getPlugin($configuration);
 
     // Since we don't yet inject the database connection, we need to use a
     // reflection hack to set it in the plugin instance.
     $reflector = new \ReflectionObject($plugin);
     $property = $reflector->getProperty('database');
-    $property->setAccessible(TRUE);
 
     $connection = $this->getDatabase($source_data);
     $property->setValue($plugin, $connection);
@@ -182,7 +184,6 @@ class QueryBatchTest extends KernelTestBase {
       $expected_batch_size = $configuration['batch_size'];
     }
     $property = $reflector->getProperty('batchSize');
-    $property->setAccessible(TRUE);
     self::assertSame($expected_batch_size, $property->getValue($plugin));
 
     // Test the batch count.
@@ -193,7 +194,6 @@ class QueryBatchTest extends KernelTestBase {
       }
     }
     $property = $reflector->getProperty('batch');
-    $property->setAccessible(TRUE);
     self::assertSame($expected_batch_count, $property->getValue($plugin));
   }
 
@@ -240,8 +240,7 @@ class QueryBatchTest extends KernelTestBase {
       // Use the biggest row to build the table schema.
       $counts = array_map('count', $rows);
       asort($counts);
-      end($counts);
-      $pilot = $rows[key($counts)];
+      $pilot = $rows[array_key_last($counts)];
 
       $connection->schema()
         ->createTable($table, [

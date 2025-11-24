@@ -2,30 +2,23 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\Cache\BlazyCache;
-use Drupal\blazy\Deprecated\BlazyManagerDeprecatedTrait;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Media\Thumbnail;
 use Drupal\blazy\Utility\Check;
 use Drupal\blazy\Utility\CheckItem;
 use Drupal\blazy\Utility\Path;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides common shared methods across Blazy ecosystem to DRY.
  */
 abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInterface {
 
-  // @todo remove at 3.x:
-  use BlazyManagerDeprecatedTrait;
-
   /**
    * {@inheritdoc}
    */
-  public function attach(array $attach = []) {
-    // @todo enable at 3.x: $load = $this->libraries->attach($attach);
-    // $blazies = $attach['blazies'];
-    $load = [];
-    $blazies = Check::attachments($load, $attach);
+  public function attach(array $attach = []): array {
+    $load    = $this->libraries->attach($attach);
+    $blazies = $attach['blazies'];
 
     Internals::count($blazies);
     $this->attachments($load, $attach, $blazies);
@@ -51,30 +44,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function getIoSettings(array $attach = []): object {
-    $io = [];
-    $thold = $this->config('io.threshold');
-    $thold = str_replace(['[', ']'], '', trim($thold ?: '0'));
-
-    // @todo re-check, looks like the default 0 is broken sometimes.
-    if ($thold == '0') {
-      $thold = '0, 0.25, 0.5, 0.75, 1';
-    }
-
-    $thold = strpos($thold, ',') !== FALSE
-      ? array_map('trim', explode(',', $thold)) : [$thold];
-    $formatted = [];
-    foreach ($thold as $value) {
-      $formatted[] = strpos($value, '.') !== FALSE ? (float) $value : (int) $value;
-    }
-
-    // Respects hook_blazy_attach_alter() for more fine-grained control.
-    foreach (['disconnect', 'rootMargin', 'threshold'] as $key) {
-      $default = $key == 'rootMargin' ? '0px' : FALSE;
-      $value = $key == 'threshold' ? $formatted : $this->config('io.' . $key);
-      $io[$key] = $attach['io.' . $key] ?? ($value ?: $default);
-    }
-    // @todo enable at 3.x: return $this->libraries->getIoSettings($attach);
-    return (object) $io;
+    return $this->libraries->getIoSettings($attach);
   }
 
   /**
@@ -109,9 +79,9 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    * {@inheritdoc}
    */
   public function getLightboxes(): array {
-    $cid = 'blazy_lightboxes';
-    // @todo at 3.x: $this->libraries->getLightboxes();
-    $data = BlazyCache::lightboxes($this->root);
+    $cid  = 'blazy_lightboxes';
+    $data = $this->libraries->getLightboxes();
+
     return $this->getCachedOptions($cid, $data);
   }
 
@@ -122,6 +92,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
     $styles = [
       'column' => 'CSS3 Columns',
       'grid' => 'Grid Foundation',
+      'flexbox' => 'Flexbox',
       'flex' => 'Flexbox Masonry',
       'nativegrid' => 'Native Grid',
     ];
@@ -177,7 +148,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
     $this->moduleHandler->alter('blazy_preblazy', $settings, $build);
 
     CheckItem::essentials($settings, $item);
-    return $blazies;
+    return $settings['blazies'] ?? $blazies;
   }
 
   /**
@@ -217,7 +188,7 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
     $is_blur = $fx == 'blur';
     $is_resimage = $this->moduleExists('responsive_image');
     $namespace = $blazies->get('namespace');
-    $use_blazy = $ui['use_theme_blazy'] ?? FALSE;
+    $use_blazy = TRUE;
 
     $blazies->set('fx', $fx)
       ->set('iframe_domain', $iframe_domain)
@@ -230,14 +201,10 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
       ->set('lightbox.plugins', $lightboxes)
       ->set('ui', $ui)
       ->set('use.blur', $is_blur)
-      // @todo enable at 3.x after conversion from data-BLAH to data-b-BLAH.
-      ->set('use.data_b', FALSE)
+      ->set('use.data_b', TRUE)
       ->set('use.theme_blazy', $use_blazy)
       ->set('use.theme_thumbnail', $use_blazy)
       ->set('version.blazy', Blazy::version('blazy'));
-
-    // @todo remove is.blur for use.blur at 3.x:
-    $blazies->set('is.blur', $is_blur);
 
     if ($namespace && $namespace != 'blazy') {
       if ($this->moduleExists($namespace)) {
@@ -298,6 +265,24 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function setAttachments(
+    array &$element,
+    array $settings,
+    array $attachments = [],
+  ): void {
+    $cache                 = $this->getCacheMetadata($settings);
+    $attached              = $this->attach($settings);
+    $attachments           = $this->merge($attached, $attachments);
+    $element['#attached']  = $this->merge($attachments, $element, '#attached');
+    $element['#cache']     = $this->merge($cache, $element, '#cache');
+    $element['#namespace'] = static::$namespace;
+
+    $this->moduleHandler->alter('blazy_element', $element, $settings);
+  }
+
+  /**
    * Provides data to be consumed by Blazy::preSettings().
    *
    * Such as to provide lazy attribute and class for Slick or Splide, etc.
@@ -311,60 +296,6 @@ abstract class BlazyManagerBase extends BlazyBase implements BlazyManagerBaseInt
    */
   protected function postSettingsData(array &$settings): void {
     // Do nothing, let extenders override data at ease as needed.
-  }
-
-  /**
-   * Provides attachments and cache common for all blazy-related modules.
-   */
-  protected function setAttachments(
-    array &$element,
-    array $settings,
-    array $attachments = []
-  ): void {
-    $cache                 = $this->getCacheMetadata($settings);
-    $attached              = $this->attach($settings);
-    $attachments           = $this->merge($attached, $attachments);
-    $element['#attached']  = $this->merge($attachments, $element, '#attached');
-    $element['#cache']     = $this->merge($cache, $element, '#cache');
-    $element['#namespace'] = static::$namespace;
-
-    $this->moduleHandler->alter('blazy_element', $element, $settings);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo remove at/by 3.x after subs extending BlazyManagerBaseInterface.
-   */
-  public function build(array $build): array {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo remove at/by 3.x after subs extending BlazyManagerBaseInterface.
-   */
-  public function getBlazy(array $build): array {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo remove at/by 3.x after subs extending BlazyManagerBaseInterface.
-   */
-  public function preRenderBlazy(array $element): array {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo remove at/by 3.x after subs extending BlazyManagerBaseInterface.
-   */
-  public function preRenderBuild(array $element): array {
-    return [];
   }
 
 }

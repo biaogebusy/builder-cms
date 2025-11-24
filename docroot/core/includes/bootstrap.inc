@@ -6,77 +6,12 @@
  */
 
 use Drupal\Component\Utility\Crypt;
-use Drupal\Core\Http\InputBag;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Test\TestDatabase;
 use Drupal\Core\Utility\Error;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\InputBag as SymfonyInputBag;
 
-/**
- * Minimum allowed version of PHP for Drupal to be bootstrapped.
- *
- * Below this version:
- * - The installer cannot be run.
- * - Updates cannot be run.
- * - Modules and themes cannot be enabled.
- * - If a site managed to bypass all of the above, then an error is shown in
- *   the status report and various fatal errors occur on various pages.
- *
- * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
- *   \Drupal::MINIMUM_PHP instead.
- *
- * @see https://www.drupal.org/node/2909361
- * @see install.php
- */
-const DRUPAL_MINIMUM_PHP = \Drupal::MINIMUM_PHP;
-
-/**
- * Minimum supported version of PHP.
- *
- * Below this version:
- * - New sites cannot be installed, except from within tests.
- * - Updates from previous Drupal versions can be run, but users are warned
- *   that Drupal no longer supports that PHP version.
- * - An error is shown in the status report that the PHP version is too old.
- *
- * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
- *   \Drupal\Core\Utility\PhpRequirements::getMinimumSupportedPhp() instead.
- *
- * @see https://www.drupal.org/node/2909361
- * @see https://www.drupal.org/node/3261451
- */
-const DRUPAL_MINIMUM_SUPPORTED_PHP = \Drupal::MINIMUM_SUPPORTED_PHP;
-
-/**
- * Minimum recommended version of PHP.
- *
- * Sites installing Drupal on PHP versions lower than this will see a warning
- * message, but Drupal can still be installed. Used for (e.g.) PHP versions
- * that have reached their EOL or will in the near future.
- *
- * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
- *   \Drupal::RECOMMENDED_PHP instead.
- *
- * @see https://www.drupal.org/node/2909361
- */
-const DRUPAL_RECOMMENDED_PHP = \Drupal::RECOMMENDED_PHP;
-
-/**
- * Minimum recommended value of PHP memory_limit.
- *
- * 64M was chosen as a minimum requirement in order to allow for additional
- * contributed modules to be installed prior to hitting the limit. However,
- * 40M is the target for the Standard installation profile.
- *
- * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use
- *   \Drupal::MINIMUM_PHP_MEMORY_LIMIT instead.
- *
- * @see https://www.drupal.org/node/2909361
- */
-const DRUPAL_MINIMUM_PHP_MEMORY_LIMIT = \Drupal::MINIMUM_PHP_MEMORY_LIMIT;
+// cspell:ignore htkey
 
 /**
  * Error reporting level: display no errors.
@@ -126,128 +61,6 @@ define('REQUEST_TIME', (int) $_SERVER['REQUEST_TIME']);
  * This strips two levels of directories off the current directory.
  */
 define('DRUPAL_ROOT', dirname(__DIR__, 2));
-
-/**
- * Declare class aliases that will be added by the autoloader.
- */
-// @todo https://www.drupal.org/project/drupal/issues/3197482 Remove this class
-//   alias once Drupal is running Symfony 5.3 or higher.
-class_alias('Drupal\Core\Http\KernelEvent', 'Symfony\Component\HttpKernel\Event\KernelEvent', TRUE);
-
-/**
- * Set up the Symfony Request factory for forward compatibility with Symfony 5.
- *
- * @todo Remove this when Symfony 4 is no longer supported.
- */
-Request::setFactory(
-  function ($query, $request, $attributes, $cookies, $files, $server, $content) {
-    $request = new Request($query, $request, $attributes, $cookies, $files, $server, $content);
-    foreach (['request', 'query', 'cookies'] as $bag) {
-      if (!($bag instanceof SymfonyInputBag)) {
-        $request->$bag = new InputBag($request->$bag->all());
-      }
-    }
-    return $request;
-  }
-);
-
-/**
- * Returns and optionally sets the filename for a system resource.
- *
- * The filename, whether provided, cached, or retrieved from the database, is
- * only returned if the file exists.
- *
- * This function plays a key role in allowing Drupal's resources (modules
- * and themes) to be located in different places depending on a site's
- * configuration. For example, a module 'foo' may legally be located
- * in any of these three places:
- *
- * core/modules/foo/foo.info.yml
- * modules/foo/foo.info.yml
- * sites/example.com/modules/foo/foo.info.yml
- *
- * Calling drupal_get_filename('module', 'foo') will give you one of
- * the above, depending on where the module is located.
- *
- * @param $type
- *   The type of the item; one of 'core', 'profile', 'module', 'theme', or
- *   'theme_engine'.
- * @param $name
- *   The name of the item for which the filename is requested. Ignored for
- *   $type 'core'.
- * @param $filename
- *   The filename of the item if it is to be set explicitly rather
- *   than by consulting the database.
- *
- * @return string
- *   The filename of the requested item or NULL if the item is not found.
- *
- * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
- *   \Drupal\Core\Extension\ExtensionPathResolver::getPathname() instead.
- *
- * @see https://www.drupal.org/node/2940438
- */
-function drupal_get_filename($type, $name, $filename = NULL) {
-  @trigger_error('drupal_get_filename() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Extension\ExtensionPathResolver::getPathname() instead. See https://www.drupal.org/node/2940438', E_USER_DEPRECATED);
-  // Type 'core' only exists to simplify application-level logic; it always maps
-  // to the /core directory, whereas $name is ignored. It is only requested via
-  // \Drupal\Core\Extension\ExtensionList::getPath(). The file
-  // /core/core.info.yml does not exist, but is required since
-  // ExtensionList::getPath() returns the dirname() of the returned pathname.
-  if ($type === 'core') {
-    return 'core/core.info.yml';
-  }
-
-  try {
-    /** @var \Drupal\Core\Extension\ExtensionList $extension_list */
-    $extension_list = \Drupal::service("extension.list.$type");
-    if (isset($filename)) {
-      // Manually add the info file path of an extension.
-      $extension_list->setPathname($name, $filename);
-    }
-    return $extension_list->getPathname($name);
-  }
-  catch (ServiceNotFoundException $e) {
-    // Catch the exception. This will result in triggering an error.
-    // If the service is unknown, create a user-level error message.
-    trigger_error(
-      sprintf('Unknown type specified: "%s". Must be one of: "core", "profile", "module", "theme", or "theme_engine".', $type),
-      E_USER_WARNING
-    );
-  }
-  catch (\InvalidArgumentException $e) {
-    // Catch the exception. This will result in triggering an error.
-    // If the filename is still unknown, create a user-level error message.
-    trigger_error(
-      sprintf('The following %s is missing from the file system: %s', $type, $name),
-      E_USER_WARNING
-    );
-  }
-}
-
-/**
- * Returns the path to a system item (module, theme, etc.).
- *
- * @param $type
- *   The type of the item; one of 'core', 'profile', 'module', 'theme', or
- *   'theme_engine'.
- * @param $name
- *   The name of the item for which the path is requested. Ignored for
- *   $type 'core'.
- *
- * @return string
- *   The path to the requested item or an empty string if the item is not found.
- *
- * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
- *   \Drupal\Core\Extension\ExtensionPathResolver::getPath() instead.
- *
- * @see https://www.drupal.org/node/2940438
- * @see \Drupal\Core\Extension\ExtensionList::getPath()
- */
-function drupal_get_path($type, $name) {
-  @trigger_error('drupal_get_path() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Extension\ExtensionPathResolver::getPath() instead. See https://www.drupal.org/node/2940438', E_USER_DEPRECATED);
-  return dirname(drupal_get_filename($type, $name));
-}
 
 /**
  * Translates a string to the current language or to a given language.
@@ -313,8 +126,14 @@ function t($string, array $args = [], array $options = []) {
  *   A link to associate with the message.
  *
  * @see \Drupal\Core\Utility\Error::decodeException()
+ *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+ *   Use \Drupal\Core\Utility\Error::logException() instead.
+ *
+ * @see https://www.drupal.org/node/2932520
  */
 function watchdog_exception($type, Exception $exception, $message = NULL, $variables = [], $severity = RfcLogLevel::ERROR, $link = NULL) {
+  @trigger_error('watchdog_exception() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Utility\Error::logException() instead. See https://www.drupal.org/node/2932520', E_USER_DEPRECATED);
 
   // Use a default value if $message is not set.
   if (empty($message)) {
@@ -390,7 +209,7 @@ function _drupal_exception_handler_additional($exception, $exception2) {
 }
 
 /**
- * Returns the test prefix if this is an internal request from SimpleTest.
+ * Returns the test prefix if this is an internal request from a test.
  *
  * @param string $new_prefix
  *   Internal use only. A new prefix to be stored.
@@ -413,9 +232,8 @@ function drupal_valid_test_ua($new_prefix = NULL) {
   // a test environment.
   $test_prefix = FALSE;
 
-  // A valid Simpletest request will contain a hashed and salted authentication
-  // code. Check if this code is present in a cookie or custom user agent
-  // string.
+  // A valid test request will contain a hashed and salted authentication code.
+  // Check if this code is present in a cookie or custom user agent string.
   $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? NULL;
   $user_agent = $_COOKIE['SIMPLETEST_USER_AGENT'] ?? $http_user_agent;
   if (isset($user_agent) && preg_match("/^simple(\w+\d+):(.+):(.+):(.+)$/", $user_agent, $matches)) {
@@ -457,7 +275,7 @@ function drupal_valid_test_ua($new_prefix = NULL) {
 }
 
 /**
- * Generates a user agent string with a HMAC and timestamp for simpletest.
+ * Generates a user agent string with a HMAC and timestamp for tests.
  */
 function drupal_generate_test_ua($prefix) {
   static $key, $last_prefix;
@@ -555,7 +373,7 @@ function drupal_maintenance_theme() {
  *
  * Example:
  * @code
- * function mymodule_log_stream_handle($new_handle = NULL) {
+ * function my_module_log_stream_handle($new_handle = NULL) {
  *   static $handle;
  *   if (isset($new_handle)) {
  *     $handle = $new_handle;
@@ -619,36 +437,41 @@ function drupal_maintenance_theme() {
  * @see drupal_static_reset()
  */
 function &drupal_static($name, $default_value = NULL, $reset = FALSE) {
-  static $data = [], $default = [];
-  // First check if dealing with a previously defined static variable.
-  if (isset($data[$name]) || array_key_exists($name, $data)) {
-    // Non-NULL $name and both $data[$name] and $default[$name] statics exist.
-    if ($reset) {
-      // Reset pre-existing static variable to its default value.
-      $data[$name] = $default[$name];
-    }
-    return $data[$name];
-  }
-  // Neither $data[$name] nor $default[$name] static variables exist.
+  static $data = [], $defaults = [];
   if (isset($name)) {
-    if ($reset) {
-      // Reset was called before a default is set and yet a variable must be
-      // returned.
-      return $data;
+    // Check if we're dealing with a previously defined static variable.
+    if (\array_key_exists($name, $data)) {
+      // Both $data[$name] and (implicitly) $defaults[$name] statics exist.
+      if ($reset) {
+        // Reset pre-existing static variable to its default value.
+        $data[$name] = $defaults[$name];
+      }
     }
-    // First call with new non-NULL $name. Initialize a new static variable.
-    $default[$name] = $data[$name] = $default_value;
+    else {
+      // Neither $data[$name] nor $defaults[$name] static variables exist.
+      if ($reset) {
+        // Reset was called before any value for $name was set, so we should
+        // not set anything ($default_value is not reliable in this case). As
+        // the function returns a reference, we must still return a variable.
+        // (Code using $reset does not use the return value).
+        return $data;
+      }
+      // First call with new non-NULL $name. Initialize a new static variable.
+      $defaults[$name] = $data[$name] = $default_value;
+    }
+    // Return a reference to the named variable.
     return $data[$name];
   }
-  // Reset all: ($name == NULL). This needs to be done one at a time so that
-  // references returned by earlier invocations of drupal_static() also get
-  // reset.
-  foreach ($default as $name => $value) {
-    $data[$name] = $value;
+  else {
+    // Reset all: ($name == NULL). This needs to be done one at a time so that
+    // references returned by earlier invocations of drupal_static() also get
+    // reset.
+    foreach ($defaults as $name => $value) {
+      $data[$name] = $value;
+    }
+    // As the function returns a reference, we must still return a variable.
+    return $data;
   }
-  // As the function returns a reference, the return should always be a
-  // variable.
-  return $data;
 }
 
 /**
@@ -661,21 +484,11 @@ function &drupal_static($name, $default_value = NULL, $reset = FALSE) {
  */
 function drupal_static_reset($name = NULL) {
   switch ($name) {
-    case 'taxonomy_vocabulary_get_names':
-      @trigger_error("Calling drupal_static_reset() with 'taxonomy_vocabulary_get_names' as argument is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. There is no replacement for this usage. See https://www.drupal.org/node/3039041", E_USER_DEPRECATED);
+    case 'system_get_module_admin_tasks':
+      @trigger_error("Calling " . __FUNCTION__ . "() with 'system_get_module_admin_tasks' as an argument is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is no replacement for this usage. See https://www.drupal.org/node/3038972", E_USER_DEPRECATED);
+    case 'shortcut_current_displayed_set':
+      @trigger_error("Calling " . __FUNCTION__ . "() with 'shortcut_current_displayed_set' as an argument is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement for this usage. See https://www.drupal.org/node/3427050", E_USER_DEPRECATED);
       break;
-
-    case 'node_mark':
-      @trigger_error("Calling drupal_static_reset() with 'node_mark' as argument is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. There is no replacement for this usage. See https://www.drupal.org/node/3037203", E_USER_DEPRECATED);
-      break;
-
-    case 'Drupal\book\BookManager::bookSubtreeData':
-    case 'Drupal\book\BookManager::bookTreeAllData':
-    case 'Drupal\book\BookManager::doBookTreeBuild':
-      @trigger_error("Calling drupal_static_reset() with '{$name}' as argument is deprecated in drupal:9.3.0 and is removed in drupal:10.0.0. Use \Drupal::service('book.memory_cache')->deleteAll() instead. See https://www.drupal.org/node/3039439", E_USER_DEPRECATED);
-      \Drupal::service('book.memory_cache')->deleteAll();
-      break;
-
   }
   drupal_static($name, NULL, TRUE);
 }

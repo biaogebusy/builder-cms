@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Component\Utility\Xss;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class AlterTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'form_test'];
 
@@ -27,7 +27,7 @@ class AlterTest extends BrowserTestBase {
   /**
    * Tests execution order of hook_form_alter() and hook_form_FORM_ID_alter().
    */
-  public function testExecutionOrder() {
+  public function testExecutionOrder(): void {
     $this->drupalGet('form-test/alter');
     // Ensure that the order is first by module, then for a given module, the
     // id-specific one after the generic one.

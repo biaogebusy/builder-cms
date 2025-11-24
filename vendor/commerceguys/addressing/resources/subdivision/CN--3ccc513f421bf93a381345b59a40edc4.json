@@ -1,0 +1,20 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NM",
+		"Wuhai Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Haibowan Qu": {
+			"local_name": "海勃湾区"
+		},
+		"Hainan Qu": {
+			"local_name": "海南区"
+		},
+		"Ud Qu": {
+			"local_name": "乌达区"
+		}
+	}
+}

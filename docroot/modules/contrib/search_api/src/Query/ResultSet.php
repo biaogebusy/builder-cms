@@ -118,7 +118,7 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
           $item_ids[] = $item_id;
         }
       }
-      catch (SearchApiException $e) {
+      catch (SearchApiException) {
         // Can't actually be thrown here, but catch for the static analyzer's
         // sake.
       }
@@ -224,8 +224,7 @@ class ResultSet implements \IteratorAggregate, ResultSetInterface {
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \Traversable {
     return new \ArrayIterator($this->resultItems);
   }
 

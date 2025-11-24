@@ -16,5 +16,17 @@ function commerce_order_views_data() {
       'id' => 'commerce_order_total',
     ],
   ];
+  $data['commerce_order']['billing_profile'] = [
+    'title' => t('Billing Profile'),
+    'help' => t('Reference to the billing profile of a commerce order.'),
+    'relationship' => [
+      'group' => t('Order'),
+      'base' => 'profile',
+      'base field' => 'profile_id',
+      'field' => 'billing_profile__target_id',
+      'id' => 'standard',
+      'label' => t('Billing Profile'),
+    ],
+  ];
   return $data;
 }

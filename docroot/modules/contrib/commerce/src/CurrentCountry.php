@@ -19,20 +19,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class CurrentCountry implements CurrentCountryInterface {
 
   /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The chain resolver.
-   *
-   * @var \Drupal\commerce\Resolver\ChainCountryResolverInterface
-   */
-  protected $chainResolver;
-
-  /**
    * Static cache of resolved countries. One per request.
    *
    * @var \SplObjectStorage
@@ -42,14 +28,12 @@ class CurrentCountry implements CurrentCountryInterface {
   /**
    * Constructs a new CurrentCountry object.
    *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
-   * @param \Drupal\commerce\Resolver\ChainCountryResolverInterface $chain_resolver
+   * @param \Drupal\commerce\Resolver\ChainCountryResolverInterface $chainResolver
    *   The chain resolver.
    */
-  public function __construct(RequestStack $request_stack, ChainCountryResolverInterface $chain_resolver) {
-    $this->requestStack = $request_stack;
-    $this->chainResolver = $chain_resolver;
+  public function __construct(protected RequestStack $requestStack, protected ChainCountryResolverInterface $chainResolver) {
     $this->countries = new \SplObjectStorage();
   }
 
@@ -58,8 +42,12 @@ class CurrentCountry implements CurrentCountryInterface {
    */
   public function getCountry() {
     $request = $this->requestStack->getCurrentRequest();
-    if (!$this->countries->contains($request)) {
-      $this->countries[$request] = $this->chainResolver->resolve();
+    if (!$request || !$this->countries->contains($request)) {
+      $country = $this->chainResolver->resolve();
+      if (!$request) {
+        return $country;
+      }
+      $this->countries[$request] = $country;
     }
 
     return $this->countries[$request];

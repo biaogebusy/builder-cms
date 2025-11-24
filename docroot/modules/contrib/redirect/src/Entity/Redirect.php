@@ -5,10 +5,13 @@ namespace Drupal\redirect\Entity;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\link\LinkItemInterface;
+use Drupal\redirect\Plugin\Field\FieldType\RedirectSourceItem;
 
 /**
  * The redirect entity class.
@@ -36,15 +39,21 @@ use Drupal\link\LinkItemInterface;
  *     "uuid" = "uuid",
  *     "bundle" = "type",
  *     "langcode" = "language",
+ *     "published" = "enabled",
  *   },
  *   links = {
  *     "canonical" = "/admin/config/search/redirect/edit/{redirect}",
  *     "delete-form" = "/admin/config/search/redirect/delete/{redirect}",
  *     "edit-form" = "/admin/config/search/redirect/edit/{redirect}",
+ *   },
+ *   constraints = {
+ *     "RedirectUniqueHash" = {}
  *   }
  * )
  */
-class Redirect extends ContentEntityBase {
+class Redirect extends ContentEntityBase implements EntityPublishedInterface {
+
+  use EntityPublishedTrait;
 
   /**
    * Generates a unique hash for identification purposes.
@@ -61,7 +70,8 @@ class Redirect extends ContentEntityBase {
    */
   public static function generateHash($source_path, array $source_query, $language) {
     $hash = [
-      'source' => mb_strtolower($source_path),
+      // Remove leading and trailing slashes, and convert to lowercase.
+      'source' => trim(mb_strtolower($source_path), '/'),
       'language' => $language,
     ];
 
@@ -85,14 +95,17 @@ class Redirect extends ContentEntityBase {
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage_controller) {
+    $source = $this->get('redirect_source')->get(0);
+    assert($source instanceof RedirectSourceItem);
+
     // Strip any trailing slashes as these are removed when looking for matching
     // redirects.
     // @see \Drupal\redirect\EventSubscriber\RedirectRequestSubscriber::onKernelRequestCheckRedirect()
-    $this->redirect_source->path = rtrim($this->redirect_source->path, '/');
+    $source->path = rtrim($source->path, '/');
 
     // Get the language code directly from the field as language() might not
     // be up to date if the language was just changed.
-    $this->set('hash', Redirect::generateHash($this->redirect_source->path, (array) $this->redirect_source->query, $this->get('language')->value));
+    $this->set('hash', Redirect::generateHash($source->path, (array) $source->query, $this->get('language')->value));
   }
 
   /**
@@ -154,25 +167,37 @@ class Redirect extends ContentEntityBase {
    *   Query arguments.
    */
   public function setSource($path, array $query = []) {
-    $this->redirect_source->set(0, ['path' => ltrim($path, '/'), 'query' => $query]);
+    $this->get('redirect_source')->set(0, ['path' => ltrim($path, '/'), 'query' => $query]);
   }
 
   /**
    * Gets the source URL data.
    *
    * @return array
+   *   The source URL data.
    */
   public function getSource() {
-    return $this->get('redirect_source')->get(0)->getValue();
+    // Under some circumstances, such as when handling unsaved entities, the
+    // source may have not been set yet. The source field would then be empty
+    // and a fatal PHP error would occur.
+    $source = $this->get('redirect_source');
+    return $source->isEmpty() ? [] : $source->get(0)->getValue();
   }
 
   /**
-   * Gets the source base URL.
+   * Gets the source URL.
    *
    * @return string
+   *   The source URL.
    */
   public function getSourceUrl() {
-    return $this->get('redirect_source')->get(0)->getUrl()->toString();
+    $redirect_source = $this->get('redirect_source');
+    if ($redirect_source->isEmpty()) {
+      return '';
+    }
+    $source = $redirect_source->get(0);
+    assert($source instanceof RedirectSourceItem);
+    return $source->getUrl()->toString();
   }
 
   /**
@@ -182,9 +207,15 @@ class Redirect extends ContentEntityBase {
    *   The source URL path, eventually with its query.
    */
   public function getSourcePathWithQuery() {
-    $path = '/' . $this->get('redirect_source')->path;
-    if ($this->get('redirect_source')->query) {
-      $path .= '?' . UrlHelper::buildQuery($this->get('redirect_source')->query);
+    $redirect_source = $this->get('redirect_source');
+    if ($redirect_source->isEmpty()) {
+      return '/';
+    }
+    $source = $redirect_source->get(0);
+    assert($source instanceof RedirectSourceItem);
+    $path = '/' . $source->path;
+    if ($source->query) {
+      $path .= '?' . UrlHelper::buildQuery($source->query);
     }
     return $path;
   }
@@ -196,7 +227,8 @@ class Redirect extends ContentEntityBase {
    *   The redirect URL data.
    */
   public function getRedirect() {
-    return $this->get('redirect_redirect')->get(0)->getValue();
+    $redirect = $this->get('redirect_redirect');
+    return $redirect->isEmpty() ? [] : $redirect->get(0)->getValue();
   }
 
   /**
@@ -211,19 +243,24 @@ class Redirect extends ContentEntityBase {
    */
   public function setRedirect($url, array $query = [], array $options = []) {
     $uri = $url . ($query ? '?' . UrlHelper::buildQuery($query) : '');
-    $external = UrlHelper::isValid($url, TRUE);
-    $uri = ($external ? $uri : 'internal:/' . ltrim($uri, '/'));
+    $uri = UrlHelper::isExternal($url) ? $uri : 'internal:/' . ltrim($uri, '/');
     $this->redirect_redirect->set(0, ['uri' => $uri, 'options' => $options]);
   }
 
   /**
    * Gets the redirect URL.
    *
-   * @return \Drupal\Core\Url
-   *   The redirect URL.
+   * @return \Drupal\Core\Url|null
+   *   The redirect URL. NULL if the redirect is yet to be set.
    */
   public function getRedirectUrl() {
-    return $this->get('redirect_redirect')->get(0)->getUrl();
+    $redirect = $this->get('redirect_redirect');
+    if ($redirect->isEmpty()) {
+      return NULL;
+    }
+    $redirect_item = $redirect->get(0);
+    assert($redirect_item instanceof LinkItemInterface);
+    return $redirect_item->getUrl();
   }
 
   /**
@@ -233,7 +270,8 @@ class Redirect extends ContentEntityBase {
    *   The redirect URL options.
    */
   public function getRedirectOptions() {
-    return $this->get('redirect_redirect')->options;
+    $redirect = $this->get('redirect_redirect');
+    return $redirect->isEmpty() ? [] : $redirect->options;
   }
 
   /**
@@ -249,13 +287,13 @@ class Redirect extends ContentEntityBase {
    */
   public function getRedirectOption($key, $default = NULL) {
     $options = $this->getRedirectOptions();
-    return isset($options[$key]) ? $options[$key] : $default;
+    return $options[$key] ?? $default;
   }
 
   /**
    * Gets the current redirect entity hash.
    *
-   * @return string
+   * @return string|null
    *   The hash.
    */
   public function getHash() {
@@ -266,6 +304,9 @@ class Redirect extends ContentEntityBase {
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
+    $fields = [];
+    $fields += static::publishedBaseFieldDefinitions($entity_type);
+
     $fields['rid'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Redirect ID'))
       ->setDescription(t('The redirect ID.'))
@@ -310,7 +351,7 @@ class Redirect extends ContentEntityBase {
       ->setTranslatable(FALSE)
       ->setSettings([
         'link_type' => LinkItemInterface::LINK_GENERIC,
-        'title' => DRUPAL_DISABLED
+        'title' => DRUPAL_DISABLED,
       ])
       ->setDisplayOptions('form', [
         'type' => 'link',
@@ -334,6 +375,18 @@ class Redirect extends ContentEntityBase {
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
       ->setDescription(t('The date when the redirect was created.'));
+
+    // Use a more appropriate label for redirect status.
+    $fields['enabled']
+      ->setLabel(t('Enabled'))
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+        'settings' => [
+          'display_label' => TRUE,
+        ],
+      ]);
+
     return $fields;
   }
 

@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
-use Drupal\Core\Url;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 
 /**
@@ -14,17 +15,74 @@ class LinkTypeFieldEntryTest extends FlagTestBase {
 
   use FieldUiTestTrait;
 
+  /**
+   * Node id.
+   *
+   * @var string
+   */
   protected $nodeId;
 
+  /**
+   * Flag Confirm Message.
+   *
+   * @var string
+   */
   protected $flagConfirmMessage = 'Flag test label 123?';
+
+  /**
+   * Flag Details Message.
+   *
+   * @var string
+   */
   protected $flagDetailsMessage = 'Enter flag test label 123 details';
+
+  /**
+   * Unflag Confirm Message.
+   *
+   * @var string
+   */
   protected $unflagConfirmMessage = 'Unflag test label 123?';
+
+  /**
+   * Create Button Text.
+   *
+   * @var string
+   */
   protected $createButtonText = 'Create flagging 123?';
+
+  /**
+   * Delete Button Text.
+   *
+   * @var string
+   */
   protected $deleteButtonText = 'Delete flagging 123?';
+
+  /**
+   * Update Button Text.
+   *
+   * @var string
+   */
   protected $updateButtonText = 'Updating flagging 123?';
 
+  /**
+   * Flag Field Id.
+   *
+   * @var string
+   */
   protected $flagFieldId = 'flag_text_field';
+
+  /**
+   * Flag Field Label.
+   *
+   * @var string
+   */
   protected $flagFieldLabel = 'Flag Text Field';
+
+  /**
+   * Flag Field Value.
+   *
+   * @var string
+   */
   protected $flagFieldValue;
 
   /**
@@ -60,25 +118,6 @@ class LinkTypeFieldEntryTest extends FlagTestBase {
   }
 
   /**
-   * Test the flag field entry plugin UI.
-   */
-  public function doFlagUIfieldPlugin() {
-    $this->drupalGet('admin/structure/flags/add');
-    $this->submitForm([], 'Continue');
-
-    // Update the flag.
-    $edit = [
-      'link_type' => 'field_entry',
-    ];
-    $this->drupalPostAjaxForm(NULL, $edit, 'link_type');
-
-    // Check confirm form field entry.
-    $this->assertSession()->responseContains(t('Flag confirmation message'));
-    $this->assertSession()->responseContains(t('Enter flagging details message'));
-    $this->assertSession()->responseContains(t('Unflag confirmation message'));
-  }
-
-  /**
    * Create a node type and flag.
    */
   public function doCreateFlag() {
@@ -105,7 +144,7 @@ class LinkTypeFieldEntryTest extends FlagTestBase {
 
     // Check the Field UI tabs appear on the flag edit page.
     $this->drupalGet('admin/structure/flags/manage/' . $flag_id);
-    $this->assertSession()->responseContains(t("Manage fields"));
+    $this->assertSession()->responseContains('Manage fields');
 
     $this->fieldUIAddNewField('admin/structure/flags/manage/' . $flag_id, $this->flagFieldId, $this->flagFieldLabel, 'text');
   }
@@ -154,7 +193,6 @@ class LinkTypeFieldEntryTest extends FlagTestBase {
     // Get the details form.
     $this->clickLink($this->flag->getShortText('unflag'));
 
-    $node_url = Url::fromRoute('entity.node.canonical', ['node' => $this->nodeId]);
     $this->assertSession()->addressEquals('flag/details/edit/' . $flag_id . '/' . $this->nodeId);
 
     // See if the details message is displayed.
@@ -185,16 +223,16 @@ class LinkTypeFieldEntryTest extends FlagTestBase {
 
     // Test a good flag ID param, but a bad flaggable ID param.
     $this->drupalGet('flag/details/edit/' . $flag_id . '/-9999');
-    $this->assertSession()->statusCodeEquals('404');
-        
+    $this->assertSession()->statusCodeEquals(404);
+
     // Test a bad flag ID param, but a good flaggable ID param.
     $this->drupalGet('flag/details/edit/jibberish/' . $this->nodeId);
-    $this->assertSession()->statusCodeEquals('404');
+    $this->assertSession()->statusCodeEquals(404);
 
     // Test editing a unflagged entity.
     $unlinked_node = $this->drupalCreateNode(['type' => $this->nodeType]);
     $this->drupalGet('flag/details/edit/' . $flag_id . '/' . $unlinked_node->id());
-    $this->assertSession()->statusCodeEquals('404');
+    $this->assertSession()->statusCodeEquals(404);
   }
 
   /**

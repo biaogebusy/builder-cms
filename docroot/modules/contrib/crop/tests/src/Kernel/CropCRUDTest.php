@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\crop\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\crop\Entity\Crop;
 
 /**
@@ -26,7 +25,7 @@ class CropCRUDTest extends CropUnitTestBase {
     $values = [
       'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
-      'description' => $this->randomGenerator->sentences(8),
+      'description' => $this->getRandomGenerator()->word(8),
     ];
     $crop_type = $this->cropTypeStorage->create($values);
 
@@ -40,7 +39,7 @@ class CropCRUDTest extends CropUnitTestBase {
 
     $loaded = $this->container->get('config.factory')->get('crop.type.' . $values['id'])->get();
     foreach ($values as $key => $value) {
-      $this->assertEquals($loaded[$key], $value, new FormattableMarkup('Correct value for @field found.', ['@field' => $key]));
+      $this->assertEquals($loaded[$key], $value, "Correct value for $key found.");
     }
   }
 
@@ -65,16 +64,16 @@ class CropCRUDTest extends CropUnitTestBase {
     ];
     $crop = $this->cropStorage->create($values);
 
-    $this->assertEquals(['x' => 100, 'y' => 150], $crop->position(), t('Position correctly returned.'));
-    $this->assertEquals(['width' => 200, 'height' => 250], $crop->size(), t('Size correctly returned.'));
-    $this->assertEquals(['x' => 0, 'y' => 25], $crop->anchor(), t('Anchor correctly returned.'));
+    $this->assertEquals(['x' => 100, 'y' => 150], $crop->position(), 'Position correctly returned.');
+    $this->assertEquals(['width' => 200, 'height' => 250], $crop->size(), 'Size correctly returned.');
+    $this->assertEquals(['x' => 0, 'y' => 25], $crop->anchor(), 'Anchor correctly returned.');
 
     $crop->setPosition(10, 10);
     $crop->setSize(20, 20);
 
-    $this->assertEquals(['x' => 10, 'y' => 10], $crop->position(), t('Position correctly returned.'));
-    $this->assertEquals(['width' => 20, 'height' => 20], $crop->size(), t('Size correctly returned.'));
-    $this->assertEquals(['x' => 0, 'y' => 0], $crop->anchor(), t('Anchor correctly returned.'));
+    $this->assertEquals(['x' => 10, 'y' => 10], $crop->position(), 'Position correctly returned.');
+    $this->assertEquals(['width' => 20, 'height' => 20], $crop->size(), 'Size correctly returned.');
+    $this->assertEquals(['x' => 0, 'y' => 0], $crop->anchor(), 'Anchor correctly returned.');
 
     $crop->setPosition($values['x'], $values['y']);
     $crop->setSize($values['width'], $values['height']);
@@ -91,27 +90,27 @@ class CropCRUDTest extends CropUnitTestBase {
     foreach ($values as $key => $value) {
       switch ($key) {
         case 'type':
-          $this->assertEquals($loaded_crop->{$key}->target_id, $value, new FormattableMarkup('Correct value for @field found.', ['@field' => $key]));
+          $this->assertEquals($loaded_crop->{$key}->target_id, $value, "Correct value for $key found.");
           break;
 
         default:
-          $this->assertEquals($loaded_crop->{$key}->value, $value, new FormattableMarkup('Correct value for @field found.', ['@field' => $key]));
+          $this->assertEquals($loaded_crop->{$key}->value, $value, "Correct value for $key found.");
           break;
       }
     }
 
-    $this->assertTrue(Crop::cropExists($file->getFileUri()), t('Crop::cropExists() correctly found saved crop.'));
-    $this->assertTrue(Crop::cropExists($file->getFileUri(), $this->cropType->id()), t('Crop::cropExists() correctly found saved crop.'));
-    $this->assertFalse(Crop::cropExists($file->getFileUri(), 'nonexistent_type'), t('Crop::cropExists() correctly handled wrong type.'));
-    $this->assertFalse(Crop::cropExists('public://nonexistent.png'), t('Crop::cropExists() correctly handled wrong uri.'));
+    $this->assertTrue(Crop::cropExists($file->getFileUri()), 'Crop::cropExists() correctly found saved crop.');
+    $this->assertTrue(Crop::cropExists($file->getFileUri(), $this->cropType->id()), 'Crop::cropExists() correctly found saved crop.');
+    $this->assertFalse(Crop::cropExists($file->getFileUri(), 'nonexistent_type'), 'Crop::cropExists() correctly handled wrong type.');
+    $this->assertFalse(Crop::cropExists('public://nonexistent.png'), 'Crop::cropExists() correctly handled wrong uri.');
 
     $loaded_crop = Crop::findCrop($file->getFileUri(), $this->cropType->id());
-    $this->assertEquals($crop->id(), $loaded_crop->id(), t('Crop::findCrop() correctly loaded crop entity.'));
-    $this->assertEquals($crop->position(), $loaded_crop->position(), t('Crop::findCrop() correctly loaded crop entity.'));
-    $this->assertEquals($crop->size(), $loaded_crop->size(), t('Crop::findCrop() correctly loaded crop entity.'));
-    $this->assertEquals($crop->uri->value, $loaded_crop->uri->value, t('Crop::findCrop() correctly loaded crop entity.'));
-    $this->assertNull(Crop::findCrop('public://nonexistent.png', $this->cropType->id()), t('Crop::findCrop() correctly handled nonexistent crop.'));
-    $this->assertNull(Crop::findCrop('public://nonexistent.png', 'nonexistent_crop'), t('Crop::findCrop() correctly handled nonexistent crop.'));
+    $this->assertEquals($crop->id(), $loaded_crop->id(), 'Crop::findCrop() correctly loaded crop entity.');
+    $this->assertEquals($crop->position(), $loaded_crop->position(), 'Crop::findCrop() correctly loaded crop entity.');
+    $this->assertEquals($crop->size(), $loaded_crop->size(), 'Crop::findCrop() correctly loaded crop entity.');
+    $this->assertEquals($crop->uri->value, $loaded_crop->uri->value, 'Crop::findCrop() correctly loaded crop entity.');
+    $this->assertNull(Crop::findCrop('public://nonexistent.png', $this->cropType->id()), 'Crop::findCrop() correctly handled nonexistent crop.');
+    $this->assertNull(Crop::findCrop('public://nonexistent.png', 'nonexistent_crop'), 'Crop::findCrop() correctly handled nonexistent crop.');
   }
 
   /**

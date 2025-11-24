@@ -4,7 +4,9 @@ namespace Drupal\Tests\redis\Functional;
 
 use Drupal\Component\Utility\OpCodeCache;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\cron_queue_test\Plugin\QueueWorker\CronQueueTestException;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
@@ -24,7 +26,7 @@ class WebTest extends BrowserTestBase {
    *
    * @var array
    */
-  protected static $modules = ['redis', 'block'];
+  protected static $modules = ['redis', 'block', 'cron_queue_test'];
 
   /**
    * {@inheritdoc}
@@ -56,6 +58,9 @@ class WebTest extends BrowserTestBase {
     $settings['cache'] = [
       'default' => 'cache.backend.redis',
     ];
+
+    $settings['queue_default'] = 'queue.redis';
+
 
     $settings['container_yamls'][] = \Drupal::service('extension.list.module')->getPath('redis') . '/example.services.yml';
 
@@ -95,10 +100,13 @@ class WebTest extends BrowserTestBase {
     $contents .= "\n\n" . '$settings["container_yamls"][] = "' . \Drupal::service('extension.list.module')->getPath('redis') . '/example.services.yml";';
     $contents .= "\n\n" . '$settings["cache"] = ' . var_export($settings['cache'], TRUE) . ';';
     $contents .= "\n\n" . '$settings["redis_compress_length"] = 100;';
+    $contents .= "\n\n" . '$settings["redis.connection"]["interface"] = "' . $redis_interface . '";';
 
     if ($host = getenv('REDIS_HOST')) {
       $contents .= "\n\n" . '$settings["redis.connection"]["host"] = "' . $host . '";';
     }
+
+    $contents .= "\n\n" . '$settings["queue_default"] = "queue.redis";';
 
     // Add the classloader.
     $contents .= "\n\n" . '$class_loader->addPsr4(\'Drupal\\\\redis\\\\\', \'' . \Drupal::service('extension.list.module')->getPath('redis') . '/src\');';
@@ -123,6 +131,7 @@ class WebTest extends BrowserTestBase {
     $db_schema->dropTable('cachetags');
     $db_schema->dropTable('semaphore');
     $db_schema->dropTable('flood');
+    $db_schema->dropTable('queue');
   }
 
   /**
@@ -138,14 +147,14 @@ class WebTest extends BrowserTestBase {
     $edit["modules[field_ui][enable]"] = TRUE;
     $edit["modules[text][enable]"] = TRUE;
     $this->drupalGet('admin/modules');
-    $this->submitForm($edit, t('Install'));
-    $this->submitForm([], t('Continue'));
+    $this->submitForm($edit, 'Install');
+    $this->submitForm([], 'Continue');
 
     $assert = $this->assertSession();
 
     // The order of the modules is not guaranteed, so just assert that they are
     // all listed.
-    $assert->elementTextContains('css', '.messages--status', '6 modules have been enabled');
+    $assert->elementTextContains('css', '.messages--status', '6 modules have been');
     $assert->elementTextContains('css', '.messages--status', 'Field UI');
     $assert->elementTextContains('css', '.messages--status', 'Node');
     $assert->elementTextContains('css', '.messages--status', 'Text');
@@ -154,24 +163,26 @@ class WebTest extends BrowserTestBase {
     $assert->elementTextContains('css', '.messages--status', 'Filter');
     $assert->checkboxChecked('edit-modules-field-ui-enable');
 
+    \Drupal::service(FieldTypePluginManagerInterface::class)->clearCachedDefinitions();
+
     // Create a node type with a field.
     $edit = [
       'name' => $this->randomString(),
+      'options[promote]' => '1',
       'type' => $node_type = mb_strtolower($this->randomMachineName()),
     ];
     $this->drupalGet('admin/structure/types/add');
-    $this->submitForm($edit, t('Save and manage fields'));
+    $this->submitForm($edit, 'Save and manage fields');
     $field_name = mb_strtolower($this->randomMachineName());
     $this->fieldUIAddNewField('admin/structure/types/manage/' . $node_type, $field_name, NULL, 'text');
 
     // Create a node, check display, edit, verify that it has been updated.
     $edit = [
       'title[0][value]' => $this->randomMachineName(),
-      'body[0][value]' => $this->randomMachineName(),
       'field_' . $field_name . '[0][value]' => $this->randomMachineName(),
     ];
     $this->drupalGet('node/add/' . $node_type);
-    $this->submitForm($edit, t('Save'));
+    $this->submitForm($edit, 'Save');
 
     // Test the output as anonymous user.
     $this->drupalLogout();
@@ -181,12 +192,11 @@ class WebTest extends BrowserTestBase {
     $this->drupalLogin($admin_user);
     $this->drupalGet('node');
     $this->clickLink($edit['title[0][value]']);
-    $this->assertSession()->responseContains($edit['body[0][value]']);
     $this->clickLink(t('Edit'));
     $update = [
       'title[0][value]' => $this->randomMachineName(),
     ];
-    $this->submitForm($update, t('Save'));
+    $this->submitForm($update, 'Save');
     $this->assertSession()->responseContains($update['title[0][value]']);
     $this->drupalGet('node');
     $this->assertSession()->responseContains($update['title[0][value]']);
@@ -194,7 +204,45 @@ class WebTest extends BrowserTestBase {
     $this->drupalLogout();
     $this->drupalGet('node');
     $this->clickLink($update['title[0][value]']);
-    $this->assertSession()->responseContains($edit['body[0][value]']);
+
+    // Manually add a queue item and process it, to test the queue factory.
+    // Get the queue to test the normal Exception.
+    $queue = \Drupal::queue(CronQueueTestException::PLUGIN_ID);
+
+    // Enqueue an item for processing.
+    $queue->createItem([$this->randomMachineName() => $this->randomMachineName()]);
+
+    // Run cron; the worker for this queue should throw an exception and handle
+    // it.
+    \Drupal::service('cron')->run();
+    $this->assertEquals(1, \Drupal::state()->get('cron_queue_test_exception'));
+
+    // Access the reports page.
+    $this->drupalLogin($admin_user);
+    $this->drupalGet('admin/reports/redis');
+    $this->assertSession()->pageTextContains('Connected, using the ' . self::getRedisInterfaceEnv() . ' client');
+    $this->assertSession()->pageTextMatches('/config: [0-9]*[1-9][0-9]*/');
+
+    $this->assertSession()->pageTextMatches('/.+ \/ .+ \([0-9]{1,2}%\), maxmemory policy: .*/');
+
+    // Assert a few cache bins for a non-zero item count.
+    $this->assertSession()->pageTextMatches('/data: [0-9]*[1-9][0-9]*/');
+    $this->assertSession()->pageTextMatches('/discovery: [0-9]*[1-9][0-9]*/');
+    $this->assertSession()->pageTextMatches('/dynamic_page_cache: [0-9]*[1-9][0-9]*/');
+
+    // Assert render cache entries.
+    $this->assertSession()->pageTextMatches('/entity_view:block:.+: [0-9]*[1-9][0-9]* \(.+\)/');
+    $this->assertSession()->pageTextMatches('/view:frontpage:display:page_1: [0-9]*[1-9][0-9]* \(.+\)/');
+
+    // Assert a few cache tags for a non-zero invalidation count.
+    $this->assertSession()->pageTextContains('Most invalidated cache tags');
+    $this->assertSession()->pageTextMatches('/entity_types: [0-9]*[1-9][0-9]*/');
+    $this->assertSession()->pageTextMatches('/entity_field_info: [0-9]*[1-9][0-9]*/');
+    $this->assertSession()->pageTextMatches('/[0-9]*[1-9][0-9]* tags with [0-9]*[1-9][0-9]* invalidations/');
+
+    if (static::getRedisInterfaceEnv() == 'Relay') {
+      $this->assertSession()->pageTextMatches('/[0-9.]+ ([KM])B \/ \d{2} MB memory usage, eviction policy: .+/');
+    }
 
     // Get database schema.
     $db_schema = Database::getConnection()->schema();
@@ -205,6 +253,7 @@ class WebTest extends BrowserTestBase {
     $this->assertFalse($db_schema->tableExists('cachetags'));
     $this->assertFalse($db_schema->tableExists('semaphore'));
     $this->assertFalse($db_schema->tableExists('flood'));
+    $this->assertFalse($db_schema->tableExists('queue'));
   }
 
 }

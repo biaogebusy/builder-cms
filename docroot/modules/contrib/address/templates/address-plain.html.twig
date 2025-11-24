@@ -10,6 +10,7 @@
  *   - organization: Organization.
  *   - address_line1: First address line.
  *   - address_line2: Second address line.
+ *   - address_line3: Third address line.
  *   - postal_code: Postal code.
  *   - sorting_code: Sorting code.
  *   - dependent_locality: The dependent locality.
@@ -48,6 +49,9 @@
   {% endif %}
   {% if address_line2 %}
     {{ address_line2 }} <br>
+  {% endif %}
+  {% if address_line3 %}
+    {{ address_line3 }} <br>
   {% endif %}
   {% if dependent_locality.code %}
     {{ dependent_locality.code }} <br>

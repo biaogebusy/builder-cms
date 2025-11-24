@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Config;
 
 use Drupal\Core\Config\ConfigCollectionInfo;
@@ -17,14 +19,14 @@ class ConfigFactoryOverrideBaseTest extends UnitTestCase {
   /**
    * @dataProvider providerTestFilterNestedArray
    */
-  public function testFilterNestedArray(array $original_data, array $override_data_before, array $override_data_after, $changed) {
+  public function testFilterNestedArray(array $original_data, array $override_data_before, array $override_data_after, $changed): void {
     $config_factory = new TestConfigFactoryOverrideBase();
     $result = $config_factory->doFilterNestedArray($original_data, $override_data_before);
     $this->assertEquals($changed, $result);
     $this->assertEquals($override_data_after, $override_data_before);
   }
 
-  public function providerTestFilterNestedArray() {
+  public static function providerTestFilterNestedArray() {
     $data = [];
     $data['empty'] = [
       [],

@@ -42,7 +42,6 @@ to install the following additional software:
 * Google Chrome or Chromium browser
 * chromedriver (tested with version 2.45) -- see
   https://sites.google.com/chromium.org/driver/
-* PHP 7.1 or higher
 
 ## Running tests
 
@@ -114,7 +113,17 @@ chromedriver using port 4444, and keep it running:
 * To run only core tests, run `yarn test:nightwatch --tag core`
 * To skip running core tests, run `yarn test:nightwatch --skiptags core`
 * To run a single test, run e.g.
-  `yarn test:nightwatch tests/Drupal/Nightwatch/Tests/exampleTest.js`
+  `yarn test:nightwatch tests/Drupal/Nightwatch/Tests/loginTest.js`
+* To run a11y tests for both the admin and default themes.
+  `yarn test:nightwatch --tag a11y`
+* To run a11y tests for the admin theme only.
+  `yarn test:nightwatch --tag a11y:admin`
+* To run a11y tests for the default theme only.
+  `yarn test:nightwatch --tag a11y:default`
+* To run an a11y test for a custom theme used as the default theme.
+  `yarn test:nightwatch --tag a11y:default --defaultTheme olivero`
+* To run an a11y test for a custom admin theme.
+  `yarn test:nightwatch --tag a11y:admin --adminTheme claro`
 
 Nightwatch tests, as well as custom commands, assertions and pages, can be
 placed in any folder with the pattern

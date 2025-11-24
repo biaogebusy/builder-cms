@@ -2,8 +2,11 @@
 
 namespace Drupal\devel_generate_example\Plugin\DevelGenerate;
 
-use Drupal\devel_generate\DevelGenerateBase;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\devel_generate\DevelGenerateBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a ExampleDevelGenerate plugin.
@@ -20,12 +23,27 @@ use Drupal\Core\Form\FormStateInterface;
  *   }
  * )
  */
-class ExampleDevelGenerate extends DevelGenerateBase {
+class ExampleDevelGenerate extends DevelGenerateBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * Provides system time.
+   */
+  protected TimeInterface $time;
 
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->time = $container->get('datetime.time');
+
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
 
     $form['num'] = [
       '#type' => 'textfield',
@@ -46,7 +64,7 @@ class ExampleDevelGenerate extends DevelGenerateBase {
   /**
    * {@inheritdoc}
    */
-  protected function generateElements(array $values) {
+  protected function generateElements(array $values): void {
     $num = $values['num'];
     $kill = $values['kill'];
 
@@ -62,7 +80,7 @@ class ExampleDevelGenerate extends DevelGenerateBase {
       'pass'    => '',
       'mail'    => 'example_devel_generate@example.com',
       'status'  => 1,
-      'created' => \Drupal::time()->getRequestTime(),
+      'created' => $this->time->getRequestTime(),
       'roles' => '',
       // A flag to let hook_user_* know that this is a generated user.
       'devel_generate' => TRUE,
@@ -70,7 +88,7 @@ class ExampleDevelGenerate extends DevelGenerateBase {
 
     $account = user_load_by_name('example_devel_generate');
     if (!$account) {
-      $account = $this->getEntityTypeManager()->getStorage('user')->create($edit);
+      $account = $this->entityTypeManager->getStorage('user')->create($edit);
     }
 
     // Populate all fields with sample values.
@@ -86,12 +104,11 @@ class ExampleDevelGenerate extends DevelGenerateBase {
   /**
    * {@inheritdoc}
    */
-  public function validateDrushParams(array $args, array $options = []) {
-    $values = [
+  public function validateDrushParams(array $args, array $options = []): array {
+    return [
       'num' => $options['num'],
       'kill' => $options['kill'],
     ];
-    return $values;
   }
 
 }

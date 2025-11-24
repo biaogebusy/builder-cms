@@ -1,29 +1,37 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Service;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements service:event-subscriber command.
- */
-final class EventSubscriber extends ModuleGenerator {
-
-  protected string $name = 'service:event-subscriber';
-  protected string $description = 'Generates an event subscriber';
-  protected string $alias = 'event-subscriber';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/service/event-subscriber';
+#[Generator(
+  name: 'service:event-subscriber',
+  description: 'Generates an event subscriber',
+  aliases: ['event-subscriber'],
+  templatePath: Application::TEMPLATE_PATH . '/Service/_event-subscriber',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class EventSubscriber extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['class'] = $this->ask('Class', '{machine_name|camelize}Subscriber');
-    $this->collectServices($vars, FALSE);
-    $this->addFile('src/EventSubscriber/{class}.php', 'event-subscriber');
-    $this->addServicesFile()->template('services');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
+
+    $vars['class'] = $ir->askClass(default: '{machine_name|camelize}Subscriber');
+    $vars['services'] = $ir->askServices(FALSE);
+
+    $assets->addFile('src/EventSubscriber/{class}.php', 'event-subscriber.twig');
+    $assets->addServicesFile()->template('services.twig');
   }
 
 }

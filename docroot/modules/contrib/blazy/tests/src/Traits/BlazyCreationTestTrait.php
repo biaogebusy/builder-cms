@@ -2,10 +2,11 @@
 
 namespace Drupal\Tests\blazy\Traits;
 
-use Drupal\blazy\Blazy;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\blazy\Blazy;
+use Drupal\blazy\internals\Internals;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
@@ -500,7 +501,8 @@ trait BlazyCreationTestTrait {
     if (empty($this->url)) {
       $source = $this->root . '/core/misc/druplicon.png';
       $uri = 'public://test.png';
-      $this->fileSystem->copy($source, $uri, FileSystemInterface::EXISTS_REPLACE);
+      $replace = Internals::fileExistsReplace();
+      $this->fileSystem->copy($source, $uri, $replace);
       $this->url = Blazy::createUrl($uri);
     }
 
@@ -539,7 +541,8 @@ trait BlazyCreationTestTrait {
 
     if (!is_file($uri)) {
       $this->prepareTestDirectory();
-      $this->fileSystem->saveData($source, $uri, FileSystemInterface::EXISTS_REPLACE);
+      $replace = Internals::fileExistsReplace();
+      $this->fileSystem->saveData($source, $uri, $replace);
     }
 
     $uri = 'public://simpletest/' . $this->testPluginId . '/' . $name;

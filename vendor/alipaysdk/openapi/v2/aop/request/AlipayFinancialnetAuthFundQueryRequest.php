@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.financialnet.auth.fund.query request
  *
  * @author auto create
- * @since 1.0, 2021-09-02 23:40:28
+ * @since 1.0, 2024-10-14 13:09:48
  */
 class AlipayFinancialnetAuthFundQueryRequest
 {

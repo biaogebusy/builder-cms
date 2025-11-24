@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\address\Kernel\Formatter;
 
-use Drupal\entity_test\Entity\EntityTest;
+use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
@@ -18,6 +18,8 @@ class AddressDefaultFormatterTest extends FormatterTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    ConfigurableLanguage::createFromLangcode('it')->save();
+    ConfigurableLanguage::createFromLangcode('fr')->save();
     ConfigurableLanguage::createFromLangcode('zh-hant')->save();
 
     $this->createField('address', 'address_default');
@@ -27,7 +29,7 @@ class AddressDefaultFormatterTest extends FormatterTestBase {
    * Tests Andorra address formatting.
    */
   public function testAndorraAddress() {
-    $entity = EntityTest::create([]);
+    $entity = EntityTestMul::create([]);
     $entity->{$this->fieldName} = [
       'country_code' => 'AD',
       'locality' => 'Canillo',
@@ -52,7 +54,7 @@ class AddressDefaultFormatterTest extends FormatterTestBase {
    * Tests El Salvador address formatting.
    */
   public function testElSalvadorAddress() {
-    $entity = EntityTest::create([]);
+    $entity = EntityTestMul::create([]);
     $entity->{$this->fieldName} = [
       'country_code' => 'SV',
       'administrative_area' => 'Ahuachapán',
@@ -87,16 +89,19 @@ class AddressDefaultFormatterTest extends FormatterTestBase {
    * Tests Taiwan address formatting.
    */
   public function testTaiwanAddress() {
-    $language = \Drupal::languageManager()->getLanguage('zh-hant');
+    // Set the default language to FR to confirm that the country is not
+    // rendered in that language, but rather in the entity language, as
+    // expected when an entity is translatable.
+    $language = \Drupal::languageManager()->getLanguage('fr');
     \Drupal::languageManager()->setConfigOverrideLanguage($language);
     // Reload the country repository for the new language to take effect.
     $this->container->set('address.country_repository', NULL);
 
-    $entity = EntityTest::create([]);
+    $entity = EntityTestMul::create(['langcode' => 'zh-hant']);
     $entity->{$this->fieldName} = [
       'langcode' => 'zh-hant',
       'country_code' => 'TW',
-      'administrative_area' => 'Taipei City',
+      'administrative_area' => 'TPE',
       'locality' => "Da'an District",
       'address_line1' => 'Sec. 3 Hsin-yi Rd.',
       'postal_code' => '106',
@@ -121,10 +126,46 @@ class AddressDefaultFormatterTest extends FormatterTestBase {
   }
 
   /**
+   * Tests Uruguay address formatting.
+   */
+  public function testUruguayAddress() {
+    $entity = EntityTestMul::create([]);
+    $entity->{$this->fieldName} = [
+      'country_code' => 'UY',
+      'administrative_area' => 'CA',
+      'locality' => 'Pando',
+      'postal_code' => '15600',
+      'address_line1' => 'Some Street 12',
+    ];
+    $this->renderEntityFields($entity, $this->display);
+    $expected = implode('', [
+      'line1' => '<p class="address" translate="no">',
+      'line2' => '<span class="address-line1">Some Street 12</span><br>' . "\n",
+      'line3' => '<span class="postal-code">15600</span> - <span class="locality">Pando</span>, <span class="administrative-area">Canelones</span><br>' . "\n",
+      'line4' => '<span class="country">Uruguay</span>',
+      'line5' => '</p>',
+    ]);
+    $this->assertRaw($expected, 'The UY address has been properly formatted.');
+
+    // A formatted address without an administrative area should not have a
+    // trailing comma after the locality.
+    $entity->{$this->fieldName}->administrative_area = '';
+    $this->renderEntityFields($entity, $this->display);
+    $expected = implode('', [
+      'line1' => '<p class="address" translate="no">',
+      'line2' => '<span class="address-line1">Some Street 12</span><br>' . "\n",
+      'line3' => '<span class="postal-code">15600</span> - <span class="locality">Pando</span><br>' . "\n",
+      'line4' => '<span class="country">Uruguay</span>',
+      'line5' => '</p>',
+    ]);
+    $this->assertRaw($expected, 'The UY address has been properly formatted.');
+  }
+
+  /**
    * Tests US address formatting.
    */
   public function testUnitedStatesIncompleteAddress() {
-    $entity = EntityTest::create([]);
+    $entity = EntityTestMul::create([]);
     $entity->{$this->fieldName} = [
       'country_code' => 'US',
       'administrative_area' => 'CA',

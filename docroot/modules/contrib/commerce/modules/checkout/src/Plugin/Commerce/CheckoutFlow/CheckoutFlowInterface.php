@@ -9,6 +9,7 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\BaseFormIdInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Places an order through a series of steps.
@@ -18,6 +19,16 @@ use Drupal\Core\Plugin\PluginFormInterface;
  * config entity and injected into the plugin at instantiation.
  */
 interface CheckoutFlowInterface extends FormInterface, BaseFormIdInterface, ConfigurableInterface, DependentPluginInterface, PluginFormInterface, PluginInspectionInterface, DerivativeInspectionInterface {
+
+  /**
+   * Sets the current order.
+   *
+   * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   *   The order.
+   *
+   * @return $this
+   */
+  public function setOrder(OrderInterface $order): static;
 
   /**
    * Gets the current order.

@@ -20,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   cron = {"time" = 10}
  * )
  */
-class MessageDeletionWorker extends QueueWorkerBase implements ContainerFactoryPluginInterface {
+final class MessageDeletionWorker extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
   /**
    * The message storage handler.
@@ -50,7 +50,7 @@ class MessageDeletionWorker extends QueueWorkerBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
+    return new self(
       $configuration,
       $plugin_id,
       $plugin_definition,

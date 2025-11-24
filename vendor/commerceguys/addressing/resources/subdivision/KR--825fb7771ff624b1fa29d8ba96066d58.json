@@ -1,0 +1,20 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"41",
+		"Seongnam-si"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Bundang-gu": {
+			"local_name": "분당구"
+		},
+		"Sujeong-gu": {
+			"local_name": "수정구"
+		},
+		"Jungwon-gu": {
+			"local_name": "중원구"
+		}
+	}
+}

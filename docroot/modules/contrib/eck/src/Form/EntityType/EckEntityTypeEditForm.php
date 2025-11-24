@@ -34,7 +34,9 @@ class EckEntityTypeEditForm extends EckEntityTypeFormBase {
     /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $efm */
     $definitions = $this->entityFieldManager->getBaseFieldDefinitions($this->entity->id());
 
-    foreach (['title', 'created', 'changed', 'uid'] as $field) {
+    foreach (['title', 'created', 'changed', 'uid', 'status'] as $field) {
+      // Lock entity base field configuration in case when that field already
+      // contain some data.
       if (isset($definitions[$field]) && $fieldStorage->countFieldData($definitions[$field], TRUE)) {
         $form['base_fields'][$field]['#disabled'] = TRUE;
       }

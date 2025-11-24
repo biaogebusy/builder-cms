@@ -40,14 +40,13 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'variation_type_action' => 'use_existing',
       'variationTypes[default]' => 1,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('The product type Foo has been successfully saved.');
 
     $product_type = ProductType::load($edit['id']);
     $this->assertNotEmpty($product_type);
     $this->assertEquals($edit['label'], $product_type->label());
     $this->assertEquals($edit['description'], $product_type->getDescription());
-    $this->assertEquals('default', $product_type->getVariationTypeId());
     $this->assertEquals(['default'], $product_type->getVariationTypeIds());
     $this->assertTrue($product_type->allowsMultipleVariations());
     $this->assertTrue($product_type->shouldInjectVariationFields());
@@ -64,12 +63,11 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'multipleVariations' => FALSE,
       'injectVariationFields' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $product_type = ProductType::load($edit['id']);
     $this->assertNotEmpty($product_type);
     $this->assertEquals($edit['label'], $product_type->label());
     $this->assertEquals($edit['description'], $product_type->getDescription());
-    $this->assertEquals($edit['id'], $product_type->getVariationTypeId());
     $this->assertEquals([$edit['id']], $product_type->getVariationTypeIds());
     $variation_type = ProductVariationType::load($edit['id']);
     $this->assertNotEmpty($variation_type);
@@ -92,7 +90,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'description' => 'My even more random product type',
       'variation_type_action' => 'create_new',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains($this->t('A product variation type with the machine name @name already exists. Select an existing product variation type or change the machine name for this product type.', ['@name' => $product_type_id]));
 
     // Confirm that the form can't be submitted with no order item types.
@@ -107,7 +105,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'description' => 'Another random product type',
       'variation_type_action' => 'create_new',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains($this->t('A new product variation type cannot be created, because no order item types were found. Select an existing product variation type or retry after creating a new order item type.'));
 
     // Confirm that a non-default order item type can be selected.
@@ -126,7 +124,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'description' => 'My even more random product type',
       'variation_type_action' => 'create_new',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $product_type = ProductType::load($edit['id']);
     $this->assertNotEmpty($product_type);
     $this->assertEquals($edit['label'], $product_type->label());
@@ -149,7 +147,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'multipleVariations' => FALSE,
       'injectVariationFields' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('The product type Default! has been successfully saved.');
 
     $product_type = ProductType::load('default');
@@ -168,7 +166,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
     $edit = [
       'multipleVariations' => TRUE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     \Drupal::entityTypeManager()->getStorage('commerce_product_type')->resetCache();
     $product_type = ProductType::load('default');
     $this->assertTrue($product_type->allowsMultipleVariations());
@@ -188,7 +186,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
       'id' => 'default2',
       'multipleVariations' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('The product type Default2 has been successfully saved.');
 
     // Confirm that the original product type is unchanged.
@@ -221,8 +219,7 @@ class ProductTypeTest extends ProductBrowserTestBase {
     $product_type = $this->createEntity('commerce_product_type', [
       'id' => 'foo',
       'label' => 'foo',
-      'variationType' => $variation_type->id(),
-      'variationTypes' => [],
+      'variationTypes' => [$variation_type->id()],
     ]);
     $product = $this->createEntity('commerce_product', [
       'type' => $product_type->id(),

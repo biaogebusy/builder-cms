@@ -200,7 +200,7 @@ class WebformHtmlEditor extends FormElement implements TrustedCallbackInterface 
         return WebformXss::getHtmlTagList();
 
       default:
-        return preg_split('/ +/', $allowed_tags);
+        return preg_split('/ +/', (string) $allowed_tags);
     }
   }
 

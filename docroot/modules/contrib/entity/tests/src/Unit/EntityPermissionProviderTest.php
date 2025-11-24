@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\entity\Unit;
 
+use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
@@ -9,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\entity\EntityPermissionProvider;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\EntityOwnerInterface;
+use Prophecy\Prophet;
 
 /**
  * @coversDefaultClass \Drupal\entity\EntityPermissionProvider
@@ -64,10 +66,11 @@ class EntityPermissionProviderTest extends UnitTestCase {
    * @return array
    *   A list of testBuildPermissions method arguments.
    */
-  public function entityTypeProvider() {
+  public static function entityTypeProvider() {
     $data = [];
     // Content entity type.
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $prophet = new Prophet();
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->getProvider()->willReturn('entity_module_test');
     $entity_type->id()->willReturn('green_entity');
     $entity_type->getSingularLabel()->willReturn('green entity');
@@ -89,7 +92,7 @@ class EntityPermissionProviderTest extends UnitTestCase {
     $data[] = [$entity_type->reveal(), $expected_permissions];
 
     // Content entity type with owner.
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->getProvider()->willReturn('entity_module_test');
     $entity_type->id()->willReturn('blue_entity');
     $entity_type->getSingularLabel()->willReturn('blue entity');
@@ -115,7 +118,7 @@ class EntityPermissionProviderTest extends UnitTestCase {
     $data[] = [$entity_type->reveal(), $expected_permissions];
 
     // Content entity type with bundles.
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->getProvider()->willReturn('entity_module_test');
     $entity_type->id()->willReturn('white_entity');
     $entity_type->getSingularLabel()->willReturn('white entity');
@@ -144,7 +147,7 @@ class EntityPermissionProviderTest extends UnitTestCase {
     $data[] = [$entity_type->reveal(), $expected_permissions];
 
     // Content entity type with bundles and owner.
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->getProvider()->willReturn('entity_module_test');
     $entity_type->id()->willReturn('black_entity');
     $entity_type->getSingularLabel()->willReturn('black entity');
@@ -171,7 +174,7 @@ class EntityPermissionProviderTest extends UnitTestCase {
     $data[] = [$entity_type->reveal(), $expected_permissions];
 
     // Content entity type with bundles and owner and entity published.
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $entity_type = $prophet->prophesize(ContentEntityTypeInterface::class);
     $entity_type->getProvider()->willReturn('entity_module_test');
     $entity_type->id()->willReturn('pink_entity');
     $entity_type->getSingularLabel()->willReturn('pink entity');

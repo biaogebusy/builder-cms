@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\tour\Functional;
 
 /**
@@ -14,12 +16,12 @@ abstract class TourTestBasic extends TourTestBase {
    *   An array of tip attributes, keyed by path.
    *
    * @code
-   * protected $tips = array(
-   *   '/foo/bar' => array(
-   *     array('data-id' => 'foo'),
-   *     array('data-class' => 'bar'),
-   *   ),
-   * );
+   * protected $tips = [
+   *   '/foo/bar' => [
+   *     ['data-id' => 'foo'],
+   *     ['data-class' => 'bar'],
+   *   ],
+   * ];
    * @endcode
    */
   protected $tips = [];
@@ -42,7 +44,7 @@ abstract class TourTestBasic extends TourTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Make sure we are using distinct default and administrative themes for
@@ -63,7 +65,7 @@ abstract class TourTestBasic extends TourTestBase {
   /**
    * A simple tip test.
    */
-  public function testTips() {
+  public function testTips(): void {
     foreach ($this->tips as $path => $attributes) {
       $this->drupalGet($path);
       $this->assertTourTips($attributes);

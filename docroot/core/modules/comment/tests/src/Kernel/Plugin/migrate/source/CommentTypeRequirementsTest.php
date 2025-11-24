@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Plugin\migrate\source;
 
 use Drupal\migrate\Exception\RequirementsException;
@@ -29,7 +31,7 @@ class CommentTypeRequirementsTest extends MigrateDrupal7TestBase {
    *
    * @dataProvider providerTestCheckCommentTypeRequirements
    */
-  public function testCheckCommentTypeRequirements(array $disabled_source_modules, string $exception_message, string $migration_plugin_id) {
+  public function testCheckCommentTypeRequirements(array $disabled_source_modules, string $exception_message, string $migration_plugin_id): void {
     if (!empty($disabled_source_modules)) {
       $this->sourceDatabase->update('system')
         ->condition('name', $disabled_source_modules, 'IN')
@@ -47,37 +49,37 @@ class CommentTypeRequirementsTest extends MigrateDrupal7TestBase {
   /**
    * Test cases for ::testCheckCommentTypeRequirements().
    */
-  public function providerTestCheckCommentTypeRequirements() {
+  public static function providerTestCheckCommentTypeRequirements() {
     return [
       'D6 comment is disabled on source' => [
-        'Disabled source modules' => ['comment'],
-        'RequirementsException message' => 'The module comment is not enabled in the source site.',
-        'migration' => 'd6_comment_type',
+        'disabled_source_modules' => ['comment'],
+        'exception_message' => 'The module comment is not enabled in the source site.',
+        'migration_plugin_id' => 'd6_comment_type',
       ],
       'D6 node is disabled on source' => [
-        'Disabled source modules' => ['node'],
-        'RequirementsException message' => 'The node module is not enabled in the source site.',
-        'migration' => 'd6_comment_type',
+        'disabled_source_modules' => ['node'],
+        'exception_message' => 'The node module is not enabled in the source site.',
+        'migration_plugin_id' => 'd6_comment_type',
       ],
       'D6 comment and node are disabled on source' => [
-        'Disabled source modules' => ['comment', 'node'],
-        'RequirementsException message' => 'The module comment is not enabled in the source site.',
-        'migration' => 'd6_comment_type',
+        'disabled_source_modules' => ['comment', 'node'],
+        'exception_message' => 'The module comment is not enabled in the source site.',
+        'migration_plugin_id' => 'd6_comment_type',
       ],
       'D7 comment is disabled on source' => [
-        'Disabled source modules' => ['comment'],
-        'RequirementsException message' => 'The module comment is not enabled in the source site.',
-        'migration' => 'd7_comment_type',
+        'disabled_source_modules' => ['comment'],
+        'exception_message' => 'The module comment is not enabled in the source site.',
+        'migration_plugin_id' => 'd7_comment_type',
       ],
       'D7 node is disabled on source' => [
-        'Disabled source modules' => ['node'],
-        'RequirementsException message' => 'The node module is not enabled in the source site.',
-        'migration' => 'd7_comment_type',
+        'disabled_source_modules' => ['node'],
+        'exception_message' => 'The node module is not enabled in the source site.',
+        'migration_plugin_id' => 'd7_comment_type',
       ],
       'D7 comment and node are disabled on source' => [
-        'Disabled source modules' => ['comment', 'node'],
-        'RequirementsException message' => 'The module comment is not enabled in the source site.',
-        'migration' => 'd7_comment_type',
+        'disabled_source_modules' => ['comment', 'node'],
+        'exception_message' => 'The module comment is not enabled in the source site.',
+        'migration_plugin_id' => 'd7_comment_type',
       ],
     ];
   }

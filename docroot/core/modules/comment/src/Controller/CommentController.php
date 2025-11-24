@@ -13,7 +13,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,19 +78,6 @@ class CommentController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('http_kernel'),
-      $container->get('comment.manager'),
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('entity.repository')
-    );
-  }
-
-  /**
    * Publishes the specified comment.
    *
    * @param \Drupal\comment\CommentInterface $comment
@@ -141,13 +127,11 @@ class CommentController extends ControllerBase {
 
       // Find the current display page for this comment.
       $page = $this->entityTypeManager()->getStorage('comment')->getDisplayOrdinal($comment, $field_definition->getSetting('default_mode'), $field_definition->getSetting('per_page'));
-      // @todo: Cleaner sub request handling.
+      // @todo Cleaner sub request handling.
       $subrequest_url = $entity->toUrl()->setOption('query', ['page' => $page])->toString(TRUE);
       $redirect_request = Request::create($subrequest_url->getGeneratedUrl(), 'GET', $request->query->all(), $request->cookies->all(), [], $request->server->all());
       // Carry over the session to the subrequest.
-      if ($request->hasSession()) {
-        $redirect_request->setSession($request->getSession());
-      }
+      $redirect_request->setSession($request->getSession());
       $request->query->set('page', $page);
       $response = $this->httpKernel->handle($redirect_request, HttpKernelInterface::SUB_REQUEST);
       if ($response instanceof CacheableResponseInterface) {
@@ -183,7 +167,7 @@ class CommentController extends ControllerBase {
    *   The node object identified by the legacy URL.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   Redirects user to new url.
+   *   Redirects user to new URL.
    *
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    */
@@ -337,11 +321,12 @@ class CommentController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
 
-    $nids = $request->request->get('node_ids');
-    $field_name = $request->request->get('field_name');
-    if (!isset($nids)) {
+    if (!$request->request->has('node_ids') || !$request->request->has('field_name')) {
       throw new NotFoundHttpException();
     }
+    $nids = $request->request->all('node_ids');
+    $field_name = $request->request->get('field_name');
+
     // Only handle up to 100 nodes.
     $nids = array_slice($nids, 0, 100);
 

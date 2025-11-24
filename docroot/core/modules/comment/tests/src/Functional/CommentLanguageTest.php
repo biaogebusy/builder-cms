@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\comment\Tests\CommentTestTrait;
@@ -69,10 +70,10 @@ class CommentLanguageTest extends BrowserTestBase {
     // Set "Article" content type to use multilingual support.
     $edit = ['language_configuration[language_alterable]' => TRUE];
     $this->drupalGet('admin/structure/types/manage/article');
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
 
     // Enable content language negotiation UI.
-    \Drupal::state()->set('language_test.content_language_type', TRUE);
+    \Drupal::keyValue('language_test')->set('content_language_type', TRUE);
 
     // Set interface language detection to user and content language detection
     // to URL. Disable inheritance from interface language to ensure content
@@ -105,7 +106,7 @@ class CommentLanguageTest extends BrowserTestBase {
   /**
    * Tests that comment language is properly set.
    */
-  public function testCommentLanguage() {
+  public function testCommentLanguage(): void {
 
     // Create two nodes, one for english and one for french, and comment each
     // node using both english and french as content language by changing URL
@@ -149,8 +150,7 @@ class CommentLanguageTest extends BrowserTestBase {
           ->range(0, 1)
           ->execute();
         $comment = Comment::load(reset($cids));
-        $args = ['%node_language' => $node_langcode, '%comment_language' => $comment->langcode->value, '%langcode' => $langcode];
-        $this->assertEquals($langcode, $comment->langcode->value, new FormattableMarkup('The comment posted with content language %langcode and belonging to the node with language %node_language has language %comment_language', $args));
+        $this->assertEquals($langcode, $comment->langcode->value, "The comment posted with content language $langcode and belonging to the node with language $node_langcode has language {$comment->langcode->value}");
         $this->assertEquals($comment_values[$node_langcode][$langcode], $comment->comment_body->value, 'Comment body correctly stored.');
       }
     }

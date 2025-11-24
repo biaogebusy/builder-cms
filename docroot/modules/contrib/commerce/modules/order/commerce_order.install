@@ -5,9 +5,14 @@
  * Install, update and uninstall functions for the Order module.
  */
 
-use Drupal\commerce\CommerceContentEntityStorageSchema;
+use CommerceGuys\Addressing\AddressFormat\AddressField;
+use CommerceGuys\Addressing\AddressFormat\FieldOverride;
+use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Site\Settings;
+use Drupal\commerce\CommerceContentEntityStorageSchema;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * Implements hook_install().
@@ -154,7 +159,7 @@ function commerce_order_update_8208() {
   }
   $configuration_to_delete[] = 'field.storage.commerce_order.order_items';
 
-  $dependents = $config_manager->findConfigEntityDependents('config', $configuration_to_delete);
+  $dependents = $config_manager->findConfigEntityDependencies('config', $configuration_to_delete);
   /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $config_entity */
   foreach ($dependents as $config_name => $config_entity) {
     $config_entity = $config_factory->getEditable($config_name);
@@ -321,4 +326,128 @@ function commerce_order_update_8216() {
       $form_display->save();
     }
   }
+}
+
+/**
+ * Migrate to Address 2.x.
+ */
+function commerce_order_update_8217() {
+  $field_map = \Drupal::service('entity_field.manager')->getFieldMap();
+  foreach ($field_map['profile']['address']['bundles'] as $bundle) {
+    $field_config = FieldConfig::loadByName('profile', $bundle, 'address');
+    if (!$field_config) {
+      continue;
+    }
+    $field_overrides = (array) $field_config->get('field_overrides');
+    $field_overrides[AddressField::ADDRESS_LINE3] = [
+      'override' => FieldOverride::HIDDEN,
+    ];
+    $field_config->setSetting('field_overrides', $field_overrides);
+    $field_config->save();
+  }
+}
+
+/**
+ * Add the 'overridden_title' field to 'commerce_order_item' entities.
+ */
+function commerce_order_update_8218() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(t('Overridden title'))
+    ->setDescription(t('Whether the title is overridden.'))
+    ->setDefaultValue(FALSE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  if (!$update_manager->getFieldStorageDefinition('overridden_title', 'commerce_order_item')) {
+    $update_manager->installFieldStorageDefinition('overridden_title', 'commerce_order_item', 'commerce_order', $storage_definition);
+  }
+}
+
+/**
+ * Add the 'balance' field to 'commerce_order' entities.
+ */
+function commerce_order_update_8219() {
+  $storage_definition = BaseFieldDefinition::create('commerce_price')
+    ->setLabel(t('Order balance'))
+    ->setDescription(t('The order balance.'))
+    ->setReadOnly(TRUE)
+    ->setDisplayOptions('view', [
+      'label' => 'hidden',
+      'type' => 'commerce_price',
+      'weight' => 0,
+    ])
+    ->setDisplayConfigurable('form', FALSE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  if (!$update_manager->getFieldStorageDefinition('balance', 'commerce_order')) {
+    $update_manager->installFieldStorageDefinition('balance', 'commerce_order', 'commerce_order', $storage_definition);
+  }
+}
+
+/**
+ * Backfill the 'balance' field of 'commerce_order' entities.
+ */
+function commerce_order_update_8220() {
+  if (!Settings::get('commerce_order_skip_update_8220', FALSE)) {
+    $database = \Drupal::database();
+    $update = $database->update('commerce_order');
+    $update->expression('balance__currency_code', 'total_price__currency_code');
+    $update->expression('balance__number', 'total_price__number - total_paid__number');
+    $update->isNotNull('total_price__number');
+    $update->isNotNull('total_paid__number');
+    $update->isNull('balance__number');
+    $orders_affected = $update->execute() ?? 0;
+    return t('Balance calculated for @count orders', ['@count' => $orders_affected]);
+  }
+
+  return "You have elected to skip the order balance backfill. Please update your database manually with the following SQL:\n   UPDATE commerce_order SET balance__currency_code = total_price__currency_code, balance__number = total_price__number - total_paid__number WHERE total_paid__number IS NOT NULL AND total_price__number IS NOT NULL and balance__number IS NULL;";
+}
+
+/**
+ * Update customer orders list view and change default url rewrite pattern.
+ */
+function commerce_order_update_8221() {
+  $config_factory = \Drupal::configFactory();
+  $view = $config_factory->getEditable('views.view.commerce_user_orders');
+  if ($view->get('display.default.display_options.fields.order_number.alter.path') === 'user/{{ raw_arguments.uid }}/orders/{{ order_id }}') {
+    return "The view is already up-to-date.";
+  }
+
+  if ($view->get('display.default.display_options.fields.order_number.alter.path') === 'user/{{ arguments.uid }}/orders/{{ order_id }}') {
+    $view->set('display.default.display_options.fields.order_number.alter.path', 'user/{{ raw_arguments.uid }}/orders/{{ order_id }}');
+    $view->save(TRUE);
+    return "The views.view.commerce_user_orders view was updated";
+  }
+
+  return "The views.view.commerce_user_orders couldn't be updated as the default path for the title field has been overridden with custom value. Test if rewrite pattern is correct.";
+}
+
+/**
+ * Add the "customer_comments" field to orders.
+ */
+function commerce_order_update_8222() {
+  $storage_definition = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('Customer comments'))
+    ->setDisplayOptions('view', [
+      'type' => 'string',
+      'label' => 'above',
+      'settings' => [],
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $update_manager->installFieldStorageDefinition('customer_comments', 'commerce_order', 'commerce_order', $storage_definition);
+}
+
+/**
+ * Add new action "Unlock Order".
+ */
+function commerce_order_update_8223() {
+  $path = \Drupal::service('extension.list.module')->getPath('commerce_order') . '/config/install';
+  $source = new FileStorage($path);
+  $config_name = 'system.action.commerce_order_unlock';
+  /** @var \Drupal\Core\Config\StorageInterface $active_storage */
+  $active_storage = \Drupal::service('config.storage');
+  $active_storage->write($config_name, $source->read($config_name));
 }

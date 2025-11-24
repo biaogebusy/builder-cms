@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Unit;
 
 use Drupal\config_translation\ConfigFieldMapper;
@@ -46,6 +48,8 @@ class ConfigFieldMapperTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->entityTypeManager = $this->createMock('Drupal\Core\Entity\EntityTypeManagerInterface');
     $this->entity = $this->createMock('Drupal\field\FieldConfigInterface');
 
@@ -83,7 +87,7 @@ class ConfigFieldMapperTest extends UnitTestCase {
    *
    * @covers ::setEntity
    */
-  public function testSetEntity() {
+  public function testSetEntity(): void {
     $entity_type = $this->createMock('Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $entity_type
       ->expects($this->any())

@@ -4,6 +4,7 @@ namespace Drupal\options\Plugin\views\argument;
 
 use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\views\FieldAPIHandlerTrait;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -13,9 +14,10 @@ use Drupal\views\Plugin\views\argument\NumericArgument;
  * Argument handler for list field to show human readable name in the summary.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("number_list_field")
  */
+#[ViewsArgument(
+  id: 'number_list_field',
+)]
 class NumberListField extends NumericArgument {
 
   use FieldAPIHandlerTrait;
@@ -30,7 +32,7 @@ class NumberListField extends NumericArgument {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     $field_storage = $this->getFieldStorageDefinition();

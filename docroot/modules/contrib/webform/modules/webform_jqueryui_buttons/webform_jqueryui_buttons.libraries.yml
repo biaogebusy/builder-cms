@@ -3,5 +3,5 @@ webform_jqueryui_buttons.element:
   js:
     js/webform_jqueryui_buttons.element.js: {}
   dependencies:
-    - jquery_ui_checkboxradio/checkboxradio
+    - jquery_ui_button/button
   deprecated: The "%library_id%" asset library is deprecated. jQueryUI is no longer maintained. See https://www.drupal.org/node/3064015

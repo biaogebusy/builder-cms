@@ -17,8 +17,8 @@ use Drupal\ctools_wizard_test\ExampleConfigEntityInterface;
  *       "delete" = "Drupal\ctools_wizard_test\Form\ExampleConfigEntityDeleteForm"
  *     },
  *     "wizard" = {
- *       "add" = "Drupal\ctools_wizard_test\Wizard\EntityAddWizardTest",
- *       "edit" = "Drupal\ctools_wizard_test\Wizard\EntityEditWizardTest"
+ *       "add" = "Drupal\ctools_wizard_test\Wizard\EntityAddWizard",
+ *       "edit" = "Drupal\ctools_wizard_test\Wizard\EntityEditWizard"
  *     }
  *   },
  *   config_prefix = "ctools_wizard_test_config_entity",

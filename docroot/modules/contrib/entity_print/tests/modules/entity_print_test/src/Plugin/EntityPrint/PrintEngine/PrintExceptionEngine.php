@@ -38,7 +38,9 @@ class PrintExceptionEngine extends PrintEngineBase {
   /**
    * {@inheritdoc}
    */
-  public function addPage($content) {}
+  public function addPage($content) {
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
@@ -50,6 +52,8 @@ class PrintExceptionEngine extends PrintEngineBase {
   /**
    * {@inheritdoc}
    */
-  public function getPrintObject() {}
+  public function getPrintObject() {
+    return new \stdClass();
+  }
 
 }

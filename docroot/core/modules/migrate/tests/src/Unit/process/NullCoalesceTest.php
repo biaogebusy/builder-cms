@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\MigrateException;
@@ -19,7 +21,7 @@ class NullCoalesceTest extends MigrateProcessTestCase {
    *
    * @covers ::transform
    */
-  public function testExceptionOnInvalidValue() {
+  public function testExceptionOnInvalidValue(): void {
     $this->expectException(MigrateException::class);
     (new NullCoalesce([], 'null_coalesce', []))->transform('invalid', $this->migrateExecutable, $this->row, 'destination_property');
   }
@@ -38,7 +40,7 @@ class NullCoalesceTest extends MigrateProcessTestCase {
    *
    * @throws \Drupal\migrate\MigrateException
    */
-  public function testTransform(array $source, $expected_result) {
+  public function testTransform(array $source, $expected_result): void {
     $plugin = new NullCoalesce([], 'null_coalesce', []);
     $result = $plugin->transform($source, $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertSame($expected_result, $result);
@@ -47,7 +49,7 @@ class NullCoalesceTest extends MigrateProcessTestCase {
   /**
    * Provides Data for ::testTransform.
    */
-  public function transformDataProvider() {
+  public static function transformDataProvider() {
     return [
       'all null' => [
         'source' => [NULL, NULL, NULL],
@@ -92,7 +94,7 @@ class NullCoalesceTest extends MigrateProcessTestCase {
    *
    * @throws \Drupal\migrate\MigrateException
    */
-  public function testTransformWithDefault(array $source, $default_value, $expected_result) {
+  public function testTransformWithDefault(array $source, $default_value, $expected_result): void {
     $plugin = new NullCoalesce(['default_value' => $default_value], 'null_coalesce', []);
     $result = $plugin->transform($source, $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertSame($expected_result, $result);
@@ -101,7 +103,7 @@ class NullCoalesceTest extends MigrateProcessTestCase {
   /**
    * Provides Data for ::testTransformWithDefault.
    */
-  public function transformWithDefaultProvider() {
+  public static function transformWithDefaultProvider() {
     return [
       'default not used' => [
         'source' => [NULL, NULL, 'Test', 'Test 2'],

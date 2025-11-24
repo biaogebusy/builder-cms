@@ -29,7 +29,7 @@ class RangeFieldSettingsTest extends UnitTestCase {
   /**
    * Data provider for testTransform.
    */
-  public function transformDataProvider() {
+  public static function transformDataProvider() {
     return [
       'range_decimal: precision/scale are set' => [
         'range_decimal',

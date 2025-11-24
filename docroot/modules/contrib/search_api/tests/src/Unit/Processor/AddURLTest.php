@@ -58,7 +58,7 @@ class AddURLTest extends UnitTestCase {
     $datasource->expects($this->any())
       ->method('getItemUrl')
       ->withAnyParameters()
-      ->will($this->returnValue(new TestUrl(self::TEST_PATH)));
+      ->willReturn(new TestUrl(self::TEST_PATH));
 
     // Create a mock for the index to return the datasource mock.
     /** @var \Drupal\search_api\IndexInterface $index */

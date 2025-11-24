@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
@@ -189,7 +191,7 @@ class DiffPluginVariousTest extends DiffPluginTestBase {
     // Create a new revision with an updated timestamp.
     /** @var \Drupal\node\NodeInterface $node */
     $node = $this->drupalGetNodeByTitle('timestamp_test');
-    $node->field_timestamp = $new_timestamp;
+    $node->set('field_timestamp', $new_timestamp);
     $node->setNewRevision(TRUE);
     $node->save();
 

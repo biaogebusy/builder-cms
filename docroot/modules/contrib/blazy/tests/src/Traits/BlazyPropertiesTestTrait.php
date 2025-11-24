@@ -178,6 +178,13 @@ trait BlazyPropertiesTestTrait {
   protected $entities;
 
   /**
+   * The libraries service.
+   *
+   * @var \Drupal\blazy\Asset\LibrariesInterface
+   */
+  protected $libraries;
+
+  /**
    * The node entity.
    *
    * @var \Drupal\Core\Entity\EntityInterface

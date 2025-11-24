@@ -42,5 +42,26 @@ function colorbox_theme() {
       ],
       'file' => 'colorbox.theme.inc',
     ],
+    'colorbox_responsive_formatter' => [
+      'variables' => [
+        'item' => NULL,
+        'item_attributes' => NULL,
+        'entity' => NULL,
+        'settings' => NULL,
+      ],
+      'file' => 'colorbox.theme.inc',
+    ],
+    'colorbox_view_mode_formatter' => [
+      'variables' => [
+        'item' => NULL,
+        'content' => NULL,
+        'modal' => NULL,
+        'item_attributes' => NULL,
+        'entity' => NULL,
+        'field_name' => NULL,
+        'settings' => NULL,
+      ],
+      'file' => 'colorbox.theme.inc',
+    ],
   ];
 }

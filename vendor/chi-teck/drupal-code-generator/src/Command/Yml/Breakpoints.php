@@ -1,27 +1,31 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Yml;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ThemeGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements yml:breakpoints command.
- */
-final class Breakpoints extends ThemeGenerator {
-
-  protected string $name = 'yml:breakpoints';
-  protected string $description = 'Generates a breakpoints yml file';
-  protected string $alias = 'breakpoints';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/yml/breakpoints';
-  protected ?string $nameQuestion = NULL;
+#[Generator(
+  name: 'yml:breakpoints',
+  description: 'Generates a breakpoints yml file',
+  aliases: ['breakpoints'],
+  templatePath: Application::TEMPLATE_PATH . '/Yaml/_breakpoints',
+  type: GeneratorType::THEME_COMPONENT,
+)]
+final class Breakpoints extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $this->addFile('{machine_name}.breakpoints.yml', 'breakpoints');
+  protected function generate(array &$vars, Assets $assets): void {
+    $interviewer = $this->createInterviewer($vars);
+    $vars['machine_name'] = $interviewer->askMachineName();
+    $assets->addFile('{machine_name}.breakpoints.yml', 'breakpoints.twig');
   }
 
 }

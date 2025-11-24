@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
 /**
@@ -29,7 +31,7 @@ class UserPathTest extends ViewTestBase {
   /**
    * Tests if the login page is still available when using a wildcard path.
    */
-  public function testUserLoginPage() {
+  public function testUserLoginPage(): void {
     $this->drupalGet('user/login');
     $this->assertSession()->statusCodeEquals(200);
   }

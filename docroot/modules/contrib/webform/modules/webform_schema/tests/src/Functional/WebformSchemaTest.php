@@ -30,7 +30,7 @@ class WebformSchemaTest extends WebformBrowserTestBase {
     $this->drupalGet('/admin/structure/webform/manage/test_webform_schema/schema');
     $assert_session->statusCodeEquals(403);
 
-    // Create a user who has 'access webform schema' permision.
+    // Create a user who has 'access webform schema' permission.
     $account = $this->createUser(['access webform schema']);
     $this->drupalLogin($account);
 

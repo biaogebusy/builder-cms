@@ -60,7 +60,7 @@ abstract class MediaSourceBase extends PluginBase implements MediaSourceInterfac
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -301,9 +301,14 @@ abstract class MediaSourceBase extends PluginBase implements MediaSourceInterfac
    *   returned. Otherwise, a new, unused one is generated.
    */
   protected function getSourceFieldName() {
+    // If the Field UI module is installed, and has a specific prefix
+    // configured, use that. Otherwise, just default to using 'field_' as
+    // a prefix, which is the default that Field UI ships with.
+    $prefix = $this->configFactory->get('field_ui.settings')
+      ->get('field_prefix') ?? 'field_';
     // Some media sources are using a deriver, so their plugin IDs may contain
     // a separator (usually ':') which is not allowed in field names.
-    $base_id = 'field_media_' . str_replace(static::DERIVATIVE_SEPARATOR, '_', $this->getPluginId());
+    $base_id = $prefix . 'media_' . str_replace(static::DERIVATIVE_SEPARATOR, '_', $this->getPluginId());
     $tries = 0;
     $storage = $this->entityTypeManager->getStorage('field_storage_config');
 

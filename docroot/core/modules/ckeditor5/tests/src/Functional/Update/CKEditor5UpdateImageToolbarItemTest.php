@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\Functional\Update;
 
 use Drupal\ckeditor5\HTMLRestrictions;
@@ -16,6 +18,7 @@ use Symfony\Component\Validator\ConstraintViolation;
  * Tests the update path for the CKEditor 5 image toolbar item.
  *
  * @group Update
+ * @group #slow
  */
 class CKEditor5UpdateImageToolbarItemTest extends UpdatePathTestBase {
 
@@ -31,7 +34,7 @@ class CKEditor5UpdateImageToolbarItemTest extends UpdatePathTestBase {
    */
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
-      __DIR__ . '/../../../../../system/tests/fixtures/update/drupal-9.3.0.bare.standard.php.gz',
+      __DIR__ . '/../../../../../system/tests/fixtures/update/drupal-9.4.0.bare.standard.php.gz',
       __DIR__ . '/../../../fixtures/update/ckeditor5-3222756.php',
     ];
   }
@@ -135,7 +138,14 @@ class CKEditor5UpdateImageToolbarItemTest extends UpdatePathTestBase {
       function (ConstraintViolation $v) {
         return (string) $v->getMessage();
       },
-      iterator_to_array(CKEditor5::validatePair($editor_after, $filter_format_after))
+      // @todo Fix stream wrappers not being available early enough in
+      //   https://www.drupal.org/project/drupal/issues/3416735. Then remove the
+      //   array_filter().
+      // @see \Drupal\Core\Config\Schema\SchemaCheckTrait::$ignoredPropertyPaths
+      array_filter(
+        iterator_to_array(CKEditor5::validatePair($editor_after, $filter_format_after)),
+        fn(ConstraintViolation $v) => $v->getMessage() != 'The file storage you selected is not a visible, readable and writable stream wrapper. Possible choices: <em class="placeholder"></em>.',
+      )
     ));
   }
 
@@ -145,7 +155,7 @@ class CKEditor5UpdateImageToolbarItemTest extends UpdatePathTestBase {
    * @return array
    *   The test cases.
    */
-  public function provider(): array {
+  public static function provider(): array {
     // There are 3 aspects that need to be verified, each can be true or false,
     // making for 8 test cases in total.
     $test_cases = [];

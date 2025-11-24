@@ -35,7 +35,7 @@ class LanguageManager implements LanguageManagerInterface {
   /**
    * Information about all defined language types.
    */
-  protected $definedLanguageTypesInfo;
+  protected array $definedLanguageTypesInfo;
 
   /**
    * Constructs the language manager.
@@ -245,6 +245,7 @@ class LanguageManager implements LanguageManagerInterface {
       'bg' => ['Bulgarian', 'Български'],
       'bn' => ['Bengali', 'বাংলা'],
       'bo' => ['Tibetan', 'བོད་སྐད་'],
+      'br' => ['Breton', 'Breton'],
       'bs' => ['Bosnian', 'Bosanski'],
       'ca' => ['Catalan', 'Català'],
       'cs' => ['Czech', 'Čeština'],
@@ -254,6 +255,7 @@ class LanguageManager implements LanguageManagerInterface {
       'dz' => ['Dzongkha', 'རྫོང་ཁ'],
       'el' => ['Greek', 'Ελληνικά'],
       'en' => ['English', 'English'],
+      'en-gb' => ['English, British', 'English, British'],
       'en-x-simple' => ['Simple English', 'Simple English'],
       'eo' => ['Esperanto', 'Esperanto'],
       'es' => ['Spanish', 'Español'],
@@ -270,6 +272,7 @@ class LanguageManager implements LanguageManagerInterface {
       'gl' => ['Galician', 'Galego'],
       'gsw-berne' => ['Swiss German', 'Schwyzerdütsch'],
       'gu' => ['Gujarati', 'ગુજરાતી'],
+      'haw' => ['Hawaiian', 'ʻŌlelo Hawaiʻi'],
       'he' => ['Hebrew', /* Left-to-right marker "‭" */ 'עברית', LanguageInterface::DIRECTION_RTL],
       'hi' => ['Hindi', 'हिन्दी'],
       'hr' => ['Croatian', 'Hrvatski'],
@@ -297,18 +300,27 @@ class LanguageManager implements LanguageManagerInterface {
       'mn' => ['Mongolian', 'монгол'],
       'mr' => ['Marathi', 'मराठी'],
       'ms' => ['Bahasa Malaysia', 'بهاس ملايو'],
+      'mt' => ['Maltese', 'Malti'],
       'my' => ['Burmese', 'ဗမာစကား'],
       'ne' => ['Nepali', 'नेपाली'],
       'nl' => ['Dutch', 'Nederlands'],
       'nb' => ['Norwegian Bokmål', 'Norsk, bokmål'],
       'nn' => ['Norwegian Nynorsk', 'Norsk, nynorsk'],
       'oc' => ['Occitan', 'Occitan'],
+      'or' => ['Odia', 'ଓଡିଆ'],
+      'os' => ['Ossetian', 'Ossetian'],
       'pa' => ['Punjabi', 'ਪੰਜਾਬੀ'],
       'pl' => ['Polish', 'Polski'],
+      'prs' => ['Persian, Afghanistan', /* Left-to-right marker "‭" */ 'دری', LanguageInterface::DIRECTION_RTL],
+      'ps' => ['Pashto', /* Left-to-right marker "‭" */ 'پښتو', LanguageInterface::DIRECTION_RTL],
+      'pt' => ['Portuguese, International', 'Português, Internacional'],
       'pt-pt' => ['Portuguese, Portugal', 'Português, Portugal'],
       'pt-br' => ['Portuguese, Brazil', 'Português, Brasil'],
+      'rhg' => ['Rohingya', 'Ruáinga'],
+      'rm-rumgr' => ['Rumantsch Grischun', 'Rumantsch Grischun'],
       'ro' => ['Romanian', 'Română'],
       'ru' => ['Russian', 'Русский'],
+      'rw' => ['Kinyarwanda', 'Kinyarwanda'],
       'sco' => ['Scots', 'Scots'],
       'se' => ['Northern Sami', 'Sámi'],
       'si' => ['Sinhala', 'සිංහල'],
@@ -372,7 +384,7 @@ class LanguageManager implements LanguageManagerInterface {
    *
    * @see \Drupal\language\ConfigurableLanguageManager::setConfigOverrideLanguage()
    */
-  public function setConfigOverrideLanguage(LanguageInterface $language = NULL) {
+  public function setConfigOverrideLanguage(?LanguageInterface $language = NULL) {
     return $this;
   }
 

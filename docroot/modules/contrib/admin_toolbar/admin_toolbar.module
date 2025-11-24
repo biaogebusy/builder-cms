@@ -5,17 +5,52 @@
  * This is the module to create a drop-down menu for the core toolbar.
  */
 
-use Drupal\admin_toolbar\Render\Element\AdminToolbar;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
-use Drupal\Component\Utility\Html;
+use Drupal\admin_toolbar\Render\Element\AdminToolbar;
 
 /**
  * Implements hook_toolbar_alter().
  */
 function admin_toolbar_toolbar_alter(&$items) {
-  $items['administration']['tray']['toolbar_administration']['#pre_render'] = [[AdminToolbar::class, 'preRenderTray']];
+  $items['administration']['tray']['toolbar_administration']['#pre_render'] = [
+    [AdminToolbar::class, 'preRenderTray'],
+  ];
+  $admin_toolbar_config = \Drupal::config('admin_toolbar.settings');
   $items['administration']['#attached']['library'][] = 'admin_toolbar/toolbar.tree';
+
+  // Add sticky behavior libraries based on the configuration.
+  $sticky_behavior = $admin_toolbar_config->get('sticky_behavior') ?? 'enabled';
+  switch ($sticky_behavior) {
+    case 'disabled':
+      $items['administration']['#attached']['library'][] = 'admin_toolbar/toolbar.disable_sticky';
+      break;
+
+    case 'hide_on_scroll_down':
+      $items['administration']['#attached']['library'][] = 'admin_toolbar/toolbar.sticky_behavior';
+      break;
+
+    default:
+      break;
+  }
+  // Add the hoverIntent behavior library if enabled.
+  $hoverintent_behavior = $admin_toolbar_config->get('hoverintent_behavior');
+  if (!empty($hoverintent_behavior['enabled'])) {
+    // Use the hoverIntent plugin library.
+    $items['administration']['#attached']['library'][] = 'admin_toolbar/toolbar.tree.hoverintent';
+    // Add the configured hoverIntent settings values to the JS of the toolbar.
+    $items['administration']['#attached']['drupalSettings']['hoverIntentTimeout'] = $hoverintent_behavior['timeout'];
+  }
+  else {
+    // Use default Admin Toolbar hover library.
+    $items['administration']['#attached']['library'][] = 'admin_toolbar/toolbar.tree.hover';
+  }
+
+  // Add the toggle toolbar keyboard shortcut library if enabled.
+  if ($admin_toolbar_config->get('enable_toggle_shortcut')) {
+    $items['administration']['#attached']['library'][] = 'admin_toolbar/toolbar.toggle_shortcut';
+  }
 }
 
 /**
@@ -46,6 +81,7 @@ function admin_toolbar_help($route_name, RouteMatchInterface $route_match) {
  * @return \Drupal\Core\Menu\MenuLinkTreeElement[]
  *   The manipulated menu link tree.
  */
+// phpcs:ignore Drupal.NamingConventions.ValidFunctionName.InvalidPrefix, Drupal.Commenting.FunctionComment.Missing
 function toolbar_tools_menu_navigation_links(array $tree) {
   foreach ($tree as $element) {
     if ($element->subtree) {
@@ -54,6 +90,10 @@ function toolbar_tools_menu_navigation_links(array $tree) {
     $link = $element->link;
     // Get the non-localized title to make the icon class.
     $definition = $link->getPluginDefinition();
+    // Prevent PHPSTAN error due to incorrect type hinting as an array of
+    // strings (string[]) for property 'options' of class 'MenuLinkTreeElement'
+    // in Core, preventing the assignment of an associative array of options.
+    // @phpstan-ignore offsetAssign.dimType
     $element->options['attributes']['class'][] = 'toolbar-icon';
     $string = strtolower(str_replace(['.', ' ', '_'], ['-', '-', '-'], $definition['id']));
     $element->options['attributes']['class'][] = Html::cleanCssIdentifier('toolbar-icon-' . $string);

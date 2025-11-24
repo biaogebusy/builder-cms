@@ -18,9 +18,7 @@ default_value_callback: ''
 settings:
   handler: 'default:node'
   handler_settings:
-    target_bundles:
-      article: article
-      page: page
+    target_bundles: { }
     sort:
       field: _none
 field_type: entity_reference

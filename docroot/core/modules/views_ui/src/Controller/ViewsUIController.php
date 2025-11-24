@@ -11,7 +11,6 @@ use Drupal\views\ViewEntityInterface;
 use Drupal\views\Views;
 use Drupal\views_ui\ViewUI;
 use Drupal\views\ViewsData;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -38,15 +37,6 @@ class ViewsUIController extends ControllerBase {
    */
   public function __construct(ViewsData $views_data) {
     $this->viewsData = $views_data;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('views.views_data')
-    );
   }
 
   /**
@@ -83,7 +73,7 @@ class ViewsUIController extends ControllerBase {
       }
     }
 
-    $header = [t('Field name'), t('Used in')];
+    $header = [$this->t('Field name'), $this->t('Used in')];
     $rows = [];
     foreach ($fields as $field_name => $views) {
       $rows[$field_name]['data'][0]['data']['#plain_text'] = $field_name;
@@ -104,7 +94,7 @@ class ViewsUIController extends ControllerBase {
       '#type' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-      '#empty' => t('No fields have been used in views yet.'),
+      '#empty' => $this->t('No fields have been used in views yet.'),
     ];
 
     return $output;
@@ -136,9 +126,9 @@ class ViewsUIController extends ControllerBase {
     ksort($rows);
     return [
       '#type' => 'table',
-      '#header' => [t('Type'), t('Name'), t('Provided by'), t('Used in')],
+      '#header' => [$this->t('Type'), $this->t('Name'), $this->t('Provided by'), $this->t('Used in')],
       '#rows' => $rows,
-      '#empty' => t('There are no enabled views.'),
+      '#empty' => $this->t('There are no enabled views.'),
     ];
   }
 

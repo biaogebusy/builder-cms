@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional\Views;
 
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use Drupal\views\Views;
@@ -15,9 +18,7 @@ use Drupal\views\Views;
 class BulkFormTest extends UserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui'];
 
@@ -36,7 +37,7 @@ class BulkFormTest extends UserTestBase {
   /**
    * Tests the user bulk form.
    */
-  public function testBulkForm() {
+  public function testBulkForm(): void {
     // Log in as a user without 'administer users'.
     $this->drupalLogin($this->drupalCreateUser(['administer permissions']));
     $user_storage = $this->container->get('entity_type.manager')->getStorage('user');
@@ -56,7 +57,8 @@ class BulkFormTest extends UserTestBase {
 
     // Assign a role to a user.
     $account = $user_storage->load($this->users[0]->id());
-    $roles = user_role_names(TRUE);
+    $roles = Role::loadMultiple();
+    unset($roles[RoleInterface::ANONYMOUS_ID]);
     unset($roles[RoleInterface::AUTHENTICATED_ID]);
     $role = key($roles);
 
@@ -140,12 +142,12 @@ class BulkFormTest extends UserTestBase {
   /**
    * Tests the user bulk form with a combined field filter on the bulk column.
    */
-  public function testBulkFormCombineFilter() {
+  public function testBulkFormCombineFilter(): void {
     // Add a user.
     User::load($this->users[0]->id());
     $view = Views::getView('test_user_bulk_form_combine_filter');
     $errors = $view->validate();
-    $this->assertEquals(t('Field %field set in %filter is not usable for this filter type. Combined field filter only works for simple fields.', ['%field' => 'User: Bulk update', '%filter' => 'Global: Combine fields filter']), reset($errors['default']));
+    $this->assertEquals(sprintf('Field User: Bulk update set in Global: Combine fields filter is not usable for this filter type. Combined field filter only works for simple fields.'), reset($errors['default']));
   }
 
 }

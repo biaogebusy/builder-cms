@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Ajax;
 
 use Drupal\Core\Ajax\CommandInterface;
@@ -10,21 +12,7 @@ use Drupal\Core\Ajax\CommandInterface;
 class PrivateMessageInboxUpdateCommand implements CommandInterface {
 
   /**
-   * The thread IDs, in the order that they should appear upon update.
-   *
-   * @var array
-   */
-  protected $threadIds;
-
-  /**
-   * HTML for any threads that don't currently exist in the inbox.
-   *
-   * @var array
-   */
-  protected $newThreads;
-
-  /**
-   * Constructs a PrivateMessageInboxUpdateCommand object.
+   * Constructs a new command instance.
    *
    * @param array $threadIds
    *   The thread IDs, in the order that they should appear when the inbox is
@@ -32,15 +20,15 @@ class PrivateMessageInboxUpdateCommand implements CommandInterface {
    * @param array $newThreads
    *   The HTML for the messages to be inserted in the page.
    */
-  public function __construct(array $threadIds, array $newThreads) {
-    $this->threadIds = $threadIds;
-    $this->newThreads = $newThreads;
-  }
+  public function __construct(
+    protected readonly array $threadIds,
+    protected readonly array $newThreads,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
-  public function render() {
+  public function render(): array {
     return [
       'command' => 'privateMessageInboxUpdate',
       'threadIds' => $this->threadIds,

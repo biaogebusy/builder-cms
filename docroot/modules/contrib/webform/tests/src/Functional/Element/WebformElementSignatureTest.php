@@ -36,7 +36,7 @@ class WebformElementSignatureTest extends WebformElementBrowserTestBase {
 
     // Check signature display.
     $this->drupalGet('/webform/test_element_signature');
-    $assert_session->responseContains('<input data-drupal-selector="edit-signature" aria-describedby="edit-signature--description" type="hidden" name="signature" value="" class="js-webform-signature form-webform-signature" data-drupal-states="{&quot;disabled&quot;:{&quot;.webform-submission-test-element-signature-add-form :input[name=\u0022disable\u0022]&quot;:{&quot;checked&quot;:true}},&quot;readonly&quot;:{&quot;.webform-submission-test-element-signature-add-form :input[name=\u0022readonly\u0022]&quot;:{&quot;checked&quot;:true}}}" />');
+    $this->assertSession()->elementExists('xpath', '//input[@data-drupal-selector = "edit-signature"][@aria-describedby = "edit-signature--description"][@type = "hidden"][@name = "signature"][@value = ""][@class = "js-webform-signature form-webform-signature"]');
     $assert_session->responseContains('<input type="submit" name="op" value="Reset" class="button js-form-submit form-submit" />');
     $assert_session->responseContains('<canvas></canvas>');
     $assert_session->responseContains('</div>');
@@ -90,7 +90,7 @@ class WebformElementSignatureTest extends WebformElementBrowserTestBase {
 
     // Check public and private file access is denied.
     $this->drupalGet($private_file_url);
-    $assert_session->responseContains('Please login to access the uploaded file.');
+    $assert_session->responseContains('Please log in to access the uploaded file.');
     $assert_session->addressEquals('/user/login');
 
     /* ********************************************************************** */
@@ -106,6 +106,12 @@ class WebformElementSignatureTest extends WebformElementBrowserTestBase {
     // Check invalid when PNG has color.
     $image = file_get_contents(__DIR__ . '/../../../files/sample.png');
     $this->assertSignature('data:image/png;base64,' . base64_encode($image), FALSE);
+
+    // Check that the temp signature files are deleted.
+    /** @var \Drupal\Core\File\FileSystemInterface $file_system */
+    $file_system = \Drupal::service('file_system');
+    $files = $file_system->scanDirectory($file_system->getTempDirectory(), '/^webform_signature_.*/');
+    $this->assertEmpty($files);
 
     /* ********************************************************************** */
     // Delete.

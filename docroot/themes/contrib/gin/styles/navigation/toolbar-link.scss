@@ -1,6 +1,6 @@
 /**
  * @file
- * Toolbar linke styles.
+ * Toolbar link styles.
  */
 
  .toolbar-link {
@@ -18,6 +18,13 @@
 
   &:hover {
     z-index: 20;
+    color: var(--gin-color-primary-hover);
+    background-color: var(--gin-color-primary-light);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);
   }
 
   // Gin Custom start ---------------------
@@ -44,7 +51,7 @@ button.toolbar-link {
   align-items: center;
   background-color: transparent;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 
   /* Chevron styles. */
   &:not(.toolbar-link--sidebar-toggle)::after {
@@ -94,9 +101,15 @@ html:not(.admin-toolbar-expanded) {
   & .toolbar-menu__item--to-title > .toolbar-link {
     display: flex;
     align-items: center;
+    font-weight: var(--gin-font-weight-semibold);
 
     &:hover {
-      background-color: unset;
+      color: var(--gin-color-primary-hover);
+    }
+
+    &:focus {
+      color: var(--gin-color-primary-active);
+      background-color: var(--gin-color-primary-light-hover);
     }
   }
 
@@ -127,7 +140,10 @@ html:not(.admin-toolbar-expanded) {
 
   & span {
     opacity: 1;
-    transition: opacity .4s ease;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: opacity .4s ease;
+    }
   }
 
   &::before {

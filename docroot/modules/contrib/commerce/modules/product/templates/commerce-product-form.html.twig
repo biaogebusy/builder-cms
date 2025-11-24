@@ -9,17 +9,18 @@
  * @ingroup themeable
  */
 #}
-<div class="layout-product-form clearfix">
-  <div class="layout-region layout-region-product-main">
-    {{ form|without('advanced', 'footer', 'actions') }}
+{{ attach_library('commerce/admin-layout') }}
+<div class="layout-product-form layout-commerce-form">
+  <div class="layout-region layout-region--commerce-main">
+    <div class="layout-region__content">
+      {{ form|without('advanced', 'footer', 'actions') }}
+    </div>
   </div>
-  <div class="layout-region layout-region-product-secondary">
+  <div class="layout-region layout-region--commerce-secondary">
     {{ form.advanced }}
   </div>
-  <div class="layout-region layout-region-product-footer">
-    <div class="layout-region-product-footer__content">
-      {{ form.footer }}
-      {{ form.actions }}
-    </div>
+  <div class="layout-region layout-region--commerce-footer">
+    {{ form.footer }}
+    {{ form.actions }}
   </div>
 </div>

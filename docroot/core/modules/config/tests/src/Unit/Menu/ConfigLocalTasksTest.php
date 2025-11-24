@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config\Unit\Menu;
 
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTestBase;
@@ -24,14 +26,14 @@ class ConfigLocalTasksTest extends LocalTaskIntegrationTestBase {
    *
    * @dataProvider getConfigAdminRoutes
    */
-  public function testConfigAdminLocalTasks($route, $expected) {
+  public function testConfigAdminLocalTasks($route, $expected): void {
     $this->assertLocalTasks($route, $expected);
   }
 
   /**
    * Provides a list of routes to test.
    */
-  public function getConfigAdminRoutes() {
+  public static function getConfigAdminRoutes() {
     return [
       ['config.sync', [['config.sync', 'config.import', 'config.export']]],
       ['config.import_full', [['config.sync', 'config.import', 'config.export'], ['config.import_full', 'config.import_single']]],

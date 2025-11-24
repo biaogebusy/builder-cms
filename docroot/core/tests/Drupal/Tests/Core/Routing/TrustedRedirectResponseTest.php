@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Routing;
 
 use Drupal\Core\Cache\CacheableMetadata;
@@ -20,7 +22,7 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   /**
    * @covers ::setTargetUrl
    */
-  public function testSetTargetUrlWithInternalUrl() {
+  public function testSetTargetUrlWithInternalUrl(): void {
     $redirect_response = new TrustedRedirectResponse('/example');
     $redirect_response->setTargetUrl('/example2');
 
@@ -30,7 +32,7 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   /**
    * @covers ::setTargetUrl
    */
-  public function testSetTargetUrlWithUntrustedUrl() {
+  public function testSetTargetUrlWithUntrustedUrl(): void {
     $request_context = new RequestContext();
     $request_context->setCompleteBaseUrl('https://www.drupal.org');
     $container = new ContainerBuilder();
@@ -46,7 +48,7 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   /**
    * @covers ::setTargetUrl
    */
-  public function testSetTargetUrlWithTrustedUrl() {
+  public function testSetTargetUrlWithTrustedUrl(): void {
     $redirect_response = new TrustedRedirectResponse('/example');
 
     $redirect_response->setTrustedTargetUrl('http://good-external-url.com/example');
@@ -57,7 +59,7 @@ class TrustedRedirectResponseTest extends UnitTestCase {
    * @covers ::createFromRedirectResponse
    * @dataProvider providerCreateFromRedirectResponse
    */
-  public function testCreateFromRedirectResponse($redirect_response) {
+  public function testCreateFromRedirectResponse($redirect_response): void {
     $trusted_redirect_response = TrustedRedirectResponse::createFromRedirectResponse($redirect_response);
 
     // The trusted redirect response is always a CacheableResponseInterface instance.
@@ -73,7 +75,7 @@ class TrustedRedirectResponseTest extends UnitTestCase {
   /**
    * @return array
    */
-  public function providerCreateFromRedirectResponse() {
+  public static function providerCreateFromRedirectResponse() {
     return [
       'cacheable-with-tags' => [(new CacheableRedirectResponse('/example'))->addCacheableDependency((new CacheableMetadata())->addCacheTags(['foo']))],
       'cacheable-with-max-age-0' => [(new CacheableRedirectResponse('/example'))->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(0))],

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Unit;
 
 use Drupal\content_moderation\ContentPreprocess;
@@ -18,7 +20,7 @@ class ContentPreprocessTest extends UnitTestCase {
    * @covers ::isLatestVersionPage
    * @dataProvider routeNodeProvider
    */
-  public function testIsLatestVersionPage($route_name, $route_nid, $check_nid, $result, $message) {
+  public function testIsLatestVersionPage($route_name, $route_nid, $check_nid, $result, $message): void {
     $content_preprocess = new ContentPreprocess($this->setupCurrentRouteMatch($route_name, $route_nid));
     $node = $this->setupNode($check_nid);
     $this->assertEquals($result, $content_preprocess->isLatestVersionPage($node), $message);
@@ -27,7 +29,7 @@ class ContentPreprocessTest extends UnitTestCase {
   /**
    * Data provider for self::testIsLatestVersionPage().
    */
-  public function routeNodeProvider() {
+  public static function routeNodeProvider() {
     return [
       ['entity.node.canonical', 1, 1, FALSE, 'Not on the latest version tab route.'],
       ['entity.node.latest_version', 1, 1, TRUE, 'On the latest version tab route, with the route node.'],

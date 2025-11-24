@@ -2,9 +2,9 @@ name: Select (or other)
 type: module
 description: "Provides a select box form element with additional option 'Other' to give a textfield."
 package: Fields
-core_version_requirement: ^8.8 || ^9 || ^10
+core_version_requirement: ^10.1 || ^11
 
-# Information added by Drupal.org packaging script on 2023-06-15
-version: '4.1.0'
+# Information added by Drupal.org packaging script on 2025-11-16
+version: '4.2.2'
 project: 'select_or_other'
-datestamp: 1686871179
+datestamp: 1763272036

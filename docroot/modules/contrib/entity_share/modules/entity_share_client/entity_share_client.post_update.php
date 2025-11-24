@@ -8,8 +8,11 @@
 declare(strict_types = 1);
 
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\entity_share\EntityShareInterface;
 use Drupal\entity_share_client\Entity\EntityImportStatusInterface;
 use Drupal\entity_share_client\Entity\ImportConfig;
+use Drupal\entity_share_client\Plugin\EntityShareClient\Processor\BlockFieldBlockContentImporter;
+use Drupal\entity_share_client\Plugin\EntityShareClient\Processor\EntityReference;
 
 /**
  * Create a default import config to preserve 8.x-2.x behavior.
@@ -17,30 +20,30 @@ use Drupal\entity_share_client\Entity\ImportConfig;
 function entity_share_client_post_update_create_default_import_config() {
   ImportConfig::create([
     'id' => 'default',
-    'label' => t('Default'),
+    'label' => \t('Default'),
     'import_processor_settings' => [
       'block_field_block_content_importer' => [
-        'max_recursion_depth' => -1,
+        'max_recursion_depth' => BlockFieldBlockContentImporter::INFINITE_RECURSION_DEPTH,
         'weights' => [
-          'prepare_importable_entity_data' => 20,
+          'prepare_importable_entity_data' => (int) 20,
         ],
       ],
       'changed_time' => [
         'weights' => [
-          'process_entity' => 100,
+          'process_entity' => (int) 100,
         ],
       ],
       'default_data_processor' => [
         'weights' => [
-          'is_entity_importable' => -10,
+          'is_entity_importable' => (int) -10,
           'post_entity_save' => 0,
-          'prepare_importable_entity_data' => -100,
+          'prepare_importable_entity_data' => (int) -100,
         ],
       ],
       'entity_reference' => [
-        'max_recursion_depth' => -1,
+        'max_recursion_depth' => EntityReference::INFINITE_RECURSION_DEPTH,
         'weights' => [
-          'process_entity' => 10,
+          'process_entity' => (int) 10,
         ],
       ],
       'physical_file' => [
@@ -52,7 +55,7 @@ function entity_share_client_post_update_create_default_import_config() {
   ])
     ->save();
 
-  \Drupal::messenger()->addStatus(t('A default import config had been created. It is recommended to check it to ensure it matches your needs.'));
+  \Drupal::messenger()->addStatus(\t('A default import config had been created. It is recommended to check it to ensure it matches your needs.'));
 }
 
 /**
@@ -80,13 +83,13 @@ function entity_share_client_post_update_convert_policy_to_string(&$sandbox) {
     ->setName('policy')
     ->setTargetEntityTypeId('entity_import_status')
     ->setTargetBundle(NULL)
-    ->setLabel(t('Policy'))
-    ->setDescription(t('The import policy.'))
+    ->setLabel(\t('Policy'))
+    ->setDescription(\t('The import policy.'))
     ->setDefaultValue(EntityImportStatusInterface::IMPORT_POLICY_DEFAULT);
 
   $definition_update_manager->updateFieldableEntityType($entity_type, $field_storage_definitions, $sandbox);
 
-  return t("Import statuses' policy have been converted to string.");
+  return \t("Import statuses' policy have been converted to string.");
 }
 
 /**
@@ -101,7 +104,7 @@ function entity_share_client_post_update_set_new_default_policy() {
     ->condition('policy', 0)
     ->execute();
 
-  return t("Default Import statuses' policy have been updated.");
+  return \t("Default Import statuses' policy have been updated.");
 }
 
 /**
@@ -132,7 +135,7 @@ function entity_share_client_post_update_set_default_max_size() {
     ->loadMultiple();
 
   foreach ($import_configs as $import_config) {
-    $import_config->set('import_maxsize', 50);
+    $import_config->set('import_maxsize', EntityShareInterface::JSON_API_PAGER_SIZE_MAX);
     $import_config->save();
   }
 }

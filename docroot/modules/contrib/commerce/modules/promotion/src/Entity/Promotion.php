@@ -2,20 +2,20 @@
 
 namespace Drupal\commerce_promotion\Entity;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\commerce\ConditionGroup;
-use Drupal\commerce\EntityOwnerTrait;
 use Drupal\commerce\Entity\CommerceContentEntityBase;
+use Drupal\commerce\EntityOwnerTrait;
 use Drupal\commerce\Plugin\Commerce\Condition\ConditionInterface;
 use Drupal\commerce\Plugin\Commerce\Condition\ParentEntityAwareInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\OrderItemPromotionOfferInterface;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PromotionOfferInterface;
-use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Entity\EntityChangedTrait;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
@@ -167,7 +167,7 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    return (int) $this->get('created')->value;
   }
 
   /**
@@ -253,6 +253,8 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
     if (!$this->get('offer')->isEmpty()) {
       return $this->get('offer')->first()->getTargetInstance();
     }
+
+    return NULL;
   }
 
   /**
@@ -440,16 +442,20 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
     if (!$this->get('end_date')->isEmpty()) {
       return new DrupalDateTime($this->get('end_date')->value, $store_timezone);
     }
+
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setEndDate(DrupalDateTime $end_date = NULL) {
+  public function setEndDate(?DrupalDateTime $end_date = NULL) {
     $this->get('end_date')->value = NULL;
     if ($end_date) {
       $this->get('end_date')->value = $end_date->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
     }
+
+    return $this;
   }
 
   /**
@@ -571,7 +577,8 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
       case self::COMPATIBLE_NONE:
         // If there are any existing promotions, then this cannot apply.
         foreach ($order->collectAdjustments() as $adjustment) {
-          if ($adjustment->getType() == 'promotion') {
+          if (($adjustment->getType() == 'promotion') &&
+            ($adjustment->getSourceId() != $this->id())) {
             return FALSE;
           }
         }
@@ -884,6 +891,20 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
         'weight' => 4,
       ]);
 
+    $fields['allow_multiple_coupons'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Allow multiple coupons'))
+      ->setDescription(t('Allow multiple coupons to apply to a single order.'))
+      ->setDefaultValue(FALSE)
+      ->setSetting('display_description', TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+        'settings' => [
+          'display_label' => TRUE,
+        ],
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('form', TRUE);
+
     $fields['require_coupon'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Require a coupon to apply this promotion'))
       ->setDefaultValue(FALSE)
@@ -981,6 +1002,13 @@ class Promotion extends CommerceContentEntityBase implements PromotionInterface 
     asort($plugins);
 
     return $plugins;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isMultipleCouponsAllowed() {
+    return (bool) $this->get('allow_multiple_coupons')->value;
   }
 
 }

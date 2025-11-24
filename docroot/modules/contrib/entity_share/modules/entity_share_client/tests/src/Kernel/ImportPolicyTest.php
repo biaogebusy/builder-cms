@@ -14,6 +14,7 @@ use Drupal\KernelTests\KernelTestBase;
  * @group entity_share_client
  */
 class ImportPolicyTest extends KernelTestBase {
+
   use StringTranslationTrait;
 
   /**
@@ -27,8 +28,9 @@ class ImportPolicyTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'serialization',
+    'file',
     'jsonapi',
+    'serialization',
     'entity_share_client',
     'entity_share_client_import_policies_test',
   ];
@@ -47,7 +49,7 @@ class ImportPolicyTest extends KernelTestBase {
   public function testDetectedPolicies() {
     $definitions = $this->policiesManager->getDefinitions();
 
-    $this->assertEquals(3, count($definitions), 'There are three policies detected.');
+    $this->assertEquals(3, \count($definitions), 'There are three policies detected.');
 
     $expectations = [
       'default' => [

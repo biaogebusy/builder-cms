@@ -20,31 +20,28 @@ class RangeFromGreaterToConstraintValidatorTest extends UnitTestCase {
   /**
    * Tests the RangeFromGreaterToConstraintValidator::validate() method.
    *
-   * @param \Drupal\range\RangeItemInterface $value
+   * @param array $value
    *   Range item.
-   * @param bool $valid
+   * @param bool $is_valid
    *   A boolean indicating if the combination is expected to be valid.
    *
    * @covers ::validate
    * @dataProvider providerValidate
    */
-  public function testValidate(RangeItemInterface $value, $valid) {
-    $context = $this->createMock(ExecutionContextInterface::class);
+  public function testValidate(array $value, bool $is_valid): void {
+    $item = $this->createMock(RangeItemInterface::class);
+    $item->expects($this->any())
+      ->method('getValue')
+      ->willReturn($value);
 
-    if ($valid) {
-      $context->expects($this->never())
-        ->method('addViolation');
-    }
-    else {
-      $context->expects($this->once())
-        ->method('addViolation');
-    }
+    $context = $this->createMock(ExecutionContextInterface::class);
+    $context->expects($is_valid ? $this->never() : $this->once())
+      ->method('addViolation');
 
     $constraint = new RangeFromGreaterToConstraint();
-
     $validate = new RangeFromGreaterToConstraintValidator();
     $validate->initialize($context);
-    $validate->validate($value, $constraint);
+    $validate->validate($item, $constraint);
   }
 
   /**
@@ -52,27 +49,15 @@ class RangeFromGreaterToConstraintValidatorTest extends UnitTestCase {
    *
    * @return array
    *   Nested arrays of values to check:
-   *     - $item
-   *     - $valid
+   *     - $value
+   *     - $is_valid
    */
-  public function providerValidate() {
-    $data = [];
-
-    $cases = [
-      ['range' => ['from' => 5, 'to' => 10], 'valid' => TRUE],
-      ['range' => ['from' => 10, 'to' => 10], 'valid' => TRUE],
-      ['range' => ['from' => 10, 'to' => 5], 'valid' => FALSE],
+  public static function providerValidate() {
+    return [
+      ['value' => ['from' => 5, 'to' => 10], 'is_valid' => TRUE],
+      ['value' => ['from' => 10, 'to' => 10], 'is_valid' => TRUE],
+      ['value' => ['from' => 10, 'to' => 5], 'is_valid' => FALSE],
     ];
-
-    foreach ($cases as $case) {
-      $item = $this->createMock('Drupal\range\RangeItemInterface');
-      $item->expects($this->any())
-        ->method('getValue')
-        ->willReturn($case['range']);
-      $data[] = [$item, $case['valid']];
-    }
-
-    return $data;
   }
 
   /**

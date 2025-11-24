@@ -41,7 +41,7 @@ class AliasPathProcessor implements InboundPathProcessorInterface, OutboundPathP
   /**
    * {@inheritdoc}
    */
-  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     if (empty($options['alias'])) {
       $langcode = isset($options['language']) ? $options['language']->getId() : NULL;
       $path = $this->aliasManager->getAliasByPath($path, $langcode);
@@ -51,7 +51,7 @@ class AliasPathProcessor implements InboundPathProcessorInterface, OutboundPathP
       // also, to protect against this problem in arbitrary path processors,
       // but it is duplicated here to protect any other URL generation code
       // that might call this method separately.
-      if (strpos($path, '//') === 0) {
+      if (str_starts_with($path, '//')) {
         $path = '/' . ltrim($path, '/');
       }
     }

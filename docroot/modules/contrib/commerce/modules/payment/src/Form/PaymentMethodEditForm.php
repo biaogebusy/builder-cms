@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_payment\Form;
 
-use Drupal\commerce\InlineFormManager;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\InlineFormManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

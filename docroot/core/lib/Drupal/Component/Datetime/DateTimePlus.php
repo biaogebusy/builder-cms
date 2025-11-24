@@ -30,7 +30,7 @@ use Drupal\Component\Utility\ToStringTrait;
  * @method $this setDate(int $year, int $month, int $day)
  * @method $this setISODate(int $year, int $week, int $day = 1)
  * @method $this setTime(int $hour, int $minute, int $second = 0, int $microseconds = 0)
- * @method $this setTimestamp(int $unixtimestamp)
+ * @method $this setTimestamp(int $unix_timestamp)
  * @method $this setTimezone(\DateTimeZone $timezone)
  * @method $this sub(\DateInterval $interval)
  * @method int getOffset()
@@ -54,6 +54,8 @@ class DateTimePlus {
 
   /**
    * An array of possible date parts.
+   *
+   * @var string[]
    */
   protected static $dateParts = [
     'year',
@@ -108,11 +110,15 @@ class DateTimePlus {
 
   /**
    * The value of the language code passed to the constructor.
+   *
+   * @var string|null
    */
   protected $langcode = NULL;
 
   /**
    * An array of errors encountered when creating this date.
+   *
+   * @var string[]
    */
   protected $errors = [];
 
@@ -126,7 +132,7 @@ class DateTimePlus {
   /**
    * Creates a date object from an input date object.
    *
-   * @param \DateTime $datetime
+   * @param \DateTimeInterface $datetime
    *   A DateTime object.
    * @param array $settings
    *   (optional) A keyed array for settings, suitable for passing on to
@@ -135,7 +141,7 @@ class DateTimePlus {
    * @return static
    *   A new DateTimePlus object.
    */
-  public static function createFromDateTime(\DateTime $datetime, $settings = []) {
+  public static function createFromDateTime(\DateTimeInterface $datetime, $settings = []) {
     return new static($datetime->format(static::FORMAT), $datetime->getTimezone(), $settings);
   }
 
@@ -246,15 +252,15 @@ class DateTimePlus {
     // Tries to create a date from the format and use it if possible.
     // A regular try/catch won't work right here, if the value is
     // invalid it doesn't return an exception.
-    $datetimeplus = new static('', $timezone, $settings);
+    $datetime_plus = new static('', $timezone, $settings);
 
-    $date = \DateTime::createFromFormat($format, $time, $datetimeplus->getTimezone());
+    $date = \DateTime::createFromFormat($format, $time, $datetime_plus->getTimezone());
     if (!$date instanceof \DateTime) {
       throw new \InvalidArgumentException('The date cannot be created from a format.');
     }
     else {
-      $datetimeplus->setTimestamp($date->getTimestamp());
-      $datetimeplus->setTimezone($date->getTimezone());
+      $datetime_plus->setTimestamp($date->getTimestamp());
+      $datetime_plus->setTimezone($date->getTimezone());
 
       // Functions that parse date is forgiving, it might create a date that
       // is not exactly a match for the provided value, so test for that by
@@ -265,7 +271,7 @@ class DateTimePlus {
         throw new \UnexpectedValueException('The created date does not match the input value.');
       }
     }
-    return $datetimeplus;
+    return $datetime_plus;
   }
 
   /**
@@ -510,7 +516,7 @@ class DateTimePlus {
    *   otherwise.
    */
   public function hasErrors() {
-    return (boolean) count($this->errors);
+    return (bool) count($this->errors);
   }
 
   /**

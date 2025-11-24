@@ -18,7 +18,7 @@
  */
 
 /* global define */
-(function (_win, _doc) {
+(function (_win, _doc, _ds) {
 
   'use strict';
 
@@ -30,6 +30,7 @@
   var PROTO_SPLICE = PROTO_A.splice;
   var PROTO_SOME = PROTO_A.some;
   var V_SYMBOL = typeof Symbol !== 'undefined' && Symbol;
+  var C_TOUCH = 'touchevents';
   var IS_JQ = 'jQuery' in _win;
   var IS_CASH = 'cash' in _win;
   var V_CLASS = 'class';
@@ -170,12 +171,14 @@
       return setTimeout(callback, delay || 0, DB);
     };
 
-    if (_doc.readyState !== 'loading') {
-      cb();
-    }
-    else {
-      _doc.addEventListener('DOMContentLoaded', cb);
-    }
+    wwoBigPipe(function () {
+      if (_doc.readyState !== 'loading') {
+        cb();
+      }
+      else {
+        _doc.addEventListener('DOMContentLoaded', cb);
+      }
+    });
 
     return this;
   }
@@ -577,6 +580,72 @@
     return x && 'getAttribute' in x;
   }
 
+  function isBigPipe() {
+    return 'bigPipePlaceholderIds' in _ds;
+  }
+
+  // Checks if BigPipe replacement jobs are done.
+  function wwoBigPipeDone() {
+    if (isBigPipe()) {
+      return isEmpty(_ds.bigPipePlaceholderIds);
+    }
+    // If BigPipe is not installed, always done.
+    return true;
+  }
+
+  // Wait for BigPipe to be done before calling a function, not really once.
+  // This should also avoid multiple invocations of the callback function.
+  function wwoBigPipe(cb, t) {
+    if (wwoBigPipeDone()) {
+      // DOM ready fix.
+      setTimeout(cb, t || 101);
+    }
+  }
+
+  /**
+   * Returns true if a touch device.
+   *
+   * @private
+   *
+   * @param {Function} cb
+   *   The callback function called on matchMedia change.
+   *
+   * @return {bool}
+   *   True if a touch device.
+   */
+  function isTouch(cb) {
+    var query = {};
+
+    // @todo remove check when min D.10.
+    if ('matchMedia' in _win) {
+      query = _win.matchMedia('(hover: none), (pointer: coarse)');
+      if (cb) {
+        query.addEventListener('change', cb);
+      }
+    }
+
+    return (
+      ('ontouchstart' in _win) ||
+      (_win.DocumentTouch && _doc instanceof _win.DocumentTouch) ||
+      query.matches ||
+      (navigator.maxTouchPoints > 0) ||
+      (navigator.msMaxTouchPoints > 0)
+    );
+  }
+
+  /**
+   * Dynamically add [no-]touchevents class to html.
+   *
+   * Basically similar to core/drupal.touchevents-test, only with change.
+   */
+  function touchOrNot() {
+    var html = _doc.documentElement;
+    var matches = isTouch(touchOrNot);
+
+    removeClass(html, [C_TOUCH, 'no-' + C_TOUCH]);
+    addClass(html, matches ? C_TOUCH : 'no-' + C_TOUCH);
+  }
+
   /**
    * Returns an object from a NamedNodeMap.
    *
@@ -746,6 +815,7 @@
           return item.trim();
         });
       }
+      return [x];
     }
     return isArr(x) ? x : [x];
   }
@@ -1203,6 +1273,7 @@
    *
    * To check if the returned element is found:
    *   - use $.isElm(el) which returns a bool, or !$.isNull(el).
+   *   - or use it directly as condition if not using asArray argument.
    * To check if the returned elements are found:
    *   - use regular els.length check.
    *
@@ -1506,10 +1577,12 @@
    *   An array of elements to process.
    */
   function toElms(selector, ctx) {
+    ctx = ctx || _doc;
+
     // Assume selector is an array-like element unless a string.
     var elements = toArray(selector);
     if (isStr(selector)) {
-      elements = [ctx || _doc].querySelectorAll(selector);
+      elements = ctx.querySelectorAll(selector);
     }
 
     return slice(elements);
@@ -1569,7 +1642,14 @@
       // el[V_REMOVE + E_LISTENER](type, EVENTS[e], options);
       // }
       if (isFun(_cb)) {
+        var customEvent = {
+          name: e,
+          callback: _cb,
+          type: type
+        };
+
         EVENTS[e] = _cb;
+        EVENTS[type] = customEvent;
 
         el[V_ADD + E_LISTENER](type, _cb, options);
       }
@@ -1585,6 +1665,7 @@
       if (isFun(_cb)) {
         el[V_REMOVE + E_LISTENER](type, _cb, options);
         delete EVENTS[e];
+        delete EVENTS[type];
       }
     }
   };
@@ -1717,6 +1798,13 @@
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent
    */
   function trigger(els, eventNames, details, param) {
+    // Supports $.trigger('resize') for window;
+    if (isStr(els)) {
+      details = eventNames;
+      eventNames = els;
+      els = [_win];
+    }
+
     var chainCallback = function (el) {
       if (!isEvt(el)) {
         return;
@@ -1732,7 +1820,7 @@
           var data = {
             bubbles: true,
             cancelable: true,
-            detail: details || {}
+            detail: isObj(details) ? details : {}
           };
 
           if (isObj(param)) {
@@ -1743,6 +1831,14 @@
         }
 
         el.dispatchEvent(event);
+
+        // Supports triggering events with extra arguments ala jQuery.
+        // $.trigger(ROOT, 'custom:move', [ctx, width]);
+        // $.on(ROOT, 'custom:move.NAMESPACE', function (e, ctx, width) {});
+        var type = eType(eventName);
+        if (EVENTS[type] && EVENTS[type].type === eventName && isArr(details)) {
+          EVENTS[type].callback.apply(null, [event].concat(details));
+        }
       };
 
       each(toArray(eventNames), execute);
@@ -1810,6 +1906,11 @@
   DB.isNativeLazy = 'loading' in HTMLImageElement.prototype;
   DB.isAmd = typeof define === 'function' && define.amd;
   DB.isWin = isWin;
+  DB.isBigPipe = isBigPipe;
+  DB.wwoBigPipeDone = wwoBigPipeDone;
+  DB.wwoBigPipe = wwoBigPipe;
+  DB.isTouch = isTouch;
+  DB.touchOrNot = touchOrNot;
   DB._er = -1;
   DB._ok = 1;
 
@@ -1940,6 +2041,32 @@
     };
   };
 
+  function boxSize(entry) {
+    var width;
+    var height;
+    var size;
+
+    if (entry.contentBoxSize) {
+      size = entry.contentBoxSize[0];
+      if (size) {
+        width = size.inlineSize;
+        height = size.blockSize;
+      }
+    }
+
+    if (!height) {
+      // entry.contentRect is deprecated.
+      size = entry.contentRect || rect(entry.target);
+      width = size.width;
+      height = size.height;
+    }
+
+    return {
+      width: Math.floor(width),
+      height: Math.floor(height)
+    };
+  }
+
   /**
    * A simple wrapper to delay callback function on window resize.
    *
@@ -1947,21 +2074,56 @@
    *
    * @param {Function} cb
    *   The callback function.
-   * @param {number} t
-   *   The timeout.
+   * @param {undefined|String|Array.<Element>|Element} t
+   *   The timeout, selector, or element(s).
+   * @param {Function} cbt
+   *   The touch callback function, else default to cb.
    *
-   * @return {ResizeObserver|Function}
-   *   The ResizeObserver instance, or callback function.
+   * @return {Function}
+   *   The callback function.
+   *
+   * See https://dev.to/murashow/quick-guide-to-resize-observer-gam
+   * See https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
    */
-  DB.resize = function (cb, t) {
-    // @todo enable later when old projects are updated: lory, extended, etc.
-    // if (this.isRo) {
-    // return new ResizeObserver(cb);
-    // }
-    _win.onresize = function (e) {
+  DB.resize = function (cb, t, cbt) {
+    // Preserves oldies till updated: lory, extended, etc.
+    // Safe to replace, previously only called: $.resize(cb)();
+    if (this.isRo && !isUnd(t)) {
+      var observer = new ResizeObserver(function (entries) {
+        var me = this;
+        var winsize = windowSize();
+        var touch = isTouch(cbt || cb);
+
+        each(entries, function (entry) {
+          var size = boxSize(entry);
+          var data = {
+            width: size.width,
+            height: size.height,
+            window: winsize,
+            touch: touch
+          };
+
+          // Pass it to callback.
+          cb.apply(null, [me, data, entry]);
+        });
+      });
+
+      var elms = toElms(t);
+      if (elms.length) {
+        each(elms, function (el) {
+          if (isElm(el)) {
+            observer.observe(el);
+          }
+        });
+      }
+      return cb;
+    }
+
+    _win.onresize = function () {
       clearTimeout(t);
-      t = setTimeout(cb.bind(e), 200);
+      t = setTimeout(cb, 200);
     };
+
     return cb;
   };
 
@@ -2262,4 +2424,4 @@
     _win.dBlazy = DB;
   }
 
-})(this, this.document);
+})(this, this.document, drupalSettings);

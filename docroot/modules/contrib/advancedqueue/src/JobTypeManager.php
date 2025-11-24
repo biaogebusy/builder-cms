@@ -2,7 +2,7 @@
 
 namespace Drupal\advancedqueue;
 
-use Drupal\advancedqueue\Annotation\AdvancedQueueJobType;
+use Drupal\advancedqueue\Attribute\AdvancedQueueJobType;
 use Drupal\advancedqueue\Plugin\AdvancedQueue\JobType\JobTypeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -25,7 +25,13 @@ class JobTypeManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/AdvancedQueue/JobType', $namespaces, $module_handler, JobTypeInterface::class, AdvancedQueueJobType::class);
+    parent::__construct(
+      'Plugin/AdvancedQueue/JobType',
+      $namespaces, $module_handler,
+      JobTypeInterface::class,
+      AdvancedQueueJobType::class,
+      'Drupal\advancedqueue\Annotation\AdvancedQueueJobType',
+    );
 
     $this->alterInfo('advancedqueue_job_type_info');
     $this->setCacheBackend($cache_backend, 'advancedqueue_job_type_plugins');

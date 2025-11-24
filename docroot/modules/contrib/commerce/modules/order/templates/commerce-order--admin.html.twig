@@ -18,20 +18,22 @@
  */
 #}
 
-{{ attach_library('commerce_order/form') }}
+{{ attach_library('commerce/admin-layout') }}
 {% set order_state = order_entity.getState.getLabel %}
 
-<div class="layout-order-form clearfix">
-  <div class="layout-region layout-region-order-main">
-    {{ order.order_items }}
-    {{ order.total_price }}
+<div class="layout-order-admin layout-commerce-admin">
+  <div class="layout-region layout-region--commerce-main">
+    <div class="layout-region__content">
+      {{ order.order_items }}
+      {{ order.total_price }}
 
-    {% if order.activity %}
-      <h2>{% trans %}Order activity{% endtrans %}</h2>
-      {{ order.activity }}
-    {% endif %}
+      {% if order.activity %}
+        <h2>{% trans %}Order activity{% endtrans %}</h2>
+        {{ order.activity }}
+      {% endif %}
+    </div>
   </div>
-  <div class="layout-region layout-region-order-secondary">
+  <div class="layout-region layout-region--commerce-secondary">
     <div class="entity-meta">
       <div class="entity-meta__header">
         <h3 class="entity-meta__title">
@@ -59,11 +61,11 @@
           {{ order.state }}
         {% endif %}
       </div>
-      <details open class="seven-details">
-        <summary role="button" class="seven-details__summary">
+      <details open class="claro-details">
+        <summary role="button" class="claro-details__summary">
           {{ 'Customer Information'|t }}
         </summary>
-        <div class="details-wrapper seven-details__wrapper">
+        <div class="details-wrapper claro-details__wrapper">
           {% for key in ['uid', 'mail', 'ip_address'] %}
             {% if order[key] %}
               <div class="form-item">
@@ -74,32 +76,32 @@
         </div>
       </details>
       {% if order.billing_information %}
-        <details open class="seven-details">
-          <summary role="button" class="seven-details__summary">
+        <details open class="claro-details">
+          <summary role="button" class="claro-details__summary">
             {{ 'Billing information'|t }}
           </summary>
-          <div class="details-wrapper seven-details__wrapper">
+          <div class="details-wrapper claro-details__wrapper">
             {{ order.billing_information }}
           </div>
         </details>
       {% endif %}
       {% if order.shipping_information %}
-        <details open class="seven-details">
-          <summary role="button" class="seven-details__summary">
+        <details open class="claro-details">
+          <summary role="button" class="claro-details__summary">
             {{ 'Shipping information'|t }}
           </summary>
-          <div class="details-wrapper seven-details__wrapper">
+          <div class="details-wrapper claro-details__wrapper">
             {{ order.shipping_information }}
           </div>
         </details>
       {% endif %}
       {% if additional_order_fields %}
-        <details open class="seven-details">
-          <summary role="button" class="seven-details__summary">
+        <details open class="claro-details">
+          <summary role="button" class="claro-details__summary">
             {{ 'Other'|t }}
           </summary>
           {# Show fields that are not shown elsewhere. #}
-          <div class="details-wrapper seven-details__wrapper">
+          <div class="details-wrapper claro-details__wrapper">
             {{ additional_order_fields }}
           </div>
         </details>

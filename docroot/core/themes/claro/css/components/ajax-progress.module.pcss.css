@@ -3,8 +3,6 @@
  * Throbber.
  */
 
-@import "../base/variables.pcss.css";
-
 .ajax-progress {
   display: inline-block;
 }
@@ -36,25 +34,16 @@
  * Remove margin from ajax throbbers following buttons because buttons already
  * have a large margin set.
  */
-.js .button:not(.js-hide) + .ajax-progress--throbber {
-  margin-left: 0; /* LTR */
+.js .action-link:not(.js-hide, .button--action) + .ajax-progress--throbber,
+.js .button:not(.js-hide, .button--action) + .ajax-progress--throbber {
+  margin-inline-start: 0;
 }
-[dir="rtl"].js .button:not(.js-hide) + .ajax-progress--throbber {
-  margin-right: 0;
-  margin-left: var(--ajax-progress-margin-horizontal);
-}
-
 /**
  * Restore start margin for ajax throbbers inside a managed file widget.
  */
 .js .form-type--managed-file .button:not(.js-hide) + .ajax-progress--throbber,
 .js .file-operations-cell .button:not(.js-hide) + .ajax-progress--throbber {
-  margin-left: var(--ajax-progress-margin-horizontal); /* LTR */
-}
-[dir="rtl"].js .form-type--managed-file .button:not(.js-hide) + .ajax-progress--throbber,
-[dir="rtl"].js .file-operations-cell .button:not(.js-hide) + .ajax-progress--throbber {
-  margin-right: var(--ajax-progress-margin-horizontal);
-  margin-left: var(--ajax-progress-margin-horizontal);
+  margin-inline-start: var(--ajax-progress-margin-horizontal); /* LTR */
 }
 
 .ajax-progress__throbber {
@@ -69,22 +58,19 @@
 
 .ajax-progress__message {
   display: inline-block;
-  padding-left: var(--ajax-progress-margin-horizontal);
+  padding-inline-start: var(--ajax-progress-margin-horizontal);
   font-size: var(--font-size-label);
 }
-[dir="rtl"] .ajax-progress__message {
-  padding-right: var(--ajax-progress-margin-horizontal);
-  padding-left: 0;
-}
+
 /**
  * Full screen throbber.
  */
 .ajax-progress--fullscreen,
 .ui-dialog .ajax-progress--throbber {
   position: fixed;
-  z-index: 1000;
-  top: 50%;
-  left: 50%;
+  z-index: 1261;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
   box-sizing: border-box;
   width: 3.5rem; /* 56px */
   height: 3.5rem;
@@ -97,8 +83,8 @@
 .ajax-progress__throbber--fullscreen,
 .ui-dialog .ajax-progress__throbber {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
   width: 1.75rem; /* 28px */
   height: 1.75rem; /* 28px */
   margin: -0.875rem;
@@ -109,18 +95,6 @@
 
 .ui-dialog .ajax-progress__message {
   display: none;
-}
-
-@media screen and (-ms-high-contrast: active) {
-  /**
-   * Throbber animation is shaky on Edge RTL on high contrast for border width
-   * less than 4px.
-   */
-  @supports (-ms-ime-align:auto) {
-    [dir="rtl"] .ajax-progress__throbber {
-      border-width: 4px;
-    }
-  }
 }
 
 @keyframes claro-throbber {

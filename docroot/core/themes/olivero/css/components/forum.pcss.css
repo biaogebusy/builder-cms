@@ -3,7 +3,7 @@
  * Forum specific styles.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .forum {
   & table {
@@ -14,6 +14,6 @@
 .forum__name--link,
 .forum__last-reply a,
 .forum__title a {
-  color: var(--color--blue-20);
+  color: var(--color-text-primary-medium);
   font-weight: bold;
 }

@@ -7,6 +7,7 @@ use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_autocomplete\Entity\Search;
 use Drupal\search_api_db\Plugin\search_api\backend\Database;
 use Drupal\Tests\search_api\Functional\ExampleContentTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests autocomplete functionality of the Database backend.
@@ -15,6 +16,7 @@ use Drupal\Tests\search_api\Functional\ExampleContentTrait;
  * @coversDefaultClass \Drupal\search_api_db\Plugin\search_api\backend\Database
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class AutocompleteTest extends KernelTestBase {
 
   use ExampleContentTrait;
@@ -33,6 +35,7 @@ class AutocompleteTest extends KernelTestBase {
     'search_api_autocomplete',
     'search_api_db',
     'search_api_db_test_autocomplete',
+    'search_api_test',
     'search_api_test_db',
     'search_api_test_example_content',
   ];

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Ajax;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -24,7 +26,7 @@ class CommandsTest extends WebDriverTestBase {
   /**
    * Tests the various Ajax Commands.
    */
-  public function testAjaxCommands() {
+  public function testAjaxCommands(): void {
     $session = $this->getSession();
     $page = $this->getSession()->getPage();
 
@@ -36,6 +38,8 @@ class CommandsTest extends WebDriverTestBase {
     // Tests the 'add_css' command.
     $page->pressButton("AJAX 'add_css' command");
     $this->assertWaitPageContains('my/file.css');
+    $this->assertSession()->elementExists('css', 'link[href="my/file.css"]');
+    $this->assertSession()->elementExists('css', 'link[href="https://example.com/css?family=Open+Sans"]');
 
     // Tests the 'after' command.
     $page->pressButton("AJAX 'After': Click to put something after the div");
@@ -98,7 +102,7 @@ class CommandsTest extends WebDriverTestBase {
     // Tests the 'data' command.
     $page->pressButton("AJAX data command: Issue command.");
     $this->assertTrue($page->waitFor(10, function () use ($session) {
-      return 'testvalue' === $session->evaluateScript('window.jQuery("#data_div").data("testkey")');
+      return 'test_value' === $session->evaluateScript('window.jQuery("#data_div").data("test_key")');
     }));
 
     // Tests the 'html' command.
@@ -135,9 +139,28 @@ Drupal.behaviors.testSettingsCommand = {
 };
 JS;
     $session->executeScript($test_settings_command);
-    // @todo: Replace after https://www.drupal.org/project/drupal/issues/2616184
+    // @todo Replace after https://www.drupal.org/project/drupal/issues/2616184
     $session->executeScript('window.jQuery("#edit-settings-command-example").mousedown();');
     $this->assertWaitPageContains('<div class="test-settings-command">42</div>');
+  }
+
+  /**
+   * Tests the various Ajax Commands with legacy parameters.
+   * @group legacy
+   */
+  public function testLegacyAjaxCommands(): void {
+    $session = $this->getSession();
+    $page = $this->getSession()->getPage();
+
+    $form_path = 'ajax_forms_test_ajax_commands_form';
+    $web_user = $this->drupalCreateUser(['access content']);
+    $this->drupalLogin($web_user);
+    $this->drupalGet($form_path);
+
+    // Tests the 'add_css' command with legacy string value.
+    $this->expectDeprecation('Javascript Deprecation: Passing a string to the Drupal.ajax.add_css() method is deprecated in 10.1.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3154948.');
+    $page->pressButton("AJAX 'add_css' legacy command");
+    $this->assertWaitPageContains('my/file.css');
   }
 
   /**

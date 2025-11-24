@@ -2,16 +2,19 @@
 
 namespace Drupal\better_exposed_filters\Plugin\views\exposed_form;
 
-use Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager;
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Url;
+use Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager;
 use Drupal\views\Plugin\views\exposed_form\InputRequired;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Exposed form plugin that provides a basic exposed form.
@@ -27,41 +30,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class BetterExposedFilters extends InputRequired {
 
   /**
-   * BEF filters widget plugin manager.
-   *
-   * @var \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager
-   */
-  public $filterWidgetManager;
-
-  /**
-   * BEF pager widget plugin manager.
-   *
-   * @var \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager
-   */
-  public $pagerWidgetManager;
-
-  /**
-   * BEF sort widget plugin manager.
-   *
-   * @var \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager
-   */
-  public $sortWidgetManager;
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The element info manager.
-   *
-   * @var \Drupal\Core\Render\ElementInfoManagerInterface
-   */
-  protected $elementInfo;
-
-  /**
    * BetterExposedFilters constructor.
    *
    * @param array $configuration
@@ -70,39 +38,40 @@ class BetterExposedFilters extends InputRequired {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager $filter_widget_manager
+   * @param \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager $filterWidgetManager
    *   The better exposed filter widget manager for filter widgets.
-   * @param \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager $pager_widget_manager
+   * @param \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager $pagerWidgetManager
    *   The better exposed filter widget manager for pager widgets.
-   * @param \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager $sort_widget_manager
+   * @param \Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetManager $sortWidgetManager
    *   The better exposed filter widget manager for sort widgets.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   Manage drupal modules.
-   * @param \Drupal\Core\Render\ElementInfoManagerInterface $element_info
+   * @param \Drupal\Core\Theme\ThemeManagerInterface $themeManager
+   *   Manage drupal themes.
+   * @param \Drupal\Core\Render\ElementInfoManagerInterface $elementInfo
    *   The element info manager.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Request object.
    */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    BetterExposedFiltersWidgetManager $filter_widget_manager,
-    BetterExposedFiltersWidgetManager $pager_widget_manager,
-    BetterExposedFiltersWidgetManager $sort_widget_manager,
-    ModuleHandlerInterface $module_handler,
-    ElementInfoManagerInterface $element_info) {
-
+    protected BetterExposedFiltersWidgetManager $filterWidgetManager,
+    protected BetterExposedFiltersWidgetManager $pagerWidgetManager,
+    protected BetterExposedFiltersWidgetManager $sortWidgetManager,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected ThemeManagerInterface $themeManager,
+    protected ElementInfoManagerInterface $elementInfo,
+    protected Request $request,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->filterWidgetManager = $filter_widget_manager;
-    $this->pagerWidgetManager = $pager_widget_manager;
-    $this->sortWidgetManager = $sort_widget_manager;
-    $this->moduleHandler = $module_handler;
-    $this->elementInfo = $element_info;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     // @phpstan-ignore-next-line
     return new static(
       $configuration,
@@ -112,14 +81,16 @@ class BetterExposedFilters extends InputRequired {
       $container->get('plugin.manager.better_exposed_filters_pager_widget'),
       $container->get('plugin.manager.better_exposed_filters_sort_widget'),
       $container->get('module_handler'),
+      $container->get('theme.manager'),
       $container->get('element_info'),
+      $container->get('request_stack')->getCurrentRequest()
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function defineOptions() {
+  protected function defineOptions(): array {
     $options = parent::defineOptions();
 
     // General, sort, pagers, and filter.
@@ -128,6 +99,7 @@ class BetterExposedFilters extends InputRequired {
         'autosubmit' => FALSE,
         'autosubmit_exclude_textfield' => FALSE,
         'autosubmit_textfield_delay' => 500,
+        'autosubmit_textfield_minimum_length' => 3,
         'autosubmit_hide' => FALSE,
         'input_required' => FALSE,
         'allow_secondary' => FALSE,
@@ -155,7 +127,8 @@ class BetterExposedFilters extends InputRequired {
     }
 
     // Initialize options if the pager is exposed.
-    $pager = $this->view->getPager();
+    /** @var \Drupal\views\Plugin\views\pager\PagerPluginBase $pager */
+    $pager = $this->view->display_handler->getPlugin('pager');
     if ($pager && $pager->usesExposed()) {
       $bef_options['pager']['plugin_id'] = 'default';
     }
@@ -190,7 +163,7 @@ class BetterExposedFilters extends InputRequired {
    *
    * @see \Drupal\views\Plugin\views\PluginBase::setOptionDefaults
    */
-  protected function createOptionDefaults(array $options) {
+  protected function createOptionDefaults(array $options): array {
     $result = [];
     foreach ($options as $key => $option) {
       if (is_array($option)) {
@@ -209,10 +182,10 @@ class BetterExposedFilters extends InputRequired {
    *
    * @inheritDoc
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
     // Ensure that the form values are stored in their original location, and
     // not dependent on their position in the form tree. We are moving around
-    // a few elements to make the UI more user friendly.
+    // a few elements to make the UI more user-friendly.
     $original_form = [];
     parent::buildOptionsForm($original_form, $form_state);
     foreach (Element::children($original_form) as $element) {
@@ -271,6 +244,20 @@ class BetterExposedFilters extends InputRequired {
       '#title' => $this->t('Delay for textfield autosubmit'),
       '#description' => $this->t('Configure a delay in ms before triggering autosubmit on textfields.'),
       '#default_value' => $bef_options['general']['autosubmit_textfield_delay'],
+      '#min' => 0,
+      '#states' => [
+        'visible' => [
+          ':input[name="exposed_form_options[bef][general][autosubmit]"]' => ['checked' => TRUE],
+          ':input[name="exposed_form_options[bef][general][autosubmit_exclude_textfield]"]' => ['checked' => FALSE],
+        ],
+      ],
+    ];
+
+    $form['bef']['general']['autosubmit_textfield_minimum_length'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Textfield autosubmit minimum length'),
+      '#description' => $this->t('Configure a minimum textfield length before triggering autosubmit on textfields.'),
+      '#default_value' => $bef_options['general']['autosubmit_textfield_minimum_length'],
       '#min' => 0,
       '#states' => [
         'visible' => [
@@ -433,7 +420,8 @@ class BetterExposedFilters extends InputRequired {
     $form['bef']['pager']['bef_intro'] = [
       '#markup' => '<h3>' . $this->t('Exposed Pager Settings') . '</h3><p>' . $this->t('This section lets you select additional options for exposed pagers. Some options are only available in certain situations. If you do not see the options you expect, please see the <a href=":link">BEF settings documentation page</a> for more details.', [':link' => $documentation_uri]) . '</p>',
     ];
-    $pager = $this->view->getPager();
+    /** @var \Drupal\views\Plugin\views\pager\PagerPluginBase $pager */
+    $pager = $this->view->display_handler->getPlugin('pager');
     $is_pager_exposed = $pager && $pager->usesExposed();
 
     $form['bef']['pager']['empty'] = [
@@ -584,7 +572,7 @@ class BetterExposedFilters extends InputRequired {
    * @return array
    *   The form element to return.
    */
-  public static function ajaxCallback(array $form, FormStateInterface $form_state) {
+  public static function ajaxCallback(array $form, FormStateInterface $form_state): array {
     $triggering_element = $form_state->getTriggeringElement();
     return NestedArray::getValue($form, array_slice($triggering_element['#array_parents'], 0, -1));
   }
@@ -592,7 +580,7 @@ class BetterExposedFilters extends InputRequired {
   /**
    * {@inheritdoc}
    */
-  public function validateOptionsForm(&$form, FormStateInterface $form_state) {
+  public function validateOptionsForm(&$form, FormStateInterface $form_state): void {
     // Drupal only passes in a part of the views form, but we need the complete
     // form array for plugin subforms to work.
     $parent_form = $form_state->getCompleteForm();
@@ -659,7 +647,7 @@ class BetterExposedFilters extends InputRequired {
   /**
    * {@inheritdoc}
    */
-  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
+  public function submitOptionsForm(&$form, FormStateInterface $form_state): void {
     // Drupal only passes in a part of the views form, but we need the complete
     // form array for plugin subforms to work.
     $parent_form = $form_state->getCompleteForm();
@@ -669,9 +657,17 @@ class BetterExposedFilters extends InputRequired {
     // Reorder options based on config - some keys may have shifted because of
     // form alterations (@see \Drupal\better_exposed_filters\Plugin\views\exposed_form\BetterExposedFilters::buildOptionsForm).
     $options = &$form_state->getValue('exposed_form_options');
+
+    $reset_checked = $options['reset_button'];
     $options = array_replace_recursive($this->options, $options);
+
     // Save a shorthand to the BEF options.
     $bef_options = &$options['bef'];
+
+    // If reset button is unchecked make sure "always show" is disabled also.
+    if (!$reset_checked) {
+      $bef_options['general']['reset_button_always_show'] = FALSE;
+    }
 
     // Shorthand for all filter handlers in this view.
     /** @var \Drupal\views\Plugin\views\HandlerBase[] $filters */
@@ -734,7 +730,7 @@ class BetterExposedFilters extends InputRequired {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(&$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(&$form, FormStateInterface $form_state): void {
     parent::exposedFormAlter($form, $form_state);
 
     // Mark form as Better Exposed Filter form for easier alterations.
@@ -743,14 +739,15 @@ class BetterExposedFilters extends InputRequired {
     // These styles are used on all exposed forms.
     $form['#attached']['library'][] = 'better_exposed_filters/general';
 
-    // Add the bef-exposed-form class at the form level so we can limit some
+    // Add the bef-exposed-form class at the form level, so we can limit some
     // styling changes to just BEF forms.
     $form['#attributes']['class'][] = 'bef-exposed-form';
 
     // Grab BEF options and allow modules/theme to modify them before
     // processing.
-    $bef_options = $this->options['bef'];
+    $bef_options = &$this->options['bef'];
     $this->moduleHandler->alter('better_exposed_filters_options', $bef_options, $this->view, $this->displayHandler);
+    $this->themeManager->alter('better_exposed_filters_options', $bef_options, $this->view, $this->displayHandler);
 
     // Apply auto-submit values.
     if (!empty($bef_options['general']['autosubmit'])) {
@@ -759,20 +756,15 @@ class BetterExposedFilters extends InputRequired {
           'data-bef-auto-submit-full-form' => '',
           'data-bef-auto-submit' => '',
           'data-bef-auto-submit-delay' => $bef_options['general']['autosubmit_textfield_delay'],
+          'data-bef-auto-submit-minimum-length' => $bef_options['general']['autosubmit_textfield_minimum_length'],
         ],
       ]);
       $form['actions']['submit']['#attributes']['data-bef-auto-submit-click'] = '';
       $form['#attached']['library'][] = 'better_exposed_filters/auto_submit';
-
-      if (!empty($bef_options['general']['autosubmit_exclude_textfield'])) {
-        $supported_types = ['entity_autocomplete', 'textfield'];
-        foreach ($form as $element) {
-          $element_type = $element['#type'] ?? NULL;
-          if (in_array($element_type, $supported_types)) {
-            $element['#attributes']['data-bef-auto-submit-exclude'] = '';
-          }
-        }
-      }
+      /* There are text fields provided by other modules which have different
+      "type" attributes, so attach the autosubmit exclude config setting
+      so we can handle it with JS. */
+      $form['#attached']['drupalSettings']['better_exposed_filters']['autosubmit_exclude_textfield'] = $bef_options['general']['autosubmit_exclude_textfield'];
 
       if (!empty($bef_options['general']['autosubmit_hide'])) {
         $form['actions']['submit']['#attributes']['class'][] = 'js-hide';
@@ -812,7 +804,8 @@ class BetterExposedFilters extends InputRequired {
     /*
      * Handle exposed pager elements.
      */
-    $pager = $this->view->getPager();
+    /** @var \Drupal\views\Plugin\views\pager\PagerPluginBase $pager */
+    $pager = $this->view->display_handler->getPlugin('pager');
     $is_pager_exposed = $pager && $pager->usesExposed();
     if ($is_pager_exposed && !empty($bef_options['pager']['plugin_id'])) {
       $plugin_id = $bef_options['pager']['plugin_id'];
@@ -859,9 +852,18 @@ class BetterExposedFilters extends InputRequired {
       $form['actions']['reset']['#access'] = TRUE;
     }
 
-    // Never enable a reset button that has already been disabled.
-    if (!isset($form['actions']['reset']['#access']) || $form['actions']['reset']['#access'] === TRUE) {
-      $form['actions']['reset']['#access'] = $has_visible_filters;
+    if (isset($form['actions']['reset'])) {
+      // Never enable a reset button that has already been disabled.
+      if (!isset($form['actions']['reset']['#access']) || $form['actions']['reset']['#access'] === TRUE) {
+        $form['actions']['reset']['#access'] = $has_visible_filters;
+      }
+
+      // Prevent from showing up in \Drupal::request()->query.
+      // See ViewsExposedForm::buildForm() for more details.
+      $form['actions']['reset']['#name'] = 'reset';
+      $form['actions']['reset']['#op'] = 'reset';
+      $form['actions']['reset']['#type'] = 'submit';
+      $form['actions']['reset']['#id'] = Html::getUniqueId('edit-reset-' . $this->view->storage->id());
     }
 
     // Ensure default process/pre_render callbacks are included when a BEF
@@ -875,7 +877,105 @@ class BetterExposedFilters extends InputRequired {
   /**
    * {@inheritdoc}
    */
-  protected function exposedFilterApplied() {
+  public function exposedFormSubmit(&$form, FormStateInterface $form_state, &$exclude): void {
+    parent::exposedFormSubmit($form, $form_state, $exclude);
+
+    $triggering_element = $form_state->getTriggeringElement();
+    if ($triggering_element && !empty($triggering_element['#name']) && $triggering_element['#name'] == 'reset') {
+      $params = $this->request->request->all();
+      if (empty($params) || in_array('reset', array_keys($params))) {
+        $this->resetForm($form, $form_state);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function resetForm(&$form, FormStateInterface $form_state): void {
+    // _SESSION is not defined for users who are not logged in.
+    // If filters are not overridden, store the 'remember' settings on the
+    // default display. If they are, store them on this display. This way,
+    // multiple displays in the same view can share the same filters and
+    // remember settings.
+    $display_id = ($this->view->display_handler->isDefaulted('filters')) ? 'default' : $this->view->current_display;
+
+    $session = $this->view->getRequest()->getSession();
+    $views_session = $session->get('views', []);
+    if (isset($views_session[$this->view->storage->id()][$display_id])) {
+      unset($views_session[$this->view->storage->id()][$display_id]);
+    }
+    $session->set('views', $views_session);
+
+    // Set the form to allow redirect.
+    if (empty($this->view->live_preview) && !$this->request->isXmlHttpRequest()) {
+      $form_state->disableRedirect(FALSE);
+    }
+    else {
+      $form_state->setRebuild();
+      $this->view->setExposedInput([]);
+
+      // Go through each handler and let it generate its exposed widget.
+      // See ViewsExposedForm::buildForm() for more details.
+      foreach ($this->view->display_handler->handlers as $type => $value) {
+        /** @var \Drupal\views\Plugin\views\ViewsHandlerInterface $handler */
+        foreach ($this->view->$type as $id => $handler) {
+          if ($handler->canExpose() && $handler->isExposed()) {
+            // Reset exposed sorts filter elements if they exist.
+            if ($type === 'sort') {
+              foreach (['sort_bef_combine', 'sort_by', 'sort_order'] as $sort_el) {
+                if (isset($this->view->exposed_data[$sort_el]) && isset($form[$sort_el])) {
+                  $this->request->query->remove($sort_el);
+                  $form_state->setValue($sort_el, $form[$sort_el]['#default_value']);
+                }
+              }
+              continue 2;
+            }
+
+            $handler->value = $handler->options['value'];
+
+            // Grouped exposed filters have their own forms.
+            // Instead of render the standard exposed form, a new Select or
+            // Radio form field is rendered with the available groups.
+            // When a user choose an option the selected value is split
+            // into the operator and value that the item represents.
+            if ($handler->isAGroup()) {
+              $handler->groupForm($form, $form_state);
+              $id = $value_identifier = $handler->options['group_info']['identifier'];
+            }
+            else {
+              $handler->buildExposedForm($form, $form_state);
+              $value_identifier = $handler->options['expose']['identifier'];
+            }
+            if ($info = $handler->exposedInfo()) {
+              $form['#info']["$type-$id"] = $info;
+            }
+
+            // Checks if this is a complex value.
+            if (isset($form[$value_identifier]) && Element::children($form[$value_identifier])) {
+              foreach (Element::children($form[$value_identifier]) as $child) {
+                $form_state->setValue([$value_identifier, $child], $form[$value_identifier][$child]['#default_value'] ?? NULL);
+              }
+            }
+            else {
+              $form_state->setValue($value_identifier, $form[$value_identifier]['#default_value'] ?? NULL);
+            }
+
+            // Cleanup query.
+            $this->request->query->remove($value_identifier);
+          }
+        }
+      }
+      $this->view->exposed_data = $form_state->getValues();
+    }
+
+    $form_state->setRedirect('<current>');
+  }
+
+  /**
+   * Check if exposed filter is applied.
+   */
+  protected function exposedFilterApplied(): ?bool {
     // If the input required option is set, check to see if a filter option has
     // been set.
     if (!empty($this->options['bef']['general']['input_required'])) {
@@ -901,7 +1001,7 @@ class BetterExposedFilters extends InputRequired {
    * @return array
    *   The form array containing the newly inserted element.
    */
-  protected function prependFormElement(array $form, $key, array $element) {
+  protected function prependFormElement(array $form, string $key, array $element): array {
     $pos = array_search($key, array_keys($form)) + 1;
     return array_splice($form, 0, $pos - 1) + $element + $form;
   }
@@ -919,7 +1019,7 @@ class BetterExposedFilters extends InputRequired {
    * @see https://www.drupal.org/project/drupal/issues/2070131
    * @see https://www.drupal.org/project/drupal/issues/2190333
    */
-  protected function addDefaultElementInfo(array &$element) {
+  protected function addDefaultElementInfo(array &$element): void {
     /** @var \Drupal\Core\Render\ElementInfoManager $element_info_manager */
     $element_info = $this->elementInfo;
     if (isset($element['#type']) && empty($element['#defaults_loaded']) && ($info = $element_info->getInfo($element['#type']))) {

@@ -74,7 +74,7 @@ class FormatterDependenciesTest extends KernelTestBase {
    * Assert the behavior of the formatter dependencies.
    *
    * @param array $formatter_settings
-   *   The formatter settings to apply to the entity dispaly.
+   *   The formatter settings to apply to the entity display.
    */
   protected function assertFormatterDependencyBehavior($formatter_settings) {
     // Assert the image style becomes a dependency of the entity display.

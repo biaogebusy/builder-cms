@@ -2,13 +2,14 @@
 
 namespace Drupal\search_api\Plugin\search_api\display;
 
+use Drupal\search_api\Attribute\SearchApiViewsDisplay;
+
 /**
  * Represents a Views REST display.
- *
- * @SearchApiDisplay(
- *   id = "views_rest",
- *   views_display_type = "rest_export",
- *   deriver = "Drupal\search_api\Plugin\search_api\display\ViewsDisplayDeriver"
- * )
  */
+#[SearchApiViewsDisplay(
+  id: 'views_rest',
+  deriver: ViewsDisplayDeriver::class,
+  views_display_type: 'rest_export'
+)]
 class ViewsRest extends ViewsDisplayBase {}

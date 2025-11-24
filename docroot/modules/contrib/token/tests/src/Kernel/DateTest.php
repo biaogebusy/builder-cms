@@ -7,7 +7,7 @@ namespace Drupal\Tests\token\Kernel;
  *
  * @group token
  */
-class DateTest extends KernelTestBase {
+class DateTest extends TokenKernelTestBase {
 
   /**
    * {@inheritdoc}

@@ -214,7 +214,6 @@ class SmsDevelMessageForm extends FormBase {
       $this->smsProvider->queue($this->message);
       $this->messenger()->addMessage($this->t('Message added to the incoming queue.'));
     }
-
   }
 
   /**

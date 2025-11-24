@@ -12,7 +12,7 @@ class DevelEventInfoTest extends DevelBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->drupalPlaceBlock('page_title_block');
     $this->drupalLogin($this->develUser);
@@ -21,7 +21,7 @@ class DevelEventInfoTest extends DevelBrowserTestBase {
   /**
    * Tests event info menu link.
    */
-  public function testEventsInfoMenuLink() {
+  public function testEventsInfoMenuLink(): void {
     $this->drupalPlaceBlock('system_menu_block:devel');
     // Ensures that the events info link is present on the devel menu and that
     // it points to the correct page.
@@ -35,9 +35,9 @@ class DevelEventInfoTest extends DevelBrowserTestBase {
   /**
    * Tests event info page.
    */
-  public function testEventList() {
+  public function testEventList(): void {
     /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher */
-    $event_dispatcher = \Drupal::service('event_dispatcher');
+    $event_dispatcher = $this->container->get('event_dispatcher');
 
     $this->drupalGet('/devel/events');
     $this->assertSession()->statusCodeEquals(200);
@@ -50,14 +50,11 @@ class DevelEventInfoTest extends DevelBrowserTestBase {
     $this->assertNotNull($table);
 
     // Ensures that the expected table headers are found.
-    /** @var \Behat\Mink\Element\NodeElement[] $headers */
     $headers = $table->findAll('css', 'thead th');
     $this->assertEquals(3, count($headers));
 
     $expected_headers = ['Event Name', 'Callable', 'Priority'];
-    $actual_headers = array_map(function ($element) {
-      return $element->getText();
-    }, $headers);
+    $actual_headers = array_map(static fn($element) => $element->getText(), $headers);
     $this->assertSame($expected_headers, $actual_headers);
 
     // Ensures that all the events are listed in the table.
@@ -75,22 +72,16 @@ class DevelEventInfoTest extends DevelBrowserTestBase {
     ];
 
     foreach ($expected_events as $event_name) {
-      $listeners = $event_dispatcher->getListeners($event_name);
-
       // Ensures that the event header is present in the table.
       $event_header_row = $table->findAll('css', sprintf('tbody tr th:contains("%s")', $event_name));
-      $this->assertNotNull($event_header_row);
-      $this->assertEquals(1, count($event_header_row));
+      $this->assertTrue(count($event_header_row) >= 1);
 
       // Ensures that all the event listener are listed in the table.
-      /** @var \Behat\Mink\Element\NodeElement[] $event_rows */
       $event_rows = $table->findAll('css', sprintf('tbody tr:contains("%s")', $event_name));
       // Remove the header row.
       array_shift($event_rows);
-      $this->assertEquals(count($listeners), count($event_rows));
-
+      $listeners = $event_dispatcher->getListeners($event_name);
       foreach ($listeners as $index => $listener) {
-        /** @var \Behat\Mink\Element\NodeElement[] $cells */
         $cells = $event_rows[$index]->findAll('css', 'td');
         $this->assertEquals(3, count($cells));
 

@@ -49,7 +49,8 @@ class PageListBuilder extends ConfigEntityListBuilder {
   public function getDefaultOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
     $operations['edit']['url'] = new Url('entity.page.edit_form', [
-      'machine_name' => $entity->id(), 'step' => 'general'
+      'machine_name' => $entity->id(),
+      'step' => 'general',
     ]);
 
     return $operations;

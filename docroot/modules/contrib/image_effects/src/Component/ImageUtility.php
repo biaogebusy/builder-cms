@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -15,7 +17,7 @@ abstract class ImageUtility {
    *  (50, null) returns 50; (50%, null) returns null;
    *  (null, null) returns null; (null, 100) returns null.
    *
-   * @param string|null $length_specification
+   * @param string|int|null $length_specification
    *   The length specification. An integer value or a % specification.
    * @param int|null $current_length
    *   The current length. May be null.
@@ -23,7 +25,7 @@ abstract class ImageUtility {
    * @return int|null
    *   The computed length.
    */
-  public static function percentFilter($length_specification, $current_length) {
+  public static function percentFilter(string|int|NULL $length_specification, ?int $current_length): ?int {
     if ($length_specification === NULL) {
       return NULL;
     }
@@ -31,7 +33,7 @@ abstract class ImageUtility {
       if ($current_length === NULL) {
         return NULL;
       }
-      return (int) (str_replace('%', '', $length_specification) * 0.01 * $current_length);
+      return (int) (((float) str_replace('%', '', $length_specification)) * 0.01 * $current_length);
     }
     return (int) $length_specification;
   }
@@ -45,9 +47,9 @@ abstract class ImageUtility {
    *   Source image width.
    * @param int|null $source_height
    *   Source image height.
-   * @param string|null $width_specification
+   * @param string|int|null $width_specification
    *   The width specification. An integer value or a % specification.
-   * @param string|null $height_specification
+   * @param string|int|null $height_specification
    *   The height specification. An integer value or a % specification.
    * @param bool $square
    *   (Optional) when TRUE and one of the specifications is NULL, will return
@@ -58,7 +60,7 @@ abstract class ImageUtility {
    *   - width: Integer with the resized image width.
    *   - height: Integer with the resized image height.
    */
-  public static function resizeDimensions($source_width, $source_height, $width_specification, $height_specification, $square = FALSE) {
+  public static function resizeDimensions(?int $source_width, ?int $source_height, string|int|NULL $width_specification, string|int|NULL $height_specification, bool $square = FALSE): array {
     $dimensions = [];
     $dimensions['width'] = static::percentFilter($width_specification, $source_width);
     $dimensions['height'] = static::percentFilter($height_specification, $source_height);

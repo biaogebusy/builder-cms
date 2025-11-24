@@ -2,14 +2,14 @@
 
 namespace Drupal\commerce;
 
-use Drupal\commerce\Annotation\CommerceInlineForm;
-use Drupal\commerce\Plugin\Commerce\InlineForm\EntityInlineFormInterface;
-use Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormInterface;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce\Attribute\CommerceInlineForm;
+use Drupal\commerce\Plugin\Commerce\InlineForm\EntityInlineFormInterface;
+use Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormInterface;
 
 /**
  * Manages discovery and instantiation of inline form plugins.
@@ -31,7 +31,7 @@ class InlineFormManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Commerce/InlineForm', $namespaces, $module_handler, InlineFormInterface::class, CommerceInlineForm::class);
+    parent::__construct('Plugin/Commerce/InlineForm', $namespaces, $module_handler, InlineFormInterface::class, CommerceInlineForm::class, 'Drupal\commerce\Annotation\CommerceInlineForm');
 
     $this->alterInfo('commerce_inline_form_info');
     $this->setCacheBackend($cache_backend, 'commerce_inline_form_plugins');
@@ -43,7 +43,7 @@ class InlineFormManager extends DefaultPluginManager {
    * @return \Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormInterface
    *   The inline form plugin.
    */
-  public function createInstance($plugin_id, array $configuration = [], EntityInterface $entity = NULL) {
+  public function createInstance($plugin_id, array $configuration = [], ?EntityInterface $entity = NULL) {
     $plugin = parent::createInstance($plugin_id, $configuration);
     if ($plugin instanceof EntityInlineFormInterface) {
       if (!$entity) {

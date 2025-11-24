@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Content lock hooks test - Main functions of the module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_content_lock_entity_lockable().
+ */
+function content_lock_hooks_test_content_lock_entity_lockable(EntityInterface $entity, array $config, string $form_op = NULL): bool {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'article' && (int) $entity->id() === 1) {
+    return FALSE;
+  }
+
+  return TRUE;
+}

@@ -2,6 +2,7 @@
 
 namespace Drupal\autosave_form\Storage;
 
+use Drupal\autosave_form\Form\AutosaveEntityFormHandler;
 use Drupal\Component\Serialization\SerializationInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityFormInterface;
@@ -52,32 +53,30 @@ class AutosaveEntityFormDatabaseStorage implements AutosaveEntityFormStorageInte
       'input' => $form_state->getUserInput()
     ]);
 
-    if (!$entity->isNew()) {
-      $this->connection->insert(static::AUTOSAVE_ENTITY_FORM_TABLE)
-        ->fields([
-          'form_id',
-          'form_session_id',
-          'entity_type_id',
-          'entity_id',
-          'langcode',
-          'uid',
-          'timestamp',
-          'entity',
-          'form_state'
-        ])
-        ->values([
-          $form_id,
-          $form_session_id,
-          $entity_type_id,
-          $entity_id,
-          $langcode,
-          $uid,
-          $timestamp,
-          $serialized_entity,
-          $serialized_form_state
-        ])
-        ->execute();
-    }
+    $this->connection->insert(static::AUTOSAVE_ENTITY_FORM_TABLE)
+      ->fields([
+        'form_id',
+        'form_session_id',
+        'entity_type_id',
+        'entity_id',
+        'langcode',
+        'uid',
+        'timestamp',
+        'entity',
+        'form_state'
+      ])
+      ->values([
+        $form_id,
+        $form_session_id,
+        $entity_type_id,
+        $entity_id,
+        $langcode,
+        $uid,
+        $timestamp,
+        $serialized_entity,
+        $serialized_form_state
+      ])
+      ->execute();
   }
 
   /**
@@ -194,8 +193,9 @@ class AutosaveEntityFormDatabaseStorage implements AutosaveEntityFormStorageInte
    */
   public function hasAutosavedStateForFormState(FormStateInterface $form_state, $uid) {
     $result = FALSE;
-    if (($form_object = $form_state->getFormObject()) && ($form_object instanceof EntityFormInterface) && ($entity = $form_object->getEntity()) && !$entity->isNew()) {
-      $result = $this->hasAutosavedState($form_object->getFormId(), $entity->getEntityTypeId(), $entity->id(), $entity->language()->getId(), $uid, $form_state->get('autosave_form_session_id'));
+    if (($form_object = $form_state->getFormObject()) && ($form_object instanceof EntityFormInterface) && ($entity = $form_object->getEntity())) {
+      $entity_id = AutosaveEntityFormHandler::getEntityId($entity);
+      $result = $this->hasAutosavedState($form_object->getFormId(), $entity->getEntityTypeId(), $entity_id, $entity->language()->getId(), $uid, $form_state->get('autosave_form_session_id'));
     }
     return $result;
   }

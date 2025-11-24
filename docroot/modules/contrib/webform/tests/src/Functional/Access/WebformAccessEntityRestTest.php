@@ -20,7 +20,7 @@ class WebformAccessEntityRestTest extends WebformBrowserTestBase {
   protected static $modules = ['webform', 'webform_test_rest'];
 
   /**
-   * Tests webform entity REST acces.
+   * Tests webform entity REST access.
    */
   public function testRestAccess() {
     $assert_session = $this->assertSession();

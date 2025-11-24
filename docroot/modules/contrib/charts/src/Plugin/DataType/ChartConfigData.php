@@ -2,17 +2,21 @@
 
 namespace Drupal\charts\Plugin\DataType;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\Attribute\DataType;
 use Drupal\Core\TypedData\TypedData;
 
 /**
- * Provides a data type wrapping for chart.
+ * Defines the 'chart_config' data type.
  *
- * @DataType(
- *   id = "chart_config",
- *   label = @Translation("Chart config"),
- *   description = @Translation("A chart configuration"),
- * )
+ * This data type represents a chart configuration object,
+ * which can be used to store and manipulate chart settings.
  */
+#[DataType(
+  id: "chart_config",
+  label: new TranslatableMarkup("Chart config"),
+  description: new TranslatableMarkup("A chart configuration")
+)]
 class ChartConfigData extends TypedData {
 
   /**

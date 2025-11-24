@@ -38,9 +38,6 @@ blazy.settings:
     wrapper_class:
       type: boolean
       label: 'Remove field/ view wrapper classes'
-    deprecated_class:
-      type: boolean
-      label: 'Remove deprecated classes'
     placeholder:
       type: string
       label: Placeholder
@@ -53,12 +50,9 @@ blazy.settings:
     use_oembed:
       type: boolean
       label: 'Use oEmbed'
-    use_theme_blazy:
-      type: boolean
-      label: 'Use theme_blazy()'
-    responsive_image:
-      type: boolean
-      label: 'Support Responsive image'
+    max_region_count:
+      type: integer
+      label: 'Max region count'
     blazy:
       type: mapping
       label: Blazy
@@ -191,8 +185,3 @@ field.formatter.settings.blazy_title:
     break:
       type: boolean
       label: 'Add Linebreak'
-
-# @todo remove at 3.x anything below this line:
-field.formatter.settings.blazy_video:
-  type: blazy_base
-  label: 'Blazy image with VEF display format settings'

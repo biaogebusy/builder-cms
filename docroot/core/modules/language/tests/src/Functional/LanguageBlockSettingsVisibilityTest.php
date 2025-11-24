@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -11,6 +13,9 @@ use Drupal\Tests\BrowserTestBase;
  */
 class LanguageBlockSettingsVisibilityTest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['block', 'language'];
 
   /**
@@ -18,7 +23,7 @@ class LanguageBlockSettingsVisibilityTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
-  public function testUnnecessaryLanguageSettingsVisibility() {
+  public function testUnnecessaryLanguageSettingsVisibility(): void {
     $admin_user = $this->drupalCreateUser([
       'administer languages',
       'access administration pages',

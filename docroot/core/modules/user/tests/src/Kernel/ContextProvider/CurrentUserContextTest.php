@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\ContextProvider;
 
 use Drupal\Core\Session\AccountInterface;
@@ -24,14 +26,13 @@ class CurrentUserContextTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
   }
 
   /**
    * @covers ::getAvailableContexts
    */
-  public function testGetAvailableContexts() {
+  public function testGetAvailableContexts(): void {
     $context_repository = $this->container->get('context.repository');
 
     // Test an authenticated account.

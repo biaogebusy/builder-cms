@@ -117,20 +117,6 @@ class LoggerVerbosityAndStyleTests extends TestCase
         '',
       ],
       [
-        '\Consolidation\Log\UnstyledLogOutputStyler',
-        $TEST_ALL_LOG_LEVELS,
-        ConsoleLogLevel::SUCCESS,
-        'It worked!',
-        ' [success] It worked!',
-      ],
-      [
-        '\Consolidation\Log\LogOutputStyler',
-        OutputInterface::VERBOSITY_NORMAL,
-        ConsoleLogLevel::SUCCESS,
-        'It worked!',
-        ' [success] It worked!',
-      ],
-      [
         '\Consolidation\Log\SymfonyLogOutputStyler',
         OutputInterface::VERBOSITY_DEBUG,
         LogLevel::WARNING,
@@ -157,13 +143,6 @@ class LoggerVerbosityAndStyleTests extends TestCase
         LogLevel::DEBUG,
         'Counter incremented.',
         "\n ! [NOTE] Counter incremented.",
-      ],
-      [
-        '\Consolidation\Log\SymfonyLogOutputStyler',
-        OutputInterface::VERBOSITY_NORMAL,
-        ConsoleLogLevel::SUCCESS,
-        'It worked!',
-        "\n [OK] It worked!",
       ],
     ]);
   }

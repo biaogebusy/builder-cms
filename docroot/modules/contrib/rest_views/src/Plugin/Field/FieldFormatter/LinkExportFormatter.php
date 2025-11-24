@@ -25,18 +25,25 @@ class LinkExportFormatter extends LinkFormatter {
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = parent::viewElements($items, $langcode);
+    $exportText = $this->getSetting('export_text');
 
     foreach ($elements as $delta => $element) {
       /** @var \Drupal\Core\Url $url */
       $url = $element['#url'];
-      $data = [
-        'url' => $url->toString(),
-        'text' => $element['#title'],
-      ];
-      $elements[$delta] = [
-        '#type' => 'data',
-        '#data' => SerializedData::create($data),
-      ];
+
+      if ($exportText) {
+        $data = [
+          'url' => $url->toString(),
+          'text' => $element['#title'],
+        ];
+        $elements[$delta] = [
+          '#type' => 'data',
+          '#data' => SerializedData::create($data),
+        ];
+      }
+      else {
+        $elements[$delta] = ['#markup' => $url->toString()];
+      }
     }
 
     return $elements;
@@ -46,21 +53,44 @@ class LinkExportFormatter extends LinkFormatter {
    * {@inheritdoc}
    */
   public static function defaultSettings(): array {
-    return [];
+    $settings = [
+      'export_text' => FALSE,
+    ];
+    return $settings;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state): array {
-    return [];
+  public function settingsForm(array $form, FormStateInterface $formState) {
+    $elements = [];
+
+    $title = $this->getFieldSetting('title');
+
+    if ($title != DRUPAL_DISABLED) {
+      $elements['export_text'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Export link text'),
+        '#default_value' => $this->getSetting('export_text'),
+      ];
+    }
+    else {
+      $elements['export_text'] = ['#type' => 'value', '#value' => FALSE];
+    }
+
+    return $elements;
   }
 
   /**
    * {@inheritdoc}
    */
   public function settingsSummary(): array {
-    return [];
+    $summary = [];
+    if ($this->getSetting('export_text')) {
+      $summary[] = $this->t('<em>Text</em> field is exported.');
+    }
+
+    return $summary;
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Render\Element;
 
 use Drupal\Core\Form\FormInterface;
@@ -61,11 +63,11 @@ class ActionsTest extends KernelTestBase implements FormInterface {
   public function submitForm(array &$form, FormStateInterface $form_state) {
   }
 
-  public function testDropbuttonWithBubbleableMetadata() {
+  public function testDropbuttonWithBubbleableMetadata(): void {
     $result = \Drupal::formBuilder()->getForm($this);
     \Drupal::service('renderer')->renderRoot($result);
     $this->assertEquals(['system/base', 'core/drupal.dropbutton'], $result['#attached']['library']);
-    $this->assertEquals(['foo'], $result['#cache']['tags']);
+    $this->assertEquals(['CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form', 'foo'], $result['#cache']['tags']);
   }
 
 }

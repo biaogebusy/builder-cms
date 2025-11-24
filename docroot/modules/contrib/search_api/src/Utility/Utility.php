@@ -109,7 +109,7 @@ class Utility {
    *   element 0 will be NULL.
    */
   public static function splitCombinedId($combined_id) {
-    if (strpos($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR) !== FALSE) {
+    if (str_contains($combined_id, IndexInterface::DATASOURCE_ID_SEPARATOR)) {
       return explode(IndexInterface::DATASOURCE_ID_SEPARATOR, $combined_id, 2);
     }
     return [NULL, $combined_id];
@@ -319,7 +319,7 @@ class Utility {
   /**
    * Formats a boost factor as a standard float value.
    *
-   * @param string|float $boost_factor
+   * @param string|float|null $boost_factor
    *   The boost factor to be formatted.
    *
    * @return string

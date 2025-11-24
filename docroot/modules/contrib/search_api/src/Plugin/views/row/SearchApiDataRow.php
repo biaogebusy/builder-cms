@@ -2,12 +2,14 @@
 
 namespace Drupal\search_api\Plugin\views\row;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\rest\Plugin\views\row\DataEntityRow;
 use Drupal\search_api\LoggerTrait;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\search_api\Plugin\views\SearchApiHandlerTrait;
 use Drupal\search_api\SearchApiException;
+use Drupal\views\Attribute\ViewsRow;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 
@@ -16,15 +18,14 @@ use Drupal\views\ViewExecutable;
  *
  * @ingroup views_row_plugins
  *
- * @ViewsRow(
- *   id = "search_api_data",
- *   title = @Translation("Entity (Search API)"),
- *   help = @Translation("Retrieves entities as row data."),
- *   display_types = {"data"}
- * )
- *
  * @see search_api_views_plugins_row_alter()
  */
+#[ViewsRow(
+  id: 'search_api_data',
+  title: new TranslatableMarkup('Entity (Search API)'),
+  help: new TranslatableMarkup('Retrieves entities as row data.'),
+  display_types: ['data'],
+)]
 class SearchApiDataRow extends DataEntityRow {
 
   use LoggerTrait;
@@ -40,7 +41,7 @@ class SearchApiDataRow extends DataEntityRow {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     $base_table = $view->storage->get('base_table');
@@ -64,7 +65,7 @@ class SearchApiDataRow extends DataEntityRow {
         try {
           $row->_object = $row->_item->getOriginalObject(FALSE);
         }
-        catch (SearchApiException $e) {
+        catch (SearchApiException) {
           // Can never happen for getOriginalObject() with $load = FALSE. Catch
           // for sake of static analysis.
         }
@@ -80,7 +81,7 @@ class SearchApiDataRow extends DataEntityRow {
     if (!($row->_object instanceof ComplexDataInterface)) {
       $context = [
         '%item_id' => $row->search_api_id,
-        '%view' => $this->view->storage->label(),
+        '%view' => $this->view->storage->label() ?? $this->view->storage->id(),
       ];
       $this->getLogger()->warning('Failed to load item %item_id in view %view.', $context);
       return NULL;
@@ -92,7 +93,6 @@ class SearchApiDataRow extends DataEntityRow {
   /**
    * {@inheritdoc}
    */
-  public function query() {
-  }
+  public function query() {}
 
 }

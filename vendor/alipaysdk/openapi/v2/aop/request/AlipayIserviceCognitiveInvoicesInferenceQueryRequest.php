@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.iservice.cognitive.invoices.inference.query request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:29:15
+ * @since 1.0, 2025-05-09 16:28:33
  */
 class AlipayIserviceCognitiveInvoicesInferenceQueryRequest
 {

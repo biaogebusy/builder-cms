@@ -44,9 +44,9 @@ Tokens
 * Custom message arguments (Custom callbacks)
   When creating a message, it's possible to store custom arguments that will be
   replaced when presenting the message.
-  E.g. If the message was created with an argument called "@sometext", it will
+  E.g. If the message was created with an argument called "@some_text", it will
   get inserted to the message text (On display time) whenever the string
-  "@sometext" is encountered.
+  "@some_text" is encountered.
   This method also supports custom call-back functions with optional arguments
   stored on the message; In order to use a callback, create the message with
   an argument such as:

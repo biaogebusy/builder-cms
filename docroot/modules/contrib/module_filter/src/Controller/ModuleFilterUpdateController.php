@@ -12,7 +12,7 @@ class ModuleFilterUpdateController extends UpdateController {
   /**
    * {@inheritdoc}
    */
-  public function updateStatus() {
+  public function updateStatus(): array {
     $build = [
       '#type' => 'container',
       '#attributes' => [

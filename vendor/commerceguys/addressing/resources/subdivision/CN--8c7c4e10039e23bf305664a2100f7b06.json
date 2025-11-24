@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GS",
+		"Lanzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anning Qu": {
+			"local_name": "安宁区"
+		},
+		"Chengguan Qu": {
+			"local_name": "城关区"
+		},
+		"Gaolan Xian": {
+			"local_name": "皋兰县"
+		},
+		"Honggu Qu": {
+			"local_name": "红古区"
+		},
+		"Qilihe Qu": {
+			"local_name": "七里河区"
+		},
+		"Xigu Qu": {
+			"local_name": "西固区"
+		},
+		"Yongdeng Xian": {
+			"local_name": "永登县"
+		},
+		"Yuzhong Xian": {
+			"local_name": "榆中县"
+		}
+	}
+}

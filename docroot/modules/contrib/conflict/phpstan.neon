@@ -1,0 +1,10 @@
+parameters:
+    level: 0
+    fileExtensions:
+      - php
+      - module
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+      # @see https://www.drupal.org/docs/develop/development-tools/phpstan/handling-unsafe-usage-of-new-static
+      - "#^Unsafe usage of new static#"
+      - '#Plugin definitions cannot be altered.#'

@@ -5,10 +5,10 @@
  * Test module for Commerce Product.
  */
 
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 
 /**
  * Implements hook_entity_access().

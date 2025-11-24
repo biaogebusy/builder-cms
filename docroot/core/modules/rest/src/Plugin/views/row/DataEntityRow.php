@@ -5,6 +5,8 @@ namespace Drupal\rest\Plugin\views\row;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsRow;
 use Drupal\views\Entity\Render\EntityTranslationRenderTrait;
 use Drupal\views\Plugin\views\row\RowPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -13,14 +15,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Plugin which displays entities as raw data.
  *
  * @ingroup views_row_plugins
- *
- * @ViewsRow(
- *   id = "data_entity",
- *   title = @Translation("Entity"),
- *   help = @Translation("Use entities as row data."),
- *   display_types = {"data"}
- * )
  */
+#[ViewsRow(
+  id: "data_entity",
+  title: new TranslatableMarkup("Entity"),
+  help: new TranslatableMarkup("Use entities as row data."),
+  display_types: ["data"]
+)]
 class DataEntityRow extends RowPluginBase {
 
   use EntityTranslationRenderTrait;
@@ -71,7 +72,7 @@ class DataEntityRow extends RowPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -107,7 +108,7 @@ class DataEntityRow extends RowPluginBase {
    * {@inheritdoc}
    */
   public function render($row) {
-    return $this->getEntityTranslation($row->_entity, $row);
+    return $this->getEntityTranslationByRelationship($row->_entity, $row);
   }
 
   /**

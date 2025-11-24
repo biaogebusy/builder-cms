@@ -26,18 +26,6 @@ final class AddressEvents {
   const AVAILABLE_COUNTRIES = 'address.available_countries';
 
   /**
-   * Name of the event fired when altering initial values.
-   *
-   * @deprecated in address:8.x-1.5 and is removed from address:8.x-2.0. Use
-   *   hook_field_widget_form_alter() to change the address #default_value.
-   *
-   * @Event
-   *
-   * @see https://www.drupal.org/project/address/issues/2838457
-   */
-  const INITIAL_VALUES = 'address.widget.initial_values';
-
-  /**
    * Name of the event fired when defining custom subdivisions.
    *
    * @Event

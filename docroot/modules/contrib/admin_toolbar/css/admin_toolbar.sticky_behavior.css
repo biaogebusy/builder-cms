@@ -1,0 +1,13 @@
+/* Admin Toolbar default visible state. */
+.toolbar-horizontal .toolbar-oriented .toolbar-bar {
+  /* Show toolbar: simple slide down animation with a transform property. */
+  transition: all 300ms ease-in-out;
+  transform: translateY(0);
+}
+
+/* Admin Toolbar's sticky behavior to hide on scroll-down. */
+body.toolbar-horizontal.sticky-toolbar-hidden .toolbar-oriented .toolbar-bar {
+  /* Hide toolbar: slide up when scrolling down. */
+  transition: all 200ms ease-out;
+  transform: translateY(-220%);
+}

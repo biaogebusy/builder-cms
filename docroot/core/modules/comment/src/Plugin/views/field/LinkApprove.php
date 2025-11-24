@@ -3,6 +3,7 @@
 namespace Drupal\comment\Plugin\views\field;
 
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\LinkBase;
 use Drupal\views\ResultRow;
 
@@ -10,16 +11,19 @@ use Drupal\views\ResultRow;
  * Provides a comment approve link.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("comment_link_approve")
  */
+#[ViewsField("comment_link_approve")]
 class LinkApprove extends LinkBase {
 
   /**
    * {@inheritdoc}
    */
   protected function getUrlInfo(ResultRow $row) {
-    return Url::fromRoute('comment.approve', ['comment' => $this->getEntity($row)->id()]);
+    $entity = $this->getEntity($row);
+    if (!$entity) {
+      return NULL;
+    }
+    return Url::fromRoute('comment.approve', ['comment' => $entity->id()]);
   }
 
   /**

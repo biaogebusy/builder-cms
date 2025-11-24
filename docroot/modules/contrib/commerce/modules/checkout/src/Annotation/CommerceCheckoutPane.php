@@ -59,6 +59,13 @@ class CommerceCheckoutPane extends Plugin {
   public $wrapper_element;
 
   /**
+   * An admin description for this pane.
+   *
+   * @var string|null
+   */
+  public ?string $admin_description;
+
+  /**
    * Constructs a new CommerceCheckoutPane object.
    *
    * @param array $values

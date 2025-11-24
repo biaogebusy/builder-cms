@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Menu;
 
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\Menu\MenuTreeStorage;
 use Drupal\KernelTests\KernelTestBase;
+
+// cspell:ignore mlid
 
 /**
  * Tests the menu tree storage.
@@ -43,7 +47,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests the tree storage when no tree was built yet.
    */
-  public function testBasicMethods() {
+  public function testBasicMethods(): void {
     $this->doTestEmptyStorage();
     $this->doTestTable();
   }
@@ -70,7 +74,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests with a simple linear hierarchy.
    */
-  public function testSimpleHierarchy() {
+  public function testSimpleHierarchy(): void {
     // Add some links with parent on the previous one and test some values.
     // <tools>
     // - test1
@@ -92,7 +96,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests the tree with moving links inside the hierarchy.
    */
-  public function testMenuLinkMoving() {
+  public function testMenuLinkMoving(): void {
     // Before the move.
     // <tools>
     // - test1
@@ -170,7 +174,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests with disabled child links.
    */
-  public function testMenuDisabledChildLinks() {
+  public function testMenuDisabledChildLinks(): void {
     // Add some links with parent on the previous one and test some values.
     // <tools>
     // - test1
@@ -225,7 +229,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests the loadTreeData method.
    */
-  public function testLoadTree() {
+  public function testLoadTree(): void {
     $this->addMenuLink('test1', '', 'test1');
     $this->addMenuLink('test2', 'test1', 'test2');
     $this->addMenuLink('test3', 'test2', 'test3');
@@ -295,7 +299,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests finding the subtree height with content menu links.
    */
-  public function testSubtreeHeight() {
+  public function testSubtreeHeight(): void {
     // root
     // - child1
     // -- child2
@@ -317,7 +321,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Ensure hierarchy persists after a menu rebuild.
    */
-  public function testMenuRebuild() {
+  public function testMenuRebuild(): void {
     // root
     // - child1
     // -- child2
@@ -348,7 +352,7 @@ class MenuTreeStorageTest extends KernelTestBase {
   /**
    * Tests MenuTreeStorage::loadByProperties().
    */
-  public function testLoadByProperties() {
+  public function testLoadByProperties(): void {
     $tests = [
       ['foo' => 'bar'],
       [0 => 'wrong'],
@@ -435,7 +439,7 @@ class MenuTreeStorageTest extends KernelTestBase {
     $found_parents = $query->execute()->fetchAllKeyed(0, 1);
 
     $this->assertSameSize($parents, $found_parents, 'Found expected number of parents');
-    $this->assertCount($raw['depth'], $found_parents, 'Number of parents is the same as the depth');
+    $this->assertCount((int) $raw['depth'], $found_parents, 'Number of parents is the same as the depth');
 
     $materialized_path = $this->treeStorage->getRootPathIds($id);
     $this->assertEquals(array_values($parents), array_values($materialized_path), 'Parents match the materialized path');

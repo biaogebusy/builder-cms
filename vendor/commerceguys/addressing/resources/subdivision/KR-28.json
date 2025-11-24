@@ -1,0 +1,40 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"28"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Ganghwa-gun": {
+			"local_name": "강화군"
+		},
+		"Gyeyang-gu": {
+			"local_name": "계양구"
+		},
+		"Nam-gu": {
+			"local_name": "남구"
+		},
+		"Namdong-gu": {
+			"local_name": "남동구"
+		},
+		"Dong-gu": {
+			"local_name": "동구"
+		},
+		"Bupyeong-gu": {
+			"local_name": "부평구"
+		},
+		"Seo-gu": {
+			"local_name": "서구"
+		},
+		"Yeonsu-gu": {
+			"local_name": "연수구"
+		},
+		"Ongjin-gun": {
+			"local_name": "옹진군"
+		},
+		"Jung-gu": {
+			"local_name": "중구"
+		}
+	}
+}

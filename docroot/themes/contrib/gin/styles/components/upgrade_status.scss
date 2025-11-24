@@ -9,7 +9,7 @@
 
 .upgrade-status-summary > summary {
   background-color: transparent;
-  border-bottom: 1px solid transparent;
+  border-block-end: 1px solid transparent;
 }
 
 .upgrade-status-summary tr.not-scanned > td.status-info,
@@ -28,8 +28,8 @@
     height: 20px;
     display: inline-block;
     position: absolute;
-    left: var(--gin-spacing-xs);
-    margin-top: 2px;
+    inset-inline-start: var(--gin-spacing-xs);
+    margin-block-start: 2px;
   }
 }
 
@@ -39,7 +39,7 @@
 
 .upgrade-status-summary .select-all,
 .upgrade-status-summary th.project-label, .upgrade-status-summary th.requirement-label {
-  border-left: var(--gin-border-m) solid var(--gin-bg-header);
+  border-inline-start: var(--gin-border-m) solid var(--gin-bg-header);
 }
 
 .upgrade-status-error-list tr.rector-covered,
@@ -53,7 +53,7 @@
 .upgrade-status-summary > summary,
 .upgrade-status-summary-environment > summary {
   background-color: transparent;
-  border-bottom: 0 none;
+  border-block-end: 0 none;
 }
 
 // Passed

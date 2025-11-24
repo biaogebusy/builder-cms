@@ -9,11 +9,12 @@ use Drupal\Core\Extension\ProfileExtensionList;
 use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Utility\Error;
 use Drupal\Core\Utility\ProjectInfo;
 use Drupal\Core\Extension\ExtensionVersion;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -114,7 +115,7 @@ final class SecurityAdvisoriesFetcher {
    *   retrieving the JSON feed, or if there was no stored response and
    *   $allow_outgoing_request was set to FALSE.
    *
-   * @throws \GuzzleHttp\Exception\TransferException
+   * @throws \Psr\Http\Client\ClientExceptionInterface
    *   Thrown if an error occurs while retrieving security advisories.
    */
   public function getSecurityAdvisories(bool $allow_outgoing_request = TRUE, int $timeout = 0): ?array {
@@ -152,7 +153,7 @@ final class SecurityAdvisoriesFetcher {
         // Ignore items in the feed that are in an invalid format. Although
         // this is highly unlikely we should still display the items that are
         // in the correct format.
-        watchdog_exception('system', $unexpected_value_exception, 'Invalid security advisory format: ' . Json::encode($advisory_data));
+        Error::logException($this->logger, $unexpected_value_exception, 'Invalid security advisory format: @advisory', ['@advisory' => Json::encode($advisory_data)]);
         continue;
       }
 
@@ -320,8 +321,8 @@ final class SecurityAdvisoriesFetcher {
       try {
         $response = $this->httpClient->get('https://updates.drupal.org/psa.json', $options);
       }
-      catch (TransferException $exception) {
-        watchdog_exception('system', $exception);
+      catch (ClientExceptionInterface $exception) {
+        Error::logException($this->logger, $exception);
         $response = $this->httpClient->get('http://updates.drupal.org/psa.json', $options);
       }
     }

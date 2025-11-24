@@ -75,7 +75,7 @@ class TokenBlockTest extends TokenTestBase {
     $this->drupalCreateContentType(['type' => 'page']);
     $node = $this->drupalCreateNode(['title' => "Site's first node"]);
     $this->drupalGet('node/' . $node->id());
-    // The apostraphe should only be escaped once.
+    // The apostrophe should only be escaped once.
     $this->assertSession()->responseContains("Site&#039;s first node block title");
   }
 }

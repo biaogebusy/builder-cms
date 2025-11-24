@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Hefei Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baohe Qu": {
+			"local_name": "包河区"
+		},
+		"Feidong Xian": {
+			"local_name": "肥东县"
+		},
+		"Feixi Xian": {
+			"local_name": "肥西县"
+		},
+		"Luyang Qu": {
+			"local_name": "庐阳区"
+		},
+		"Shushan Qu": {
+			"local_name": "蜀山区"
+		},
+		"Yaohai Qu": {
+			"local_name": "瑶海区"
+		},
+		"Changfeng Xian": {
+			"local_name": "长丰县"
+		}
+	}
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Functional\EntityResource\EntityTest;
 
 use Drupal\Core\Url;
@@ -16,7 +18,7 @@ use GuzzleHttp\RequestOptions;
  *
  * @group datetime
  */
-class EntityTestDateonlyTest extends EntityTestResourceTestBase {
+class EntityTestDateOnlyTest extends EntityTestResourceTestBase {
 
   use AnonResourceTestTrait;
 
@@ -37,7 +39,7 @@ class EntityTestDateonlyTest extends EntityTestResourceTestBase {
    *
    * @var string
    */
-  protected static $fieldName = 'field_dateonly';
+  protected static $fieldName = 'field_date_only';
 
   /**
    * {@inheritdoc}
@@ -47,7 +49,7 @@ class EntityTestDateonlyTest extends EntityTestResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
 
     // Add datetime field.

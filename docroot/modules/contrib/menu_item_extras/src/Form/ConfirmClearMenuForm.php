@@ -3,10 +3,10 @@
 namespace Drupal\menu_item_extras\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
-use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Url;
 use Drupal\menu_item_extras\Service\MenuLinkContentServiceInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class ConfirmClearMenuForm.

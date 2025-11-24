@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\settings_tray\FunctionalJavascript;
 
 use Drupal\block\Entity\Block;
@@ -44,7 +46,7 @@ class OverriddenConfigurationTest extends SettingsTrayTestBase {
   /**
    * Tests blocks with overridden related configuration removed when overridden.
    */
-  public function testOverriddenConfigurationRemoved() {
+  public function testOverriddenConfigurationRemoved(): void {
     $web_assert = $this->assertSession();
     $page = $this->getSession()->getPage();
     $this->grantPermissions(Role::load(Role::AUTHENTICATED_ID), ['administer site configuration', 'administer menu']);
@@ -62,9 +64,14 @@ class OverriddenConfigurationTest extends SettingsTrayTestBase {
     $this->drupalGet('user');
     $this->openBlockForm($this->getBlockSelector($branding_block));
     $web_assert->fieldNotExists('settings[site_information][site_name]');
+    $page_load_hash_1 = $this->getSession()->evaluateScript('window.performance.timeOrigin');
     $page->pressButton('Save Site branding');
-    $this->assertElementVisibleAfterWait('css', 'div:contains(The block configuration has been saved)');
-    $web_assert->assertWaitOnAjaxRequest();
+    // Pressing the button triggered no validation errors and an AJAX redirect
+    // that reloaded the page.
+    $this->waitForOffCanvasToClose();
+    $page_load_hash_2 = $this->getSession()->evaluateScript('window.performance.timeOrigin');
+    $this->assertNotSame($page_load_hash_1, $page_load_hash_2);
+    $web_assert->elementExists('css', 'div:contains(The block configuration has been saved)');
     // Confirm we did not save changes to the configuration.
     $this->assertEquals('Llama Fan Club', \Drupal::configFactory()->get('system.site')->get('name'));
     $this->assertEquals('Drupal', \Drupal::configFactory()->getEditable('system.site')->get('name'));
@@ -79,7 +86,6 @@ class OverriddenConfigurationTest extends SettingsTrayTestBase {
     // Confirm the menu block does include menu section when the menu is not
     // overridden.
     $menu_block = $this->placeBlock('system_menu_block:main');
-    $web_assert->assertWaitOnAjaxRequest();
     $this->drupalGet('user');
     $web_assert->pageTextContains('This is on the menu');
     $this->openBlockForm($this->getBlockSelector($menu_block));
@@ -94,11 +100,16 @@ class OverriddenConfigurationTest extends SettingsTrayTestBase {
     $menu_without_overrides = \Drupal::configFactory()->getEditable('system.menu.main')->get();
     $this->openBlockForm($this->getBlockSelector($menu_block));
     $web_assert->elementNotExists('css', '#menu-overview');
+    $page_load_hash_3 = $this->getSession()->evaluateScript('window.performance.timeOrigin');
     $page->pressButton('Save Main navigation');
-    $this->assertElementVisibleAfterWait('css', 'div:contains(The block configuration has been saved)');
-    $web_assert->assertWaitOnAjaxRequest();
+    // Pressing the button triggered no validation errors and an AJAX redirect
+    // that reloaded the page.
+    $this->waitForOffCanvasToClose();
+    $page_load_hash_4 = $this->getSession()->evaluateScript('window.performance.timeOrigin');
+    $this->assertNotSame($page_load_hash_3, $page_load_hash_4);
+    $web_assert->elementExists('css', 'div:contains(The block configuration has been saved)');
     // Confirm we did not save changes to the configuration.
-    $this->assertEquals('Labely label', \Drupal::configFactory()->get('system.menu.main')->get('label'));
+    $this->assertEquals('Foo label', \Drupal::configFactory()->get('system.menu.main')->get('label'));
     $this->assertEquals('Main navigation', \Drupal::configFactory()->getEditable('system.menu.main')->get('label'));
     $this->assertEquals($menu_with_overrides, \Drupal::configFactory()->get('system.menu.main')->get());
     $this->assertEquals($menu_without_overrides, \Drupal::configFactory()->getEditable('system.menu.main')->get());
@@ -108,7 +119,7 @@ class OverriddenConfigurationTest extends SettingsTrayTestBase {
   /**
    * Tests that blocks with configuration overrides are disabled.
    */
-  public function testOverriddenBlock() {
+  public function testOverriddenBlock(): void {
     $web_assert = $this->assertSession();
     $page = $this->getSession()->getPage();
     $overridden_block = $this->placeBlock('system_powered_by_block', [
@@ -138,14 +149,14 @@ class OverriddenConfigurationTest extends SettingsTrayTestBase {
     // Test a non-overridden block does show the form in the off-canvas dialog.
     $block = $this->placeBlock('system_powered_by_block', [
       'label_display' => 1,
-      'label' => 'Labely label',
+      'label' => 'Foo label',
     ]);
     $this->drupalGet('user');
     $block_selector = $this->getBlockSelector($block);
     // Confirm the block is marked as Settings Tray editable.
     $this->assertEquals('editable', $page->find('css', $block_selector)->getAttribute('data-drupal-settingstray'));
     // Confirm the label is not overridden.
-    $web_assert->elementContains('css', $block_selector, 'Labely label');
+    $web_assert->elementContains('css', $block_selector, 'Foo label');
     $this->openBlockForm($block_selector);
   }
 

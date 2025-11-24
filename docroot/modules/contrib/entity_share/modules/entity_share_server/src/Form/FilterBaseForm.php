@@ -9,8 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Base class for filter form.
- *
- * @package Drupal\entity_share_server\Form
  */
 class FilterBaseForm extends EntityForm {
 
@@ -33,12 +31,12 @@ class FilterBaseForm extends EntityForm {
     /** @var \Drupal\entity_share_server\Entity\ChannelInterface $channel */
     $channel = $this->entity;
     $channel_groups = $channel->get('channel_groups');
-    if (is_null($channel_groups)) {
+    if ($channel_groups === NULL) {
       $channel_groups = [];
     }
-    $member_options = array_keys($channel_groups);
+    $member_options = \array_keys($channel_groups);
 
-    return array_combine($member_options, $member_options);
+    return \array_combine($member_options, $member_options);
   }
 
   /**
@@ -86,7 +84,7 @@ class FilterBaseForm extends EntityForm {
    */
   public function addOneValue(array &$form, FormStateInterface $form_state) {
     $number_of_values = $form_state->get('number_of_values');
-    $number_of_values++;
+    ++$number_of_values;
     $form_state->set('number_of_values', $number_of_values);
     $form_state->setRebuild();
   }
@@ -104,7 +102,7 @@ class FilterBaseForm extends EntityForm {
   public function removeOneValue(array &$form, FormStateInterface $form_state) {
     $number_of_values = $form_state->get('number_of_values');
     if ($number_of_values > 1) {
-      $number_of_values--;
+      --$number_of_values;
       $form_state->set('number_of_values', $number_of_values);
     }
     $form_state->setRebuild();
@@ -124,16 +122,15 @@ class FilterBaseForm extends EntityForm {
     $channel = $this->entity;
     $channel_filters = $channel->get('channel_filters');
 
-    if (is_null($channel_filters)) {
+    if ($channel_filters === NULL) {
       return FALSE;
     }
 
     if (isset($channel_filters[$name])) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**

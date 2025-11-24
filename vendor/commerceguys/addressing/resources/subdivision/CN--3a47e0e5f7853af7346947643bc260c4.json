@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JS",
+		"Suzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Changshu Shi": {
+			"local_name": "常熟市"
+		},
+		"Gusu Qu": {
+			"local_name": "姑苏区"
+		},
+		"Huqiu Qu": {
+			"local_name": "虎丘区"
+		},
+		"Kunshan Shi": {
+			"local_name": "昆山市"
+		},
+		"Taicang Shi": {
+			"local_name": "太仓市"
+		},
+		"Wujiang Qu": {
+			"local_name": "吴江区"
+		},
+		"Wuzhong Qu": {
+			"local_name": "吴中区"
+		},
+		"Xiangcheng Qu": {
+			"local_name": "相城区"
+		},
+		"Zhangjiagang Shi": {
+			"local_name": "张家港市"
+		}
+	}
+}

@@ -2,7 +2,7 @@ langcode: en
 status: true
 dependencies:
   module:
-  - entity_module_test
+    - entity_module_test
 id: entity_test_enhanced
 label: 'Enhanced entities'
 module: views
@@ -164,7 +164,7 @@ display:
     cache_metadata:
       max-age: -1
       contexts:
-      - 'languages:language_content'
-      - 'languages:language_interface'
-      - url.query_args
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url.query_args
       tags: {  }

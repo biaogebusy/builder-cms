@@ -2,13 +2,13 @@
 
 namespace Drupal\blazy\Media;
 
-use Drupal\blazy\BlazyManagerInterface;
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Utility\CheckItem;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Url;
+use Drupal\blazy\BlazyManagerInterface;
+use Drupal\blazy\Utility\CheckItem;
+use Drupal\blazy\internals\Internals;
 use Drupal\media\IFrameUrlHelper;
 use Drupal\media\MediaInterface;
 use GuzzleHttp\Client;
@@ -62,7 +62,7 @@ class BlazyMedia implements BlazyMediaInterface {
   public function __construct(
     BlazyManagerInterface $manager,
     Client $http_client,
-    IFrameUrlHelper $iframe_url_helper
+    IFrameUrlHelper $iframe_url_helper,
   ) {
     $this->manager = $manager;
     $this->httpClient = $http_client;
@@ -163,15 +163,16 @@ class BlazyMedia implements BlazyMediaInterface {
     // Local video, FB, Twitter, etc. is rich to be simple due to terracota,
     // can be refined later when Blazy supports more media types better.
     if ($entity instanceof MediaInterface) {
-      $view_mode = $settings['view_mode'] ?? 'default';
-      $view_mode = $blazies->get('media.view_mode', $view_mode);
-      $source_field = $blazies->get('media.source_field');
+      if ($source_field = $blazies->get('media.source_field')) {
+        $view_mode = $settings['view_mode'] ?? 'default';
+        $view_mode = $blazies->get('media.view_mode', $view_mode);
 
-      // Reset $build, except for #settings, we'll unwrap theme_field() here:
-      $build = $entity->get($source_field)->view($view_mode);
-      $build['#settings'] = $settings;
+        // Reset $build, except for #settings, we'll unwrap theme_field() here:
+        $build = $entity->get($source_field)->view($view_mode);
+        $build['#settings'] = $settings;
 
-      return isset($build[0]) ? $this->unfield($build) : $build;
+        return isset($build[0]) ? $this->unfield($build) : $build;
+      }
     }
     return [];
   }
@@ -256,6 +257,7 @@ class BlazyMedia implements BlazyMediaInterface {
    * {@inheritdoc}
    */
   public function getMetadata(MediaInterface $media, $view_mode, $langcode): array {
+    // @fixme ambiguous NULL with broken Media, see #3222843.
     $source     = $media->getSource();
     $definition = $source->getPluginDefinition();
     $source_id  = $source->getPluginId();
@@ -321,7 +323,7 @@ class BlazyMedia implements BlazyMediaInterface {
     $uri        = $blazies->get('image.uri');
 
     // Checks if we have iframes.
-    if ($content = $this->manager->renderer()->renderPlain($item)) {
+    if ($content = $this->manager->renderInIsolation($item)) {
       // Prior to PHP 8.0.0 this method could be called statically, but would
       // issue an E_DEPRECATED error. As of PHP 8.0.0 calling this method
       // statically throws an Error exception.

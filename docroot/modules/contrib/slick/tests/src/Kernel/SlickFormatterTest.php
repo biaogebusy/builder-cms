@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\slick\Kernel;
 
-use Drupal\slick\SlickDefault;
 use Drupal\Tests\blazy\Kernel\BlazyKernelTestBase;
 use Drupal\Tests\slick\Traits\SlickKernelTrait;
 use Drupal\Tests\slick\Traits\SlickUnitTestTrait;
+use Drupal\slick\SlickDefault;
 
 /**
  * Tests the Slick field rendering using the image field type.
@@ -147,7 +147,7 @@ class SlickFormatterTest extends BlazyKernelTestBase {
    * @return array
    *   An array of tested data.
    */
-  public function providerTestGetThumbnail() {
+  public static function providerTestGetThumbnail() {
     $data[] = [
       '',
       FALSE,
@@ -184,7 +184,7 @@ class SlickFormatterTest extends BlazyKernelTestBase {
    * @return array
    *   An array of tested data.
    */
-  public function providerTestBuildSettings() {
+  public static function providerTestBuildSettings() {
     $data[] = [
       [
         'vanilla' => TRUE,

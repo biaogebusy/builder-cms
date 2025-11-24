@@ -51,12 +51,12 @@ class AccessDeniedSubscriber implements EventSubscriberInterface {
       $redirect_url = NULL;
       if ($this->account->isAuthenticated()) {
         switch ($route_name) {
-          case 'user.login';
+          case 'user.login':
             // Redirect an authenticated user to the profile page.
             $redirect_url = Url::fromRoute('entity.user.canonical', ['user' => $this->account->id()], ['absolute' => TRUE]);
             break;
 
-          case 'user.register';
+          case 'user.register':
             // Redirect an authenticated user to the profile form.
             $redirect_url = Url::fromRoute('entity.user.edit_form', ['user' => $this->account->id()], ['absolute' => TRUE]);
             break;
@@ -65,7 +65,7 @@ class AccessDeniedSubscriber implements EventSubscriberInterface {
       elseif ($route_name === 'user.page') {
         $redirect_url = Url::fromRoute('user.login', [], ['absolute' => TRUE]);
       }
-      elseif ($route_name === 'user.logout') {
+      elseif (in_array($route_name, ['user.logout', 'user.logout.confirm'], TRUE)) {
         $redirect_url = Url::fromRoute('<front>', [], ['absolute' => TRUE]);
       }
 
@@ -78,7 +78,7 @@ class AccessDeniedSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Use a higher priority than
     // \Drupal\Core\EventSubscriber\ExceptionLoggingSubscriber, because there's
     // no need to log the exception if we can redirect.

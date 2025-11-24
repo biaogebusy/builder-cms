@@ -4,6 +4,7 @@ namespace Drupal\Core\Entity\EntityReferenceSelection;
 
 use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Entity\Attribute\EntityReferenceSelection;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -25,7 +26,7 @@ class SelectionPluginManager extends DefaultPluginManager implements SelectionPl
     $this->alterInfo('entity_reference_selection');
     $this->setCacheBackend($cache_backend, 'entity_reference_selection_plugins');
 
-    parent::__construct('Plugin/EntityReferenceSelection', $namespaces, $module_handler, 'Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface', 'Drupal\Core\Entity\Annotation\EntityReferenceSelection');
+    parent::__construct('Plugin/EntityReferenceSelection', $namespaces, $module_handler, 'Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface', EntityReferenceSelection::class, 'Drupal\Core\Entity\Annotation\EntityReferenceSelection');
   }
 
   /**
@@ -42,7 +43,7 @@ class SelectionPluginManager extends DefaultPluginManager implements SelectionPl
     ];
 
     // A specific selection plugin ID was already specified.
-    if (strpos($options['handler'], ':') !== FALSE) {
+    if (str_contains($options['handler'], ':')) {
       $plugin_id = $options['handler'];
     }
     // Only a selection group name was specified.
@@ -63,8 +64,7 @@ class SelectionPluginManager extends DefaultPluginManager implements SelectionPl
 
     // Sort the selection plugins by weight and select the best match.
     uasort($selection_handler_groups[$base_plugin_id], ['Drupal\Component\Utility\SortArray', 'sortByWeightElement']);
-    end($selection_handler_groups[$base_plugin_id]);
-    $plugin_id = key($selection_handler_groups[$base_plugin_id]);
+    $plugin_id = array_key_last($selection_handler_groups[$base_plugin_id]);
 
     return $plugin_id;
   }
@@ -91,7 +91,7 @@ class SelectionPluginManager extends DefaultPluginManager implements SelectionPl
   /**
    * {@inheritdoc}
    */
-  public function getSelectionHandler(FieldDefinitionInterface $field_definition, EntityInterface $entity = NULL) {
+  public function getSelectionHandler(FieldDefinitionInterface $field_definition, ?EntityInterface $entity = NULL) {
     $options = $field_definition->getSetting('handler_settings') ?: [];
     $options += [
       'target_type' => $field_definition->getFieldStorageDefinition()->getSetting('target_type'),

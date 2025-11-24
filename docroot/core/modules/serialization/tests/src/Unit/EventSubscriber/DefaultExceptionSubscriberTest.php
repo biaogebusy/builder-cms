@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\EventSubscriber;
 
 use Drupal\serialization\Encoder\JsonEncoder;
@@ -21,13 +23,13 @@ class DefaultExceptionSubscriberTest extends UnitTestCase {
   /**
    * @covers ::on4xx
    */
-  public function testOn4xx() {
+  public function testOn4xx(): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/test');
     $request->setRequestFormat('json');
 
     $e = new MethodNotAllowedHttpException(['POST', 'PUT'], 'test message');
-    $event = new ExceptionEvent($kernel->reveal(), $request, HttpKernelInterface::MASTER_REQUEST, $e);
+    $event = new ExceptionEvent($kernel->reveal(), $request, HttpKernelInterface::MAIN_REQUEST, $e);
     $subscriber = new DefaultExceptionSubscriber(new Serializer([], [new JsonEncoder()]), []);
     $subscriber->on4xx($event);
     $response = $event->getResponse();

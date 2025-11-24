@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SD",
+		"Dezhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Decheng Qu": {
+			"local_name": "德城区"
+		},
+		"Leling Shi": {
+			"local_name": "乐陵市"
+		},
+		"Linyi Xian": {
+			"local_name": "临邑县"
+		},
+		"Ling Xian": {
+			"local_name": "陵县"
+		},
+		"Ningjin Xian": {
+			"local_name": "宁津县"
+		},
+		"Pingyuan Xian": {
+			"local_name": "平原县"
+		},
+		"Qihe Xian": {
+			"local_name": "齐河县"
+		},
+		"Qingyun Xian": {
+			"local_name": "庆云县"
+		},
+		"Wucheng Xian": {
+			"local_name": "武城县"
+		},
+		"Xiajin Xian": {
+			"local_name": "夏津县"
+		},
+		"Yucheng Shi": {
+			"local_name": "禹城市"
+		}
+	}
+}

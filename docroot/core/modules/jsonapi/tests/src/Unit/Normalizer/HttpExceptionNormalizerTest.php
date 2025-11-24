@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Unit\Normalizer;
 
 use Drupal\Core\Config\ConfigFactory;
@@ -23,7 +25,7 @@ class HttpExceptionNormalizerTest extends UnitTestCase {
   /**
    * @covers ::normalize
    */
-  public function testNormalize() {
+  public function testNormalize(): void {
     $request_stack = $this->prophesize(RequestStack::class);
     $request_stack->getCurrentRequest()->willReturn(Request::create('http://localhost/'));
     $container = $this->prophesize(ContainerInterface::class);

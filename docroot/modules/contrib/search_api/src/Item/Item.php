@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
@@ -115,6 +116,13 @@ class Item implements \IteratorAggregate, ItemInterface {
   protected $extraData = [];
 
   /**
+   * All warnings added to this item.
+   *
+   * @var string[]|\Drupal\Component\Render\MarkupInterface[]
+   */
+  protected array $warnings = [];
+
+  /**
    * Cached access results for the item, keyed by user ID.
    *
    * @var \Drupal\Core\Access\AccessResultInterface[]
@@ -134,7 +142,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    *   (optional) The datasource of this item. If not set, it will be determined
    *   from the ID and loaded from the index.
    */
-  public function __construct(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
+  public function __construct(IndexInterface $index, $id, ?DatasourceInterface $datasource = NULL) {
     $this->index = $index;
     $this->itemId = $id;
     if ($datasource) {
@@ -148,7 +156,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    */
   public function getDatasourceId() {
     if (!isset($this->datasourceId)) {
-      list($this->datasourceId) = Utility::splitCombinedId($this->itemId);
+      [$this->datasourceId] = Utility::splitCombinedId($this->itemId);
     }
     return $this->datasourceId;
   }
@@ -223,8 +231,7 @@ class Item implements \IteratorAggregate, ItemInterface {
     if (isset($this->fields[$field_id])) {
       return $this->fields[$field_id];
     }
-    $fields = $this->getFields($extract);
-    return isset($fields[$field_id]) ? $fields[$field_id] : NULL;
+    return $this->getFields($extract)[$field_id] ?? NULL;
   }
 
   /**
@@ -235,9 +242,9 @@ class Item implements \IteratorAggregate, ItemInterface {
       $data_type_fallback_mapping = \Drupal::getContainer()
         ->get('search_api.data_type_helper')
         ->getDataTypeFallbackMapping($this->index);
+      $fields_by_property_path = [];
+      $processors_with_fields = [];
       foreach ([NULL, $this->getDatasourceId()] as $datasource_id) {
-        $fields_by_property_path = [];
-        $processors_with_fields = [];
         $properties = $this->index->getPropertyDefinitions($datasource_id);
         foreach ($this->index->getFieldsByDatasource($datasource_id) as $field_id => $field) {
           // Don't overwrite fields that were previously set.
@@ -269,27 +276,29 @@ class Item implements \IteratorAggregate, ItemInterface {
             }
           }
         }
-        try {
-          if ($fields_by_property_path) {
-            \Drupal::getContainer()
-              ->get('search_api.fields_helper')
-              ->extractFields($this->getOriginalObject(), $fields_by_property_path, $this->getLanguage());
-          }
-          if ($processors_with_fields) {
-            $processors = $this->index->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES);
-            foreach ($processors as $processor_id => $processor) {
-              if (isset($processors_with_fields[$processor_id])) {
-                $processor->addFieldValues($this);
-              }
-            }
-          }
+      }
+
+      // Extract the "regular" properties from the Typed Data and then let all
+      // necessary processors add their field values.
+      try {
+        if ($fields_by_property_path) {
+          \Drupal::getContainer()
+            ->get('search_api.fields_helper')
+            ->extractFields($this->getOriginalObject(), $fields_by_property_path, $this->getLanguage());
         }
-        catch (SearchApiException $e) {
-          // If we couldn't load the object, just log an error and fail
-          // silently to set the values.
-          $this->logException($e);
+        if ($processors_with_fields) {
+          $processors = $this->index->getProcessorsByStage(ProcessorInterface::STAGE_ADD_PROPERTIES);
+          foreach (array_intersect_key($processors, $processors_with_fields) as $processor) {
+            $processor->addFieldValues($this);
+          }
         }
       }
+      catch (SearchApiException $e) {
+        // If we couldn't load the object, just log an error and fail
+        // silently to set the values.
+        $this->logException($e);
+      }
+
       $this->fieldsExtracted = TRUE;
     }
     return $this->fields;
@@ -298,7 +307,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function setField($field_id, FieldInterface $field = NULL) {
+  public function setField($field_id, ?FieldInterface $field = NULL) {
     if ($field) {
       if ($field->getFieldIdentifier() !== $field_id) {
         throw new \InvalidArgumentException('The field identifier passed must be consistent with the identifier set on the field object.');
@@ -354,7 +363,10 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function setScore($score) {
-    $this->score = $score;
+    if (!is_numeric($score) || ((float) $score) < 0) {
+      @trigger_error('Passing negative numbers or non-numeric values to \Drupal\search_api\Item\Item::setScore() is deprecated in search_api:8.x-1.36 and will stop working in search_api:2.0.0. See https://www.drupal.org/node/3485262', E_USER_DEPRECATED);
+    }
+    $this->score = (float) $score;
     return $this;
   }
 
@@ -369,7 +381,10 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   public function setBoost($boost) {
-    $this->boost = $boost;
+    if (!is_numeric($boost) || ((float) $boost) < 0) {
+      @trigger_error('Passing negative numbers or non-numeric values to \Drupal\search_api\Item\Item::setBoost() is deprecated in search_api:8.x-1.36 and will stop working in search_api:2.0.0. See https://www.drupal.org/node/3485262', E_USER_DEPRECATED);
+    }
+    $this->boost = (float) $boost;
     return $this;
   }
 
@@ -425,7 +440,29 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function checkAccess(AccountInterface $account = NULL) {
+  public function hasWarnings(): bool {
+    return (bool) $this->warnings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWarnings(): array {
+    return $this->warnings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addWarning(MarkupInterface|string $warning): static {
+    $this->warnings[] = $warning;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkAccess(?AccountInterface $account = NULL) {
     @trigger_error('\Drupal\search_api\Item\ItemInterface::checkAccess() is deprecated in search_api:8.x-1.14 and is removed from search_api:2.0.0. Use getAccessResult() instead. See https://www.drupal.org/node/3051902', E_USER_DEPRECATED);
     return $this->getAccessResult($account)->isAllowed();
   }
@@ -433,7 +470,7 @@ class Item implements \IteratorAggregate, ItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAccessResult(AccountInterface $account = NULL) {
+  public function getAccessResult(?AccountInterface $account = NULL) {
     if (!$account) {
       $account = \Drupal::currentUser();
     }
@@ -444,7 +481,7 @@ class Item implements \IteratorAggregate, ItemInterface {
         $this->accessResults[$uid] = $this->getDatasource()
           ->getItemAccessResult($this->getOriginalObject(), $account);
       }
-      catch (SearchApiException $e) {
+      catch (SearchApiException) {
         $this->accessResults[$uid] = AccessResult::neutral('Item could not be loaded, so cannot check access');
       }
     }
@@ -456,7 +493,7 @@ class Item implements \IteratorAggregate, ItemInterface {
    * {@inheritdoc}
    */
   #[\ReturnTypeWillChange]
-  public function getIterator() {
+  public function getIterator(): \Traversable {
     return new \ArrayIterator($this->getFields());
   }
 

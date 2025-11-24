@@ -5,9 +5,9 @@
  * Provides extra menu links for the core drupal toolbar.
  */
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_toolbar().
@@ -24,6 +24,10 @@ function admin_toolbar_tools_toolbar() {
     ],
     '#attached' => ['library' => ['admin_toolbar_tools/toolbar.icon']],
   ];
+
+  // Toolbar item for primary local tasks.
+  $items['admin_toolbar_local_tasks'] = \Drupal::service('admin_toolbar_tools.helper')->buildLocalTasksToolbar();
+
   return $items;
 }
 
@@ -56,9 +60,13 @@ function admin_toolbar_tools_help($route_name, RouteMatchInterface $route_match)
  * Implements hook_entity_insert().
  */
 function admin_toolbar_tools_entity_insert(EntityInterface $entity) {
-  $entities = \Drupal::service('admin_toolbar_tools.helper')->getRebuildEntityTypes();
-  if (in_array($entity->getEntityTypeId(), $entities)) {
-    \Drupal::service('plugin.manager.menu.link')->rebuild();
+  // Skip rebuild during config sync because rebuild should
+  // always be a post-sync step.
+  if (!\Drupal::isConfigSyncing()) {
+    $entities = \Drupal::service('admin_toolbar_tools.helper')->getRebuildEntityTypes();
+    if (in_array($entity->getEntityTypeId(), $entities)) {
+      \Drupal::service('plugin.manager.menu.link')->rebuild();
+    }
   }
 }
 
@@ -66,9 +74,13 @@ function admin_toolbar_tools_entity_insert(EntityInterface $entity) {
  * Implements hook_entity_update().
  */
 function admin_toolbar_tools_entity_update(EntityInterface $entity) {
-  $entities = \Drupal::service('admin_toolbar_tools.helper')->getRebuildEntityTypes();
-  if (in_array($entity->getEntityTypeId(), $entities)) {
-    \Drupal::service('plugin.manager.menu.link')->rebuild();
+  // Skip rebuild during config sync because rebuild should
+  // always be a post-sync step.
+  if (!\Drupal::isConfigSyncing()) {
+    $entities = \Drupal::service('admin_toolbar_tools.helper')->getRebuildEntityTypes();
+    if (in_array($entity->getEntityTypeId(), $entities)) {
+      \Drupal::service('plugin.manager.menu.link')->rebuild();
+    }
   }
 }
 
@@ -76,8 +88,27 @@ function admin_toolbar_tools_entity_update(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function admin_toolbar_tools_entity_delete(EntityInterface $entity) {
-  $entities = \Drupal::service('admin_toolbar_tools.helper')->getRebuildEntityTypes();
-  if (in_array($entity->getEntityTypeId(), $entities)) {
-    \Drupal::service('plugin.manager.menu.link')->rebuild();
+  // Skip rebuild during config sync because rebuild should
+  // always be a post-sync step.
+  if (!\Drupal::isConfigSyncing()) {
+    $entities = \Drupal::service('admin_toolbar_tools.helper')->getRebuildEntityTypes();
+    if (in_array($entity->getEntityTypeId(), $entities)) {
+      \Drupal::service('plugin.manager.menu.link')->rebuild();
+    }
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function admin_toolbar_tools_form_project_browser_settings_alter(&$form) {
+  // Project browser settings form: Add a submit handler to rebuild menu items.
+  $form['#submit'][] = 'admin_toolbar_tools_project_browser_settings_submit';
+}
+
+/**
+ * Project browser integration: Helper function callback to rebuild menu items.
+ */
+function admin_toolbar_tools_project_browser_settings_submit(&$form) {
+  \Drupal::service('plugin.manager.menu.link')->rebuild();
 }

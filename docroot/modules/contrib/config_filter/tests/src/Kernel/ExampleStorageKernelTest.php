@@ -15,9 +15,7 @@ class ExampleStorageKernelTest extends KernelTestBase {
   use ConfigStorageTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',

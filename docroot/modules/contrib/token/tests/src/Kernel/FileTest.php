@@ -8,7 +8,7 @@ use Drupal\file\Entity\File;
  *
  * @group token
  */
-class FileTest extends KernelTestBase {
+class FileTest extends TokenKernelTestBase {
 
   /**
    * {@inheritdoc}

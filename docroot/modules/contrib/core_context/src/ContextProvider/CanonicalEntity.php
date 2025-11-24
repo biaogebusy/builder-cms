@@ -65,7 +65,7 @@ final class CanonicalEntity extends RouteAwareContextProviderBase {
    * {@inheritdoc}
    */
   protected function getContextsFromRoute(Route $route) : array {
-    list ($entity_type_id, $view_mode) = explode('.', $this->getEntityTypeAndViewModeFromRoute($route));
+    [$entity_type_id, $view_mode] = explode('.', $this->getEntityTypeAndViewModeFromRoute($route));
 
     $entity = $this->routeMatch->getParameter($entity_type_id);
     $contexts = $this->getContextsFromEntity($entity);

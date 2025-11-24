@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_price\Calculator;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_price\Calculator;
 
 /**
  * Provides common configuration for percentage off offers.
@@ -60,7 +60,7 @@ trait PercentageOffTrait {
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValue($form['#parents']);
     if (empty($values['percentage'])) {
-      $form_state->setError($form, $this->t('Percentage must be a positive number.'));
+      $form_state->setError($form['percentage'], $this->t('Percentage must be a positive number.'));
     }
   }
 

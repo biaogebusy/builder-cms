@@ -24,7 +24,7 @@ trait BlazyFormatterViewTrait {
     FieldItemListInterface $items,
     $langcode,
     array $entities = [],
-    array $settings = []
+    array $settings = [],
   ) {
     // Modifies elements before building elements.
     $entities = empty($entities) ? [] : array_values($entities);
@@ -61,6 +61,7 @@ trait BlazyFormatterViewTrait {
     unset($build['settings']);
 
     // Build the elements.
+    /* @phpstan-ignore-next-line */
     if (method_exists($this, 'buildElements')) {
       // @todo remove $langcode at 3.x:
       $this->buildElements($build, $elements, $langcode);

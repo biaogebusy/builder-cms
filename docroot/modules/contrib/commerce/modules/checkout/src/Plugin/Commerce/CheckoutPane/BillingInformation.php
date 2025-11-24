@@ -2,22 +2,21 @@
 
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the billing information pane.
- *
- * @CommerceCheckoutPane(
- *   id = "billing_information",
- *   label = @Translation("Billing information"),
- *   default_step = "order_information",
- *   wrapper_element = "fieldset",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "billing_information",
+  label: new TranslatableMarkup('Billing information'),
+  default_step: "order_information",
+  wrapper_element: "fieldset",
+)]
 class BillingInformation extends CheckoutPaneBase implements CheckoutPaneInterface {
 
   /**
@@ -28,39 +27,12 @@ class BillingInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
   protected $inlineFormManager;
 
   /**
-   * Constructs a new BillingInformation object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface $checkout_flow
-   *   The parent checkout flow.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce\InlineFormManager $inline_form_manager
-   *   The inline form manager.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow, EntityTypeManagerInterface $entity_type_manager, InlineFormManager $inline_form_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $checkout_flow, $entity_type_manager);
-
-    $this->inlineFormManager = $inline_form_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow = NULL) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $checkout_flow,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_inline_form')
-    );
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?CheckoutFlowInterface $checkout_flow = NULL) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition, $checkout_flow);
+    $instance->inlineFormManager = $container->get('plugin.manager.commerce_inline_form');
+    return $instance;
   }
 
   /**

@@ -3,23 +3,25 @@
 namespace Drupal\media_entity_instagram\Plugin\media\Source;
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\media\Attribute\OEmbedMediaSource;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaTypeInterface;
 use Drupal\media\Plugin\media\Source\OEmbed;
+use Drupal\media_entity_instagram\Form\InstagramMediaLibraryAddForm;
 
 /**
  * Implementation of an oEmbed Instagram source.
- *
- * @MediaSource(
- *   id = "oembed:instagram",
- *   label = @Translation("Instagram"),
- *   description = @Translation("Use Facebooks graph API for reusable instagrams."),
- *   allowed_field_types = {"string", "link"},
- *   default_thumbnail_filename = "instagram.png",
- *   providers = {"Instagram"},
- *   forms = {"media_library_add" = "\Drupal\media_entity_instagram\Form\InstagramMediaLibraryAddForm"}
- * )
  */
+#[OEmbedMediaSource(
+  id: "oembed:instagram",
+  label: new TranslatableMarkup("Instagram"),
+  description: new TranslatableMarkup("Use Facebooks graph API for reusable instagrams."),
+  allowed_field_types: ["string", "link"],
+  forms: ["media_library_add" => InstagramMediaLibraryAddForm::class],
+  providers: ["Instagram"],
+  default_thumbnail_filename: "instagram.png"
+)]
 class Instagram extends OEmbed {
 
   /**
@@ -27,9 +29,10 @@ class Instagram extends OEmbed {
    *
    * @var array
    */
-  public static $validationRegexp = [
+  public static array $validationRegexp = [
     '@((http|https):){0,1}//(www\.){0,1}instagram\.com/p/(?<shortcode>[a-z0-9_-]+)@i' => 'shortcode',
     '@((http|https):){0,1}//(www\.){0,1}instagr\.am/p/(?<shortcode>[a-z0-9_-]+)@i' => 'shortcode',
+    '@((http|https):){0,1}//(www\.){0,1}instagram\.com/reel/(?<shortcode>[a-z0-9_-]+)@i' => 'shortcode',
     '@((http|https):){0,1}//(www\.){0,1}instagram\.com/tv/(?<shortcode>[a-z0-9_-]+)@i' => 'shortcode',
     '@((http|https):){0,1}//(www\.){0,1}instagr\.am/tv/(?<shortcode>[a-z0-9_-]+)@i' => 'shortcode',
   ];
@@ -37,7 +40,7 @@ class Instagram extends OEmbed {
   /**
    * {@inheritdoc}
    */
-  public function getMetadataAttributes() {
+  public function getMetadataAttributes(): array {
     return [
       'shortcode' => $this->t('Instagram shortcode'),
       'type' => $this->t('Resource type'),
@@ -96,7 +99,7 @@ class Instagram extends OEmbed {
    *
    * @see preg_match()
    */
-  protected function matchRegexp(MediaInterface $media) {
+  protected function matchRegexp(MediaInterface $media): bool|array {
     $matches = [];
 
     if (isset($this->configuration['source_field'])) {
@@ -116,7 +119,7 @@ class Instagram extends OEmbed {
   /**
    * {@inheritdoc}
    */
-  public function prepareViewDisplay(MediaTypeInterface $type, EntityViewDisplayInterface $display) {
+  public function prepareViewDisplay(MediaTypeInterface $type, EntityViewDisplayInterface $display): void {
     $display->setComponent($this->getSourceFieldDefinition($type)->getName(), [
       'type' => 'instagram_embed',
       'label' => 'visually_hidden',

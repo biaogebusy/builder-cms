@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\FunctionalJavascript;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -31,7 +33,7 @@ abstract class FlagJsTestBase extends WebDriverTestBase {
   /**
    * A user with Flag admin rights.
    *
-   * @var AccountInterface
+   * @var \Drupal\Core\Session\AccountInterface
    */
   protected $adminUser;
 

@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_order\EventSubscriber;
 
-use Drupal\state_machine\Event\WorkflowTransitionEvent;
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\state_machine\Event\WorkflowTransitionEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class TimestampEventSubscriber implements EventSubscriberInterface {
@@ -28,7 +28,7 @@ class TimestampEventSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       'commerce_order.place.pre_transition' => 'onPlaceTransition',
       'commerce_order.pre_transition' => 'onAnyTransition',

@@ -5,20 +5,18 @@
  * The Flag module.
  */
 
-
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\ConfirmFormInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\flag\Plugin\Flag\EntityFlagType;
-use Drupal\Core\Cache\Cache;
-use Drupal\node\NodeInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\flag\FlagInterface;
+use Drupal\flag\Plugin\Flag\EntityFlagType;
 use Drupal\system\Entity\Action;
 use Drupal\user\UserInterface;
-use Drupal\flag\FlagInterface;
-use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
@@ -33,7 +31,10 @@ function flag_help($route_name, RouteMatchInterface $route_match) {
         if (\Drupal::service('flag')->getFlagById('bookmark')) {
           $output .= ' ' . t('Flag module automatically provides a few default views for the <em>bookmarks</em> flag. You can use these as templates by cloning these views and then customizing as desired.');
         }
-        $output .= ' ' . t('The <a href="@flag-handbook-url">Flag module handbook</a> contains extensive <a href="@customize-url">documentation on creating customized views</a> using flags.', ['@flag-handbook-url' => 'http://drupal.org/handbook/modules/flag', '@customize-url' => 'http://drupal.org/node/296954']);
+        $output .= ' ' . t('The <a href="@flag-handbook-url">Flag module handbook</a> contains extensive <a href="@customize-url">documentation on creating customized views</a> using flags.', [
+          '@flag-handbook-url' => 'http://drupal.org/handbook/modules/flag',
+          '@customize-url' => 'http://drupal.org/node/296954',
+        ]);
         $output .= '</p>';
       }
 
@@ -50,68 +51,6 @@ function flag_help($route_name, RouteMatchInterface $route_match) {
     case 'flag.add_page':
       $output = '<p>' . t('Select the type of flag to create.') . '</p>';
       return $output;
-
-    case 'field_ui.overview_flagging':
-      // @todo: Doesn't make sense at the moment, implement when form
-      // functionality is available.
-      /*
-      // Get the existing link types that provide a flagging form.
-      $link_types = flag_get_link_types();
-      $form_link_types = array();
-      foreach (flag_get_link_types() as $link_type) {
-        if ($link_type['provides form']) {
-          $form_link_types[] = '<em>' . $link_type['title'] . '</em>';
-        }
-      }
-
-      // Get the flag for which we're managing fields.
-      $flag = menu_get_object('flag', FLAG_ADMIN_PATH_START + 1);
-
-      // Common text.
-      $output  = '<p>' . t('Flags can have fields added to them. For example, a "Spam" flag could have a <em>Reason</em> field where a user could type in why he believes the item flagged is spam. A "Bookmarks" flag could have a <em>Folder</em> field into which a user could arrange her bookmarks.') . '</p>';
-      $output .= '<p>' . t('On this page you can add fields to flags, delete them, and otherwise manage them.') . '</p>';
-
-      // Three cases:
-      if ($flag->link_type == 'form') {
-        // Case 1: the current link type is the flagging form. Don't tell the
-        // user anything extra, all is fine.
-      }
-      elseif ($link_types[$flag->link_type]['provides form']) {
-        // Case 2: the current link type shows the form for creation of the
-        // flagging, but it not the flagging form. Tell the user they can't edit
-        // existing flagging fields.
-        $output .= t("Field values may be edited when flaggings are created because this flag's link type shows a form for the flagging. However, to edit field values on existing flaggings, you will need to set your flag to use the <em>Flagging form</em> link type. This is provided by the <em><a href='!flagging-form-url'>Flagging Form</a></em> module.", array(
-          '!flagging-form-url' => 'http://drupal.org/project/flagging_form',
-        ));
-        if (!\Drupal::moduleHandler()->moduleExists('flagging_form')) {
-          $output .= ' <span class="warning">'
-            . t("You do not currently have this module enabled.")
-            . '</span>';
-        }
-        $output .= '</p>';
-      }
-      else {
-        // Case 3: the current link type does not allow access to the flagging
-        // form. Tell the user they should change it.
-        $output .= '<p class="warning">' . t("To allow users to enter values for fields you will need to <a href='!form-link-type-url'>set your flag</a> to use one of the following link types which allow users to access the flagging form: !link-types-list. (In case a form isn't used, the fields are assigned their default values.)", array(
-          '!form-link-type-url' => url('admin/structure/flags/manage/' . $flag->name, array('fragment' => 'edit-link-type')),
-          // The list of labels from link types. These are all defined in code
-          // in hook_flag_link_type_info() and therefore safe to output raw.
-          '!link-types-list' => implode(', ', $form_link_types),
-        )) . '</p>';
-        $output .= '<p>' . t("Additionally, to edit field values on existing flaggings, you will need to set your flag to use the Flagging form link type. This is provided by the <em><a href='!flagging-form-url'>Flagging Form</a></em> module.", array(
-          '!flagging-form-url' => 'http://drupal.org/project/flagging_form',
-        ));
-        if (!\Drupal::moduleHandler()->moduleExists('flagging_form')) {
-          $output .= ' <span class="warning">'
-            . t("You do not currently have this module enabled.")
-            . '</span>';
-        }
-        $output .= '</p>';
-      }
-
-      return $output;
-      */
   }
 }
 
@@ -134,16 +73,18 @@ function flag_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Check the first flag and return early if the form isn't considered to be
   // an edit form.
   if (!empty($flags) && isset($flags[0]) && $flags[0] instanceof FlagInterface) {
-    if (!$flags[0]->getFlagTypePlugin()->isAddEditForm($object->getOperation())) {
+    /** @var \Drupal\flag\Plugin\Flag\EntityFlagType $flag_type */
+    $flag_type = $flags[0]->getFlagTypePlugin();
+    if (!$flag_type->isAddEditForm($object->getOperation())) {
       return;
     }
   }
 
   // Filter the flags to those that apply here:
-  //  - the flag uses the entity type plugin.
-  //  - the plugin is configured to output the flag in the entity form.
-  //  - the current user has access to the flag.
-  $filtered_flags = array_filter($flags, function(FlagInterface $flag) use ($object) {
+  // - the flag uses the entity type plugin.
+  // - the plugin is configured to output the flag in the entity form.
+  // - the current user has access to the flag.
+  $filtered_flags = array_filter($flags, function (FlagInterface $flag) use ($object) {
     $plugin = $flag->getFlagTypePlugin();
     $entity = $object->getEntity();
     $action = $flag->isFlagged($entity) ? 'unflag' : 'flag';
@@ -166,7 +107,7 @@ function flag_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#tree' => TRUE,
     ];
 
-    /** @var FlagInterface $flag */
+    /** @var \Drupal\flag\FlagInterface $flag */
     foreach ($filtered_flags as $flag) {
       // Add each flag to the form.
       $form['flag'][$flag->id()] = [
@@ -194,7 +135,9 @@ function flag_form_alter(&$form, FormStateInterface $form_state, $form_id) {
  * @see flag_form_alter()
  */
 function flag_form_submit($form, FormStateInterface $form_state) {
-  $entity = $form_state->getFormObject()->getEntity();
+  /** @var \Drupal\Core\Entity\ContentEntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->getEntity();
   if (!$form_state->isValueEmpty('flag')) {
     $values = $form_state->getValue('flag');
     flag_form_save($entity, $values);
@@ -206,12 +149,12 @@ function flag_form_submit($form, FormStateInterface $form_state) {
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
  *   The entity being saved.
- * @param $values
+ * @param array $values
  *   The flag entity form values.
  *
  * @see flag_form_submit()
  */
-function flag_form_save(EntityInterface $entity, $values) {
+function flag_form_save(EntityInterface $entity, array $values) {
   $flag_service = \Drupal::service('flag');
   $account = \Drupal::currentUser();
 
@@ -227,7 +170,7 @@ function flag_form_save(EntityInterface $entity, $values) {
   // Load all the flags for the entity.
   $flags = $flag_service->getAllFlags($entity->getEntityTypeId(), $entity->bundle());
 
-  /** @var FlagInterface $flag */
+  /** @var \Drupal\flag\FlagInterface $flag */
   foreach ($flags as $flag) {
     // Get the flag_id from the Flag.
     $flag_id = $flag->id();
@@ -265,7 +208,7 @@ function flag_entity_extra_field_info() {
   $flag_service = \Drupal::service('flag');
   $flags = $flag_service->getAllFlags();
 
-  /** @var FlagInterface $flag */
+  /** @var \Drupal\flag\FlagInterface $flag */
   foreach ($flags as $flag) {
     // Skip flags that aren't on entities.
     $flag_type_plugin = $flag->getFlagTypePlugin();
@@ -311,6 +254,7 @@ function flag_theme() {
         'action' => 'flag',
         'flag' => NULL,
         'flaggable' => NULL,
+        'view_mode' => NULL,
       ],
     ],
   ];
@@ -322,9 +266,12 @@ function flag_theme() {
 function flag_theme_suggestions_flag(array $variables) {
   $flag = $variables['flag'];
   $flaggable = $variables['flaggable'];
+  $view_mode = $variables['view_mode'];
 
   return [
     'flag__' . $flag->id(),
+    'flag__' . $view_mode,
+    'flag__' . $flag->id() . '__' . $view_mode,
     'flag__' . $flag->id() . '_' . $flaggable->id(),
   ];
 }
@@ -332,9 +279,52 @@ function flag_theme_suggestions_flag(array $variables) {
 /**
  * Implements hook_node_links_alter().
  */
-function flag_node_links_alter(array &$links, NodeInterface $entity, array &$context) {
-  // @todo: Define this for handling the showOnLinks() flag mode.
-  // see https://www.drupal.org/project/flag/issues/2703229
+function flag_node_links_alter(array &$links, EntityInterface $entity, array &$context) {
+  flag_build_entity_links($links, $entity, $context);
+}
+
+/**
+ * Implements hook_comment_links_alter().
+ */
+function flag_comment_links_alter(array &$links, EntityInterface $entity, array &$context) {
+  flag_build_entity_links($links, $entity, $context);
+}
+
+/**
+ * Build flag entity links.
+ *
+ * @see flag_node_links_alter()
+ * @see flag_comment_links_alter()
+ */
+function flag_build_entity_links(array &$links, EntityInterface $entity, array &$context) {
+  /** @var \Drupal\Core\Render\RendererInterface $renderer */
+  $renderer = \Drupal::service('renderer');
+  /** @var \Drupal\flag\FlagServiceInterface $flagManager */
+  $flagManager = \Drupal::service('flag');
+  $extraLinks = [];
+  $cache = ['contexts' => [], 'tags' => [], 'max-age' => NULL];
+
+  // Adds flag type links.
+  $viewMode = $context['view_mode'] === 'default' ? 'full' : $context['view_mode'];
+  foreach ($flagManager->getAllFlags($entity->getEntityTypeId(), $entity->bundle()) as $flag) {
+    if (in_array($viewMode, $flag->get('flagTypeConfig')['show_in_links'], TRUE)) {
+      if ($link = $flag->getLinkTypePlugin()->getAsFlagLink($flag, $entity, $viewMode)) {
+        $cache['contexts'] = Cache::mergeContexts($cache['contexts'], $link['#cache']['contexts']);
+        $cache['tags'] = Cache::mergeTags($cache['tags'], $link['#cache']['tags']);
+        $cache['max-age'] = Cache::mergeMaxAges($cache['max-age'], $link['#cache']['max-age']);
+        $extraLinks["flag_{$flag->id()}"] = ['title' => $renderer->render($link)];
+      }
+    }
+  }
+
+  if ($extraLinks) {
+    $links['flags'] = [
+      '#theme' => "links__{$entity->getEntityTypeId()}__flags",
+      '#links' => $extraLinks,
+      '#attributes' => ['class' => ['links', 'inline']],
+      '#cache' => $cache,
+    ];
+  }
 }
 
 /**
@@ -342,7 +332,7 @@ function flag_node_links_alter(array &$links, NodeInterface $entity, array &$con
  *
  * Handles the 'show_in_links' and 'show_as_field' flag options.
  */
-function flag_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+function flag_entity_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, ?string $view_mode = NULL) {
   // Don't show on previews.
   if ($entity->isNew()) {
     return;
@@ -362,10 +352,11 @@ function flag_entity_view(array &$build, EntityInterface $entity, EntityViewDisp
     $build['#cache']['tags'] = Cache::mergeTags($build['#cache']['tags'], $flag->getCacheTags());
 
     // Do not display the flag if disabled.
-    if (!$flag->status()){
+    if (!$flag->status()) {
       continue;
     }
 
+    /** @var \Drupal\flag\Plugin\Flag\EntityFlagType $flag_type_plugin */
     $flag_type_plugin = $flag->getFlagTypePlugin();
 
     // Only add cache key if flag link is displayed.
@@ -378,7 +369,9 @@ function flag_entity_view(array &$build, EntityInterface $entity, EntityViewDisp
         $entity->getEntityTypeId(),
         $entity->id(),
         $flag->id(),
-      ]],
+        $view_mode,
+      ],
+      ],
       '#create_placeholder' => TRUE,
     ];
   }
@@ -442,7 +435,7 @@ function flag_entity_view_alter(&$build, EntityInterface $entity, EntityViewDisp
         continue;
       }
 
-      // Only apply metadata to contextual links if plugin is enabled
+      // Only apply metadata to contextual links if plugin is enabled.
       if (!$flag_type_plugin->showContextualLink()) {
         continue;
       }
@@ -456,8 +449,15 @@ function flag_entity_view_alter(&$build, EntityInterface $entity, EntityViewDisp
     }
 
     if (!empty($flag_keys)) {
+      $build['#contextual_links'][$entity_type]['route_parameters']['view_mode'] = $build['#view_mode'];
       $build['#contextual_links'][$entity_type]['metadata']['flag_keys'] = implode(',', $flag_keys);
     }
+  }
+
+  // Enable placeholder on entity links to avoid them being cached with the
+  // entity view mode.
+  if (isset($build['links']['#lazy_builder'])) {
+    $build['links']['#create_placeholder'] = TRUE;
   }
 }
 
@@ -483,7 +483,7 @@ function flag_contextual_links_alter(array &$links, $group, array $route_paramet
   foreach ($flags as $flag) {
     /** @var \Drupal\flag\FlagInterface $flag */
     // Do not display the flag if disabled.
-    if (!$flag->status()){
+    if (!$flag->status()) {
       continue;
     }
 
@@ -502,7 +502,7 @@ function flag_contextual_links_alter(array &$links, $group, array $route_paramet
 
     $flag_link = $flag
       ->getLinkTypePlugin()
-      ->getAsLink($flag, $entity);
+      ->getAsLink($flag, $entity, $route_parameters['view_mode']);
 
     $flag_url = $flag_link->getUrl();
 
@@ -515,7 +515,7 @@ function flag_contextual_links_alter(array &$links, $group, array $route_paramet
   }
 }
 
-/*
+/**
  * Implements hook_entity_predelete().
  */
 function flag_entity_predelete(EntityInterface $entity) {
@@ -544,10 +544,10 @@ function flag_user_predelete(UserInterface $account) {
 /**
  * Implements hook_entity_operation().
  */
-function flag_entity_operation(\Drupal\Core\Entity\EntityInterface $entity) {
+function flag_entity_operation(EntityInterface $entity) {
   $operations = [];
 
-  if ($entity instanceof \Drupal\flag\FlagInterface) {
+  if ($entity instanceof FlagInterface) {
     if (!$entity->status()) {
       $operations['enable'] = [
         'title' => t('Enable'),

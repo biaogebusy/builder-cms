@@ -5,11 +5,11 @@
  * Automated Logout - Module.
  */
 
-use Drupal\Core\Url;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 use Drupal\user\Entity\User;
-use Drupal\Component\Utility\Xss;
 
 /**
  * Implements hook_help().
@@ -138,7 +138,7 @@ function autologout_autologout_prevent() {
 
   // If user has no timeout set.
   if (\Drupal::service('autologout.manager')->getUserTimeout() === 0) {
-    _check_session_variable();
+    autologout_check_session_variable();
     return TRUE;
   }
 
@@ -169,7 +169,7 @@ function autologout_autologout_prevent() {
     }
   }
   if (in_array($user_ip, $ip_address_whitelist)) {
-    _check_session_variable();
+    autologout_check_session_variable();
     return TRUE;
   }
 
@@ -179,9 +179,11 @@ function autologout_autologout_prevent() {
 /**
  * Helper function to unset the autologout session variable if present.
  */
-function _check_session_variable() {
-  if (isset($_SESSION['autologout_last'])) {
-    unset($_SESSION['autologout_last']);
+function autologout_check_session_variable() {
+  $currentRequest = \Drupal::service('request_stack')->getCurrentRequest();
+  $session = $currentRequest->getSession()->get('autologout_last');
+  if (isset($session)) {
+    $currentRequest->getSession()->remove('autologout_last');
   }
 }
 
@@ -221,7 +223,11 @@ function autologout_page_attachments_alter(array &$attachments) {
   $timeout = $autologout_manager->getUserTimeout();
   $timeout_padding = $settings->get('padding');
   $redirect_url = $autologout_manager->getUserRedirectUrl();
-  $redirect_query = \Drupal::service('redirect.destination')->getAsArray() + ['autologout_timeout' => 1];
+  $redirect_query = [];
+  if ($settings->get('include_destination')) {
+    $redirect_query[] = \Drupal::service('redirect.destination')->getAsArray();
+  }
+  $redirect_query += ['autologout_timeout' => 1];
   $no_dialog = $settings->get('no_dialog');
   $disable_buttons = $settings->get('disable_buttons');
   $yes_button = $settings->get('yes_button');
@@ -310,7 +316,7 @@ function autologout_attach_js(array &$element, array $settings) {
  * session_limit module thinking the user has reached their
  * session limit.
  */
-function autologout_user_login($account) {
+function autologout_user_login($account): void {
   // Cleanup old sessions.
   $autologout_manager = \Drupal::service('autologout.manager');
   $timeout = \Drupal::service('autologout.manager')->getUserTimeout($account->id());
@@ -319,25 +325,29 @@ function autologout_user_login($account) {
   if ($autologout_manager->preventJs()) {
     return;
   }
+  // Now Sessions table is no longer defined in system_schema().
+  // Do not clear session if there is no sessions table.
+  // @see https://www.drupal.org/node/3431286
+  if (\Drupal::database()->schema()->tableExists('sessions')) {
+    $timeout_padding = \Drupal::config('autologout.settings')->get('padding');
+    $timestamp = \Drupal::time()->getRequestTime() - ($timeout + $timeout_padding);
 
-  $timeout_padding = \Drupal::config('autologout.settings')->get('padding');
-  $timestamp = \Drupal::time()->getRequestTime() - ($timeout + $timeout_padding);
+    // Find all stale sessions.
+    $database = \Drupal::database();
+    $sids = $database->select('sessions', 's')
+      ->fields('s', ['sid'])
+      ->condition('uid', $account->id())
+      ->condition('timestamp', $timestamp, '<')
+      ->orderBy('timestamp', 'DESC')
+      ->execute()
+      ->fetchCol();
 
-  // Find all stale sessions.
-  $database = \Drupal::database();
-  $sids = $database->select('sessions', 's')
-    ->fields('s', ['sid'])
-    ->condition('uid', $account->id())
-    ->condition('timestamp', $timestamp, '<')
-    ->orderBy('timestamp', 'DESC')
-    ->execute()
-    ->fetchCol();
-
-  if (!empty($sids)) {
-    // Delete stale sessions at login.
-    $database->delete('sessions')
-      ->condition('sid', $sids, 'IN')
-      ->execute();
+    if (!empty($sids)) {
+      // Delete stale sessions at login.
+      $database->delete('sessions')
+        ->condition('sid', $sids, 'IN')
+        ->execute();
+    }
   }
 
   // Add login time cookie.

@@ -7,21 +7,12 @@ use Drupal\Core\Database\Connection;
 class CouponCodeGenerator implements CouponCodeGeneratorInterface {
 
   /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
-
-  /**
    * Constructs a new CouponCodeGenerator object.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection.
    */
-  public function __construct(Connection $connection) {
-    $this->connection = $connection;
-  }
+  public function __construct(protected Connection $connection) {}
 
   /**
    * {@inheritdoc}
@@ -83,8 +74,6 @@ class CouponCodeGenerator implements CouponCodeGeneratorInterface {
         $characters = [
           'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
           'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n',
-          'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
           '2', '3', '4', '5', '6', '7', '8', '9',
         ];
         break;
@@ -94,8 +83,6 @@ class CouponCodeGenerator implements CouponCodeGeneratorInterface {
         $characters = [
           'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
           'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-          'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n',
-          'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
         ];
         break;
 

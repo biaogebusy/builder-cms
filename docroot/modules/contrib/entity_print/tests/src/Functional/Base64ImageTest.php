@@ -93,7 +93,7 @@ class Base64ImageTest extends BrowserTestBase {
     $renderer = \Drupal::service('renderer');
 
     $html = (string) $renderer->executeInRenderContext(new RenderContext(), function () use (&$build, $renderer) {
-      return $renderer->render($build, TRUE);
+      return $renderer->renderRoot($build);
     });
 
     // Ensure the image is rendered as a base64 encoded image.

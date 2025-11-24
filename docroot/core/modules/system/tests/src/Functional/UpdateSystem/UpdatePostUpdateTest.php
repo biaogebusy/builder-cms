@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\UpdateSystem;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\UpdatePathTestTrait;
@@ -73,7 +74,7 @@ class UpdatePostUpdateTest extends BrowserTestBase {
   /**
    * Tests hook_post_update_NAME().
    */
-  public function testPostUpdate() {
+  public function testPostUpdate(): void {
     $this->runUpdates();
 
     $this->assertSession()->responseContains('<h3>Update first</h3>');
@@ -110,7 +111,7 @@ class UpdatePostUpdateTest extends BrowserTestBase {
       'update_test_postupdate_post_update_test_batch',
     ];
     foreach ($expected_updates as $expected_update) {
-      $this->assertEquals(1, $existing_updates[$expected_update], new FormattableMarkup("@expected_update exists in 'existing_updates' key and only appears once.", ['@expected_update' => $expected_update]));
+      $this->assertEquals(1, $existing_updates[$expected_update], "$expected_update exists in 'existing_updates' key and only appears once.");
     }
 
     $this->drupalGet('update.php/selection');

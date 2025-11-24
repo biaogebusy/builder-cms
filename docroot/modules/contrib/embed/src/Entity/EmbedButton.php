@@ -2,8 +2,10 @@
 
 namespace Drupal\embed\Entity;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\embed\EmbedButtonInterface;
@@ -108,6 +110,7 @@ class EmbedButton extends ConfigEntityBase implements EmbedButtonInterface {
     if ($plugin_id = $this->getTypeId()) {
       return $this->embedTypeManager()->createInstance($plugin_id, $this->getTypeSettings());
     }
+    return NULL;
   }
 
   /**
@@ -119,6 +122,7 @@ class EmbedButton extends ConfigEntityBase implements EmbedButtonInterface {
       $files = $this->entityTypeManager()->getStorage('file')->loadByProperties(['uuid' => $this->icon_uuid]);
       return reset($files);
     }
+    return NULL;
   }
 
   /**
@@ -210,7 +214,14 @@ class EmbedButton extends ConfigEntityBase implements EmbedButtonInterface {
       /** @var \Drupal\Core\File\FileSystemInterface $filesystem */
       $fileSystem = \Drupal::service('file_system');
       $fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-      $fileSystem->saveData(base64_decode($data['data']), $data['uri'], FileSystemInterface::EXISTS_REPLACE);
+      $fileExists = DeprecationHelper::backwardsCompatibleCall(
+        currentVersion: \Drupal::VERSION,
+        deprecatedVersion: '10.3',
+        currentCallable: fn() => FileExists::Replace,
+        deprecatedCallable: fn() => FileSystemInterface::EXISTS_REPLACE,
+      );
+
+      $fileSystem->saveData(base64_decode($data['data']), $data['uri'], $fileExists);
     }
     return $data['uri'];
   }

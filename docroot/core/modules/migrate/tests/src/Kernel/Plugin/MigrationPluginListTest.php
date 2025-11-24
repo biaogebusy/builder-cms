@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\Plugin;
 
 use Drupal\Core\Database\Database;
@@ -7,7 +9,7 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\migrate\Exception\RequirementsException;
 use Drupal\migrate\Plugin\migrate\source\SqlBase;
 use Drupal\migrate\Plugin\RequirementsInterface;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests the migration plugin manager.
@@ -17,7 +19,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class MigrationPluginListTest extends KernelTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -25,12 +27,10 @@ class MigrationPluginListTest extends KernelTestBase {
   protected static $modules = [
     'migrate',
     // Test with all modules containing Drupal migrations.
-    'action',
-    // @todo Remove aggregator in https://www.drupal.org/project/drupal/issues/3264120
-    'aggregator',
     'ban',
     'block',
     'block_content',
+    // @todo Remove book in https://www.drupal.org/project/drupal/issues/3376101
     'book',
     'comment',
     'contact',
@@ -39,6 +39,7 @@ class MigrationPluginListTest extends KernelTestBase {
     'field',
     'file',
     'filter',
+    // @todo Remove forum in https://www.drupal.org/project/drupal/issues/3261653
     'forum',
     'image',
     'language',
@@ -50,6 +51,7 @@ class MigrationPluginListTest extends KernelTestBase {
     'path',
     'search',
     'shortcut',
+    // @todo Remove statistics in https://www.drupal.org/project/drupal/issues/3341092
     'statistics',
     'syslog',
     'system',
@@ -73,7 +75,7 @@ class MigrationPluginListTest extends KernelTestBase {
   /**
    * @covers ::getDefinitions
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     // Create an entity reference field to make sure that migrations derived by
     // EntityReferenceTranslationDeriver do not get discovered without
     // migrate_drupal enabled.
@@ -138,8 +140,7 @@ class MigrationPluginListTest extends KernelTestBase {
     $connection_info = Database::getConnectionInfo('default');
     foreach ($connection_info as $target => $value) {
       $prefix = $value['prefix'];
-      // Simpletest uses 7 character prefixes at most so this can't cause
-      // collisions.
+      // Tests use 7 character prefixes at most so this can't cause collisions.
       $connection_info[$target]['prefix'] = $prefix . '0';
     }
     Database::addConnectionInfo('migrate', 'default', $connection_info['default']);

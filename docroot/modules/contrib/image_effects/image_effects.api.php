@@ -15,7 +15,7 @@ use Drupal\image\ConfigurableImageEffectBase;
  * @param \Drupal\image\ConfigurableImageEffectBase $image_effect
  *   The Text Overlay image effect plugin for which text need to be altered.
  */
-function hook_image_effects_text_overlay_text_alter(&$text, ConfigurableImageEffectBase $image_effect) {
+function hook_image_effects_text_overlay_text_alter(string &$text, ConfigurableImageEffectBase $image_effect): void {
   // Skip if the effect is not TextOverlayImageEffect or an alternative
   // implementation.
   if ($image_effect->getPluginId() !== "image_effects_text_overlay") {

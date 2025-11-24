@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\metatag\Functional;
 
-use Drupal\metatag\MetatagManager;
 use Drupal\metatag\Entity\MetatagDefaults;
+use Drupal\metatag\MetatagManager;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 
 /**
  * Tests the Metatag administration.
@@ -14,8 +14,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  */
 class MetatagAdminTest extends BrowserTestBase {
 
+  use FieldUiTestTrait;
   use MetatagHelperTrait;
-  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -25,7 +25,6 @@ class MetatagAdminTest extends BrowserTestBase {
     // @see testAvailableConfigEntities
     'block',
     'block_content',
-    'comment',
     'contact',
     'field_ui',
     'menu_link_content',
@@ -127,7 +126,7 @@ class MetatagAdminTest extends BrowserTestBase {
     drupal_flush_all_caches();
     $this->drupalGet('hit-a-404');
     $session->statusCodeEquals(404);
-    foreach ($values as $metatag => $value) {
+    foreach ($values as $value) {
       $processed_value = \Drupal::token()->replace($value);
       $session->responseContains($processed_value);
     }
@@ -190,7 +189,6 @@ class MetatagAdminTest extends BrowserTestBase {
     // Check through the values that are in the 'select' list, make sure that
     // unwanted items are not present.
     $this->assertArrayNotHasKey('block_content', $types, 'Custom block entities are not supported.');
-    $this->assertArrayNotHasKey('comment', $types, 'Comment entities are not supported.');
     $this->assertArrayNotHasKey('menu_link_content', $types, 'Menu link entities are not supported.');
     $this->assertArrayNotHasKey('shortcut', $types, 'Shortcut entities are not supported.');
     $this->assertArrayHasKey('node__page', $types, 'Nodes are supported.');
@@ -278,7 +276,7 @@ class MetatagAdminTest extends BrowserTestBase {
 
     // Create a test node.
     $node = $this->drupalCreateNode([
-      'title' => $this->t('Hello, world!'),
+      'title' => 'Hello, world!',
       'type' => 'article',
     ]);
 
@@ -318,7 +316,7 @@ class MetatagAdminTest extends BrowserTestBase {
     // performant than creating a node for every set of assertions.
     // @see BookTest::testDelete()
     $node = $this->drupalCreateNode([
-      'title' => $this->t('Hello, world!'),
+      'title' => 'Hello, world!',
       'type' => 'article',
     ]);
     $this->drupalGet('node/' . $node->id());
@@ -340,7 +338,7 @@ class MetatagAdminTest extends BrowserTestBase {
 
     // Confirm the fields load properly on the node/add/article page.
     $node = $this->drupalCreateNode([
-      'title' => $this->t('Hello, world!'),
+      'title' => 'Hello, world!',
       'type' => 'article',
     ]);
     $this->drupalGet('node/' . $node->id());
@@ -379,19 +377,8 @@ class MetatagAdminTest extends BrowserTestBase {
     $this->drupalLogin($account);
 
     // Add a Metatag field to the Article content type.
-    $this->drupalGet('admin/structure/types/manage/article/fields/add-field');
     $session = $this->assertSession();
-    $session->statusCodeEquals(200);
-    $edit = [
-      'new_storage_type' => 'metatag',
-      'label' => 'Meta tags',
-      'field_name' => 'meta_tags',
-    ];
-    $this->submitForm($edit, $this->t('Save and continue'));
-    $this->submitForm([], $this->t('Save field settings'));
-    $session->pageTextContains(strip_tags('Updated field Meta tags field settings.'));
-    $this->submitForm([], $this->t('Save settings'));
-    $session->pageTextContains(strip_tags('Saved Meta tags configuration.'));
+    $this->fieldUIAddNewField('admin/structure/types/manage/article', 'meta_tags', 'Metatag', 'metatag');
 
     // Try creating an article, confirm the fields are present. This should be
     // the node default values that are shown.

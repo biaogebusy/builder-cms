@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -19,9 +21,7 @@ use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 class ImageFormatterTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['file', 'image'];
 
@@ -58,7 +58,7 @@ class ImageFormatterTest extends FieldKernelTestBase {
 
     $this->entityType = 'entity_test';
     $this->bundle = $this->entityType;
-    $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->fieldName = $this->randomMachineName();
 
     FieldStorageConfig::create([
       'entity_type' => $this->entityType,
@@ -87,7 +87,7 @@ class ImageFormatterTest extends FieldKernelTestBase {
   /**
    * Tests the cache tags from image formatters.
    */
-  public function testImageFormatterCacheTags() {
+  public function testImageFormatterCacheTags(): void {
     // Create a test entity with the image field set.
     $entity = EntityTest::create([
       'name' => $this->randomMachineName(),
@@ -107,7 +107,7 @@ class ImageFormatterTest extends FieldKernelTestBase {
    *
    * @requires extension gd
    */
-  public function testImageFormatterSvg() {
+  public function testImageFormatterSvg(): void {
     // Install the default image styles.
     $this->installConfig(['image']);
 
@@ -154,9 +154,9 @@ class ImageFormatterTest extends FieldKernelTestBase {
     $this->assertEquals('medium', $build[$this->fieldName][0]['#image_style']);
     // We check that the image URL contains the expected style directory
     // structure.
-    $this->assertStringContainsString('styles/medium/public/test-image.png', $build[$this->fieldName][0]['#markup']);
-    $this->assertStringContainsString('width="220"', $build[$this->fieldName][0]['#markup']);
-    $this->assertStringContainsString('height="220"', $build[$this->fieldName][0]['#markup']);
+    $this->assertStringContainsString('styles/medium/public/test-image.png', (string) $build[$this->fieldName][0]['#markup']);
+    $this->assertStringContainsString('width="220"', (string) $build[$this->fieldName][0]['#markup']);
+    $this->assertStringContainsString('height="220"', (string) $build[$this->fieldName][0]['#markup']);
 
     // The second image is an SVG, which is not supported by the GD toolkit.
     // The image style should still be applied with its cache tags, but image
@@ -167,17 +167,17 @@ class ImageFormatterTest extends FieldKernelTestBase {
     $this->assertEquals('medium', $build[$this->fieldName][1]['#image_style']);
     // We check that the image URL does not contain the style directory
     // structure.
-    $this->assertStringNotContainsString('styles/medium/public/test-image.svg', $build[$this->fieldName][1]['#markup']);
+    $this->assertStringNotContainsString('styles/medium/public/test-image.svg', (string) $build[$this->fieldName][1]['#markup']);
     // Since we did not store original image dimensions, width and height
     // HTML attributes will not be present.
-    $this->assertStringNotContainsString('width', $build[$this->fieldName][1]['#markup']);
-    $this->assertStringNotContainsString('height', $build[$this->fieldName][1]['#markup']);
+    $this->assertStringNotContainsString('width', (string) $build[$this->fieldName][1]['#markup']);
+    $this->assertStringNotContainsString('height', (string) $build[$this->fieldName][1]['#markup']);
   }
 
   /**
    * Tests Image Formatter URL options handling.
    */
-  public function testImageFormatterUrlOptions() {
+  public function testImageFormatterUrlOptions(): void {
     $this->display->setComponent($this->fieldName, ['settings' => ['image_link' => 'content']]);
 
     // Create a test entity with the image field set.

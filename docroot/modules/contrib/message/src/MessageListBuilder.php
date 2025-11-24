@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -15,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @see \Drupal\Message\Entity\Message
  */
-class MessageListBuilder extends EntityListBuilder {
+final class MessageListBuilder extends EntityListBuilder {
 
   /**
    * The date service.
@@ -23,6 +24,13 @@ class MessageListBuilder extends EntityListBuilder {
    * @var \Drupal\Core\Datetime\DateFormatter
    */
   protected $dateService;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
 
   /**
    * Creates a Message ListBuilder.
@@ -35,15 +43,20 @@ class MessageListBuilder extends EntityListBuilder {
    *   The date service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation service.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    */
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityStorageInterface $storage,
     DateFormatter $date_service,
-    TranslationInterface $string_translation) {
+    TranslationInterface $string_translation,
+    LanguageManagerInterface $language_manager,
+  ) {
     parent::__construct($entity_type, $storage);
 
     $this->dateService = $date_service;
+    $this->languageManager = $language_manager;
     $this->setStringTranslation($string_translation);
   }
 
@@ -51,11 +64,12 @@ class MessageListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
+    return new self(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('date.formatter'),
-      $container->get('string_translation')
+      $container->get('string_translation'),
+      $container->get('language_manager')
     );
   }
 
@@ -80,7 +94,7 @@ class MessageListBuilder extends EntityListBuilder {
       ],
     ];
 
-    if (\Drupal::languageManager()->isMultilingual()) {
+    if ($this->languageManager->isMultilingual()) {
       $header['language_name'] = [
         'data' => $this->t('Language'),
         'class' => [RESPONSIVE_PRIORITY_LOW],

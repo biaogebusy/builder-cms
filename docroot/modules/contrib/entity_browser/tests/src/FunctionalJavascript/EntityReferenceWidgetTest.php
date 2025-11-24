@@ -97,9 +97,9 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->drupalGet('/node/add/article');
     $this->assertSession()->fieldExists('title[0][value]')->setValue('Referencing node 1');
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:1]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
+    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame();
     $this->assertTrue($this->assertSession()->waitForText('Walrus'));
     $this->assertSession()->buttonExists('Save')->press();
@@ -229,26 +229,30 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $replace_button->click();
     $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:3]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->wait(1000);
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     // Even in the AJAX-built markup for the newly selected element, the replace
     // button should be there.
     $this->assertSession()->elementExists('css', 'input[data-drupal-selector="edit-field-entity-reference1-current-items-0-replace-button"]');
     // Adding a new node to the selection, however, should make it disappear.
     $open_iframe_link = $this->assertSession()->elementExists('css', 'a[data-drupal-selector="edit-field-entity-reference1-entity-browser-entity-browser-link"]');
     $open_iframe_link->click();
-    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:1]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->wait(1000);
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
     $this->assertSession()->elementNotExists('css', 'input[data-drupal-selector="edit-field-entity-reference1-current-items-0-replace-button"]');
     $this->assertSession()->buttonExists('Save')->press();
     $this->assertSession()->pageTextContains('Article Referencing node 1 has been updated.');
@@ -259,14 +263,16 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->fieldExists('title[0][value]')->setValue('Referencing node 2');
     $open_iframe_link = $this->assertSession()->elementExists('css', 'a[data-drupal-selector="edit-field-entity-reference1-entity-browser-entity-browser-link"]');
     $open_iframe_link->click();
-    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:1]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->wait(1000);
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     $this->assertSession()->elementContains('css', '#edit-field-entity-reference1-wrapper', 'Alpaca');
     // All three buttons should be visible.
     $this->assertSession()->elementExists('css', 'input[data-drupal-selector="edit-field-entity-reference1-current-items-0-remove-button"]');
@@ -277,12 +283,10 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $replace_button->click();
     $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:2]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->wait(1000);
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
     $this->assertSession()->elementContains('css', '#edit-field-entity-reference1-wrapper', 'Referencing node 1');
 
     // Do the same as above but now with cardinality 2.
@@ -293,14 +297,16 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->fieldExists('title[0][value]')->setValue('Referencing node 3');
     $open_iframe_link = $this->assertSession()->elementExists('css', 'a[data-drupal-selector="edit-field-entity-reference1-entity-browser-entity-browser-link"]');
     $open_iframe_link->click();
-    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:1]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->wait(1000);
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     $this->assertSession()->elementContains('css', '#edit-field-entity-reference1-wrapper', 'Alpaca');
     // All three buttons should be visible.
     $this->assertSession()->elementExists('css', 'input[data-drupal-selector="edit-field-entity-reference1-current-items-0-remove-button"]');
@@ -311,12 +317,15 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $replace_button->click();
     $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:2]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->wait(1000);
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     $this->assertSession()->elementContains('css', '#edit-field-entity-reference1-wrapper', 'Referencing node 1');
 
     // Verify that if the user cannot edit the entity, the "Edit" button does
@@ -327,13 +336,16 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->drupalGet('node/add/article');
     $open_iframe_link = $this->assertSession()->elementExists('css', 'a[data-drupal-selector="edit-field-entity-reference1-entity-browser-entity-browser-link"]');
     $open_iframe_link->click();
-    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_node_view');
-    $this->waitForAjaxToFinish();
     $this->assertSession()->fieldExists('entity_browser_select[node:1]')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->getSession()->switchToIFrame();
     $this->waitForAjaxToFinish();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     $this->assertSession()->buttonNotExists('edit-field-entity-reference1-current-items-0-edit-button');
   }
 
@@ -481,11 +493,13 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->fieldExists('entity_browser_select[node:' . $daisy->id() . ']')->check();
     $this->assertSession()->fieldExists('entity_browser_select[node:' . $nick->id() . ']')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->waitForAjaxToFinish();
     $this->assertSession()->buttonExists('Use selected')->press();
-    $this->waitForAjaxToFinish();
+    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->switchToIFrame();
-    $this->waitForAjaxToFinish();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
 
     $correct_order = [
       1 => 'Gatsby',
@@ -510,11 +524,13 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $this->assertSession()->fieldExists('entity_browser_select[node:' . $easter_bunny->id() . ']')->check();
     $this->assertSession()->fieldExists('entity_browser_select[node:' . $pumpkin_king->id() . ']')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->waitForAjaxToFinish();
     $this->assertSession()->buttonExists('Use selected')->press();
     $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame();
-    $this->waitForAjaxToFinish();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
 
     // Close details 2.
     $this->assertSession()->elementExists('xpath', '(//summary)[2]')->click();
@@ -527,7 +543,6 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
     $item_selector = "$list_selector .item-container";
     $assert_session->elementsCount('css', $item_selector, 3);
     $this->sortableAfter("$item_selector:first-child", "$item_selector:nth-child(2)", $list_selector);
-    $this->waitForAjaxToFinish();
 
     $this->assertSession()->fieldExists('title[0][value]')->setValue('Hello World');
 
@@ -587,7 +602,7 @@ class EntityReferenceWidgetTest extends EntityBrowserWebDriverTestBase {
    * {@inheritdoc}
    */
   protected function sortableUpdate($item, $from, $to = NULL) {
-    list ($container) = explode(' ', $item, 2);
+    [$container] = explode(' ', $item, 2);
 
     $js = <<<END
 Drupal.entityBrowserEntityReference.entitiesReordered(document.querySelector("$container"));

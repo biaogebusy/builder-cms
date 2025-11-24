@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Config;
 
 use Drupal\Component\Uuid\Php;
@@ -42,15 +44,17 @@ class StorageComparerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->sourceStorage = $this->createMock('Drupal\Core\Config\StorageInterface');
     $this->targetStorage = $this->createMock('Drupal\Core\Config\StorageInterface');
 
     $this->sourceStorage->expects($this->atLeastOnce())
       ->method('getCollectionName')
-      ->will($this->returnValue(StorageInterface::DEFAULT_COLLECTION));
+      ->willReturn(StorageInterface::DEFAULT_COLLECTION);
     $this->targetStorage->expects($this->atLeastOnce())
       ->method('getCollectionName')
-      ->will($this->returnValue(StorageInterface::DEFAULT_COLLECTION));
+      ->willReturn(StorageInterface::DEFAULT_COLLECTION);
 
     $this->storageComparer = new StorageComparer($this->sourceStorage, $this->targetStorage);
   }
@@ -106,7 +110,7 @@ class StorageComparerTest extends UnitTestCase {
   /**
    * @covers ::createChangelist
    */
-  public function testCreateChangelistNoChange() {
+  public function testCreateChangelistNoChange(): void {
     $config_data = $this->getConfigData();
     $config_files = array_keys($config_data);
     $this->sourceStorage->expects($this->once())
@@ -137,7 +141,7 @@ class StorageComparerTest extends UnitTestCase {
   /**
    * @covers ::createChangelist
    */
-  public function testCreateChangelistCreate() {
+  public function testCreateChangelistCreate(): void {
     $target_data = $source_data = $this->getConfigData();
     unset($target_data['field.storage.node.body']);
     unset($target_data['field.field.node.article.body']);
@@ -176,7 +180,7 @@ class StorageComparerTest extends UnitTestCase {
   /**
    * @covers ::createChangelist
    */
-  public function testCreateChangelistDelete() {
+  public function testCreateChangelistDelete(): void {
     $target_data = $source_data = $this->getConfigData();
     unset($source_data['field.storage.node.body']);
     unset($source_data['field.field.node.article.body']);
@@ -215,7 +219,7 @@ class StorageComparerTest extends UnitTestCase {
   /**
    * @covers ::createChangelist
    */
-  public function testCreateChangelistUpdate() {
+  public function testCreateChangelistUpdate(): void {
     $target_data = $source_data = $this->getConfigData();
     $source_data['system.site']['title'] = 'Drupal New!';
     $source_data['field.field.node.article.body']['new_config_key'] = 'new data';
@@ -254,7 +258,7 @@ class StorageComparerTest extends UnitTestCase {
   /**
    * @covers ::createChangelist
    */
-  public function testDifferentCollections() {
+  public function testDifferentCollections(): void {
     $source = new MemoryStorage();
     $target = new MemoryStorage();
 

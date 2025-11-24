@@ -4,9 +4,11 @@ namespace Drupal\responsive_image\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\file\FileInterface;
 use Drupal\image\Plugin\Field\FieldFormatter\ImageFormatterBase;
@@ -17,18 +19,14 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 
 /**
  * Plugin for responsive image formatter.
- *
- * @FieldFormatter(
- *   id = "responsive_image",
- *   label = @Translation("Responsive image"),
- *   field_types = {
- *     "image",
- *   },
- *   quickedit = {
- *     "editor" = "image"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'responsive_image',
+  label: new TranslatableMarkup('Responsive image'),
+  field_types: [
+    'image',
+  ],
+)]
 class ResponsiveImageFormatter extends ImageFormatterBase {
 
   /**
@@ -61,7 +59,7 @@ class ResponsiveImageFormatter extends ImageFormatterBase {
    * Constructs a ResponsiveImageFormatter object.
    *
    * @param string $plugin_id
-   *   The plugin_id for the formatter.
+   *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -118,6 +116,9 @@ class ResponsiveImageFormatter extends ImageFormatterBase {
     return [
       'responsive_image_style' => '',
       'image_link' => '',
+      'image_loading' => [
+        'attribute' => 'lazy',
+      ],
     ] + parent::defaultSettings();
   }
 
@@ -125,6 +126,8 @@ class ResponsiveImageFormatter extends ImageFormatterBase {
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
+    $elements = parent::settingsForm($form, $form_state);
+
     $responsive_image_options = [];
     $responsive_image_styles = $this->responsiveImageStyleStorage->loadMultiple();
     uasort($responsive_image_styles, '\Drupal\responsive_image\Entity\ResponsiveImageStyle::sort');
@@ -146,6 +149,29 @@ class ResponsiveImageFormatter extends ImageFormatterBase {
         '#markup' => $this->linkGenerator->generate($this->t('Configure Responsive Image Styles'), new Url('entity.responsive_image_style.collection')),
         '#access' => $this->currentUser->hasPermission('administer responsive image styles'),
       ],
+    ];
+
+    $image_loading = $this->getSetting('image_loading');
+    $elements['image_loading'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Image loading'),
+      '#weight' => 10,
+      '#description' => $this->t('Lazy render images with native image loading attribute (<em>loading="lazy"</em>). This improves performance by allowing browsers to lazily load images. See <a href="@url">Lazy loading</a>.', [
+        '@url' => 'https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading#images_and_iframes',
+      ]),
+    ];
+    $loading_attribute_options = [
+      'lazy' => $this->t('Lazy'),
+      'eager' => $this->t('Eager'),
+    ];
+    $elements['image_loading']['attribute'] = [
+      '#title' => $this->t('Lazy loading attribute'),
+      '#type' => 'select',
+      '#default_value' => $image_loading['attribute'],
+      '#options' => $loading_attribute_options,
+      '#description' => $this->t('Select the lazy loading attribute for images. <a href=":link">Learn more.</a>', [
+        ':link' => 'https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes',
+      ]),
     ];
 
     $link_types = [
@@ -186,7 +212,12 @@ class ResponsiveImageFormatter extends ImageFormatterBase {
       $summary[] = $this->t('Select a responsive image style.');
     }
 
-    return $summary;
+    $image_loading = $this->getSetting('image_loading');
+    $summary[] = $this->t('Loading attribute: @attribute', [
+      '@attribute' => $image_loading['attribute'],
+    ]);
+
+    return array_merge($summary, parent::settingsSummary());
   }
 
   /**
@@ -238,6 +269,9 @@ class ResponsiveImageFormatter extends ImageFormatterBase {
       $item = $file->_referringItem;
       $item_attributes = $item->_attributes;
       unset($item->_attributes);
+
+      $image_loading_settings = $this->getSetting('image_loading');
+      $item_attributes['loading'] = $image_loading_settings['attribute'];
 
       $elements[$delta] = [
         '#theme' => 'responsive_image_formatter',

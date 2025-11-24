@@ -134,7 +134,7 @@ interface WebformHelpManagerInterface {
    * @param string $video_id
    *   Video id.
    * @param string|null $video_display
-   *   Video displa type.
+   *   Video display type.
    * @param string|null $title
    *   Link title.
    * @param array $options

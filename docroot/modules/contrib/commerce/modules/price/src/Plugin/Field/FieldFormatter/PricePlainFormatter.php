@@ -3,24 +3,23 @@
 namespace Drupal\commerce_price\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_price_plain' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_price_plain",
- *   label = @Translation("Plain"),
- *   field_types = {
- *     "commerce_price"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_price_plain",
+  label: new TranslatableMarkup("Plain"),
+  field_types: ["commerce_price"],
+)]
 class PricePlainFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**

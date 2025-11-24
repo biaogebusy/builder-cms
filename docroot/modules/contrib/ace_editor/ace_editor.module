@@ -4,6 +4,28 @@
  * @file
  * This file is used to write hooks that used in the module.
  */
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function ace_editor_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the ace_editor module.
+    case 'help.page.ace_editor':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Ace is a code editor written in JavaScript, allowing you to edit HTML, PHP and JavaScript (and more). It provides syntax highlighting, proper indentation, keyboard shortcuts, find and replace (including regular expressions).') . '</p>';
+      $output .= '<p>' . t('This module integrates the Ace editor into Drupal\'s node/block edit forms, for editing raw HTML, PHP, JS, etc... in a familiar way..') . '</p>';
+      $output .= '<p>' . t('It supports:') . '</p>';
+      $output .= '<ul>' . t('<li>node edit forms, including summary</li>') . '</ul>';
+      $output .= '<ul>' . t('<li>blocks edit forms</li>') . '</ul>';
+      $output .= '<p>' . t('It also provides a display formatter, along with a text filter and an API to embed and show code snippets in your content.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
 
 /**
  * Verifies that Ace library is present.
@@ -17,8 +39,8 @@ function ace_editor_lib_path() {
   $paths_to_check = [
     '/libraries/ace',
     '/libraries/ace-builds',
-    '/' . drupal_get_path('module', 'ace_editor') . '/libraries/',
-    '/' . drupal_get_path('profile', \Drupal::installProfile()) . '/libraries/ace',
+    '/' . \Drupal::service('extension.list.module')->getPath('ace_editor') . '/libraries',
+    '/' . \Drupal::service('extension.list.profile')->getPath(\Drupal::installProfile()) . '/libraries/ace',
   ];
 
   foreach ($paths_to_check as $path) {
@@ -74,7 +96,7 @@ function ace_editor_library_info_alter(&$libraries, $extension) {
     $library_path = ace_editor_lib_path();
     $libraries['primary']['js'][$library_path . 'ace.js'] = ['weight' => -2];
     $config = \Drupal::config('ace_editor.settings')->get();
-    if ($config['auto_complete']) {
+    if (isset($config['auto_complete'])) {
       $libraries['primary']['js'][$library_path . 'ext-language_tools.js'] = ['weight' => -2];
     }
     $libraries['formatter']['js'][$library_path . 'ace.js'] = ['weight' => -2];

@@ -27,6 +27,9 @@ entity_print_engine_pdf:
     default_paper_orientation:
       type: string
       label: 'Paper Orientation'
+    dpi:
+      type: number
+      label: 'DPI'
     username:
       type: string
       label: 'HTTP Auth username'
@@ -70,6 +73,9 @@ entity_print_print_engine.dompdf:
     verify_peer_name:
       type: boolean
       label: 'Verify Peer Name'
+    disable_log:
+      type: boolean
+      label: 'Disable DomPdf logging'
 
 entity_print_print_engine.phpwkhtmltopdf:
   type: entity_print_engine_pdf

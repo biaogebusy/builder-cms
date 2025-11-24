@@ -3,6 +3,7 @@
 namespace Drupal\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -18,8 +19,9 @@ use Drupal\Core\Render\Element;
  * - #pattern: A string for the native HTML5 pattern attribute.
  *
  * Usage example:
+ *
  * @code
- * $form['title'] = array(
+ * $form['title'] = [
  *   '#type' => 'textfield',
  *   '#title' => $this->t('Subject'),
  *   '#default_value' => $node->title,
@@ -27,22 +29,14 @@ use Drupal\Core\Render\Element;
  *   '#maxlength' => 128,
  *   '#pattern' => 'some-prefix-[a-z]+',
  *   '#required' => TRUE,
- * );
+ * ];
  * @endcode
  *
- * @see \Drupal\Core\Render\Element\Color
- * @see \Drupal\Core\Render\Element\Email
- * @see \Drupal\Core\Render\Element\MachineName
- * @see \Drupal\Core\Render\Element\Number
- * @see \Drupal\Core\Render\Element\Password
- * @see \Drupal\Core\Render\Element\PasswordConfirm
- * @see \Drupal\Core\Render\Element\Range
- * @see \Drupal\Core\Render\Element\Tel
- * @see \Drupal\Core\Render\Element\Url
- *
- * @FormElement("textfield")
+ * @see \Drupal\Core\Render\Element
+ * @see \Drupal\Core\Render\Element\Textarea
  */
-class Textfield extends FormElement {
+#[FormElement('textfield')]
+class Textfield extends FormElementBase {
 
   /**
    * {@inheritdoc}

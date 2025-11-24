@@ -47,9 +47,11 @@
       var element = this;
 
       // Remove buttons created earlier.
+      // cspell:disable-next-line addnew
       $('.shs-addnew-container', element.app.container).remove();
 
       // Set default classes and clear content.
+      // cspell:disable-next-line addnew
       element.$el.addClass('shs-addnew-container')
               .html('');
 

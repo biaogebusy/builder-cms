@@ -1,17 +1,6 @@
-# Maintainers.
-Colan
-colan
-~ergonlogic
-Fieldto
-Gervais
-~josephleon
-Laventure
-~llamech
-~mparker
-Seonaid
-~spiderman
-~szhu
+# Machine names.
+autocollapse
 
 # Misc.
 addmore
-autocollapse
+Fieldto

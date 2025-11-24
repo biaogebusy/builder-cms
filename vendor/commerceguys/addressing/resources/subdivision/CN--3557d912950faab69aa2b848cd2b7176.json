@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Lienchiang County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beigan Township": {
+			"local_name": "北竿鄉"
+		},
+		"Dongyin Township": {
+			"local_name": "東引鄉"
+		},
+		"Juguang Township": {
+			"local_name": "莒光鄉"
+		},
+		"Nangan Township": {
+			"local_name": "南竿鄉"
+		}
+	}
+}

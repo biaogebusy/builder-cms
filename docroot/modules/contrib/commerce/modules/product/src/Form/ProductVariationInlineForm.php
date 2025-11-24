@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_product\Form;
 
-use Drupal\commerce\EntityHelper;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\commerce\EntityHelper;
 use Drupal\inline_entity_form\Form\EntityInlineForm;
 
 /**

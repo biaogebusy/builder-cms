@@ -39,19 +39,6 @@ class PhoneNumberSettingsListBuilder extends ConfigEntityListBuilder {
   protected $time;
 
   /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('entity_type.manager')->getStorage('sms_phone_number_verification'),
-      $container->get('sms.phone_number.verification'),
-      $container->get('datetime.time'),
-    );
-  }
-
-  /**
    * Constructs a new PhoneNumberSettingsListBuilder.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -70,6 +57,19 @@ class PhoneNumberSettingsListBuilder extends ConfigEntityListBuilder {
     $this->phoneNumberVerificationStorage = $phone_number_verification_storage;
     $this->phoneNumberVerificationProvider = $phone_number_verification_provider;
     $this->time = $time;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('entity_type.manager')->getStorage('sms_phone_number_verification'),
+      $container->get('sms.phone_number.verification'),
+      $container->get('datetime.time'),
+    );
   }
 
   /**
@@ -145,6 +145,7 @@ class PhoneNumberSettingsListBuilder extends ConfigEntityListBuilder {
   protected function buildPhoneNumberVerificationQuery($entity_type_id, $bundle) {
     return $this->phoneNumberVerificationStorage
       ->getQuery()
+      ->accessCheck(TRUE)
       ->condition('entity__target_type', $entity_type_id)
       ->condition('bundle', $bundle);
   }

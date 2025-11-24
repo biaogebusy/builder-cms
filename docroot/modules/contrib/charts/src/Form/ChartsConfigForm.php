@@ -5,12 +5,14 @@ namespace Drupal\charts\Form;
 use Drupal\charts\ChartManager;
 use Drupal\charts\DependenciesCalculatorTrait;
 use Drupal\charts\TypeManager;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Serialization\Yaml;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -49,10 +51,19 @@ class ChartsConfigForm extends ConfigFormBase {
   protected $moduleExtensionList;
 
   /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
    * Constructs a new ChartsConfigForm.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Config factory.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   Typed config manager.
    * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $cache_tags_invalidator
    *   Cache tag invalidator.
    * @param \Drupal\charts\ChartManager|null $chart_plugin_manager
@@ -61,15 +72,47 @@ class ChartsConfigForm extends ConfigFormBase {
    *   The chart type plugin manager.
    * @param \Drupal\Core\Extension\ModuleExtensionList|null $module_extension_list
    *   The module extension list.
+   * @param \Drupal\Core\File\FileSystemInterface|null $file_system
+   *   The file system service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, CacheTagsInvalidatorInterface $cache_tags_invalidator, ChartManager $chart_plugin_manager = NULL, TypeManager $chart_type_plugin_manager = NULL, ModuleExtensionList $module_extension_list = NULL) {
-    parent::__construct($config_factory);
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    TypedConfigManagerInterface $typedConfigManager,
+    CacheTagsInvalidatorInterface $cache_tags_invalidator,
+    ?ChartManager $chart_plugin_manager = NULL,
+    ?TypeManager $chart_type_plugin_manager = NULL,
+    ?ModuleExtensionList $module_extension_list = NULL,
+    ?FileSystemInterface $file_system = NULL,
+  ) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->cacheTagsInvalidator = $cache_tags_invalidator;
-    // @todo Implement full if statement for optional parameters, and add
-    // deprecation warnings when they are not passed.
-    $this->chartPluginManager = $chart_plugin_manager ?: \Drupal::service('plugin.manager.charts');
-    $this->chartTypePluginManager = $chart_type_plugin_manager ?: \Drupal::service('plugin.manager.charts_type');
-    $this->moduleExtensionList = $module_extension_list ?: \Drupal::service('extension.list.module');
+
+    if (empty($chart_plugin_manager)) {
+      // @phpstan-ignore-next-line
+      $chart_plugin_manager = \Drupal::service('plugin.manager.charts');
+      @trigger_error('Calling ChartsConfigForm::__construct() without the $chart_plugin_manager as an instance of ChartManager is deprecated in charts:5.1.6 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3518027', E_USER_DEPRECATED);
+    }
+    if (empty($chart_type_plugin_manager)) {
+      // @phpstan-ignore-next-line
+      $chart_type_plugin_manager = \Drupal::service('plugin.manager.charts_type');
+      @trigger_error('Calling ChartsConfigForm::__construct() without the $chart_type_plugin_manager as an instance of TypeManager is deprecated in charts:5.1.6 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3518027', E_USER_DEPRECATED);
+
+    }
+    if (empty($module_extension_list)) {
+      // @phpstan-ignore-next-line
+      $module_extension_list = \Drupal::service('extension.list.module');
+      @trigger_error('Calling ChartsConfigForm::__construct() without the $module_extension_list as an instance of ModuleExtensionList is deprecated in charts:5.1.6 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3518027', E_USER_DEPRECATED);
+    }
+    if (empty($file_system)) {
+      // @phpstan-ignore-next-line
+      $file_system = \Drupal::service('file_system');
+      @trigger_error('Calling ChartsConfigForm::__construct() without the $file_system as an instance of FileSystemInterface is deprecated in charts:5.1.6 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3518027', E_USER_DEPRECATED);
+    }
+
+    $this->chartPluginManager = $chart_plugin_manager;
+    $this->chartTypePluginManager = $chart_type_plugin_manager;
+    $this->moduleExtensionList = $module_extension_list;
+    $this->fileSystem = $file_system;
   }
 
   /**
@@ -78,10 +121,12 @@ class ChartsConfigForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('cache_tags.invalidator'),
       $container->get('plugin.manager.charts'),
       $container->get('plugin.manager.charts_type'),
-      $container->get('extension.list.module')
+      $container->get('extension.list.module'),
+      $container->get('file_system'),
     );
   }
 
@@ -182,7 +227,7 @@ class ChartsConfigForm extends ConfigFormBase {
   public function submitReset(array &$form, FormStateInterface $form_state) {
     $path = $this->moduleExtensionList->getPath('charts');
     $default_install_settings_file = $path . '/config/install/charts.settings.yml';
-    if (!file_exists($default_install_settings_file)) {
+    if (!$this->fileSystem->realpath($default_install_settings_file)) {
       $this->messenger()->addWarning($this->t('We could not reset the configuration to default because the default settings file does not exist. Please re-download the charts module files.'));
       return;
     }

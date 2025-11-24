@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -53,13 +55,13 @@ class JsonApiFunctionalDateFieldTest extends JsonApiFunctionalTestBase {
   /**
    * Tests the GET method.
    */
-  public function testRead() {
+  public function testRead(): void {
     /** @var \Drupal\Core\Datetime\DateFormatterInterface $date_formatter */
     $date_formatter = $this->container->get('date.formatter');
 
-    $timestamp_1 = '5000000';
-    $timestamp_2 = '6000000';
-    $timestamp_3 = '7000000';
+    $timestamp_1 = 5000000;
+    $timestamp_2 = 6000000;
+    $timestamp_3 = 7000000;
     // Expected: node 1.
     $timestamp_smaller_than_value = $timestamp_2;
     // Expected: node 1 and node 2.

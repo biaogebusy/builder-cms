@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_tools\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -9,7 +11,7 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group migrate_tools
  */
-class MigrateListBuilderTest extends BrowserTestBase {
+final class MigrateListBuilderTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
@@ -43,7 +45,7 @@ class MigrateListBuilderTest extends BrowserTestBase {
   /**
    * Test migrate UI list page with default migrations.
    */
-  public function testMigrateListBuilderDefault() {
+  public function testMigrateListBuilderDefault(): void {
     // List migrations from default group.
     $this->drupalGet('/admin/structure/migrate/manage/default/migrations');
     $this->assertSession()->statusCodeEquals(200);
@@ -52,7 +54,7 @@ class MigrateListBuilderTest extends BrowserTestBase {
   /**
    * Test migrate UI list page with disabled migrations.
    */
-  public function testMigrateListBuilderDisabled() {
+  public function testMigrateListBuilderDisabled(): void {
     // List migrations containing disabled migrations.
     $this->drupalGet('/admin/structure/migrate/manage/disabled/migrations');
     $this->assertSession()->statusCodeEquals(200);

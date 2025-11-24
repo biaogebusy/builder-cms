@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Media;
 
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Theme\Attributes;
 use Drupal\Core\Cache\Cache;
+use Drupal\blazy\Theme\Attributes;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides responsive image utilities.
@@ -132,7 +132,7 @@ class BlazyResponsiveImage {
   public static function dimensions(
     array &$settings,
     $resimage = NULL,
-    $initial = FALSE
+    $initial = FALSE,
   ): void {
     $blazies    = $settings['blazies'];
     $dimensions = $blazies->get('resimage.dimensions', []);
@@ -235,11 +235,15 @@ class BlazyResponsiveImage {
     $ratio    = NULL;
     $data_src = $placeholder;
 
-    // If not enabled via UI, by default, always 1px, or the custom Placeholder.
-    // Image style will be prioritized as fallback to have different fallbacks
-    // per field relevant for various aspect ratios rather than the one and only
-    // fallback for the entire site via Responsive image UI.
-    if ($blazies->ui('one_pixel') || !empty($settings['image_style'])) {
+    // Global Responsive image 1px option should not block, so to get a proper
+    // Fallback image ready as required when Image style is left empty.
+    // This way no original image is passed into Image style which will screw up
+    // image dimensions.
+    // Image style, when not empty, should block, and will be prioritized as
+    // fallback to have different fallbacks per field relevant for various
+    // aspect ratios rather than the one and only fallback for the entire site
+    // via Responsive image UI.
+    if (!empty($settings['image_style'])) {
       return;
     }
 
@@ -375,7 +379,9 @@ class BlazyResponsiveImage {
       $func1 = '_responsive_image_build_source_attributes';
       $func2 = '_responsive_image_image_style_url';
 
+      /* @phpstan-ignore-next-line */
       if (is_callable($func1)) {
+        /* @phpstan-ignore-next-line */
         if (is_callable($func2)) {
           $fallback = $func2($id, $uri);
         }

@@ -41,7 +41,7 @@
               settings.paragraphs_tabs_widget_vertical_tabs[tabsGroup]
                 .summarySelector;
             rawSummary =
-              $(currentTabSummarySelector, summaryContext).val() || '';
+              $(currentTabSummarySelector, summaryContext)[0].value || '';
             summary = Drupal.checkPlain(rawSummary);
           }
 

@@ -471,6 +471,9 @@ interface WebformHandlerInterface extends PluginInspectionInterface, Configurabl
   /**
    * Acts on a saved webform submission before the insert or update hook is invoked.
    *
+   * Implementing a postSave at your side be careful because if your code breaks
+   * the PHP execution it may prevent the sql transaction from committing.
+   *
    * @param \Drupal\webform\WebformSubmissionInterface $webform_submission
    *   A webform submission.
    * @param bool $update
@@ -529,7 +532,7 @@ interface WebformHandlerInterface extends PluginInspectionInterface, Configurabl
    *   The account trying to access the entity.
    *
    * @return \Drupal\Core\Core\AccessResultInterface
-   *   The result of the access check. No option returns a nuetral result.
+   *   The result of the access check. No option returns a neutral result.
    */
   public function access(WebformSubmissionInterface $webform_submission, $operation, AccountInterface $account = NULL);
 

@@ -37,13 +37,23 @@ function autosave_form_form_alter(&$form, FormStateInterface $form_state, $form_
   $active_on = \Drupal::configFactory()->get('autosave_form.settings')->get('active_on');
   $form_object = $form_state->getFormObject();
 
+  if (!($form_object instanceof EntityFormInterface)) {
+    return;
+  }
+  $entity = $form_object->getEntity();
+  $entity_type_id = $entity->getEntityTypeId();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  if (!$entity_type_manager->hasHandler($entity_type_id, 'autosave_form')) {
+    return;
+  }
+  $autosave_form_handler = $entity_type_manager->getHandler($entity_type_id, 'autosave_form');
+  if (!($autosave_form_handler instanceof AutosaveEntityFormHandlerInterface)) {
+    return;
+  }
   if ($form_object instanceof ContentEntityFormInterface) {
     if (!$active_on['content_entity_forms']) {
       return;
     }
-
-    $entity = $form_object->getEntity();
-    $entity_type_id = $entity->getEntityTypeId();
     $allowed_content_entity_types = \Drupal::configFactory()
       ->get('autosave_form.settings')
       ->get('allowed_content_entity_types');
@@ -59,12 +69,10 @@ function autosave_form_form_alter(&$form, FormStateInterface $form_state, $form_
       }
     }
   }
-  elseif ($form_object instanceof EntityFormInterface) {
-    if (!$active_on['config_entity_forms']) {
-      return;
-    }
+  elseif (!$active_on['config_entity_forms']) {
+    return;
   }
-  else {
+  if ($entity->isNew() && !\Drupal::config('autosave_form.settings')->get('allowed_new')) {
     return;
   }
 
@@ -75,23 +83,15 @@ function autosave_form_form_alter(&$form, FormStateInterface $form_state, $form_
   // view, because e.g. a block is using an entity form.
   $route = \Drupal::routeMatch()->getRouteObject();
   if ($route && ($route_defaults = $route->getDefaults()) && isset($route_defaults['_entity_form'])) {
-    list($entity_type_id, $form_op) = explode('.', $route_defaults['_entity_form']);
-    $entity = $form_object->getEntity();
-    if (($entity->getEntityTypeId() != $entity_type_id) || ($form_object->getOperation() != $form_op)) {
+    list($form_entity_type_id, $form_op) = explode('.', $route_defaults['_entity_form']);
+    if (($entity_type_id !== $form_entity_type_id) || ($form_object->getOperation() !== $form_op)) {
       return;
     }
   }
   else {
     return;
   }
-
-  $entity_type_manager = \Drupal::entityTypeManager();
-  if ($entity_type_manager->hasHandler($entity->getEntityTypeId(), 'autosave_form')) {
-    $autosave_form_handler = $entity_type_manager->getHandler($entity->getEntityTypeId(), 'autosave_form');
-    if ($autosave_form_handler instanceof AutosaveEntityFormHandlerInterface) {
-      $autosave_form_handler->formAlter($form, $form_state);
-    }
-  }
+  $autosave_form_handler->formAlter($form, $form_state);
 }
 
 /**
@@ -143,4 +143,25 @@ function autosave_form_user_update(EntityInterface $user) {
     $autosave_entity_form_storage = \Drupal::service('autosave_form.entity_form_storage');
     $autosave_entity_form_storage->purgeAutosavedEntitiesStates(NULL, NULL, $user->id());
   }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function autosave_form_entity_insert(EntityInterface $entity) {
+  /** @var \Drupal\autosave_form\Storage\AutosaveEntityFormStorageInterface $autosave_entity_form_storage */
+  $autosave_entity_form_storage = \Drupal::service('autosave_form.entity_form_storage');
+
+  $uid = \Drupal::currentUser()->id();
+  $entity_type = $entity->getEntityType();
+  $autosave_session_id = ($entity_type->hasHandlerClass('autosave_form'))
+    && ($class = $entity_type->getHandlerClass('autosave_form'))
+    ? $class::getAutosaveSessionID($entity) : NULL;
+  if (!\Drupal::config('autosave_form.settings')->get('allowed_new')) {
+    return;
+  }
+  // If we can get the session id, just delete drafts for this session.
+  // We explicitly set entity_id to 0, because entity is not new and has id
+  // already.
+  $autosave_entity_form_storage->purgeAutosavedEntityState($entity->getEntityTypeId(), 0, $autosave_session_id, NULL, NULL, $uid);
 }

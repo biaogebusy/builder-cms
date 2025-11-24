@@ -25,7 +25,7 @@ use Drupal\search_api\Plugin\IndexPluginInterface;
  * combined item IDs (that also include the datasource ID), but only the raw,
  * datasource-specific IDs.
  *
- * @see \Drupal\search_api\Annotation\SearchApiDatasource
+ * @see \Drupal\search_api\Attribute\SearchApiDatasource
  * @see \Drupal\search_api\Datasource\DatasourcePluginManager
  * @see \Drupal\search_api\Datasource\DatasourcePluginBase
  * @see plugin_api
@@ -144,7 +144,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    *
    * @see https://www.drupal.org/node/3051902
    */
-  public function checkItemAccess(ComplexDataInterface $item, AccountInterface $account = NULL);
+  public function checkItemAccess(ComplexDataInterface $item, ?AccountInterface $account = NULL);
 
   /**
    * Checks whether a user has permission to view the given item.
@@ -158,7 +158,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function getItemAccessResult(ComplexDataInterface $item, AccountInterface $account = NULL);
+  public function getItemAccessResult(ComplexDataInterface $item, ?AccountInterface $account = NULL);
 
   /**
    * Returns the available view modes for this datasource.
@@ -167,7 +167,7 @@ interface DatasourceInterface extends IndexPluginInterface {
    *   (optional) The bundle for which to return the available view modes. Or
    *   NULL to return all view modes for this datasource, across all bundles.
    *
-   * @return string[]
+   * @return array<string, string|\Stringable>
    *   An associative array of view mode labels, keyed by the view mode ID. Can
    *   be empty if it isn't possible to view items of this datasource.
    */
@@ -299,15 +299,15 @@ interface DatasourceInterface extends IndexPluginInterface {
    *
    * @see \Drupal\search_api\Datasource\DatasourceInterface::canContainEntityReferences()
    */
-  public function getAffectedItemsForEntityChange(EntityInterface $entity, array $foreign_entity_relationship_map, EntityInterface $original_entity = NULL): array;
+  public function getAffectedItemsForEntityChange(EntityInterface $entity, array $foreign_entity_relationship_map, ?EntityInterface $original_entity = NULL): array;
 
   /**
    * Retrieves any dependencies of the given fields.
    *
-   * @param string[] $fields
+   * @param array<string, string> $fields
    *   An array of property paths on this datasource, keyed by field IDs.
    *
-   * @return string[][][]
+   * @return array<string, array<string, list<string>>>
    *   An associative array containing the dependencies of the given fields. The
    *   array is keyed by field ID and dependency type, the values are arrays
    *   with dependency names.

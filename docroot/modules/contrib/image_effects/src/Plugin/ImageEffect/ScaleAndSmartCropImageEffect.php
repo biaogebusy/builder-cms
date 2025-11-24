@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 
 /**
  * Scale and crop an image preserving the portion with the most entropy.
- *
- * @ImageEffect(
- *   id = "image_effects_scale_and_smart_crop",
- *   label = @Translation("Scale and Smart Crop"),
- *   description = @Translation("Similar to Scale and Crop, but preserves the portion of the image with the most entropy.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_scale_and_smart_crop',
+  label: new TranslatableMarkup('Scale and Smart Crop'),
+  description: new TranslatableMarkup('Similar to Scale and Crop, but preserves the portion of the image with the most entropy.'),
+)]
 class ScaleAndSmartCropImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -128,7 +131,11 @@ class ScaleAndSmartCropImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
     if (!$dimensions['width'] || !$dimensions['height']) {
+      $dimensions['width'] = $dimensions['height'] = NULL;
       return;
     }
     if ($this->configuration['simulate']) {
@@ -139,9 +146,7 @@ class ScaleAndSmartCropImageEffect extends ConfigurableImageEffectBase {
       $dimensions['height'] = (int) round($dimensions['height'] * $scaleFactor);
     }
     else {
-      $d = ImageUtility::resizeDimensions($dimensions['width'], $dimensions['height'], $this->configuration['width'], $this->configuration['height']);
-      $dimensions['width'] = $d['width'];
-      $dimensions['height'] = $d['height'];
+      ['width' => $dimensions['width'], 'height' => $dimensions['height']] = ImageUtility::resizeDimensions($dimensions['width'], $dimensions['height'], $this->configuration['width'], $this->configuration['height']);
     }
   }
 

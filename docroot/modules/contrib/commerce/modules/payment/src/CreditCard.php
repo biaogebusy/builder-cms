@@ -288,6 +288,7 @@ final class CreditCard {
       'B' => new TranslatableMarkup('International "A"'),
       'C' => new TranslatableMarkup('International "N"'),
       'D' => new TranslatableMarkup('International "X"'),
+      // cspell:disable-next-line
       'E' => new TranslatableMarkup('Not allowed for MOTO (Internet/Phone) transactions'),
       'F' => new TranslatableMarkup('UK-specific "X"'),
       'G' => new TranslatableMarkup('Global Unavailable'),

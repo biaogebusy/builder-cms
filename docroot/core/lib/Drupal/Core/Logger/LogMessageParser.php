@@ -25,13 +25,20 @@ class LogMessageParser implements LogMessageParserInterface {
         // Keys are not prefixed with anything according to PSR3 specs.
         // If the message is "User {username} created" the variable key will be
         // just "username".
-        if (strpos($message, '@' . $key) !== FALSE) {
+        if (str_contains($message, '@' . $key)) {
           $key = '@' . $key;
         }
       }
+      // To be considered a valid placeholder, the key should be in
+      // \Drupal\Component\Render\FormattableMarkup style and the variable
+      // should be a string, number, or \Stringable object. For historical
+      // reasons, Boolean and NULL placeholders are also allowed; NULL
+      // placeholders are deprecated and may throw an error in the future.
+      // @see https://www.drupal.org/node/3318826
       if (!empty($key) && ($key[0] === '@' || $key[0] === '%' || $key[0] === ':')) {
-        // The key is now in \Drupal\Component\Render\FormattableMarkup style.
-        $variables[$key] = $variable;
+        if (is_scalar($variable) || is_null($variable) || $variable instanceof \Stringable) {
+          $variables[$key] = $variable;
+        }
       }
     }
 

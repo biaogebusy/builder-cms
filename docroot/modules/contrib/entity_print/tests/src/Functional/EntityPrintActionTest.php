@@ -75,6 +75,7 @@ class EntityPrintActionTest extends BrowserTestBase {
     // A meta refresh is inserted when using the test PDF engine, but this is
     // not present for real engines. So the test can assert the engine is
     // invoked, do not follow the meta refresh.
+    return FALSE;
   }
 
 }

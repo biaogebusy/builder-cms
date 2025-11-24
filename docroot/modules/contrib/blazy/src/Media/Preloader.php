@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Media;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\Utility\CheckItem;
-use Drupal\Component\Utility\UrlHelper;
 
 /**
  * Provides preload utility.
@@ -91,8 +91,14 @@ class Preloader {
 
     $empties = $images = [];
     foreach ($items as $key => $item) {
+      // Priotize image file, then Media, etc.
+      $entity = is_object($item) && isset($item->entity) ? $item->entity : NULL;
+      if (!$entity) {
+        $entity = $entities[$key] ?? NULL;
+      }
+
       // Respects empty URI to keep indices intact for correct mixed media.
-      $image = $func($item, $entities[$key] ?? NULL, $key);
+      $image = $func($item, $entity, $key);
       $images[] = $image;
 
       if (empty($image['uri'])) {

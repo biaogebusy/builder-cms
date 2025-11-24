@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD",
+		"Yangjiang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Jiangcheng Qu": {
+			"local_name": "江城区"
+		},
+		"Yangchun Shi": {
+			"local_name": "阳春市"
+		},
+		"Yangdong Xian": {
+			"local_name": "阳东县"
+		},
+		"Yangxi Xian": {
+			"local_name": "阳西县"
+		}
+	}
+}

@@ -6,6 +6,9 @@ use Drupal\big_pipe\Render\BigPipeMarkup;
 use Drupal\big_pipe_test\EventSubscriber\BigPipeTestSubscriber;
 use Drupal\Core\Security\TrustedCallbackInterface;
 
+/**
+ * Returns responses for Big Pipe routes.
+ */
 class BigPipeTestController implements TrustedCallbackInterface {
 
   /**
@@ -39,13 +42,16 @@ class BigPipeTestController implements TrustedCallbackInterface {
     // happens to not be valid HTML.
     $build['edge_case__invalid_html'] = $cases['edge_case__invalid_html']->renderArray;
 
-    // 5. Edge case: non-#lazy_builder placeholder.
+    // 5. Edge case: non-#lazy_builder placeholder that suspends.
+    $build['edge_case__html_non_lazy_builder_suspend'] = $cases['edge_case__html_non_lazy_builder_suspend']->renderArray;
+
+    // 6. Edge case: non-#lazy_builder placeholder.
     $build['edge_case__html_non_lazy_builder'] = $cases['edge_case__html_non_lazy_builder']->renderArray;
 
-    // 6. Exception: #lazy_builder that throws an exception.
+    // 7. Exception: #lazy_builder that throws an exception.
     $build['exception__lazy_builder'] = $cases['exception__lazy_builder']->renderArray;
 
-    // 7. Exception: placeholder that causes response filter to throw exception.
+    // 8. Exception: placeholder that causes response filter to throw exception.
     $build['exception__embedded_response'] = $cases['exception__embedded_response']->renderArray;
 
     return $build;
@@ -83,6 +89,37 @@ class BigPipeTestController implements TrustedCallbackInterface {
   }
 
   /**
+   * A page with placeholder preview.
+   *
+   * @return array[]
+   */
+  public function placeholderPreview() {
+    return [
+      'user_container' => [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'placeholder-preview-twig-container'],
+        'user' => [
+          '#lazy_builder' => ['user.toolbar_link_builder:renderDisplayName', []],
+          '#create_placeholder' => TRUE,
+        ],
+      ],
+      'user_links_container' => [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'placeholder-render-array-container'],
+        'user_links' => [
+          '#lazy_builder' => [static::class . '::helloOrHi', []],
+          '#create_placeholder' => TRUE,
+          '#lazy_builder_preview' => [
+            '#attributes' => ['id' => 'render-array-preview'],
+            '#type' => 'container',
+            '#markup' => 'There is a lamb and there is a puppy',
+          ],
+        ],
+      ],
+    ];
+  }
+
+  /**
    * #lazy_builder callback; builds <time> markup with current time.
    *
    * Note: does not actually use current time, that would complicate testing.
@@ -97,13 +134,31 @@ class BigPipeTestController implements TrustedCallbackInterface {
   }
 
   /**
-   * #lazy_builder callback; says "hello" or "yarhar".
+   * #lazy_builder callback; suspends its own execution then returns markup.
    *
    * @return array
    */
-  public static function helloOrYarhar() {
+  public static function piggy(): array {
+    // Immediately call Fiber::suspend(), so that other placeholders are
+    // executed next. When this is resumed, it will immediately return the
+    // render array.
+    if (\Fiber::getCurrent() !== NULL) {
+      \Fiber::suspend();
+    }
     return [
-      '#markup' => BigPipeMarkup::create('<marquee>Yarhar llamas forever!</marquee>'),
+      '#markup' => '<span>This 🐷 little 🐽 piggy 🐖 stayed 🐽 at 🐷 home.</span>',
+      '#cache' => ['max-age' => 0],
+    ];
+  }
+
+  /**
+   * #lazy_builder callback; says "hello" or "hi".
+   *
+   * @return array
+   */
+  public static function helloOrHi() {
+    return [
+      '#markup' => BigPipeMarkup::create('<marquee>llamas forever!</marquee>'),
       '#cache' => [
         'max-age' => 0,
         'tags' => ['cache_tag_set_in_lazy_builder'],
@@ -162,7 +217,7 @@ class BigPipeTestController implements TrustedCallbackInterface {
    * {@inheritdoc}
    */
   public static function trustedCallbacks() {
-    return ['currentTime', 'helloOrYarhar', 'exception', 'responseException', 'counter'];
+    return ['currentTime', 'piggy', 'helloOrHi', 'exception', 'responseException', 'counter'];
   }
 
 }

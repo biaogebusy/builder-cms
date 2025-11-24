@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Config;
 
 use Drupal\node\Entity\NodeType;
@@ -13,9 +15,7 @@ use Drupal\KernelTests\KernelTestBase;
 class NodeImportChangeTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node',
@@ -39,7 +39,7 @@ class NodeImportChangeTest extends KernelTestBase {
   /**
    * Tests importing an updated content type.
    */
-  public function testImportChange() {
+  public function testImportChange(): void {
     $node_type_id = 'default';
     $node_type_config_name = "node.type.$node_type_id";
 

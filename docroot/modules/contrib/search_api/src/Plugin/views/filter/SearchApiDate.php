@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\views\Plugin\views\filter\Date;
 
@@ -9,9 +10,8 @@ use Drupal\views\Plugin\views\filter\Date;
  * Defines a filter for filtering on dates.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_date")
  */
+#[ViewsFilter('search_api_date')]
 class SearchApiDate extends Date {
 
   use SearchApiFilterTrait;
@@ -96,11 +96,12 @@ class SearchApiDate extends Date {
    */
   protected function opBetween($field) {
     if (!empty($this->value['max'])
-        && strpos($this->value['max'], ':') === FALSE) {
+        && ($this->value['type'] ?? '') != 'offset'
+        && !str_contains($this->value['max'], ':')) {
       // No time was specified, so make the date range inclusive.
       $this->value['max'] .= ' +1 day';
     }
-    $base_timestamp = $this->value['type'] == 'offset'
+    $base_timestamp = ($this->value['type'] ?? '') == 'offset'
       ? $this->getTimeService()->getRequestTime()
       : 0;
     $a = $b = NULL;

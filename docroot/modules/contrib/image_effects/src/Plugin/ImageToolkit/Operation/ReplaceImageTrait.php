@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation;
 
 use Drupal\Core\Image\ImageInterface;
@@ -16,6 +18,7 @@ trait ReplaceImageTrait {
     return [
       'replacement_image' => [
         'description' => 'The image to be used to replace current one.',
+        'type' => ImageInterface::class,
       ],
     ];
   }
@@ -24,15 +27,14 @@ trait ReplaceImageTrait {
    * {@inheritdoc}
    */
   protected function validateArguments(array $arguments) {
-    // Ensure replacement_image is an expected ImageInterface object.
-    if (!$arguments['replacement_image'] instanceof ImageInterface) {
-      throw new \InvalidArgumentException("Replacement image passed to the 'replace_image' operation is invalid");
-    }
+    $arguments = ArgumentsTypeValidator::validate($this->arguments(), $arguments);
+
     // Ensure replacement_image is a valid image.
     if (!$arguments['replacement_image']->isValid()) {
       $source = $arguments['replacement_image']->getSource();
       throw new \InvalidArgumentException("Invalid image at {$source}");
     }
+
     return $arguments;
   }
 

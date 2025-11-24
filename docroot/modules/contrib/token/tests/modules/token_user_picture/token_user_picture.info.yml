@@ -6,7 +6,7 @@ hidden: TRUE
 dependencies:
   - drupal:image
 
-# Information added by Drupal.org packaging script on 2024-04-13
-version: '8.x-1.14'
+# Information added by Drupal.org packaging script on 2025-09-06
+version: '8.x-1.16'
 project: 'token'
-datestamp: 1713009401
+datestamp: 1757151199

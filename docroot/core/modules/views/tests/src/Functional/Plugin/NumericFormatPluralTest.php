@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional\Plugin;
 
 use Drupal\Component\Gettext\PoHeader;
@@ -15,9 +17,7 @@ use Drupal\Tests\views\Functional\ViewTestBase;
 class NumericFormatPluralTest extends ViewTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui', 'file', 'language', 'locale'];
 
@@ -49,7 +49,7 @@ class NumericFormatPluralTest extends ViewTestBase {
   /**
    * Tests plural formatting setting on a numeric views handler.
    */
-  public function testNumericFormatPlural() {
+  public function testNumericFormatPlural(): void {
     // Create a file.
     $file = $this->createFile();
 

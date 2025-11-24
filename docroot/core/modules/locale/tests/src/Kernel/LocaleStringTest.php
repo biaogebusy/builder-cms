@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\locale\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -50,7 +52,7 @@ class LocaleStringTest extends KernelTestBase {
   /**
    * Tests CRUD API.
    */
-  public function testStringCrudApi() {
+  public function testStringCrudApi(): void {
     // Create source string.
     $source = $this->buildSourceString()->save();
     $this->assertNotEmpty($source->lid);
@@ -121,7 +123,7 @@ class LocaleStringTest extends KernelTestBase {
   /**
    * Tests Search API loading multiple objects.
    */
-  public function testStringSearchApi() {
+  public function testStringSearchApi(): void {
     $language_count = 3;
     // Strings 1 and 2 will have some common prefix.
     // Source 1 will have all translations, not customized.
@@ -238,6 +240,29 @@ class LocaleStringTest extends KernelTestBase {
       'language' => $langcode,
       'translation' => $this->randomMachineName(100),
     ])->save();
+  }
+
+  /**
+   * Tests that strings are correctly deleted.
+   */
+  public function testDeleteStrings(): void {
+    $source = $this->storage->createString([
+      'source' => 'Revision ID',
+    ])->save();
+
+    $this->storage->createTranslation([
+      'lid' => $source->lid,
+      'language' => 'fr',
+      'translation' => 'Translated Revision ID',
+    ])->save();
+
+    // Confirm that the string has been created.
+    $this->assertNotEmpty($this->storage->findString(['lid' => $source->lid]));
+
+    $this->storage->deleteStrings(['lid' => $source->lid]);
+
+    // Confirm that the string has been deleted.
+    $this->assertEmpty($this->storage->findString(['lid' => $source->lid]));
   }
 
 }

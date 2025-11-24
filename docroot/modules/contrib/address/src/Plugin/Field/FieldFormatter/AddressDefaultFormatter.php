@@ -11,9 +11,9 @@ use CommerceGuys\Addressing\Subdivision\SubdivisionRepositoryInterface;
 use Drupal\address\AddressInterface;
 use Drupal\address\FieldHelper;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
@@ -120,6 +120,7 @@ class AddressDefaultFormatter extends FormatterBase implements ContainerFactoryP
         '#cache' => [
           'contexts' => [
             'languages:' . LanguageInterface::TYPE_INTERFACE,
+            'languages:' . LanguageInterface::TYPE_CONTENT,
           ],
         ],
       ];
@@ -141,8 +142,12 @@ class AddressDefaultFormatter extends FormatterBase implements ContainerFactoryP
    *   A renderable array.
    */
   protected function viewElement(AddressInterface $address, $langcode) {
+    // If the parent entity is non-translatable, $address->getLocale() contains
+    // the interface language at the time of address creation, while $langcode
+    // contains the current interface language. Our goal is to have the country
+    // name be recognizable by all users, making $langcode a safer bet.
+    $countries = $this->countryRepository->getList($langcode);
     $country_code = $address->getCountryCode();
-    $countries = $this->countryRepository->getList();
     $address_format = $this->addressFormatRepository->get($country_code);
     $values = $this->getValues($address, $address_format);
 
@@ -229,8 +234,8 @@ class AddressDefaultFormatter extends FormatterBase implements ContainerFactoryP
     // Remove noise caused by empty placeholders.
     $lines = explode("\n", $string);
     foreach ($lines as $index => $line) {
-      // Remove leading punctuation, excess whitespace.
-      $line = trim(preg_replace('/^[-,]+/', '', $line, 1));
+      // Remove leading/trailing punctuation, excess whitespace.
+      $line = trim($line, ' -,');
       $line = preg_replace('/\s\s+/', ' ', $line);
       $lines[$index] = $line;
     }

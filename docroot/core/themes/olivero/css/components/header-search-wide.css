@@ -16,135 +16,57 @@
   position: static;
 }
 
-[dir="ltr"] .block-search-wide__wrapper {
-  left: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper {
-  right: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper {
-  margin-left: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper {
-  margin-right: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper {
-  margin-right: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper {
-  margin-left: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper {
-  padding-left: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper {
-  padding-right: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper {
-  padding-right: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper {
-  padding-left: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper {
-  border-left: solid 5.625rem #313637;
-}
-
-[dir="rtl"] .block-search-wide__wrapper {
-  border-right: solid 5.625rem #313637;
-}
-
 .block-search-wide__wrapper {
   position: absolute;
   z-index: 1; /* Ensure left border shows above social region in IE11. */
-  top: 100%;
+  inset-block-start: 100%;
+  inset-inline-start: calc(-1 * var(--content-left));
   display: none;
   visibility: hidden;
   overflow: hidden;
-  width: 100vw;
-  max-width: 98.125rem;
-  height: 9rem;
+  width: calc(100% + var(--content-left));
+  max-width: var(--max-bg-color);
+  height: var(--sp8);
   max-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  margin-block: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  padding-block: 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0;
   transition: all 0.2s;
-  background: #000;
+  border-inline-start: solid var(--content-left) var(--color--gray-20);
+  background: var(--color--black);
 }
 
 .block-search-wide__wrapper.is-active {
   visibility: visible;
-  max-height: 9rem;
+  max-height: var(--sp8);
 }
 
 .block-search-wide__wrapper form {
   display: flex;
-  -ms-grid-column: 1;
-  -ms-grid-column-span: 13;
   grid-column: 1 / 14;
 }
 
-[dir="ltr"] .block-search-wide__wrapper input[type="search"] {
-  padding-left: 13.5rem;
-}
-
-[dir="rtl"] .block-search-wide__wrapper input[type="search"] {
-  padding-right: 13.5rem;
-}
-
-[dir="ltr"] .block-search-wide__wrapper input[type="search"] {
-  padding-right: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper input[type="search"] {
-  padding-left: 0;
-}
-
 .block-search-wide__wrapper input[type="search"] {
-  width: calc(100% + 2.25rem);
-  height: 9rem;
-  padding-top: 0;
-  padding-bottom: 0;
+  width: calc(100% + var(--sp2));
+  height: var(--sp8);
+  padding-block: 0;
+  padding-inline-start: var(--sp12);
+  padding-inline-end: 0;
   transition: background-size 0.4s;
-  color: #fff;
+  color: var(--color--white);
   border: solid 1px transparent;
   box-shadow: none;
-  font-family: Lora, georgia, serif;
+  font-family: var(--font-serif);
   font-size: 2rem;
   -webkit-appearance: none;
-}
-
-.block-search-wide__wrapper input[type="search"]::-ms-clear {
-  width: 2.5rem;
-  opacity: 0.5;
 }
 
 .block-search-wide__wrapper input[type="search"]:focus {
   outline: solid 4px transparent;
   outline-offset: -4px;
-
-  /*
-        We normally indicate focus by animating background-image width. This isn't
-        available in IE11 when in Windows high contrast mode.
-      */
-}
-
-@media screen and (-ms-high-contrast: active) {
-
-  .block-search-wide__wrapper input[type="search"]:focus {
-    border-bottom-width: 9px;
-  }
 }
 
 .block-search-wide__wrapper .form-item-keys {
@@ -157,49 +79,18 @@
   margin: 0;
 }
 
-[dir="ltr"] .block-search-wide__wrapper .search-form__submit {
-  margin-left: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit {
-  margin-right: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper .search-form__submit {
-  margin-right: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit {
-  margin-left: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper .search-form__submit {
-  padding-left: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit {
-  padding-right: 0;
-}
-
-[dir="ltr"] .block-search-wide__wrapper .search-form__submit {
-  padding-right: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit {
-  padding-left: 0;
-}
-
 .block-search-wide__wrapper .search-form__submit {
   position: relative;
   overflow: hidden;
-  -ms-grid-row-align: stretch;
   align-self: stretch;
   width: 6.25rem;
   height: auto;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  margin-block: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  padding-block: 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0;
   cursor: pointer;
   border-color: transparent;
   background-color: transparent;
@@ -210,17 +101,10 @@
     */
 }
 
-[dir="ltr"] .block-search-wide__wrapper .search-form__submit .icon--search {
-  right: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit .icon--search {
-  left: 0;
-}
-
 .block-search-wide__wrapper .search-form__submit .icon--search {
   position: absolute;
-  top: 0;
+  inset-block-start: 0;
+  inset-inline-end: 0;
   display: block;
   width: 1.5rem; /* Width of the SVG background image. */
   height: 100%;
@@ -231,24 +115,17 @@
   background-size: contain;
 }
 
-[dir="ltr"] .block-search-wide__wrapper .search-form__submit .icon--search:after {
-  left: 0;
-}
-
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit .icon--search:after {
-  right: 0;
-}
-
-.block-search-wide__wrapper .search-form__submit .icon--search:after {
+.block-search-wide__wrapper .search-form__submit .icon--search::after {
   position: absolute;
-  bottom: 0;
+  inset-block-end: 0;
+  inset-inline-start: 0;
   width: 100%;
   height: 0;
   content: "";
   transition: transform 0.2s;
   transform: scaleX(0);
   transform-origin: left;
-  border-top: solid 0.5625rem #2494db;
+  border-block-start: solid var(--sp0-5) var(--color--primary-50);
 }
 
 .block-search-wide__wrapper .search-form__submit:focus {
@@ -257,56 +134,36 @@
   box-shadow: none;
 }
 
-.block-search-wide__wrapper .search-form__submit:focus span:after {
+.block-search-wide__wrapper .search-form__submit:focus span::after {
   transform: scaleX(1);
 }
 
 @media screen and (-ms-high-contrast: active) {
-
   .block-search-wide__wrapper .search-form__submit:focus {
-    border-bottom-width: 9px;
+    border-bottom-width: var(--sp0-5);
   }
 
-  .block-search-wide__wrapper .search-form__submit:focus span:after {
+  .block-search-wide__wrapper .search-form__submit:focus span::after {
     content: none;
   }
 }
 
 @media screen and (-ms-high-contrast: active) {
-  /* IE11's high contrast show will not show the background image, so we show the text. */
-  .block-search-wide__wrapper .search-form__submit .visually-hidden {
-    position: static;
-    overflow: visible;
-    clip: auto;
-    width: auto;
-    height: auto;
-    text-align: center;
-  }
-
   /* Edge's high contrast does show the background image, so we hide it. */
   .block-search-wide__wrapper .search-form__submit .icon--search {
     display: none;
   }
 }
 
-[dir="ltr"] .block-search-wide__container {
-  padding-right: 2.25rem;
-}
-
-[dir="rtl"] .block-search-wide__container {
-  padding-left: 2.25rem;
-}
-
 .block-search-wide__container {
-  max-width: 84.375rem;
+  max-width: var(--max-width);
+  padding-inline-end: var(--sp2);
 }
 
 .block-search-wide__grid {
-  display: -ms-grid;
   display: grid;
-  -ms-grid-columns: (1fr)[14];
-  grid-template-columns: repeat(14, 1fr);
-  grid-column-gap: 2.25rem;
+  grid-template-columns: repeat(var(--grid-col-count), 1fr);
+  grid-column-gap: var(--grid-gap);
 }
 
 /* Override specificity from container-inline.module.css */
@@ -316,17 +173,16 @@
 }
 
 .container-inline .block-search-wide__grid {
-  display: -ms-grid;
   display: grid;
 }
 
 .block-search-wide__button {
   position: relative;
   display: none;
-  width: 3.375rem;
-  height: 6.75rem;
+  width: var(--sp3);
+  height: var(--sp6);
   cursor: pointer;
-  color: #0d1214; /* Affects SVG search icon. */
+  color: var(--color-text-neutral-loud); /* Affects SVG search icon. */
   border: 0;
   background: transparent;
   -webkit-appearance: none;
@@ -337,42 +193,42 @@
   outline: 0;
 }
 
-.block-search-wide__button:focus:after {
+.block-search-wide__button:focus::after {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 80%;
-  height: 3.375rem;
+  height: var(--sp3);
   content: "";
   transform: translate(-50%, -50%);
-  border: solid 2px #2494db;
+  border: solid 2px var(--color--primary-50);
   border-radius: 0.25rem;
 }
 
 .block-search-wide__button[aria-expanded="true"] {
-  background: #000;
+  background: var(--color--black);
 }
 
-.block-search-wide__button[aria-expanded="true"]:focus:after {
-  border-color: #fff;
+.block-search-wide__button[aria-expanded="true"]:focus::after {
+  border-color: var(--color--white);
 }
 
-.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close:before,
-.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close:after {
+.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close::before,
+.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close::after {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1.6875rem;
+  width: var(--sp1-5);
   height: 0;
   content: "";
-  border-top: solid 2px #fff;
+  border-block-start: solid 2px var(--color--white);
 }
 
-.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close:before {
+.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close::before {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close:after {
+.block-search-wide__button[aria-expanded="true"] .block-search-wide__button-close::after {
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
@@ -380,24 +236,12 @@
   display: none;
 }
 
-[dir="ltr"] .block-search-wide__button svg {
-  margin-left: auto;
-}
-
-[dir="rtl"] .block-search-wide__button svg {
-  margin-right: auto;
-}
-
-[dir="ltr"] .block-search-wide__button svg {
-  margin-right: auto;
-}
-
-[dir="rtl"] .block-search-wide__button svg {
-  margin-left: auto;
+.block-search-wide__button svg {
+  margin-inline-start: auto;
+  margin-inline-end: auto;
 }
 
 @media (forced-colors: active) {
-
   .block-search-wide__button {
     background: ButtonFace;
   }
@@ -411,33 +255,32 @@
 
 html:not(.js) .search-block-form:focus-within .block-search-wide__wrapper {
   visibility: visible;
-  max-height: 9rem;
+  max-height: var(--sp8);
 }
 
 /* Necessary to override specificity of transpiled PostCSS properties from default input focus styling. */
 
 [dir] .block-search-wide__wrapper input[type="search"] {
   background-color: transparent;
-  background-image: linear-gradient(#2494db, #2494db); /* Two values are needed for IE11 support. */
+  background-image: linear-gradient(var(--color--primary-50), var(--color--primary-50)); /* Two values are needed for IE11 support. */
   background-repeat: no-repeat;
   background-position: bottom left; /* LTR */
   background-size: 0% 0.625rem;
 }
 
 [dir] .block-search-wide__wrapper input[type="search"]:focus {
-  background-size: 100% 0.5625rem;
+  background-size: 100% var(--sp0-5);
 }
 
 [dir="rtl"] .block-search-wide__wrapper input[type="search"] {
   background-position: bottom right;
 }
 
-[dir="rtl"] .block-search-wide__wrapper .search-form__submit .icon--search:after {
+[dir="rtl"] .block-search-wide__wrapper .search-form__submit .icon--search::after {
   transform-origin: right;
 }
 
 @media (min-width: 75rem) {
-
   body:not(.is-always-mobile-nav) .block-search-wide__wrapper,
   body:not(.is-always-mobile-nav) .block-search-wide__button {
     display: block;

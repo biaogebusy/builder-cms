@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Migrate\d6;
 
 use Drupal\system\Entity\Action;
@@ -12,7 +14,10 @@ use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
  */
 class MigrateActionsTest extends MigrateDrupal6TestBase {
 
-  protected static $modules = ['action', 'comment', 'node'];
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['comment', 'node'];
 
   /**
    * {@inheritdoc}
@@ -25,7 +30,7 @@ class MigrateActionsTest extends MigrateDrupal6TestBase {
   /**
    * Tests Drupal 6 action migration to Drupal 8.
    */
-  public function testActions() {
+  public function testActions(): void {
     // Test default actions.
     $this->assertEntity('node_publish_action', 'Publish post', 'node', []);
     $this->assertEntity('node_make_sticky_action', 'Make post sticky', 'node', []);
@@ -33,9 +38,6 @@ class MigrateActionsTest extends MigrateDrupal6TestBase {
     $this->assertEntity('comment_publish_action', 'Publish comment', 'comment', []);
 
     // Test advanced actions.
-    $this->assertEntity('unpublish_comment_containing_keyword_s_', 'Unpublish comment containing keyword(s)', 'comment', ["keywords" => [0 => "drupal"]]);
-    $this->assertEntity('change_the_author_of_a_post', 'Change the author of a post', 'node', ["owner_uid" => "2"]);
-    $this->assertEntity('unpublish_post_containing_keyword_s_', 'Unpublish post containing keyword(s)', 'node', ["keywords" => [0 => "drupal"]]);
     $this->assertEntity('display_a_message_to_the_user', 'Display a message to the user', 'system', ["message" => "Drupal migration test"]);
     $this->assertEntity('send_e_mail', 'Send e-mail', 'system', [
       "recipient" => "test@example.com",

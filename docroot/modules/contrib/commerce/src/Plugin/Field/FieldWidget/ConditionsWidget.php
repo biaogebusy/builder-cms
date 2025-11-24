@@ -2,27 +2,26 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldWidget;
 
-use Drupal\commerce\ConditionManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\ConditionManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_conditions' widget.
- *
- * @FieldWidget(
- *   id = "commerce_conditions",
- *   label = @Translation("Conditions"),
- *   field_types = {
- *     "commerce_plugin_item:commerce_condition"
- *   },
- *   multiple_values = TRUE
- * )
  */
+#[FieldWidget(
+  id: "commerce_conditions",
+  label: new TranslatableMarkup("Conditions"),
+  field_types: ["commerce_plugin_item:commerce_condition"],
+  multiple_values: TRUE,
+)]
 class ConditionsWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**

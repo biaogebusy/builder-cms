@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\text\FunctionalJavascript;
 
 use Drupal\field\Entity\FieldConfig;
@@ -64,7 +66,7 @@ class TextareaWithSummaryTest extends WebDriverTestBase {
   /**
    * Tests the textSummary javascript behavior.
    */
-  public function testTextSummaryBehavior() {
+  public function testTextSummaryBehavior(): void {
     // Test with field defaults.
     $this->assertSummaryToggle();
 
@@ -102,12 +104,12 @@ class TextareaWithSummaryTest extends WebDriverTestBase {
   /**
    * Tests that the textSummary behavior is not run for required summary fields.
    */
-  public function testTextSummaryRequiredBehavior() {
+  public function testTextSummaryRequiredBehavior(): void {
     // Test with field defaults.
     $this->assertSummaryToggle();
 
     // Create a second field with a required summary.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $field_storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'node',

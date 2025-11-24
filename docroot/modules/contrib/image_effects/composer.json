@@ -3,17 +3,19 @@
     "type": "drupal-module",
     "description": "Provides effects and operations for the Image API.",
     "require": {
-        "drupal/core": "^9.3 || ^10",
-        "drupal/file_mdm": "^2.5"
+        "drupal/core": "^10.3.7 | ^11.0.6",
+        "drupal/file_mdm": "^3.1"
     },
     "conflict": {
-        "drupal/imagemagick": "<3.4",
-        "drupal/jquery_colorpicker": "<2"
+        "drupal/imagemagick": "<4.0.1",
+        "drupal/color": "<2"
     },
     "require-dev": {
-        "drupal/color": "*",
-        "drupal/imagemagick": "^3.4",
-        "drupal/vendor_stream_wrapper": "^1.2 | ^2",
+        "drupal/color": "^2",
+        "drupal/imagemagick": "^4.0.2",
+        "drupal/token": "*",
+        "drupal/vendor_stream_wrapper": "^2.0.5",
+        "drush/drush": ">=12",
         "fileeye/linuxlibertine-fonts": "^5.3"
     },
     "extra": {

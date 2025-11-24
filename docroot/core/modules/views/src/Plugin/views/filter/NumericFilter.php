@@ -3,15 +3,15 @@
 namespace Drupal\views\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsFilter;
 
 /**
  * Simple filter to handle greater than/less than filters.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("numeric")
  */
-class NumericFilter extends FilterPluginBase {
+#[ViewsFilter("numeric")]
+class NumericFilter extends FilterPluginBase implements FilterOperatorsInterface {
 
   protected $alwaysMultiple = TRUE;
 
@@ -89,6 +89,9 @@ class NumericFilter extends FilterPluginBase {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function operators() {
     $operators = [
       '<' => [
@@ -145,9 +148,15 @@ class NumericFilter extends FilterPluginBase {
         'method' => 'opRegex',
         'values' => 1,
       ],
+      'not_regular_expression' => [
+        'title' => $this->t('Negated regular expression'),
+        'short' => $this->t('not regex'),
+        'method' => 'opNotRegex',
+        'values' => 1,
+      ],
     ];
 
-    // if the definition allows for the empty operator, add it.
+    // If the definition allows for the empty operator, add it.
     if (!empty($this->definition['allow empty'])) {
       $operators += [
         'empty' => [
@@ -210,7 +219,7 @@ class NumericFilter extends FilterPluginBase {
       $identifier = $this->options['expose']['identifier'];
 
       if (empty($this->options['expose']['use_operator']) || empty($this->options['expose']['operator_id'])) {
-        // exposed and locked.
+        // Exposed and locked.
         $which = in_array($this->operator, $this->operatorValues(2)) ? 'minmax' : 'value';
       }
       else {
@@ -377,6 +386,16 @@ class NumericFilter extends FilterPluginBase {
     $this->query->addWhere($this->options['group'], $field, $this->value['value'], 'REGEXP');
   }
 
+  /**
+   * Filters by a negated regular expression.
+   *
+   * @param string $field
+   *   The expression pointing to the queries field, for example "foo.bar".
+   */
+  protected function opNotRegex($field) {
+    $this->query->addWhere($this->options['group'], $field, $this->value['value'], 'NOT REGEXP');
+  }
+
   public function adminSummary() {
     if ($this->isAGroup()) {
       return $this->t('grouped');
@@ -404,15 +423,18 @@ class NumericFilter extends FilterPluginBase {
       return TRUE;
     }
 
-    // rewrite the input value so that it's in the correct format so that
+    // Rewrite the input value so that it's in the correct format so that
     // the parent gets the right data.
-    if (!empty($this->options['expose']['identifier'])) {
-      $value = &$input[$this->options['expose']['identifier']];
-      if (!is_array($value)) {
-        $value = [
-          'value' => $value,
-        ];
-      }
+    $key = $this->isAGroup() ? 'group_info' : 'expose';
+    if (empty($this->options[$key]['identifier'])) {
+      // Invalid identifier configuration. Value can't be resolved.
+      return FALSE;
+    }
+    $value = &$input[$this->options[$key]['identifier']];
+    if (!is_array($value)) {
+      $value = [
+        'value' => $value,
+      ];
     }
 
     $rc = parent::acceptExposedInput($input);

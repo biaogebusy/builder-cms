@@ -53,7 +53,7 @@ final class ExtensionVersion {
    */
   public static function createFromVersionString(string $version_string): ExtensionVersion {
     $original_version = $version_string;
-    if (strpos($version_string, static::CORE_PREFIX) === 0 && $version_string !== '8.x-dev') {
+    if (str_starts_with($version_string, static::CORE_PREFIX) && $version_string !== '8.x-dev') {
       $version_string = preg_replace('/8\.x-/', '', $version_string, 1);
     }
     else {
@@ -119,7 +119,7 @@ final class ExtensionVersion {
    *   The ExtensionVersion instance.
    */
   public static function createFromSupportBranch(string $branch): ExtensionVersion {
-    if (substr($branch, -1) !== '.') {
+    if (!str_ends_with($branch, '.')) {
       throw new \UnexpectedValueException("Invalid support branch: $branch");
     }
     return static::createFromVersionString($branch . '0');

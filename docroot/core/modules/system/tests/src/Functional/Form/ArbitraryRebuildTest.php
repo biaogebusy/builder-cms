@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\field\Entity\FieldConfig;
@@ -14,9 +16,7 @@ use Drupal\Tests\BrowserTestBase;
 class ArbitraryRebuildTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['text', 'form_test'];
 
@@ -57,7 +57,7 @@ class ArbitraryRebuildTest extends BrowserTestBase {
   /**
    * Tests a basic rebuild with the user registration form.
    */
-  public function testUserRegistrationRebuild() {
+  public function testUserRegistrationRebuild(): void {
     $edit = [
       'name' => 'foo',
       'mail' => 'bar@example.com',
@@ -72,7 +72,7 @@ class ArbitraryRebuildTest extends BrowserTestBase {
   /**
    * Tests a rebuild caused by a multiple value field.
    */
-  public function testUserRegistrationMultipleField() {
+  public function testUserRegistrationMultipleField(): void {
     $edit = [
       'name' => 'foo',
       'mail' => 'bar@example.com',

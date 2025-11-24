@@ -2,11 +2,11 @@
 
 namespace Drupal\devel_generate\Plugin\DevelGenerate;
 
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\devel_generate\DevelGenerateBase;
+use Drupal\taxonomy\VocabularyStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,50 +22,34 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *     "num" = 1,
  *     "title_length" = 12,
  *     "kill" = FALSE
- *   }
+ *   },
+ *   dependencies = {
+ *     "taxonomy",
+ *   },
  * )
  */
 class VocabularyDevelGenerate extends DevelGenerateBase implements ContainerFactoryPluginInterface {
 
   /**
    * The vocabulary storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $vocabularyStorage;
+  protected VocabularyStorageInterface $vocabularyStorage;
 
   /**
-   * Constructs a new VocabularyDevelGenerate object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $entity_storage
-   *   The vocabulary storage.
+   * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityStorageInterface $entity_storage) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $entity_type_manager = $container->get('entity_type.manager');
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->vocabularyStorage = $entity_type_manager->getStorage('taxonomy_vocabulary');
 
-    $this->vocabularyStorage = $entity_storage;
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration, $plugin_id, $plugin_definition,
-      $container->get('entity_type.manager')->getStorage('taxonomy_vocabulary')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
     $form['num'] = [
       '#type' => 'number',
       '#title' => $this->t('Number of vocabularies?'),
@@ -93,14 +77,14 @@ class VocabularyDevelGenerate extends DevelGenerateBase implements ContainerFact
   /**
    * {@inheritdoc}
    */
-  public function generateElements(array $values) {
+  protected function generateElements(array $values): void {
     if ($values['kill']) {
       $this->deleteVocabularies();
       $this->setMessage($this->t('Deleted existing vocabularies.'));
     }
 
     $new_vocs = $this->generateVocabularies($values['num'], $values['title_length']);
-    if (!empty($new_vocs)) {
+    if ($new_vocs !== []) {
       $this->setMessage($this->t('Created the following new vocabularies: @vocs', ['@vocs' => implode(', ', $new_vocs)]));
     }
   }
@@ -108,7 +92,7 @@ class VocabularyDevelGenerate extends DevelGenerateBase implements ContainerFact
   /**
    * Deletes all vocabularies.
    */
-  protected function deleteVocabularies() {
+  protected function deleteVocabularies(): void {
     $vocabularies = $this->vocabularyStorage->loadMultiple();
     $this->vocabularyStorage->delete($vocabularies);
   }
@@ -124,18 +108,18 @@ class VocabularyDevelGenerate extends DevelGenerateBase implements ContainerFact
    * @return array
    *   Array containing the generated vocabularies id.
    */
-  protected function generateVocabularies($records, $maxlength = 12) {
+  protected function generateVocabularies(int $records, int $maxlength = 12): array {
     $vocabularies = [];
 
     // Insert new data:
-    for ($i = 1; $i <= $records; $i++) {
+    for ($i = 1; $i <= $records; ++$i) {
       $name = $this->getRandom()->word(mt_rand(2, $maxlength));
 
       $vocabulary = $this->vocabularyStorage->create([
         'name' => $name,
         'vid' => mb_strtolower($name),
-        'langcode' => Language::LANGCODE_NOT_SPECIFIED,
-        'description' => "Description of $name",
+        'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
+        'description' => 'Description of ' . $name,
         'hierarchy' => 1,
         'weight' => mt_rand(0, 10),
         'multiple' => 1,
@@ -157,7 +141,7 @@ class VocabularyDevelGenerate extends DevelGenerateBase implements ContainerFact
   /**
    * {@inheritdoc}
    */
-  public function validateDrushParams(array $args, array $options = []) {
+  public function validateDrushParams(array $args, array $options = []): array {
     $values = [
       'num' => array_shift($args),
       'kill' => $options['kill'],

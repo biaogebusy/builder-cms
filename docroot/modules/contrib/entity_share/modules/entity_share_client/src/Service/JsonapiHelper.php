@@ -11,8 +11,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Provides methods not present in the JSON:API module.
- *
- * @package Drupal\entity_share_client\Service
  */
 class JsonapiHelper implements JsonapiHelperInterface {
 

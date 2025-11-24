@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\Functional;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -53,7 +55,7 @@ class MediaLibraryDisplayModeTest extends BrowserTestBase {
   /**
    * Tests that the Media Library can automatically configure display modes.
    */
-  public function testDisplayModes() {
+  public function testDisplayModes(): void {
     $this->createMediaType('file', [
       'id' => 'type_one',
     ]);
@@ -83,6 +85,9 @@ class MediaLibraryDisplayModeTest extends BrowserTestBase {
 
     // Display modes are created on install.
     $this->container->get('module_installer')->install(['media_library']);
+    // The container was rebuilt during module installation, so ensure we have
+    // an up-to-date reference to it.
+    $this->container = $this->kernel->getContainer();
 
     // For a non-image media type without a mapped name field, the media_library
     // form mode should only contain the name field.
@@ -112,8 +117,8 @@ class MediaLibraryDisplayModeTest extends BrowserTestBase {
       'source' => 'file',
     ];
     $this->drupalGet('admin/structure/media/add');
-    $this->submitForm($edit, 'Save');
-    $this->submitForm([], 'Save');
+    $this->submitForm($edit, 'Save and manage fields');
+    $this->submitForm([], 'Save and manage fields');
     $this->assertSession()->pageTextContains("Media Library form and view displays have been created for the $type_five_id media type.");
     $this->assertFormDisplay($type_five_id, TRUE, FALSE);
     $this->assertViewDisplay($type_five_id, 'medium');
@@ -182,6 +187,10 @@ class MediaLibraryDisplayModeTest extends BrowserTestBase {
     $this->assertSession()->pageTextContains("Media Library form and view displays have been created for the $type_id media type.");
     $this->assertFormDisplay($type_id, FALSE, FALSE);
     $this->assertViewDisplay($type_id, 'medium');
+
+    // Now that all our media types have been created, ensure the bundle info
+    // cache is up-to-date.
+    $this->container->get('entity_type.bundle.info')->clearCachedBundles();
 
     // Delete a form and view display.
     EntityFormDisplay::load('media.type_one.media_library')->delete();

@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Adjust image transparency.
- *
- * @ImageEffect(
- *   id = "image_effects_opacity",
- *   label = @Translation("Opacity"),
- *   description = @Translation("Change overall image transparency level. Applies only to image formats that support Alpha channel, like PNG.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_opacity',
+  label: new TranslatableMarkup('Opacity'),
+  description: new TranslatableMarkup('Change overall image transparency level. Applies only to image formats that support Alpha channel, like PNG.'),
+)]
 class OpacityImageEffect extends ConfigurableImageEffectBase {
 
   /**

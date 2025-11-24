@@ -2,22 +2,23 @@
 
 namespace Drupal\Tests\field_permissions\Functional;
 
-use Drupal\node\Entity\NodeType;
-use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\node\Functional\NodeTestBase;
 
 /**
  * Tests the field config edit form.
  *
  * @group field_permissions
  */
-class FieldPermissionsFieldConfigEditFormTest extends BrowserTestBase {
+class FieldPermissionsFieldConfigEditFormTest extends NodeTestBase {
 
   /**
    * {@inheritdoc}
    */
   protected static $modules = [
     'field_permissions_test',
+    'field_permissions',
     'node',
+    'datetime',
     'field_ui',
   ];
 
@@ -32,17 +33,15 @@ class FieldPermissionsFieldConfigEditFormTest extends BrowserTestBase {
    * @covers \Drupal\field_permissions\Plugin\FieldPermissionTypeInterface::appliesToField
    */
   public function testAppliesToField(): void {
-    $node_type = NodeType::create(['type' => 'page']);
-    $node_type->save();
-    node_add_body_field($node_type);
+    $assert = $this->assertSession();
 
     $this->drupalLogin($this->createUser([
       'administer field permissions',
+      'bypass node access',
+      'administer content types',
       'administer node fields',
     ]));
     $this->drupalGet('/admin/structure/types/manage/page/fields/node.page.body');
-
-    $assert = $this->assertSession();
 
     // All plugins are exposed on the field config edit form.
     $assert->pageTextContains('Field visibility and permissions');

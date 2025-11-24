@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
-use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\PurchasableEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PurchasedEntityConditionDeriver extends DeriverBase implements ContainerDeriverInterface {

@@ -125,11 +125,6 @@
         this.setHighContrastMode(highContrastMode);
       });
 
-      // Watch save
-      document.querySelector('[data-drupal-selector="edit-submit"]').addEventListener('click', () => {
-        // Reset darkmode localStorage.
-        localStorage.setItem('Drupal.gin.darkmode', '');
-      });
     },
 
     darkmode: function (darkmodeParam = null) {
@@ -145,9 +140,6 @@
       else {
         document.querySelector('html').classList.remove(darkmodeClass);
       }
-
-      // Reset localStorage.
-      localStorage.setItem('Drupal.gin.darkmode', '');
 
       // Change to Darkmode.
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {

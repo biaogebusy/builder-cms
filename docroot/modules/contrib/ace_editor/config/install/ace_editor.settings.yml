@@ -33,9 +33,6 @@ theme_list:
   twilight: 'Twilight'
   vibrant_ink: 'Vibrant Ink'
   xcode: 'Xcode'
-
-theme: 'cobalt'
-
 syntax_list:
   abap: "Abap"
   abc: "Abc"
@@ -179,7 +176,7 @@ syntax_list:
   xml: "XML"
   xquery: "Xquery"
   yaml: "YAML"
-
+theme: 'cobalt'
 syntax: 'html'
 height: '300px'
 width: '100%'

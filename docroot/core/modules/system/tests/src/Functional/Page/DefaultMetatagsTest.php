@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Page;
 
 use Drupal\Tests\BrowserTestBase;
@@ -19,7 +21,7 @@ class DefaultMetatagsTest extends BrowserTestBase {
   /**
    * Tests meta tags.
    */
-  public function testMetaTag() {
+  public function testMetaTag(): void {
     $this->drupalGet('');
     // Ensures that the charset metatag is on the page.
     $this->assertSession()->elementsCount('xpath', '//meta[@charset="utf-8"]', 1);

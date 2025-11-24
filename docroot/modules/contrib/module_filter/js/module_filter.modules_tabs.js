@@ -328,7 +328,7 @@
   };
 
   Drupal.behaviors.moduleFilterModulesTabs = {
-    attach() {
+    attach(context, settings) {
       if (ModuleFilter.input !== undefined) {
         const tabs = {};
 
@@ -402,18 +402,18 @@
           ModuleFilter.modulesWrapper.children('details').remove();
 
           // Sort rows by module name.
-          const $rows = $('tbody tr', $table);
-          $rows.sort(function (a, b) {
-            const aname = $('td.module label', a).text();
-            const bname = $('td.module label', b).text();
+          const rows = [...$('tbody tr', $table)];
+          rows.sort(function (a, b) {
+            const aName = $('td.module label', a).text();
+            const bName = $('td.module label', b).text();
 
-            if (aname === bname) {
+            if (aName === bName) {
               return 0;
             }
 
-            return aname > bname ? 1 : -1;
+            return aName > bName ? 1 : -1;
           });
-          $rows.detach().appendTo($('tbody', $table));
+          $(rows).detach().appendTo($('tbody', $table));
 
           // Add the unified table.
           ModuleFilter.modulesWrapper.append($table);
@@ -436,76 +436,82 @@
           ModuleFilter.input.focus();
         }
 
-        buildTable();
-        ModuleFilter.tabs = new Tabs(tabs, ModuleFilter.wrapper);
+        $(once('module-filter-build', '.modules-wrapper', context)).each(
+          function () {
+            buildTable();
+            ModuleFilter.tabs = new Tabs(tabs, ModuleFilter.wrapper);
 
-        ModuleFilter.winnow.options.rules.push(function (item) {
-          const activeTab = ModuleFilter.tabs.getActive();
+            ModuleFilter.winnow.options.rules.push(function (item) {
+              const activeTab = ModuleFilter.tabs.getActive();
 
-          // Update tab results. The results are updated prior to hiding the
-          // items not visible in the active tab.
-          const allTab = ModuleFilter.tabs.get('all');
-          allTab.results.push(item);
-          if (item.element.hasClass('recent')) {
-            const recentTab = ModuleFilter.tabs.get('recent');
-            recentTab.results.push(item);
-          }
-          if (item.element.hasClass('new')) {
-            const newTab = ModuleFilter.tabs.get('new');
-            newTab.results.push(item);
-          }
-          if (item.tab !== undefined && item.tab) {
-            item.tab.results.push(item);
-          }
+              // Update tab results. The results are updated prior to hiding the
+              // items not visible in the active tab.
+              const allTab = ModuleFilter.tabs.get('all');
+              allTab.results.push(item);
+              if (item.element.hasClass('recent')) {
+                const recentTab = ModuleFilter.tabs.get('recent');
+                recentTab.results.push(item);
+              }
+              if (item.element.hasClass('new')) {
+                const newTab = ModuleFilter.tabs.get('new');
+                newTab.results.push(item);
+              }
+              if (item.tab !== undefined && item.tab) {
+                item.tab.results.push(item);
+              }
 
-          // For tabs other than "all", evaluate whether the item should
-          // be shown.
-          if (activeTab && activeTab.packageId !== 'all') {
-            switch (activeTab.packageId) {
-              case 'recent':
-                if (item.element.hasClass('recent')) {
-                  return true;
+              // For tabs other than "all", evaluate whether the item should
+              // be shown.
+              if (activeTab && activeTab.packageId !== 'all') {
+                switch (activeTab.packageId) {
+                  case 'recent':
+                    if (item.element.hasClass('recent')) {
+                      return true;
+                    }
+                    break;
+
+                  case 'new':
+                    if (item.element.hasClass('new')) {
+                      return true;
+                    }
+                    break;
+
+                  default:
+                    if (
+                      item.element.hasClass(`package__${activeTab.packageId}`)
+                    ) {
+                      return true;
+                    }
+                    break;
                 }
-                break;
 
-              case 'new':
-                if (item.element.hasClass('new')) {
-                  return true;
+                return false;
+              }
+            });
+            ModuleFilter.winnow.bind('finishIndexing', function (e, winnow) {
+              $.each(winnow.index, function (key, item) {
+                const packageId = item.element.data('moduleFilter.packageId');
+                if (packageId) {
+                  item.tab = ModuleFilter.tabs.get(packageId);
                 }
-                break;
+              });
+            });
+            ModuleFilter.winnow.bind('start', function () {
+              ModuleFilter.tabs.resetResults();
+            });
+            ModuleFilter.winnow.bind('finish', function () {
+              if (ModuleFilter.input.val() !== '') {
+                ModuleFilter.tabs.showResults();
+              } else {
+                ModuleFilter.tabs.hideResults();
+              }
+            });
 
-              default:
-                if (item.element.hasClass(`package__${activeTab.packageId}`)) {
-                  return true;
-                }
-                break;
-            }
-
-            return false;
-          }
-        });
-        ModuleFilter.winnow.bind('finishIndexing', function (e, winnow) {
-          $.each(winnow.index, function (key, item) {
-            const packageId = item.element.data('moduleFilter.packageId');
-            if (packageId) {
-              item.tab = ModuleFilter.tabs.get(packageId);
-            }
-          });
-        });
-        ModuleFilter.winnow.bind('start', function () {
-          ModuleFilter.tabs.resetResults();
-        });
-        ModuleFilter.winnow.bind('finish', function () {
-          if (ModuleFilter.input.val() !== '') {
-            ModuleFilter.tabs.showResults();
-          } else {
-            ModuleFilter.tabs.hideResults();
-          }
-        });
-
-        $(window)
-          .bind('hashchange.moduleFilter', selectTabByHash)
-          .triggerHandler('hashchange.moduleFilter');
+            $(window)
+              .bind('hashchange.moduleFilter', selectTabByHash)
+              .triggerHandler('hashchange.moduleFilter');
+          },
+        );
       }
     },
   };

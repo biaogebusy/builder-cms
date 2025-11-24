@@ -32,17 +32,3 @@ configuration of the module, that allows you to restrict access by role.
 If you don't check any roles the default access permissions will be kept.
 Otherwise, the module will additionally restrict access to the chosen user
 roles.
-
-
-## Maintainers
-
-Current maintainers:
-- Florent Torregrosa - [Grimreaper](https://www.drupal.org/user/2388214)
-
-Previous maintainers:
-- Wolfgang Ziegler - [fago](https://www.drupal.org/user/16747)
-- Alexis Wilke - [AlexisWilke](https://www.drupal.org/user/356197)
-- Daniel Wehner - [dawehner](https://www.drupal.org/user/99340)
-
-This project has been sponsored by:
-- [Made to Order Software Corporation](https://www.m2osw.com)

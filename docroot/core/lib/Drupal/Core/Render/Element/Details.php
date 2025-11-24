@@ -2,6 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
+use Drupal\Core\Render\Attribute\RenderElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -20,23 +21,22 @@ use Drupal\Core\Render\Element;
  *
  * Usage example:
  * @code
- * $form['author'] = array(
+ * $form['author'] = [
  *   '#type' => 'details',
  *   '#title' => $this->t('Author'),
- * );
+ * ];
  *
- * $form['author']['name'] = array(
+ * $form['author']['name'] = [
  *   '#type' => 'textfield',
  *   '#title' => $this->t('Name'),
- * );
+ * ];
  * @endcode
  *
  * @see \Drupal\Core\Render\Element\Fieldset
  * @see \Drupal]Core\Render\Element\VerticalTabs
- *
- * @RenderElement("details")
  */
-class Details extends RenderElement {
+#[RenderElement('details')]
+class Details extends RenderElementBase {
 
   /**
    * {@inheritdoc}

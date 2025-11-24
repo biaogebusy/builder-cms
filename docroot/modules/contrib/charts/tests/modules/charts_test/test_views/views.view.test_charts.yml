@@ -76,6 +76,7 @@ display:
           chart_settings:
             library: charts_test_library
             type: column
+            library_type_options: {  }
             fields:
               label: name
               stacking: false
@@ -102,6 +103,7 @@ display:
               subtitle: ''
               data_labels: true
               data_markers: true
+              connect_nulls: false
               legend_position: bottom
               background: ''
               three_dimensional: 0

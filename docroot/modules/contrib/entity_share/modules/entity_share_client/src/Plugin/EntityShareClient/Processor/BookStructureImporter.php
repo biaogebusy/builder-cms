@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
@@ -8,6 +8,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -25,7 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   locked = false,
  * )
  */
-class BookStructureImporter extends EntityReference {
+class BookStructureImporter extends ImportProcessorReferencePluginBase {
 
   /**
    * The book structure entries that are entity references.
@@ -82,7 +83,7 @@ class BookStructureImporter extends EntityReference {
   public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data): void {
     // Parse entity data to extract book structure and links to other nodes.
     // And remove this info.
-    if (isset($entity_json_data['attributes']['drupal_internal__book']) && is_array($entity_json_data['attributes']['drupal_internal__book'])) {
+    if (isset($entity_json_data['attributes']['drupal_internal__book']) && \is_array($entity_json_data['attributes']['drupal_internal__book'])) {
       $book = $entity_json_data['attributes']['drupal_internal__book'];
       unset($entity_json_data['attributes']['drupal_internal__book']);
 

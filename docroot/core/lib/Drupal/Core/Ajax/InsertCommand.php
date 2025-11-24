@@ -24,7 +24,7 @@ class InsertCommand implements CommandInterface, CommandWithAttachedAssetsInterf
    * If the command is a response to a request from an #ajax form element then
    * this value can be NULL.
    *
-   * @var string
+   * @var string|null
    */
   protected $selector;
 
@@ -47,7 +47,7 @@ class InsertCommand implements CommandInterface, CommandWithAttachedAssetsInterf
   /**
    * Constructs an InsertCommand object.
    *
-   * @param string $selector
+   * @param string|null $selector
    *   A CSS selector.
    * @param string|array $content
    *   The content that will be inserted in the matched element(s), either a
@@ -55,7 +55,7 @@ class InsertCommand implements CommandInterface, CommandWithAttachedAssetsInterf
    * @param array $settings
    *   An array of JavaScript settings to be passed to any attached behaviors.
    */
-  public function __construct($selector, $content, array $settings = NULL) {
+  public function __construct($selector, $content, ?array $settings = NULL) {
     $this->selector = $selector;
     $this->content = $content;
     $this->settings = $settings;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
 use Drupal\field\Entity\FieldStorageConfig;
@@ -14,7 +16,8 @@ trait FileFieldCreationTrait {
    * Creates a new file field.
    *
    * @param string $name
-   *   The name of the new field (all lowercase), exclude the "field_" prefix.
+   *   The name of the new field (all lowercase). The Field UI 'field_' prefix
+   *   is not added to the field name.
    * @param string $entity_type
    *   The entity type.
    * @param string $bundle
@@ -29,7 +32,7 @@ trait FileFieldCreationTrait {
    * @return \Drupal\field\FieldStorageConfigInterface
    *   The file field.
    */
-  public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $widget_settings = []) {
+  protected function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $widget_settings = []) {
     $field_storage = FieldStorageConfig::create([
       'entity_type' => $entity_type,
       'field_name' => $name,
@@ -47,7 +50,8 @@ trait FileFieldCreationTrait {
    * Attaches a file field to an entity.
    *
    * @param string $name
-   *   The name of the new field (all lowercase), exclude the "field_" prefix.
+   *   The name of the new field (all lowercase). The Field UI 'field_' prefix
+   *   is not added to the field name.
    * @param string $entity_type
    *   The entity type this field will be added to.
    * @param string $bundle
@@ -57,7 +61,7 @@ trait FileFieldCreationTrait {
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    */
-  public function attachFileField($name, $entity_type, $bundle, $field_settings = [], $widget_settings = []) {
+  protected function attachFileField($name, $entity_type, $bundle, $field_settings = [], $widget_settings = []) {
     $field = [
       'field_name' => $name,
       'label' => $name,

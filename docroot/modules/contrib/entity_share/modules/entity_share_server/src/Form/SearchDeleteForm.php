@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to delete a search on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SearchDeleteForm extends SearchBaseForm {
 

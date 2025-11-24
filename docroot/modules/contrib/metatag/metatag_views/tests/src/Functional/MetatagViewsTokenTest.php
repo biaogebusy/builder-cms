@@ -62,7 +62,7 @@ class MetatagViewsTokenTest extends BrowserTestBase {
     ];
     $this->submitForm($edit, 'Save and edit');
     $title_prefix = $this->updateView(TRUE);
-    $node_title = $this->randomString();
+    $node_title = $this->randomTitle();
     $this->createContentTypeNode($node_title);
     $this->drupalGet("/$page_path");
     $this->assertSession()->statusCodeEquals(200);

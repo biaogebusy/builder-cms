@@ -34,6 +34,12 @@ abstract class PdfEngineBase extends PrintEngineBase {
       '#default_value' => $this->configuration['default_paper_orientation'],
       '#weight' => -9,
     ];
+    $form['dpi'] = [
+      '#type' => 'number',
+      '#title' => $this->t('DPI'),
+      '#default_value' => $this->configuration['dpi'],
+      '#weight' => -8,
+    ];
     $form['credentials'] = [
       '#type' => 'details',
       '#title' => $this->t('HTTP Authentication'),
@@ -71,6 +77,7 @@ abstract class PdfEngineBase extends PrintEngineBase {
     return parent::defaultConfiguration() + [
       'default_paper_orientation' => 'portrait',
       'default_paper_size' => 'letter',
+      'dpi' => 96,
       'username' => '',
       'password' => '',
     ];

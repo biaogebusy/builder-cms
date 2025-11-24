@@ -25,7 +25,7 @@ class RouteCompiler extends SymfonyRouteCompiler implements RouteCompilerInterfa
    * @return \Drupal\Core\Routing\CompiledRoute
    *   A CompiledRoute instance.
    */
-  public static function compile(Route $route) {
+  public static function compile(Route $route): CompiledRoute {
     // Symfony 4 requires that all UTF-8 route patterns have the "utf8" option
     // set and Drupal does not support non UTF-8 routes.
     $route->setOption('utf8', TRUE);
@@ -98,7 +98,7 @@ class RouteCompiler extends SymfonyRouteCompiler implements RouteCompilerInterfa
     // patterns we need to check in the RouteProvider.
     $fit = 0;
     foreach ($parts as $k => $part) {
-      if (strpos($part, '{') === FALSE) {
+      if (!str_contains($part, '{')) {
         $fit |= 1 << ($slashes - $k);
       }
     }

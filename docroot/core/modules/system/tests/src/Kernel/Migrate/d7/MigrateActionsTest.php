@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Migrate\d7;
 
 use Drupal\system\Entity\Action;
@@ -12,7 +14,10 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
  */
 class MigrateActionsTest extends MigrateDrupal7TestBase {
 
-  protected static $modules = ['action', 'comment', 'node'];
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = ['comment', 'node'];
 
   /**
    * {@inheritdoc}
@@ -25,7 +30,7 @@ class MigrateActionsTest extends MigrateDrupal7TestBase {
   /**
    * Tests Drupal 7 action migration to Drupal 8.
    */
-  public function testActions() {
+  public function testActions(): void {
     // Test default actions.
     $this->assertEntity('node_publish_action', 'Publish content', 'node', []);
     $this->assertEntity('node_make_sticky_action', 'Make content sticky', 'node', []);
@@ -33,9 +38,6 @@ class MigrateActionsTest extends MigrateDrupal7TestBase {
     $this->assertEntity('comment_publish_action', 'Publish comment', 'comment', []);
 
     // Test advanced actions.
-    $this->assertEntity('unpublish_comment_containing_keyword_s_', 'Unpublish comment containing keyword(s)', 'comment', ["keywords" => [0 => "drupal"]]);
-    $this->assertEntity('change_the_author_of_content', 'Change the author of content', 'node', ["owner_uid" => "2"]);
-    $this->assertEntity('unpublish_content_containing_keyword_s_', 'Unpublish content containing keyword(s)', 'node', ["keywords" => [0 => "drupal"]]);
     $this->assertEntity('display_a_message_to_the_user', 'Display a message to the user', 'system', ["message" => "Drupal migration test"]);
     $this->assertEntity('send_e_mail', 'Send e-mail', 'system', [
       "recipient" => "test@example.com",

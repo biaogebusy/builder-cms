@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Mirror image.
- *
- * @ImageEffect(
- *   id = "image_effects_mirror",
- *   label = @Translation("Mirror"),
- *   description = @Translation("Mirror the image horizontally and/or vertically.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_mirror',
+  label: new TranslatableMarkup('Mirror'),
+  description: new TranslatableMarkup('Mirror the image horizontally and/or vertically.'),
+)]
 class MirrorImageEffect extends ConfigurableImageEffectBase {
 
   /**

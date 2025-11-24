@@ -4,9 +4,9 @@ namespace Drupal\migrate\Plugin\migrate\process;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateLookupInterface;
-use Drupal\migrate\MigrateSkipProcessException;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\MigrateStubInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -114,16 +114,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @endcode
  *
  * If the source value passed in to the plugin is NULL, boolean FALSE, an empty
- * array or an empty string, the plugin will throw a
- * MigrateSkipProcessException, causing further plugins in the process to be
- * skipped.
+ * array or an empty string, the plugin will return NULL and stop further
+ * processing on the pipeline. This is done for backwards compatibility reasons,
+ * and future versions of this plugin should simply return NULL and allow
+ * processing to continue.
+ * @see https://www.drupal.org/project/drupal/issues/3246666
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "migration_lookup"
- * )
  */
+#[MigrateProcess('migration_lookup')]
 class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -153,7 +152,7 @@ class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPlugi
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\migrate\Plugin\MigrationInterface $migration
@@ -173,7 +172,7 @@ class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -187,7 +186,6 @@ class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    *
-   * @throws \Drupal\migrate\MigrateSkipProcessException
    * @throws \Drupal\migrate\MigrateException
    */
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
@@ -205,6 +203,9 @@ class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPlugi
       }
       $lookup_value = (array) $lookup_value;
       $this->skipInvalid($lookup_value);
+      if ($this->isPipelineStopped()) {
+        return NULL;
+      }
       $source_id_values[$lookup_migration_id] = $lookup_value;
 
       // Re-throw any PluginException as a MigrateException so the executable
@@ -260,7 +261,22 @@ class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPlugi
         throw $e;
       }
       catch (MigrateSkipRowException $e) {
-        throw $e;
+        // Build a new message.
+        $skip_row_exception_message = $e->getMessage();
+        if (empty($skip_row_exception_message)) {
+          $new_message = sprintf("Migration lookup for destination '%s' attempted to create a stub using migration %s, which resulted in a row skip",
+            $destination_property,
+            $stub_migration,
+          );
+        }
+        else {
+          $new_message = sprintf("Migration lookup for destination '%s' attempted to create a stub using migration %s, which resulted in a row skip, with message '%s'",
+            $destination_property,
+            $stub_migration,
+            $skip_row_exception_message,
+          );
+        }
+        throw new MigrateSkipRowException($new_message, 0);
       }
       catch (\Exception $e) {
         throw new MigrateException(sprintf('%s was thrown while attempting to stub: %s', get_class($e), $e->getMessage()), $e->getCode(), $e);
@@ -281,12 +297,10 @@ class MigrationLookup extends ProcessPluginBase implements ContainerFactoryPlugi
    *
    * @param array $value
    *   The incoming value to check.
-   *
-   * @throws \Drupal\migrate\MigrateSkipProcessException
    */
   protected function skipInvalid(array $value) {
     if (!array_filter($value, [$this, 'isValid'])) {
-      throw new MigrateSkipProcessException();
+      $this->stopPipeline();
     }
   }
 

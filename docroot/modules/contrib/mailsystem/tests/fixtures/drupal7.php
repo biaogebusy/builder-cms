@@ -151,6 +151,6 @@ $connection->insert('variable')
 ))
 ->values(array(
   'name' => 'mail_system',
-  'value' => 'a:4:{s:14:"default-system";s:17:"TestingMailSystem";s:10:"color_1111";s:17:"DefaultMailSystem";s:9:"date_4321";s:17:"DefaultMailSystem";s:10:"system_123";s:17:"TestingMailSystem";}',
+  'value' => 'a:4:{s:14:"default-system";s:17:"TestingMailSystem";s:9:"user_1111";s:17:"DefaultMailSystem";s:9:"date_4321";s:17:"DefaultMailSystem";s:10:"system_123";s:17:"TestingMailSystem";}',
 ))
 ->execute();

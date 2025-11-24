@@ -52,4 +52,15 @@ interface ConditionGroupInterface extends ConditionSetInterface {
    */
   public function &getTags();
 
+  /**
+   * Determines whether the condition group is empty.
+   *
+   * A condition group is empty if it doesn't contain any conditions (neither
+   * directly nor indirectly).
+   *
+   * @return bool
+   *   TRUE if the condition group is empty, FALSE otherwise.
+   */
+  public function isEmpty(): bool;
+
 }

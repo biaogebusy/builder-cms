@@ -11,8 +11,13 @@ use Drupal\Core\Form\FormStateInterface;
  * @FieldType(
  *   id = "range_decimal",
  *   label = @Translation("Range (decimal)"),
- *   description = @Translation("This field stores a fixed decimal range in the database."),
- *   category = @Translation("Numeric range"),
+ *   description = {
+ *     @Translation("Ideal for exact counts and measures (prices, temperatures, distances, volumes, etc.)"),
+ *     @Translation("Stores a range in the database in a fixed decimal format"),
+ *     @Translation("For example, 12.34-56.78 (should be used for further detailed calculations such as summing many of these)"),
+ *   },
+ *   category = "range",
+ *   weight = -30,
  *   default_widget = "range",
  *   default_formatter = "range_decimal",
  *   constraints = {"RangeBothValuesRequired" = {}, "RangeFromGreaterTo" = {}}

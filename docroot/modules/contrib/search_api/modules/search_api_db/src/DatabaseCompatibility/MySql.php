@@ -47,17 +47,18 @@ class MySql extends GenericDatabase implements LocationAwareDatabaseInterface {
     // As MySQL removes trailing whitespace when computing primary keys, we need
     // to do the same or pseudo-duplicates could cause an exception ("Integrity
     // constraint violation: Duplicate entry") during indexing.
-    if ($type !== 'text') {
-      $value = rtrim($value);
-    }
-    return $value;
+    return rtrim($value);
   }
 
   /**
    * {@inheritdoc}
    */
   public function orderByRandom(SelectInterface $query) {
-    $alias = $query->addExpression('rand()', 'random_order_field');
+    $seed = $query->getMetaData('search_api_random_sort_seed');
+    if (!isset($seed) || !is_numeric($seed)) {
+      $seed = '';
+    }
+    $alias = $query->addExpression("rand($seed)", 'random_order_field');
     $query->orderBy($alias);
   }
 
@@ -82,7 +83,7 @@ class MySql extends GenericDatabase implements LocationAwareDatabaseInterface {
    * {@inheritdoc}
    */
   public function convertValue($value, string $original_type) {
-    if (!$value || !is_string($value) || strpos($value, ',') === FALSE) {
+    if (!$value || !is_string($value) || !str_contains($value, ',')) {
       return NULL;
     }
     [$lat, $lon] = explode(',', $value);

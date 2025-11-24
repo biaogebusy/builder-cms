@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\Views;
 
 use Drupal\field\Entity\FieldConfig;
@@ -20,9 +22,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 abstract class FieldTestBase extends ViewTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'field_test_views'];
 
@@ -43,7 +43,7 @@ abstract class FieldTestBase extends ViewTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE, $modules = ['field_test_views']) {
+  protected function setUp($import_test_views = TRUE, $modules = ['field_test_views']): void {
     parent::setUp($import_test_views, $modules);
 
     // Ensure the page node type exists.

@@ -70,7 +70,7 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
   public function __construct(
     BlazyMediaInterface $blazy_media,
     ResourceFetcherInterface $resource_fetcher,
-    UrlResolverInterface $url_resolver
+    UrlResolverInterface $url_resolver,
   ) {
     $this->blazyMedia = $blazy_media;
     $this->resourceFetcher = $resource_fetcher;
@@ -145,17 +145,89 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
   /**
    * {@inheritdoc}
    */
-  public function build(array &$build, $entity = NULL): void {
-    // @todo remove old approach at 3.x after old VEF BlazyVideoTrait removed.
-    if (isset($build['input_url'])) {
-      $this->blazyManager->verifySafely($build);
-      $this->toEmbed($build);
+  public function build(array &$build): void {
+    $access   = $build['#access'] ?? FALSE;
+    $entity   = $build['#entity'] ?? NULL;
+    $settings = &$build['#settings'];
+    $blazies  = $settings['blazies'];
+    $valid    = $entity instanceof MediaInterface;
+    $stage    = $settings['image'] ?? NULL;
+    $stage    = $blazies->get('field.formatter.image', $stage);
+    $media    = $valid ? $entity : NULL;
+
+    // Checks for access.
+    if (!$access && $denied = $this->blazyManager->denied($entity)) {
+      $build['content'][] = $denied;
       return;
     }
 
-    // Extracts image item from Media, File entity, ER, FieldItemList, etc.
-    $build['#entity'] = $build['#entity'] ?? $entity;
-    $this->fromMediaOrAny($build);
+    // Two designated types of $stage: MediaInterface and FileInterface.
+    // Since 2.10, Main stage is usable as the main display of a Paragraphs,
+    // only if the stage is a Media entity and Overlay is left empty. Basically
+    // render the Media and replace its parent $entity. This way if it is a
+    // video, Media switch will kick in as a Media player or simply an iframe.
+    // Old behavior is intact if Overlay is provided as previously designed.
+    // Before 2.10, the stage was always made an Image, and required Overlay
+    // to have a video player or iframe on top of the stage as an Image.
+    if (!$valid && $entity && $stage && empty($settings['overlay'])) {
+      if ($object = $this->blazyMedia->fromField($entity, $stage)) {
+        $media = $object;
+        $valid = $media instanceof MediaInterface;
+      }
+    }
+
+    // Required early by BlazyImage::fromAny() below to get media metadata.
+    if ($valid) {
+      $build['#media'] = $media;
+      // Prepare Media needed settings, extract Media thumbnail, except type.
+      $media = $this->blazyMedia->prepare($build);
+
+      // Overrides media with the translated version.
+      $build['#media'] = $media;
+    }
+
+    // Provides image url earlier for file_video at ::fromMedia to have posters.
+    if (!BlazyImage::isValidItem($build)) {
+      $entity = $valid ? $media : $entity;
+      /** @var \Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem $entity */
+      if ($item = BlazyImage::fromAny($entity, $settings)) {
+        $build['#item'] = $item;
+      }
+    }
+
+    // BlazyFilter/ VEF without file upload [data-entity-uuid], nor File API.
+    // Soundcloud, etc.
+    if (!BlazyImage::isValidItem($build)) {
+      $build['#item'] = $this->getThumbnail($settings);
+    }
+
+    // If we have a valid image item, fake or real, no biggies.
+    if (BlazyImage::isValidItem($build)) {
+      // Marks a hires if valid and so configured, normally field_media_image.
+      $blazies->set('is.hires', !empty($stage));
+
+      // Extract ImageItem info so to be consumed by SVG attributes.
+      if ($item = $this->blazyManager->toHashtag($build, 'item', NULL)) {
+        if ($data = BlazyImage::toArray($item)) {
+          $blazies->set('image', $data, TRUE)
+            // @todo remove this pingpong at 3.x:
+            ->set('image.item', $item);
+        }
+      }
+    }
+
+    /** @var \Drupal\media\Entity\Media $entity */
+    if ($valid) {
+      $this->fromMedia($build);
+    }
+    else {
+      // Attempts to get image data directly from oEmbed resource.
+      // Called by BlazyFilter or deprecated VEF, run after data populated.
+      $vef = $blazies->get('media.source') == 'video_embed_field';
+      if ($vef || !$entity || !$blazies->get('media.embed_url')) {
+        $this->toEmbed($settings);
+      }
+    }
   }
 
   /**
@@ -169,32 +241,15 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
   }
 
   /**
-   * Checks for the provider and its resources.
-   */
-  public function checkProviderAndResource($input, $blazies): void {
-    $id = md5($input);
-    if (!isset($this->providerAndResource[$id])) {
-      if (!$blazies->was('provider')) {
-        $this->checkProvider($input, $blazies);
-      }
-
-      if (!$blazies->was('resource')) {
-        $this->checkResource($input, $blazies);
-      }
-
-      $this->providerAndResource[$id] = $id;
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getThumbnail(array &$settings, $fallback = TRUE): ?object {
     $blazies = $settings['blazies'];
     $input   = $blazies->get('media.input_url', $settings['input_url'] ?? NULL);
+    $item    = NULL;
 
     if (!$input) {
-      return NULL;
+      return $item;
     }
 
     $id = md5($input);
@@ -205,7 +260,6 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
       // Similar to extracting image data from ImageFactory source. Basically,
       // anything from resource is fallback, except for type.
       // Respect hard-coded width and height since no UI for all these here.
-      $item   = NULL;
       $values = $blazies->get('media.resource', []);
       $uri    = $blazies->get('image.uri', $settings['uri'] ?? NULL);
       $uri    = $uri ?: $values['uri'] ?? NULL;
@@ -303,94 +357,25 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
   }
 
   /**
-   * Temporary method to be compatible with old approach pre 2.10.
+   * Checks for the provider and its resources, to determine oembed, or not.
    *
-   * @todo move it directly into ::build() after sub-modules.
+   * @param string $input
+   *   The media input url.
+   * @param object $blazies
+   *   The blazies object to check and store the provider and its resources.
    */
-  private function fromMediaOrAny(array &$build): void {
-    $this->blazyManager->hashtag($build);
-
-    $access   = $build['#access'] ?? FALSE;
-    $entity   = $build['#entity'] ?? NULL;
-    $settings = &$build['#settings'];
-    $blazies  = $settings['blazies'];
-    $valid    = $entity instanceof MediaInterface;
-    $stage    = $settings['image'] ?? NULL;
-    $stage    = $blazies->get('field.formatter.image', $stage);
-    $media    = $valid ? $entity : NULL;
-
-    // Checks for access.
-    if (!$access && $denied = $this->blazyManager->denied($entity)) {
-      $build['content'][] = $denied;
-      return;
-    }
-
-    // Two designated types of $stage: MediaInterface and FileInterface.
-    // Since 2.10, Main stage is usable as the main display of a Paragraphs,
-    // only if the stage is a Media entity and Overlay is left empty. Basically
-    // render the Media and replace its parent $entity. This way if it is a
-    // video, Media switch will kick in as a Media player or simply an iframe.
-    // Old behavior is intact if Overlay is provided as previously designed.
-    // Before 2.10, the stage was always made an Image, and required Overlay
-    // to have a video player or iframe on top of the stage as an Image.
-    if (!$valid && $entity && $stage && empty($settings['overlay'])) {
-      if ($object = $this->blazyMedia->fromField($entity, $stage)) {
-        $media = $object;
-        $valid = TRUE;
+  private function checkProviderAndResource($input, $blazies): void {
+    $id = md5($input);
+    if (!isset($this->providerAndResource[$id])) {
+      if (!$blazies->was('provider')) {
+        $this->checkProvider($input, $blazies);
       }
-    }
 
-    // Required early by BlazyImage::fromAny() below to get media metadata.
-    if ($valid) {
-      $build['#media'] = $media;
-      // Prepare Media needed settings, extract Media thumbnail, except type.
-      $media = $this->blazyMedia->prepare($build);
-
-      // Overrides media with the translated version.
-      $build['#media'] = $media;
-    }
-
-    // Provides image url earlier for file_video at ::fromMedia to have posters.
-    if (!BlazyImage::isValidItem($build)) {
-      $entity = $valid ? $media : $entity;
-      /** @var \Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem $entity */
-      if ($item = BlazyImage::fromAny($entity, $settings)) {
-        $build['#item'] = $item;
+      if (!$blazies->was('resource')) {
+        $this->checkResource($input, $blazies);
       }
-    }
 
-    // BlazyFilter/ VEF without file upload [data-entity-uuid], nor File API.
-    // Soundcloud, etc.
-    if (!BlazyImage::isValidItem($build)) {
-      $build['#item'] = $this->getThumbnail($settings);
-    }
-
-    // If we have a valid image item, fake or real, no biggies.
-    if (BlazyImage::isValidItem($build)) {
-      // Marks a hires if valid and so configured, normally field_media_image.
-      $blazies->set('is.hires', !empty($stage));
-
-      // Extract ImageItem info so to be consumed by SVG attributes.
-      if ($item = $this->blazyManager->toHashtag($build, 'item', NULL)) {
-        if ($data = BlazyImage::toArray($item)) {
-          $blazies->set('image', $data, TRUE)
-            // @todo remove this pingpong at 3.x:
-            ->set('image.item', $item);
-        }
-      }
-    }
-
-    /** @var \Drupal\media\Entity\Media $entity */
-    if ($valid) {
-      $this->fromMedia($build);
-    }
-    else {
-      // Attempts to get image data directly from oEmbed resource.
-      // Called by BlazyFilter or deprecated VEF, run after data populated.
-      $vef = $blazies->get('media.source') == 'video_embed_field';
-      if ($vef || !$entity || !$blazies->get('media.embed_url')) {
-        $this->toEmbed($settings);
-      }
+      $this->providerAndResource[$id] = $id;
     }
   }
 
@@ -520,7 +505,7 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
    */
   private function toEmbed(array &$settings): void {
     $blazies = $settings['blazies'];
-    $input   = $blazies->get('media.input_url', $settings['input_url'] ?? NULL);
+    $input   = $blazies->get('media.input_url');
     $switch  = $settings['media_switch'] ?? NULL;
 
     if (empty($input)) {
@@ -544,30 +529,6 @@ class BlazyOEmbed implements BlazyOEmbedInterface {
     $embed_url = Internals::correct($embed_url);
     $blazies->set('media.embed_url', $embed_url)
       ->set('media.escaped', TRUE);
-  }
-
-  /**
-   * Deprecated method ::imageFactory().
-   *
-   * @deprecated in blazy:8.x-2.6 and is removed from blazy:3.0.0. Use none
-   *   instead.
-   * @see https://www.drupal.org/node/3103018
-   */
-  public function imageFactory() {
-    @trigger_error('imageFactory is deprecated in blazy:8.x-2.6 and is removed from blazy:3.0.0. Use none instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
-    return Internals::service('image.factory');
-  }
-
-  /**
-   * Deprecated method ::getIframeUrlHelper().
-   *
-   * @deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use none
-   *   instead.
-   * @see https://www.drupal.org/node/3103018
-   */
-  public function getIframeUrlHelper() {
-    @trigger_error('getIframeUrlHelper is deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use none instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
-    return Internals::service('media.oembed.iframe_url_helper');
   }
 
 }

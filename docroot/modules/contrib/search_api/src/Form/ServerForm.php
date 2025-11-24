@@ -147,7 +147,7 @@ class ServerForm extends EntityForm {
         $backend = $this->backendPluginManager
           ->createInstance($backend_id, $config);
       }
-      catch (PluginException $e) {
+      catch (PluginException) {
         continue;
       }
       if ($backend->isHidden()) {
@@ -172,7 +172,7 @@ class ServerForm extends EntityForm {
         '#ajax' => [
           'callback' => [get_class($this), 'buildAjaxBackendConfigForm'],
           'wrapper' => 'search-api-backend-config-form',
-          'method' => 'replace',
+          'method' => 'replaceWith',
           'effect' => 'fade',
         ],
       ];
@@ -181,7 +181,7 @@ class ServerForm extends EntityForm {
     else {
       $url = 'https://www.drupal.org/docs/8/modules/search-api/getting-started/server-backends-and-features';
       $args[':url'] = Url::fromUri($url)->toString();
-      $error = $this->t('There are no backend plugins available for the Search API. Please install a <a href=":url">module that provides a backend plugin</a> to proceed.', $args);
+      $error = $this->t('There are no backend plugins available for the Search API. Install a <a href=":url">module that provides a backend plugin</a> to proceed.', $args);
       $this->messenger->addError($error);
       $form = [];
     }
@@ -210,12 +210,12 @@ class ServerForm extends EntityForm {
    */
   public function buildBackendConfigForm(array &$form, FormStateInterface $form_state, ServerInterface $server) {
     $form['backend_config'] = [];
-    if ($server->hasValidBackend()) {
-      $backend = $server->getBackend();
+    $backend = $server->getBackendIfAvailable();
+    if ($backend) {
       $form_state->set('backend', $backend->getPluginId());
       if ($backend instanceof PluginFormInterface) {
         if ($form_state->isRebuilding()) {
-          $this->messenger->addWarning($this->t('Please configure the selected backend.'));
+          $this->messenger->addWarning($this->t('Configure the selected backend.'));
         }
         // Attach the backend plugin configuration form.
         $backend_form_state = SubformState::createForSubform($form['backend_config'], $form, $form_state);
@@ -282,9 +282,8 @@ class ServerForm extends EntityForm {
         $form_state->setRebuild();
       }
     }
-    // Check before loading the backend plugin so we don't throw an exception.
     elseif ($server->hasValidBackend()) {
-      $backend = $server->getBackend();
+      $backend = $server->getBackendIfAvailable();
       if ($backend instanceof PluginFormInterface) {
         $backend_form_state = SubformState::createForSubform($form['backend_config'], $form, $form_state);
         $backend->validateConfigurationForm($form['backend_config'], $backend_form_state);
@@ -300,13 +299,10 @@ class ServerForm extends EntityForm {
 
     /** @var \Drupal\search_api\ServerInterface $server */
     $server = $this->getEntity();
-    // Check before loading the backend plugin so we don't throw an exception.
-    if ($server->hasValidBackend()) {
-      $backend = $server->getBackend();
-      if ($backend instanceof PluginFormInterface) {
-        $backend_form_state = SubformState::createForSubform($form['backend_config'], $form, $form_state);
-        $backend->submitConfigurationForm($form['backend_config'], $backend_form_state);
-      }
+    $backend = $server->getBackendIfAvailable();
+    if ($backend instanceof PluginFormInterface) {
+      $backend_form_state = SubformState::createForSubform($form['backend_config'], $form, $form_state);
+      $backend->submitConfigurationForm($form['backend_config'], $backend_form_state);
     }
 
     return $server;
@@ -320,9 +316,10 @@ class ServerForm extends EntityForm {
     if (!$form_state->isRebuilding()) {
       try {
         $server = $this->getEntity();
-        $server->save();
+        $return = $server->save();
         $this->messenger->addStatus($this->t('The server was successfully saved.'));
         $form_state->setRedirect('entity.search_api_server.canonical', ['search_api_server' => $server->id()]);
+        return $return;
       }
       catch (EntityStorageException $e) {
         $form_state->setRebuild();
@@ -334,6 +331,7 @@ class ServerForm extends EntityForm {
         $this->messenger->addError($this->t('The server could not be saved.'));
       }
     }
+    return 0;
   }
 
 }

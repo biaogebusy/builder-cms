@@ -8,10 +8,9 @@ dependencies:
   - drupal:node
   - drupal:rest
   - drupal:views
-  - drupal:views_test_data
 hidden: true
 
-# Information added by Drupal.org packaging script on 2023-10-15
-version: '8.x-1.30'
+# Information added by Drupal.org packaging script on 2025-11-01
+version: '8.x-1.40'
 project: 'search_api'
-datestamp: 1697366294
+datestamp: 1762030918

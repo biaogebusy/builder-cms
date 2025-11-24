@@ -61,7 +61,7 @@ class SmsVerification extends EntityContentBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     $entity_type = static::getEntityTypeId($plugin_id);
     return new static(
       $configuration,
@@ -72,7 +72,7 @@ class SmsVerification extends EntityContentBase implements ContainerFactoryPlugi
       array_keys($container->get('entity_type.bundle.info')->getBundleInfo($entity_type)),
       $container->get('entity_field.manager'),
       $container->get('plugin.manager.field.field_type'),
-      $container->get('sms.phone_number.verification')
+      $container->get('sms.phone_number.verification'),
     );
   }
 

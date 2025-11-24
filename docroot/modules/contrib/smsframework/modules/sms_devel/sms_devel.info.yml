@@ -1,12 +1,12 @@
 name: SMS Devel
 type: module
 description: Tools to assist building with the SMS Framework.
-core_version_requirement: '>=9.2'
+core_version_requirement: ^10.2 || ^11
 package: SMS Framework
 dependencies:
   - smsframework:sms
 
-# Information added by Drupal.org packaging script on 2022-12-05
-version: '2.1.0'
+# Information added by Drupal.org packaging script on 2024-12-09
+version: '2.3.0'
 project: 'smsframework'
-datestamp: 1670240398
+datestamp: 1733714929

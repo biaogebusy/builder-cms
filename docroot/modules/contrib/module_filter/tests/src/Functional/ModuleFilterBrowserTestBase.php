@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\module_filter\Functional;
 
 use Drupal\Tests\BrowserTestBase;

@@ -84,6 +84,8 @@ class QuickNodeCloneNodeForm extends NodeForm {
       $this->messenger()->addError($this->t('The cloned post could not be saved.'));
       $form_state->setRebuild();
     }
+
+    return $insert;
   }
 
 }

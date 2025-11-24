@@ -2,7 +2,7 @@
 
 namespace Drupal\content_lock\Form;
 
-use Drupal\content_lock\ContentLock\ContentLock;
+use Drupal\content_lock\ContentLock\ContentLockInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -14,7 +14,7 @@ use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class ContentLockSettingsForm.
+ * Defines a form for configuring the Content Lock module.
  *
  * @package Drupal\content_lock\Form
  */
@@ -197,11 +197,11 @@ class ContentLockSettingsForm extends ConfigFormBase {
             '#type' => 'radios',
             '#title' => $this->t('Lock only on entity form operation level.'),
             '#options' => [
-              ContentLock::FORM_OP_MODE_DISABLED => $this->t('Disabled'),
-              ContentLock::FORM_OP_MODE_WHITELIST => $this->t('Enable lock for selected form operations'),
-              ContentLock::FORM_OP_MODE_BLACKLIST => $this->t('Disable lock for selected form operations'),
+              ContentLockInterface::FORM_OP_MODE_DISABLED => $this->t('Disabled'),
+              ContentLockInterface::FORM_OP_MODE_WHITELIST => $this->t('Enable lock for selected form operations'),
+              ContentLockInterface::FORM_OP_MODE_BLACKLIST => $this->t('Disable lock for selected form operations'),
             ],
-            '#default_value' => $config->get('form_op_lock.' . $definition->id() . '.mode') ?: ContentLock::FORM_OP_MODE_DISABLED,
+            '#default_value' => $config->get('form_op_lock.' . $definition->id() . '.mode') ?: ContentLockInterface::FORM_OP_MODE_DISABLED,
             '#description' => $this->t('Activating this options allows users to edit different entity forms concurrently'),
           ];
 
@@ -214,7 +214,7 @@ class ContentLockSettingsForm extends ConfigFormBase {
             '#default_value' => (array) $config->get('form_op_lock.' . $definition->id() . '.values'),
             '#states' => [
               'invisible' => [
-                ':input[name="' . $definition->id() . '[settings][form_op_lock][mode]"]' => ['value' => ContentLock::FORM_OP_MODE_DISABLED],
+                ':input[name="' . $definition->id() . '[settings][form_op_lock][mode]"]' => ['value' => ContentLockInterface::FORM_OP_MODE_DISABLED],
               ],
             ],
           ];

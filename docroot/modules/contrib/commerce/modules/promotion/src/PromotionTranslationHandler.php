@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_promotion;
 
-use Drupal\content_translation\ContentTranslationHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\content_translation\ContentTranslationHandler;
 
 /**
  * Defines the translation handler for promotions.

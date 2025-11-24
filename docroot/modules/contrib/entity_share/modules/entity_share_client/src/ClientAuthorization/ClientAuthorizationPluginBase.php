@@ -4,15 +4,16 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\ClientAuthorization;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\entity_share_client\Http\ClientFactoryInterface;
 use Drupal\entity_share_client\Service\KeyProvider;
-use Drupal\Core\Http\ClientFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class for Client authorization plugins.
@@ -57,7 +58,7 @@ abstract class ClientAuthorizationPluginBase extends PluginBase implements Clien
     KeyProvider $keyProvider,
     KeyValueFactoryInterface $key_value_factory,
     UuidInterface $uuid,
-    ClientFactory $clientFactory
+    ClientFactory|ClientFactoryInterface $clientFactory
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->keyService = $keyProvider;
@@ -190,7 +191,6 @@ abstract class ClientAuthorizationPluginBase extends PluginBase implements Clien
         $this->keyValueStore->delete($configuration['uuid']);
         $key = $credentials['id'];
         break;
-
     }
     $configuration['data'] = [
       'credential_provider' => $provider,
@@ -226,7 +226,7 @@ abstract class ClientAuthorizationPluginBase extends PluginBase implements Clien
       '#attributes' => [
         'data-states-selector' => 'provider',
       ],
-      '#weight' => -99,
+      '#weight' => (int) -99,
     ];
     $form['entity_share']['#states'] = [
       'required' => [
@@ -259,7 +259,7 @@ abstract class ClientAuthorizationPluginBase extends PluginBase implements Clien
       '#type' => 'key_select',
       '#title' => $this->t('Select a stored Key'),
       '#default_value' => $key_id,
-      '#empty_option' => $this->t('- Please select -'),
+      '#empty_option' => $this->t('- Select -'),
     ];
   }
 

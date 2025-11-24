@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_order\Kernel;
 
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_order\Exception\OrderVersionMismatchException;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Entity\EntityStorageException;
 
 /**
  * Tests order locking.
@@ -28,7 +28,7 @@ class OrderLockingTest extends OrderKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->user = $this->createUser(['mail' => 'test@example.com']);
+    $this->user = $this->createUser();
   }
 
   /**
@@ -57,8 +57,8 @@ class OrderLockingTest extends OrderKernelTestBase {
       'uid' => $this->user->id(),
       'store_id' => $this->store->id(),
     ]);
-    $contraint_violations = $order->validate()->getEntityViolations();
-    $this->assertEquals(0, $contraint_violations->count());
+    $constraint_violations = $order->validate()->getEntityViolations();
+    $this->assertEquals(0, $constraint_violations->count());
     $order->save();
     $this->assertEquals(1, $order->getVersion());
 
@@ -74,9 +74,9 @@ class OrderLockingTest extends OrderKernelTestBase {
       $this->assertEquals(2, $order->getVersion());
     })($order->id());
 
-    $contraint_violations = $order->validate()->getEntityViolations();
-    $this->assertEquals(1, $contraint_violations->count());
-    $entity_constraint_violation = $contraint_violations->get(0);
+    $constraint_violations = $order->validate()->getEntityViolations();
+    $this->assertEquals(1, $constraint_violations->count());
+    $entity_constraint_violation = $constraint_violations->get(0);
     $this->assertEquals('The order has either been modified by another user, or you have already submitted modifications. As a result, your changes cannot be saved.', $entity_constraint_violation->getMessage());
   }
 

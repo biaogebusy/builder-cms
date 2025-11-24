@@ -15,6 +15,10 @@ if (!InstallerKernel::installationAttempted() && extension_loaded('redis')) {
   // $settings['redis.connection']['host'] = '127.0.0.1';
   // $settings['redis.connection']['port'] = 6379;
 
+  // Use UNIX socket instead:
+  // $settings['redis.connection']['host'] = '/tmp/redis.sock'; // Your Redis socket
+  // $settings['redis.connection']['port'] = 0; // For socket connections the port must be 0
+
   // Customize used interface.
   // $settings['redis.connection']['interface'] = 'PhpRedis';
 
@@ -33,6 +37,12 @@ if (!InstallerKernel::installationAttempted() && extension_loaded('redis')) {
 
   // Customize the prefix, a reliable but long fallback is used if not defined.
   // $settings['cache_prefix'] = 'prefix';
+
+  // Respect specific TTL with an offset see README.md for more information.
+  $settings['redis_ttl_offset'] = 3600;
+
+  // Additional optimizations, see README.md
+  $settings['redis_invalidate_all_as_delete'] = TRUE;
 
   // Apply changes to the container configuration to better leverage Redis.
   // This includes using Redis for the lock and flood control systems, as well

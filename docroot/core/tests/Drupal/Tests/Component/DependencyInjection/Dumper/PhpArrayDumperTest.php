@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\DependencyInjection\Dumper;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,14 +24,14 @@ class PhpArrayDumperTest extends OptimizedPhpArrayDumperTest {
   /**
    * {@inheritdoc}
    */
-  protected function serializeDefinition(array $service_definition) {
+  protected static function serializeDefinition(array $service_definition) {
     return $service_definition;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getServiceCall($id, $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
+  protected static function getServiceCall($id, $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): string {
     if ($invalid_behavior !== ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
       return sprintf('@?%s', $id);
     }
@@ -40,14 +42,14 @@ class PhpArrayDumperTest extends OptimizedPhpArrayDumperTest {
   /**
    * {@inheritdoc}
    */
-  protected function getParameterCall($name) {
+  protected static function getParameterCall($name): string {
     return '%' . $name . '%';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getCollection($collection, $resolve = TRUE) {
+  protected static function getCollection($collection, $resolve = TRUE) {
     return $collection;
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
@@ -29,7 +31,7 @@ class ReadOnlyStreamWrapperTest extends FileTestBase {
   /**
    * Tests read-only specific behavior.
    */
-  public function testReadOnlyBehavior() {
+  public function testReadOnlyBehavior(): void {
     $type = DummyReadOnlyStreamWrapper::getType();
     // Checks that the stream wrapper type is not declared as writable.
     $this->assertSame(0, $type & StreamWrapperInterface::WRITE);
@@ -78,7 +80,7 @@ class ReadOnlyStreamWrapperTest extends FileTestBase {
     // Attempt to close the stream.  (Suppress errors, as fclose triggers fflush.)
     $this->assertTrue(fclose($handle), 'Able to close file using the read_only stream wrapper.');
     // Test the rename() function
-    $this->assertFalse(@rename($uri, $this->scheme . '://newname.txt'), 'Unable to rename files using the read-only stream wrapper.');
+    $this->assertFalse(@rename($uri, $this->scheme . '://new_name.txt'), 'Unable to rename files using the read-only stream wrapper.');
     // Test the unlink() function
     $this->assertTrue(@$file_system->unlink($uri), 'Able to unlink file using read-only stream wrapper.');
     $this->assertFileExists($filepath);
@@ -86,14 +88,14 @@ class ReadOnlyStreamWrapperTest extends FileTestBase {
     // Test the mkdir() function by attempting to create a directory.
     $dirname = $this->randomMachineName();
     $dir = $site_path . '/files/' . $dirname;
-    $readonlydir = $this->scheme . '://' . $dirname;
+    $read_only_dir = $this->scheme . '://' . $dirname;
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
-    $this->assertFalse(@$file_system->mkdir($readonlydir, 0775, 0), 'Unable to create directory with read-only stream wrapper.');
+    $this->assertFalse(@$file_system->mkdir($read_only_dir, 0775, 0), 'Unable to create directory with read-only stream wrapper.');
     // Create a temporary directory for testing purposes
     $this->assertTrue($file_system->mkdir($dir), 'Test directory created.');
     // Test the rmdir() function by attempting to remove the directory.
-    $this->assertFalse(@$file_system->rmdir($readonlydir), 'Unable to delete directory with read-only stream wrapper.');
+    $this->assertFalse(@$file_system->rmdir($read_only_dir), 'Unable to delete directory with read-only stream wrapper.');
     // Remove the temporary directory.
     $file_system->rmdir($dir);
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
@@ -14,7 +16,7 @@ class ContainerDerivativeDiscoveryDecoratorTest extends UnitTestCase {
   /**
    * @covers ::getDefinitions
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $example_service = $this->createMock('Symfony\Contracts\EventDispatcher\EventDispatcherInterface');
     $example_container = $this->getMockBuilder('Symfony\Component\DependencyInjection\ContainerBuilder')
       ->onlyMethods(['get'])

@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_order\Resolver;
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_store\Resolver\StoreResolverInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * Returns the order's store, when an order is present in the URL.

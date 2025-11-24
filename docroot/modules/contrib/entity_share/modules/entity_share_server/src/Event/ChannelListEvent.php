@@ -8,12 +8,10 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Allows to alter the list of channels provided by the website.
- *
- * @package Drupal\entity_share_server\Event
  */
 class ChannelListEvent extends Event {
 
-  const EVENT_NAME = 'entity_share_server.channel_list';
+  public const EVENT_NAME = 'entity_share_server.channel_list';
 
   /**
    * List of channels provided by entity share server.

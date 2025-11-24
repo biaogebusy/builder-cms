@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Kernel\Views;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -34,7 +36,7 @@ class StyleSerializerKernelTest extends ViewsKernelTestBase {
   /**
    * @covers ::calculateDependencies
    */
-  public function testCalculateDepenencies() {
+  public function testCalculateDependencies(): void {
     /** @var \Drupal\views\Entity\View $view */
     $view = View::load('test_serializer_display_entity');
     $display = &$view->getDisplay('rest_export_1');

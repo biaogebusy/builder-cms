@@ -5,7 +5,6 @@ namespace Drupal\Tests\metatag\Functional;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\metatag\Entity\MetatagDefaults;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Ensures that the Metatag config translations work correctly.
@@ -13,8 +12,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  * @group metatag
  */
 class MetatagConfigTranslationTest extends BrowserTestBase {
-
-  use StringTranslationTrait;
 
   /**
    * Profile to use.
@@ -90,7 +87,7 @@ class MetatagConfigTranslationTest extends BrowserTestBase {
     $this->drupalGet('admin/config/regional/config-translation/metatag_defaults');
     $session->statusCodeEquals(200);
     // @todo Update this to confirm the H1 is loaded.
-    $session->responseContains($this->t('Metatag defaults'));
+    $session->responseContains('Metatag defaults');
 
     // Load all of the Metatag defaults.
     $defaults = \Drupal::configFactory()->listAll('metatag.metatag_defaults');
@@ -109,10 +106,8 @@ class MetatagConfigTranslationTest extends BrowserTestBase {
     foreach ($defaults as $config_name) {
       $config_entity = $config_manager->loadConfigEntityByName($config_name);
       $this->assertNotNull($config_entity);
-      if (!empty($config_entity)) {
-        $this->drupalGet('admin/config/search/metatag/' . $config_entity->id() . '/translate');
-        $session->statusCodeEquals(200);
-      }
+      $this->drupalGet('admin/config/search/metatag/' . $config_entity->id() . '/translate');
+      $session->statusCodeEquals(200);
     }
   }
 
@@ -128,7 +123,7 @@ class MetatagConfigTranslationTest extends BrowserTestBase {
       'title' => 'Test title',
       'description' => 'Test description',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $session->statusCodeEquals(200);
     $session->pageTextContains('Saved the Global Metatag defaults.');
 
@@ -153,7 +148,7 @@ class MetatagConfigTranslationTest extends BrowserTestBase {
       'translation[config_names][metatag.metatag_defaults.global][tags][title]' => 'Le title',
       'translation[config_names][metatag.metatag_defaults.global][tags][description]' => 'Le description',
     ];
-    $this->submitForm($edit, $this->t('Save translation'));
+    $this->submitForm($edit, 'Save translation');
     $session->statusCodeEquals(200);
     $session->pageTextContains('Successfully saved French translation');
 

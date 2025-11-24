@@ -38,39 +38,12 @@ INSTALLATION
 ------------
 
  * Module: Install as you would normally install a contributed Drupal module.
-   See: https://www.drupal.org/docs/8/extending-drupal-8/installing-drupal-8-modules
+   See: https://www.drupal.org/documentation/install/modules-themes/modules-8
    for further information.
 
  * Plugin: Download the most recent 3.x.x version of the FooTable jQuery plugin
-   from https://github.com/fooplugins/FooTable/tags and copy the compiled
-   directory to the libraries/footable directory.
-
-   Installation using Composer:
-
-   If you are installing this module using Composer, you can also download the
-   library by adding for example the following lines into your composer.json file:
-
-     "repositories": {
-       ...
-       "footable": {
-         "type": "package",
-         "package": {
-           "name": "fooplugins/footable",
-           "version": "3.1.6",
-           "type": "drupal-library",
-           "dist": {
-             "url": "https://github.com/fooplugins/FooTable/archive/3.1.6.zip",
-             "type": "zip"
-           }
-         }
-       },
-       ...
-     }
-     "require": {
-       ...
-       "fooplugins/footable": "3.*",
-       ...
-     }
+   from https://github.com/fooplugins/FooTable/tags and move the contents of
+   the compiled directory into the libraries/footable directory.
 
 
 CONFIGURATION

@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Webform Rest module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function webform_rest_install() {
+  // Displays a message suggesting the installation of restui module if not currently installed
+  $moduleHandler = \Drupal::service('module_handler');
+  if (!$moduleHandler->moduleExists('restui')) {
+    $messenger = \Drupal::messenger();
+    $messenger->addMessage(t('It seems you dont have the REST UI module installed. Consider installing it to easily configure Rest resources.'));
+  }
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Tests\UnitTestCase;
@@ -29,6 +31,8 @@ class TypedDataNormalizerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->normalizer = new TypedDataNormalizer();
     $this->typedData = $this->createMock('Drupal\Core\TypedData\TypedDataInterface');
   }
@@ -36,7 +40,7 @@ class TypedDataNormalizerTest extends UnitTestCase {
   /**
    * Tests the supportsNormalization() method.
    */
-  public function testSupportsNormalization() {
+  public function testSupportsNormalization(): void {
     $this->assertTrue($this->normalizer->supportsNormalization($this->typedData));
     // Also test that an object not implementing TypedDataInterface fails.
     $this->assertFalse($this->normalizer->supportsNormalization(new \stdClass()));
@@ -45,7 +49,7 @@ class TypedDataNormalizerTest extends UnitTestCase {
   /**
    * Tests the normalize() method.
    */
-  public function testNormalize() {
+  public function testNormalize(): void {
     $this->typedData->expects($this->once())
       ->method('getValue')
       ->willReturn('test');

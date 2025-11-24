@@ -1,0 +1,17 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GS",
+		"Jinchang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Jinchuan Qu": {
+			"local_name": "金川区"
+		},
+		"Yongchang Xian": {
+			"local_name": "永昌县"
+		}
+	}
+}

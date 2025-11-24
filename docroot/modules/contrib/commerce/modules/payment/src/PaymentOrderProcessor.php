@@ -11,21 +11,12 @@ use Drupal\commerce_order\OrderProcessorInterface;
 class PaymentOrderProcessor implements OrderProcessorInterface {
 
   /**
-   * The payment order updater.
-   *
-   * @var \Drupal\commerce_payment\PaymentOrderUpdaterInterface
-   */
-  protected $paymentOrderUpdater;
-
-  /**
    * Constructs a new PaymentOrderProcessor instance.
    *
-   * @param \Drupal\commerce_payment\PaymentOrderUpdaterInterface $payment_order_updater
+   * @param \Drupal\commerce_payment\PaymentOrderUpdaterInterface $paymentOrderUpdater
    *   The order update manager.
    */
-  public function __construct(PaymentOrderUpdaterInterface $payment_order_updater) {
-    $this->paymentOrderUpdater = $payment_order_updater;
-  }
+  public function __construct(protected PaymentOrderUpdaterInterface $paymentOrderUpdater) {}
 
   /**
    * {@inheritdoc}

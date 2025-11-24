@@ -1,0 +1,30 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"LN",
+		"Dandong Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Donggang Shi": {
+			"local_name": "东港市"
+		},
+		"Fengcheng Shi": {
+			"local_name": "凤城市"
+		},
+		"Kuandian Xian": {
+			"local_code": "宽甸满族自治县",
+			"local_name": "宽甸县"
+		},
+		"Yuanbao Qu": {
+			"local_name": "元宝区"
+		},
+		"Zhen'an Qu": {
+			"local_name": "振安区"
+		},
+		"Zhenxing Qu": {
+			"local_name": "振兴区"
+		}
+	}
+}

@@ -12,6 +12,6 @@ class SmsMessageStatus {
   /**
    * Message could not be processed due to an unknown problem with the gateway.
    */
-  const ERROR = 'error';
+  public const ERROR = 'error';
 
 }

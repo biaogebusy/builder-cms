@@ -53,12 +53,12 @@ class EntityAccessDeniedHttpException extends CacheableAccessDeniedHttpException
    * @param string $relationship_field
    *   (Optional) A relationship field name if access was denied because the
    *   user does not have permission to view an entity's relationship field.
-   * @param \Exception|null $previous
+   * @param \Throwable|null $previous
    *   The previous exception.
    * @param int $code
    *   The code.
    */
-  public function __construct($entity, AccessResultInterface $entity_access, $pointer, $message = 'The current user is not allowed to GET the selected resource.', $relationship_field = NULL, \Exception $previous = NULL, $code = 0) {
+  public function __construct($entity, AccessResultInterface $entity_access, $pointer, $message = 'The current user is not allowed to GET the selected resource.', $relationship_field = NULL, ?\Throwable $previous = NULL, $code = 0) {
     assert(is_null($entity) || $entity instanceof EntityInterface);
     parent::__construct(CacheableMetadata::createFromObject($entity_access), $message, $previous, $code);
     $error = [
@@ -71,7 +71,7 @@ class EntityAccessDeniedHttpException extends CacheableAccessDeniedHttpException
       $error['reason'] = $entity_access->getReason();
     }
     $this->error = $error;
-    // @todo: remove this ternary operation in https://www.drupal.org/project/drupal/issues/2997594.
+    // @todo remove this ternary operation in https://www.drupal.org/project/drupal/issues/2997594.
     $this->resourceIdentifier = $entity ? ResourceIdentifier::fromEntity($entity) : NULL;
   }
 

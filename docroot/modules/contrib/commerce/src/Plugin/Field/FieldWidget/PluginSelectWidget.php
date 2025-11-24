@@ -2,29 +2,28 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldWidget;
 
-use Drupal\commerce\InlineFormManager;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\InlineFormManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_plugin_select' widget.
- *
- * @FieldWidget(
- *   id = "commerce_plugin_select",
- *   label = @Translation("Plugin select"),
- *   field_types = {
- *     "commerce_plugin_item"
- *   },
- * )
  */
+#[FieldWidget(
+  id: "commerce_plugin_select",
+  label: new TranslatableMarkup("Plugin select"),
+  field_types: ["commerce_plugin_item"],
+)]
 class PluginSelectWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -100,6 +99,9 @@ class PluginSelectWidget extends WidgetBase implements ContainerFactoryPluginInt
     // Fallback to the field value if #ajax hasn't been used yet.
     if ($target_plugin_id === NULL) {
       $target_plugin_id = $items[$delta]->target_plugin_id;
+      $target_plugin_configuration = $items[$delta]->target_plugin_configuration ?: [];
+    }
+    elseif ($target_plugin_id === $items[$delta]->target_plugin_id) {
       $target_plugin_configuration = $items[$delta]->target_plugin_configuration ?: [];
     }
     // The element is required, default to the first plugin.

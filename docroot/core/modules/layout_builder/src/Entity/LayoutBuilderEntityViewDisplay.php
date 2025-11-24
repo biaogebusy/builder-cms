@@ -122,7 +122,6 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
-    parent::preSave($storage);
 
     $original_value = isset($this->original) ? $this->original->isOverridable() : FALSE;
     $new_value = $this->isOverridable();
@@ -137,6 +136,8 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
         $this->removeSectionField($entity_type_id, $bundle, OverridesSectionStorage::FIELD_NAME);
       }
     }
+
+    parent::preSave($storage);
 
     $already_enabled = isset($this->original) ? $this->original->isLayoutBuilderEnabled() : FALSE;
     $set_enabled = $this->isLayoutBuilderEnabled();
@@ -159,6 +160,19 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function save(): int {
+    $return = parent::save();
+    if (!\Drupal::moduleHandler()->moduleExists('layout_builder_expose_all_field_blocks')) {
+      // Invalidate the block cache in order to regenerate field block
+      // definitions.
+      \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
+    }
+    return $return;
+  }
+
+  /**
    * Removes a layout section field if it is no longer needed.
    *
    * Because the field is shared across all view modes, the field will only be
@@ -172,7 +186,9 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
    *   The name for the layout section field.
    */
   protected function removeSectionField($entity_type_id, $bundle, $field_name) {
-    $query = $this->entityTypeManager()->getStorage($this->getEntityTypeId())->getQuery()
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage($this->getEntityTypeId());
+    $query = $storage->getQuery()
       ->condition('targetEntityType', $this->getTargetEntityTypeId())
       ->condition('bundle', $this->getTargetBundle())
       ->condition('mode', $this->getMode(), '<>')
@@ -301,7 +317,6 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
    */
   protected function buildSections(FieldableEntityInterface $entity) {
     $contexts = $this->getContextsForEntity($entity);
-    // @todo Remove in https://www.drupal.org/project/drupal/issues/3018782.
     $label = new TranslatableMarkup('@entity being viewed', [
       '@entity' => $entity->getEntityType()->getSingularLabel(),
     ]);
@@ -316,7 +331,7 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
         $build[$delta] = $section->toRenderArray($contexts);
       }
     }
-    // The render array is built based on decisions made by @SectionStorage
+    // The render array is built based on decisions made by SectionStorage
     // plugins and therefore it needs to depend on the accumulated
     // cacheability of those decisions.
     $cacheability->applyTo($build);

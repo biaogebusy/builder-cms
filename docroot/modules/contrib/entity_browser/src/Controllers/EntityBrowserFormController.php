@@ -104,9 +104,9 @@ class EntityBrowserFormController extends HtmlFormController implements Containe
    *   Loads the entity browser object
    */
   protected function loadBrowser() {
-    /* @var $route \Symfony\Component\Routing\Route */
+    /** @var \Symfony\Component\Routing\Route $route */
     $route = $this->currentRouteMatch->getRouteObject();
-    /* @var $browser \Drupal\entity_browser\EntityBrowserInterface */
+    /** @var \Drupal\entity_browser\EntityBrowserInterface $browser */
     return $this->browserStorage->load($route->getDefault('entity_browser_id'));
   }
 

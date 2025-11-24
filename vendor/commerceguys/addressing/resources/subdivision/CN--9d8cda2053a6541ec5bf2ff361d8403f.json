@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Ya'an Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baoxing Xian": {
+			"local_name": "宝兴县"
+		},
+		"Hanyuan Xian": {
+			"local_name": "汉源县"
+		},
+		"Lushan Xian": {
+			"local_name": "芦山县"
+		},
+		"Mingshan Qu": {
+			"local_name": "名山区"
+		},
+		"Shimian Xian": {
+			"local_name": "石棉县"
+		},
+		"Tianquan Xian": {
+			"local_name": "天全县"
+		},
+		"Yingjing Xian": {
+			"local_name": "荥经县"
+		},
+		"Yucheng Qu": {
+			"local_name": "雨城区"
+		}
+	}
+}

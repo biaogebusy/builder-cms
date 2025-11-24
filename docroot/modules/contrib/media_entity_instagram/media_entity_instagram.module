@@ -12,7 +12,7 @@ use Drupal\media\OEmbed\Provider;
 /**
  * Implements hook_oembed_resource_url_alter().
  */
-function media_entity_instagram_oembed_resource_url_alter(array &$parsed_url, Provider $provider) {
+function media_entity_instagram_oembed_resource_url_alter(array &$parsed_url, Provider $provider): void {
   if ($provider->getName() !== 'Instagram') {
     return;
   }

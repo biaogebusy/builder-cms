@@ -10,7 +10,7 @@ config_test_dynamic:
       type: label
       label: 'Label'
     weight:
-      type: integer
+      type: weight
       label: 'Weight'
     style:
       type: string
@@ -24,6 +24,9 @@ config_test_dynamic:
     protected_property:
       type: string
       label: 'Protected property'
+    array_property:
+      type: ignore
+      label: 'Array property'
 
 config_test.dynamic.*:
   type: config_test_dynamic
@@ -90,6 +93,13 @@ config_test.types:
       type: integer
       label: 'Integer'
     octal:
+      # Symfony 5.1's YAML parser issues a deprecation when reading octal with a
+      # leading zero, to comply with YAML 1.2. However PECL YAML is still YAML 1.1
+      # compliant.
+      # @see core/modules/config/tests/config_test/config/install/config_test.types.yml
+      # @see \Drupal\KernelTests\Core\Config\ConfigCRUDTest::testDataTypes()
+      # @todo Mark as required again in https://www.drupal.org/project/drupal/issues/3205480
+      requiredKey: false
       type: integer
       label: 'Octal'
     string:
@@ -98,6 +108,80 @@ config_test.types:
     string_int:
       type: string
       label: 'String integer'
+    # All the above types, but now nullable.
+    nullable_array:
+      type: sequence
+      label: 'Nullable array'
+      nullable: true
+      sequence:
+        type: string
+        label: 'Item'
+    nullable_boolean:
+      type: boolean
+      label: 'Nullable boolean'
+      nullable: true
+    nullable_exp:
+      type: float
+      label: 'Nullable exponential'
+      nullable: true
+    nullable_float:
+      type: float
+      label: 'Nullable float'
+      nullable: true
+    nullable_float_as_integer:
+      type: float
+      label: 'Float'
+      nullable: true
+    nullable_hex:
+      type: integer
+      label: 'Nullable hexadecimal'
+      nullable: true
+    nullable_int:
+      type: integer
+      label: 'Nullable integer'
+      nullable: true
+    nullable_octal:
+      type: integer
+      label: 'Nullable octal'
+      nullable: true
+    nullable_string:
+      type: string
+      label: 'Nullable string'
+      nullable: true
+    nullable_string_int:
+      type: string
+      label: 'Nullable string integer'
+      nullable: true
+    # To test required vs optional keys.
+    mapping_with_only_required_keys:
+      type: mapping
+      label: 'Mapping with only required keys'
+      mapping:
+        north: { type: string }
+        east: { type: string }
+        south: { type: string }
+        west: { type: string }
+    mapping_with_some_required_keys:
+      type: mapping
+      label: 'Mapping with only required keys'
+      mapping:
+        north: { type: string }
+        east: { type: string, requiredKey: false }
+        south: { type: string }
+        west: { type: string, requiredKey: false }
+    mapping_with_only_optional_keys:
+      type: mapping
+      label: 'Mapping with only optional keys'
+      mapping:
+        north: { type: string, requiredKey: false }
+        east: { type: string, requiredKey: false }
+        south: { type: string, requiredKey: false }
+        west: { type: string, requiredKey: false }
+
+config_test.types.fully_validatable:
+  type: config_test.types
+  constraints:
+    FullyValidatable: ~
 
 config_test.no_status.default:
   type: config_object
@@ -157,6 +241,13 @@ config_test.foo:
     label:
       type: label
       label: 'Label'
+    # Note that config_object should never be used on a non-root key.
+    broken_langcode_required:
+      type: config_object
+      required: false
+      mapping:
+        foo:
+          type: string
 
 config_test.bar:
   type: config_test.foo
@@ -206,3 +297,9 @@ config_test.validation:
             callback: [\Drupal\config_test\ConfigValidation, validateGiraffes]
     uuid:
       type: uuid
+
+    # @see \Drupal\KernelTests\Config\TypedConfigTest::testNotBlankInteractionWithNotNull()
+    string__not_blank:
+      type: string
+      constraints:
+        NotBlank: {}

@@ -5,8 +5,6 @@
  * These styles affect the installation UI, maintenance page, and the database update UI.
  */
 
-@import "../base/variables.pcss.css";
-
 .maintenance-page {
   min-height: 100%;
   background-color: var(--color-gray-100);
@@ -64,7 +62,8 @@ h3 {
  * Task list & step indicator.
  * Shows on both the install screen and the database update page.
  */
-@media all and (max-width: 48em) { /* 768px */
+@media all and (max-width: 48em) {
+  /* 768px */
   header[role="banner"] {
     position: relative;
   }
@@ -81,7 +80,8 @@ h3 {
   }
 }
 
-@media all and (min-width: 48em) { /* 768px */
+@media all and (min-width: 48em) {
+  /* 768px */
   .step-indicator {
     display: none;
   }
@@ -107,11 +107,11 @@ h3 {
     padding: 1rem 3rem 1rem 1rem;
     border-radius: 2rem 0 0 2rem;
   }
-  .task-list li:before {
+  .task-list li::before {
     margin-right: 0.375rem;
     content: counter(steps);
   }
-  [dir="rtl"] .task-list li:before {
+  [dir="rtl"] .task-list li::before {
     margin-right: 0;
     margin-left: 0.375rem;
   }
@@ -140,13 +140,15 @@ h3 {
   background: #fff;
   box-shadow: var(--shadow-z3);
 }
-.layout-container:after { /* No reason for a clearfix in the markup. */
+.layout-container::after {
+  /* No reason for a clearfix in the markup. */
   display: table;
   clear: both;
   content: "";
 }
 
-@media all and (max-width: 48em) { /* 768px */
+@media all and (max-width: 48em) {
+  /* 768px */
   .layout-container {
     margin: 1.25em;
     padding: var(--space-m) var(--space-l);
@@ -157,7 +159,8 @@ h3 {
   }
 }
 
-@media all and (min-width: 48em) { /* 768px */
+@media all and (min-width: 48em) {
+  /* 768px */
   html {
     display: table;
   }

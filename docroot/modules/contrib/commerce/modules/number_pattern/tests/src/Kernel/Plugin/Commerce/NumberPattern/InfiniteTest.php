@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_number_pattern\Kernel\Plugin\Commerce\NumberPattern;
 
+use Drupal\Tests\commerce_number_pattern\Kernel\NumberPatternKernelTestBase;
 use Drupal\commerce_number_pattern\Entity\NumberPattern;
 use Drupal\commerce_number_pattern_test\Entity\EntityTestWithStore;
-use Drupal\Tests\commerce_number_pattern\Kernel\NumberPatternKernelTestBase;
 
 /**
  * Tests the infinite number pattern.

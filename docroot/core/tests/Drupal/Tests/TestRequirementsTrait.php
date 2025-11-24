@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests;
 
 use Drupal\Core\Extension\ExtensionDiscovery;
@@ -20,7 +22,7 @@ trait TestRequirementsTrait {
    *
    * @return string
    */
-  protected static function getDrupalRoot() {
+  protected static function getDrupalRoot(): string {
     return dirname(substr(__DIR__, 0, -strlen(__NAMESPACE__)), 2);
   }
 
@@ -33,8 +35,15 @@ trait TestRequirementsTrait {
    * @throws \PHPUnit\Framework\SkippedTestError
    *   Thrown when the requirements are not met, and this test should be
    *   skipped. Callers should not catch this exception.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is
+   *   no replacement.
+   *
+   * @see https://www.drupal.org/node/3418480
    */
   protected function checkRequirements() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3418480', E_USER_DEPRECATED);
+
     if (!$this->getName(FALSE) || !method_exists($this, $this->getName(FALSE))) {
       return;
     }
@@ -78,12 +87,19 @@ trait TestRequirementsTrait {
    * @throws \PHPUnit\Framework\SkippedTestError
    *   Thrown when the requirements are not met, and this test should be
    *   skipped. Callers should not catch this exception.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is
+   *   no replacement.
+   *
+   * @see https://www.drupal.org/node/3418480
    */
   private function checkModuleRequirements($root, array $annotations) {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3418480', E_USER_DEPRECATED);
+
     // Make a list of required modules.
     $required_modules = [];
     foreach ($annotations as $requirement) {
-      if (strpos($requirement, 'module ') === 0) {
+      if (str_starts_with($requirement, 'module ')) {
         $required_modules[] = trim(str_replace('module ', '', $requirement));
       }
     }

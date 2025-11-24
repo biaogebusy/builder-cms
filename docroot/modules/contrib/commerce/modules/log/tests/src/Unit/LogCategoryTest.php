@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_log\Unit;
 
-use Drupal\commerce_log\Plugin\LogCategory\LogCategory;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_log\Plugin\LogCategory\LogCategory;
 
 /**
  * @coversDefaultClass \Drupal\commerce_log\Plugin\LogCategory\LogCategory

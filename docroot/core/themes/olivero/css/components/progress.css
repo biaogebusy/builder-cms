@@ -12,20 +12,16 @@
 
 .progress__track {
   overflow: hidden;
-  height: 1.125rem;
-  border: 1px solid #0d77b5;
-  border-radius: 0.1875rem;
+  height: var(--sp);
+  border: 1px solid var(--color--primary-40);
+  border-radius: var(--border-radius);
 }
 
 .progress__bar {
-  height: 1.125rem;
-  background-color: #0d77b5;
+  height: var(--sp);
+  background-color: var(--color--primary-40);
 }
 
-[dir="ltr"] .progress__percentage {
-  margin-left: 1rem;
-}
-
-[dir="rtl"] .progress__percentage {
-  margin-right: 1rem;
+.progress__percentage {
+  margin-inline-start: 1rem;
 }

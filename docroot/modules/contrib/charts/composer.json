@@ -1,0 +1,53 @@
+{
+  "name": "drupal/charts",
+  "description": "A charting API for Drupal that provides chart elements and integration with Views",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "homepage": "https://drupal.org/project/charts",
+  "authors": [
+      {
+        "name": "Daniel Cothran (andileco)",
+        "homepage": "https://www.drupal.org/u/andileco",
+        "role": "Maintainer"
+      },
+      {
+        "name": "Nia Kathoni (nikathone)",
+        "homepage": "https://www.drupal.org/u/nikathone",
+        "role": "Maintainer"
+      },
+      {
+        "name": "Nate Lampton (quicksketch)",
+        "homepage": "https://www.drupal.org/u/quicksketch",
+        "role": "Maintainer"
+      },
+      {
+        "name": "brmassa",
+        "homepage": "https://www.drupal.org/u/brmassa",
+        "role": "Maintainer"
+      },
+      {
+        "name": "Rafal W (kenorb)",
+        "homepage": "https://www.drupal.org/u/kenorb",
+        "role": "Maintainer"
+      },
+      {
+        "name": "Pierre Vriens (pierrevriens)",
+        "homepage": "https://www.drupal.org/u/pierrevriens",
+        "role": "Maintainer"
+      },
+      {
+        "name": "Majali (rashad612)",
+        "homepage": "https://www.drupal.org/u/rashad612",
+        "role": "Maintainer"
+      }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/charts?version=all_5.1.*",
+    "source": "https://git.drupalcode.org/project/charts",
+    "docs": "https://www.drupal.org/docs/contributed-modules/charts"
+  },
+  "require": {
+    "drupal/core": "^10.3 || ^11"
+  }
+}

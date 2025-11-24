@@ -1,0 +1,42 @@
+<?php
+
+/**
+ * @file
+ * Install for js_cookie module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function js_cookie_requirements($phase) {
+  if ($phase !== 'runtime') {
+    return [];
+  }
+
+  $requirements = [];
+  $libraries = \Drupal::service('library.discovery')->getLibrariesByExtension('js_cookie');
+
+  // Check installed libraries.
+  foreach ($libraries as $library_name => &$library) {
+    if (isset($library['directory'])) {
+      if (!file_exists(DRUPAL_ROOT . $library['directory'])) {
+        $requirements['js_cookie_' . $library_name] = [
+          'title' => t('JS Cookie Library @library', ['@library' => $library_name]),
+          'value' => t('Library %library is not installed locally and will be loaded from CDN. Loading external files from a CDN may be a data protection violation.', ['%library' => $library_name]),
+          'description' => 'Please install the library. For more information see README.md',
+          'severity' => REQUIREMENT_WARNING,
+        ];
+      }
+      else {
+        $requirements['js_cookie_' . $library_name] = [
+          'title' => t('JS Cookie Library @library', ['@library' => $library_name]),
+          'value' => t('Library %library is installed.', ['%library' => $library_name]),
+          'description' => 'The library is installed and will be loaded from the local libraries directory.',
+          'severity' => REQUIREMENT_OK,
+        ];
+      }
+    }
+  }
+
+  return $requirements;
+}

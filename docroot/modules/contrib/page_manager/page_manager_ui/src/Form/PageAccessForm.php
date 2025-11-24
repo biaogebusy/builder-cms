@@ -38,7 +38,7 @@ class PageAccessForm extends ManageConditions {
     return [
       'entity.page.condition', [
         'machine_name' => $machine_name,
-        'condition' => $row
+        'condition' => $row,
       ],
     ];
   }

@@ -2,10 +2,12 @@
 
 namespace Drupal\search_api\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Task\TaskInterface;
 
@@ -29,6 +31,22 @@ use Drupal\search_api\Task\TaskInterface;
  *   },
  * )
  */
+#[ContentEntityType(
+  id: 'search_api_task',
+  label: new TranslatableMarkup('Search task'),
+  label_collection: new TranslatableMarkup('Search tasks'),
+  label_singular: new TranslatableMarkup('search task'),
+  label_plural: new TranslatableMarkup('search tasks'),
+  entity_keys: [
+    'id' => 'id',
+  ],
+  base_table: 'search_api_task',
+  translatable: FALSE,
+  label_count: [
+    'singular' => '@count search task',
+    'plural' => '@count search tasks',
+  ],
+)]
 class Task extends ContentEntityBase implements TaskInterface {
 
   /**

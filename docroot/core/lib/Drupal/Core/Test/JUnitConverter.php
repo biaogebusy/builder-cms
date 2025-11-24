@@ -69,7 +69,7 @@ class JUnitConverter {
    *
    * @internal
    */
-  public static function findTestCases(\SimpleXMLElement $element, \SimpleXMLElement $parent = NULL) {
+  public static function findTestCases(\SimpleXMLElement $element, ?\SimpleXMLElement $parent = NULL) {
     if (!isset($parent)) {
       $parent = $element;
     }
@@ -90,9 +90,9 @@ class JUnitConverter {
       if ($file && !$child->attributes()->file) {
         $child->addAttribute('file', $file);
       }
-      $test_cases = array_merge($test_cases, static::findTestCases($child, $element));
+      $test_cases[] = static::findTestCases($child, $element);
     }
-    return $test_cases;
+    return array_merge(...$test_cases);
   }
 
   /**

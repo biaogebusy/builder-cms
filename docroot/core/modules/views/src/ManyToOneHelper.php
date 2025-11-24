@@ -4,6 +4,7 @@ namespace Drupal\views;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\HandlerBase;
+use Drupal\views\Plugin\views\ViewsHandlerInterface;
 
 /**
  * This many to one helper object is used on both arguments and filters.
@@ -19,6 +20,20 @@ use Drupal\views\Plugin\views\HandlerBase;
  *            queries.
  */
 class ManyToOneHelper {
+
+  /**
+   * Should the field use formula or alias.
+   *
+   * @see \Drupal\views\Plugin\views\argument\StringArgument::query()
+   *
+   * @var bool
+   */
+  public bool $formula = FALSE;
+
+  /**
+   * The handler.
+   */
+  public ViewsHandlerInterface $handler;
 
   public function __construct($handler) {
     $this->handler = $handler;
@@ -122,7 +137,7 @@ class ManyToOneHelper {
     $field = $this->handler->relationship . '_' . $this->handler->table . '.' . $this->handler->field;
     $join = $this->getJoin();
 
-    // shortcuts
+    // Shortcuts
     $options = $this->handler->options;
     $view = $this->handler->view;
     $query = $this->handler->query;
@@ -142,7 +157,7 @@ class ManyToOneHelper {
               'field' => $this->handler->realField,
               'operator' => '!=',
               'value' => $value,
-              'numeric' => !empty($this->definition['numeric']),
+              'numeric' => !empty($this->handler->definition['numeric']),
             ],
           ];
         }
@@ -163,12 +178,15 @@ class ManyToOneHelper {
       $field = $this->handler->relationship . '_' . $this->handler->table . '.' . $this->handler->field;
       if ($this->handler->operator == 'or' && empty($this->handler->options['reduce_duplicates'])) {
         if (empty($this->handler->options['add_table']) && empty($this->handler->view->many_to_one_tables[$field])) {
-          // query optimization, INNER joins are slightly faster, so use them
+          // Query optimization, INNER joins are slightly faster, so use them
           // when we know we can.
           $join = $this->getJoin();
-          if (isset($join)) {
+          $group = $this->handler->options['group'] ?? FALSE;
+          // Only if there is no group with OR operator.
+          if (isset($join) && !($group && $this->handler->query->where[$group]['type'] === 'OR')) {
             $join->type = 'INNER';
           }
+
           $this->handler->tableAlias = $this->handler->query->ensureTable($this->handler->table, $this->handler->relationship, $join);
           $this->handler->view->many_to_one_tables[$field] = $this->handler->value;
         }
@@ -312,18 +330,18 @@ class ManyToOneHelper {
           $placeholder .= '[]';
 
           if ($operator == 'IS NULL') {
-            $this->handler->query->addWhereExpression(0, "$field $operator");
+            $this->handler->query->addWhereExpression($options['group'], "$field $operator");
           }
           else {
-            $this->handler->query->addWhereExpression(0, "$field $operator($placeholder)", [$placeholder => $value]);
+            $this->handler->query->addWhereExpression($options['group'], "$field $operator($placeholder)", [$placeholder => $value]);
           }
         }
         else {
           if ($operator == 'IS NULL') {
-            $this->handler->query->addWhereExpression(0, "$field $operator");
+            $this->handler->query->addWhereExpression($options['group'], "$field $operator");
           }
           else {
-            $this->handler->query->addWhereExpression(0, "$field $operator $placeholder", [$placeholder => $value]);
+            $this->handler->query->addWhereExpression($options['group'], "$field $operator $placeholder", [$placeholder => $value]);
           }
         }
       }
@@ -336,7 +354,7 @@ class ManyToOneHelper {
         $clause->condition("$alias.$field", $value);
       }
 
-      // implode on either AND or OR.
+      // Implode on either AND or OR.
       $this->handler->query->addWhere($options['group'], $clause);
     }
   }

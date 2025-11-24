@@ -5,12 +5,12 @@
  * Provides basic Blazy integration for lazy loading and multi-serving images.
  */
 
+use Drupal\Core\Field\FormatterInterface;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyAlter;
 use Drupal\blazy\BlazyManager;
 use Drupal\blazy\Theme\BlazyTheme;
 use Drupal\blazy\Theme\BlazyViews;
-use Drupal\Core\Field\FormatterInterface;
 use Drupal\editor\Entity\Editor;
 
 /**
@@ -107,21 +107,7 @@ function blazy_preprocess_field(array &$variables) {
  * Implements hook_preprocess_views_view().
  */
 function blazy_preprocess_views_view(array &$variables) {
-  $css_class = $variables['css_class'] ?? NULL;
-  if ($css_class && strpos($css_class, 'blazy--') !== FALSE) {
-    if ($lightboxes = blazy()->getLightboxes()) {
-      BlazyViews::preprocessViewsView($variables, $lightboxes);
-    }
-  }
-}
-
-/**
- * Implements hook_views_pre_render().
- */
-function blazy_views_pre_render($view) {
-  if (isset($view)) {
-    BlazyViews::viewsPreRender($view);
-  }
+  BlazyViews::preprocessViewsView($variables);
 }
 
 /**
@@ -157,8 +143,8 @@ function blazy_library_info_build() {
 /**
  * Implements hook_blazy_settings_alter().
  */
-function blazy_blazy_settings_alter(array &$build, $items) {
-  BlazyAlter::blazySettingsAlter($build, $items);
+function blazy_blazy_settings_alter(array &$build, $object) {
+  BlazyAlter::blazySettingsAlter($build, $object);
 }
 
 /**
@@ -209,6 +195,7 @@ function blazy_filter_cleanup($module = 'blazy') {
   // Just to be safe and sure, reset filter_formats cache, etc.
   // @todo re-check if core deprecated this function at or by D10.
   $reset = 'drupal_static_reset';
+  /* @phpstan-ignore-next-line */
   if (is_callable($reset)) {
     $reset('filter_formats');
   }
@@ -217,38 +204,4 @@ function blazy_filter_cleanup($module = 'blazy') {
 
   // Clear plugin manager caches.
   \Drupal::getContainer()->get('plugin.cache_clearer')->clearCachedDefinitions();
-}
-
-/**
- * Provides a shortcut to parse the markdown string for better hook_help().
- *
- * @todo deprecated in blazy:8.x-2.16 and is removed from blazy:3.0.0. Use
- * blazy()->markdown() instead.
- * @see https://www.drupal.org/node/3367291
- */
-function blazy_parse_markdown($string) {
-  return blazy()->markdown($string);
-}
-
-/**
- * Provides a wrapper to replace deprecated libraries_get_path() at ease.
- *
- * @deprecated in blazy:8.x-2.16 and is removed from blazy:3.0.0. Use
- * blazy()->getLibrariesPath() instead.
- * @see https://www.drupal.org/node/3367291
- */
-function blazy_libraries_get_path($name, $base_path = FALSE) {
-  @trigger_error('blazy_libraries_get_path is deprecated in blazy:8.x-2.16 and is removed from blazy:3.0.0. Use blazy()->getLibrariesPath() instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-  return blazy()->getLibrariesPath($name, $base_path);
-}
-
-/**
- * Implements hook_field_formatter_info_alter().
- *
- * @todo remove VEF/VEM from blazy:3.x for core Media integration.
- */
-function blazy_field_formatter_info_alter(array &$info) {
-  if (blazy()->moduleExists('video_embed_field')) {
-    Blazy::fieldFormatterInfoAlter($info);
-  }
 }

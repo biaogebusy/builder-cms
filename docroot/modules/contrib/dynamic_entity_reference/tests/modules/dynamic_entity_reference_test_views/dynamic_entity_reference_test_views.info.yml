@@ -1,15 +1,15 @@
-name: 'Dynamic entity reference test views'
+name: "Dynamic entity reference test views"
 type: module
-description: 'Provides default views for views dynamic entity reference tests.'
+description: "Provides default views for views dynamic entity reference tests."
 package: Testing
-core_version_requirement: ^9.3
-php: 7.4
+core_version_requirement: ^10 || ^11
+php: 8.1
 hidden: TRUE
 dependencies:
-  - dynamic_entity_reference
-  - views
+  - dynamic_entity_reference:dynamic_entity_reference
+  - drupal:views
 
-# Information added by Drupal.org packaging script on 2022-02-07
-version: '8.x-1.16'
+# Information added by Drupal.org packaging script on 2025-02-25
+version: '3.2.1'
 project: 'dynamic_entity_reference'
-datestamp: 1644273071
+datestamp: 1740521062

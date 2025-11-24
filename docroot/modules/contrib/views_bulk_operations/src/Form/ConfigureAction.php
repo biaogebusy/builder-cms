@@ -2,12 +2,13 @@
 
 namespace Drupal\views_bulk_operations\Form;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\Core\Url;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager;
 use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Action configuration form.
@@ -15,27 +16,6 @@ use Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInter
 class ConfigureAction extends FormBase {
 
   use ViewsBulkOperationsFormTrait;
-
-  /**
-   * The tempstore service.
-   *
-   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
-   */
-  protected $tempStoreFactory;
-
-  /**
-   * Views Bulk Operations action manager.
-   *
-   * @var \Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager
-   */
-  protected $actionManager;
-
-  /**
-   * Views Bulk Operations action processor.
-   *
-   * @var \Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface
-   */
-  protected $actionProcessor;
 
   /**
    * Constructor.
@@ -48,14 +28,10 @@ class ConfigureAction extends FormBase {
    *   Views Bulk Operations action processor.
    */
   public function __construct(
-    PrivateTempStoreFactory $tempStoreFactory,
-    ViewsBulkOperationsActionManager $actionManager,
-    ViewsBulkOperationsActionProcessorInterface $actionProcessor
-  ) {
-    $this->tempStoreFactory = $tempStoreFactory;
-    $this->actionManager = $actionManager;
-    $this->actionProcessor = $actionProcessor;
-  }
+    protected readonly PrivateTempStoreFactory $tempStoreFactory,
+    protected readonly ViewsBulkOperationsActionManager $actionManager,
+    protected readonly ViewsBulkOperationsActionProcessorInterface $actionProcessor
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -82,30 +58,27 @@ class ConfigureAction extends FormBase {
 
     $form_data = $this->getFormData($view_id, $display_id);
 
-    // TODO: display an error msg, redirect back.
     if (!isset($form_data['action_id'])) {
-      return;
+      return [
+        '#markup' => $this->t('No items selected. Go back and try again.'),
+      ];
     }
 
     $form['#title'] = $this->t('Configure "%action" action applied to the selection', ['%action' => $form_data['action_label']]);
 
     $form['list'] = $this->getListRenderable($form_data);
 
-    // :D Make sure the submit button is at the bottom of the form
-    // and is editable from the action buildConfigurationForm method.
-    $form['actions']['#weight'] = 666;
+    $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
+      '#button_type' => 'primary',
       '#value' => $this->t('Apply'),
-      '#submit' => [
-        [$this, 'submitForm'],
-      ],
     ];
     $this->addCancelButton($form);
 
     $action = $this->actionManager->createInstance($form_data['action_id']);
 
-    if (method_exists($action, 'setContext')) {
+    if (\method_exists($action, 'setContext')) {
       $action->setContext($form_data);
     }
 
@@ -122,7 +95,7 @@ class ConfigureAction extends FormBase {
     $form_data = $form_state->get('views_bulk_operations');
 
     $action = $this->actionManager->createInstance($form_data['action_id']);
-    if (method_exists($action, 'validateConfigurationForm')) {
+    if (\method_exists($action, 'validateConfigurationForm')) {
       $action->validateConfigurationForm($form, $form_state);
     }
   }
@@ -134,7 +107,7 @@ class ConfigureAction extends FormBase {
     $form_data = $form_state->get('views_bulk_operations');
 
     $action = $this->actionManager->createInstance($form_data['action_id']);
-    if (method_exists($action, 'submitConfigurationForm')) {
+    if (\method_exists($action, 'submitConfigurationForm')) {
       $action->submitConfigurationForm($form, $form_state);
       $form_data['configuration'] = $action->getConfiguration();
     }
@@ -154,8 +127,9 @@ class ConfigureAction extends FormBase {
     }
     else {
       $this->deleteTempstoreData($form_data['view_id'], $form_data['display_id']);
-      $this->actionProcessor->executeProcessing($form_data);
-      $form_state->setRedirectUrl($form_data['redirect_url']);
+      $response = $this->actionProcessor->executeProcessing($form_data);
+      $url = Url::fromUri($response->getTargetUrl());
+      $form_state->setRedirectUrl($url);
     }
   }
 

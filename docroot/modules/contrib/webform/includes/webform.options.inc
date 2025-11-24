@@ -5,6 +5,7 @@
  * Options alter hooks.
  */
 
+use Drupal\Core\Datetime\TimeZoneFormHelper;
 use Drupal\Core\Language\LanguageManager;
 use Drupal\webform\Utility\WebformOptionsHelper;
 
@@ -36,7 +37,7 @@ function webform_webform_options_range_alter(array &$options, array $element = [
  */
 function webform_webform_options_time_zones_alter(array &$options, array $element = []) {
   if (empty($options)) {
-    $options = system_time_zones();
+    $options = TimeZoneFormHelper::getOptionsList();
   }
 }
 

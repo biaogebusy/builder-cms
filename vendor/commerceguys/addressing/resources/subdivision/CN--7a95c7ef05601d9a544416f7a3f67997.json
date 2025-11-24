@@ -1,0 +1,77 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HE",
+		"Shijiazhuang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Gaoyi Xian": {
+			"local_name": "高邑县"
+		},
+		"Gaocheng Qu": {
+			"local_name": "藁城区"
+		},
+		"Jinzhou Shi": {
+			"local_name": "晋州市"
+		},
+		"Jingxing Kuangqu": {
+			"local_name": "井陉矿区"
+		},
+		"Jingxing Xian": {
+			"local_name": "井陉县"
+		},
+		"Lingshou Xian": {
+			"local_name": "灵寿县"
+		},
+		"Luquan Qu": {
+			"local_name": "鹿泉区"
+		},
+		"Luancheng Qu": {
+			"local_name": "栾城区"
+		},
+		"Pingshan Xian": {
+			"local_name": "平山县"
+		},
+		"Qiaoxi Qu": {
+			"local_name": "桥西区"
+		},
+		"Shenze Xian": {
+			"local_name": "深泽县"
+		},
+		"Wuji Xian": {
+			"local_name": "无极县"
+		},
+		"Xinji Shi": {
+			"local_name": "辛集市"
+		},
+		"Xinhua Qu": {
+			"local_name": "新华区"
+		},
+		"Xinle Shi": {
+			"local_name": "新乐市"
+		},
+		"Xingtang Xian": {
+			"local_name": "行唐县"
+		},
+		"Yuhua Qu": {
+			"local_name": "裕华区"
+		},
+		"Yuanshi Xian": {
+			"local_name": "元氏县"
+		},
+		"Zanhuang Xian": {
+			"local_name": "赞皇县"
+		},
+		"Chang'an Qu": {
+			"local_name": "长安区"
+		},
+		"Zhao Xian": {
+			"local_name": "赵县"
+		},
+		"Zhengding Xian": {
+			"local_name": "正定县"
+		}
+	}
+}

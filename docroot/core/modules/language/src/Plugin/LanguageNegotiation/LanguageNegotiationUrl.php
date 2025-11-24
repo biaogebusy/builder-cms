@@ -6,25 +6,27 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\PathProcessor\OutboundPathProcessorInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\language\Attribute\LanguageNegotiation;
 use Drupal\language\LanguageNegotiationMethodBase;
 use Drupal\language\LanguageSwitcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class for identifying language via URL prefix or domain.
- *
- * @LanguageNegotiation(
- *   id = \Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl::METHOD_ID,
- *   types = {\Drupal\Core\Language\LanguageInterface::TYPE_INTERFACE,
- *   \Drupal\Core\Language\LanguageInterface::TYPE_CONTENT,
- *   \Drupal\Core\Language\LanguageInterface::TYPE_URL},
- *   weight = -8,
- *   name = @Translation("URL"),
- *   description = @Translation("Language from the URL (Path prefix or domain)."),
- *   config_route_name = "language.negotiation_url"
- * )
  */
+#[LanguageNegotiation(
+  id: LanguageNegotiationUrl::METHOD_ID,
+  name: new TranslatableMarkup('URL'),
+  types: [LanguageInterface::TYPE_INTERFACE,
+    LanguageInterface::TYPE_CONTENT,
+    LanguageInterface::TYPE_URL,
+  ],
+  weight: -8,
+  description: new TranslatableMarkup("Language from the URL (Path prefix or domain)."),
+  config_route_name: 'language.negotiation_url'
+)]
 class LanguageNegotiationUrl extends LanguageNegotiationMethodBase implements InboundPathProcessorInterface, OutboundPathProcessorInterface, LanguageSwitcherInterface {
 
   /**
@@ -45,7 +47,7 @@ class LanguageNegotiationUrl extends LanguageNegotiationMethodBase implements In
   /**
    * {@inheritdoc}
    */
-  public function getLangcode(Request $request = NULL) {
+  public function getLangcode(?Request $request = NULL) {
     $langcode = NULL;
 
     if ($request && $this->languageManager) {
@@ -121,7 +123,7 @@ class LanguageNegotiationUrl extends LanguageNegotiationMethodBase implements In
   /**
    * {@inheritdoc}
    */
-  public function processOutbound($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function processOutbound($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
     $url_scheme = 'http';
     $port = 80;
     if ($request) {
@@ -130,7 +132,7 @@ class LanguageNegotiationUrl extends LanguageNegotiationMethodBase implements In
     }
     $languages = array_flip(array_keys($this->languageManager->getLanguages()));
     // Language can be passed as an option, or we go for current URL language.
-    if (!isset($options['language'])) {
+    if (!isset($options['language']) || ($options['language'] instanceof LanguageInterface && $options['language']->getId() == LanguageInterface::LANGCODE_NOT_SPECIFIED)) {
       $language_url = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_URL);
       $options['language'] = $language_url;
     }
@@ -163,7 +165,7 @@ class LanguageNegotiationUrl extends LanguageNegotiationMethodBase implements In
 
         // In case either the original base URL or the HTTP host contains a
         // port, retain it.
-        if (isset($normalized_base_url) && strpos($normalized_base_url, ':') !== FALSE) {
+        if (isset($normalized_base_url) && str_contains($normalized_base_url, ':')) {
           [, $port] = explode(':', $normalized_base_url);
           $options['base_url'] .= ':' . $port;
         }

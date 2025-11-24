@@ -6,9 +6,9 @@
  */
 
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\field\FieldStorageConfigInterface;
-use Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceItem;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
+use Drupal\dynamic_entity_reference\Plugin\Field\FieldType\DynamicEntityReferenceItem;
+use Drupal\field\FieldStorageConfigInterface;
 
 /**
  * Implements hook_field_views_data().

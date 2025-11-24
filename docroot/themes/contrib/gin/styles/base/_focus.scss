@@ -21,7 +21,10 @@
 .ck .ck.ck-button:active:focus,
 .toolbar-box .toolbar-handle:focus,
 .field-option:has(.field-option-radio:checked),
-.subfield-option:has(.field-option-radio:checked)
+.field-option:focus-within,
+.subfield-option:has(.field-option-radio:checked),
+.subfield-option:focus-within,
+#edit-submit.form-submit:focus
 {
   outline: none;
   box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);

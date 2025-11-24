@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Interface RecentlyReadServiceInterface.
+ * Provides an interface for RecentlyRead service.
  *
  * @package Drupal\recently_read
  */
@@ -20,7 +20,7 @@ interface RecentlyReadServiceInterface {
    * @param \Drupal\Core\Session\AccountInterface|null $user
    *   The user who read the entity. If NULL then the current user will be used.
    */
-  public function insertEntity(EntityInterface $entity, AccountInterface $user = NULL);
+  public function insertEntity(EntityInterface $entity, ?AccountInterface $user = NULL): void;
 
   /**
    * Delete records from DB.
@@ -28,7 +28,7 @@ interface RecentlyReadServiceInterface {
    * @param array $records
    *   Number of records to delete.
    */
-  public function deleteRecords(array $records);
+  public function deleteRecords(array $records): void;
 
   /**
    * Get all records in DB for specified user/anonymous.
@@ -39,7 +39,7 @@ interface RecentlyReadServiceInterface {
    * @return array|int
    *   Returns an array of record id's.
    */
-  public function getRecords($user_id);
+  public function getRecords($user_id): int|array;
 
   /**
    * Delete all "Recently Read" IDs for the entity.
@@ -49,6 +49,6 @@ interface RecentlyReadServiceInterface {
    * @param \Drupal\Core\Session\AccountInterface|null $user
    *   The user who read the entity.
    */
-  public function deleteEntityRecords(EntityInterface $entity, AccountInterface $user = NULL);
+  public function deleteEntityRecords(EntityInterface $entity, ?AccountInterface $user = NULL): void;
 
 }

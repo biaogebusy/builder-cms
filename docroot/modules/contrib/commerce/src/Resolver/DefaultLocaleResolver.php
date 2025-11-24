@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce\Resolver;
 
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\commerce\CurrentCountryInterface;
 use Drupal\commerce\Locale;
-use Drupal\Core\Language\LanguageManagerInterface;
 
 /**
  * Returns the locale based on the current language and country.
@@ -12,31 +12,14 @@ use Drupal\Core\Language\LanguageManagerInterface;
 class DefaultLocaleResolver implements LocaleResolverInterface {
 
   /**
-   * The language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * The current country.
-   *
-   * @var \Drupal\commerce\CurrentCountryInterface
-   */
-  protected $currentCountry;
-
-  /**
    * Constructs a new DefaultLocaleResolver object.
    *
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\commerce\CurrentCountryInterface $current_country
+   * @param \Drupal\commerce\CurrentCountryInterface $currentCountry
    *   The current country.
    */
-  public function __construct(LanguageManagerInterface $language_manager, CurrentCountryInterface $current_country) {
-    $this->languageManager = $language_manager;
-    $this->currentCountry = $current_country;
-  }
+  public function __construct(protected LanguageManagerInterface $languageManager, protected CurrentCountryInterface $currentCountry) {}
 
   /**
    * {@inheritdoc}

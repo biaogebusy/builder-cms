@@ -4,6 +4,7 @@ namespace Drupal\flag\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\flag\ActionLink\ActionLinkPluginManager;
@@ -21,7 +22,7 @@ abstract class FlagFormBase extends EntityForm {
   /**
    * The action link plugin manager.
    *
-   * @var Drupal\flag\ActionLink\ActionLinkPluginManager
+   * @var \Drupal\flag\ActionLink\ActionLinkPluginManager
    */
   protected $actionLinkManager;
 
@@ -40,6 +41,13 @@ abstract class FlagFormBase extends EntityForm {
   protected $linkGenerator;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new form.
    *
    * @param \Drupal\flag\ActionLink\ActionLinkPluginManager $action_link_manager
@@ -48,11 +56,14 @@ abstract class FlagFormBase extends EntityForm {
    *   The bundle info service.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The link generator service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
    */
-  public function __construct(ActionLinkPluginManager $action_link_manager, EntityTypeBundleInfoInterface $bundle_info_service, LinkGeneratorInterface $link_generator) {
+  public function __construct(ActionLinkPluginManager $action_link_manager, EntityTypeBundleInfoInterface $bundle_info_service, LinkGeneratorInterface $link_generator, EntityTypeManagerInterface $entity_type_manager) {
     $this->actionLinkManager = $action_link_manager;
     $this->bundleInfoService = $bundle_info_service;
     $this->linkGenerator = $link_generator;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -62,7 +73,8 @@ abstract class FlagFormBase extends EntityForm {
     return new static(
       $container->get('plugin.manager.flag.linktype'),
       $container->get('entity_type.bundle.info'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -72,6 +84,7 @@ abstract class FlagFormBase extends EntityForm {
   public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL) {
     $form = parent::buildForm($form, $form_state);
 
+    /** @var \Drupal\flag\FlagInterface $flag */
     $flag = $this->entity;
 
     $form['#flag'] = $flag;
@@ -81,7 +94,7 @@ abstract class FlagFormBase extends EntityForm {
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#default_value' => $flag->label(),
-      '#description' => $this->t('A short, descriptive title for this flag. It will be used in administrative interfaces to refer to this flag, and in page titles and menu items of some views this module provides (these are customizable, though). Some examples could be <em>Bookmarks</em>, <em>Favorites</em>, or <em>Offensive</em>.'),
+      '#description' => $this->t('Name or label of this flag. It will be used as hostname in various drupal entities. Some examples could be <em>Bookmarks</em>, <em>Favorites</em>, or <em>Offensive</em>.'),
       '#maxlength' => 255,
       '#required' => TRUE,
       '#weight' => -3,
@@ -174,6 +187,7 @@ abstract class FlagFormBase extends EntityForm {
     ];
 
     // Switch plugin type in case a different is chosen.
+    /** @var \Drupal\flag\Plugin\Flag\EntityFlagType $flag_type_plugin */
     $flag_type_plugin = $flag->getFlagTypePlugin();
     $flag_type_def = $flag_type_plugin->getPluginDefinition();
 
@@ -210,7 +224,7 @@ abstract class FlagFormBase extends EntityForm {
       '#weight' => 20,
       '#prefix' => '<div id="link-type-settings-wrapper">',
       '#suffix' => '</div>',
-      // @todo: Move flag_link_type_options_states() into controller?
+      // @todo Move flag_link_type_options_states() into controller?
       // '#after_build' => array('flag_link_type_options_states'),
     ];
 
@@ -220,13 +234,15 @@ abstract class FlagFormBase extends EntityForm {
     ];
 
     $form = $flag_type_plugin->buildConfigurationForm($form, $form_state);
+    /** @var \Drupal\flag\Plugin\Flag\EntityFlagType $flag_link_type_plugin */
+    $flag_link_type_plugin = $flag->getLinkTypePlugin();
 
     $form['display']['link_type'] = [
       '#type' => 'radios',
       '#title' => $this->t('Link type'),
       '#options' => $this->actionLinkManager->getAllLinkTypes(),
       // '#after_build' => array('flag_check_link_types'),
-      '#default_value' => $flag->getLinkTypePlugin()->getPluginId(),
+      '#default_value' => $flag_link_type_plugin->getPluginId(),
       // Give this a high weight so additions by the flag classes for entity-
       // specific options go above.
       '#weight' => 18,
@@ -238,10 +254,9 @@ abstract class FlagFormBase extends EntityForm {
         'callback' => '::updateSelectedPluginType',
         'wrapper' => 'link-type-settings-wrapper',
         'event' => 'change',
-        'method' => 'replace',
+        'method' => 'replaceWith',
       ],
     ];
-    //debug($flag->getLinkTypePlugin()->getPluginId(), 'default value');
     $form['display']['link_type_submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Update'),
@@ -287,11 +302,11 @@ abstract class FlagFormBase extends EntityForm {
    * {@inheritdoc}
    */
   public function buildEntity(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\flag\FlagInterface $entity */
     $entity = parent::buildEntity($form, $form_state);
     // Update the link type plugin.
     // @todo Do this somewhere else?
     $entity->setLinkTypePlugin($entity->get('link_type'));
-    //debug($entity->getLinkTypePlugin()->getPluginId(), $entity->get('link_type'));
     return $entity;
   }
 
@@ -301,6 +316,7 @@ abstract class FlagFormBase extends EntityForm {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
+    /** @var \Drupal\flag\FlagInterface $flag */
     $flag = $this->entity;
     $flag->getFlagTypePlugin()->validateConfigurationForm($form, $form_state);
     $flag->getLinkTypePlugin()->validateConfigurationForm($form, $form_state);
@@ -310,6 +326,7 @@ abstract class FlagFormBase extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\flag\FlagInterface $flag */
     $flag = $this->entity;
 
     $flag->getFlagTypePlugin()->submitConfigurationForm($form, $form_state);
@@ -336,34 +353,23 @@ abstract class FlagFormBase extends EntityForm {
 
     // We clear caches more vigorously if the flag was new.
     // _flag_clear_cache($flag->entity_type, !empty($flag->is_new));
-
     // Save permissions.
     // This needs to be done after the flag cache has been cleared, so that
     // the new permissions are picked up by hook_permission().
     // This may need to move to the flag class when we implement extra
     // permissions for different flag types: http://drupal.org/node/879988
-
     // If the flag ID has changed, clean up all the obsolete permissions.
     if ($flag->id() != $form['#flag_name']) {
       $old_name = $form['#flag_name'];
       $permissions = ["flag $old_name", "unflag $old_name"];
-      foreach (array_keys(user_roles()) as $rid) {
+      $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
+      foreach (array_keys($roles) as $rid) {
         user_role_revoke_permissions($rid, $permissions);
       }
     }
-    /*
-        foreach (array_keys(user_roles(!\Drupal::moduleHandler()->moduleExists('session_api'))) as $rid) {
-          // Create an array of permissions.
-          $permissions = array(
-            "flag $flag->name" => $flag->roles['flag'][$rid],
-            "unflag $flag->name" => $flag->roles['unflag'][$rid],
-          );
-          user_role_change_permissions($rid, $permissions);
-        }
-    */
-    // @todo: when we add database caching for flags we'll have to clear the
+    // @todo when we add database caching for flags we'll have to clear the
     // cache again here.
-
+    // @phpstan-ignore-next-line
     $form_state->setRedirect('entity.flag.collection');
   }
 

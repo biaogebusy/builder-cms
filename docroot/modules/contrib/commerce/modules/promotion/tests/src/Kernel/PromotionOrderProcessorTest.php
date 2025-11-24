@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItem;
@@ -9,7 +10,6 @@ use Drupal\commerce_price\Price;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\user\UserInterface;
 
 /**
@@ -379,6 +379,62 @@ class PromotionOrderProcessorTest extends OrderKernelTestBase {
     $language = ConfigurableLanguage::createFromLangcode($langcode);
     $this->container->get('language.default')->set($language);
     \Drupal::languageManager()->reset();
+  }
+
+  /**
+   * Tests coupon redemption behavior with allow_multiple_coupons.
+   */
+  public function testMultipleCouponRedemption() {
+    $order_refresh = $this->container->get('commerce_order.order_refresh');
+
+    // Create a promotion that does NOT allow multiple coupons.
+    $promotion1 = Promotion::create([
+      'name' => 'Single Use Promotion',
+      'allow_multiple_coupons' => FALSE,
+      'order_types' => [$this->order->bundle()],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+    ]);
+    $promotion1->save();
+
+    // Create a promotion that allows multiple coupons.
+    $promotion2 = Promotion::create([
+      'name' => 'Multi Use Promotion',
+      'allow_multiple_coupons' => TRUE,
+      'order_types' => [$this->order->bundle()],
+      'stores' => [$this->store->id()],
+      'status' => TRUE,
+    ]);
+    $promotion2->save();
+
+    // Create coupons for both promotions.
+    $coupon1 = Coupon::create(['code' => 'SAVE10_1', 'promotion_id' => $promotion1->id()]);
+    $coupon1->save();
+
+    $coupon2 = Coupon::create(['code' => 'SAVE10_2', 'promotion_id' => $promotion1->id()]);
+    $coupon2->save();
+
+    $coupon3 = Coupon::create(['code' => 'SAVE15_1', 'promotion_id' => $promotion2->id()]);
+    $coupon3->save();
+
+    $coupon4 = Coupon::create(['code' => 'SAVE15_2', 'promotion_id' => $promotion2->id()]);
+    $coupon4->save();
+
+    // Apply multiple coupons from promotion 2 (should apply successfully).
+    $this->order->set('coupons', [$coupon3, $coupon4]);
+    $this->order->save();
+    $order_refresh->refresh($this->order);
+    $this->assertCount(2, $this->order->get('coupons')->referencedEntities(), 'Both coupons applied when allow_multiple_coupons is TRUE.');
+
+    $this->assertTrue($coupon2->available($this->order), "Coupon from promotion that does not allow multiple coupons should be available if no other coupons from the same promotion are applied.");
+
+    // Apply a single coupon from promotion 1 (should apply successfully).
+    $this->order->set('coupons', [$coupon1]);
+    $this->order->save();
+    $order_refresh->refresh($this->order);
+    $this->assertCount(1, $this->order->get('coupons')->referencedEntities(), 'Single coupon applied correctly.');
+
+    $this->assertFalse($coupon2->available($this->order), "Second coupon from the same promotion should not be available when allow_multiple_coupons is FALSE.");
   }
 
 }

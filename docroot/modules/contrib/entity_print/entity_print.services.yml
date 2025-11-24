@@ -9,7 +9,7 @@ services:
 
   entity_print.print_builder:
     class: Drupal\entity_print\PrintBuilder
-    arguments: ['@entity_print.renderer_factory', '@event_dispatcher', '@string_translation']
+    arguments: ['@entity_print.renderer_factory', '@event_dispatcher', '@string_translation', '@file_system']
 
   entity_print.renderer_factory:
     class: Drupal\entity_print\Renderer\RendererFactory

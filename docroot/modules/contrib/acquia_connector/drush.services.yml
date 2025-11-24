@@ -1,5 +1,11 @@
 services:
-  acquia_connector.commands:
-    class: Drupal\acquia_connector\Commands\AcquiaConnectorCommands
+  acquia_connector.sql_sanitize:
+    class: Drupal\acquia_connector\Commands\SqlSanitizeCommands
+    arguments: ['@state']
+    tags:
+      - { name: drush.command }
+  acquia_connector.refresh:
+    class: Drupal\acquia_connector\Commands\RefreshSubscription
+    arguments: ['@acquia_connector.subscription', '@state']
     tags:
       - { name: drush.command }

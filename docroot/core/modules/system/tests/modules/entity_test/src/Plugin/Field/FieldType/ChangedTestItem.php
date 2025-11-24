@@ -2,23 +2,25 @@
 
 namespace Drupal\entity_test\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
+use Drupal\Core\Field\ChangedFieldItemList;
 use Drupal\Core\Field\Plugin\Field\FieldType\ChangedItem;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Defines the 'changed_test' entity field type.
  *
  * Wraps Drupal\Core\Field\Plugin\Field\FieldType\ChangedItem.
  *
- * @FieldType(
- *   id = "changed_test",
- *   label = @Translation("Last changed"),
- *   description = @Translation("An entity field containing a UNIX timestamp of when the entity has been last updated."),
- *   no_ui = TRUE,
- *   list_class = "\Drupal\Core\Field\ChangedFieldItemList"
- * )
- *
  * @see \Drupal\Core\Entity\EntityChangedInterface
  */
+#[FieldType(
+  id: "changed_test",
+  label: new TranslatableMarkup("Last changed"),
+  description: new TranslatableMarkup("An entity field containing a UNIX timestamp of when the entity has been last updated."),
+  no_ui: TRUE,
+  list_class: ChangedFieldItemList::class,
+)]
 class ChangedTestItem extends ChangedItem {
 
   /**
@@ -27,7 +29,7 @@ class ChangedTestItem extends ChangedItem {
   public function preSave() {
     parent::preSave();
 
-    if ($this->value == REQUEST_TIME) {
+    if ($this->value == \Drupal::time()->getRequestTime()) {
       // During a test the request time is immutable. To allow tests of the
       // algorithm of
       // Drupal\Core\Field\Plugin\Field\FieldType\ChangedItem::preSave() we need

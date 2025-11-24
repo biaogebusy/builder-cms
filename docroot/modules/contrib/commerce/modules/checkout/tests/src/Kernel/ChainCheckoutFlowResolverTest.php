@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_checkout\Kernel;
 
-use Drupal\commerce_order\Entity\Order;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
+use Drupal\commerce_order\Entity\Order;
 
 /**
  * Tests the chain checkout flow resolver.
@@ -34,7 +34,7 @@ class ChainCheckoutFlowResolverTest extends OrderKernelTestBase {
    * Tests resolving the checkout flow.
    */
   public function testCheckoutFlowResolution() {
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
     $order = Order::create([
       'type' => 'default',
       'mail' => $user->getEmail(),

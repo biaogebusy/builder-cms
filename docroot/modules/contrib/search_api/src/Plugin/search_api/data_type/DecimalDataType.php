@@ -2,18 +2,19 @@
 
 namespace Drupal\search_api\Plugin\search_api\data_type;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiDataType;
 use Drupal\search_api\DataType\DataTypePluginBase;
 
 /**
  * Provides a decimal data type.
- *
- * @SearchApiDataType(
- *   id = "decimal",
- *   label = @Translation("Decimal"),
- *   description = @Translation("Contains numeric, typically non-integer values."),
- *   default = "true"
- * )
  */
+#[SearchApiDataType(
+  id: 'decimal',
+  label: new TranslatableMarkup('Decimal'),
+  description: new TranslatableMarkup('Contains numeric, typically non-integer values.'),
+  default: TRUE,
+)]
 class DecimalDataType extends DataTypePluginBase {
 
   /**

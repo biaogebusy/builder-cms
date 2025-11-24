@@ -1,28 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Field;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
 
 /**
  * Plugin to compare the title and the uris of two link fields.
- *
- * @FieldDiffBuilder(
- *   id = "link_field_diff_builder",
- *   label = @Translation("Link Field Diff"),
- *   field_types = {
- *     "link"
- *   },
- * )
  */
+#[FieldDiffBuilder(
+  id: 'link_field_diff_builder',
+  label: new TranslatableMarkup('Link Field Diff'),
+  field_types: ['link'],
+)]
 class LinkFieldBuilder extends FieldDiffBuilderBase {
 
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): array {
     $result = [];
 
     // Every item from $field_items is of type FieldItemInterface.
@@ -50,7 +51,7 @@ class LinkFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['compare_title'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Compare link title'),
@@ -68,7 +69,7 @@ class LinkFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['compare_title'] = $form_state->getValue('compare_title');
     $this->configuration['compare_uri'] = $form_state->getValue('compare_uri');
 
@@ -78,7 +79,7 @@ class LinkFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     $default_configuration = [
       'compare_title' => 0,
       'compare_uri' => 1,

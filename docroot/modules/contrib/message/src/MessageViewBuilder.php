@@ -22,7 +22,7 @@ class MessageViewBuilder extends EntityViewBuilder {
     $partials = $entity->getText($langcode);
 
     // Get the partials the user selected for the current view mode.
-    $extra_fields = EntityViewDisplay::load('message.' . $entity->bundle() . '.' . $view_mode);
+    $extra_fields = EntityViewDisplay::load('message.' . $entity->bundle() . '.' . $build['#view_mode']);
     if (!$extra_fields instanceof EntityViewDisplayInterface) {
       $extra_fields = EntityViewDisplay::create([
         'targetEntityType' => 'message',

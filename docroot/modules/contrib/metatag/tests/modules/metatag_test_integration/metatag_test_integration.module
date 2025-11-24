@@ -23,7 +23,7 @@ function metatag_test_integration_metatags_attachments_alter(array &$attachments
  * @param array $attachments
  *   The array of attachments to act on.
  */
-function _metatag_test_integration_replace_tag($name, $content, array &$attachments) {
+function _metatag_test_integration_replace_tag($name, $content, array &$attachments): void {
   if (empty($attachments['#attached'])) {
     $attachments['#attached'] = [];
   }
@@ -60,7 +60,7 @@ function _metatag_test_integration_replace_tag($name, $content, array &$attachme
  *   The position in the attachment array that the tag is found in. -1 if the
  *   tag is not set.
  */
-function _metatag_test_integration_find_tag($name, array $attachments) {
+function _metatag_test_integration_find_tag($name, array $attachments): int {
   foreach ($attachments['#attached']['html_head'] as $index => $attachment) {
     if ($attachment[1] == $name) {
       return $index;

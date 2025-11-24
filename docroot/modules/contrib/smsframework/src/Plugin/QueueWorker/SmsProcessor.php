@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\sms\Plugin\QueueWorker;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -26,25 +27,11 @@ class SmsProcessor extends QueueWorkerBase implements ContainerFactoryPluginInte
   public const PLUGIN_ID = 'sms.messages';
 
   /**
-   * The SMS provider.
-   *
-   * @var \Drupal\sms\Provider\SmsProviderInterface
-   */
-  protected $smsProvider;
-
-  /**
    * SMS message entity storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $smsMessageStorage;
-
-  /**
-   * Time.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
+  protected EntityStorageInterface $smsMessageStorage;
 
   /**
    * Constructs a new SmsProcessor object.
@@ -57,16 +44,21 @@ class SmsProcessor extends QueueWorkerBase implements ContainerFactoryPluginInte
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\sms\Provider\SmsProviderInterface $sms_provider
+   * @param \Drupal\sms\Provider\SmsProviderInterface $smsProvider
    *   The SMS provider.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   Time.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, SmsProviderInterface $sms_provider, TimeInterface $time) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    array $plugin_definition,
+    EntityTypeManagerInterface $entity_type_manager,
+    protected SmsProviderInterface $smsProvider,
+    protected TimeInterface $time,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->smsMessageStorage = $entity_type_manager->getStorage('sms');
-    $this->smsProvider = $sms_provider;
-    $this->time = $time;
   }
 
   /**

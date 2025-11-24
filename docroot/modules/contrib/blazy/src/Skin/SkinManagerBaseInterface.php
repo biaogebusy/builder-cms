@@ -2,8 +2,8 @@
 
 namespace Drupal\blazy\Skin;
 
-use Drupal\blazy\Plugin\SkinPluginInterface;
 use Drupal\Component\Plugin\Mapper\MapperInterface;
+use Drupal\blazy\Plugin\SkinPluginInterface;
 
 /**
  * Provides a base interface defining skins, and asset managements.

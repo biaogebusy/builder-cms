@@ -14,13 +14,13 @@ final class Direction {
    *
    * @var int
    */
-  const OUTGOING = 1;
+  public const OUTGOING = 1;
 
   /**
    * Whether the message was received by the website.
    *
    * @var int
    */
-  const INCOMING = -1;
+  public const INCOMING = -1;
 
 }

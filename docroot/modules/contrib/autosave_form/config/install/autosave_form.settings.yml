@@ -8,3 +8,5 @@ notification:
   message: "Saving draft..."
   delay: 1000
 allowed_content_entity_types: { }
+allowed_new: TRUE
+langcode: en

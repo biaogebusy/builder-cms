@@ -1,6 +1,6 @@
 {
   "name": "drupal/allowed_formats",
-  "description": "Limit which text formats are available for each field instance.",
+  "description": "Hides info about the selected text format. The 'allowed formats' functionality has been moved to core since Drupal 10.1.0.",
   "type": "drupal-module",
   "homepage": "https://www.drupal.org/project/allowed_formats",
   "license": "GPL-2.0-or-later",
@@ -31,7 +31,7 @@
     "issues": "https://www.drupal.org/project/issues/allowed_formats",
     "source": "http://cgit.drupalcode.org/allowed_formats"
   },
-  "require": {
-    "drupal/core": "^8.8 || ^9"
+  "conflict": {
+    "drupal/core": "<10.1.0"
   }
 }

@@ -1,0 +1,7 @@
+admin_toolbar.settings:
+  path: '/admin/config/user-interface/admin-toolbar'
+  defaults:
+    _form: '\Drupal\admin_toolbar\Form\AdminToolbarSettingsForm'
+    _title: 'Admin Toolbar settings'
+  requirements:
+    _permission: 'administer site configuration'

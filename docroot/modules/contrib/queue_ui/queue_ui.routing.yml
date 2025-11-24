@@ -6,6 +6,23 @@ queue_ui.overview_form:
   requirements:
     _permission: 'admin queue_ui'
 
+queue_ui.overview_form.derivative:
+  path: admin/config/system/queue-ui/derivative/{derivative_worker_id}
+  defaults:
+    _form: '\Drupal\queue_ui\Form\OverviewForm'
+    _title_callback: '\Drupal\queue_ui\Form\OverviewForm::title'
+  requirements:
+    _permission: 'admin queue_ui'
+
+queue_ui.cron_form:
+  path: admin/config/system/queue-ui/cron/{queue}
+  defaults:
+    _form: '\Drupal\queue_ui\Form\CronForm'
+    _title_callback: '\Drupal\queue_ui\Form\CronForm::title'
+  requirements:
+    _permission: 'admin queue_ui'
+    _custom_access: '\Drupal\queue_ui\Form\CronForm::access'
+
 queue_ui.confirm_clear_form:
   path: admin/config/system/queue-ui/clear
   defaults:
@@ -17,7 +34,6 @@ queue_ui.inspect:
   path: admin/config/system/queue-ui/inspect/{queueName}
   defaults:
     _form: '\Drupal\queue_ui\Form\InspectForm'
-    _title: 'Inspect queue'
   requirements:
     _permission: 'admin queue_ui'
 
@@ -25,7 +41,6 @@ queue_ui.inspect.view:
   path: admin/config/system/queue-ui/{queueName}/view/{queueItem}
   defaults:
     _form: '\Drupal\queue_ui\Form\ItemDetailForm'
-    _title: 'Queue item details'
   requirements:
     _permission: 'admin queue_ui'
 

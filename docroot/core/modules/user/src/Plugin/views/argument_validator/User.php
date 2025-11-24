@@ -2,9 +2,12 @@
 
 namespace Drupal\user\Plugin\views\argument_validator;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\argument_validator\Entity;
@@ -28,7 +31,7 @@ class User extends Entity {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $entity_type_bundle_info);
 
     $this->userStorage = $entity_type_manager->getStorage('user');
@@ -58,10 +61,13 @@ class User extends Entity {
       '#default_value' => $this->options['restrict_roles'],
     ];
 
+    $roles = Role::loadMultiple();
+    unset($roles[RoleInterface::ANONYMOUS_ID]);
+    $roles = array_map(fn(RoleInterface $role) => Html::escape($role->label()), $roles);
     $form['roles'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Restrict to the selected roles'),
-      '#options' => array_map(['\Drupal\Component\Utility\Html', 'escape'], user_role_names(TRUE)),
+      '#options' => $roles,
       '#default_value' => $this->options['roles'],
       '#description' => $this->t('If no roles are selected, users from any role will be allowed.'),
       '#states' => [
@@ -76,7 +82,7 @@ class User extends Entity {
    * {@inheritdoc}
    */
   public function submitOptionsForm(&$form, FormStateInterface $form_state, &$options = []) {
-    // filter trash out of the options so we don't store giant unnecessary arrays
+    // Filter trash out of the options so we don't store giant unnecessary arrays
     $options['roles'] = array_filter($options['roles']);
   }
 

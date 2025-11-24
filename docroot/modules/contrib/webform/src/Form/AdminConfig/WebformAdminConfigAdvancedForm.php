@@ -100,7 +100,7 @@ class WebformAdminConfigAdvancedForm extends WebformAdminConfigBaseForm {
         '#title' => $this->t('Display element description as help text (tooltip)'),
         '#description' => $this->t("If checked, all element descriptions will be moved to help text (tooltip).")
           . '<br/><br/><em>'
-          . $this->t('This behavior is disabled when the <a href=":href">Tippy.js library is disabled</a.', [':href' => Url::fromRoute('webform.config.libraries')->toString()]) . '</em>',
+          . $this->t('This behavior is disabled when the <a href=":href">Tippy.js library is disabled</a>.', [':href' => Url::fromRoute('webform.config.libraries')->toString()]) . '</em>',
         '#default_value' => $config->get('ui.description_help'),
         '#disabled' => TRUE,
       ];
@@ -287,38 +287,28 @@ class WebformAdminConfigAdvancedForm extends WebformAdminConfigBaseForm {
       '#help' => FALSE,
       '#weight' => 100,
     ];
-    $form['repair']['warning'] = [
-      '#type' => 'webform_message',
-      '#message_type' => 'warning',
-      '#message_message' => $this->t('Repair and remove older Webform configuration files.') . '<br/>' .
-        '<strong>' . $this->t('This action cannot be undone.') . '</strong>',
+    $form['repair']['title'] = [
+      '#markup' => $this->t('This action will…'),
     ];
-    $form['repair'] += [
-      'title' => [
-        '#markup' => $this->t('This action will…'),
-      ],
-      'list' => [
-        '#theme' => 'item_list',
-        '#items' => [
-          $this->t('Repair webform submission storage schema'),
-          $this->t('Repair admin configuration'),
-          $this->t('Repair webform settings'),
-          $this->t('Repair webform handlers'),
-          $this->t('Repair webform field storage definitions'),
-          $this->t('Repair webform submission storage schema'),
-          $this->t('Remove webform submission translation settings'),
-        ],
+    $form['repair']['list'] = [
+      '#theme' => 'item_list',
+      '#items' => [
+        $this->t('Repair webform submission storage schema'),
+        $this->t('Repair admin configuration'),
+        $this->t('Repair webform settings'),
+        $this->t('Repair webform handlers'),
+        $this->t('Repair webform field storage definitions'),
+        $this->t('Repair webform submission storage schema'),
+        $this->t('Remove webform submission translation settings'),
       ],
     ];
-    $form['repair']['action'] = ['#type' => 'actions'];
-    $form['repair']['action']['repair_configuration'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Repair configuration'),
-      '#attributes' => [
-        'onclick' => 'return confirm("' . $this->t('Are you sure you want to repair and remove older webform configuration?')
-          . PHP_EOL
-          . $this->t('This cannot be undone!!!') . '");',
-      ],
+    $form['repair']['link'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Repair webform configuration'),
+      '#url' => Url::fromRoute('webform.config.repair'),
+      '#attributes' => ['class' => ['button', 'button--small']],
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
     ];
 
     return parent::buildForm($form, $form_state);
@@ -328,85 +318,40 @@ class WebformAdminConfigAdvancedForm extends WebformAdminConfigBaseForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $op = (string) $form_state->getValue('op');
-    if ($op === (string) $this->t('Repair configuration')) {
-      // Copied from:
-      // @see \Drupal\webform\Commands\WebformCliService::drush_webform_repair
-      \Drupal::moduleHandler()->loadInclude('webform', 'install');
+    // Update config and submit form.
+    $config = $this->config('webform.settings');
+    $config->set('ui', $form_state->getValue('ui'));
+    $config->set('requirements', $form_state->getValue('requirements'));
+    $config->set('test', $form_state->getValue('test'));
+    $config->set('batch', $form_state->getValue('batch'));
 
-      $this->messenger()->addMessage($this->t('Repairing webform submission storage schema…'));
-      _webform_update_webform_submission_storage_schema();
+    // Track if help is disabled.
+    // @todo Figure out how to clear cached help block.
+    $is_help_disabled = ($config->getOriginal('ui.help_disabled') !== $config->get('ui.help_disabled'));
+    $is_toolbar_item = ($config->getOriginal('ui.toolbar_item') !== $config->get('ui.toolbar_item'));
 
-      $this->messenger()->addMessage($this->t('Repairing admin configuration…'));
-      _webform_update_admin_settings(TRUE);
+    parent::submitForm($form, $form_state);
 
-      $this->messenger()->addMessage($this->t('Repairing webform HTML editor…'));
-      _webform_update_html_editor();
-
-      $this->messenger()->addMessage($this->t('Repairing webform settings…'));
-      _webform_update_webform_settings();
-
-      $this->messenger()->addMessage($this->t('Repairing webform handlers…'));
-      _webform_update_webform_handler_settings();
-
-      $this->messenger()->addMessage($this->t('Repairing webform actions…'));
-      _webform_update_actions();
-
-      $this->messenger()->addMessage($this->t('Repairing webform field storage definitions…'));
-      _webform_update_field_storage_definitions();
-
-      $this->messenger()->addMessage($this->t('Repairing webform submission storage schema…'));
-      _webform_update_webform_submission_storage_schema();
-
-      if ($this->moduleHandler->moduleExists('webform_entity_print')) {
-        $this->messenger()->addMessage($this->t('Repairing webform entity print settings…'));
-        $this->moduleHandler->loadInclude('webform_entity_print', 'install');
-        webform_entity_print_install();
-      }
-
-      $this->messenger()->addMessage($this->t('Removing (unneeded) webform submission translation settings…'));
-      _webform_update_webform_submission_translation();
-
+    // Clear cached data.
+    if ($is_help_disabled || $is_toolbar_item) {
+      // Flush cache when help is being enabled.
+      // @see webform_help()
       drupal_flush_all_caches();
-
-      $this->messenger()->addStatus($this->t('Webform configuration has been repaired.'));
     }
     else {
-      // Update config and submit form.
-      $config = $this->config('webform.settings');
-      $config->set('ui', $form_state->getValue('ui'));
-      $config->set('requirements', $form_state->getValue('requirements'));
-      $config->set('test', $form_state->getValue('test'));
-      $config->set('batch', $form_state->getValue('batch'));
+      // Clear render cache so that local tasks can be updated to hide/show
+      // the 'Contribute' tab.
+      // @see webform_local_tasks_alter()
+      $this->renderCache->deleteAll();
+      $this->routerBuilder->rebuild();
+    }
 
-      // Track if help is disabled.
-      // @todo Figure out how to clear cached help block.
-      $is_help_disabled = ($config->getOriginal('ui.help_disabled') !== $config->get('ui.help_disabled'));
-      $is_toolbar_item = ($config->getOriginal('ui.toolbar_item') !== $config->get('ui.toolbar_item'));
-
-      parent::submitForm($form, $form_state);
-
-      // Clear cached data.
-      if ($is_help_disabled || $is_toolbar_item) {
-        // Flush cache when help is being enabled.
-        // @see webform_help()
-        drupal_flush_all_caches();
-      }
-      else {
-        // Clear render cache so that local tasks can be updated to hide/show
-        // the 'Contribute' tab.
-        // @see webform_local_tasks_alter()
-        $this->renderCache->deleteAll();
-        $this->routerBuilder->rebuild();
-      }
-
-      // Redirect to the update advanced admin configuration form.
-      if ($is_toolbar_item) {
-        $path = $config->get('ui.toolbar_item')
-          ? '/admin/webform/config/advanced'
-          : '/admin/structure/webform/config/advanced';
-        $form_state->setRedirectUrl(Url::fromUserInput($path));
-      }
+    // Redirect to the update advanced admin configuration form.
+    if ($is_toolbar_item) {
+      $path = $config->get('ui.toolbar_item')
+        ? '/admin/webform/config/advanced'
+        : '/admin/structure/webform/config/advanced';
+      $form_state->setRedirectUrl(Url::fromUserInput($path));
     }
   }
 

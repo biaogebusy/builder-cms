@@ -104,7 +104,7 @@ abstract class CountryAwareInOperatorBase extends InOperator {
    *   An array of available country codes, including the full list when
    *   unrestricted.
    */
-  protected function getAvailableCountries(EntityTypeInterface $entity_type = NULL, $field_name = NULL) {
+  protected function getAvailableCountries(?EntityTypeInterface $entity_type = NULL, $field_name = NULL) {
     if (!isset($entity_type)) {
       $entity_type_id = $this->getEntityType();
       $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);

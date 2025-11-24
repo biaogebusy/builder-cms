@@ -43,9 +43,16 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
   use EntityFieldHelperTrait;
 
   /**
+   * Value for import configuration to use default weights from a plugin.
+   *
+   * @see self::getImportConfigProcessorSettings()
+   */
+  const PLUGIN_DEFINITION_STAGES = TRUE;
+
+  /**
    * The import config ID.
    */
-  const IMPORT_CONFIG_ID = 'test_import_config';
+  public const IMPORT_CONFIG_ID = 'test_import_config';
 
   /**
    * {@inheritdoc}
@@ -69,21 +76,21 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    *
    * @var string
    */
-  protected static $entityTypeId = NULL;
+  protected static $entityTypeId;
 
   /**
    * The tested entity type bundle.
    *
    * @var string
    */
-  protected static $entityBundleId = NULL;
+  protected static $entityBundleId;
 
   /**
    * The tested entity langcode.
    *
    * @var string
    */
-  protected static $entityLangcode = NULL;
+  protected static $entityLangcode;
 
   /**
    * A test user with administrative privileges.
@@ -179,6 +186,13 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
   protected $entities = [];
 
   /**
+   * An array of file size keyed by file UUID.
+   *
+   * @var array
+   */
+  protected $filesSize = [];
+
+  /**
    * A mapping of the entity data used for the test.
    *
    * @var array
@@ -219,6 +233,13 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    * @var \Drupal\Core\File\FileUrlGeneratorInterface
    */
   protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
+   * The login path.
+   *
+   * @var string
+   */
+  protected $loginPath = 'user/login';
 
   /**
    * {@inheritdoc}
@@ -305,7 +326,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
   protected function getAuthenticationRequestOptions(AccountInterface $account) {
     return [
       RequestOptions::HEADERS => [
-        'Authorization' => 'Basic ' . base64_encode($account->getAccountName() . ':' . $account->passRaw),
+        'Authorization' => 'Basic ' . \base64_encode($account->getAccountName() . ':' . $account->passRaw),
       ],
     ];
   }
@@ -322,6 +343,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
       'id' => $this->randomMachineName(),
       'label' => $this->randomString(),
       'url' => $this->buildUrl('<front>'),
+      'login_path' => $this->loginPath,
     ]);
     $plugin = $this->createAuthenticationPlugin($user, $remote);
     $remote->mergePluginConfig($plugin);
@@ -389,12 +411,22 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    * Helper function to create the import config used for the test.
    */
   protected function createImportConfig() {
+    $processor_plugin_manager = $this->container->get('plugin.manager.entity_share_client_import_processor');
+
+    $import_processor_settings = $this->getImportConfigProcessorSettings();
+    foreach ($import_processor_settings as $plugin_id => &$settings) {
+      if ($settings['weights'] == static::PLUGIN_DEFINITION_STAGES) {
+        $definition = $processor_plugin_manager->getDefinition($plugin_id);
+        $settings['weights'] = $definition['stages'];
+      }
+    }
+
     $import_config_storage = $this->entityTypeManager->getStorage('import_config');
     $import_config = $import_config_storage->create([
       'id' => $this::IMPORT_CONFIG_ID,
       'label' => $this->randomString(),
       'import_maxsize' => 50,
-      'import_processor_settings' => $this->getImportConfigProcessorSettings(),
+      'import_processor_settings' => $import_processor_settings,
     ]);
     $import_config->save();
     $this->importConfig = $import_config;
@@ -437,7 +469,9 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    * Helper function to create the import config used for the test.
    *
    * @return array
-   *   The import processors config.
+   *   The import processors config. The 'weights' property in a configuration
+   *   array can be set to static::PLUGIN_DEFINITION_STAGES to use the default
+   *   stages and weights from a processor plugin's definition.
    */
   protected function getImportConfigProcessorSettings() {
     // Only locked import processors are enabled by default.
@@ -522,7 +556,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     foreach ($entityData as $field_machine_name => $data) {
       // Some data are dynamic.
       if (isset($data['value_callback'])) {
-        $prepared_entity_data[$field_machine_name] = call_user_func($data['value_callback']);
+        $prepared_entity_data[$field_machine_name] = \call_user_func($data['value_callback']);
       }
       else {
         $prepared_entity_data[$field_machine_name] = $data['value'];
@@ -579,7 +613,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    */
   protected function discoverJsonApiEndpoints($url) {
     // Prevents infinite loop.
-    if (in_array($url, $this->visitedUrlsDuringSetup)) {
+    if (\in_array($url, $this->visitedUrlsDuringSetup, TRUE)) {
       return;
     }
     $this->visitedUrlsDuringSetup[] = $url;
@@ -588,7 +622,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     $json_response = Json::decode((string) $response->getBody());
 
     // Loop on the data and relationships to get expected endpoints.
-    if (is_array($json_response['data'])) {
+    if (\is_array($json_response['data'])) {
       foreach (EntityShareUtility::prepareData($json_response['data']) as $data) {
         if (isset($data['relationships'])) {
           foreach ($data['relationships'] as $field_data) {
@@ -602,13 +636,13 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
             $prepared_field_data = EntityShareUtility::prepareData($field_data['data']);
             $config_or_user = FALSE;
             foreach ($prepared_field_data as $field_data_value) {
-              $parsed_type = explode('--', $field_data_value['type']);
+              $parsed_type = \explode('--', $field_data_value['type']);
               $entity_type_id = $parsed_type[0];
               if ($entity_type_id == 'user') {
                 $config_or_user = TRUE;
                 break;
               }
-              elseif ($this->entityDefinitions[$entity_type_id]->getGroup() == 'configuration') {
+              if ($this->entityDefinitions[$entity_type_id]->getGroup() == 'configuration') {
                 $config_or_user = TRUE;
                 break;
               }
@@ -666,7 +700,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    * This function doesn't assert the deletion of entities.
    */
   protected function resetImportedContent() {
-    $entity_type_ids = array_keys($this->getEntitiesDataArray());
+    $entity_type_ids = \array_keys($this->getEntitiesDataArray());
     foreach ($entity_type_ids as $entity_type_id) {
       $entity_storage = $this->entityTypeManager->getStorage($entity_type_id);
       $entities = $entity_storage->loadByProperties();
@@ -699,14 +733,14 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
 
           // Check the values.
           if (!empty($recreated_entities)) {
-            $recreated_entity = array_shift($recreated_entities);
+            $recreated_entity = \array_shift($recreated_entities);
 
             $entity_translation = $recreated_entity->getTranslation($language_id);
 
             foreach ($entity_data_per_field as $field_machine_name => $data) {
               // Some data are dynamic.
               if (isset($data['value_callback'])) {
-                $data['value'] = call_user_func($data['value_callback']);
+                $data['value'] = \call_user_func($data['value_callback']);
               }
 
               // When additional keys in field data are created by Drupal. We
@@ -714,7 +748,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
               if ($data['checker_callback'] == 'getFilteredStructureValues') {
                 // Assume that also for single value fields, the data will be
                 // set using an array of values.
-                $structure = array_keys($data['value'][0]);
+                $structure = \array_keys($data['value'][0]);
                 $this->assertEquals($data['value'], $this->getFilteredStructureValues($entity_translation, $field_machine_name, $structure), 'The data of the field ' . $field_machine_name . ' has been recreated.');
               }
               else {
@@ -731,7 +765,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    * Helper function to import all channels.
    */
   protected function pullEveryChannels() {
-    foreach (array_keys($this->channels) as $channel_id) {
+    foreach (\array_keys($this->channels) as $channel_id) {
       $this->pullChannel($channel_id);
     }
   }
@@ -745,9 +779,9 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
   protected function pullChannel($channel_id) {
     $import_context = new ImportContext($this->remote->id(), $channel_id, $this::IMPORT_CONFIG_ID);
     $this->importService->importChannel($import_context);
-    $batch =& batch_get();
+    $batch = &\batch_get();
     $batch['progressive'] = FALSE;
-    batch_process();
+    \batch_process();
   }
 
   /**
@@ -821,7 +855,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    *   Return common part to create medias.
    */
   protected function getCompleteMediaInfos(array $media_infos) {
-    return array_merge([
+    return \array_merge([
       'status' => [
         'value' => NodeInterface::PUBLISHED,
         'checker_callback' => 'getValue',
@@ -839,7 +873,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    *   Return common part to create nodes.
    */
   protected function getCompleteNodeInfos(array $node_infos) {
-    return array_merge([
+    return \array_merge([
       'type' => [
         'value' => static::$entityBundleId,
         'checker_callback' => 'getTargetId',
@@ -861,7 +895,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    *   Return common part to create taxonomy terms.
    */
   protected function getCompleteTaxonomyTermInfos(array $taxonomy_term_infos) {
-    return array_merge([
+    return \array_merge([
       'vid' => [
         'value' => static::$entityBundleId,
         'checker_callback' => 'getTargetId',
@@ -883,7 +917,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    *   Return common part to create paragraph.
    */
   protected function getCompleteParagraphInfos(array $paragraph_infos) {
-    return array_merge([
+    return \array_merge([
       'type' => [
         'value' => 'es_test',
         'checker_callback' => 'getTargetId',
@@ -901,7 +935,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    *   Return common part to create blocks.
    */
   protected function getCompleteBlockInfos(array $block_infos) {
-    return array_merge([
+    return \array_merge([
       'type' => [
         'value' => 'es_test',
         'checker_callback' => 'getTargetId',
@@ -928,7 +962,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     $existing_entity_id = '';
     $existing_entity = $this->loadEntity($entity_type_id, $entity_uuid);
 
-    if (!is_null($existing_entity)) {
+    if ($existing_entity !== NULL) {
       $existing_entity_id = $existing_entity->id();
     }
 
@@ -950,7 +984,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     $existing_entity_id = '';
     $existing_entity = $this->loadEntity($entity_type_id, $entity_uuid);
 
-    if (!is_null($existing_entity) && $existing_entity instanceof RevisionableInterface) {
+    if ($existing_entity !== NULL && $existing_entity instanceof RevisionableInterface) {
       $existing_entity_id = $existing_entity->getRevisionId();
     }
 
@@ -975,7 +1009,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     ]);
 
     if (!empty($existing_entities)) {
-      $existing_entity = array_shift($existing_entities);
+      $existing_entity = \array_shift($existing_entities);
     }
 
     return $existing_entity;
@@ -1000,7 +1034,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
     ]);
 
     if (!empty($existing_entities)) {
-      $existing_entity = array_shift($existing_entities);
+      $existing_entity = \array_shift($existing_entities);
     }
 
     return $existing_entity;
@@ -1020,7 +1054,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
   protected function prepareUrlFilteredOnUuids(array $selected_entities, $channel_id) {
     $channel_infos = $this->remoteManager->getChannelsInfos($this->remote);
     $channel_url = $channel_infos[$channel_id]['url'];
-    return EntityShareUtility::prepareUuidsFilteredUrl($channel_url, array_values($selected_entities));
+    return EntityShareUtility::prepareUuidsFilteredUrl($channel_url, \array_values($selected_entities));
   }
 
   /**
@@ -1036,8 +1070,8 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
       $directory_uri = $stream_wrapper->dirname($file_data['uri']);
       $this->fileSystem->prepareDirectory($directory_uri, FileSystemInterface::CREATE_DIRECTORY);
       if (isset($file_data['file_content'])) {
-        file_put_contents($file_data['uri'], $file_data['file_content']);
-        $this->filesSize[$file_uuid] = filesize($file_data['uri']);
+        \file_put_contents($file_data['uri'], $file_data['file_content']);
+        $this->filesSize[$file_uuid] = \filesize($file_data['uri']);
       }
       elseif (isset($file_data['file_content_callback'])) {
         $this->{$file_data['file_content_callback']}($file_uuid, $file_data);
@@ -1072,21 +1106,21 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
    */
   protected function commonBasicPull() {
     foreach (static::$filesData as $file_data) {
-      $this->assertFalse(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
+      $this->assertFalse(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
     }
 
     $this->pullEveryChannels();
     $this->checkCreatedEntities();
 
     foreach (static::$filesData as $file_uuid => $file_data) {
-      $this->assertTrue(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
+      $this->assertTrue(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
       if (isset($file_data['file_content'])) {
-        $recreated_file_data = file_get_contents($file_data['uri']);
+        $recreated_file_data = \file_get_contents($file_data['uri']);
         $this->assertEquals($file_data['file_content'], $recreated_file_data, 'The recreated physical file ' . $file_data['filename'] . ' has the same content.');
       }
 
       if (isset($this->filesSize[$file_uuid])) {
-        $this->assertEquals($this->filesSize[$file_uuid], filesize($file_data['uri']), 'The recreated physical file ' . $file_data['filename'] . ' has the same size as the original.');
+        $this->assertEquals($this->filesSize[$file_uuid], \filesize($file_data['uri']), 'The recreated physical file ' . $file_data['filename'] . ' has the same size as the original.');
       }
     }
   }
@@ -1102,7 +1136,7 @@ abstract class EntityShareClientFunctionalTestBase extends BrowserTestBase {
   protected function getMediaEntityReferenceTestFiles($file_uuid, array $file_data) {
     $filepath = $this->moduleExtensionList->getPath('entity_share') . '/tests/fixtures/files/' . $file_data['filename'];
     $this->fileSystem->copy($filepath, PublicStream::basePath());
-    $this->filesSize[$file_uuid] = filesize($filepath);
+    $this->filesSize[$file_uuid] = \filesize($filepath);
   }
 
   /**

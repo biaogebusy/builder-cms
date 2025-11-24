@@ -13,7 +13,7 @@ trait FieldGroupTestTrait {
    * @param string $entity_type
    *   The entity type as string.
    * @param string $bundle
-   *   The bundle of the enity type.
+   *   The bundle of the entity type.
    * @param string $context
    *   The context for the group.
    * @param string $mode
@@ -44,10 +44,10 @@ trait FieldGroupTestTrait {
       'bundle' => $bundle,
       'mode' => $mode,
       'context' => $context,
-      'children' => isset($data['children']) ? $data['children'] : [],
-      'parent_name' => isset($data['parent']) ? $data['parent'] : '',
-      'weight' => isset($data['weight']) ? $data['weight'] : 0,
-      'label' => isset($data['label']) ? $data['label'] : $this->randomString(8),
+      'children' => $data['children'] ?? [],
+      'parent_name' => $data['parent'] ?? '',
+      'weight' => $data['weight'] ?? 0,
+      'label' => $data['label'] ?? $this->randomString(8),
       'format_type' => $data['format_type'],
       'format_settings' => $data['format_settings'],
       'region' => 'content',

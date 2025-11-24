@@ -9,7 +9,7 @@ namespace Drupal\blazy;
  * field managers, such as Views field, or Slick/Entity Browser displays, etc.
  * May be called by formatters expecting a mix of theme_blazy() and entity
  * view builder aka vanilla in blazy ecosytem, or output as is as fallback.
- * Should be named BlazyEntityManagerInterface at 3.x.
+ * Should be named BlazyEntityManagerInterface at 3.x, or leave it, no biggies.
  *
  * @see Drupal\blazy\Field\BlazyEntityReferenceBase
  * @see Drupal\blazy\Plugin\Field\FieldFormatter\BlazyMediaFormatterBase

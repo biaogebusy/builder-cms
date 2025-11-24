@@ -10,4 +10,7 @@
  */
 function config_ignore_hook_test_config_ignore_settings_alter(array &$settings) {
   $settings[] = 'system.site';
+
+  $count = \Drupal::state()->get('hook_config_ignore_settings_alter__call_count', 0);
+  \Drupal::state()->set('hook_config_ignore_settings_alter__call_count', $count + 1);
 }

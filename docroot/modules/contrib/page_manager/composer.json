@@ -18,7 +18,7 @@
   "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
   "require": {
-    "drupal/ctools": "^3.11 || ^4.0"
+    "drupal/ctools": "^3.15 || ^4.1"
   },
   "extra": {
     "branch-alias": {

@@ -2,8 +2,8 @@
 
 namespace Drupal\metatag\Plugin\diff\Field;
 
-use Drupal\diff\FieldDiffBuilderBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\diff\FieldDiffBuilderBase;
 
 /**
  * Plugin to diff metatag fields.
@@ -21,7 +21,7 @@ class MetatagFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): mixed {
     $result = [];
 
     // Every item from $field_items is of type FieldItemInterface.
@@ -30,9 +30,9 @@ class MetatagFieldBuilder extends FieldDiffBuilderBase {
         $values = $field_item->getValue();
         if (isset($values['value'])) {
           // Metatag data store as serialize string.
-          $metatag_data = unserialize($values['value']);
+          $metatag_data = metatag_data_decode($values['value']);
 
-          foreach ($metatag_data as $key => $value) {
+          foreach ($metatag_data as $value) {
             $result[$field_key][] = (string) $value;
           }
         }

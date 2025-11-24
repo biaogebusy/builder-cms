@@ -3,8 +3,8 @@
 namespace Drupal\comment;
 
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\language\Entity\ContentLanguageSettings;
@@ -74,11 +74,16 @@ class CommentTypeForm extends EntityForm {
 
     $comment_type = $this->entity;
 
+    if ($this->operation === 'edit') {
+      $form['#title'] = $this->t('Edit %label comment type', ['%label' => $comment_type->label()]);
+    }
+
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
       '#default_value' => $comment_type->label(),
+      '#description' => $this->t('The human-readable name for this comment type, displayed on the <em>Comment types</em> page.'),
       '#required' => TRUE,
     ];
     $form['id'] = [
@@ -87,6 +92,7 @@ class CommentTypeForm extends EntityForm {
       '#machine_name' => [
         'exists' => '\Drupal\comment\Entity\CommentType::load',
       ],
+      '#description' => $this->t('Unique machine-readable name: lowercase letters, numbers, and underscores only.'),
       '#maxlength' => EntityTypeInterface::BUNDLE_MAX_LENGTH,
       '#disabled' => !$comment_type->isNew(),
     ];
@@ -94,7 +100,7 @@ class CommentTypeForm extends EntityForm {
     $form['description'] = [
       '#type' => 'textarea',
       '#default_value' => $comment_type->getDescription(),
-      '#description' => $this->t('Describe this comment type. The text will be displayed on the <em>Comment types</em> administration overview page.'),
+      '#description' => $this->t('Displays on the <em>Comment types</em> page.'),
       '#title' => $this->t('Description'),
     ];
 
@@ -114,6 +120,8 @@ class CommentTypeForm extends EntityForm {
         '#type' => 'select',
         '#default_value' => $comment_type->getTargetEntityTypeId(),
         '#title' => $this->t('Target entity type'),
+        '#required' => TRUE,
+        '#empty_value' => '_none',
         '#options' => $options,
         '#description' => $this->t('The target entity type can not be changed after the comment type has been created.'),
       ];

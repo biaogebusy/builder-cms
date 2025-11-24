@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity\Sql;
 
 use Drupal\Core\Entity\ContentEntityType;
@@ -27,14 +29,14 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
   /**
    * The mocked entity type manager used in this test.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $entityTypeManager;
 
   /**
    * The mocked entity field manager used in this test.
    *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $entityFieldManager;
 
@@ -77,8 +79,10 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    $this->entityTypeManager = $this->createMock(EntityTypeManager::class);
-    $this->entityFieldManager = $this->createMock(EntityFieldManager::class);
+    parent::setUp();
+
+    $this->entityTypeManager = $this->prophesize(EntityTypeManager::class);
+    $this->entityFieldManager = $this->prophesize(EntityFieldManager::class);
     $this->entityLastInstalledSchemaRepository = $this->createMock(EntityLastInstalledSchemaRepositoryInterface::class);
     $this->storage = $this->getMockBuilder('Drupal\Core\Entity\Sql\SqlContentEntityStorage')
       ->disableOriginalConstructor()
@@ -113,7 +117,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @covers ::getFieldSchemaData
    * @covers ::processIdentifierSchema
    */
-  public function testGetSchemaBase() {
+  public function testGetSchemaBase(): void {
     $this->entityType = new ContentEntityType([
       'id' => 'entity_test',
       'entity_keys' => ['id' => 'id'],
@@ -406,7 +410,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @covers ::getEntityIndexName
    * @covers ::processIdentifierSchema
    */
-  public function testGetSchemaRevisionable() {
+  public function testGetSchemaRevisionable(): void {
     $this->entityType = $this->getMockBuilder('Drupal\Core\Entity\ContentEntityType')
       ->setConstructorArgs([
         [
@@ -510,7 +514,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @covers ::getEntityIndexName
    * @covers ::processDataTable
    */
-  public function testGetSchemaTranslatable() {
+  public function testGetSchemaTranslatable(): void {
     $this->entityType = new ContentEntityType([
       'id' => 'entity_test',
       'entity_keys' => [
@@ -622,7 +626,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @covers ::initializeRevisionDataTable
    * @covers ::processRevisionDataTable
    */
-  public function testGetSchemaRevisionableTranslatable() {
+  public function testGetSchemaRevisionableTranslatable(): void {
     $this->entityType = $this->getMockBuilder('Drupal\Core\Entity\ContentEntityType')
       ->setConstructorArgs([
         [
@@ -834,7 +838,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @covers ::getDedicatedTableSchema
    * @covers ::createDedicatedTableSchema
    */
-  public function testDedicatedTableSchema() {
+  public function testDedicatedTableSchema(): void {
     $entity_type_id = 'entity_test';
     $this->entityType = new ContentEntityType([
       'id' => 'entity_test',
@@ -1011,7 +1015,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @covers ::getDedicatedTableSchema
    * @covers ::createDedicatedTableSchema
    */
-  public function testDedicatedTableSchemaForEntityWithStringIdentifier() {
+  public function testDedicatedTableSchemaForEntityWithStringIdentifier(): void {
     $entity_type_id = 'entity_test';
     $this->entityType = new ContentEntityType([
       'id' => 'entity_test',
@@ -1149,46 +1153,30 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
     );
   }
 
-  public function providerTestRequiresEntityDataMigration() {
-    $updated_entity_type_definition = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
-    $updated_entity_type_definition->expects($this->any())
-      ->method('getStorageClass')
-      // A class that exists, *any* class.
-      ->willReturn('\Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema');
-    $original_entity_type_definition = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
-    $original_entity_type_definition->expects($this->any())
-      ->method('getStorageClass')
-      // A class that exists, *any* class.
-      ->willReturn('\Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema');
-    $original_entity_type_definition_other_nonexisting = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
-    $original_entity_type_definition_other_nonexisting->expects($this->any())
-      ->method('getStorageClass')
-      ->willReturn('bar');
-    $original_entity_type_definition_other_existing = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
-    $original_entity_type_definition_other_existing->expects($this->any())
-      ->method('getStorageClass')
-      // A class that exists, *any* class.
-      ->willReturn('\Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema');
+  public static function providerTestRequiresEntityDataMigration(): \Generator {
+    // Case 1: same storage class, ::hasData() === TRUE.
+    yield [SqlContentEntityStorageSchema::class, TRUE, TRUE, TRUE];
 
-    return [
-      // Case 1: same storage class, ::hasData() === TRUE.
-      [$updated_entity_type_definition, $original_entity_type_definition, TRUE, TRUE, TRUE],
-      // Case 2: same storage class, ::hasData() === FALSE.
-      [$updated_entity_type_definition, $original_entity_type_definition, FALSE, TRUE, FALSE],
-      // Case 3: different storage class, original storage class does not exist.
-      [$updated_entity_type_definition, $original_entity_type_definition_other_nonexisting, NULL, TRUE, TRUE],
-      // Case 4: different storage class, original storage class exists,
-      // ::hasData() === TRUE.
-      [$updated_entity_type_definition, $original_entity_type_definition_other_existing, TRUE, TRUE, TRUE],
-      // Case 5: different storage class, original storage class exists,
-      // ::hasData() === FALSE.
-      [$updated_entity_type_definition, $original_entity_type_definition_other_existing, FALSE, TRUE, FALSE],
-      // Case 6: same storage class, ::hasData() === TRUE, no structure changes.
-      [$updated_entity_type_definition, $original_entity_type_definition, TRUE, FALSE, FALSE],
-      // Case 7: different storage class, original storage class exists,
-      // ::hasData() === TRUE, no structure changes.
-      [$updated_entity_type_definition, $original_entity_type_definition_other_existing, TRUE, FALSE, FALSE],
-    ];
+    // Case 2: same storage class, ::hasData() === FALSE.
+    yield [SqlContentEntityStorageSchema::class, FALSE, TRUE, FALSE];
+
+    // Case 3: different storage class, original storage class does not exist.
+    yield ['bar', NULL, TRUE, TRUE];
+
+    // Case 4: different storage class, original storage class exists,
+    // ::hasData() === TRUE.
+    yield [SqlContentEntityStorageSchemaTest::class, TRUE, TRUE, TRUE];
+
+    // Case 5: different storage class, original storage class exists,
+    // ::hasData() === FALSE.
+    yield [SqlContentEntityStorageSchemaTest::class, FALSE, TRUE, FALSE];
+
+    // Case 6: same storage class, ::hasData() === TRUE, no structure changes.
+    yield [SqlContentEntityStorageSchema::class, TRUE, FALSE, FALSE];
+
+    // Case 7: different storage class, original storage class exists,
+    // ::hasData() === TRUE, no structure changes.
+    yield [SqlContentEntityStorageSchemaTest::class, TRUE, FALSE, FALSE];
   }
 
   /**
@@ -1196,7 +1184,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    *
    * @dataProvider providerTestRequiresEntityDataMigration
    */
-  public function testRequiresEntityDataMigration($updated_entity_type_definition, $original_entity_type_definition, $original_storage_has_data, $shared_table_structure_changed, $migration_required) {
+  public function testRequiresEntityDataMigration(string $storage_class, bool|null $original_storage_has_data, bool $shared_table_structure_changed, bool $migration_required): void {
     $this->entityType = new ContentEntityType([
       'id' => 'entity_test',
       'entity_keys' => ['id' => 'id'],
@@ -1220,9 +1208,20 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
       ->willReturn($this->storageDefinitions);
 
     $this->storageSchema = $this->getMockBuilder('Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema')
-      ->setConstructorArgs([$this->entityTypeManager, $this->entityType, $this->storage, $connection, $this->entityFieldManager, $this->entityLastInstalledSchemaRepository])
+      ->setConstructorArgs([$this->entityTypeManager->reveal(), $this->entityType, $this->storage, $connection, $this->entityFieldManager->reveal(), $this->entityLastInstalledSchemaRepository])
       ->onlyMethods(['installedStorageSchema', 'hasSharedTableStructureChange'])
       ->getMock();
+
+    $updated_entity_type_definition = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
+    $updated_entity_type_definition->expects($this->any())
+      ->method('getStorageClass')
+      // A class that exists, *any* class.
+      ->willReturn('\Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema');
+
+    $original_entity_type_definition = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
+    $original_entity_type_definition->expects($this->any())
+      ->method('getStorageClass')
+      ->willReturn($storage_class);
 
     $this->storageSchema->expects($this->any())
       ->method('hasSharedTableStructureChange')
@@ -1235,67 +1234,21 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
   /**
    * Data provider for ::testRequiresEntityStorageSchemaChanges().
    */
-  public function providerTestRequiresEntityStorageSchemaChanges() {
-
-    $cases = [];
-
-    $updated_entity_type_definition = $this->createMock('\Drupal\Core\Entity\ContentEntityTypeInterface');
-    $original_entity_type_definition = $this->createMock('\Drupal\Core\Entity\ContentEntityTypeInterface');
-
-    $updated_entity_type_definition->expects($this->any())
-      ->method('id')
-      ->willReturn('entity_test');
-    $updated_entity_type_definition->expects($this->any())
-      ->method('getKey')
-      ->willReturn('id');
-    $original_entity_type_definition->expects($this->any())
-      ->method('id')
-      ->willReturn('entity_test');
-    $original_entity_type_definition->expects($this->any())
-      ->method('getKey')
-      ->willReturn('id');
-
-    // Storage class changes should not impact this at all, and should not be
-    // checked.
-    $updated = clone $updated_entity_type_definition;
-    $original = clone $original_entity_type_definition;
-    $updated->expects($this->never())
-      ->method('getStorageClass');
-    $original->expects($this->never())
-      ->method('getStorageClass');
-
+  public static function providerTestRequiresEntityStorageSchemaChanges(): \Generator {
     // Case 1: No shared table changes should not require change.
-    $cases[] = [$updated, $original, FALSE, FALSE, FALSE];
+    yield [FALSE, FALSE, FALSE];
 
     // Case 2: A change in the entity schema should result in required changes.
-    $cases[] = [$updated, $original, TRUE, TRUE, FALSE];
+    yield [TRUE, TRUE, FALSE];
 
     // Case 3: Has shared table changes should result in required changes.
-    $cases[] = [$updated, $original, TRUE, FALSE, TRUE];
+    yield [TRUE, FALSE, TRUE];
 
     // Case 4: Changing translation should result in required changes.
-    $updated = clone $updated_entity_type_definition;
-    $updated->expects($this->once())
-      ->method('isTranslatable')
-      ->willReturn(FALSE);
-    $original = clone $original_entity_type_definition;
-    $original->expects($this->once())
-      ->method('isTranslatable')
-      ->willReturn(TRUE);
-    $cases[] = [$updated, $original, TRUE, FALSE, FALSE];
+    yield [TRUE, FALSE, FALSE, 'isTranslatable'];
 
     // Case 5: Changing revisionable should result in required changes.
-    $updated = clone $updated_entity_type_definition;
-    $updated->expects($this->once())
-      ->method('isRevisionable')
-      ->willReturn(FALSE);
-    $original = clone $original_entity_type_definition;
-    $original->expects($this->once())
-      ->method('isRevisionable')
-      ->willReturn(TRUE);
-    $cases[] = [$updated, $original, TRUE, FALSE, FALSE];
-
-    return $cases;
+    yield [TRUE, FALSE, FALSE, 'isRevisionable'];
   }
 
   /**
@@ -1303,7 +1256,38 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    *
    * @dataProvider providerTestRequiresEntityStorageSchemaChanges
    */
-  public function testRequiresEntityStorageSchemaChanges(ContentEntityTypeInterface $updated, ContentEntityTypeInterface $original, $requires_change, $change_schema, $change_shared_table) {
+  public function testRequiresEntityStorageSchemaChanges(bool $requires_change, bool $change_schema, bool $change_shared_table, ?string $method = NULL): void {
+    $original = $this->createMock(ContentEntityTypeInterface::class);
+    $original->expects($this->any())
+      ->method('id')
+      ->willReturn('entity_test');
+    $original->expects($this->any())
+      ->method('getKey')
+      ->willReturn('id');
+
+    $updated = $this->createMock(ContentEntityTypeInterface::class);
+    $updated->expects($this->any())
+      ->method('id')
+      ->willReturn('entity_test');
+    $updated->expects($this->any())
+      ->method('getKey')
+      ->willReturn('id');
+
+    if ($method) {
+      $original->expects($this->once())
+        ->method($method)
+        ->willReturn(TRUE);
+      $updated->expects($this->once())
+        ->method($method)
+        ->willReturn(FALSE);
+    }
+
+    // Storage class changes should not impact this at all, and should not be
+    // checked.
+    $original->expects($this->never())
+      ->method('getStorageClass');
+    $updated->expects($this->never())
+      ->method('getStorageClass');
 
     $this->entityType = new ContentEntityType([
       'id' => 'entity_test',
@@ -1354,24 +1338,20 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    *   be created. Defaults to expecting nothing.
    */
   protected function setUpStorageSchema(array $expected = []) {
-    $this->entityTypeManager->expects($this->any())
-      ->method('getDefinition')
-      ->with($this->entityType->id())
+    $this->entityTypeManager
+      ->getDefinition($this->entityType->id())
       ->willReturn($this->entityType);
 
-    $this->entityTypeManager->expects($this->any())
-      ->method('getActiveDefinition')
-      ->with($this->entityType->id())
+    $this->entityTypeManager
+      ->getActiveDefinition($this->entityType->id())
       ->willReturn($this->entityType);
 
-    $this->entityFieldManager->expects($this->any())
-      ->method('getFieldStorageDefinitions')
-      ->with($this->entityType->id())
+    $this->entityFieldManager
+      ->getFieldStorageDefinitions($this->entityType->id())
       ->willReturn($this->storageDefinitions);
 
-    $this->entityFieldManager->expects($this->any())
-      ->method('getActiveFieldStorageDefinitions')
-      ->with($this->entityType->id())
+    $this->entityFieldManager
+      ->getActiveFieldStorageDefinitions($this->entityType->id())
       ->willReturn($this->storageDefinitions);
 
     $this->dbSchemaHandler = $this->getMockBuilder('Drupal\Core\Database\Schema')
@@ -1417,7 +1397,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
       ->willReturn($this->storageDefinitions);
 
     $this->storageSchema = $this->getMockBuilder('Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema')
-      ->setConstructorArgs([$this->entityTypeManager, $this->entityType, $this->storage, $connection, $this->entityFieldManager, $this->entityLastInstalledSchemaRepository])
+      ->setConstructorArgs([$this->entityTypeManager->reveal(), $this->entityType, $this->storage, $connection, $this->entityFieldManager->reveal(), $this->entityLastInstalledSchemaRepository])
       ->onlyMethods(['installedStorageSchema', 'loadEntitySchemaData', 'hasSharedTableNameChanges', 'isTableEmpty', 'getTableMapping'])
       ->getMock();
     $this->storageSchema
@@ -1473,7 +1453,7 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
   /**
    * ::onEntityTypeUpdate.
    */
-  public function testonEntityTypeUpdateWithNewIndex() {
+  public function testonEntityTypeUpdateWithNewIndex(): void {
     $this->entityType = $original_entity_type = new ContentEntityType([
       'id' => 'entity_test',
       'entity_keys' => ['id' => 'id'],
@@ -1536,12 +1516,12 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
       ]);
 
     // The original indexes should be dropped before the new one is added.
-    $this->dbSchemaHandler->expects($this->exactly(3))
+    $indexes = ['entity_test__b588603cb9', 'entity_test__removed_field', 'entity_test__b588603cb9'];
+    $this->dbSchemaHandler->expects($this->exactly(count($indexes)))
       ->method('dropIndex')
-      ->withConsecutive(
-        ['entity_test', 'entity_test__b588603cb9'],
-        ['entity_test', 'entity_test__removed_field'],
-      );
+      ->with('entity_test', $this->callback(function ($index) use (&$indexes) {
+        return array_shift($indexes) === $index;
+      }));
 
     $this->dbSchemaHandler->expects($this->atLeastOnce())
       ->method('fieldExists')
@@ -1574,14 +1554,14 @@ class SqlContentEntityStorageSchemaTest extends UnitTestCase {
    * @dataProvider providerSchemaCastValue
    * @covers ::castValue
    */
-  public function testCastValue($expected, $value, array $schema) {
+  public function testCastValue($expected, $value, array $schema): void {
     $this->assertSame($expected, SqlContentEntityStorageSchema::castValue($schema, $value));
   }
 
   /**
    * Provides data for testCastValue().
    */
-  public function providerSchemaCastValue() {
+  public static function providerSchemaCastValue() {
     $cases = [];
     // Tests NULL values.
     $cases[] = [

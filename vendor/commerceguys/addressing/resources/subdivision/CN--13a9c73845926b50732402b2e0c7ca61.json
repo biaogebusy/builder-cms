@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HA",
+		"Luohe Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Linying Xian": {
+			"local_name": "临颍县"
+		},
+		"Wuyang Xian": {
+			"local_name": "舞阳县"
+		},
+		"Yancheng Qu": {
+			"local_name": "郾城区"
+		},
+		"Yuanhui Qu": {
+			"local_name": "源汇区"
+		},
+		"Zhaoling Qu": {
+			"local_name": "召陵区"
+		}
+	}
+}

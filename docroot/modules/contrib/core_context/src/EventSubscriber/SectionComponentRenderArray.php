@@ -53,7 +53,9 @@ final class SectionComponentRenderArray implements EventSubscriberInterface {
     return [
       // This needs to run before Layout Builder's event subscriber, so its
       // priority needs to be higher.
-      LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY => ['setComponentContexts', 150],
+      LayoutBuilderEvents::SECTION_COMPONENT_BUILD_RENDER_ARRAY => [
+        'setComponentContexts', 150,
+      ],
     ];
   }
 
@@ -67,7 +69,7 @@ final class SectionComponentRenderArray implements EventSubscriberInterface {
     $plugin = $event->getPlugin();
 
     // If the plugin cannot accept contexts, there's no point in continuing.
-    if (! ($plugin instanceof ContextAwarePluginInterface)) {
+    if (!($plugin instanceof ContextAwarePluginInterface)) {
       return;
     }
 
@@ -82,13 +84,15 @@ final class SectionComponentRenderArray implements EventSubscriberInterface {
     // The event is unaware of the section storage, so we need to use the
     // available contexts to find the correct section storage.
     $section_storage = $this->sectionStorageManager->findByContext($contexts, $event->getCacheableMetadata());
+    // If we couldn't find an appropriate section storage, there's nothing else
+    // for us to do.
+    if (empty($section_storage)) {
+      return;
+    }
 
     // If the section storage is overriding another one, the contexts provided
     // by the override should be overlaid on top of the ones provided by the
     // underlying default.
-    if (is_null($section_storage)) {
-      return;
-    }
     $contexts = $this->getContextsFromSectionStorage($section_storage);
     while ($section_storage instanceof OverridesSectionStorageInterface) {
       $section_storage = $section_storage->getDefaultSectionStorage();
@@ -115,8 +119,8 @@ final class SectionComponentRenderArray implements EventSubscriberInterface {
   private function getContextsFromSectionStorage(SectionStorageInterface $section_storage) {
     // Since we need to get the section list by prying open the section storage,
     // we can only work with instances of SectionStorageBase, since they have a
-    // protected getSectionList() method. This isn't very clean, but I spoke to
-    // Tim Plunkett and he literally told me to do it this way.
+    // protected getSectionList() method. This isn't very clean, but Tim
+    // Plunkett literally told me to do it this way.
     if ($section_storage instanceof SectionStorageBase) {
       $method = new \ReflectionMethod($section_storage, 'getSectionList');
       $method->setAccessible(TRUE);
@@ -135,13 +139,13 @@ final class SectionComponentRenderArray implements EventSubscriberInterface {
 
     // If the section list still isn't an entity, then we don't have a way to
     // extract contexts from it.
-    if (! ($section_list instanceof EntityInterface)) {
+    if (!($section_list instanceof EntityInterface)) {
       return [];
     }
 
     // If the entity doesn't have a context handler, then we cannot get contexts
     // from it and there is nothing else to do.
-    if (! $section_list->getEntityType()->hasHandlerClass('context')) {
+    if (!$section_list->getEntityType()->hasHandlerClass('context')) {
       return [];
     }
 

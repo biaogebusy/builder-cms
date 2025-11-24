@@ -15,7 +15,7 @@ class DefaultWidget extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable($filter = NULL, array $filter_options = []) {
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
     return TRUE;
   }
 

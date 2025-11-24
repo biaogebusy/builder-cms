@@ -46,6 +46,7 @@ class EckEntityTypeDeleteForm extends EntityDeleteForm {
     $content_number = $this->entityTypeManager
       ->getStorage($this->entity->id())
       ->getQuery()
+      ->accessCheck(FALSE)
       ->count()
       ->execute();
 

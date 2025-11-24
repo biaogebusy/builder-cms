@@ -166,6 +166,7 @@ display:
           batch: false
           batch_size: 10
           form_step: true
+          ajax_loader: true
           buttons: true
           action_title: Action
           clear_on_exposed: true
@@ -175,11 +176,11 @@ display:
               action_id: views_bulk_operations_simple_test_action
               preconfiguration:
                 label_override: 'Simple test action'
-                preconfig: 'Test setting'
+                add_confirmation: false
             -
               action_id: views_bulk_operations_advanced_test_action
               preconfiguration:
-                preconfig: 'Test setting'
+                add_confirmation: true
           plugin_id: views_bulk_operations_bulk_form
       filters:
         sticky:

@@ -48,7 +48,7 @@ class DummyRedirectController implements ContainerInjectionInterface {
     $return = $this->currentRequest->request->get('return');
     $total = $this->currentRequest->request->get('total');
 
-    if ($total > 20) {
+    if ($total > 20 || $total == 0) {
       return new TrustedRedirectResponse($return);
     }
 
@@ -65,7 +65,7 @@ class DummyRedirectController implements ContainerInjectionInterface {
     $return = $this->currentRequest->query->get('return');
     $total = $this->currentRequest->query->get('total');
 
-    if ($total > 20) {
+    if ($total > 20 || $total == 0) {
       return new TrustedRedirectResponse($return);
     }
 

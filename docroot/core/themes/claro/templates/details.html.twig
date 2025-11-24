@@ -19,11 +19,6 @@
  * @see claro_preprocess_details()
  */
 #}
-{#
-  Prefix 'details' class to avoid collision with Modernizr.
-
-  @todo Remove prefix after https://www.drupal.org/node/2981732 has been solved.
-#}
 {%
   set classes = [
     'claro-details',
@@ -46,7 +41,7 @@
     'claro-details__content',
     accordion ? 'claro-details__content--accordion',
     accordion_item ? 'claro-details__content--accordion-item',
-    element['#module_package_listing']  ? 'claro-details__content--package-listing',
+    element['#module_package_listing'] ? 'claro-details__content--package-listing',
   ]
 %}
 <details{{ attributes.addClass(classes) }}>
@@ -58,7 +53,7 @@
         required ? 'form-required',
         accordion ? 'claro-details__summary--accordion',
         accordion_item ? 'claro-details__summary--accordion-item',
-        element['#module_package_listing']  ? 'claro-details__summary--package-listing',
+        element['#module_package_listing'] ? 'claro-details__summary--package-listing',
 
     ]
     %}
@@ -75,7 +70,7 @@
     {% endif %}
 
       {% if errors %}
-        <div class="form-item form-item--error-message">
+        <div class="form-item form-item__error-message">
           {{ errors }}
         </div>
       {% endif %}

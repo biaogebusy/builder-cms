@@ -196,11 +196,11 @@ function webform_requirements($phase) {
   if (\Drupal::config('webform.settings')->get('requirements.spam')) {
     $spam_protection = FALSE;
     $installed_projects = [
-      '#prefix' => '<p><hr/></p><dl>',
+      '#prefix' => '<hr class="webform-hr"/><dl>',
       '#suffix' => '</dl>',
     ];
     $available_projects = [
-      '#prefix' => '<p><hr/></p><dl>',
+      '#prefix' => '<hr class="webform-hr"/><dl>',
       '#suffix' => '</dl>',
     ];
 

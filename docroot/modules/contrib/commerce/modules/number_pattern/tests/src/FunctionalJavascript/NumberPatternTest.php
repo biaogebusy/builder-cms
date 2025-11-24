@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_number_pattern\FunctionalJavascript;
 
+use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 use Drupal\commerce_number_pattern\Entity\NumberPattern;
 use Drupal\commerce_number_pattern_test\Entity\EntityTestWithStore;
-use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 
 /**
  * Tests the number pattern admin UI.
@@ -75,8 +75,8 @@ class NumberPatternTest extends CommerceWebDriverTestBase {
     $this->assertSession()->fieldNotExists('configuration[yearly][per_store_sequence');
     $edit = [
       'label' => 'Foo!',
-      'configuration[yearly][initial_number]' => 2,
-      'configuration[yearly][padding]' => 5,
+      'configuration[yearly][initial_number]' => '2',
+      'configuration[yearly][padding]' => '5',
     ];
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains('Saved the Foo! number pattern.');

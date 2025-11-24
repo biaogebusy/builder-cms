@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\Core\Cache\MemoryCounterBackendFactory;
 use Drupal\sqlite\Driver\Database\sqlite\Connection;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * Base class for tests of Migrate source plugins that use a database.
@@ -16,7 +19,9 @@ abstract class MigrateSqlSourceTestBase extends MigrateSourceTestBase {
    */
   public function register(ContainerBuilder $container) {
     parent::register($container);
-    $container->register('cache_factory', MemoryCounterBackendFactory::class);
+    $container
+      ->register('cache_factory', MemoryCounterBackendFactory::class)
+      ->addArgument(new Reference('datetime.time'));
   }
 
   /**
@@ -42,8 +47,7 @@ abstract class MigrateSqlSourceTestBase extends MigrateSourceTestBase {
       // Use the biggest row to build the table schema.
       $counts = array_map('count', $rows);
       asort($counts);
-      end($counts);
-      $pilot = $rows[key($counts)];
+      $pilot = $rows[array_key_last($counts)];
 
       $connection->schema()
         ->createTable($table, [
@@ -84,14 +88,13 @@ abstract class MigrateSqlSourceTestBase extends MigrateSourceTestBase {
    *
    * @requires extension pdo_sqlite
    */
-  public function testSource(array $source_data, array $expected_data, $expected_count = NULL, array $configuration = [], $high_water = NULL, $expected_cache_key = NULL) {
+  public function testSource(array $source_data, array $expected_data, $expected_count = NULL, array $configuration = [], $high_water = NULL, $expected_cache_key = NULL): void {
     $plugin = $this->getPlugin($configuration);
 
     // Since we don't yet inject the database connection, we need to use a
     // reflection hack to set it in the plugin instance.
     $reflector = new \ReflectionObject($plugin);
     $property = $reflector->getProperty('database');
-    $property->setAccessible(TRUE);
     $property->setValue($plugin, $this->getDatabase($source_data));
 
     /** @var MemoryCounterBackend $cache **/
@@ -99,7 +102,6 @@ abstract class MigrateSqlSourceTestBase extends MigrateSourceTestBase {
     if ($expected_cache_key) {
       // Verify the computed cache key.
       $property = $reflector->getProperty('cacheKey');
-      $property->setAccessible(TRUE);
       $this->assertSame($expected_cache_key, $property->getValue($plugin));
 
       // Cache miss prior to calling ::count().

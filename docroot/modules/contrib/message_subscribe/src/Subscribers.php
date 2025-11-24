@@ -14,7 +14,6 @@ use Drupal\flag\FlagServiceInterface;
 use Drupal\message\MessageInterface;
 use Drupal\message_notify\MessageNotifier;
 use Drupal\message_subscribe\Exception\MessageSubscribeException;
-use Drupal\og\MembershipManagerInterface;
 use Drupal\user\EntityOwnerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -57,15 +56,6 @@ class Subscribers implements SubscribersInterface {
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
-
-  /**
-   * The group membership manager service.
-   *
-   * This is only available if the OG module is enabled.
-   *
-   * @var \Drupal\og\MembershipManagerInterface
-   */
-  protected $membershipManager;
 
   /**
    * The message subscribe queue.
@@ -112,16 +102,6 @@ class Subscribers implements SubscribersInterface {
     $this->moduleHandler = $module_handler;
     $this->queue = $queue->get('message_subscribe');
     $this->debug = $this->config->get('debug_mode');
-  }
-
-  /**
-   * Set the group membership manager service.
-   *
-   * @param \Drupal\og\MembershipManagerInterface $membership_manager
-   *   The group membership manager service.
-   */
-  public function setMembershipManager(MembershipManagerInterface $membership_manager) {
-    $this->membershipManager = $membership_manager;
   }
 
   /**
@@ -197,9 +177,13 @@ class Subscribers implements SubscribersInterface {
     if ($subscribe_options['uids']) {
       // We got a list of user IDs directly from the implementing module,
       // However we need to adhere to the range.
-      $uids = $subscribe_options['range'] ? array_slice($subscribe_options['uids'], 0, $subscribe_options['range'], TRUE) : $subscribe_options['uids'];
-    }
+      $offset = 0;
+      if ($subscribe_options['last uid']) {
+        $offset = array_search($subscribe_options['last uid'], array_keys($subscribe_options['uids'])) + 1;
+      }
 
+      $uids = $subscribe_options['range'] ? array_slice($subscribe_options['uids'], $offset, $subscribe_options['range'], TRUE) : $subscribe_options['uids'];
+    }
     if (empty($uids) && !$uids = $this->getSubscribers($entity, $message, $subscribe_options, $context)) {
       // If we use a queue, it will be deleted.
       return;
@@ -251,7 +235,15 @@ class Subscribers implements SubscribersInterface {
       }
     }
 
-    if ($use_queue) {
+    $last_key = key(array_slice($subscribe_options['uids'], -1, 1, TRUE));
+
+    // Last key could not be found which means there are no more queue items to
+    // create.
+    if ($last_key === NULL) {
+      return;
+    }
+
+    if ($use_queue && isset($last_uid) && $last_key != $last_uid) {
       // Add item to the queue.
       $task = [
         'message' => $message,
@@ -262,7 +254,7 @@ class Subscribers implements SubscribersInterface {
       ];
 
       $task['subscribe_options']['last uid'] = $last_uid;
-      $this->debug('Queuing new batch with last uid of @uid', ['@uid' => $last_uid]);
+      $this->debug('New batch queue with last uid of @uid', ['@uid' => $last_uid]);
 
       // Create a new queue item, with the last user ID.
       $this->queue->createItem($task);
@@ -359,7 +351,7 @@ class Subscribers implements SubscribersInterface {
    *   Returns TRUE if the entity is owned by the given user ID.
    */
   protected function isEntityOwner(EntityInterface $entity, $uid) {
-    // Special handling for entites implementing RevisionLogInterface.
+    // Special handling for entities implementing RevisionLogInterface.
     $is_owner = FALSE;
     if ($entity instanceof RevisionLogInterface) {
       $is_owner = $entity->getRevisionUserId() == $uid;
@@ -374,7 +366,7 @@ class Subscribers implements SubscribersInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFlags($entity_type = NULL, $bundle = NULL, AccountInterface $account = NULL) {
+  public function getFlags($entity_type = NULL, $bundle = NULL, ?AccountInterface $account = NULL) {
     $flags = $this->flagService->getAllFlags($entity_type, $bundle);
     if ($account) {
       // Filter flags down to ones the account has action access for.
@@ -429,20 +421,6 @@ class Subscribers implements SubscribersInterface {
 
     /** @var \Drupal\node\NodeInterface[] $nodes */
     $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($context['node']);
-
-    if ($this->moduleHandler->moduleExists('og')) {
-      // Iterate over existing nodes to extract the related groups.
-      foreach ($nodes as $node) {
-        foreach ($this->membershipManager->getGroupIds($node) as $group_type => $gids) {
-          foreach ($gids as $gid) {
-            $context[$group_type][$gid] = $gid;
-          }
-        }
-      }
-      // Re-load nodes as the OG context may have added additional ones.
-      /** @var \Drupal\node\NodeInterface[] $nodes */
-      $nodes = $this->entityTypeManager->getStorage('node')->loadMultiple($context['node']);
-    }
 
     foreach ($nodes as $node) {
       $context['user'][$node->getOwnerId()] = $node->getOwnerId();

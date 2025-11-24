@@ -13,6 +13,11 @@ use Drupal\Tests\migrate_drupal_ui\Functional\MigrateUpgradeTestBase;
  */
 class MigrateUiFieldGroupTest extends MigrateUpgradeTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
   use FieldGroupMigrationAssertionsTrait;
 
   /**
@@ -127,23 +132,36 @@ class MigrateUiFieldGroupTest extends MigrateUpgradeTestBase {
     $this->submitForm([], 'Continue');
     $session->pageTextContains('Provide credentials for the database of the Drupal site you want to upgrade.');
 
-    $driver = $connection_options['driver'];
+    $connectionDriver = $connection_options['driver'];
 
     // Use the driver connection form to get the correct options out of the
     // database settings. This supports all of the databases we test against.
-    $drivers = drupal_get_database_types();
-    $form = $drivers[$driver]->getFormOptions($connection_options);
+    if (\Drupal::hasService('extension.list.database_driver')) {
+      $drivers = [];
+      foreach (\Drupal::service('extension.list.database_driver')->getInstallableList() as $driver) {
+        $drivers[$driver->getNameSpace()] = $driver->getInstallTasks();
+      }
+    }
+    else {
+      // Introduce database driver extensions and
+      // autoload database drivers' dependencies.
+      // @see https://www.drupal.org/node/3258175
+      // @phpstan-ignore-next-line
+      $drivers = drupal_get_database_types();
+    }
+
+    $form = $drivers[$connectionDriver]->getFormOptions($connection_options);
     $connection_options = array_intersect_key($connection_options, $form + $form['advanced_options']);
     $version = $this->getLegacyDrupalVersion($this->sourceDatabase);
     $edit = [
-      $driver => $connection_options,
+      $connectionDriver => $connection_options,
       'source_private_file_path' => $this->getSourceBasePath(),
       'version' => $version,
       'source_base_path' => $this->getSourceBasePath(),
     ];
 
     if (count($drivers) !== 1) {
-      $edit['driver'] = $driver;
+      $edit['driver'] = $connectionDriver;
     }
     $edits = $this->translatePostValues($edit);
 

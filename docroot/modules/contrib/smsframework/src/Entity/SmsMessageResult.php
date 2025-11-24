@@ -42,7 +42,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    *
    * @var \Drupal\sms\Entity\SmsDeliveryReportInterface[]
    */
-  protected $reports = [];
+  protected array $reports = [];
 
   /**
    * {@inheritdoc}
@@ -228,14 +228,14 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * @param \Drupal\sms\Message\SmsMessageResultInterface $sms_result
    *   A plain SMS message result.
    *
-   * @return \Drupal\sms\Entity\SmsMessageResultInterface
+   * @return static
    *   An SMS message result entity that can be saved.
    */
-  public static function convertFromMessageResult(StdMessageResultInterface $sms_result) {
+  public static function convertFromMessageResult(StdMessageResultInterface $sms_result): static {
     if ($sms_result instanceof SmsMessageResultInterface) {
       return $sms_result;
     }
-    $new = SmsMessageResult::create();
+    $new = static::create();
     $new
       ->setCreditsBalance($sms_result->getCreditsBalance())
       ->setCreditsUsed($sms_result->getCreditsUsed())

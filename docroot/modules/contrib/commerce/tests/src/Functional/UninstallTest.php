@@ -4,7 +4,6 @@ namespace Drupal\Tests\commerce\Functional;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\commerce\Traits\DeprecationSuppressionTrait;
 
 /**
  * Tests module uninstallation.
@@ -13,24 +12,7 @@ use Drupal\Tests\commerce\Traits\DeprecationSuppressionTrait;
  */
 class UninstallTest extends BrowserTestBase {
 
-  use DeprecationSuppressionTrait;
   use StringTranslationTrait;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    $this->setErrorHandler();
-    parent::setUp();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function tearDown(): void {
-    parent::tearDown();
-    $this->restoreErrorHandler();
-  }
 
   /**
    * {@inheritdoc}
@@ -61,7 +43,7 @@ class UninstallTest extends BrowserTestBase {
     // Confirm that all Commerce modules have been installed successfully.
     $installed_modules = $this->container->get('module_handler')->getModuleList();
     foreach (self::$modules as $module) {
-      $this->assertArrayHasKey($module, $installed_modules, $this->t('Commerce module @module installed successfully.', ['@module' => $module]));
+      $this->assertArrayHasKey($module, $installed_modules, (string) $this->t('Commerce module @module installed successfully.', ['@module' => $module]));
     }
 
     // Uninstall all modules except the base module.
@@ -75,7 +57,7 @@ class UninstallTest extends BrowserTestBase {
     $this->rebuildContainer();
     $installed_modules = $this->container->get('module_handler')->getModuleList();
     foreach (self::$modules as $module) {
-      $this->assertArrayNotHasKey($module, $installed_modules, $this->t('Commerce module @module uninstalled successfully.', ['@module' => $module]));
+      $this->assertArrayNotHasKey($module, $installed_modules, (string) $this->t('Commerce module @module uninstalled successfully.', ['@module' => $module]));
     }
 
     // Reinstall the modules. If there was no trailing configuration left
@@ -84,7 +66,7 @@ class UninstallTest extends BrowserTestBase {
     $this->rebuildContainer();
     $installed_modules = $this->container->get('module_handler')->getModuleList();
     foreach (self::$modules as $module) {
-      $this->assertArrayHasKey($module, $installed_modules, $this->t('Commerce module @module reinstalled successfully.', ['@module' => $module]));
+      $this->assertArrayHasKey($module, $installed_modules, (string) $this->t('Commerce module @module reinstalled successfully.', ['@module' => $module]));
     }
   }
 

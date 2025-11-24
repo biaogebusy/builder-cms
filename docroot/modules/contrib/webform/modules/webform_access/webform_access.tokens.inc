@@ -17,7 +17,7 @@ function webform_access_token_info() {
   $types = [];
   $types['webform_access'] = [
     'name' => t('Webform access'),
-    'description' => t("Tokens related to webform access group types. <em>This token is only available to a Webform email handler's 'To', 'CC', and 'BCC' email recipents.</em>"),
+    'description' => t("Tokens related to webform access group types. <em>This token is only available to a Webform email handler's 'To', 'CC', and 'BCC' email recipients.</em>"),
     'needs-data' => 'webform_access',
   ];
 
@@ -37,7 +37,7 @@ function webform_access_token_info() {
     'description' => t('The email addresses of all <strong>custom email addresses</strong> assigned to the current webform.'),
   ];
   $webform_access['admins'] = [
-    'name' => t('All adminstrators'),
+    'name' => t('All administrators'),
     'description' => t('The email addresses of all <strong>administrators</strong> assigned to the current webform.'),
   ];
   $webform_access['all'] = [
@@ -59,11 +59,11 @@ function webform_access_token_info() {
       'description' => t('The email addresses of <strong>custom email addresses</strong> assigned to the %title access type for the current webform.', ['%title' => $webform_access_type->label()]),
     ];
     $webform_access["type:$webform_access_type_name:admins"] = [
-      'name' => t('@label (Adminstrators)', $t_args),
+      'name' => t('@label (Administrators)', $t_args),
       'description' => t('The email addresses of <strong>administrators</strong> assigned to the %title access type for the current webform.', ['%title' => $webform_access_type->label()]),
     ];
     $webform_access["type:$webform_access_type_name:all"] = [
-      'name' => t('@label (Users, custom email addresses, Adminstrators)', $t_args),
+      'name' => t('@label (Users, custom email addresses, Administrators)', $t_args),
       'description' => t('The email addresses of <strong>users</strong>, <strong>custom email addresses</strong>, and <strong>administrators</strong> assigned to the %title access type for the current webform.', ['%title' => $webform_access_type->label()]),
     ];
   }
@@ -106,7 +106,7 @@ function webform_access_tokens($type, $tokens, array $data, array $options, Bubb
         $emails = [];
 
         // Get access group administrator email addresses.
-        // Administrator email addresss are only returned if explicitly
+        // Administrator email address are only returned if explicitly
         // requested via [webform_access:type:admins] or
         // [webform_access:type:TYPE_ID:admins].
         if (in_array($type, ['admins', 'all'])

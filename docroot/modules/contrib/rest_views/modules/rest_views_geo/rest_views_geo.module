@@ -8,7 +8,7 @@
 /**
  * Implements hook_views_data_alter().
  */
-function rest_views_geo_views_data_alter(array &$data) {
+function rest_views_geo_views_data_alter(array &$data): void {
   foreach ($data as $table_alias => $fields) {
     /** @var array[] $fields */
     foreach ($fields as $field_alias => $field) {

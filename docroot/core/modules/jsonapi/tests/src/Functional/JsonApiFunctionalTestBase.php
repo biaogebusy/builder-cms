@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -10,8 +12,9 @@ use Drupal\file\Entity\File;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\image\Kernel\ImageFieldCreationTrait;
+use Drupal\Tests\jsonapi\Traits\GetDocumentFromResponseTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -24,7 +27,8 @@ use GuzzleHttp\Exception\ServerException;
  */
 abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
+  use GetDocumentFromResponseTrait;
   use ImageFieldCreationTrait;
 
   const IS_MULTILINGUAL = TRUE;
@@ -92,7 +96,7 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Set up a HTTP client that accepts relative URLs.
@@ -128,8 +132,8 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
         ],
         FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED
       );
-      $this->createImageField('field_image', 'article');
-      $this->createImageField('field_heroless', 'article');
+      $this->createImageField('field_image', 'node', 'article');
+      $this->createImageField('field_no_hero', 'node', 'article');
     }
 
     FieldStorageConfig::create([
@@ -210,7 +214,7 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
    * @return \Psr\Http\Message\ResponseInterface
    *   The request response.
    *
-   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws \Psr\Http\Client\ClientExceptionInterface
    *
    * @see \GuzzleHttp\ClientInterface::request
    */
@@ -327,7 +331,7 @@ abstract class JsonApiFunctionalTestBase extends BrowserTestBase {
       // Make sure that there is at least 1 https link for ::testRead() #19.
       $this->nodes[0]->field_link = [
         'title' => 'Drupal',
-        'uri' => 'https://drupal.org',
+        'uri' => 'https://example.com',
       ];
       $this->nodes[0]->save();
     }

@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD",
+		"Shanwei Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cheng Qu": {
+			"local_name": "城区"
+		},
+		"Haifeng Xian": {
+			"local_name": "海丰县"
+		},
+		"Lufeng Shi": {
+			"local_name": "陆丰市"
+		},
+		"Luhe Xian": {
+			"local_name": "陆河县"
+		}
+	}
+}

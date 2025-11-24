@@ -1,6 +1,5 @@
 drupal.chosen:
   remote: https://drupal.org/project/chosen
-  version: 1.7.0
   license:
       name: GNU GPL v2
       url: https://www.drupal.org/about/licensing
@@ -12,7 +11,7 @@ drupal.chosen:
       css/chosen-drupal.css: {}
   dependencies:
     - core/drupal
-    - core/jquery
+    - core/drupalSettings
     - core/once
     - chosen_lib/chosen
 drupal.chosen.all:
@@ -23,3 +22,9 @@ chosen.claro:
   css:
     component:
       css/chosen.claro.css: {}
+chosen.bef:
+  js:
+    js/chosen-bef.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

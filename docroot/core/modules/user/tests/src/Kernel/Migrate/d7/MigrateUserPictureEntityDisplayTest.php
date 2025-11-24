@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d7;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -33,7 +35,7 @@ class MigrateUserPictureEntityDisplayTest extends MigrateDrupal7TestBase {
   /**
    * Tests the Drupal 7 user picture to Drupal 8 entity display migration.
    */
-  public function testUserPictureEntityDisplay() {
+  public function testUserPictureEntityDisplay(): void {
     $component = EntityViewDisplay::load('user.user.default')->getComponent('user_picture');
     $this->assertSame('image', $component['type']);
     $this->assertSame('', $component['settings']['image_style']);

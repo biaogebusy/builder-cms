@@ -15,7 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 function entity_share_async_form_entity_share_client_pull_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $async_button = [
     '#type' => 'submit',
-    '#value' => t('Import asynchronously'),
+    '#value' => \t('Import asynchronously'),
     '#button_type' => 'primary',
     '#validate' => ['::validateSelectedEntities'],
     '#submit' => [
@@ -44,9 +44,9 @@ function entity_share_async_form_entity_share_client_pull_form_alter(&$form, For
       ->getStorage('import_config')
       ->loadMultiple();
 
-    foreach (array_keys($form['channel_wrapper']['entities_wrapper']['entities']['#options']) as $uuid) {
+    foreach (\array_keys($form['channel_wrapper']['entities_wrapper']['entities']['#options']) as $uuid) {
       if (isset($async_states[$remote_id][$channel_id][$uuid])) {
-        $import_config_label = t('Undefined');
+        $import_config_label = \t('Undefined');
         $import_config_id = $async_states[$remote_id][$channel_id][$uuid];
         if (isset($import_configs[$import_config_id])) {
           $import_config_label = $import_configs[$import_config_id]->label();
@@ -55,7 +55,7 @@ function entity_share_async_form_entity_share_client_pull_form_alter(&$form, For
         $form['channel_wrapper']['entities_wrapper']['entities']['#options'][$uuid]['#attributes']['class'] = [
           'entity-share-waiting-sync',
         ];
-        $form['channel_wrapper']['entities_wrapper']['entities']['#options'][$uuid]['status'] = t('Waiting for synchronization (import config %import_config)', [
+        $form['channel_wrapper']['entities_wrapper']['entities']['#options'][$uuid]['status'] = \t('Waiting for synchronization (import config %import_config)', [
           '%import_config' => $import_config_label,
         ]);
       }
@@ -73,7 +73,7 @@ function entity_share_async_form_entity_share_client_pull_form_alter(&$form, For
  */
 function _entity_share_async_form_submit(array &$form, FormStateInterface $form_state) {
   $selected_entities = $form_state->getValue('entities');
-  $selected_entities = array_filter($selected_entities);
+  $selected_entities = \array_filter($selected_entities);
   $remote_id = $form_state->getValue('remote');
   $channel_id = $form_state->getValue('channel');
   $import_config_id = $form_state->getValue('import_config');

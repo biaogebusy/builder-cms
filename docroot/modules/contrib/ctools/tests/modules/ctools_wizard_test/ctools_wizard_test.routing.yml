@@ -1,19 +1,19 @@
 ctools.wizard.test:
   path: '/ctools/wizard'
   defaults:
-    _wizard: '\Drupal\ctools_wizard_test\Wizard\WizardTest'
+    _wizard: '\Drupal\ctools_wizard_test\Wizard\EntityWizard'
     _title: 'Wizard Test'
     tempstore_id: 'ctools.wizard.test'
-    machine_name: 'WizardTest'
+    machine_name: 'EntityWizard'
   requirements:
     _access: 'TRUE'
 ctools.wizard.test.step:
   path: '/ctools/wizard/{step}'
   defaults:
-    _wizard: '\Drupal\ctools_wizard_test\Wizard\WizardTest'
+    _wizard: '\Drupal\ctools_wizard_test\Wizard\EntityWizard'
     _title: 'Wizard Test'
     tempstore_id: 'ctools.wizard.test'
-    machine_name: 'WizardTest'
+    machine_name: 'EntityWizard'
   requirements:
     _access: 'TRUE'
 

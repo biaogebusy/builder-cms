@@ -14,7 +14,7 @@ content:
   linked_username:
     weight: 0
     region: content
-    settings: {  }
-    third_party_settings: {  }
+    settings: {}
+    third_party_settings: {}
 hidden:
   member_for: true

@@ -203,7 +203,7 @@ display:
             alter_text: false
             text: ''
             make_link: true
-            path: 'user/{{ arguments.uid }}/orders/{{ order_id }}'
+            path: 'user/{{ raw_arguments.uid }}/orders/{{ order_id }}'
             absolute: false
             external: false
             replace_spaces: false
@@ -531,7 +531,6 @@ display:
           default_argument_type: fixed
           default_argument_options:
             argument: ''
-          default_argument_skip_url: false
           summary_options:
             base_path: ''
             count: true
@@ -551,7 +550,8 @@ display:
           not: false
           entity_type: commerce_order
           entity_field: uid
-          plugin_id: numeric
+          plugin_id: entity_target_id
+          target_entity_type_id: commerce_order
       display_extenders: {  }
     cache_metadata:
       max-age: -1

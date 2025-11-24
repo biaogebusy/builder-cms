@@ -13,12 +13,16 @@ class AutologoutRolesTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['user', 'migrate_drupal', 'autologout'];
+  protected static $modules = [
+    'user',
+    'migrate_drupal',
+    'autologout',
+  ];
 
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $tests = [];
 
     $tests[0]['source_data']['variable'] = [

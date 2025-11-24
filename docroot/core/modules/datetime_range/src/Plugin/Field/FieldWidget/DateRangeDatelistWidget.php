@@ -2,21 +2,20 @@
 
 namespace Drupal\datetime_range\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\datetime_range\Plugin\Field\FieldType\DateRangeItem;
 
 /**
  * Plugin implementation of the 'daterange_datelist' widget.
- *
- * @FieldWidget(
- *   id = "daterange_datelist",
- *   label = @Translation("Select list"),
- *   field_types = {
- *     "daterange"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'daterange_datelist',
+  label: new TranslatableMarkup('Select list'),
+  field_types: ['daterange'],
+)]
 class DateRangeDatelistWidget extends DateRangeWidgetBase {
 
   /**
@@ -117,10 +116,10 @@ class DateRangeDatelistWidget extends DateRangeWidgetBase {
         '#default_value' => $this->getSetting('increment'),
         '#options' => [
           1 => $this->t('1 minute'),
-          5 => $this->t('5 minute'),
-          10 => $this->t('10 minute'),
-          15 => $this->t('15 minute'),
-          30 => $this->t('30 minute'),
+          5 => $this->t('@count minutes', ['@count' => 5]),
+          10 => $this->t('@count minutes', ['@count' => 10]),
+          15 => $this->t('@count minutes', ['@count' => 15]),
+          30 => $this->t('@count minutes', ['@count' => 30]),
         ],
       ];
     }

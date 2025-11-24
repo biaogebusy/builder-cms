@@ -2,10 +2,6 @@
 
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow;
 
-use Drupal\commerce\AjaxFormTrait;
-use Drupal\commerce\Response\NeedsRedirectException;
-use Drupal\commerce_checkout\Event\CheckoutEvents;
-use Drupal\commerce_order\Event\OrderEvent;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -16,6 +12,11 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
+use Drupal\commerce\AjaxFormTrait;
+use Drupal\commerce\Response\NeedsRedirectException;
+use Drupal\commerce_checkout\Event\CheckoutEvents;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Event\OrderEvent;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -30,7 +31,7 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
   use AjaxFormTrait;
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
@@ -55,25 +56,25 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
    *
    * @var string|int|null
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration
-  protected $_orderId;
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing, PSR2.Classes.PropertyDeclaration.Underscore
+  protected $_orderId = NULL;
 
   /**
    * The parent config entity.
    *
    * Not available while the plugin is being configured.
    *
-   * @var \Drupal\commerce_checkout\Entity\CheckoutFlowInterface
+   * @var \Drupal\commerce_checkout\Entity\CheckoutFlowInterface|null
    */
-  protected $parentEntity;
+  protected $parentEntity = NULL;
 
   /**
    * The ID of the parent entity (used for serialization).
    *
    * @var string|int|null
    */
-  // phpcs:ignore Drupal.Classes.PropertyDeclaration
-  protected $_parentEntityId;
+  // phpcs:ignore Drupal.Classes.PropertyDeclaration, Drupal.NamingConventions.ValidVariableName.LowerCamelName, Drupal.Commenting.VariableComment.Missing, PSR2.Classes.PropertyDeclaration.Underscore
+  protected $_parentEntityId = NULL;
 
   /**
    * Static cache of visible steps.
@@ -128,14 +129,14 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     if (!empty($this->parentEntity)) {
       $this->_parentEntityId = $this->parentEntity->id();
-      unset($this->parentEntity);
+      $this->parentEntity = NULL;
     }
     if (!empty($this->order)) {
       $this->_orderId = $this->order->id();
-      unset($this->order);
+      $this->order = NULL;
     }
 
     return parent::__sleep();
@@ -144,27 +145,35 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
   /**
    * {@inheritdoc}
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     parent::__wakeup();
 
     if (!empty($this->_parentEntityId)) {
       $checkout_flow_storage = $this->entityTypeManager->getStorage('commerce_checkout_flow');
       $this->parentEntity = $checkout_flow_storage->load($this->_parentEntityId);
-      unset($this->_parentEntityId);
+      $this->_parentEntityId = NULL;
     }
 
     if (!empty($this->_orderId)) {
       $order_storage = $this->entityTypeManager->getStorage('commerce_order');
       $this->order = $order_storage->load($this->_orderId);
-      unset($this->_orderId);
+      $this->_orderId = NULL;
     }
   }
 
   /**
    * {@inheritdoc}
    */
+  public function setOrder(OrderInterface $order): static {
+    $this->order = $order;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getOrder() {
-    if (!$this->order && $this->_orderId) {
+    if (empty($this->order) && !empty($this->_orderId)) {
       $order_storage = $this->entityTypeManager->getStorage('commerce_order');
       $this->order = $order_storage->load($this->_orderId);
     }
@@ -251,7 +260,7 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
       'complete' => [
         'label' => $this->t('Complete'),
         'next_label' => $this->t('Complete checkout'),
-        'has_sidebar' => FALSE,
+        'has_sidebar' => !empty($this->configuration['display_sidebar_checkout_complete']),
       ],
     ];
   }
@@ -316,6 +325,7 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
     return [
       'display_checkout_progress' => TRUE,
       'display_checkout_progress_breadcrumb_links' => FALSE,
+      'display_sidebar_checkout_complete' => FALSE,
       'guest_order_assign' => FALSE,
       'guest_new_account' => FALSE,
       'guest_new_account_notify' => FALSE,
@@ -338,6 +348,12 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
       '#description' => $this->t('Let the checkout progress block render the breadcrumb as links.'),
       '#default_value' => $this->configuration['display_checkout_progress_breadcrumb_links'],
     ];
+    $form['display_sidebar_checkout_complete'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Display sidebar on checkout completion'),
+      '#description' => $this->t('Whether the sidebar should be shown on the checkout completion page.'),
+      '#default_value' => $this->configuration['display_sidebar_checkout_complete'],
+    ];
     $form['guest_order_assign'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Assign an anonymous order to a pre-existing user'),
@@ -347,7 +363,7 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
     $form['guest_new_account'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Create a new account for an anonymous order'),
-      '#description' => $this->t('Creates a new user account on checkout completion if the customer specified a non-existent e-mail address.'),
+      '#description' => $this->t('Creates a new user account on checkout completion if the customer specified a non-existent email address.'),
       '#default_value' => $this->configuration['guest_new_account'],
     ];
     $form['guest_new_account_notify'] = [
@@ -379,6 +395,7 @@ abstract class CheckoutFlowBase extends PluginBase implements CheckoutFlowInterf
       $this->configuration = [];
       $this->configuration['display_checkout_progress'] = $values['display_checkout_progress'];
       $this->configuration['display_checkout_progress_breadcrumb_links'] = $values['display_checkout_progress_breadcrumb_links'];
+      $this->configuration['display_sidebar_checkout_complete'] = !empty($values['display_sidebar_checkout_complete']);
       $this->configuration['guest_order_assign'] = $values['guest_order_assign'];
       $this->configuration['guest_new_account'] = $values['guest_new_account'];
       $this->configuration['guest_new_account_notify'] = $values['guest_new_account_notify'];

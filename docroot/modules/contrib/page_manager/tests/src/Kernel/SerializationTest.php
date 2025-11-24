@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\page_manager\Kernel;
 
+use Drupal\Core\Plugin\Context\Context;
+use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\page_manager\Entity\Page;
-use Drupal\Core\Plugin\Context\ContextDefinition;
-use Drupal\Core\Plugin\Context\Context;
 use Drupal\page_manager\Entity\PageVariant;
 use Drupal\page_manager\Plugin\DisplayVariant\HttpStatusCodeDisplayVariant;
 use Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant;
@@ -31,7 +31,7 @@ class SerializationTest extends KernelTestBase {
   public function setUp(): void {
     parent::setUp();
 
-    // @todo: Remove the silent dependency on user.
+    // @todo Remove the silent dependency on user.
     $this->installEntitySchema('user');
   }
 
@@ -41,6 +41,7 @@ class SerializationTest extends KernelTestBase {
    * @param object $object
    *   The object to serialize.
    * @param string $message
+   *   Message when serialization fails.
    *
    * @return object
    *   The unserialized object.
@@ -55,6 +56,7 @@ class SerializationTest extends KernelTestBase {
    * Create a basic page.
    *
    * @return \Drupal\page_manager\Entity\Page
+   *   The Page Entity.
    */
   protected function createPage() {
     return Page::create([
@@ -70,6 +72,7 @@ class SerializationTest extends KernelTestBase {
    * Create a basic page variant.
    *
    * @return \Drupal\page_manager\Entity\PageVariant
+   *   The page variant.
    */
   protected function createPageVariant() {
     return PageVariant::create([
@@ -89,7 +92,7 @@ class SerializationTest extends KernelTestBase {
     $page = $this->createPage();
 
     // Test that a very simple page successfully serializes.
-    /* @var \Drupal\page_manager\Entity\Page $unserialized */
+    /** @var \Drupal\page_manager\Entity\Page $unserialized */
     $unserialized = $this->assertSerialization($page);
     $this->assertEquals($page->id(), $unserialized->id());
     $this->assertEquals($page->label(), $unserialized->label());
@@ -139,7 +142,7 @@ class SerializationTest extends KernelTestBase {
     $page_variant = $this->createPageVariant();
 
     // Test that a very simple page variant successfully serializes.
-    /* @var \Drupal\page_manager\Entity\PageVariant $unserialized */
+    /** @var \Drupal\page_manager\Entity\PageVariant $unserialized */
     $unserialized = $this->assertSerialization($page_variant);
     $this->assertEquals($page_variant->id(), $unserialized->id());
     $this->assertEquals($page_variant->label(), $unserialized->label());
@@ -206,14 +209,14 @@ class SerializationTest extends KernelTestBase {
     $configuration = [
       'page_title' => 'Test variant',
     ];
-    /* @var \Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant $variant_plugin */
+    /** @var \Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant $variant_plugin */
     $variant_plugin = $this->container
       ->get('plugin.manager.display_variant')
       ->createInstance('block_display', $configuration);
     $this->assertInstanceOf(PageBlockDisplayVariant::class, $variant_plugin);
 
     // Test that a very simple variant successfully serializes.
-    /* @var \Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant $unserialized */
+    /** @var \Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant $unserialized */
     $unserialized = $this->assertSerialization($variant_plugin);
     $this->assertEquals($variant_plugin->getConfiguration(), $unserialized->getConfiguration());
 
@@ -231,14 +234,14 @@ class SerializationTest extends KernelTestBase {
     $configuration = [
       'status_code' => '404',
     ];
-    /* @var \Drupal\page_manager\Plugin\DisplayVariant\HttpStatusCodeDisplayVariant $variant_plugin */
+    /** @var \Drupal\page_manager\Plugin\DisplayVariant\HttpStatusCodeDisplayVariant $variant_plugin */
     $variant_plugin = $this->container
       ->get('plugin.manager.display_variant')
       ->createInstance('http_status_code', $configuration);
     $this->assertInstanceOf(HttpStatusCodeDisplayVariant::class, $variant_plugin);
 
     // Test that a very simple variant successfully serializes.
-    /* @var \Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant $unserialized */
+    /** @var \Drupal\page_manager\Plugin\DisplayVariant\PageBlockDisplayVariant $unserialized */
     $unserialized = $this->assertSerialization($variant_plugin);
     $this->assertEquals($variant_plugin->getConfiguration(), $unserialized->getConfiguration());
   }

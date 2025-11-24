@@ -1,20 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Runtime;
 
 use Consolidation\AnnotatedCommand\AnnotationData;
 use Consolidation\AnnotatedCommand\Hooks\InitializeHookInterface;
-use Consolidation\SiteAlias\SiteAlias;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
-use Consolidation\SiteProcess\ProcessManager;
 use Consolidation\SiteProcess\Util\Tty;
-use Drush\Drush;
-use Drush\Log\LogLevel;
+use Drush\Attributes\HandleRemoteCommands;
 use Drush\Config\ConfigAwareTrait;
+use Drush\Drush;
+use Drush\SiteAlias\ProcessManager;
 use Robo\Contract\ConfigAwareInterface;
 use Symfony\Component\Console\Input\InputInterface;
-use Drush\Utils\TerminalUtils;
 
 /**
  * The RedispatchHook is installed as an init hook that runs before
@@ -27,22 +27,16 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
     use ConfigAwareTrait;
     use SiteAliasManagerAwareTrait;
 
-    /** @var ProcessManager */
-    protected $processManager;
-
-    public function __construct(ProcessManager $processManager)
+    public function __construct(protected ProcessManager $processManager)
     {
-        $this->processManager = $processManager;
     }
 
     /**
      * Check to see if it is necessary to redispatch to a remote site.
+     *
      * We do not redispatch to local sites here; usually, local sites may
      * simply be selected and require no redispatch. When a local redispatch
      * is needed, it happens in the RedispatchToSiteLocal class.
-     *
-     * @param InputInterface $input
-     * @param AnnotationData $annotationData
      */
     public function initialize(InputInterface $input, AnnotationData $annotationData)
     {
@@ -50,11 +44,11 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
         //   - redispatch to a different site-local Drush on same system
         //   - site-list handling (REMOVED)
         // These redispatches need to be done regardless of the presence
-        // of a @handle-remote-commands annotation.
+        // of a HandleRemoteCommands Attribute.
 
-        // If the command has the @handle-remote-commands annotation, then
+        // If the command has the HandleRemoteCommands Attribute, then
         // short-circuit redispatches to remote hosts.
-        if ($annotationData->has('handle-remote-commands')) {
+        if ($annotationData->has(HandleRemoteCommands::NAME)) {
             return;
         }
         return $this->redispatchIfRemote($input);
@@ -63,8 +57,6 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
     /**
      * Check to see if the target of the command is remote. Call redispatch
      * if it is.
-     *
-     * @param InputInterface $input
      */
     public function redispatchIfRemote(InputInterface $input)
     {
@@ -77,14 +69,12 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
 
     /**
      * Called from RemoteCommandProxy::execute() to run remote commands.
-     *
-     * @param InputInterface $input
      */
-    public function redispatch(InputInterface $input)
+    public function redispatch(InputInterface $input): never
     {
         // Get the command arguments, and shift off the Drush command.
         $redispatchArgs = $this->getConfig()->get('runtime.argv');
-        $drush_path = array_shift($redispatchArgs);
+        array_shift($redispatchArgs);
         $command_name = $this->getConfig()->get('runtime.command');
 
         Drush::logger()->debug('Redispatch hook {command}', ['command' => $command_name]);
@@ -101,11 +91,12 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
         if (!Tty::isTtySupported()) {
             $process->setInput(STDIN);
         } else {
-            $process->setTty($this->getConfig()->get('ssh.tty', $input->isInteractive()));
+            // Command line options are always strings so cast - https://github.com/drush-ops/drush/issues/5798.
+            $process->setTty((bool) $this->getConfig()->get('ssh.tty', $input->isInteractive()));
         }
         $process->mustRun($process->showRealtime());
 
-        return $this->exitEarly($process->getExitCode());
+        $this->exitEarly($process->getExitCode());
     }
 
     /**
@@ -116,7 +107,7 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
     protected function alterArgsForRedispatch(array $redispatchArgs): array
     {
         return array_filter($redispatchArgs, function ($item) {
-            return strpos($item, '-D') !== 0;
+            return !str_starts_with($item, '-D');
         });
     }
 
@@ -126,7 +117,7 @@ class RedispatchHook implements InitializeHookInterface, ConfigAwareInterface, S
      *
      * @param int $exit_code.
      */
-    protected function exitEarly(int $exit_code): void
+    protected function exitEarly(int $exit_code): never
     {
         Drush::logger()->debug('Redispatch hook exit early');
 

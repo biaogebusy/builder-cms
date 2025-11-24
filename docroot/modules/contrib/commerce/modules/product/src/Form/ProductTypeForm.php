@@ -2,14 +2,14 @@
 
 namespace Drupal\commerce_product\Form;
 
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce\EntityHelper;
 use Drupal\commerce\EntityTraitManagerInterface;
 use Drupal\commerce\Form\CommerceBundleEntityFormBase;
 use Drupal\commerce_order\Entity\OrderItemTypeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -136,6 +136,10 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
     $form['variations']['injectVariationFields'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Inject product variation fields into the rendered product.'),
+      '#description' => $this->t('Only the fields enabled on a product variation
+       view mode will be injected on the product rendered on a view mode with
+       the same machine name than the product variation view mode configured. If
+       no corresponding view mode found, then fallback to the Default view mode.'),
       '#default_value' => $product_type->shouldInjectVariationFields(),
     ];
     $form['product_status'] = [
@@ -210,11 +214,10 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
       ]);
       if ($this->moduleHandler->moduleExists('commerce_order')) {
         $order_item_type_ids = $this->getOrderItemTypeIds();
-        $order_item_type_id = isset($types['default']) ? 'default' : reset($order_item_type_ids);
+        $order_item_type_id = in_array('default', $order_item_type_ids, TRUE) ? 'default' : reset($order_item_type_ids);
         $variation_type->setOrderItemTypeId($order_item_type_id);
       }
       $variation_type->save();
-      $product_type->setVariationTypeId($form_state->getValue('id'));
       $product_type->setVariationTypeIds([$form_state->getValue('id')]);
     }
   }
@@ -228,7 +231,7 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
     /** @var \Drupal\commerce_product\Entity\ProductTypeInterface $original_product_type */
     $original_product_type = $form_state->get('original_entity');
 
-    $product_type->save();
+    $status = $product_type->save();
     $this->postSave($product_type, $this->operation);
     $this->submitTraitForm($form, $form_state);
     // Create the needed fields.
@@ -253,9 +256,10 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
     }
     // Update the default value of the status field.
     $product_type_id = $product_type->id();
+    /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $product = $this->entityTypeManager->getStorage('commerce_product')->create(['type' => $product_type_id]);
     $value = (bool) $form_state->getValue('product_status');
-    if ($product->status->value != $value) {
+    if ($product->isPublished() != $value) {
       $fields = $this->entityFieldManager->getFieldDefinitions('commerce_product', $product_type_id);
       $fields['status']->getConfig($product_type_id)->setDefaultValue($value)->save();
       $this->entityFieldManager->clearCachedFieldDefinitions();
@@ -263,6 +267,8 @@ class ProductTypeForm extends CommerceBundleEntityFormBase {
 
     $this->messenger()->addMessage($this->t('The product type %label has been successfully saved.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.commerce_product_type.collection');
+
+    return $status;
   }
 
   /**

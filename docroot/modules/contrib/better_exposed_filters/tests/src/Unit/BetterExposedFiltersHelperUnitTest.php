@@ -2,11 +2,12 @@
 
 namespace Drupal\Tests\better_exposed_filters\Unit;
 
-use Drupal\better_exposed_filters\BetterExposedFiltersHelper;
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use Drupal\better_exposed_filters\BetterExposedFiltersHelper;
 
 /**
  * Tests the helper functions for better exposed filters.
@@ -26,15 +27,15 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
    *
    * @covers ::rewriteOptions
    */
-  public function testRewriteOptions($options, $settings, $expected) {
-    $actual = BetterExposedFiltersHelper::rewriteOptions($options, $settings);
+  public function testRewriteOptions($options, $settings, $expected, $rewrite_based_on_key = FALSE) {
+    $actual = BetterExposedFiltersHelper::rewriteOptions($options, $settings, FALSE, $rewrite_based_on_key);
     $this->assertEquals(array_values($expected), array_values($actual));
   }
 
   /**
    * Data provider for ::testRewriteOptions.
    */
-  public function providerTestRewriteOptions() {
+  public static function providerTestRewriteOptions(): array {
     $data = [];
 
     // Super basic rewrite.
@@ -58,6 +59,19 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
       ['foo' => '1', 'baz' => '3'],
     ];
 
+    // Check boolean values.
+    $data[] = [
+      ['foo' => '0', 'bar' => '1'],
+      "0|Zero",
+      ['foo' => 'Zero', 'bar' => '1'],
+    ];
+
+    $data[] = [
+      ['foo' => '0', 'bar' => '1'],
+      "1|One",
+      ['foo' => '0', 'bar' => 'One'],
+    ];
+
     // Ensure order is preserved.
     $data[] = [
       ['foo' => '1', 'bar' => '2', 'baz' => '3'],
@@ -79,6 +93,38 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
       ['foo' => 'One', 'bar' => 'Two', 'baz' => 'Three'],
     ];
 
+    // Key based option replacement - no options are replaced.
+    $data[] = [
+      ['foo' => '1', 'bar' => '2', 'baz' => '3'],
+      "4|Two",
+      ['foo' => '1', 'bar' => '2', 'baz' => '3'],
+      TRUE,
+    ];
+
+    // Key based option replacement - some options are replaced.
+    $data[] = [
+      ['foo' => '1', 'bar' => '2', 'baz' => '3'],
+      "foo|One\n2|Two\nbaz|Three",
+      [
+        'foo' => new TranslatableMarkup('One'),
+        'bar' => '2',
+        'baz' => new TranslatableMarkup('Three'),
+      ],
+      TRUE,
+    ];
+
+    // Key based option replacement - all options are replaced.
+    $data[] = [
+      ['foo' => '1', 'bar' => '2', 'baz' => '3'],
+      "foo|One\nbar|Two\nbaz|Three",
+      [
+        'foo' => new TranslatableMarkup('One'),
+        'bar' => new TranslatableMarkup('Two'),
+        'baz' => new TranslatableMarkup('Three'),
+      ],
+      TRUE,
+    ];
+
     return $data;
   }
 
@@ -97,7 +143,7 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
   /**
    * Data provider for ::testRewriteReorderOptions.
    */
-  public function providerTestRewriteReorderOptions() {
+  public static function providerTestRewriteReorderOptions(): array {
     $data = [];
 
     // Basic use case.
@@ -139,7 +185,7 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
   /**
    * Data provider for ::testRewriteTaxonomy.
    */
-  public function providerTestRewriteTaxonomy() {
+  public static function providerTestRewriteTaxonomy(): array {
     $data = [];
 
     // Replace a single item, no change in order.
@@ -211,10 +257,14 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
    * @covers ::sortOptions
    */
   public function testSortOptions($unsorted, $expected) {
+    // Data providers run before ::setUp. We rely on the stringTranslationTrait
+    // for some of our option values so call it here instead.
+    $this->stringTranslation = $this->getStringTranslationStub();
+
     $transliterator = $this->createMock(TransliterationInterface::class);
     $transliterator->expects($this->any())
       ->method('transliterate')
-      ->will($this->returnCallback(
+      ->willReturnCallback(
         fn($string, $langcode = 'en', $unknown_character = '?', $max_length = NULL) => str_replace([
           'á',
           'ã',
@@ -222,7 +272,7 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
           'ë',
           'ő',
         ], ['a', 'a', 'e', 'e', 'o'], $string)
-      ));
+      );
     $container = new ContainerBuilder();
     $container->set('transliteration', $transliterator);
     \Drupal::setContainer($container);
@@ -234,11 +284,7 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
   /**
    * Data provider for ::testSortOptions.
    */
-  public function providerTestSortOptions() {
-    // Data providers run before ::setUp. We rely on the stringTranslationTrait
-    // for some of our option values so call it here instead.
-    $this->stringTranslation = $this->getStringTranslationStub();
-
+  public static function providerTestSortOptions(): array {
     $data = [];
 
     // List of strings.
@@ -337,16 +383,20 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
    * @covers ::sortNestedOptions
    */
   public function testSortNestedOptions($unsorted, $expected) {
+    // Data providers run before ::setUp. We rely on the stringTranslationTrait
+    // for some of our option values so call it here instead.
+    $this->stringTranslation = $this->getStringTranslationStub();
+
     $transliterator = $this->createMock(TransliterationInterface::class);
     $transliterator->expects($this->any())
       ->method('transliterate')
-      ->will($this->returnCallback(
+      ->willReturnCallback(
         fn($string, $langcode = 'en', $unknown_character = '?', $max_length = NULL) => str_replace([
           'á',
           'é',
           'è',
         ], ['a', 'e', 'e'], $string)
-      ));
+      );
     $container = new ContainerBuilder();
     $container->set('transliteration', $transliterator);
     \Drupal::setContainer($container);
@@ -358,11 +408,7 @@ class BetterExposedFiltersHelperUnitTest extends UnitTestCase {
   /**
    * Data provider for ::testSortNestedOptions.
    */
-  public function providerTestSortNestedOptions() {
-    // Data providers run before ::setUp. We rely on the stringTranslationTrait
-    // for some of our option values so call it here instead.
-    $this->stringTranslation = $this->getStringTranslationStub();
-
+  public static function providerTestSortNestedOptions(): array {
     $data = [];
 
     // List of nested taxonomy terms.

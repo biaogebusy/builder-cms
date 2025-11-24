@@ -1,165 +1,133 @@
 {
 	"country_code": "MX",
 	"subdivisions": {
-		"Ags.": {
-			"name": "Aguascalientes",
-			"iso_code": "MX-AGU",
-			"postal_code_pattern": "20"
+		"AGU": {
+			"code": "Ags.",
+			"name": "Aguascalientes"
 		},
-		"B.C.": {
-			"name": "Baja California",
-			"iso_code": "MX-BCN",
-			"postal_code_pattern": "2[12]"
+		"BCN": {
+			"code": "B.C.",
+			"name": "Baja California"
 		},
-		"B.C.S.": {
-			"name": "Baja California Sur",
-			"iso_code": "MX-BCS",
-			"postal_code_pattern": "23"
+		"BCS": {
+			"code": "B.C.S.",
+			"name": "Baja California Sur"
 		},
-		"Camp.": {
-			"name": "Campeche",
-			"iso_code": "MX-CAM",
-			"postal_code_pattern": "24"
+		"CAM": {
+			"code": "Camp.",
+			"name": "Campeche"
 		},
-		"Chis.": {
-			"name": "Chiapas",
-			"iso_code": "MX-CHP",
-			"postal_code_pattern": "29|30"
+		"CHP": {
+			"code": "Chis.",
+			"name": "Chiapas"
 		},
-		"Chih.": {
-			"name": "Chihuahua",
-			"iso_code": "MX-CHH",
-			"postal_code_pattern": "3[1-3]"
+		"CHH": {
+			"code": "Chih.",
+			"name": "Chihuahua"
 		},
-		"CDMX": {
-			"name": "Ciudad de México",
-			"iso_code": "MX-CMX",
-			"postal_code_pattern": "0|1[0-6]"
+		"CMX": {
+			"code": "CDMX",
+			"name": "Ciudad de México"
 		},
-		"Coah.": {
-			"name": "Coahuila de Zaragoza",
-			"iso_code": "MX-COA",
-			"postal_code_pattern": "2[5-7]"
+		"COA": {
+			"code": "Coah.",
+			"name": "Coahuila de Zaragoza"
 		},
-		"Col.": {
-			"name": "Colima",
-			"iso_code": "MX-COL",
-			"postal_code_pattern": "28"
+		"COL": {
+			"code": "Col.",
+			"name": "Colima"
 		},
-		"Dgo.": {
-			"name": "Durango",
-			"iso_code": "MX-DUR",
-			"postal_code_pattern": "3[45]"
+		"DUR": {
+			"code": "Dgo.",
+			"name": "Durango"
 		},
-		"Méx.": {
-			"name": "Estado de México",
-			"iso_code": "MX-MEX",
-			"postal_code_pattern": "5[0-7]"
+		"MEX": {
+			"code": "Méx.",
+			"name": "Estado de México"
 		},
-		"Gto.": {
-			"name": "Guanajuato",
-			"iso_code": "MX-GUA",
-			"postal_code_pattern": "3[6-8]"
+		"GUA": {
+			"code": "Gto.",
+			"name": "Guanajuato"
 		},
-		"Gro.": {
-			"name": "Guerrero",
-			"iso_code": "MX-GRO",
-			"postal_code_pattern": "39|4[01]"
+		"GRO": {
+			"code": "Gro.",
+			"name": "Guerrero"
 		},
-		"Hgo.": {
-			"name": "Hidalgo",
-			"iso_code": "MX-HID",
-			"postal_code_pattern": "4[23]"
+		"HID": {
+			"code": "Hgo.",
+			"name": "Hidalgo"
 		},
-		"Jal.": {
-			"name": "Jalisco",
-			"iso_code": "MX-JAL",
-			"postal_code_pattern": "4[4-9]"
+		"JAL": {
+			"code": "Jal.",
+			"name": "Jalisco"
 		},
-		"Mich.": {
-			"name": "Michoacán",
-			"iso_code": "MX-MIC",
-			"postal_code_pattern": "5[89]|6[01]"
+		"MIC": {
+			"code": "Mich.",
+			"name": "Michoacán"
 		},
-		"Mor.": {
-			"name": "Morelos",
-			"iso_code": "MX-MOR",
-			"postal_code_pattern": "62"
+		"MOR": {
+			"code": "Mor.",
+			"name": "Morelos"
 		},
-		"Nay.": {
-			"name": "Nayarit",
-			"iso_code": "MX-NAY",
-			"postal_code_pattern": "63"
+		"NAY": {
+			"code": "Nay.",
+			"name": "Nayarit"
 		},
-		"N.L.": {
-			"name": "Nuevo León",
-			"iso_code": "MX-NLE",
-			"postal_code_pattern": "6[4-7]"
+		"NLE": {
+			"code": "N.L.",
+			"name": "Nuevo León"
 		},
-		"Oax.": {
-			"name": "Oaxaca",
-			"iso_code": "MX-OAX",
-			"postal_code_pattern": "6[89]|7[01]"
+		"OAX": {
+			"code": "Oax.",
+			"name": "Oaxaca"
 		},
-		"Pue.": {
-			"name": "Puebla",
-			"iso_code": "MX-PUE",
-			"postal_code_pattern": "7[2-5]"
+		"PUE": {
+			"code": "Pue.",
+			"name": "Puebla"
 		},
-		"Qro.": {
-			"name": "Querétaro",
-			"iso_code": "MX-QUE",
-			"postal_code_pattern": "76"
+		"QUE": {
+			"code": "Qro.",
+			"name": "Querétaro"
 		},
-		"Q.R.": {
-			"name": "Quintana Roo",
-			"iso_code": "MX-ROO",
-			"postal_code_pattern": "77"
+		"ROO": {
+			"code": "Q.R.",
+			"name": "Quintana Roo"
 		},
-		"S.L.P.": {
-			"name": "San Luis Potosí",
-			"iso_code": "MX-SLP",
-			"postal_code_pattern": "7[89]"
+		"SLP": {
+			"code": "S.L.P.",
+			"name": "San Luis Potosí"
 		},
-		"Sin.": {
-			"name": "Sinaloa",
-			"iso_code": "MX-SIN",
-			"postal_code_pattern": "8[0-2]"
+		"SIN": {
+			"code": "Sin.",
+			"name": "Sinaloa"
 		},
-		"Son.": {
-			"name": "Sonora",
-			"iso_code": "MX-SON",
-			"postal_code_pattern": "8[3-5]"
+		"SON": {
+			"code": "Son.",
+			"name": "Sonora"
 		},
-		"Tab.": {
-			"name": "Tabasco",
-			"iso_code": "MX-TAB",
-			"postal_code_pattern": "86"
+		"TAB": {
+			"code": "Tab.",
+			"name": "Tabasco"
 		},
-		"Tamps.": {
-			"name": "Tamaulipas",
-			"iso_code": "MX-TAM",
-			"postal_code_pattern": "8[7-9]"
+		"TAM": {
+			"code": "Tamps.",
+			"name": "Tamaulipas"
 		},
-		"Tlax.": {
-			"name": "Tlaxcala",
-			"iso_code": "MX-TLA",
-			"postal_code_pattern": "90"
+		"TLA": {
+			"code": "Tlax.",
+			"name": "Tlaxcala"
 		},
-		"Ver.": {
-			"name": "Veracruz",
-			"iso_code": "MX-VER",
-			"postal_code_pattern": "9[1-6]"
+		"VER": {
+			"code": "Ver.",
+			"name": "Veracruz"
 		},
-		"Yuc.": {
-			"name": "Yucatán",
-			"iso_code": "MX-YUC",
-			"postal_code_pattern": "97"
+		"YUC": {
+			"code": "Yuc.",
+			"name": "Yucatán"
 		},
-		"Zac.": {
-			"name": "Zacatecas",
-			"iso_code": "MX-ZAC",
-			"postal_code_pattern": "9[89]"
+		"ZAC": {
+			"code": "Zac.",
+			"name": "Zacatecas"
 		}
 	}
 }

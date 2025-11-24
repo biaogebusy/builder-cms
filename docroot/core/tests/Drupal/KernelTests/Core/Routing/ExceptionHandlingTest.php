@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Routing;
 
 use Drupal\Component\Utility\Html;
@@ -32,7 +34,7 @@ class ExceptionHandlingTest extends KernelTestBase {
   /**
    * Tests on a route with a non-supported HTTP method.
    */
-  public function test405() {
+  public function test405(): void {
     $request = Request::create('/router_test/test15', 'PATCH');
 
     /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
@@ -43,9 +45,22 @@ class ExceptionHandlingTest extends KernelTestBase {
   }
 
   /**
+   * Tests a route with a non-supported _format parameter.
+   */
+  public function test406(): void {
+    $request = Request::create('/router_test/test2?_format=non_existent_format');
+
+    /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $kernel */
+    $kernel = \Drupal::getContainer()->get('http_kernel');
+    $response = $kernel->handle($request);
+
+    $this->assertEquals(Response::HTTP_NOT_ACCEPTABLE, $response->getStatusCode());
+  }
+
+  /**
    * Tests the exception handling for json and 403 status code.
    */
-  public function testJson403() {
+  public function testJson403(): void {
     $request = Request::create('/router_test/test15');
     $request->query->set('_format', 'json');
     $request->setRequestFormat('json');
@@ -63,7 +78,7 @@ class ExceptionHandlingTest extends KernelTestBase {
   /**
    * Tests the exception handling for json and 404 status code.
    */
-  public function testJson404() {
+  public function testJson404(): void {
     $request = Request::create('/not-found');
     $request->query->set('_format', 'json');
     $request->setRequestFormat('json');
@@ -74,13 +89,13 @@ class ExceptionHandlingTest extends KernelTestBase {
 
     $this->assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
     $this->assertEquals('application/json', $response->headers->get('Content-type'));
-    $this->assertEquals('{"message":"No route found for \\u0022GET \\/not-found\\u0022"}', $response->getContent());
+    $this->assertEquals('{"message":"No route found for \\u0022GET http:\/\/localhost\\/not-found\\u0022"}', $response->getContent());
   }
 
   /**
    * Tests the exception handling for HTML and 403 status code.
    */
-  public function testHtml403() {
+  public function testHtml403(): void {
     $request = Request::create('/router_test/test15');
     $request->setFormat('html', ['text/html']);
 
@@ -95,7 +110,7 @@ class ExceptionHandlingTest extends KernelTestBase {
   /**
    * Tests the exception handling for HTML and 404 status code.
    */
-  public function testHtml404() {
+  public function testHtml404(): void {
     $request = Request::create('/not-found');
     $request->setFormat('html', ['text/html']);
 
@@ -110,14 +125,14 @@ class ExceptionHandlingTest extends KernelTestBase {
   /**
    * Tests that the exception response is executed in the original context.
    */
-  public function testExceptionResponseGeneratedForOriginalRequest() {
+  public function testExceptionResponseGeneratedForOriginalRequest(): void {
     // Test with 404 path pointing to a route that uses '_controller'.
     $response = $this->doTest404Route('/router_test/test25');
     $this->assertStringContainsString('/not-found', $response->getContent());
 
     // Test with 404 path pointing to a route that uses '_form'.
     $response = $this->doTest404Route('/router_test/test26');
-    $this->assertStringContainsString('<form class="system-logging-settings"', $response->getContent());
+    $this->assertStringContainsString('<form class="router-test-form"', $response->getContent());
 
     // Test with 404 path pointing to a route that uses '_entity_form'.
     $response = $this->doTest404Route('/router_test/test27');
@@ -148,7 +163,7 @@ class ExceptionHandlingTest extends KernelTestBase {
   /**
    * Tests if exception backtraces are properly escaped when output to HTML.
    */
-  public function testBacktraceEscaping() {
+  public function testBacktraceEscaping(): void {
     // Enable verbose error logging.
     $this->config('system.logging')->set('error_level', ERROR_REPORTING_DISPLAY_VERBOSE)->save();
 
@@ -170,7 +185,7 @@ class ExceptionHandlingTest extends KernelTestBase {
   /**
    * Tests exception message escaping.
    */
-  public function testExceptionEscaping() {
+  public function testExceptionEscaping(): void {
     // Enable verbose error logging.
     $this->config('system.logging')->set('error_level', ERROR_REPORTING_DISPLAY_VERBOSE)->save();
 
@@ -200,7 +215,7 @@ class ExceptionHandlingTest extends KernelTestBase {
     // final exception subscriber, it is printed as partial HTML, and hence
     // escaped.
     $this->assertEquals('text/plain; charset=UTF-8', $response->headers->get('Content-type'));
-    $this->assertStringStartsWith('The website encountered an unexpected error. Please try again later.<br><br><em class="placeholder">Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException</em>: Not acceptable format: json&lt;script&gt;alert(123);&lt;/script&gt; in <em class="placeholder">', $response->getContent());
+    $this->assertEquals('A route that returns a rendered array as its response only supports the HTML format.', $response->getContent());
   }
 
 }

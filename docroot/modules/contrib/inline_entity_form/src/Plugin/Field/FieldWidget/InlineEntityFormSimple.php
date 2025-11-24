@@ -10,6 +10,7 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\inline_entity_form\TranslationHelper;
+use Drupal\rat\v1\RenderArray;
 
 /**
  * Simple inline widget.
@@ -75,7 +76,8 @@ class InlineEntityFormSimple extends InlineEntityFormBase {
         ];
         // Hide the inline form. getInlineEntityForm() still needed to be
         // called because otherwise the field re-ordering doesn't work.
-        $element['inline_entity_form']['#access'] = FALSE;
+        // Safely restrict access. Entity cacheability already set.
+        RenderArray::alter($element['inline_entity_form'])->restrictAccess(FALSE, NULL);
       }
     }
     return $element;

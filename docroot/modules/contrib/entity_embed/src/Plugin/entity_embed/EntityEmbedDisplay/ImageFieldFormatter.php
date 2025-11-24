@@ -67,7 +67,7 @@ class ImageFieldFormatter extends FileFieldFormatter {
   /**
    * {@inheritdoc}
    */
-  public function access(AccountInterface $account = NULL) {
+  public function access(?AccountInterface $account = NULL) {
     return parent::access($account)->andIf($this->isValidImage());
   }
 

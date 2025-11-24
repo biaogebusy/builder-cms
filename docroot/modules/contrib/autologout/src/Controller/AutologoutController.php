@@ -2,15 +2,16 @@
 
 namespace Drupal\autologout\Controller;
 
-use Drupal\autologout\AutologoutManagerInterface;
 use Drupal\Component\Datetime\TimeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\SettingsCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
+use Drupal\autologout\AutologoutManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Returns responses for autologout module routes.
@@ -33,19 +34,26 @@ class AutologoutController extends ControllerBase {
   protected $time;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected RequestStack $requestStack;
+
+  /**
    * Constructs an AutologoutSubscriber object.
    *
    * @param \Drupal\autologout\AutologoutManagerInterface $autologout
    *   The autologout manager service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(
-    AutologoutManagerInterface $autologout,
-    TimeInterface $time
-  ) {
+  public function __construct(AutologoutManagerInterface $autologout, TimeInterface $time, RequestStack $requestStack) {
     $this->autoLogoutManager = $autologout;
     $this->time = $time;
+    $this->requestStack = $requestStack;
   }
 
   /**
@@ -54,7 +62,8 @@ class AutologoutController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('autologout.manager'),
-      $container->get('datetime.time')
+      $container->get('datetime.time'),
+      $container->get('request_stack')
     );
   }
 
@@ -62,8 +71,8 @@ class AutologoutController extends ControllerBase {
    * Alternative logout.
    */
   public function altLogout() {
+    $redirect_url = $this->autoLogoutManager->getUserRedirectUrl();
     $this->autoLogoutManager->logout();
-    $redirect_url = $this->config('autologout.settings')->get('redirect_url');
     $url = Url::fromUserInput(
       $redirect_url,
       [
@@ -92,12 +101,13 @@ class AutologoutController extends ControllerBase {
    * Ajax callback to reset the last access session variable.
    */
   public function ajaxSetLast() {
-    $_SESSION['autologout_last'] = $this->time->getRequestTime();
+    $this->requestStack->getCurrentRequest()->getSession()->set('autologout_last', $this->time->getRequestTime());
 
     // Reset the timer.
     $response = new AjaxResponse();
     $markup = $this->autoLogoutManager->createTimer();
     $response->addCommand(new ReplaceCommand('#timer', $markup));
+    $response->addCommand(new SettingsCommand(['activity' => TRUE]));
 
     return $response;
   }
@@ -106,14 +116,16 @@ class AutologoutController extends ControllerBase {
    * AJAX callback that returns the time remaining for this user is logged out.
    */
   public function ajaxGetRemainingTime() {
-
-    $req = \Drupal::requestStack()->getCurrentRequest();
+    $req = $this->requestStack->getCurrentRequest();
     $active = $req->get('uactive');
     $response = new AjaxResponse();
 
     if (isset($active) && $active === "false") {
       $response->addCommand(new ReplaceCommand('#timer', 0));
-      $response->addCommand(new SettingsCommand(['time' => 0]));
+      $response->addCommand(new SettingsCommand([
+        'time' => 0,
+        'activity' => FALSE,
+      ]));
 
       return $response;
     }
@@ -124,7 +136,10 @@ class AutologoutController extends ControllerBase {
     $markup = $this->autoLogoutManager->createTimer();
 
     $response->addCommand(new ReplaceCommand('#timer', $markup));
-    $response->addCommand(new SettingsCommand(['time' => $time_remaining_ms]));
+    $response->addCommand(new SettingsCommand([
+      'time' => $time_remaining_ms,
+      'activity' => TRUE,
+    ]));
 
     return $response;
   }

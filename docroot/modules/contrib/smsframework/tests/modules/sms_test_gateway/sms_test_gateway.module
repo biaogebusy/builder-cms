@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
 /**
  * @file
  * A test gateway to be used for testing the SMS Framework.
  */
+
+declare(strict_types = 1);
 
 /**
  * Gets incoming data from static.

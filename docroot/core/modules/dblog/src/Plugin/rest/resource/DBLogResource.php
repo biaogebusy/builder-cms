@@ -3,6 +3,8 @@
 namespace Drupal\dblog\Plugin\rest\resource;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\rest\Attribute\RestResource;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -10,16 +12,15 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides a resource for database watchdog log entries.
- *
- * @RestResource(
- *   id = "dblog",
- *   label = @Translation("Watchdog database log"),
- *   uri_paths = {
- *     "canonical" = "/dblog/{id}"
- *   }
- * )
  */
-class DBLogResource extends ResourceBase {
+#[RestResource(
+  id: "dblog",
+  label: new TranslatableMarkup("Watchdog database log"),
+  uri_paths: [
+    "canonical" => "/dblog/{id}",
+  ]
+)]
+class DbLogResource extends ResourceBase {
 
   /**
    * Responds to GET requests.

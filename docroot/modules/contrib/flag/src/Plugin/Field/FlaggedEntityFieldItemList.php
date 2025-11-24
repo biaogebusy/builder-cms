@@ -16,6 +16,7 @@ class FlaggedEntityFieldItemList extends EntityReferenceFieldItemList {
    * Returns the label as the field item.
    */
   protected function computeValue() {
+    // @phpstan-ignore-next-line
     $this->list[0] = $this->createItem(0, $this->getEntity()->value);
   }
 

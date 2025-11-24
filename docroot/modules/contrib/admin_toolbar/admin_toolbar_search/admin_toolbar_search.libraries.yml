@@ -5,7 +5,11 @@ search:
   js:
     js/admin_toolbar_search.js: {}
   dependencies:
-    - core/jquery
-    - core/drupal
-    - core/jquery.once
-    - core/jquery.ui.autocomplete
+    - admin_toolbar/toolbar.tree
+    - core/drupal.autocomplete
+
+search.keyboard_shortcut:
+  js:
+    js/admin_toolbar_search.keyboard_shortcut.js: {}
+  dependencies:
+    - admin_toolbar_search/search

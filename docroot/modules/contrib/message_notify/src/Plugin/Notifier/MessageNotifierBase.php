@@ -63,7 +63,7 @@ abstract class MessageNotifierBase extends PluginBase implements MessageNotifier
    *   delivering a notification. If not passed to the constructor, use
    *   ::setMessage().
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, MessageInterface $message = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, ?MessageInterface $message = NULL) {
     // Set some defaults.
     $configuration += [
       'save on success' => TRUE,
@@ -80,7 +80,7 @@ abstract class MessageNotifierBase extends PluginBase implements MessageNotifier
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MessageInterface $message = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MessageInterface $message = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -104,7 +104,13 @@ abstract class MessageNotifierBase extends PluginBase implements MessageNotifier
     $view_builder = $this->entityTypeManager->getViewBuilder('message');
     foreach ($this->pluginDefinition['viewModes'] as $view_mode) {
       $build = $view_builder->view($this->message, $view_mode);
-      $output[$view_mode] = $this->renderer->renderPlain($build);
+      if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+        // @phpstan-ignore-next-line
+        $output[$view_mode] = $this->renderer->renderPlain($build);
+      }
+      else {
+        $output[$view_mode] = $this->renderer->renderInIsolation($build);
+      }
     }
 
     $result = $this->deliver($output);
@@ -123,7 +129,10 @@ abstract class MessageNotifierBase extends PluginBase implements MessageNotifier
     $save = FALSE;
     // NULL means skip delivery. False signifies failure. Strict check.
     if ($result === FALSE) {
-      $this->logger->error('Could not send message using {title} to user ID {uid}.', ['{title}' => $this->pluginDefinition['title'], '{uid}' => $this->message->getOwnerId()]);
+      $this->logger->error('Could not send message using {title} to user ID {uid}.', [
+        '{title}' => $this->pluginDefinition['title'],
+        '{uid}' => $this->message->getOwnerId(),
+      ]);
       if ($this->configuration['save on fail']) {
         $save = TRUE;
       }

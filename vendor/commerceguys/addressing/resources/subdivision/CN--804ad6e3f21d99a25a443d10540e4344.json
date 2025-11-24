@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Ziyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anyue Xian": {
+			"local_name": "安岳县"
+		},
+		"Jianyang Shi": {
+			"local_name": "简阳市"
+		},
+		"Lezhi Xian": {
+			"local_name": "乐至县"
+		},
+		"Yanjiang Qu": {
+			"local_name": "雁江区"
+		}
+	}
+}

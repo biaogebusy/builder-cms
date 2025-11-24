@@ -2,9 +2,9 @@
 ***
 ## <a name="troubleshooting"></a>TROUBLESHOOTING
 * Masonry (Flexbox and or Native Grid) are messed up, try uninstalling BigPipe.
-  Before 2.7, we tried hard to be BigPipe-compatible, but it broke things like
+  Before 2.17, we tried hard to be BigPipe-compatible, but it broke things like
   Masonry on infinite pager VIS/ IO, etc. Not always, but applicable if any
-  other BigPipe-related JS/ CSS issues as seen at Slick/ Splide, etc. 
+  other BigPipe-related JS/ CSS issues as seen at Slick/ Splide, etc.
 * Any javascript-related issues might no longer be valid when
   `No JavaScript lazy` enabled. Unless the exceptions, things that Native
   doesn't support (Blur, BG, Video, etc.) are met, or for those who still
@@ -31,18 +31,18 @@
 
 
 ### 1. JavaScript Errors
-Any references to bLazy library is no longer required for forked version at 2.6.  
-**Symptons**:  
+Any references to bLazy library is no longer required for forked version at 2.6.
+**Symptons**:
 Blazy is not defined. Images are gone, only eternal blue loader is flipping like
 a drunk butterfly.
 
-**Solution**:  
-Ensure that there are no extra errors. Steps:  
+**Solution**:
+Ensure that there are no extra errors. Steps:
 
 * Switch to core themes for a moment in case your theme is the culprit. Any
   theme JS errors might break Blazy. Press F12 at browsers to fix them one by
   one.
-* Try disabling `Disconnect` option under IO.  
+* Try disabling `Disconnect` option under IO.
 
 
 ### 2. BLAZY GRID WITH SINGLE VALUE FIELD (D7 ONLY)
@@ -120,6 +120,7 @@ the blurred image if doable with your design.
 
 ### <a name="aspect-ratio"></a> 8. ASPECT RATIO
 **UPDATE 18/07/2023**:
+
 Aspect ratio **Fluid** will now calculate dimensions to match the fixed ones
 (1:1, 2:3, etc.) automatically to avoid JS works specific for non-responsive
 images. Useful if you are not sure. To add more aspect ratios:
@@ -127,14 +128,18 @@ images. Useful if you are not sure. To add more aspect ratios:
 
   ``$blazies->set('css.ratio', ['7:8', '6:5'], TRUE);``
 
-  The `TRUE` flag ensures to append, not nullify the existing ones:
-  ``['1:1', '3:2', '4:3', '8:5', '16:9']``  
-  See `blazy.api.php` for the available `hook_alter`.
+  The `TRUE` flag ensures to append, not nullify, the existing ones:
+  ``['1:1', '3:2', '4:3', '8:5', '16:9']``
+
+  See `blazy.api.php` for the available `hook_alter`. Always clear caches
+  whenever adding or removing procedural functions.
 + Add the relevant CSS rules in your theme CSS using the convention as seen at
   `css/components/blazy.ratio.css`.
-+ Create image styles that stick to some aspect ratios you defined:
-  * `/admin/config/media/image-styles`
-  * `/admin/help/blazy_ui#aspect-ratio-template`
++ Create image styles that stick to these aspect ratios you defined:
+  * [/admin/config/media/image-styles](/admin/config/media/image-styles)
+  * [Aspect ratio template](#aspect-ratio-template)
++ Choose Aspect ratio **Fluid** so that your custom aspect ratios are
+  automacally in use.
 
 
 Relevant to make aspect ratio `Fluid` option prioritize these ratios for pure
@@ -155,6 +160,9 @@ GridStack gapless grids, or Blazy `Native Grid`. Image sizes, hence aspect
 ratio, cannot be applied to gapless grids. Aspect ratio is based on image sizes,
 not grid sizes. The Native lazy load might not need aspect ratios, either,
 except for iframes so to be responsive without installing jQuery fitVids, etc.
+Using **Use CSS background** option is another solution for gapless grids, but
+may not work for specific images which require 100% visibility due to being
+cropped to fit the container.
 
 **UPDATE 05/02/2020**:
 Blazy RC7+ is 99% integrated with Responsive image, including
@@ -225,7 +233,8 @@ If confusing, just toggle **Use field template**, and see the output. You'll
 know which works.
 
 ### 12. NATIVE GRID MASONRY
-Q: _One dimensional vs. two-dimensional native grids?_  
+Q: _One dimensional vs. two-dimensional native grids?_
+
 A: Under **Display style**, choose **Native Grid**. Under **Grid large** option,
    input any single grid column numbers, or input `WIDTHxHEIGHT` pairs.
    + The native grid masonry is a two-dimensional grid made one dimensional,
@@ -233,8 +242,9 @@ A: Under **Display style**, choose **Native Grid**. Under **Grid large** option,
    + To have a two-dimensional grid, input any space delimited `WIDTHxHEIGHT`
      pairs, e.g.: `4x4 4x3 2x2 2x4 2x2 2x3 2x3 4x2 4x2`, or any combinations.
 
-Q: _The native grid masonry doesn't have correct bottom gaps?_  
-A: It does. Your eyes are likely being tricked. **Solutions**:  
+Q: _The native grid masonry doesn't have correct bottom gaps?_
+
+A: It does. Your eyes are likely being tricked. **Solutions**:
 
    * Try adding background color to `.grid__content`. Notice even gaps. The
      problem is inner divities do not have 100%. Read more below.
@@ -253,10 +263,10 @@ A: It does. Your eyes are likely being tricked. **Solutions**:
      may take care these types of issues for you.
 
 ### 13. BLAZY IMAGES DO NOT LOAD
-Images does not load within hidden tabs, or other hidden containers:  
+Images does not load within hidden tabs, or other hidden containers:
 
-* `/admin/config/media/blazy`  
-* Enable `Load invisible` option.  
+* `/admin/config/media/blazy`
+* Enable `Load invisible` option.
 * Specific for `Responsive image` within lightboxes under option
   `Lightbox image style`, be sure to not use `-empty image-` option under
   `Fallback image style`, edit them at
@@ -267,7 +277,18 @@ Images does not load within hidden tabs, or other hidden containers:
 Only an issue with old bLazy, not IO, AFAIK. Other than that, be sure to read
 back the topmost troubleshooting section.
 
-### 14. BROKEN MODULES
+### 14. OLIVERO SUB-THEMES
+Carousels in Views like Splide and Slick are not compatible with Olivero. It
+causes gargantuan width and height. However a workaround is provided. If however
+you see gargantuan dimensions somewhere else, be sure to disable problematic
+grid rules line `grid-template-rows: max-content;` at their ancestor selectors.
+This rule reveals child width beyond boundaries, causing absurd gargantuan width
+and height which is true to many carousels since they span their slides inline
+beyond viewport, and only dislay some within viewport until that rule breaks it.
+Adding `view--blazy` under **Advanced > Other > CSS** class should also work, if
+any misses.
+
+### 15. BROKEN MODULES
 Alpha, Beta, DEV releases are for developers only. Beware of possible breakage.
 
 However if it is broken, unless an update is provided, running `drush cr` during
@@ -277,7 +298,7 @@ If you don't drush, before any module update, always open:
 [Performance](/admin/config/development/performance)
 
 And so you are ready to hit **Clear all caches** if any issue.
-Only at worst case, know how to run
+Only at worst case, specific for D7, know how to run
 https://www.drupal.org/project/registry_rebuild safely.
 
-Check out [Update SOP](#updating) for the non-drush users.
+Check out [Update SOP](#updating) for details.
